@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Default">
+      <UniqueIdentifier>{0fd233c8-1155-45c4-948c-7494157a77e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default\리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Global">
+      <UniqueIdentifier>{0fbe6dd2-68b9-446c-9237-ff13eec77e02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayGround">
+      <UniqueIdentifier>{7ff80499-ad2f-4f90-b10c-cb429c012db4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayGround\Objects">
+      <UniqueIdentifier>{fd2030ca-cd15-4610-b743-cfeabc5afa74}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="Global\GlobalDef.h">
+      <Filter>Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Global\GlobalHeader.h">
+      <Filter>Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Global\GlobalInc.h">
+      <Filter>Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Global\GlobalUdt.h">
+      <Filter>Global</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayGround\EntryPoint.h">
+      <Filter>PlayGround</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayGround\Objects\PlayGround.h">
+      <Filter>PlayGround\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayGround\Objects\DefaultGameObject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PlayGround.rc">
+      <Filter>Default\리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Default\리소스 파일</Filter>
+    </Image>
+    <Image Include="PlayGround.ico">
+      <Filter>Default\리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PlayGround\EntryPoint.cpp">
+      <Filter>PlayGround</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayGround\Objects\PlayGround.cpp">
+      <Filter>PlayGround\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayGround\Objects\DefaultGameObject.cpp" />
+  </ItemGroup>
+</Project>
