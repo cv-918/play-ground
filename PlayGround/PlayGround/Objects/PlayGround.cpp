@@ -1,17 +1,8 @@
 #include "PlayGround.h"
 
-PlayGround::PlayGround()
-	: dc_(nullptr), back_dc_(nullptr)
-	, back_bmp_(nullptr), old_back_bmp_(nullptr)
-	, screen_width_(WINCX), screen_height_(WINCY)
-{
-}
+#include "GlobalObjects/KeyManager.h"
 
-PlayGround::~PlayGround()
-{
-}
-
-bool PlayGround::Initialize()
+_bool PlayGround::Initialize()
 {
 	dc_ = GetDC(g_hWnd);
 	CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
@@ -19,33 +10,55 @@ bool PlayGround::Initialize()
 	return true;
 }
 
-int PlayGround::Update(double _delta_time)
+_int PlayGround::Update(double _delta_time)
 {
+	BeginFrame();
 	return 0;
 }
 
-int PlayGround::Render(double _delta_time)
+_int PlayGround::Render(double _delta_time)
 {
 	// 1) Clear (단색)
 	PatBlt(back_dc_, 0, 0, screen_width_, screen_height_, BLACKNESS);
 
-	int frame_width = 10;
+	_int frame_width = 10;
 	RECT rt = { frame_width, frame_width, screen_width_ - frame_width, screen_height_ - frame_width };
 
 	Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
 	//FillRect(back_dc_, &rt, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-	RECT rc{};
-	GetClientRect(g_hWnd, &rc);
-	int cw = rc.right - rc.left;
-	int ch = rc.bottom - rc.top;
 
 	// 3) Present
 	BitBlt(dc_, 0, 0, screen_width_, screen_height_, back_dc_, 0, 0, SRCCOPY);
 	return 0;
 }
 
-bool PlayGround::Release()
+LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam)
+{
+	switch (_msg)
+	{
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+		_KeyMgr.OnKeyDown(_wparam, _lparam);
+		break;
+
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		_KeyMgr.OnKeyUp(_wparam, _lparam);
+		break;
+
+	case WM_CHAR:
+		_KeyMgr.OnChar(static_cast<wchar_t>(_wparam));
+		break;
+
+	case WM_KILLFOCUS:
+		_KeyMgr.ResetAll();
+		break;
+	}
+
+	return 0;
+}
+
+_bool PlayGround::Release()
 {
 	_DestroyBackBuffer();
 
@@ -58,7 +71,12 @@ bool PlayGround::Release()
 	return true;
 }
 
-bool PlayGround::CreateBackBuffer(const int _width, const int _height)
+void PlayGround::BeginFrame()
+{
+	_KeyMgr.BeginFrame();
+}
+
+_bool PlayGround::CreateBackBuffer(const int _width, const int _height)
 {
 	// 기존 리소스 정리
 	_DestroyBackBuffer();
@@ -76,7 +94,7 @@ bool PlayGround::CreateBackBuffer(const int _width, const int _height)
 	return true;
 }
 
-bool PlayGround::_DestroyBackBuffer()
+_bool PlayGround::_DestroyBackBuffer()
 {
 	if (!back_dc_)
 	{
@@ -97,4 +115,6 @@ bool PlayGround::_DestroyBackBuffer()
 
 	DeleteDC(back_dc_);
 	back_dc_ = nullptr;
+
+	return true;
 }

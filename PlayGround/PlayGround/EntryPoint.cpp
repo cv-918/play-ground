@@ -8,6 +8,7 @@
 #include "Objects/PlayGround.h"
 
 HWND g_hWnd;
+PlayGround pg;
 
 #define MAX_LOADSTRING 100
 
@@ -46,7 +47,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_PLAYGROUND));
 
     MSG msg = {};
-    PlayGround pg;
     if (!pg.Initialize())
     {
         return FALSE;
@@ -185,6 +185,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    pg.WndProc(hWnd, message, wParam, lParam);
     switch (message)
     {
     case WM_COMMAND:

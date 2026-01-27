@@ -8,14 +8,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Global">
-      <UniqueIdentifier>{0fbe6dd2-68b9-446c-9237-ff13eec77e02}</UniqueIdentifier>
-    </Filter>
     <Filter Include="PlayGround">
       <UniqueIdentifier>{7ff80499-ad2f-4f90-b10c-cb429c012db4}</UniqueIdentifier>
     </Filter>
     <Filter Include="PlayGround\Objects">
       <UniqueIdentifier>{fd2030ca-cd15-4610-b743-cfeabc5afa74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GlobalHeaders">
+      <UniqueIdentifier>{0fbe6dd2-68b9-446c-9237-ff13eec77e02}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -28,17 +28,17 @@
     <ClInclude Include="framework.h">
       <Filter>Default</Filter>
     </ClInclude>
-    <ClInclude Include="Global\GlobalDef.h">
-      <Filter>Global</Filter>
+    <ClInclude Include="GlobalHeaders\GlobalDef.h">
+      <Filter>GlobalHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="Global\GlobalHeader.h">
-      <Filter>Global</Filter>
+    <ClInclude Include="GlobalHeaders\GlobalHeader.h">
+      <Filter>GlobalHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="Global\GlobalInc.h">
-      <Filter>Global</Filter>
+    <ClInclude Include="GlobalHeaders\GlobalInc.h">
+      <Filter>GlobalHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="Global\GlobalUdt.h">
-      <Filter>Global</Filter>
+    <ClInclude Include="GlobalHeaders\GlobalUdt.h">
+      <Filter>GlobalHeaders</Filter>
     </ClInclude>
     <ClInclude Include="PlayGround\EntryPoint.h">
       <Filter>PlayGround</Filter>
@@ -46,7 +46,12 @@
     <ClInclude Include="PlayGround\Objects\PlayGround.h">
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="PlayGround\Objects\DefaultGameObject.h" />
+    <ClInclude Include="PlayGround\Objects\GameObject.h" />
+    <ClInclude Include="PlayGround\Objects\GlobalObjects\KeyManager.h" />
+    <ClInclude Include="PlayGround\Objects\Units\Unit.h" />
+    <ClInclude Include="PlayGround\Components\Component.h" />
+    <ClInclude Include="PlayGround\Components\Transform.h" />
+    <ClInclude Include="PlayGround\Objects\Units\Player.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PlayGround.rc">
@@ -68,6 +73,11 @@
     <ClCompile Include="PlayGround\Objects\PlayGround.cpp">
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="PlayGround\Objects\DefaultGameObject.cpp" />
+    <ClCompile Include="PlayGround\Objects\GameObject.cpp" />
+    <ClCompile Include="PlayGround\Objects\GlobalObjects\KeyManager.cpp" />
+    <ClCompile Include="PlayGround\Objects\Units\Unit.cpp" />
+    <ClCompile Include="PlayGround\Components\Component.cpp" />
+    <ClCompile Include="PlayGround\Components\Transform.cpp" />
+    <ClCompile Include="PlayGround\Objects\Units\Player.cpp" />
   </ItemGroup>
 </Project>

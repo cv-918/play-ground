@@ -1,31 +1,35 @@
 #pragma once
 
-#include "DefaultGameObject.h"
+#include "GameObject.h"
 
-class PlayGround : public DefaultGameObject
+class PlayGround : public GameObject
 {
 public:
-	explicit PlayGround();
-	virtual ~PlayGround();
+	explicit PlayGround() DEFAULT;
+	virtual ~PlayGround() DEFAULT;
 
-	virtual bool Initialize() override;
-	virtual int Update(double _delta_time) override;
-	virtual int Render(double _delta_time) override;
+	virtual _bool Initialize() override;
+	virtual _int Update(double _delta_time) override;
+	virtual _int Render(double _delta_time) override;
 
-	bool Release();
+	LRESULT WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
+
+	_bool Release();
 
 public:
-	bool CreateBackBuffer(const int _width, const int _height);
+	void BeginFrame();
+
+	_bool CreateBackBuffer(const int _width, const int _height);
 
 private:
-	bool _DestroyBackBuffer();
+	_bool _DestroyBackBuffer();
 
 private:
-	HDC     dc_;
-	HDC     back_dc_;
-	HBITMAP back_bmp_;
-	HBITMAP old_back_bmp_;
+	HDC     dc_				= nullptr;
+	HDC     back_dc_		= nullptr;
+	HBITMAP back_bmp_		= nullptr;
+	HBITMAP old_back_bmp_	= nullptr;
 
-	int screen_width_;
-	int screen_height_;
+	_uint screen_width_		= IV_ZERO;
+	_uint screen_height_	= IV_ZERO;
 };
