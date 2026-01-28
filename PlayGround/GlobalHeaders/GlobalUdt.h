@@ -74,22 +74,28 @@ public:
 	_int ID() const { return id_; }
 	void ID(const _int _id) { id_ = _id; }
 
-	std::string Name() const { return name_; }
-	void Name(const std::string _name) { name_ = _name; }
+	std::wstring Name() const { return name_; }
+	void Name(const std::wstring _name) { name_ = _name; }
 
 protected:
 	_int id_ = IV_INVALID;
-	std::string name_;
+	std::wstring name_;
 };
 
-class GameObjectBase abstract : public IInitializable, IUpdatable, IIdentifiable
+class GameObjectBase abstract
+	: public IInitializable
+	, public IUpdatable
+	, public IIdentifiable
 {
 public:
 	explicit GameObjectBase() DEFAULT;
 	virtual ~GameObjectBase() DEFAULT;
 };
 
-class ComponentBase abstract : public IInitializable, IUpdatable, IIdentifiable
+class ComponentBase 
+	: public IInitializable
+	, public IUpdatable
+	, public IIdentifiable
 {
 public:
 	explicit ComponentBase() DEFAULT;
@@ -108,27 +114,27 @@ private:
 };
 
 // 구조체
-struct Vector3
+struct _Vector3
 {
 public:
 	// 생성자
-	constexpr Vector3() : x(IV_ZERO), y(IV_ZERO), z(IV_ZERO) {}
-	constexpr Vector3(_float _x, _float _y, _float _z) : x(_x), y(_y), z(_z) {}
-	constexpr Vector3(_float _x, _float _y) : x(_x), y(_y), z(IV_ZERO) {}
+	constexpr _Vector3() : x(IV_ZERO), y(IV_ZERO), z(IV_ZERO) {}
+	constexpr _Vector3(_float _x, _float _y, _float _z) : x(_x), y(_y), z(_z) {}
+	constexpr _Vector3(_float _x, _float _y) : x(_x), y(_y), z(IV_ZERO) {}
 
 	// 영벡터
-	static constexpr Vector3 Zero() { return Vector3{}; }
+	static constexpr _Vector3 Zero() { return _Vector3{}; }
 
 	// 길이
 	_float LengthSq() const { return x * x + y * y + z * z; }
 	_float Length() const { return static_cast<_float>(std::sqrt(LengthSq())); }
 
 	// 정규화(길이가 0이면 영벡터 반환)
-	Vector3 Normalized() const
+	_Vector3 Normalized() const
 	{
 		const _float len = Length();
 		if (len <= 0.0f)
-			return Vector3::Zero();
+			return _Vector3::Zero();
 
 		return (*this) / len;
 	}
@@ -146,12 +152,12 @@ public:
 	}
 
 	// 내적
-	static _float Dot(const Vector3& _a, const Vector3& _b) { return _a.x * _b.x + _a.y * _b.y + _a.z * _b.z; }
+	static _float Dot(const _Vector3& _a, const _Vector3& _b) { return _a.x * _b.x + _a.y * _b.y + _a.z * _b.z; }
 
 	// 외적(3D용, 2D에서는 거의 안 씀)
-	static Vector3 Cross(const Vector3& _a, const Vector3& _b)
+	static _Vector3 Cross(const _Vector3& _a, const _Vector3& _b)
 	{
-		return Vector3(
+		return _Vector3(
 			_a.y * _b.z - _a.z * _b.y,
 			_a.z * _b.x - _a.x * _b.z,
 			_a.x * _b.y - _a.y * _b.x
@@ -159,13 +165,13 @@ public:
 	}
 
 	// 거리
-	static _float Distance(const Vector3& _a, const Vector3& _b) { return (_a - _b).Length(); }
+	static _float Distance(const _Vector3& _a, const _Vector3& _b) { return (_a - _b).Length(); }
 
 	// 선형 보간
-	static Vector3 Lerp(const Vector3& _a, const Vector3& _b, _float _t) { return _a + (_b - _a) * _t; }
+	static _Vector3 Lerp(const _Vector3& _a, const _Vector3& _b, _float _t) { return _a + (_b - _a) * _t; }
 
 	// 근사 비교(부동소수점용)
-	bool NearEquals(const Vector3& _rhs, _float _epsilon = 1e-5f) const
+	bool NearEquals(const _Vector3& _rhs, _float _epsilon = 1e-5f) const
 	{
 		return (std::fabs(x - _rhs.x) <= _epsilon) &&
 			(std::fabs(y - _rhs.y) <= _epsilon) &&
@@ -173,21 +179,21 @@ public:
 	}
 
 	// 연산자 오버로드
-	Vector3 operator+(const Vector3& _rhs) const { return Vector3(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
-	Vector3 operator-(const Vector3& _rhs) const { return Vector3(x - _rhs.x, y - _rhs.y, z - _rhs.z); }
-	Vector3 operator*(const _float _s) const { return Vector3(x * _s, y * _s, z * _s); }
-	Vector3 operator/(const _float _s) const
+	_Vector3 operator+(const _Vector3& _rhs) const { return _Vector3(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
+	_Vector3 operator-(const _Vector3& _rhs) const { return _Vector3(x - _rhs.x, y - _rhs.y, z - _rhs.z); }
+	_Vector3 operator*(const _float _s) const { return _Vector3(x * _s, y * _s, z * _s); }
+	_Vector3 operator/(const _float _s) const
 	{
 		// 0 나눗셈 방지(샌드박스라 assert로 바꿔도 됨)
 		if (_s == 0.0f)
-			return Vector3::Zero();
-		return Vector3(x / _s, y / _s, z / _s);
+			return _Vector3::Zero();
+		return _Vector3(x / _s, y / _s, z / _s);
 	}
 
-	Vector3& operator+=(const Vector3& _rhs) { x += _rhs.x; y += _rhs.y; z += _rhs.z; return *this; }
-	Vector3& operator-=(const Vector3& _rhs) { x -= _rhs.x; y -= _rhs.y; z -= _rhs.z; return *this; }
-	Vector3& operator*=(const _float _s) { x *= _s; y *= _s; z *= _s; return *this; }
-	Vector3& operator/=(const _float _s)
+	_Vector3& operator+=(const _Vector3& _rhs) { x += _rhs.x; y += _rhs.y; z += _rhs.z; return *this; }
+	_Vector3& operator-=(const _Vector3& _rhs) { x -= _rhs.x; y -= _rhs.y; z -= _rhs.z; return *this; }
+	_Vector3& operator*=(const _float _s) { x *= _s; y *= _s; z *= _s; return *this; }
+	_Vector3& operator/=(const _float _s)
 	{
 		if (_s == 0.0f)
 		{
@@ -198,8 +204,8 @@ public:
 		return *this;
 	}
 
-	bool operator==(const Vector3& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
-	bool operator!=(const Vector3& _rhs) const { return !(*this == _rhs); }
+	bool operator==(const _Vector3& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
+	bool operator!=(const _Vector3& _rhs) const { return !(*this == _rhs); }
 
 public:
 	_float x = IV_ZERO;
@@ -208,7 +214,7 @@ public:
 };
 
 // 스칼라 * 벡터
-inline Vector3 operator*(const _float _s, const Vector3& _v)
+inline _Vector3 operator*(const _float _s, const _Vector3& _v)
 {
 	return _v * _s;
 }

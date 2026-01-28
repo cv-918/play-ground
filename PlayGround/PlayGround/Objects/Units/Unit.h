@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../GameObject.h"
 #include "../GlobalObjects/KeyManager.h"
 
@@ -13,6 +14,9 @@ class Unit abstract : public GameObject
 	// 유닛이 가질 수 있는 요소들을 UnitComponent 로 계층화
 	// move, combat etc
 
+protected:
+	void _RenderName();
+
 	// move 에 대한 기능 우선은 여기에 구현
 public:
 	_float MoveSpd() const { return move_spd; }
@@ -24,6 +28,12 @@ public:
 private:
 	_float move_spd = 1.f;
 	_float rotate_spd = 1.f;
+
 	// 목적지까지 남은 거리가 프레임당 이동거리보다 작을 경우 목적지로 포지션 고정
+	// 이거는 컨트롤러 타입을 추가해서 구현
+
+	// 유틸리티 RECT 클래스 만들기
+	// 이 클래스는 정점 4개를 놓고 LineTo 로 사각형을 그리도록?
+	// 그와 별개로 기본형 RECT 에 해당하는 형태도 갖고있는 것이 좋을 것 같다
 };
 

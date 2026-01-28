@@ -150,6 +150,7 @@
     <ClInclude Include="PlayGround\EntryPoint.h" />
     <ClInclude Include="PlayGround\Objects\GameObject.h" />
     <ClInclude Include="PlayGround\Objects\GlobalObjects\KeyManager.h" />
+    <ClInclude Include="PlayGround\Objects\GlobalObjects\RenderChain.h" />
     <ClInclude Include="PlayGround\Objects\PlayGround.h" />
     <ClInclude Include="PlayGround\Objects\Units\Player.h" />
     <ClInclude Include="PlayGround\Objects\Units\Unit.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="PlayGround\EntryPoint.cpp" />
     <ClCompile Include="PlayGround\Objects\GameObject.cpp" />
     <ClCompile Include="PlayGround\Objects\GlobalObjects\KeyManager.cpp" />
+    <ClCompile Include="PlayGround\Objects\GlobalObjects\RenderChain.cpp" />
     <ClCompile Include="PlayGround\Objects\PlayGround.cpp" />
     <ClCompile Include="PlayGround\Objects\Units\Player.cpp" />
     <ClCompile Include="PlayGround\Objects\Units\Unit.cpp" />

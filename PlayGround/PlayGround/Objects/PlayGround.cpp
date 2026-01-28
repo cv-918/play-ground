@@ -20,7 +20,7 @@ _bool PlayGround::Initialize()
 	return true;
 }
 
-_int PlayGround::Update(double _delta_time)
+_int PlayGround::Update(_double _delta_time)
 {
 	BeginFrame();
 
@@ -29,7 +29,7 @@ _int PlayGround::Update(double _delta_time)
 	return 0;
 }
 
-_int PlayGround::Render(double _delta_time)
+_int PlayGround::Render(_double _delta_time)
 {
 	// 1) Clear (단색)
 	PatBlt(back_dc_, 0, 0, screen_width_, screen_height_, BLACKNESS);
@@ -97,7 +97,7 @@ void PlayGround::BeginFrame()
 	_KeyMgr.BeginFrame();
 }
 
-_bool PlayGround::CreateBackBuffer(const int _width, const int _height)
+_bool PlayGround::CreateBackBuffer(const _int _width, const _int _height)
 {
 	// 기존 리소스 정리
 	_DestroyBackBuffer();

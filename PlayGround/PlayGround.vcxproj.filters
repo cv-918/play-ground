@@ -52,6 +52,7 @@
     <ClInclude Include="PlayGround\Components\Component.h" />
     <ClInclude Include="PlayGround\Components\Transform.h" />
     <ClInclude Include="PlayGround\Objects\Units\Player.h" />
+    <ClInclude Include="PlayGround\Objects\GlobalObjects\RenderChain.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PlayGround.rc">
@@ -79,5 +80,6 @@
     <ClCompile Include="PlayGround\Components\Component.cpp" />
     <ClCompile Include="PlayGround\Components\Transform.cpp" />
     <ClCompile Include="PlayGround\Objects\Units\Player.cpp" />
+    <ClCompile Include="PlayGround\Objects\GlobalObjects\RenderChain.cpp" />
   </ItemGroup>
 </Project>

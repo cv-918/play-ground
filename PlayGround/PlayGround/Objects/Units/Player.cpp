@@ -2,12 +2,13 @@
 
 #include "../../Components/Transform.h"
 
-bool Player::Initialize()
+_bool Player::Initialize()
 {
     if (!__super::Initialize())
         return false;
 
 	MoveSpd(1000.f);
+	Name(_T("Player"));
     
     return true;
 }
@@ -45,6 +46,9 @@ _int Player::Render(_double _delta_time)
 	};
 
 	Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+
+	const auto name = Name();
+	DrawText(back_dc_, name.c_str(), name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 	
 
     return 0;
@@ -61,10 +65,10 @@ _int Player::_ControllRoutine(_double _delta_time)
 
 	switch (controller_type_)
 	{
-	case ControllerType::Direction:
+	case KeyBoardControlType::Direction:
 	{
 		auto mov_spd = MoveSpd();
-		auto mov_dir = Vector3::Zero();
+		auto mov_dir = _Vector3::Zero();
 		if (_KeyMgr.Pressed('W'))
 		{
 			transform_->Translate(transform_->Forward2D() * mov_spd * delta_time);
@@ -91,12 +95,12 @@ _int Player::_ControllRoutine(_double _delta_time)
 			transform_->Rotate2D(rot_spd * delta_time);
 		}
 
-		return rotate || mov_dir == Vector3::Zero();
+		return rotate || mov_dir == _Vector3::Zero();
 	}
 
-	case ControllerType::Axis:
+	case KeyBoardControlType::Axis:
 	{
-		Vector3 move;
+		_Vector3 move;
 		if		(_KeyMgr.Pressed('W')) move.y -= 1.f;
 		else if (_KeyMgr.Pressed('S')) move.y += 1.f;
 		if		(_KeyMgr.Pressed('A')) move.x -= 1.f;
