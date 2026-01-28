@@ -112,7 +112,7 @@ struct Vector3
 {
 public:
 	// 생성자
-	constexpr Vector3() = default;
+	constexpr Vector3() : x(IV_ZERO), y(IV_ZERO), z(IV_ZERO) {}
 	constexpr Vector3(_float _x, _float _y, _float _z) : x(_x), y(_y), z(_z) {}
 	constexpr Vector3(_float _x, _float _y) : x(_x), y(_y), z(IV_ZERO) {}
 
@@ -120,6 +120,7 @@ public:
 	static constexpr Vector3 Zero() { return Vector3{}; }
 
 	// 길이
+	_float LengthSq() const { return x * x + y * y + z * z; }
 	_float Length() const { return static_cast<_float>(std::sqrt(LengthSq())); }
 
 	// 정규화(길이가 0이면 영벡터 반환)
@@ -197,8 +198,8 @@ public:
 		return *this;
 	}
 
-private:
-	_float LengthSq() const { return x * x + y * y + z * z; }
+	bool operator==(const Vector3& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
+	bool operator!=(const Vector3& _rhs) const { return !(*this == _rhs); }
 
 public:
 	_float x = IV_ZERO;

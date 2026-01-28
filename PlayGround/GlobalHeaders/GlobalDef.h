@@ -5,6 +5,7 @@
 
 #define	WINCX				800
 #define	WINCY				600
+#define PI					3.1415926535f
 
 // √ ±‚»≠ (iv : initialize value)
 #define IV_ZERO				0

@@ -17,7 +17,12 @@ public:
 	void RegisterComponent(Component* _component);
 	void DeregisterComponent(const ComponentType _type);
 
+	Component* GetComponent(const ComponentType _type);
+	Transform* GetTransform() const { return transform_; }
+
 private:
 	std::vector<Component*> components_;
+
+protected:
 	Transform* transform_ = nullptr; // Transform 캐시 포인터(소유권 없음)
 };

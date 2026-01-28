@@ -1,10 +1,3 @@
-﻿  Component.cpp
-  Transform.cpp
-  EntryPoint.cpp
-  GameObject.cpp
-  KeyManager.cpp
-  PlayGround.cpp
-C:\Users\user\source\repos\PlayGround\PlayGround\Objects\PlayGround.cpp(25,54): warning C4838: '_uint'에서 'LONG'(으)로의 변환에는 축소 변환이 필요합니다.
-C:\Users\user\source\repos\PlayGround\PlayGround\Objects\PlayGround.cpp(25,84): warning C4838: '_uint'에서 'LONG'(으)로의 변환에는 축소 변환이 필요합니다.
-  코드를 생성하고 있습니다...
-  PlayGround.vcxproj -> C:\Users\user\source\repos\PlayGround\Debug\PlayGround.exe
+﻿  EntryPoint.cpp
+  LINK : C:\Users\user\Documents\GitHub\play-ground\PlayGround\Debug\PlayGround.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
+  PlayGround.vcxproj -> C:\Users\user\Documents\GitHub\play-ground\PlayGround\Debug\PlayGround.exe

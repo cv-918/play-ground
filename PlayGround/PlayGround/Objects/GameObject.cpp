@@ -7,7 +7,10 @@ _bool GameObject::Initialize()
 	// Transform이 없으면 생성해서 등록
 	if (transform_ == nullptr)
 	{
-		RegisterComponent(new Transform());
+		auto new_transform = new Transform();
+
+		RegisterComponent(new_transform);
+		transform_ = new_transform;
 	}
 
 	// 필요하면 다른 기본 컴포넌트도 여기서 등록 가능
@@ -75,4 +78,15 @@ void GameObject::DeregisterComponent(const ComponentType _type)
 
 	// 해당 타입 컴포넌트 제거
 	components_.erase(iter, components_.end());
+}
+
+Component* GameObject::GetComponent(const ComponentType _type)
+{
+	for (const auto& component : components_)
+	{
+		if (component->Type() == _type)
+			return component;
+	}
+
+	return nullptr;
 }

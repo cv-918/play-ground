@@ -2,10 +2,20 @@
 
 #include "GlobalObjects/KeyManager.h"
 
+#include "Units/Player.h"
+
+PlayGround::~PlayGround()
+{
+	Release();
+}
+
 _bool PlayGround::Initialize()
 {
 	dc_ = GetDC(g_hWnd);
 	CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
+
+	player_ = new Player();
+	player_->Initialize();
 
 	return true;
 }
@@ -13,6 +23,9 @@ _bool PlayGround::Initialize()
 _int PlayGround::Update(double _delta_time)
 {
 	BeginFrame();
+
+	player_->Update(_delta_time);
+
 	return 0;
 }
 
@@ -26,6 +39,8 @@ _int PlayGround::Render(double _delta_time)
 
 	Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
 	//FillRect(back_dc_, &rt, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+	player_->Render(_delta_time);
 
 	// 3) Present
 	BitBlt(dc_, 0, 0, screen_width_, screen_height_, back_dc_, 0, 0, SRCCOPY);
@@ -66,6 +81,12 @@ _bool PlayGround::Release()
 	{
 		ReleaseDC(g_hWnd, dc_);
 		dc_ = nullptr;
+	}
+
+	if (player_)
+	{
+		delete player_;
+		player_ = nullptr;
 	}
 
 	return true;

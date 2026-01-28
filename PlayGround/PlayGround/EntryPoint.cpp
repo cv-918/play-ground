@@ -7,8 +7,14 @@
 #include "EntryPoint.h"
 #include "Objects/PlayGround.h"
 
-HWND g_hWnd;
 PlayGround pg;
+
+// 이것들도 D3DMgr 처럼 매니저로 빼줘야 한다
+HWND    g_hWnd;
+HDC     dc_ = nullptr;
+HDC     back_dc_ = nullptr;
+HBITMAP back_bmp_ = nullptr;
+HBITMAP old_back_bmp_ = nullptr;
 
 #define MAX_LOADSTRING 100
 
@@ -52,33 +58,37 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    auto prev = GetTickCount64();
+	auto prev = GetTickCount64();
 
-    // 기본 메시지 루프입니다:
-    while (msg.message != WM_QUIT)
-    {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
-            if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-        else
-        {
-            const auto curr = GetTickCount64();
+	while (msg.message != WM_QUIT)
+	{
+		// 1) 큐에 쌓인 메시지를 전부 처리
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+				break;
 
-            double dt = (curr - prev) / 1000.f; // seconds
-            prev = curr;
+			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
 
-            // 폭주 방지: alt-tab, breakpoint 등으로 dt가 커지면 게임이 순간이동함
-            if (dt > 0.1) dt = 0.1; // clamp 100ms
+		if (msg.message == WM_QUIT)
+			break;
 
-            pg.Update(dt);
-            pg.Render(dt);
-        }
-    }
+		// 2) 매 루프마다 프레임 갱신(메시지 유무와 무관)
+		const auto curr = GetTickCount64();
+		double dt = (curr - prev) / 1000.0;  // seconds
+		prev = curr;
+
+		// 폭주 방지
+		if (dt > 0.1) dt = 0.1;
+
+		pg.Update(dt);
+		pg.Render(dt);
+	}
 
     return (int) msg.wParam;
 }
