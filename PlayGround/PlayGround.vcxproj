@@ -72,6 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$_Bin</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -88,7 +89,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Core;$(ProjectDir)Components;$(ProjectDir)Gameplay;$(ProjectDir)System;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -103,6 +106,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -140,20 +145,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Base\Bases.h" />
+    <ClInclude Include="Core\Base\Defines.h" />
+    <ClInclude Include="Core\Interface\Interfaces.h" />
+    <ClInclude Include="Core\Math\Geometry2D.h" />
+    <ClInclude Include="Core\Math\Vector3.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="GlobalHeaders\GlobalDef.h" />
-    <ClInclude Include="GlobalHeaders\GlobalHeader.h" />
-    <ClInclude Include="GlobalHeaders\GlobalInc.h" />
-    <ClInclude Include="GlobalHeaders\GlobalUdt.h" />
-    <ClInclude Include="PlayGround\Components\Component.h" />
-    <ClInclude Include="PlayGround\Components\Transform.h" />
-    <ClInclude Include="PlayGround\EntryPoint.h" />
-    <ClInclude Include="PlayGround\Objects\GameObject.h" />
-    <ClInclude Include="PlayGround\Objects\GlobalObjects\KeyManager.h" />
-    <ClInclude Include="PlayGround\Objects\GlobalObjects\RenderChain.h" />
-    <ClInclude Include="PlayGround\Objects\PlayGround.h" />
-    <ClInclude Include="PlayGround\Objects\Units\Player.h" />
-    <ClInclude Include="PlayGround\Objects\Units\Unit.h" />
+    <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\Transform.h" />
+    <ClInclude Include="App\EntryPoint.h" />
+    <ClInclude Include="Gameplay\Actors\GameObject.h" />
+    <ClInclude Include="Systems\Input\KeyManager.h" />
+    <ClInclude Include="Systems\Render\RenderChain.h" />
+    <ClInclude Include="App\PlayGround.h" />
+    <ClInclude Include="Gameplay\Actors\Player.h" />
+    <ClInclude Include="Gameplay\Actors\Unit.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -165,15 +171,19 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PlayGround\Components\Component.cpp" />
-    <ClCompile Include="PlayGround\Components\Transform.cpp" />
-    <ClCompile Include="PlayGround\EntryPoint.cpp" />
-    <ClCompile Include="PlayGround\Objects\GameObject.cpp" />
-    <ClCompile Include="PlayGround\Objects\GlobalObjects\KeyManager.cpp" />
-    <ClCompile Include="PlayGround\Objects\GlobalObjects\RenderChain.cpp" />
-    <ClCompile Include="PlayGround\Objects\PlayGround.cpp" />
-    <ClCompile Include="PlayGround\Objects\Units\Player.cpp" />
-    <ClCompile Include="PlayGround\Objects\Units\Unit.cpp" />
+    <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\Transform.cpp" />
+    <ClCompile Include="App\EntryPoint.cpp" />
+    <ClCompile Include="Gameplay\Actors\GameObject.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Systems\Input\KeyManager.cpp" />
+    <ClCompile Include="Systems\Render\RenderChain.cpp" />
+    <ClCompile Include="App\PlayGround.cpp" />
+    <ClCompile Include="Gameplay\Actors\Player.cpp" />
+    <ClCompile Include="Gameplay\Actors\Unit.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

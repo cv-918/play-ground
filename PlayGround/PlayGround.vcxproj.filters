@@ -28,31 +28,24 @@
     <ClInclude Include="framework.h">
       <Filter>Default</Filter>
     </ClInclude>
-    <ClInclude Include="GlobalHeaders\GlobalDef.h">
-      <Filter>GlobalHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalHeaders\GlobalHeader.h">
-      <Filter>GlobalHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalHeaders\GlobalInc.h">
-      <Filter>GlobalHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalHeaders\GlobalUdt.h">
-      <Filter>GlobalHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayGround\EntryPoint.h">
+    <ClInclude Include="App\EntryPoint.h">
       <Filter>PlayGround</Filter>
     </ClInclude>
-    <ClInclude Include="PlayGround\Objects\PlayGround.h">
+    <ClInclude Include="App\PlayGround.h">
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="PlayGround\Objects\GameObject.h" />
-    <ClInclude Include="PlayGround\Objects\GlobalObjects\KeyManager.h" />
-    <ClInclude Include="PlayGround\Objects\Units\Unit.h" />
-    <ClInclude Include="PlayGround\Components\Component.h" />
-    <ClInclude Include="PlayGround\Components\Transform.h" />
-    <ClInclude Include="PlayGround\Objects\Units\Player.h" />
-    <ClInclude Include="PlayGround\Objects\GlobalObjects\RenderChain.h" />
+    <ClInclude Include="Gameplay\Actors\GameObject.h" />
+    <ClInclude Include="Systems\Input\KeyManager.h" />
+    <ClInclude Include="Gameplay\Actors\Unit.h" />
+    <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\Transform.h" />
+    <ClInclude Include="Gameplay\Actors\Player.h" />
+    <ClInclude Include="Systems\Render\RenderChain.h" />
+    <ClInclude Include="Core\Base\Bases.h" />
+    <ClInclude Include="Core\Interface\Interfaces.h" />
+    <ClInclude Include="Core\Base\Defines.h" />
+    <ClInclude Include="Core\Math\Geometry2D.h" />
+    <ClInclude Include="Core\Math\Vector3.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PlayGround.rc">
@@ -68,18 +61,19 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PlayGround\EntryPoint.cpp">
+    <ClCompile Include="App\EntryPoint.cpp">
       <Filter>PlayGround</Filter>
     </ClCompile>
-    <ClCompile Include="PlayGround\Objects\PlayGround.cpp">
+    <ClCompile Include="App\PlayGround.cpp">
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="PlayGround\Objects\GameObject.cpp" />
-    <ClCompile Include="PlayGround\Objects\GlobalObjects\KeyManager.cpp" />
-    <ClCompile Include="PlayGround\Objects\Units\Unit.cpp" />
-    <ClCompile Include="PlayGround\Components\Component.cpp" />
-    <ClCompile Include="PlayGround\Components\Transform.cpp" />
-    <ClCompile Include="PlayGround\Objects\Units\Player.cpp" />
-    <ClCompile Include="PlayGround\Objects\GlobalObjects\RenderChain.cpp" />
+    <ClCompile Include="Gameplay\Actors\GameObject.cpp" />
+    <ClCompile Include="Systems\Input\KeyManager.cpp" />
+    <ClCompile Include="Gameplay\Actors\Unit.cpp" />
+    <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\Transform.cpp" />
+    <ClCompile Include="Gameplay\Actors\Player.cpp" />
+    <ClCompile Include="Systems\Render\RenderChain.cpp" />
+    <ClCompile Include="pch.cpp" />
   </ItemGroup>
 </Project>

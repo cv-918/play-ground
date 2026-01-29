@@ -15,3 +15,12 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+
+// 필요한 추가 헤더
+#include <array>
+#include <list>
+#include <vector>
+#include <map>
+#include <algorithm>
+
+#include <cmath>
