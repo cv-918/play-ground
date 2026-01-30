@@ -1,6 +1,36 @@
 #include "framework.h"
 #include "Transform.h"
 
+void Transform::Translate(const _Vector3& _delta)
+{
+	position_ += _delta;
+}
+
+void Transform::Rotate2D(const _float _delta)
+{
+	rotation_.z += _delta;
+}
+
+void Transform::LookAt(const _Vector3& _target)
+{
+	// 방향 벡터
+	const _float dx = _target.x - position_.x;
+	const _float dy = _target.y - position_.y;
+
+	// 같은 위치를 바라보려고 하면 회전 불가
+	if (dx == 0.0f && dy == 0.0f)
+		return;
+
+	// atan2 결과는 라디안 & WinAPI 좌표계 보정: y 반전
+	const _float rad = (_float)std::atan2(-dy, dx);
+
+	// degree로 변환 & +Y forward 기준으로 맞추기 위해 -90도
+	const _float deg = rad * (180.0f / PI) - 90.f;
+
+	// z축 회전에 저장
+	rotation_.z = deg;
+}
+
 _Vector3 Transform::Forward2D() const
 {
 	// rotation_.z를 도 단위로 가정

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/Base/Bases.h"
-#include "Core/Base/Defines.h"
 #include "Core/Math/Vector3.h"
 
 class Component : public ComponentBase
@@ -12,4 +11,3 @@ public:
 	virtual int Update(double _delta_time) override;
 	virtual int Render(double _delta_time) override;
 };
-

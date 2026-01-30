@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/Base/Bases.h"
-#include "Core/Base/Defines.h"
 #include "Core/Interface/Interfaces.h"
 #include "Core/Math/Geometry2D.h"
 

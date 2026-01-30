@@ -35,7 +35,7 @@
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
     <ClInclude Include="Gameplay\Actors\GameObject.h" />
-    <ClInclude Include="Systems\Input\KeyManager.h" />
+    <ClInclude Include="Systems\Input\InputManager.h" />
     <ClInclude Include="Gameplay\Actors\Unit.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\Transform.h" />
@@ -68,7 +68,7 @@
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
     <ClCompile Include="Gameplay\Actors\GameObject.cpp" />
-    <ClCompile Include="Systems\Input\KeyManager.cpp" />
+    <ClCompile Include="Systems\Input\InputManager.cpp" />
     <ClCompile Include="Gameplay\Actors\Unit.cpp" />
     <ClCompile Include="Components\Component.cpp" />
     <ClCompile Include="Components\Transform.cpp" />

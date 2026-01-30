@@ -5,8 +5,8 @@
 
 #include "EntryPoint.h"
 #include "App/PlayGround.h"
-#include "Core/Base/Defines.h"
 #include "Systems/Render/RenderChain.h"
+#include "Systems/Input/InputManager.h"
 
 PlayGround pg;
 
@@ -56,6 +56,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	while (msg.message != WM_QUIT)
 	{
+        _InputMgr.Get().BeginFrame();
+
 		// 1) 큐에 쌓인 메시지를 전부 처리
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{

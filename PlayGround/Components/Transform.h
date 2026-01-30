@@ -17,8 +17,9 @@ public:
 	virtual ~Transform() DEFAULT;
 
 public:
-	void Translate(const _Vector3& _delta) { position_ += _delta; }
-	void Rotate2D(const _float _delta) { rotation_.z += _delta; }
+	void Translate(const _Vector3& _delta);
+	void Rotate2D(const _float _delta);
+	void LookAt(const _Vector3& _target);
 
 	_Vector3 Forward2D() const;
 	_Vector3 Back2D() const;

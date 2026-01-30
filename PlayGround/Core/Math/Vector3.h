@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Math/Geometry2D.h"
+
 struct _Vector3
 {
 public:
@@ -7,6 +9,8 @@ public:
 	constexpr _Vector3() : x(IV_ZERO), y(IV_ZERO), z(IV_ZERO) {}
 	constexpr _Vector3(_float _x, _float _y, _float _z) : x(_x), y(_y), z(_z) {}
 	constexpr _Vector3(_float _x, _float _y) : x(_x), y(_y), z(IV_ZERO) {}
+	constexpr _Vector3(_int _x, _int _y) : x(s_float(_x)), y(s_float(_y)), z(IV_ZERO) {}
+	constexpr _Vector3(const _Point& _pt) : x(s_float(_pt.x)), y(s_float(_pt.y)), z(IV_ZERO) {}
 
 	// 영벡터
 	static constexpr _Vector3 Zero() { return _Vector3{}; }
@@ -14,6 +18,7 @@ public:
 	// 길이
 	_float LengthSq() const { return x * x + y * y + z * z; }
 	_float Length() const { return static_cast<_float>(std::sqrt(LengthSq())); }
+	_float Magnitude() const { return Length(); } // Length랑 똑같은 함수인데 이름만 다르게 호출(편의용)
 
 	// 정규화(길이가 0이면 영벡터 반환)
 	_Vector3 Normalized() const

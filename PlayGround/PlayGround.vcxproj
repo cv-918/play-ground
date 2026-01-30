@@ -155,7 +155,7 @@
     <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="App\EntryPoint.h" />
     <ClInclude Include="Gameplay\Actors\GameObject.h" />
-    <ClInclude Include="Systems\Input\KeyManager.h" />
+    <ClInclude Include="Systems\Input\InputManager.h" />
     <ClInclude Include="Systems\Render\RenderChain.h" />
     <ClInclude Include="App\PlayGround.h" />
     <ClInclude Include="Gameplay\Actors\Player.h" />
@@ -179,7 +179,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Systems\Input\KeyManager.cpp" />
+    <ClCompile Include="Systems\Input\InputManager.cpp" />
     <ClCompile Include="Systems\Render\RenderChain.cpp" />
     <ClCompile Include="App\PlayGround.cpp" />
     <ClCompile Include="Gameplay\Actors\Player.cpp" />

@@ -16,9 +16,6 @@ public:
 
 	LRESULT WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
 
-public:
-	void BeginFrame();
-
 private:
 	Unit* player_			= nullptr;
 };
