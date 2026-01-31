@@ -2,8 +2,6 @@
 
 #include "Gameplay/Actors/GameObject.h"
 
-class Unit;
-
 class PlayGround : public GameObject
 {
 public:
@@ -17,5 +15,6 @@ public:
 	LRESULT WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
 
 private:
-	Unit* player_			= nullptr;
+	GameObject* player_ = nullptr;
+	GameObject* background_ = nullptr;
 };

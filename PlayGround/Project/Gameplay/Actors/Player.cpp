@@ -5,10 +5,12 @@
 #include "Systems/Input/InputManager.h"
 #include "Systems/Render/RenderChain.h"
 
+#include "Core/Math/MathFunctions.h"
+
 _bool Player::Initialize()
 {
-    if (!__super::Initialize())
-        return false;
+	if (!__super::Initialize())
+		return false;
 
 	MoveSpd(400.f);
 	MoveSpdMax(1200.f);
@@ -17,21 +19,21 @@ _bool Player::Initialize()
 	transform_->Rotation(0, 1);
 
 	input_manager_ = &_InputMgr.Get();
-    
-    return true;
+
+	return true;
 }
 
 _int Player::Update(_double _delta_time)
 {
-    _int ret = 0;
+	_int ret = 0;
 
-    ret = _ControllRoutine(_delta_time);
-    if (0 != ret)
-    {
-        return ret;
-    }
+	ret = _ControllRoutine(_delta_time);
+	if (0 != ret)
+	{
+		return ret;
+	}
 
-    return 0;
+	return 0;
 }
 
 _int Player::Render(_double _delta_time)
@@ -44,7 +46,7 @@ _int Player::Render(_double _delta_time)
 	const auto pos = transform_->Position();
 	const _int rt_size = 50;
 	const auto half_size = rt_size >> 1;
-	
+
 	RECT rt = {
 		pos.x - half_size,
 		pos.y - half_size,
@@ -74,7 +76,7 @@ _int Player::Render(_double _delta_time)
 	// s, 디버그 정보 찍기
 	_ShowDebugInfo();
 
-    return 0;
+	return 0;
 }
 
 _int Player::_ControllRoutine(_double _delta_time)
@@ -96,7 +98,16 @@ _int Player::_ControllRoutine(_double _delta_time)
 		auto mov_dir = _Vector3::Zero();
 		if (input_manager_->Pressed('W'))
 		{
-			transform_->Translate(transform_->Forward2D() * mov_spd * delta_time);
+			// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
+			auto next_pos = transform_->Forward2D() * mov_spd * delta_time;
+			const auto next_pos_copy = next_pos;
+
+			next_pos.x = MathFunctions::Clamp(s_int(next_pos.x), background_rect_.Left(), background_rect_.Right());
+			next_pos.y = MathFunctions::Clamp(s_int(next_pos.y), background_rect_.Top(), background_rect_.Bottom());
+
+			// 클램프 됐을 경우, 벽에 부딪힌 것으로 간주, 속도 0으로
+			if (next_pos_copy != next_pos) move_velocity_ = _Vector3::Zero();
+			transform_->Translate(next_pos);
 		}
 		else if (input_manager_->Pressed('S'))
 		{
@@ -114,7 +125,7 @@ _int Player::_ControllRoutine(_double _delta_time)
 			rotate = true;
 			rot_spd *= -1.f;
 		}
-	
+
 		if (rotate)
 		{
 			transform_->Rotate2D(rot_spd * delta_time);
@@ -126,10 +137,14 @@ _int Player::_ControllRoutine(_double _delta_time)
 	case KeyBoardControlType::Axis:
 	{
 		_Vector3 move;
-		if (input_manager_->Pressed('W')) move.y -= 1.f;
-		else if (input_manager_->Pressed('S')) move.y += 1.f;
-		if (input_manager_->Pressed('A')) move.x -= 1.f;
-		else if (input_manager_->Pressed('D')) move.x += 1.f;
+		if (input_manager_->Pressed('W'))
+			move.y -= 1.f;
+		else if (input_manager_->Pressed('S'))
+			move.y += 1.f;
+		if (input_manager_->Pressed('A'))
+			move.x -= 1.f;
+		else if (input_manager_->Pressed('D'))
+			move.x += 1.f;
 
 		bool use_move_acceleration = true;
 		if (use_move_acceleration)
@@ -179,7 +194,34 @@ _int Player::_ControllRoutine(_double _delta_time)
 			}
 			// e, 가속도 적용 구간
 
-			transform_->Translate(move_velocity_ * delta_time);
+			bool apply_clamp = true;
+			if (apply_clamp)
+			{
+				// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
+				auto next_pos = transform_->Position() + move_velocity_ * delta_time;
+				const auto next_pos_copy = next_pos;
+
+				next_pos.x = MathFunctions::Clamp(next_pos.x, background_rect_.Left_f(), background_rect_.Right_f());
+				next_pos.y = MathFunctions::Clamp(next_pos.y, background_rect_.Top_f(), background_rect_.Bottom_f());
+
+				// 클램프 됐을 경우
+				if (next_pos_copy != next_pos)
+				{
+					// 벽에 부딪힌 것으로 간주, 속도 0으로
+					// 포지션은 벽으로 고정
+					move_velocity_ = _Vector3::Zero();
+					transform_->Position(next_pos);
+				}
+				// 아닐 경우 통상 이동로직
+				else
+				{
+					transform_->Translate(move_velocity_* delta_time);
+				}
+			}
+			else
+			{
+				transform_->Translate(move_velocity_* delta_time);
+			}
 		}
 		else
 		{
@@ -233,33 +275,45 @@ void Player::_ShowDebugInfo()
 	};
 
 	_tchar buffer[MAX_PATH] = {};
-	_int draw_pos_y = 5;
-	const _int line_height = 14;
 
-	swprintf_s(buffer, L"디버깅 정보 타입 : %ls", labels[debug_type_].c_str());
-	TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICK;
+	_int draw_pos_y = INGAVE_FRAME_THICK_H;
+	const _int line_height = IV_ZERO;
+	const _int line_gap = 20;
 
+	// 1) 배경 먼저 그리기
+	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICK_H, INGAVE_FRAME_THICK_H, WINCX - INGAVE_FRAME_THICK_H, WINCY - INGAVE_FRAME_THICK_H };
+	Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+
+	// 2) 텍스트 그리기
+	swprintf_s(buffer, L"[ 디버깅 정보 타입 : %ls ]", labels[debug_type_].c_str());
+	TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+
+	// 3) 상세 정보 그리기
 	switch (debug_type_)
 	{
 	case MouseInfo:
 		swprintf_s(buffer, L"MousePoint : %d, %d", input_manager_->MousePoint().x, input_manager_->MousePoint().y);
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 
 		swprintf_s(buffer, L"MouseDelta : %d, %d", input_manager_->MouseDelta().x, input_manager_->MouseDelta().y);
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 
 		swprintf_s(buffer, L"WheelDelta : %d", input_manager_->WheelDelta());
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 		break;
 	case ControlInfo:
+		swprintf_s(buffer, L"Position : %f, %f, %f", transform_->Position().x, transform_->Position().y, transform_->Position().z);
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+
 		swprintf_s(buffer, L"가속도 : %f", acceleration_);
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 
 		swprintf_s(buffer, L"마찰 계수 : %f", friction_);
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 
 		swprintf_s(buffer, L"Move Velocity : %f", move_velocity_.Magnitude());
-		TextOut(back_dc_, 5, draw_pos_y += 14, buffer, wcslen(buffer));
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
 		break;
 	}
 }

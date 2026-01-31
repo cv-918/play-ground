@@ -19,36 +19,37 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="Project\Framework\targetver.h">
       <Filter>Default</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
+    <ClInclude Include="Project\Framework\framework.h">
       <Filter>Default</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>Default</Filter>
-    </ClInclude>
-    <ClInclude Include="App\EntryPoint.h">
+    <ClInclude Include="Project\App\EntryPoint.h">
       <Filter>PlayGround</Filter>
     </ClInclude>
-    <ClInclude Include="App\PlayGround.h">
+    <ClInclude Include="Project\App\PlayGround.h">
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Gameplay\Actors\GameObject.h" />
-    <ClInclude Include="Systems\Input\InputManager.h" />
-    <ClInclude Include="Gameplay\Actors\Unit.h" />
-    <ClInclude Include="Components\Component.h" />
-    <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="Gameplay\Actors\Player.h" />
-    <ClInclude Include="Systems\Render\RenderChain.h" />
-    <ClInclude Include="Core\Base\Bases.h" />
-    <ClInclude Include="Core\Interface\Interfaces.h" />
-    <ClInclude Include="Core\Base\Defines.h" />
-    <ClInclude Include="Core\Math\Geometry2D.h" />
-    <ClInclude Include="Core\Math\Vector3.h" />
+    <ClInclude Include="Project\Gameplay\Actors\GameObject.h" />
+    <ClInclude Include="Project\Systems\Input\InputManager.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Unit.h" />
+    <ClInclude Include="Project\Gameplay\Components\Component.h" />
+    <ClInclude Include="Project\Gameplay\Components\Transform.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Player.h" />
+    <ClInclude Include="Project\Systems\Render\RenderChain.h" />
+    <ClInclude Include="Project\Core\Base\Bases.h" />
+    <ClInclude Include="Project\Core\Interface\Interfaces.h" />
+    <ClInclude Include="Project\Core\Base\Defines.h" />
+    <ClInclude Include="Project\Core\Math\Geometry2D.h" />
+    <ClInclude Include="Project\Core\Math\Vector3.h" />
+    <ClInclude Include="Project\Framework\Resource.h" />
+    <ClInclude Include="Project\Gameplay\World\Background.h" />
+    <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
+    <ClInclude Include="Project\Core\Math\MathFunctions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="PlayGround.rc">
+    <ResourceCompile Include="Project\Framework\PlayGround.rc">
       <Filter>Default\리소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -61,19 +62,21 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="App\EntryPoint.cpp">
+    <ClCompile Include="Project\App\EntryPoint.cpp">
       <Filter>PlayGround</Filter>
     </ClCompile>
-    <ClCompile Include="App\PlayGround.cpp">
+    <ClCompile Include="Project\App\PlayGround.cpp">
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Gameplay\Actors\GameObject.cpp" />
-    <ClCompile Include="Systems\Input\InputManager.cpp" />
-    <ClCompile Include="Gameplay\Actors\Unit.cpp" />
-    <ClCompile Include="Components\Component.cpp" />
-    <ClCompile Include="Components\Transform.cpp" />
-    <ClCompile Include="Gameplay\Actors\Player.cpp" />
-    <ClCompile Include="Systems\Render\RenderChain.cpp" />
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\GameObject.cpp" />
+    <ClCompile Include="Project\Systems\Input\InputManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Unit.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Component.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Player.cpp" />
+    <ClCompile Include="Project\Systems\Render\RenderChain.cpp" />
+    <ClCompile Include="Project\Framework\pch.cpp" />
+    <ClCompile Include="Project\Gameplay\World\Background.cpp" />
+    <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
   </ItemGroup>
 </Project>
