@@ -5,22 +5,24 @@
 #include "Systems/Render/RenderChain.h"
 
 #include "Actors/Player.h"
+#include "GamePlay/World/Background.h"
 
 PlayGround::~PlayGround()
 {
-	if (player_)
-	{
-		delete player_;
-		player_ = nullptr;
-	}
+	SAFE_DELETE(player_);
+	SAFE_DELETE(background_);
 }
 
 _bool PlayGround::Initialize()
 {
 	_RenderChain.Initialize();
 
+	background_ = new Background();
+	background_->Initialize();
+
 	player_ = new Player();
 	player_->Initialize();
+	s_cast(Player*, player_)->SetBackgroundRect(s_cast(Background*, background_)->BackgroundRect());
 
 	return true;
 }
@@ -28,6 +30,7 @@ _bool PlayGround::Initialize()
 _int PlayGround::Update(_double _delta_time)
 {
 	player_->Update(_delta_time);
+	background_->Update(_delta_time);
 
 	return 0;
 }
@@ -37,14 +40,8 @@ _int PlayGround::Render(_double _delta_time)
 	// 1) Clear (단색)
 	_RenderChain.Clear();
 
-	// s. 배경 클래스 따로 빼야함
-	_int frame_width = 10;
-	RECT rt = { frame_width, frame_width, WINCX - frame_width, WINCY - frame_width };
-
-	Rectangle(_RenderChain.BackDc(), rt.left, rt.top, rt.right, rt.bottom);
-	//FillRect(back_dc_, &rt, (HBRUSH)GetStockObject(WHITE_BRUSH));
-	// s. 배경 클래스 따로 빼야함
-
+	// 2) Render
+	background_->Render(_delta_time);
 	player_->Render(_delta_time);
 
 	// 3) Present

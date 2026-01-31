@@ -26,6 +26,9 @@ private:
 	void _ShowDebugInfo();
 
 public:
+	void SetBackgroundRect(const _Rect& _rect) { background_rect_ = _rect; }
+
+public:
 	void SetControllerType(const KeyBoardControlType _type) { controller_type_ = _type; }
 	
 private:
@@ -48,5 +51,8 @@ private:
 	};
 
 	DrawDebugInfoType debug_type_ = DrawDebugInfoType::None;
+
+	// 네비게이션용 배경 영역
+	_Rect background_rect_ = {};
 };
 
