@@ -1,15 +1,12 @@
 #pragma once
 
-#include "Actors/Unit.h"
+#include "Unit.h"
 
 enum class KeyBoardControlType
 {
 	Direction,
 	Axis,
 };
-
-// 아니면 둘 다 합쳐서 그냥 컨트롤 타입으로 묶고 그 안에서 제한적으로 제공
-// 이게 사실 정석인 것 같긴 하다
 
 class InputManager;
 
@@ -18,7 +15,12 @@ class Player : public Unit
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
-	virtual _int Render(_double _delta_time) override;
+	virtual void Render(_double _delta_time) override;
+	virtual void DebugRender(_double _delta_time) override;
+
+	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
+	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;
+	virtual void OnCollisionExit(Collider* _this, Collider* _other) override;
 
 private:
 	_int _ControllRoutine(_double _delta_time);
@@ -51,8 +53,12 @@ private:
 	};
 
 	DrawDebugInfoType debug_type_ = DrawDebugInfoType::None;
+	_int debug_control_data_idx_ = IV_ZERO;
+	std::vector<std::wstring> debug_info_lines_;
 
 	// 네비게이션용 배경 영역
 	_Rect background_rect_ = {};
+
+	_float player_size_ = 30.f;
 };
 

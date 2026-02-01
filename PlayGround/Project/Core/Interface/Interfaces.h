@@ -18,7 +18,8 @@ public:
 	virtual ~IUpdatable() DEFAULT;
 
 	virtual _int Update(double _delta_time) PURE;
-	virtual _int Render(double _delta_time) PURE;
+	virtual _int LateUpdate(double _delta_time) PURE;
+	virtual void Render(double _delta_time) PURE;
 
 public:
 	_bool Active() const { return is_active; }

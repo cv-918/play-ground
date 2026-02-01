@@ -31,6 +31,17 @@ enum class ComponentType
 {
 	Undefined,
 	Transform,
+	Collider,
+};
+
+enum class CollisionLayer
+{
+	PlayerBody,
+	PlayerAttack,
+	ExpDust,
+	Bullet,
+	Wall,
+	End
 };
 
 class ComponentBase
@@ -38,7 +49,9 @@ class ComponentBase
 	, public IUpdatable
 	, public IIdentifiable
 {
-public:
+protected:
+	explicit ComponentBase(const ComponentType _type) : type_(_type) {}
+
 	explicit ComponentBase() DEFAULT;
 	virtual ~ComponentBase() DEFAULT;
 
@@ -48,8 +61,7 @@ public:
 	class GameObject* GameObject() const { return gameobject_; }
 	void GameObject(class GameObject* _object) { gameobject_ = _object; }
 
-private:
+protected:
 	ComponentType type_ = ComponentType::Undefined;
-
 	class GameObject* gameobject_ = nullptr;
 };

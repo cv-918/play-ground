@@ -6,6 +6,9 @@
 #include "Systems/Render/RenderChain.h"
 
 #include "Core/Math/MathFunctions.h"
+#include "Components/SphereCollider.h"
+
+#include "Actors/ExpDust.h"
 
 _bool Player::Initialize()
 {
@@ -16,67 +19,116 @@ _bool Player::Initialize()
 	MoveSpdMax(1200.f);
 	RotateSpd(600.f);
 	Name(_T("Player"));
+	HP(100);
+
 	transform_->Rotation(0, 1);
 
 	input_manager_ = &_InputMgr.Get();
+	
+	enum { SphereCol_Body, SphereCol_Attack };
+	RegisterComponent(new SphereCollider(player_size_));
+	RegisterComponent(new SphereCollider(50.f));
+
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Body)));
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Attack)));
 
 	return true;
 }
 
 _int Player::Update(_double _delta_time)
 {
-	_int ret = 0;
+	_int ret = __super::Update(_delta_time);
+	if (0 != ret) return ret;
 
 	ret = _ControllRoutine(_delta_time);
-	if (0 != ret)
-	{
-		return ret;
-	}
+	if (0 != ret) return ret;
 
 	return 0;
 }
 
-_int Player::Render(_double _delta_time)
+void Player::Render(_double _delta_time)
 {
-	// 포지션을 중점으로 도형을 그린다
-	// 어떤 외형을 갖게할 것인가 -> Shape컴포넌트
-	// 회전은 그냥 Rectengle 로는 어차피 표현 못하고 정점 잡아서 라인투로 그려야함
-	// 회전 테스트 자체는 LineTo 로 주시 방향만 그려서 완료, 하지만 회전하는 사각형을 그리려면 여전히 RectShape 컴포넌트가 필요함
+	__super::Render(_delta_time);
 
 	const auto pos = transform_->Position();
-	const _int rt_size = 50;
-	const auto half_size = rt_size >> 1;
+	const _int rt_size = player_size_;
 
 	RECT rt = {
-		pos.x - half_size,
-		pos.y - half_size,
-		pos.x + half_size,
-		pos.y + half_size
+		pos.x - rt_size,
+		pos.y - rt_size,
+		pos.x + rt_size,
+		pos.y + rt_size
 	};
 
 	// s, 플레이어 외형 그리기
 	Ellipse(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
 	// e, 플레이어 외형 그리기
+}
 
-	// s, 플레이어 이름 그리기
-	const auto name = Name();
-	DrawText(back_dc_, name.c_str(), name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-	// e, 플레이어 이름 그리기
+void Player::DebugRender(_double _delta_time)
+{
+	__super::DebugRender(_delta_time);
+
+	const auto position = transform_->Position();
 
 	// s, 방향 그려서 회전이 적용되는지 확인
 	auto forward = transform_->Forward2D();
 	const float line_length = 50.f;
 	forward *= line_length;
-	forward += pos;
+	forward += position;
 
-	MoveToEx(back_dc_, s_int(pos.x), s_int(pos.y), nullptr);
+	MoveToEx(back_dc_, s_int(position.x), s_int(position.y), nullptr);
 	LineTo(back_dc_, s_int(forward.x), s_int(forward.y));
 	// s, 방향 그려서 회전이 적용되는지 확인
 
 	// s, 디버그 정보 찍기
 	_ShowDebugInfo();
+}
 
-	return 0;
+void Player::OnCollisionEnter(Collider* _this, Collider* _other)
+{
+	switch (_this->Layer())
+	{
+	case CollisionLayer::PlayerBody:
+		// 몸통 collider 충돌 처리
+		break;
+	case CollisionLayer::PlayerAttack:
+	{
+		// 공격 collider 충돌 처리
+		switch (_other->Layer())
+		{
+		case CollisionLayer::ExpDust:
+		{
+			const auto exp_dust = s_cast(ExpDust*, _other->GameObject());
+			exp_dust->HP(exp_dust->HP() - 1);
+
+			// 만약 체력이 0 이하라면 소멸 처리
+			if(exp_dust->HP() <= 0)
+			{
+				exp_dust->InActive();
+			}
+
+			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
+			const _double attack_cooltime = 1.f;
+
+			// 더스트에 대한 충돌 기록 저장
+			_this->SetTimerForTarget(_other, attack_cooltime);
+
+			break;
+		}
+		}
+
+		break;
+	}
+	}
+}
+
+void Player::OnCollisionStay(Collider* _this, Collider* _other)
+{
+}
+
+void Player::OnCollisionExit(Collider* _this, Collider* _other)
+{
 }
 
 _int Player::_ControllRoutine(_double _delta_time)
@@ -215,12 +267,12 @@ _int Player::_ControllRoutine(_double _delta_time)
 				// 아닐 경우 통상 이동로직
 				else
 				{
-					transform_->Translate(move_velocity_* delta_time);
+					transform_->Translate(move_velocity_ * delta_time);
 				}
 			}
 			else
 			{
-				transform_->Translate(move_velocity_* delta_time);
+				transform_->Translate(move_velocity_ * delta_time);
 			}
 		}
 		else
@@ -244,14 +296,91 @@ _int Player::_ControllRoutine(_double _delta_time)
 
 void Player::_ControlInfoOnDebug()
 {
-	if (input_manager_->Down(VK_OEM_4))
+	enum DebugControlDataType
 	{
+		Acceleration,
+		Friction,
+		MaxSpeed,
+		TypeCount,
+	};
 
-	}
-	else if (input_manager_->Down(VK_OEM_6))
+	std::vector<std::wstring> labels =
 	{
+		L"[ 컨트롤 정보 : 가속도(1) ]",
+		L"[ 컨트롤 정보 : 마찰계수(2) ]",
+		L"[ 컨트롤 정보 : 최대속도(3) ]",
+	};
 
+	switch (debug_type_)
+	{
+	case Player::ControlInfo:
+		if (input_manager_->Down(VK_UP))
+		{
+			++debug_control_data_idx_;
+
+			if (debug_control_data_idx_ >= DebugControlDataType::TypeCount)
+			{
+				debug_control_data_idx_ = DebugControlDataType::Acceleration;
+			}
+		}
+		else if (input_manager_->Down(VK_DOWN))
+		{
+			--debug_control_data_idx_;
+
+			if (debug_control_data_idx_ < DebugControlDataType::Acceleration)
+			{
+				debug_control_data_idx_ = DebugControlDataType::TypeCount - 1;
+			}
+		}
+
+		switch (debug_control_data_idx_)
+		{
+		case DebugControlDataType::Acceleration:
+			if (input_manager_->Down(VK_LEFT))
+			{
+				if (100.f < acceleration_)
+					acceleration_ -= 100.f;
+			}
+			else if (input_manager_->Down(VK_RIGHT))
+			{
+				acceleration_ += 100.f;
+			}
+			break;
+		case DebugControlDataType::Friction:
+			if (input_manager_->Down(VK_LEFT))
+			{
+				if (1 < friction_)
+					--friction_;
+			}
+			else if (input_manager_->Down(VK_RIGHT))
+			{
+				++friction_;
+			}
+			break;
+		case DebugControlDataType::MaxSpeed:
+			if (input_manager_->Down(VK_LEFT))
+			{
+				auto move_spd_max = MoveSpdMax();
+				if (100.f < move_spd_max)
+				{
+					move_spd_max -= 100.f;
+					MoveSpdMax(move_spd_max);
+				}
+			}
+			else if (input_manager_->Down(VK_RIGHT))
+			{
+				auto move_spd_max = MoveSpdMax();
+				MoveSpdMax(move_spd_max + 100.f);
+			}
+			break;
+		}
+		break;
+	default:
+		debug_info_lines_.insert(debug_info_lines_.begin() + 1, L"[ 컨트롤 정보 : None ]");
+		return;
 	}
+
+	debug_info_lines_.insert(debug_info_lines_.begin() + 1, labels[debug_control_data_idx_]);
 }
 
 void Player::_ShowDebugInfo()
@@ -266,6 +395,8 @@ void Player::_ShowDebugInfo()
 		debug_type_ = s_cast(DrawDebugInfoType, val);
 	}
 
+	debug_info_lines_.clear();
+
 	std::vector<std::wstring> labels =
 	{
 		L"None",
@@ -276,10 +407,9 @@ void Player::_ShowDebugInfo()
 
 	_tchar buffer[MAX_PATH] = {};
 
-	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICK;
-	_int draw_pos_y = INGAVE_FRAME_THICK_H;
-	const _int line_height = IV_ZERO;
 	const _int line_gap = 20;
+	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICK;
+	_int draw_pos_y = INGAVE_FRAME_THICK_H - line_gap + 5;
 
 	// 1) 배경 먼저 그리기
 	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICK_H, INGAVE_FRAME_THICK_H, WINCX - INGAVE_FRAME_THICK_H, WINCY - INGAVE_FRAME_THICK_H };
@@ -287,33 +417,46 @@ void Player::_ShowDebugInfo()
 
 	// 2) 텍스트 그리기
 	swprintf_s(buffer, L"[ 디버깅 정보 타입 : %ls ]", labels[debug_type_].c_str());
-	TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+	debug_info_lines_.push_back(buffer);
+
+	_ControlInfoOnDebug();
 
 	// 3) 상세 정보 그리기
 	switch (debug_type_)
 	{
 	case MouseInfo:
 		swprintf_s(buffer, L"MousePoint : %d, %d", input_manager_->MousePoint().x, input_manager_->MousePoint().y);
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		debug_info_lines_.push_back(buffer);
 
 		swprintf_s(buffer, L"MouseDelta : %d, %d", input_manager_->MouseDelta().x, input_manager_->MouseDelta().y);
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		debug_info_lines_.push_back(buffer);
 
 		swprintf_s(buffer, L"WheelDelta : %d", input_manager_->WheelDelta());
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		debug_info_lines_.push_back(buffer);
 		break;
 	case ControlInfo:
-		swprintf_s(buffer, L"Position : %f, %f, %f", transform_->Position().x, transform_->Position().y, transform_->Position().z);
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
+		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"가속도 : %f", acceleration_);
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		swprintf_s(buffer, L"이동량 : %.2f", move_velocity_.Magnitude());
+		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"마찰 계수 : %f", friction_);
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		swprintf_s(buffer, L"가속도 : %.f", acceleration_);
+		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"Move Velocity : %f", move_velocity_.Magnitude());
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, buffer, wcslen(buffer));
+		swprintf_s(buffer, L"마찰 계수 : %.f", friction_);
+		debug_info_lines_.push_back(buffer);
+
+		swprintf_s(buffer, L"최대 속도 : %.f", MoveSpdMax());
+		debug_info_lines_.push_back(buffer);
+
+		swprintf_s(buffer, L"HP : %d", HP());
+		debug_info_lines_.push_back(buffer);
 		break;
+	}
+
+	for (const auto& line : debug_info_lines_)
+	{
+		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, line.c_str(), line.length());
 	}
 }

@@ -6,8 +6,11 @@
 class Component : public ComponentBase
 {
 public:
-	// ComponentBase을(를) 통해 상속됨
-	virtual bool Initialize() override;
-	virtual int Update(double _delta_time) override;
-	virtual int Render(double _delta_time) override;
+	explicit Component(const ComponentType _type) : ComponentBase(_type) {}
+
+public:
+	virtual _bool Initialize() override;
+	virtual _int Update(double _delta_time) override;
+	virtual _int LateUpdate(double _delta_time) override;
+	virtual void Render(double _delta_time) override;
 };

@@ -1,14 +1,19 @@
 #include "framework.h"
 #include "Transform.h"
 
+#include "Actors/GameObject.h"
+
 void Transform::Translate(const _Vector3& _delta)
 {
-	position_ += _delta;
+	Position(position_ + _delta);
 }
 
 void Transform::Rotate2D(const _float _delta)
 {
-	rotation_.z += _delta;
+	_Vector3 rotation = rotation_;
+	rotation.z += _delta;
+
+	Rotation(rotation);
 }
 
 void Transform::LookAt(const _Vector3& _target)
@@ -28,7 +33,7 @@ void Transform::LookAt(const _Vector3& _target)
 	const _float deg = rad * (180.0f / PI) - 90.f;
 
 	// z축 회전에 저장
-	rotation_.z = deg;
+	Rotation(_Vector3{ rotation_.x, rotation_.y, deg });
 }
 
 _Vector3 Transform::Forward2D() const
@@ -70,4 +75,10 @@ _Vector3 Transform::GetDirection(const Direction _dir)
 	}
 
 	return _Vector3::Zero();
+}
+
+void Transform::Position(const _Vector3 _pos)
+{
+	position_ = _pos;
+	//gameobject_->OnUpdatePosition();
 }

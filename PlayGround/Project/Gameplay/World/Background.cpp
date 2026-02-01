@@ -3,6 +3,9 @@
 
 _bool Background::Initialize()
 {
+	if (!__super::Initialize())
+		return false;
+
 	// 약간의 여백, 가로는 2/3 지점까지 배경, 나머지 영역은 디버그용
 	background_rect_ = _Rect(_Point{ INGAVE_FRAME_THICK_H, INGAVE_FRAME_THICK_H }, _Point{ s_int(WINCX * 0.66f), WINCY - INGAVE_FRAME_THICK_H });
 	background_rt_ = background_rect_.ToRECT();
@@ -12,11 +15,16 @@ _bool Background::Initialize()
 
 _int Background::Update(double _delta_time)
 {
+	_int ret = __super::Update(_delta_time);
+	if (0 != ret) return ret;
+
     return _int();
 }
 
-_int Background::Render(double _delta_time)
+void Background::Render(double _delta_time)
 {
+	__super::Render(_delta_time);
+
     // 배경을 그려야한다
 	// 일단은 Rect 로 배경을 채우자
 	// 추후에는 이미지로 변경
@@ -29,6 +37,4 @@ _int Background::Render(double _delta_time)
 	SelectObject(back_dc_, oldPen);
 	DeleteObject(hBrush);
 	DeleteObject(hPen);
-
-    return _int();
 }

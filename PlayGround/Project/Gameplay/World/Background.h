@@ -12,7 +12,7 @@ public:
 public:
     virtual _bool Initialize() override;
     virtual _int Update(double _delta_time) override;
-	virtual _int Render(double _delta_time) override;
+	virtual void Render(double _delta_time) override;
 
 public:
 	const _Rect& BackgroundRect() const { return background_rect_; }
