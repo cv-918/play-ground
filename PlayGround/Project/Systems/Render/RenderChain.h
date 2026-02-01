@@ -12,9 +12,9 @@ class RenderChain
 	, public IReleasable
 {
 public:
-	explicit RenderChain() DEFAULT;
 	virtual ~RenderChain();
 
+public:
 	virtual _bool Initialize() override;
 	virtual _bool Release() override;
 

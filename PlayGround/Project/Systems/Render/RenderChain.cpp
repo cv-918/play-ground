@@ -2,6 +2,7 @@
 #include "RenderChain.h"
 
 #include "Actors/GameObject.h"
+#include "Components/Collider.h"
 
 RenderChain::~RenderChain()
 {
@@ -14,6 +15,7 @@ _bool RenderChain::Initialize()
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
 
 	GameObject::BackDc(back_dc_);
+	Collider::BackDc(back_dc_);
 
     return true;
 }

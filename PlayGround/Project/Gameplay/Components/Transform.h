@@ -13,7 +13,13 @@ enum class Direction
 class Transform : public Component
 {
 public:
-	explicit Transform() DEFAULT;
+	explicit Transform()
+		: Component(ComponentType::Transform)
+		, position_(_Vector3::Zero())
+		, rotation_(_Vector3::Zero())
+		, scale_(_Vector3::One())
+	{
+	}
 	virtual ~Transform() DEFAULT;
 
 public:
@@ -28,16 +34,16 @@ public:
 	_Vector3 GetDirection(const Direction _dir);
 
 	_Vector3 Position() const { return position_; }
-	void Position(const _Vector3 _pos) { position_ = _pos; }
-	void Position(const int _x, const int _y) { position_.x = s_float(_x), position_.y = s_float(_y); }
+	void Position(const _Vector3 _pos);
+	void Position(const int _x, const int _y) { Position(_Vector3{ s_float(_x), s_float(_y), position_.z }); }
 
 	_Vector3 Rotation() const { return rotation_; }
 	void Rotation(const _Vector3 _pos) { rotation_ = _pos; }
-	void Rotation(const int _x, const int _y) { rotation_.x = s_float(_x), rotation_.y = s_float(_y); }
+	void Rotation(const int _x, const int _y) { Rotation(_Vector3{ s_float(_x), s_float(_y), rotation_.z }); }
 
 	_Vector3 Scale() const { return scale_; }
 	void Scale(const _Vector3 _pos) { scale_ = _pos; }
-	void Scale(const int _x, const int _y) { scale_.x = s_float(_x), scale_.y = s_float(_y); }
+	void Scale(const int _x, const int _y) { Scale(_Vector3{ s_float(_x), s_float(_y), scale_.z }); }
 
 protected:
 	_Vector3 position_;

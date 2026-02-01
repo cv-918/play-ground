@@ -47,6 +47,12 @@
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
+    <ClInclude Include="Project\Gameplay\Components\Collider.h" />
+    <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
+    <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
+    <ClInclude Include="Project\Core\Math\Random.h" />
+    <ClInclude Include="Project\Systems\Physics\CollisionManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -78,5 +84,11 @@
     <ClCompile Include="Project\Framework\pch.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
+    <ClCompile Include="Project\Core\Math\Random.cpp" />
+    <ClCompile Include="Project\Systems\Physics\CollisionManager.cpp" />
   </ItemGroup>
 </Project>

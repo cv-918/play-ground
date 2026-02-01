@@ -72,11 +72,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)_Bin\</OutDir>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)</OutDir>
     <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)</OutDir>
+    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -91,7 +93,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\Gameplay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -109,6 +111,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,16 +154,22 @@
     <ClInclude Include="Project\Core\Interface\Interfaces.h" />
     <ClInclude Include="Project\Core\Math\Geometry2D.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
+    <ClInclude Include="Project\Core\Math\Random.h" />
     <ClInclude Include="Project\Core\Math\Vector3.h" />
     <ClInclude Include="Project\Framework\framework.h" />
     <ClInclude Include="Project\Framework\Resource.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
+    <ClInclude Include="Project\Gameplay\Components\Collider.h" />
     <ClInclude Include="Project\Gameplay\Components\Component.h" />
+    <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
+    <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
     <ClInclude Include="Project\App\EntryPoint.h" />
     <ClInclude Include="Project\Gameplay\Actors\GameObject.h" />
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
     <ClInclude Include="Project\Systems\Input\InputManager.h" />
+    <ClInclude Include="Project\Systems\Physics\CollisionManager.h" />
     <ClInclude Include="Project\Systems\Render\RenderChain.h" />
     <ClInclude Include="Project\App\PlayGround.h" />
     <ClInclude Include="Project\Gameplay\Actors\Player.h" />
@@ -175,7 +184,12 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Project\Core\Math\Random.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Component.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
     <ClCompile Include="Project\App\EntryPoint.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\GameObject.cpp" />
@@ -186,6 +200,7 @@
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
     <ClCompile Include="Project\Systems\Input\InputManager.cpp" />
+    <ClCompile Include="Project\Systems\Physics\CollisionManager.cpp" />
     <ClCompile Include="Project\Systems\Render\RenderChain.cpp" />
     <ClCompile Include="Project\App\PlayGround.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Player.cpp" />

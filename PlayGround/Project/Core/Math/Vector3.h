@@ -14,6 +14,8 @@ public:
 
 	// øµ∫§≈Õ
 	static constexpr _Vector3 Zero() { return _Vector3{}; }
+	// ¥‹¿ß∫§≈Õ
+	static constexpr _Vector3 One() { return _Vector3{ 1.0f, 1.0f, 1.0f }; }
 
 	// ±Ê¿Ã
 	_float LengthSq() const { return x * x + y * y + z * z; }
