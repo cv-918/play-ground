@@ -32,6 +32,8 @@ enum class ComponentType
 	Undefined,
 	Transform,
 	Collider,
+	Movement,
+	Combat,
 };
 
 enum class CollisionLayer

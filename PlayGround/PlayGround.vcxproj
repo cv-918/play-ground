@@ -160,7 +160,9 @@
     <ClInclude Include="Project\Framework\Resource.h" />
     <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
     <ClInclude Include="Project\Gameplay\Components\Collider.h" />
+    <ClInclude Include="Project\Gameplay\Components\Combat.h" />
     <ClInclude Include="Project\Gameplay\Components\Component.h" />
+    <ClInclude Include="Project\Gameplay\Components\Movement.h" />
     <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
@@ -187,7 +189,9 @@
     <ClCompile Include="Project\Core\Math\Random.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Component.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
     <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />

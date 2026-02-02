@@ -40,8 +40,8 @@ _Vector3 Transform::Forward2D() const
 {
 	// rotation_.z를 도 단위로 가정
 	const _float rad = rotation_.z * (PI / 180.0f);
-	const _float c = static_cast<_float>(std::cos(rad));
-	const _float s = static_cast<_float>(std::sin(rad));
+	const _float c = s_float(std::cos(rad));
+	const _float s = s_float(std::sin(rad));
 
 	// (0,-1)을 회전시킨 결과
 	return _Vector3(-s, -c, 0.0f);

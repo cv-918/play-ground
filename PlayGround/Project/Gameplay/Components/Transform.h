@@ -35,15 +35,20 @@ public:
 
 	_Vector3 Position() const { return position_; }
 	void Position(const _Vector3 _pos);
-	void Position(const int _x, const int _y) { Position(_Vector3{ s_float(_x), s_float(_y), position_.z }); }
+	void Position(const _int _x, const _int _y) { Position(_Vector3{ s_float(_x), s_float(_y), position_.z }); }
+	void Position(const _float _x, const _float _y) { Position(_Vector3{ _x, _y, position_.z }); }
 
 	_Vector3 Rotation() const { return rotation_; }
 	void Rotation(const _Vector3 _pos) { rotation_ = _pos; }
-	void Rotation(const int _x, const int _y) { Rotation(_Vector3{ s_float(_x), s_float(_y), rotation_.z }); }
+	void Rotation(const _int _x, const _int _y) { Rotation(_Vector3{ s_float(_x), s_float(_y), rotation_.z }); }
+	void Rotation(const _float _x, const _float _y) { Rotation(_Vector3{ _x, _y, rotation_.z }); }
 
 	_Vector3 Scale() const { return scale_; }
 	void Scale(const _Vector3 _pos) { scale_ = _pos; }
-	void Scale(const int _x, const int _y) { Scale(_Vector3{ s_float(_x), s_float(_y), scale_.z }); }
+	void Scale(const _int _val) { Scale(_Vector3{ s_float(_val), s_float(_val), scale_.z }); }
+	void Scale(const _float _val) { Scale(_Vector3{ _val, _val, scale_.z }); }
+	void Scale(const _int _x, const _int _y) { Scale(_Vector3{ s_float(_x), s_float(_y), scale_.z }); }
+	void Scale(const _float _x, const _float _y) { Scale(_Vector3{ _x, _y, scale_.z }); }
 
 protected:
 	_Vector3 position_;

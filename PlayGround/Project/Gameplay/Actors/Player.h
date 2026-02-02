@@ -12,6 +12,8 @@ class InputManager;
 
 class Player : public Unit
 {
+	enum PlayerColliderId { SphereCol_Body, SphereCol_Attack, ColCount };
+
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
@@ -58,7 +60,7 @@ private:
 
 	// 네비게이션용 배경 영역
 	_Rect background_rect_ = {};
-
+	_float player_col_size_[ColCount] = {};
 	_float player_size_ = 30.f;
 };
 

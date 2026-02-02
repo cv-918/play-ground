@@ -1,12 +1,15 @@
 #include "framework.h"
 #include "Player.h"
 
-#include "Components/Transform.h"
 #include "Systems/Input/InputManager.h"
 #include "Systems/Render/RenderChain.h"
 
 #include "Core/Math/MathFunctions.h"
+
+#include "Components/Transform.h"
 #include "Components/SphereCollider.h"
+#include "Components/Movement.h"
+#include "Components/Combat.h"
 
 #include "Actors/ExpDust.h"
 
@@ -15,19 +18,31 @@ _bool Player::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	MoveSpd(400.f);
-	MoveSpdMax(1200.f);
-	RotateSpd(600.f);
+	// 플레이어 identifier 설정
 	Name(_T("Player"));
-	HP(100);
 
+	// 플레이어 초기값 설정
 	transform_->Rotation(0, 1);
+	transform_->Scale(30.f);
 
+	// input manager 캐싱
 	input_manager_ = &_InputMgr.Get();
-	
-	enum { SphereCol_Body, SphereCol_Attack };
-	RegisterComponent(new SphereCollider(player_size_));
-	RegisterComponent(new SphereCollider(50.f));
+
+	// 플레이어 컴포넌트 설정
+	const auto com_movement = new Movement();
+	com_movement->MoveSpd(400.f);
+	com_movement->MoveSpdMax(1200.f);
+	com_movement->RotateSpd(600.f);
+	RegisterComponent(com_movement);
+
+	const auto com_combat = new Combat();
+	com_combat->HP(10);
+	RegisterComponent(com_combat);
+
+	player_col_size_[SphereCol_Body] = 30.f;
+	player_col_size_[SphereCol_Attack] = 50.f;
+	RegisterComponent(new SphereCollider(player_col_size_[SphereCol_Body]));
+	RegisterComponent(new SphereCollider(player_col_size_[SphereCol_Attack]));
 
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Body)));
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Attack)));
@@ -51,7 +66,7 @@ void Player::Render(_double _delta_time)
 	__super::Render(_delta_time);
 
 	const auto pos = transform_->Position();
-	const _int rt_size = player_size_;
+	const _int rt_size = transform_->Scale().x;
 
 	RECT rt = {
 		pos.x - rt_size,
