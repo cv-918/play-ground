@@ -151,7 +151,7 @@ LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lpara
 		break;
 
 	case WM_CHAR:
-		_InputMgr.OnChar(static_cast<_tchar>(_wparam));
+		_InputMgr.OnChar(s_tchar(_wparam));
 		break;
 
 	case WM_KILLFOCUS:

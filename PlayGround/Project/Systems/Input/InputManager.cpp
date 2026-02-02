@@ -70,7 +70,7 @@ void InputManager::OnKeyDown(WPARAM _vk, LPARAM _lparam)
 	// lParam bit 30: 이전 키 상태(1이면 이전에도 눌려있던 상태 -> 자동 반복 포함)
 	const bool was_down = (_lparam & (1LL << 30)) != 0;
 
-	auto& k = keys_[static_cast<uint8_t>(_vk)];
+	auto& k = keys_[s_cast(uint8_t, _vk)];
 
 	// 물리적으로 "처음 눌림"만 Down 트리거로 처리
 	if (!k.is_down)
@@ -91,7 +91,7 @@ void InputManager::OnKeyUp(WPARAM _vk, LPARAM _lparam)
 {
 	if (_vk > UCHAR_MAX) return;
 
-	auto& k = keys_[static_cast<uint8_t>(_vk)];
+	auto& k = keys_[s_cast(uint8_t, _vk)];
 	if (k.is_down)
 	{
 		k.is_down = false;
@@ -111,17 +111,17 @@ void InputManager::OnChar(_tchar _ch)
 bool InputManager::Down(_int _vk) const
 {
 	if (_vk < 0 || _vk > UCHAR_MAX) return false;
-	return keys_[static_cast<uint8_t>(_vk)].went_down;
+	return keys_[s_cast(uint8_t, _vk)].went_down;
 }
 
 bool InputManager::Pressed(_int _vk) const
 {
 	if (_vk < 0 || _vk > UCHAR_MAX) return false;
-	return keys_[static_cast<uint8_t>(_vk)].is_down;
+	return keys_[s_cast(uint8_t, _vk)].is_down;
 }
 
 bool InputManager::Up(_int _vk) const
 {
 	if (_vk < 0 || _vk > UCHAR_MAX) return false;
-	return keys_[static_cast<uint8_t>(_vk)].went_up;
+	return keys_[s_cast(uint8_t, _vk)].went_up;
 }

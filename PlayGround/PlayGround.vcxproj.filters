@@ -53,6 +53,8 @@
     <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
     <ClInclude Include="Project\Core\Math\Random.h" />
     <ClInclude Include="Project\Systems\Physics\CollisionManager.h" />
+    <ClInclude Include="Project\Gameplay\Components\Movement.h" />
+    <ClInclude Include="Project\Gameplay\Components\Combat.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -90,5 +92,7 @@
     <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
     <ClCompile Include="Project\Systems\Physics\CollisionManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
   </ItemGroup>
 </Project>

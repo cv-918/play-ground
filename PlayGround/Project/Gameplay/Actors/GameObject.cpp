@@ -104,7 +104,7 @@ void GameObject::RegisterComponent(Component* _component)
 		else
 		{
 			// components_에 들어간 실제 포인터를 캐시로 잡는다
-			transform_ = static_cast<Transform*>(components_.back());
+			transform_ = s_cast(Transform*, components_.back());
 		}
 	}
 }

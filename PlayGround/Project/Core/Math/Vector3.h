@@ -19,7 +19,7 @@ public:
 
 	// 길이
 	_float LengthSq() const { return x * x + y * y + z * z; }
-	_float Length() const { return static_cast<_float>(std::sqrt(LengthSq())); }
+	_float Length() const { return s_float(std::sqrt(LengthSq())); }
 	_float Magnitude() const { return Length(); } // Length랑 똑같은 함수인데 이름만 다르게 호출(편의용)
 
 	// 정규화(길이가 0이면 영벡터 반환)
