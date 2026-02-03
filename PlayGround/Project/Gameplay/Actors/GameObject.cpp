@@ -6,6 +6,11 @@
 
 HDC GameObject::back_dc_ = nullptr;
 
+GameObject::~GameObject()
+{
+	Release();
+}
+
 _bool GameObject::Initialize()
 {
 	// Transform이 없으면 생성해서 등록
@@ -53,6 +58,15 @@ void GameObject::Render(double _delta_time)
 
 	for (const auto& component : components_)
 		component->Render(_delta_time);
+}
+
+_bool GameObject::Release()
+{
+	for (auto& component : components_)
+		SAFE_DELETE(component);
+
+	std::vector<Component*>().swap(components_);
+	return true;
 }
 
 void GameObject::DebugRender(double _delta_time)
@@ -190,13 +204,10 @@ Component* GameObject::GetComponent(const std::wstring& _name, const _int _index
 		{
 			if (count == _index)
 				return component;
+
 			++count;
 		}
 	}
 
 	return nullptr;
-}
-
-void GameObject::OnUpdatePosition()
-{
 }

@@ -1,6 +1,8 @@
 #include "framework.h"
 #include "ExpDust.h"
 
+#include "Systems/Physics/CollisionManager.h"
+
 #include "Components/SphereCollider.h"
 #include "Components/Transform.h"
 
@@ -21,9 +23,6 @@ _bool ExpDust::Initialize()
 
 	RegisterComponent(collider_);
 	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, collider_);
-
-	HP(1);
-	//HP(_Random.Range(1, 5));
 
 	color_brush_ = _Random.Range(WHITE_BRUSH, BLACK_BRUSH);
 	if (WHITE_BRUSH == color_brush_)
@@ -89,6 +88,10 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 }
 
 void ExpDust::OnCollisionExit(Collider* _this, Collider* _other)
+{
+}
+
+void ExpDust::GetDamage(_float _damage)
 {
 }
 

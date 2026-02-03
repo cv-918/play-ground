@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Unit.h"
+#include "GameObject.h"
 
 enum class KeyBoardControlType
 {
@@ -10,7 +10,10 @@ enum class KeyBoardControlType
 
 class InputManager;
 
-class Player : public Unit
+class Player
+	: public GameObject
+	, public ICollidable
+	, public IDamagable
 {
 	enum PlayerColliderId { SphereCol_Body, SphereCol_Attack, ColCount };
 
@@ -20,9 +23,13 @@ private:
 	virtual void Render(_double _delta_time) override;
 	virtual void DebugRender(_double _delta_time) override;
 
+	// ICollidable을(를) 통해 상속됨
 	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;
 	virtual void OnCollisionExit(Collider* _this, Collider* _other) override;
+
+	// IDamagable을(를) 통해 상속됨
+	virtual void GetDamage(_float _damage) override;
 
 private:
 	_int _ControllRoutine(_double _delta_time);
@@ -62,5 +69,8 @@ private:
 	_Rect background_rect_ = {};
 	_float player_col_size_[ColCount] = {};
 	_float player_size_ = 30.f;
+
+	class Movement* movement_ = nullptr;
+	class Combat* combat_ = nullptr;
 };
 

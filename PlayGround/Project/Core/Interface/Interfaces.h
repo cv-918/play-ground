@@ -59,3 +59,34 @@ protected:
 	_int id_ = IV_INVALID;
 	std::wstring name_;
 };
+
+// component interface
+class IHandler
+{
+protected:
+	explicit IHandler() DEFAULT;
+	virtual ~IHandler() DEFAULT;
+};
+
+class Collider;
+class ICollidable : public IHandler
+{
+protected:
+	explicit ICollidable() DEFAULT;
+	virtual ~ICollidable() DEFAULT;
+
+public:
+	virtual void OnCollisionEnter(Collider* _this, Collider* _other) PURE;
+	virtual void OnCollisionStay(Collider* _this, Collider* _other) PURE;
+	virtual void OnCollisionExit(Collider* _this, Collider* _other) PURE;
+};
+
+class IDamagable : public IHandler
+{
+protected:
+	explicit IDamagable() DEFAULT;
+	virtual ~IDamagable() DEFAULT;
+
+public:
+	virtual void GetDamage(_float _damage) PURE;
+};

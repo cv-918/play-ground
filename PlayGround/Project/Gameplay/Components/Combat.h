@@ -12,7 +12,6 @@ public:
 public:
 	_int HP() const { return hp_; }
 	void HP(const _int _hp) { hp_ = _hp; }
-	_int& HP() { return hp_; }
 
 	_int Att() const { return att_; }
 	void Att(const _int _att) { att_ = _att; }

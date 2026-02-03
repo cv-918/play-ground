@@ -11,10 +11,16 @@ class Collider;
 class GameObject : public GameObjectBase
 {
 public:
+	virtual ~GameObject();
+
+public:
+	// GameObjectBase을(를) 통해 상속됨
 	virtual _bool Initialize() override;
 	virtual _int Update(double _delta_time) override;
 	virtual _int LateUpdate(double _delta_time) override;
 	virtual void Render(double _delta_time) override;
+	virtual _bool Release() override;
+
 	virtual void DebugRender(double _delta_time);
 
 public:
@@ -42,19 +48,13 @@ public:
 
 private:
 	std::vector<Component*> components_;
+	std::vector<IHandler*> handlers_;
+	uint32_t handler_mask_ = IV_ZERO;
 
 protected:
-	Transform* transform_ = nullptr; // Transform 캐시 포인터(소유권 없음)
-	static HDC back_dc_; // 캐시해둔 dc
+	Transform* transform_ = nullptr; // Transform 캐시
+	static HDC back_dc_; // dc 캐시
 
 	_bool is_enabled_ = true;
 	_bool is_visible_ = true;
-
-public:
-	virtual void OnCollisionEnter(Collider* _this, Collider* _other) {}
-	virtual void OnCollisionStay(Collider* _this, Collider* _other) {}
-	virtual void OnCollisionExit(Collider* _this, Collider* _other) {}
-
-public:
-	virtual void OnUpdatePosition();
 };
