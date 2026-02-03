@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Actors/GameObject.h"
-#include "Systems/Physics/CollisionManager.h"
 
 /*
 	모든 실제적 위치를 갖는 유닛(구조물X)

@@ -3,6 +3,7 @@
 
 #include "Systems/Input/InputManager.h"
 #include "Systems/Render/RenderChain.h"
+#include "Systems/Physics/CollisionManager.h"
 
 #include "Core/Math/MathFunctions.h"
 
@@ -29,15 +30,15 @@ _bool Player::Initialize()
 	input_manager_ = &_InputMgr.Get();
 
 	// 플레이어 컴포넌트 설정
-	const auto com_movement = new Movement();
-	com_movement->MoveSpd(400.f);
-	com_movement->MoveSpdMax(1200.f);
-	com_movement->RotateSpd(600.f);
-	RegisterComponent(com_movement);
+	movement_ = new Movement();
+	movement_->MoveSpd(400.f);
+	movement_->MoveSpdMax(1200.f);
+	movement_->RotateSpd(600.f);
+	RegisterComponent(movement_);
 
-	const auto com_combat = new Combat();
-	com_combat->HP(10);
-	RegisterComponent(com_combat);
+	combat_ = new Combat();
+	combat_->HP(10);
+	RegisterComponent(combat_);
 
 	player_col_size_[SphereCol_Body] = 30.f;
 	player_col_size_[SphereCol_Attack] = 50.f;
@@ -114,7 +115,12 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		{
 		case CollisionLayer::ExpDust:
 		{
+			const auto dust = _other->GameObject();
+			const auto com_combat = dust->GetComponent(ComponentType::Combat);
+			s_cast(Combat*, com_combat)->HP() -= 1;
+
 			const auto exp_dust = s_cast(ExpDust*, _other->GameObject());
+			exp_dust->HP();
 			exp_dust->HP(exp_dust->HP() - 1);
 
 			// 만약 체력이 0 이하라면 소멸 처리
@@ -146,6 +152,10 @@ void Player::OnCollisionExit(Collider* _this, Collider* _other)
 {
 }
 
+void Player::GetDamage(_float _damage)
+{
+}
+
 _int Player::_ControllRoutine(_double _delta_time)
 {
 	if (!transform_)
@@ -161,44 +171,44 @@ _int Player::_ControllRoutine(_double _delta_time)
 	{
 	case KeyBoardControlType::Direction:
 	{
-		auto mov_spd = MoveSpd();
-		auto mov_dir = _Vector3::Zero();
-		if (input_manager_->Pressed('W'))
-		{
-			// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
-			auto next_pos = transform_->Forward2D() * mov_spd * delta_time;
-			const auto next_pos_copy = next_pos;
+		//auto mov_spd = MoveSpd();
+		//auto mov_dir = _Vector3::Zero();
+		//if (input_manager_->Pressed('W'))
+		//{
+		//	// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
+		//	auto next_pos = transform_->Forward2D() * mov_spd * delta_time;
+		//	const auto next_pos_copy = next_pos;
 
-			next_pos.x = MathFunctions::Clamp(s_int(next_pos.x), background_rect_.Left(), background_rect_.Right());
-			next_pos.y = MathFunctions::Clamp(s_int(next_pos.y), background_rect_.Top(), background_rect_.Bottom());
+		//	next_pos.x = MathFunctions::Clamp(s_int(next_pos.x), background_rect_.Left(), background_rect_.Right());
+		//	next_pos.y = MathFunctions::Clamp(s_int(next_pos.y), background_rect_.Top(), background_rect_.Bottom());
 
-			// 클램프 됐을 경우, 벽에 부딪힌 것으로 간주, 속도 0으로
-			if (next_pos_copy != next_pos) move_velocity_ = _Vector3::Zero();
-			transform_->Translate(next_pos);
-		}
-		else if (input_manager_->Pressed('S'))
-		{
-			transform_->Translate(transform_->Back2D() * mov_spd * delta_time);
-		}
+		//	// 클램프 됐을 경우, 벽에 부딪힌 것으로 간주, 속도 0으로
+		//	if (next_pos_copy != next_pos) move_velocity_ = _Vector3::Zero();
+		//	transform_->Translate(next_pos);
+		//}
+		//else if (input_manager_->Pressed('S'))
+		//{
+		//	transform_->Translate(transform_->Back2D() * mov_spd * delta_time);
+		//}
 
-		bool rotate = false;
-		auto rot_spd = RotateSpd();
-		if (input_manager_->Pressed('A'))
-		{
-			rotate = true;
-		}
-		else if (input_manager_->Pressed('D'))
-		{
-			rotate = true;
-			rot_spd *= -1.f;
-		}
+		//bool rotate = false;
+		//auto rot_spd = RotateSpd();
+		//if (input_manager_->Pressed('A'))
+		//{
+		//	rotate = true;
+		//}
+		//else if (input_manager_->Pressed('D'))
+		//{
+		//	rotate = true;
+		//	rot_spd *= -1.f;
+		//}
 
-		if (rotate)
-		{
-			transform_->Rotate2D(rot_spd * delta_time);
-		}
+		//if (rotate)
+		//{
+		//	transform_->Rotate2D(rot_spd * delta_time);
+		//}
 
-		return rotate || mov_dir == _Vector3::Zero();
+		//return rotate || mov_dir == _Vector3::Zero();
 	}
 
 	case KeyBoardControlType::Axis:

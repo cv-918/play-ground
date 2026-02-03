@@ -20,6 +20,7 @@ public:
 class GameObjectBase abstract
 	: public IInitializable
 	, public IUpdatable
+	, public IReleasable
 	, public IIdentifiable
 {
 public:
