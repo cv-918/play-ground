@@ -13,6 +13,8 @@ GameObject::~GameObject()
 
 _bool GameObject::Initialize()
 {
+	handlers_->resize(s_int(HandlerSystemList::SystemCount));
+
 	// Transform이 없으면 생성해서 등록
 	if (transform_ == nullptr)
 	{
@@ -102,11 +104,14 @@ void GameObject::RegisterComponent(Component* _component)
 	if (_component == nullptr)
 		return;
 
+	// 1. 컴포넌트에 게임 오브젝트 포인터와 ID 할당
 	_component->GameObject(this);
 	_component->ID(components_.size());
+
+	// 2-1. 컴포넌트 리스트에 추가
 	components_.push_back(_component);
 
-	// Transform이면 캐시 포인터 갱신
+	// 2-2. Transform 컴포넌트인 경우 캐시 포인터 갱신
 	if (ComponentType::Transform == _component->Type())
 	{
 		// 이미 Transform이 등록되어 있는 경우
@@ -119,8 +124,13 @@ void GameObject::RegisterComponent(Component* _component)
 		{
 			// components_에 들어간 실제 포인터를 캐시로 잡는다
 			transform_ = s_cast(Transform*, components_.back());
+			return;
 		}
 	}
+
+	// 3. 컴포넌트 타입에 따라 필요한 핸들러 시스템에 등록
+	CheckAndRegisterHandler<ICollidable>(_component, HandlerSystemList::Collision);
+	CheckAndRegisterHandler<IDamagable>(_component, HandlerSystemList::Damage);
 }
 
 void GameObject::DeregisterComponent(const ComponentType _type)

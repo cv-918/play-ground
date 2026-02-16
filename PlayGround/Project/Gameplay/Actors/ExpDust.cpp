@@ -3,11 +3,11 @@
 
 #include "Systems/Physics/CollisionManager.h"
 
+#include "Core/Math/Random.h"
+
 #include "Components/SphereCollider.h"
 #include "Components/Transform.h"
-
-#include "Core/Math/Random.h"
-#include "Player.h"
+#include "Components/Combat.h"
 
 _bool ExpDust::Initialize()
 {
@@ -70,8 +70,11 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 	case CollisionLayer::PlayerBody:
 		if (is_white_)
 		{
-			const auto player = s_cast(Player*, _other->GameObject());
-			player->HP(player->HP() - 1); // 플레이어 체력 1 감소
+			const auto player = _other->GameObject();
+
+			// 플레이어의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
+			const auto com_combat = player->GetComponent(ComponentType::Combat);
+			s_cast(Combat*, com_combat)->GetDamage(1);
 
 			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
 			const _double attack_speed = 4.f;

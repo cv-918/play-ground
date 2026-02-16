@@ -2,6 +2,7 @@
 #include "Collider.h"
 
 #include "Actors/GameObject.h"
+#include "Combat.h"
 
 HDC Collider::back_dc_ = nullptr;
 
@@ -31,12 +32,18 @@ void Collider::DetectCollision(Collider* _other)
 		// 충돌 목록에 추가에 성공했을 경우
 		if (_RegisterOnCollidedList(_other))
 		{
-			GameObject()->OnCollisionEnter(this, _other);
+			// Enter 신호 전파
+			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+				s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
+				});
 		}
 		// 이미 충돌 목록에 있을 경우
 		else
 		{
-			GameObject()->OnCollisionStay(this, _other);
+			// Stay 신호 전파
+			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+				s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
+				});
 		}
 	}
 	// 충돌하지 않을 경우
@@ -45,7 +52,10 @@ void Collider::DetectCollision(Collider* _other)
 		// 충돌 목록에서 제거에 성공했을 경우
 		if (_DeregisterFromCollidedList(_other))
 		{
-			GameObject()->OnCollisionExit(this, _other);
+			// Exit 신호 전파
+			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+				s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
+				});
 		}
 	}
 }
