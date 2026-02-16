@@ -12,8 +12,6 @@
 #include "Components/Movement.h"
 #include "Components/Combat.h"
 
-#include "Actors/ExpDust.h"
-
 _bool Player::Initialize()
 {
 	if (!__super::Initialize())
@@ -116,23 +114,15 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		case CollisionLayer::ExpDust:
 		{
 			const auto dust = _other->GameObject();
+			d_cast(IDamagable*, dust)->GetDamage(1);
+
+			// 더스트의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
 			const auto com_combat = dust->GetComponent(ComponentType::Combat);
-			s_cast(Combat*, com_combat)->HP() -= 1;
+			s_cast(Combat*, com_combat)->GetDamage(1);
 
-			const auto exp_dust = s_cast(ExpDust*, _other->GameObject());
-			exp_dust->HP();
-			exp_dust->HP(exp_dust->HP() - 1);
-
-			// 만약 체력이 0 이하라면 소멸 처리
-			if(exp_dust->HP() <= 0)
-			{
-				exp_dust->InActive();
-			}
-
+			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
 			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
 			const _double attack_cooltime = 1.f;
-
-			// 더스트에 대한 충돌 기록 저장
 			_this->SetTimerForTarget(_other, attack_cooltime);
 
 			break;
@@ -154,6 +144,9 @@ void Player::OnCollisionExit(Collider* _this, Collider* _other)
 
 void Player::GetDamage(_float _damage)
 {
+	// 플레이어가 데미지를 입었을 때의 처리
+	// 이 코드를 Combat에 둘 것인가 Player에 둘 것인가?
+	combat_->GetDamage(_damage);
 }
 
 _int Player::_ControllRoutine(_double _delta_time)
@@ -223,78 +216,72 @@ _int Player::_ControllRoutine(_double _delta_time)
 		else if (input_manager_->Pressed('D'))
 			move.x += 1.f;
 
-		bool use_move_acceleration = true;
-		if (use_move_acceleration)
+		
+		if (move.LengthSq() > 0.f)
 		{
-			if (move.LengthSq() > 0.f)
+			move.Normalize();
+		}
+
+		// s, 가속도 적용 구간
+		// 가속도 적용
+		move_velocity_ += move * acceleration_ * delta_time;
+
+		if (move_velocity_ == _Vector3::Zero())
+		{
+			transform_->LookAt(input_manager_->MousePoint());
+			return 0;
+		}
+
+		// 마찰력 적용
+		/*
+			마찰력 적용을 '방향키 입력이 없을 때' 로 한정하면
+			마찰력 계수에 상관없이 이동 자체는 항상 최고속도가 나올 수 있을 것 같다
+
+			'방향키 입력이 없을 때'를 판별하기 위해서 InputManager에 AnyKeyPressed()를 만들었는데
+			조금 더 생각해보니 저걸로 판별할 경우 'WASD가 아닌 아무 키'를 눌렀을 때 여전히 마찰력이 적용된다
+			move의 Length()를 검사해서 WASD 입력으로 move의 값이 변한 상태인지 아닌지를 기준점으로 사용하는게 더 타당한 것 같다
+
+			if (move == _Vector3::Zero()) 조건으로 하면 '입력'이 없을 때에만 작동하는데 이게 뭔가 일관되지 않았다?
+		*/
+		if (move == _Vector3::Zero())
+		{
+			move_velocity_ -= move_velocity_ * friction_ * delta_time;
+		}
+
+		// 최대 속도 제한
+		const auto move_spd_max = movement_->MoveSpdMax();
+		if (move_velocity_.Length() > move_spd_max)
+		{
+			move_velocity_.Normalize();
+			move_velocity_ *= move_spd_max;
+		}
+
+		// 속도가 매우 작으면 0으로 고정 (떨림 현상 방지)
+		if (move_velocity_.Length() < 1.f)
+		{
+			move_velocity_ = _Vector3::Zero();
+		}
+		// e, 가속도 적용 구간
+
+		bool apply_clamp = true;
+		if (apply_clamp)
+		{
+			// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
+			auto next_pos = transform_->Position() + move_velocity_ * delta_time;
+			const auto next_pos_copy = next_pos;
+
+			next_pos.x = MathFunctions::Clamp(next_pos.x, background_rect_.Left_f(), background_rect_.Right_f());
+			next_pos.y = MathFunctions::Clamp(next_pos.y, background_rect_.Top_f(), background_rect_.Bottom_f());
+
+			// 클램프 됐을 경우
+			if (next_pos_copy != next_pos)
 			{
-				move.Normalize();
-			}
-
-			// s, 가속도 적용 구간
-			// 가속도 적용
-			move_velocity_ += move * acceleration_ * delta_time;
-
-			if (move_velocity_ == _Vector3::Zero())
-			{
-				transform_->LookAt(input_manager_->MousePoint());
-				return 0;
-			}
-
-			// 마찰력 적용
-			/*
-				마찰력 적용을 '방향키 입력이 없을 때' 로 한정하면
-				마찰력 계수에 상관없이 이동 자체는 항상 최고속도가 나올 수 있을 것 같다
-
-				'방향키 입력이 없을 때'를 판별하기 위해서 InputManager에 AnyKeyPressed()를 만들었는데
-				조금 더 생각해보니 저걸로 판별할 경우 'WASD가 아닌 아무 키'를 눌렀을 때 여전히 마찰력이 적용된다
-				move의 Length()를 검사해서 WASD 입력으로 move의 값이 변한 상태인지 아닌지를 기준점으로 사용하는게 더 타당한 것 같다
-
-				if (move == _Vector3::Zero()) 조건으로 하면 '입력'이 없을 때에만 작동하는데 이게 뭔가 일관되지 않았다?
-			*/
-			if (move == _Vector3::Zero())
-			{
-				move_velocity_ -= move_velocity_ * friction_ * delta_time;
-			}
-
-			// 최대 속도 제한
-			if (move_velocity_.Length() > MoveSpdMax())
-			{
-				move_velocity_.Normalize();
-				move_velocity_ *= MoveSpdMax();
-			}
-
-			// 속도가 매우 작으면 0으로 고정 (떨림 현상 방지)
-			if (move_velocity_.Length() < 1.f)
-			{
+				// 벽에 부딪힌 것으로 간주, 속도 0으로
+				// 포지션은 벽으로 고정
 				move_velocity_ = _Vector3::Zero();
+				transform_->Position(next_pos);
 			}
-			// e, 가속도 적용 구간
-
-			bool apply_clamp = true;
-			if (apply_clamp)
-			{
-				// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
-				auto next_pos = transform_->Position() + move_velocity_ * delta_time;
-				const auto next_pos_copy = next_pos;
-
-				next_pos.x = MathFunctions::Clamp(next_pos.x, background_rect_.Left_f(), background_rect_.Right_f());
-				next_pos.y = MathFunctions::Clamp(next_pos.y, background_rect_.Top_f(), background_rect_.Bottom_f());
-
-				// 클램프 됐을 경우
-				if (next_pos_copy != next_pos)
-				{
-					// 벽에 부딪힌 것으로 간주, 속도 0으로
-					// 포지션은 벽으로 고정
-					move_velocity_ = _Vector3::Zero();
-					transform_->Position(next_pos);
-				}
-				// 아닐 경우 통상 이동로직
-				else
-				{
-					transform_->Translate(move_velocity_ * delta_time);
-				}
-			}
+			// 아닐 경우 통상 이동로직
 			else
 			{
 				transform_->Translate(move_velocity_ * delta_time);
@@ -302,11 +289,7 @@ _int Player::_ControllRoutine(_double _delta_time)
 		}
 		else
 		{
-			if (move.LengthSq() > 0.f)
-			{
-				move.Normalize();
-				transform_->Translate(move * MoveSpd() * delta_time);
-			}
+			transform_->Translate(move_velocity_ * delta_time);
 		}
 
 		// 마우스 바라보기
@@ -385,17 +368,17 @@ void Player::_ControlInfoOnDebug()
 		case DebugControlDataType::MaxSpeed:
 			if (input_manager_->Down(VK_LEFT))
 			{
-				auto move_spd_max = MoveSpdMax();
+				auto move_spd_max = movement_->MoveSpdMax();
 				if (100.f < move_spd_max)
 				{
 					move_spd_max -= 100.f;
-					MoveSpdMax(move_spd_max);
+					movement_->MoveSpdMax(move_spd_max);
 				}
 			}
 			else if (input_manager_->Down(VK_RIGHT))
 			{
-				auto move_spd_max = MoveSpdMax();
-				MoveSpdMax(move_spd_max + 100.f);
+				auto move_spd_max = movement_->MoveSpdMax();
+				movement_->MoveSpdMax(move_spd_max + 100.f);
 			}
 			break;
 		}
@@ -472,10 +455,10 @@ void Player::_ShowDebugInfo()
 		swprintf_s(buffer, L"마찰 계수 : %.f", friction_);
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"최대 속도 : %.f", MoveSpdMax());
+		swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"HP : %d", HP());
+		swprintf_s(buffer, L"HP : %d", combat_->HP());
 		debug_info_lines_.push_back(buffer);
 		break;
 	}

@@ -60,7 +60,13 @@ protected:
 	std::wstring name_;
 };
 
-// component interface
+enum class HandlerSystemList
+{
+	Collision,
+	Damage,
+	SystemCount,
+};
+
 class IHandler
 {
 protected:

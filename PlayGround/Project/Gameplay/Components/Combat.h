@@ -10,6 +10,9 @@ public:
 	{}
 
 public:
+	void GetDamage(const _int _damage);
+
+public:
 	_int HP() const { return hp_; }
 	void HP(const _int _hp) { hp_ = _hp; }
 
