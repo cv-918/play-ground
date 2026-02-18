@@ -46,11 +46,19 @@ private:
 	KeyBoardControlType controller_type_ = KeyBoardControlType::Axis;
 	const InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 
-	// s, 가속도 방식 적용
 	_Vector3 move_velocity_;
 	_float acceleration_ = 1500.f; // 가속도 (픽셀/초^2)
 	_float friction_ = 2.0f;        // 마찰 계수 (높을수록 빨리 멈춤)
-	// e, 가속도 방식 적용
+
+	// 네비게이션용 배경 영역
+	_Rect background_rect_ = {};
+	_float player_col_size_[ColCount] = {};
+	_float player_size_ = 30.f;
+
+	// 컴포넌트 캐싱
+	class Movement* movement_ = nullptr;
+	class Combat* combat_ = nullptr;
+	class Status* status_ = nullptr;
 
 	// 디버그
 	enum DrawDebugInfoType
@@ -64,13 +72,5 @@ private:
 	DrawDebugInfoType debug_type_ = DrawDebugInfoType::None;
 	_int debug_control_data_idx_ = IV_ZERO;
 	std::vector<std::wstring> debug_info_lines_;
-
-	// 네비게이션용 배경 영역
-	_Rect background_rect_ = {};
-	_float player_col_size_[ColCount] = {};
-	_float player_size_ = 30.f;
-
-	class Movement* movement_ = nullptr;
-	class Combat* combat_ = nullptr;
 };
 

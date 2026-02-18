@@ -14,6 +14,8 @@ private:
 	virtual _int Update(_double _delta_time) override;
 	virtual void Render(_double _delta_time) override;
 
+	virtual void DebugRender(double _delta_time) override;
+
 	// ICollidable을(를) 통해 상속됨
 	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;
@@ -27,10 +29,11 @@ public:
 
 private:
 	class SphereCollider* collider_ = nullptr;
-	_int color_brush_ = WHITE_BRUSH;
 
-	_bool is_white_ = false;
+	class Movement* movement_ = nullptr;
+	class Combat* combat_ = nullptr;
+	class Status* status_ = nullptr;
 
-	
+	HBRUSH color_brush_;
 };
 

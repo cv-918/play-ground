@@ -165,6 +165,7 @@
     <ClInclude Include="Project\Gameplay\Components\Movement.h" />
     <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
+    <ClInclude Include="Project\Gameplay\Components\Status.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
     <ClInclude Include="Project\App\EntryPoint.h" />
     <ClInclude Include="Project\Gameplay\Actors\GameObject.h" />
@@ -194,6 +195,7 @@
     <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
     <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Status.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
     <ClCompile Include="Project\App\EntryPoint.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\GameObject.cpp" />

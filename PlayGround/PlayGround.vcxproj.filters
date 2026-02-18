@@ -55,6 +55,7 @@
     <ClInclude Include="Project\Systems\Physics\CollisionManager.h" />
     <ClInclude Include="Project\Gameplay\Components\Movement.h" />
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
+    <ClInclude Include="Project\Gameplay\Components\Status.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -94,5 +95,6 @@
     <ClCompile Include="Project\Systems\Physics\CollisionManager.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\Status.cpp" />
   </ItemGroup>
 </Project>

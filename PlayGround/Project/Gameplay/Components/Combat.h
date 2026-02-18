@@ -6,7 +6,7 @@ class Combat : public Component
 public:
 	explicit Combat()
 		: Component(ComponentType::Combat)
-		, hp_(0)
+		, hp_(0), att_(0)
 	{}
 
 public:
