@@ -13,8 +13,6 @@ GameObject::~GameObject()
 
 _bool GameObject::Initialize()
 {
-	handlers_->resize(s_int(HandlerSystemList::SystemCount));
-
 	// Transform이 없으면 생성해서 등록
 	if (transform_ == nullptr)
 	{
@@ -90,8 +88,8 @@ void GameObject::DebugRender(double _delta_time)
 	rt.bottom = pos.y + half_size;
 
 	// s, 오브젝트 이름 그리기
-	const auto name = Name();
-	DrawText(back_dc_, name.c_str(), name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+	const auto debug_string_name = Name();
+	DrawText(back_dc_, debug_string_name.c_str(), debug_string_name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 	// e, 오브젝트 이름 그리기
 
 	// 3. (선택 사항) 다음 그림을 위해 이전 모드로 복구
@@ -129,8 +127,23 @@ void GameObject::RegisterComponent(Component* _component)
 	}
 
 	// 3. 컴포넌트 타입에 따라 필요한 핸들러 시스템에 등록
-	CheckAndRegisterHandler<ICollidable>(_component, HandlerSystemList::Collision);
-	CheckAndRegisterHandler<IDamagable>(_component, HandlerSystemList::Damage);
+	switch (_component->Type())
+	{
+	case ComponentType::Undefined:
+		break;
+	case ComponentType::Transform:
+		break;
+	case ComponentType::Collider:
+		CheckAndRegisterHandler<ICollidable>(_component, HandlerSystemList::Collision);
+		break;
+	case ComponentType::Movement:
+		break;
+	case ComponentType::Combat:
+		CheckAndRegisterHandler<IDamagable>(_component, HandlerSystemList::Damage);
+		break;
+	default:
+		break;
+	}
 }
 
 void GameObject::DeregisterComponent(const ComponentType _type)

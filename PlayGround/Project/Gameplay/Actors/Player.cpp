@@ -8,8 +8,9 @@
 #include "Core/Math/MathFunctions.h"
 
 #include "Components/Transform.h"
-#include "Components/SphereCollider.h"
+#include "Components/Status.h"
 #include "Components/Movement.h"
+#include "Components/SphereCollider.h"
 #include "Components/Combat.h"
 
 _bool Player::Initialize()
@@ -28,6 +29,8 @@ _bool Player::Initialize()
 	input_manager_ = &_InputMgr.Get();
 
 	// 플레이어 컴포넌트 설정
+	status_ = new Status();
+
 	movement_ = new Movement();
 	movement_->MoveSpd(400.f);
 	movement_->MoveSpdMax(1200.f);
@@ -35,7 +38,7 @@ _bool Player::Initialize()
 	RegisterComponent(movement_);
 
 	combat_ = new Combat();
-	combat_->HP(10);
+	combat_->HP(5);
 	RegisterComponent(combat_);
 
 	player_col_size_[SphereCol_Body] = 30.f;
@@ -113,12 +116,10 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		{
 		case CollisionLayer::ExpDust:
 		{
-			const auto dust = _other->GameObject();
-			d_cast(IDamagable*, dust)->GetDamage(1);
-
-			// 더스트의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
-			const auto com_combat = dust->GetComponent(ComponentType::Combat);
-			s_cast(Combat*, com_combat)->GetDamage(1);
+			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
+			_other->GameObject()->SendHandlerMessage(HandlerSystemList::Damage, [](IHandler* _handler) {
+				s_cast(IDamagable*, _handler)->GetDamage(1.f);
+				});
 
 			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
 			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩

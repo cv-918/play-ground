@@ -11,7 +11,7 @@ enum class ColliderType
 class Collider abstract : public Component
 {
 public:
-	explicit Collider(const ColliderType _type) : Component(ComponentType::Collider), type(_type), draw_(true) {}
+	explicit Collider(const ColliderType _type) : Component(ComponentType::Collider), type(_type), layer(CollisionLayer::End), draw_(true) {}
 
 public:
 	virtual _int Update(_double _delta_time) override;

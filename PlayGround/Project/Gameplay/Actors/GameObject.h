@@ -16,7 +16,6 @@ public:
 	virtual ~GameObject();
 
 public:
-	// GameObjectBase을(를) 통해 상속됨
 	virtual _bool Initialize() override;
 	virtual _int Update(double _delta_time) override;
 	virtual _int LateUpdate(double _delta_time) override;
@@ -39,7 +38,10 @@ public:
 		if (!(handler_mask_ & (1 << cast_type))) return;
 
 		for (auto* handler : handlers_[cast_type])
-			func(handler);
+		{
+			if (handler)
+				func(handler);
+		}
 	}
 
 	Component* GetComponent(const _int _id);

@@ -32,8 +32,9 @@ enum class ComponentType
 {
 	Undefined,
 	Transform,
-	Collider,
+	Status,
 	Movement,
+	Collider,
 	Combat,
 };
 

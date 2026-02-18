@@ -15,6 +15,13 @@ _int Collider::Update(_double _delta_time)
 		if (pair.second < 0.0)
 		{
 			pair.second = 0.0;
+
+			// 충돌 타이머가 0이 된 경우, 충돌 중인 콜라이더 목록에 없다면
+			// 해당 콜라이더와의 충돌이 종료된 것으로 간주하여 목록에서 제거
+			if (std::find(collided_colliders_.begin(), collided_colliders_.end(), pair.first) == collided_colliders_.end())
+			{
+				collision_timers_.erase(pair.first);
+			}
 		}
 	}
 
@@ -86,10 +93,6 @@ _bool Collider::_DeregisterFromCollidedList(Collider* _other)
 		collided_colliders_.erase(it);
 		return true;
 	}
-
-	// 충돌 타이머도 제거
-	if(collision_timers_.find(_other) != collision_timers_.end())
-		collision_timers_.erase(_other);
 
 	return _bool(false);
 }
