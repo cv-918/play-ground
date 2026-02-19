@@ -9,7 +9,7 @@
 
 #include "Components/Transform.h"
 #include "Components/Status.h"
-#include "Components/Movement.h"
+#include "Components/PlayerMovement.h"
 #include "Components/SphereCollider.h"
 #include "Components/Combat.h"
 
@@ -30,11 +30,9 @@ _bool Player::Initialize()
 
 	// 플레이어 컴포넌트 설정
 	status_ = new Status();
+	RegisterComponent(status_);
 
-	movement_ = new Movement();
-	movement_->MoveSpd(400.f);
-	movement_->MoveSpdMax(1200.f);
-	movement_->RotateSpd(600.f);
+	movement_ = new PlayerMovement();
 	RegisterComponent(movement_);
 
 	combat_ = new Combat();
@@ -48,6 +46,8 @@ _bool Player::Initialize()
 
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Body)));
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Attack)));
+
+	Finalize();
 
 	return true;
 }
@@ -65,8 +65,12 @@ _int Player::Update(_double _delta_time)
 
 void Player::Render(_double _delta_time)
 {
+	if (!IsVisible())
+		return;
+
 	__super::Render(_delta_time);
 
+	// s, 플레이어 외형 그리기
 	const auto pos = transform_->Position();
 	const _int rt_size = transform_->Scale().x;
 
@@ -77,7 +81,6 @@ void Player::Render(_double _delta_time)
 		pos.y + rt_size
 	};
 
-	// s, 플레이어 외형 그리기
 	Ellipse(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
 	// e, 플레이어 외형 그리기
 }
@@ -139,10 +142,6 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 {
 }
 
-void Player::OnCollisionExit(Collider* _this, Collider* _other)
-{
-}
-
 void Player::GetDamage(_float _damage)
 {
 	// 플레이어가 데미지를 입었을 때의 처리
@@ -152,154 +151,6 @@ void Player::GetDamage(_float _damage)
 
 _int Player::_ControllRoutine(_double _delta_time)
 {
-	if (!transform_)
-	{
-		return -1;
-	}
-
-	const auto delta_time = s_float(_delta_time);
-
-	// 여기 컨트롤러 타입에 따른 다른 이동 처리 코드를
-	// 일단 switch 로 구분해놓고 나중에 전략 또는 상태(객체) 패턴으로 변경
-	switch (controller_type_)
-	{
-	case KeyBoardControlType::Direction:
-	{
-		//auto mov_spd = MoveSpd();
-		//auto mov_dir = _Vector3::Zero();
-		//if (input_manager_->Pressed('W'))
-		//{
-		//	// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
-		//	auto next_pos = transform_->Forward2D() * mov_spd * delta_time;
-		//	const auto next_pos_copy = next_pos;
-
-		//	next_pos.x = MathFunctions::Clamp(s_int(next_pos.x), background_rect_.Left(), background_rect_.Right());
-		//	next_pos.y = MathFunctions::Clamp(s_int(next_pos.y), background_rect_.Top(), background_rect_.Bottom());
-
-		//	// 클램프 됐을 경우, 벽에 부딪힌 것으로 간주, 속도 0으로
-		//	if (next_pos_copy != next_pos) move_velocity_ = _Vector3::Zero();
-		//	transform_->Translate(next_pos);
-		//}
-		//else if (input_manager_->Pressed('S'))
-		//{
-		//	transform_->Translate(transform_->Back2D() * mov_spd * delta_time);
-		//}
-
-		//bool rotate = false;
-		//auto rot_spd = RotateSpd();
-		//if (input_manager_->Pressed('A'))
-		//{
-		//	rotate = true;
-		//}
-		//else if (input_manager_->Pressed('D'))
-		//{
-		//	rotate = true;
-		//	rot_spd *= -1.f;
-		//}
-
-		//if (rotate)
-		//{
-		//	transform_->Rotate2D(rot_spd * delta_time);
-		//}
-
-		//return rotate || mov_dir == _Vector3::Zero();
-	}
-
-	case KeyBoardControlType::Axis:
-	{
-		_Vector3 move;
-		if (input_manager_->Pressed('W'))
-			move.y -= 1.f;
-		else if (input_manager_->Pressed('S'))
-			move.y += 1.f;
-		if (input_manager_->Pressed('A'))
-			move.x -= 1.f;
-		else if (input_manager_->Pressed('D'))
-			move.x += 1.f;
-
-		
-		if (move.LengthSq() > 0.f)
-		{
-			move.Normalize();
-		}
-
-		// s, 가속도 적용 구간
-		// 가속도 적용
-		move_velocity_ += move * acceleration_ * delta_time;
-
-		if (move_velocity_ == _Vector3::Zero())
-		{
-			transform_->LookAt(input_manager_->MousePoint());
-			return 0;
-		}
-
-		// 마찰력 적용
-		/*
-			마찰력 적용을 '방향키 입력이 없을 때' 로 한정하면
-			마찰력 계수에 상관없이 이동 자체는 항상 최고속도가 나올 수 있을 것 같다
-
-			'방향키 입력이 없을 때'를 판별하기 위해서 InputManager에 AnyKeyPressed()를 만들었는데
-			조금 더 생각해보니 저걸로 판별할 경우 'WASD가 아닌 아무 키'를 눌렀을 때 여전히 마찰력이 적용된다
-			move의 Length()를 검사해서 WASD 입력으로 move의 값이 변한 상태인지 아닌지를 기준점으로 사용하는게 더 타당한 것 같다
-
-			if (move == _Vector3::Zero()) 조건으로 하면 '입력'이 없을 때에만 작동하는데 이게 뭔가 일관되지 않았다?
-		*/
-		if (move == _Vector3::Zero())
-		{
-			move_velocity_ -= move_velocity_ * friction_ * delta_time;
-		}
-
-		// 최대 속도 제한
-		const auto move_spd_max = movement_->MoveSpdMax();
-		if (move_velocity_.Length() > move_spd_max)
-		{
-			move_velocity_.Normalize();
-			move_velocity_ *= move_spd_max;
-		}
-
-		// 속도가 매우 작으면 0으로 고정 (떨림 현상 방지)
-		if (move_velocity_.Length() < 1.f)
-		{
-			move_velocity_ = _Vector3::Zero();
-		}
-		// e, 가속도 적용 구간
-
-		bool apply_clamp = true;
-		if (apply_clamp)
-		{
-			// 예비 포지션을 구해서 배경 영역을 벗어나는지 검사
-			auto next_pos = transform_->Position() + move_velocity_ * delta_time;
-			const auto next_pos_copy = next_pos;
-
-			next_pos.x = MathFunctions::Clamp(next_pos.x, background_rect_.Left_f(), background_rect_.Right_f());
-			next_pos.y = MathFunctions::Clamp(next_pos.y, background_rect_.Top_f(), background_rect_.Bottom_f());
-
-			// 클램프 됐을 경우
-			if (next_pos_copy != next_pos)
-			{
-				// 벽에 부딪힌 것으로 간주, 속도 0으로
-				// 포지션은 벽으로 고정
-				move_velocity_ = _Vector3::Zero();
-				transform_->Position(next_pos);
-			}
-			// 아닐 경우 통상 이동로직
-			else
-			{
-				transform_->Translate(move_velocity_ * delta_time);
-			}
-		}
-		else
-		{
-			transform_->Translate(move_velocity_ * delta_time);
-		}
-
-		// 마우스 바라보기
-		transform_->LookAt(input_manager_->MousePoint());
-
-		return move.Length() != 0;
-	}
-	}
-
 	return 0;
 }
 
@@ -347,23 +198,25 @@ void Player::_ControlInfoOnDebug()
 		case DebugControlDataType::Acceleration:
 			if (input_manager_->Down(VK_LEFT))
 			{
-				if (100.f < acceleration_)
-					acceleration_ -= 100.f;
+				auto acceleration = movement_->Acceleration();
+				if (100.f < acceleration)
+					movement_->Acceleration() -= 100.f;
 			}
 			else if (input_manager_->Down(VK_RIGHT))
 			{
-				acceleration_ += 100.f;
+				movement_->Acceleration() += 100.f;
 			}
 			break;
 		case DebugControlDataType::Friction:
 			if (input_manager_->Down(VK_LEFT))
 			{
-				if (1 < friction_)
-					--friction_;
+				auto friction = movement_->Friction();
+				if (1 < friction)
+					--movement_->Friction();
 			}
 			else if (input_manager_->Down(VK_RIGHT))
 			{
-				++friction_;
+				++movement_->Friction();
 			}
 			break;
 		case DebugControlDataType::MaxSpeed:
@@ -447,13 +300,13 @@ void Player::_ShowDebugInfo()
 		swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"이동량 : %.2f", move_velocity_.Magnitude());
+		swprintf_s(buffer, L"이동량 : %.2f", movement_->MoveVelocity().Magnitude());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"가속도 : %.f", acceleration_);
+		swprintf_s(buffer, L"가속도 : %.f", movement_->Acceleration());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"마찰 계수 : %.f", friction_);
+		swprintf_s(buffer, L"마찰 계수 : %.f", movement_->Friction());
 		debug_info_lines_.push_back(buffer);
 
 		swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
@@ -468,4 +321,10 @@ void Player::_ShowDebugInfo()
 	{
 		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, line.c_str(), line.length());
 	}
+}
+
+void Player::SetNavMesh(const _Rect& _rt)
+{
+	if (movement_)
+		movement_->SetNavMesh(_rt);
 }

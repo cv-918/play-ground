@@ -26,17 +26,19 @@ _bool PlayGround::Initialize()
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::ExpDust, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::ExpDust, true);
 	
-	game_objects_.push_back(new Background());
+	const auto background = new Background();
+	game_objects_.push_back(background);
 
 	// 여기서 다른 유닛들 추가
 
-	game_objects_.push_back(new Player());
+	const auto player = new Player();
+	game_objects_.push_back(player);
 	for (auto& game_object : game_objects_)
 	{
 		game_object->Initialize();
 	}
 
-	s_cast(Player*, game_objects_.back())->SetBackgroundRect(s_cast(Background*, game_objects_.front())->BackgroundRect());
+	player->SetNavMesh(s_cast(Background*, game_objects_.front())->BackgroundRect());
 
 	return true;
 }

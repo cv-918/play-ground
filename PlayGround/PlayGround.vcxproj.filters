@@ -56,6 +56,7 @@
     <ClInclude Include="Project\Gameplay\Components\Movement.h" />
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
     <ClInclude Include="Project\Gameplay\Components\Status.h" />
+    <ClInclude Include="Project\Gameplay\Components\PlayerMovement.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -96,5 +97,6 @@
     <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Status.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\PlayerMovement.cpp" />
   </ItemGroup>
 </Project>

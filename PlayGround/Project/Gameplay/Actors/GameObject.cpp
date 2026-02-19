@@ -11,6 +11,7 @@ GameObject::~GameObject()
 	Release();
 }
 
+// final 오브젝트의 Initialize 최상단에서 호출
 _bool GameObject::Initialize()
 {
 	// Transform이 없으면 생성해서 등록
@@ -22,10 +23,47 @@ _bool GameObject::Initialize()
 		transform_ = new_transform;
 	}
 
-	// 필요하면 다른 기본 컴포넌트도 여기서 등록 가능
-	for(const auto& component : components_)
+	return true;
+}
+
+// final 오브젝트의 Initialize 최하단에서 호출
+_bool GameObject::Finalize()
+{
+	for (const auto& component : components_)
+	{
+		// 컴포넌트 초기화
 		component->Initialize();
 
+		// 컴포넌트 타입에 따라 필요한 핸들러 시스템에 등록
+		switch (component->Type())
+		{
+		case ComponentType::Undefined:
+			break;
+		case ComponentType::Transform:
+			break;
+		case ComponentType::Collider:
+			CheckAndRegisterHandler<ICollidable>(component, HandlerSystemList::Collision);
+			break;
+		case ComponentType::Movement:
+			break;
+		case ComponentType::Combat:
+			CheckAndRegisterHandler<IDamagable>(component, HandlerSystemList::Damage);
+			break;
+		default:
+			break;
+		}
+	}
+
+	MAKE_INITIALIZED;
+	return true;
+}
+
+_bool GameObject::Release()
+{
+	for (auto& component : components_)
+		SAFE_DELETE(component);
+
+	std::vector<Component*>().swap(components_);
 	return true;
 }
 
@@ -58,15 +96,6 @@ void GameObject::Render(double _delta_time)
 
 	for (const auto& component : components_)
 		component->Render(_delta_time);
-}
-
-_bool GameObject::Release()
-{
-	for (auto& component : components_)
-		SAFE_DELETE(component);
-
-	std::vector<Component*>().swap(components_);
-	return true;
 }
 
 void GameObject::DebugRender(double _delta_time)
@@ -124,25 +153,6 @@ void GameObject::RegisterComponent(Component* _component)
 			transform_ = s_cast(Transform*, components_.back());
 			return;
 		}
-	}
-
-	// 3. 컴포넌트 타입에 따라 필요한 핸들러 시스템에 등록
-	switch (_component->Type())
-	{
-	case ComponentType::Undefined:
-		break;
-	case ComponentType::Transform:
-		break;
-	case ComponentType::Collider:
-		CheckAndRegisterHandler<ICollidable>(_component, HandlerSystemList::Collision);
-		break;
-	case ComponentType::Movement:
-		break;
-	case ComponentType::Combat:
-		CheckAndRegisterHandler<IDamagable>(_component, HandlerSystemList::Damage);
-		break;
-	default:
-		break;
 	}
 }
 

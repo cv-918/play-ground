@@ -9,6 +9,15 @@ class ExpDust
 	, public ICollidable
 	, public IDamagable
 {
+	enum class DustGrade
+	{
+		One,		// 
+		Two,		// 이동(직선, 빠름)
+		Three,		// 이동(타겟, 보통)
+		Four,		// 공격
+		Five,		// 이동(직선, 느림) | 공격
+	};
+
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;

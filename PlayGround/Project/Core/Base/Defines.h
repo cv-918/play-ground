@@ -20,6 +20,7 @@ typedef double					_double;
 
 #define PURE					= 0
 #define DEFAULT					= default
+#define EMPTY_FUNC				{}
 
 #define	WINCX					1280
 #define	WINCY					720
