@@ -4,11 +4,22 @@
 
 class IInitializable
 {
+#define MAKE_INITIALIZED _MarkAsInitialized()
+
 public:
 	explicit IInitializable() DEFAULT;
 	virtual ~IInitializable() DEFAULT;
 
 	virtual _bool Initialize() PURE;
+
+public:
+	_bool IsInitialized() const { return initialized_; }
+
+protected:
+	void _MarkAsInitialized() { initialized_ = true; }
+
+private:
+	_bool initialized_ = false;
 };
 
 class IUpdatable abstract
@@ -83,8 +94,8 @@ protected:
 
 public:
 	virtual void OnCollisionEnter(Collider* _this, Collider* _other) PURE;
-	virtual void OnCollisionStay(Collider* _this, Collider* _other) PURE;
-	virtual void OnCollisionExit(Collider* _this, Collider* _other) PURE;
+	virtual void OnCollisionStay(Collider* _this, Collider* _other) EMPTY_FUNC;
+	virtual void OnCollisionExit(Collider* _this, Collider* _other) EMPTY_FUNC;
 };
 
 class IDamagable : public IHandler

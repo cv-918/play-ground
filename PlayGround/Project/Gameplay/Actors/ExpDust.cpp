@@ -21,38 +21,7 @@ _bool ExpDust::Initialize()
 	Name(_T("ExpDust") + std::to_wstring(++instance_count));
 
 	// 더스트 초기값 설정
-	const auto lv = _Random.Range(1, 5);
-
-	_float scale = 10.f; // 기본 크기
-	_float move_spd = 0.f; // 기본 이동 속도
 	
-	_int move_pattern = 0; // 이동 패턴 (0: 정지, 1: 랜덤 방향으로 이동, 2: 플레이어를 향해 이동 등)
-	_int move_pattern_change_interval = 0; // 이동 패턴 변경 간격 (초 단위)
-	_int move_pattern_timer = 0; // 이동 패턴 타이머
-	
-	// 무브먼트 타입 설정해서 가속도 로직으로 이동할지 일반 로직으로 이동할지 선택
-	switch (lv)
-	{
-	case 1:
-		break;
-	case 2:
-		break;
-	case 3:
-		scale = 30.f;
-		break;
-	case 4:
-		scale = 50.f;
-		break;
-	case 5:
-		scale = 80.f;
-		break;
-	default:
-		break;
-	}
-
-	transform_->Rotation(0, 1);
-	transform_->Scale(scale);
-
 	// 랜덤 색상 설정
 	// RGB(100~255 범위의 랜덤한 색상)
 	// 추후에는 레벨에 따른 색상 범위 설정도 고려
@@ -64,11 +33,56 @@ _bool ExpDust::Initialize()
 		_Random.Range(color_range_min, color_range_max)
 	));
 
+	const auto lv = _Random.Range(1, 5);
+
+	_float scale = 0.f; // 기본 크기
+	_float move_spd = 0.f; // 기본 이동 속도
+
+	Movement::MovePattern move_pattern = Movement::MovePattern::Undefined;
+	_int move_pattern_change_interval = 0; // 이동 패턴 변경 간격 (초 단위)
+	_int move_pattern_timer = 0; // 이동 패턴 타이머
+	
+	// 무브먼트 타입 설정해서 가속도 로직으로 이동할지 일반 로직으로 이동할지 선택
+	switch (s_cast(DustGrade, lv))
+	{
+	case DustGrade::One:
+		scale = 10.f;
+		break;
+	case DustGrade::Two:
+		move_pattern = Movement::MovePattern::Directional;
+		move_spd = 80.f;
+
+		scale = 10.f;
+		break;
+	case DustGrade::Three:
+		move_pattern = Movement::MovePattern::ToTarget;
+		move_spd = 60.f;
+
+		scale = 30.f;
+		break;
+	case DustGrade::Four:
+		scale = 50.f;
+		break;
+	case DustGrade::Five:
+		move_pattern = Movement::MovePattern::Directional;
+		move_spd = 40.f;
+
+		scale = 80.f;
+		break;
+	default:
+		break;
+	}
+
+	transform_->Rotation(0, 1);
+	transform_->Scale(scale);
+
 	// 더스트 컴포넌트 설정
-	collider_ = new SphereCollider(scale * 0.5f);
+	_float radius = scale * 0.5f;
+	collider_ = new SphereCollider(radius);
 	collider_->Draw(false);
 
 	movement_ = new Movement();
+	movement_->MoveSpd(move_spd);
 
 	combat_ = new Combat();
 
@@ -78,7 +92,9 @@ _bool ExpDust::Initialize()
 	RegisterComponent(collider_);
 	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, collider_);
 
-	return _bool();
+	Finalize();
+
+	return true;
 }
 
 _int ExpDust::Update(_double _delta_time)
@@ -96,7 +112,6 @@ void ExpDust::Render(_double _delta_time)
 
 	__super::Render(_delta_time);
 
-	//HBRUSH hollowBrush = (HBRUSH)GetStockObject(color_brush_);
 	HBRUSH oldBrush = (HBRUSH)SelectObject(back_dc_, color_brush_);
 
 	const auto pos = transform_->Position();

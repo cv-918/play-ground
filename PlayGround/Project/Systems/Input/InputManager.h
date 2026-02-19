@@ -6,6 +6,12 @@
 #define _InputMgr InputManager::Get()
 #define INPUT_KEY_MAX 256
 
+enum class KeyBoardControlType
+{
+	Direction,
+	Axis,
+};
+
 class InputManager : public SingletonBase<InputManager>
 {
 public:
@@ -40,6 +46,8 @@ public:
 
 	const std::vector<_tchar>& Chars() const { return chars_; } // 이번 프레임에 들어온 WM_CHAR 문자 목록
 	
+	KeyBoardControlType ControllerType() const { return controller_type_; }
+	void ControllerType(const KeyBoardControlType _type) { controller_type_ = _type; }
 
 private:
 	struct KeyState
@@ -58,6 +66,8 @@ private:
 	_Point prev_mouse_;
 	_Point mouse_delta_;
 
-	_int wheel_delta_ = IV_ZERO;;
+	_int wheel_delta_ = IV_ZERO;
+
+	KeyBoardControlType controller_type_ = KeyBoardControlType::Axis;
 };
 

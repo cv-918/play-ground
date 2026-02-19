@@ -17,11 +17,13 @@ public:
 
 public:
 	virtual _bool Initialize() override;
-	virtual _int Update(double _delta_time) override;
-	virtual _int LateUpdate(double _delta_time) override;
-	virtual void Render(double _delta_time) override;
+	_bool Finalize();
 	virtual _bool Release() override;
 
+	virtual _int Update(double _delta_time) override;
+	virtual _int LateUpdate(double _delta_time) override;
+
+	virtual void Render(double _delta_time) override;
 	virtual void DebugRender(double _delta_time);
 
 public:
