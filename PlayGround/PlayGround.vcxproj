@@ -163,7 +163,8 @@
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
     <ClInclude Include="Project\Gameplay\Components\Component.h" />
     <ClInclude Include="Project\Gameplay\Components\Movement.h" />
-    <ClInclude Include="Project\Gameplay\Components\PlayerMovement.h" />
+    <ClInclude Include="Project\Gameplay\Components\NonPlayableMovement.h" />
+    <ClInclude Include="Project\Gameplay\Components\PlayableMovement.h" />
     <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\Status.h" />
@@ -194,7 +195,8 @@
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Component.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Movement.cpp" />
-    <ClCompile Include="Project\Gameplay\Components\PlayerMovement.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\NonPlayableMovement.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\PlayableMovement.cpp" />
     <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Status.cpp" />

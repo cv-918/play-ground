@@ -38,7 +38,7 @@ private:
 	_float player_col_size_[ColCount] = {};
 
 	// ÄÄÆ÷³ÍÆ® Ä³½Ì
-	class PlayerMovement* movement_ = nullptr;
+	class PlayableMovement* movement_ = nullptr;
 	class Combat* combat_ = nullptr;
 	class Status* status_ = nullptr;
 

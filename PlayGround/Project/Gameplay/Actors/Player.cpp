@@ -9,7 +9,7 @@
 
 #include "Components/Transform.h"
 #include "Components/Status.h"
-#include "Components/PlayerMovement.h"
+#include "Components/PlayableMovement.h"
 #include "Components/SphereCollider.h"
 #include "Components/Combat.h"
 
@@ -32,7 +32,7 @@ _bool Player::Initialize()
 	status_ = new Status();
 	RegisterComponent(status_);
 
-	movement_ = new PlayerMovement();
+	movement_ = new PlayableMovement();
 	RegisterComponent(movement_);
 
 	combat_ = new Combat();

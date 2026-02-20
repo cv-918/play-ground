@@ -7,7 +7,7 @@
 
 #include "Components/Transform.h"
 #include "Components/Status.h"
-#include "Components/Movement.h"
+#include "Components/NonPlayableMovement.h"
 #include "Components/SphereCollider.h"
 #include "Components/Combat.h"
 
@@ -38,7 +38,7 @@ _bool ExpDust::Initialize()
 	_float scale = 0.f; // 기본 크기
 	_float move_spd = 0.f; // 기본 이동 속도
 
-	Movement::MovePattern move_pattern = Movement::MovePattern::Undefined;
+	MovementPattern pattern = MovementPattern::Undefined;
 	_int move_pattern_change_interval = 0; // 이동 패턴 변경 간격 (초 단위)
 	_int move_pattern_timer = 0; // 이동 패턴 타이머
 	
@@ -49,13 +49,13 @@ _bool ExpDust::Initialize()
 		scale = 10.f;
 		break;
 	case DustGrade::Two:
-		move_pattern = Movement::MovePattern::Directional;
+		pattern = MovementPattern::Directional;
 		move_spd = 80.f;
 
 		scale = 10.f;
 		break;
 	case DustGrade::Three:
-		move_pattern = Movement::MovePattern::ToTarget;
+		pattern = MovementPattern::ToTarget;
 		move_spd = 60.f;
 
 		scale = 30.f;
@@ -64,7 +64,7 @@ _bool ExpDust::Initialize()
 		scale = 50.f;
 		break;
 	case DustGrade::Five:
-		move_pattern = Movement::MovePattern::Directional;
+		pattern = MovementPattern::Directional;
 		move_spd = 40.f;
 
 		scale = 80.f;
@@ -73,24 +73,35 @@ _bool ExpDust::Initialize()
 		break;
 	}
 
+	// s, [ 더스트 컴포넌트 설정 ]
+	// #1. 초기 SRT(Scale, Rotation, Translation) 설정
+	// 트랜스폼 및 무브먼트 컴포넌트에 대한 설정
+	// 크기는 레벨에 의해서
+	// 회전은 이동 타입 및 초기 생성 위치에 따라서
+	// 위치는 네비메시(화면 영역) 바깥의 임의의 지점을 생성 위치로
+
 	transform_->Rotation(0, 1);
 	transform_->Scale(scale);
 
-	// 더스트 컴포넌트 설정
+	
 	_float radius = scale * 0.5f;
 	collider_ = new SphereCollider(radius);
 	collider_->Draw(false);
 
-	movement_ = new Movement();
+	movement_ = new NonPlayableMovement();
+	movement_->Pattern(pattern);
 	movement_->MoveSpd(move_spd);
 
+	// #2. 공격 패턴 설정
+	// 컴뱃 및 스테이터스 컴포넌트에 대한 설정
+	// 공격 패턴이 있는 레벨의 경우 공격 패턴 설정
 	combat_ = new Combat();
-
 	status_ = new Status();
 	status_->Level(lv);
 
 	RegisterComponent(collider_);
 	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, collider_);
+	// e, [ 더스트 컴포넌트 설정 ]
 
 	Finalize();
 
