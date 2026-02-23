@@ -6,9 +6,11 @@ _bool Background::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	// 약간의 여백, 가로는 2/3 지점까지 배경, 나머지 영역은 디버그용
-	background_rect_ = _Rect(_Point{ INGAVE_FRAME_THICK_H, INGAVE_FRAME_THICK_H }, _Point{ s_int(WINCX * 0.66f), WINCY - INGAVE_FRAME_THICK_H });
-	background_rt_ = background_rect_.ToRECT();
+	const auto lt = _Point{ INGAVE_FRAME_THICKNESS_HALF, INGAVE_FRAME_THICKNESS_HALF };
+	const auto size = _Size{ GAME_SCREEN_CX, GAME_SCREEN_CY };
+
+	nav_mesh_ = _Rect(lt, size);
+	nav_mesh_draw_rt_ = nav_mesh_.ToRECT();
 
     return true;
 }
@@ -32,7 +34,7 @@ void Background::Render(double _delta_time)
 	HPEN oldPen = (HPEN)SelectObject(back_dc_, hPen);
 	HBRUSH hBrush = CreateSolidBrush(RGB(135, 206, 235)); // 하늘색
 	HBRUSH oldBrush = (HBRUSH)SelectObject(back_dc_, hBrush);
-	FillRect(back_dc_, &background_rt_, hBrush);
+	FillRect(back_dc_, &nav_mesh_draw_rt_, hBrush);
 	SelectObject(back_dc_, oldBrush);
 	SelectObject(back_dc_, oldPen);
 	DeleteObject(hBrush);

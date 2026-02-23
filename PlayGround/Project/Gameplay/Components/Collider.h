@@ -15,6 +15,7 @@ public:
 
 public:
 	virtual _int Update(_double _delta_time) override;
+	virtual _int LateUpdate(_double _delta_time) override;
 
 public:
 	ColliderType Type() const { return type; }
@@ -45,6 +46,7 @@ private:
 
 	std::list<Collider*> collided_colliders_; // 충돌 중인 콜라이더 목록
 	std::map<Collider*, _double> collision_timers_;
+	std::vector<Collider*> erase_waiting_list_;
 
 	_bool draw_;
 

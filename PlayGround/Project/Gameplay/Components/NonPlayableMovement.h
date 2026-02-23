@@ -8,7 +8,13 @@ public:
 	virtual _bool Initialize() override;
 
 private:
-	void _ProcessOnstopped();
-	void _ProcessOnDirectional();
-	void _ProcessOnToTarget();
+	void _ProcessOnstopped(_double _delta_time);
+	void _ProcessOnDirectional(_double _delta_time);
+	void _ProcessOnToTarget(_double _delta_time);
+
+public:
+	void Target(class GameObject* _object) { target_ = _object; }
+
+private:
+	class GameObject* target_;
 };

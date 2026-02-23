@@ -5,8 +5,8 @@
 
 #include "EntryPoint.h"
 #include "App/PlayGround.h"
-#include "Systems/Render/RenderChain.h"
-#include "Systems/Input/InputManager.h"
+#include "EngineSystems/Render/RenderChain.h"
+#include "EngineSystems/Input/InputManager.h"
 
 PlayGround pg;
 

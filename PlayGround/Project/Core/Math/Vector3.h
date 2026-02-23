@@ -72,8 +72,15 @@ public:
 	}
 
 	// 연산자 오버로드
+	_Vector3& operator=(const _float _s) { x = y = z = _s; return *this; }
+	_Vector3& operator=(const _int _i) { x = y = z = s_float(_i); return *this; }
+
 	_Vector3 operator+(const _Vector3& _rhs) const { return _Vector3(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
+	_Vector3 operator+(const _float _s) const { return _Vector3(x + _s, y + _s, z + _s); }
+
 	_Vector3 operator-(const _Vector3& _rhs) const { return _Vector3(x - _rhs.x, y - _rhs.y, z - _rhs.z); }
+	_Vector3 operator-(const _float _s) const { return _Vector3(x - _s, y - _s, z - _s); }
+
 	_Vector3 operator*(const _float _s) const { return _Vector3(x * _s, y * _s, z * _s); }
 	_Vector3 operator/(const _float _s) const
 	{
@@ -84,7 +91,13 @@ public:
 	}
 
 	_Vector3& operator+=(const _Vector3& _rhs) { x += _rhs.x; y += _rhs.y; z += _rhs.z; return *this; }
+	_Vector3& operator+=(const _float _s) { x += _s; y += _s; z += _s; return *this; }
+	_Vector3& operator+=(const _int _i) { const _float _s = s_float(_i); x += _s; y += _s; z += _s; return *this; }
+
 	_Vector3& operator-=(const _Vector3& _rhs) { x -= _rhs.x; y -= _rhs.y; z -= _rhs.z; return *this; }
+	_Vector3& operator-=(const _float _s) { x -= _s; y -= _s; z -= _s; return *this; }
+	_Vector3& operator-=(const _int _i) { const _float _s = s_float(_i); x -= _s; y -= _s; z -= _s; return *this; }
+
 	_Vector3& operator*=(const _float _s) { x *= _s; y *= _s; z *= _s; return *this; }
 	_Vector3& operator/=(const _float _s)
 	{

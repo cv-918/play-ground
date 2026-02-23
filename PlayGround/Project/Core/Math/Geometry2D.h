@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/Base/Bases.h"
 
 struct _Point
 {
@@ -24,6 +25,7 @@ struct _Size
 	_int y;
 };
 
+struct _Vector3;
 struct _Rect
 {
 	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() }, size_{ _Size::Zero() } {}
@@ -50,6 +52,15 @@ struct _Rect
 	_Size Size() const { return size_; }
 
 	const RECT ToRECT() const { return RECT{ points_[0].x, points_[0].y, points_[1].x, points_[1].y }; }
+
+	_bool PtInRect(const _Point& _pt) const;
+	_bool PtInRect(const _Vector3& _vec) const;
+
+	void MoveToCenter(const _Point& _center);
+
+public:
+	_Rect& operator*=(const _float _scale);
+	_Rect operator*(const _float _scale) const;
 
 private:
 	_Point points_[2]; // lt, rb

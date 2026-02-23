@@ -11,7 +11,7 @@ class ExpDust
 {
 	enum class DustGrade
 	{
-		One,		// 
+		One = 1,		// 
 		Two,		// 이동(직선, 빠름)
 		Three,		// 이동(타겟, 보통)
 		Four,		// 공격

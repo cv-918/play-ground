@@ -1,9 +1,9 @@
 #include "framework.h"
 #include "Player.h"
 
-#include "Systems/Input/InputManager.h"
-#include "Systems/Render/RenderChain.h"
-#include "Systems/Physics/CollisionManager.h"
+#include "EngineSystems/Input/InputManager.h"
+#include "EngineSystems/Render/RenderChain.h"
+#include "EngineSystems/Physics/CollisionManager.h"
 
 #include "Core/Math/MathFunctions.h"
 
@@ -89,11 +89,11 @@ void Player::DebugRender(_double _delta_time)
 {
 	__super::DebugRender(_delta_time);
 
+	// s, 방향 그려서 회전이 적용되는지 확인
 	const auto position = transform_->Position();
 
-	// s, 방향 그려서 회전이 적용되는지 확인
 	auto forward = transform_->Forward2D();
-	const float line_length = 50.f;
+	const float line_length = 75.f;
 	forward *= line_length;
 	forward += position;
 
@@ -270,12 +270,12 @@ void Player::_ShowDebugInfo()
 	_tchar buffer[MAX_PATH] = {};
 
 	const _int line_gap = 20;
-	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICK;
-	_int draw_pos_y = INGAVE_FRAME_THICK_H - line_gap + 5;
+	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICKNESS;
+	_int draw_pos_y = INGAVE_FRAME_THICKNESS_HALF - line_gap + 5;
 
 	// 1) 배경 먼저 그리기
-	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICK_H, INGAVE_FRAME_THICK_H, WINCX - INGAVE_FRAME_THICK_H, WINCY - INGAVE_FRAME_THICK_H };
-	Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICKNESS_HALF, INGAVE_FRAME_THICKNESS_HALF, WINCX - INGAVE_FRAME_THICKNESS_HALF, WINCY - INGAVE_FRAME_THICKNESS_HALF };
+	//Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
 
 	// 2) 텍스트 그리기
 	swprintf_s(buffer, L"[ 디버깅 정보 타입 : %ls ]", labels[debug_type_].c_str());

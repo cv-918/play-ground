@@ -1,15 +1,18 @@
 #include "framework.h"
 #include "PlayGround.h"
 
-#include "Systems/Input/InputManager.h"
-#include "Systems/Render/RenderChain.h"
-#include "Systems/Physics/CollisionManager.h"
+#include "EngineSystems/Input/InputManager.h"
+#include "EngineSystems/Render/RenderChain.h"
+#include "EngineSystems/Physics/CollisionManager.h"
 #include "Core/Math/Random.h"
 
 #include "Actors/Player.h"
 #include "Actors/ExpDust.h"
 #include "Components/Transform.h"
 #include "GamePlay/World/Background.h"
+
+#include "GamePlaySystems/StageManager.h"
+#include "GamePlaySystems/GameState.h"
 
 PlayGround::~PlayGround()
 {
@@ -38,7 +41,11 @@ _bool PlayGround::Initialize()
 		game_object->Initialize();
 	}
 
-	player->SetNavMesh(s_cast(Background*, game_objects_.front())->BackgroundRect());
+	const auto& nav_mesh = background->NavMesh();
+	player->SetNavMesh(nav_mesh);
+	_StageMgr.SetNavMesh(nav_mesh);
+
+	_GameState.Player(player);
 
 	return true;
 }
