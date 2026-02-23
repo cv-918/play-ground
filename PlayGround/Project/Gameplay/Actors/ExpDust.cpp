@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "ExpDust.h"
 
-#include "Systems/Physics/CollisionManager.h"
+#include "EngineSystems/Physics/CollisionManager.h"
 
 #include "Core/Math/Random.h"
 
@@ -10,6 +10,9 @@
 #include "Components/NonPlayableMovement.h"
 #include "Components/SphereCollider.h"
 #include "Components/Combat.h"
+
+#include "GamePlaySystems/StageManager.h"
+#include "GamePlaySystems/GameState.h"
 
 _bool ExpDust::Initialize()
 {
@@ -35,54 +38,147 @@ _bool ExpDust::Initialize()
 
 	const auto lv = _Random.Range(1, 5);
 
-	_float scale = 0.f; // 기본 크기
-	_float move_spd = 0.f; // 기본 이동 속도
-
+	// movement
 	MovementPattern pattern = MovementPattern::Undefined;
-	_int move_pattern_change_interval = 0; // 이동 패턴 변경 간격 (초 단위)
-	_int move_pattern_timer = 0; // 이동 패턴 타이머
+	_float move_spd = 0.f;
+
+	// transform
+	_float scale = 0.f;
+	_Vector3 position;
+	_int position_clampper = 0;
+	_int position_padding_x = _Random.Range(0, 50); // for moving patterns
+	_int position_padding_y = _Random.Range(0, 50); // for moving patterns
+	_Vector3 look_point;
 	
 	// 무브먼트 타입 설정해서 가속도 로직으로 이동할지 일반 로직으로 이동할지 선택
 	switch (s_cast(DustGrade, lv))
 	{
 	case DustGrade::One:
+		pattern = MovementPattern::Stopped;
+		move_spd = 0.f;
+
 		scale = 10.f;
+		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Two:
 		pattern = MovementPattern::Directional;
 		move_spd = 80.f;
 
 		scale = 10.f;
+		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Three:
 		pattern = MovementPattern::ToTarget;
 		move_spd = 60.f;
 
 		scale = 30.f;
+		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Four:
+		pattern = MovementPattern::Stopped;
+		move_spd = 0.f;
+
 		scale = 50.f;
+		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Five:
 		pattern = MovementPattern::Directional;
 		move_spd = 40.f;
 
 		scale = 80.f;
+		position_clampper = (s_int(scale) >> 1);
 		break;
 	default:
 		break;
 	}
 
+	switch (pattern)
+	{
+	case MovementPattern::Stopped:
+	{
+		position.x = _Random.Range(INGAVE_FRAME_THICKNESS_HALF + position_clampper,
+			WINCX - INGAVE_FRAME_THICKNESS_HALF - position_clampper);
+		position.y = _Random.Range(INGAVE_FRAME_THICKNESS_HALF + position_clampper,
+			WINCY - INGAVE_FRAME_THICKNESS_HALF - position_clampper);
+	}
+	break;
+
+	case MovementPattern::Directional:
+	case MovementPattern::ToTarget:
+	{
+		_Point generated_position = _StageMgr.GeneratePosition(STAGE_PLAY_STATE::Ready == _StageMgr.State());
+
+		/*
+			중점에서 생성 위치를 빼면 방향 벡터(v)가 나온다
+			생성 위치를 v 방향으로 radius 만큼 이동시킨 위치가 화면 안에 있을 경우,
+			반대 방향으로 '얼마만큼 -radius만큼?-' 밀어낸다.
+		*/
+
+		//const auto& generated_position = _StageMgr.GeneratePosition(false);
+
+		_Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
+		const auto to_center = (center - generated_position).Normalized();
+		position = to_center * position_clampper;
+
+		const auto& nav_mesh = _StageMgr.GetNavMesh();
+		if (nav_mesh.PtInRect(position))
+		{
+			position = to_center * (position_clampper * -1.f);
+		}
+
+		// 이 영역을 랜덤하게 바라보게끔 한다
+		const auto& look_target_area = nav_mesh * 0.75f;
+		look_point = { _Random.Range(look_target_area.Left(), look_target_area.Right()),
+			_Random.Range(look_target_area.Top(), look_target_area.Bottom()) };
+	}
+	break;
+		//// 스테이지가 준비 중이라면 화면 내부 + 외부 생성
+		//if (STAGE_PLAY_STATE::Ready == _StageMgr.State())
+		//{
+		//	const auto& generated_position = _StageMgr.GeneratePosition(true);
+		//	// 
+		//	//position.x = ;
+		//}
+		//// 스테이지가 진행 중이라면 외부 생성
+		//else
+		//{
+		//	/*
+		//		중점에서 생성 위치를 빼면 방향 벡터(v)가 나온다
+		//		생성 위치를 v 방향으로 radius 만큼 이동시킨 위치가 화면 안에 있을 경우,
+		//		반대 방향으로 '얼마만큼 -radius만큼?-' 밀어낸다.
+		//	*/
+		//	const auto& generated_position = _StageMgr.GeneratePosition(false);
+
+		//	_Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
+		//	const auto to_center = (center - generated_position).Normalized();
+		//	position = to_center * position_clampper;
+
+		//	const auto& nav_mesh = _StageMgr.GetNavMesh();
+		//	if (nav_mesh.PtInRect(position))
+		//	{
+		//		position = to_center * -position_clampper;
+		//	}
+		//}
+		//break;
+	}
+
 	// s, [ 더스트 컴포넌트 설정 ]
-	// #1. 초기 SRT(Scale, Rotation, Translation) 설정
-	// 트랜스폼 및 무브먼트 컴포넌트에 대한 설정
-	// 크기는 레벨에 의해서
-	// 회전은 이동 타입 및 초기 생성 위치에 따라서
-	// 위치는 네비메시(화면 영역) 바깥의 임의의 지점을 생성 위치로
+	/*
+		#1. 초기 SRT(Scale, Rotation, Translation) 설정
+		- 트랜스폼 및 무브먼트 컴포넌트에 대한 설정
 
-	transform_->Rotation(0, 1);
+		* 크기 : 레벨 분기
+		* 위치 : 이동 타입(레벨에 의해 분기)에 따라
+				 -> Stopped 인 경우 무조건 화면 내부에 생성해야함
+				 -> Directional | ToTarget 일 경우 스폰 가능한 전체 영역
+				 -> 스테이지 이동에 의한 초기 생성인지 스테이지 진행 중의 지속 생성인지에 따라서 스폰 영역 변경되어야 함
+				 
+		* 회전 : 레벨(이동 타입) 및 초기 생성 위치에 따라서
+	*/
+
 	transform_->Scale(scale);
-
+	transform_->Position(position);
+	transform_->LookAt(look_point);
 	
 	_float radius = scale * 0.5f;
 	collider_ = new SphereCollider(radius);
@@ -91,10 +187,21 @@ _bool ExpDust::Initialize()
 	movement_ = new NonPlayableMovement();
 	movement_->Pattern(pattern);
 	movement_->MoveSpd(move_spd);
+	if (lv == 3)
+	{
+ 		s_cast(NonPlayableMovement*, movement_)->Target(_GameState.Player());
+	}
 
-	// #2. 공격 패턴 설정
-	// 컴뱃 및 스테이터스 컴포넌트에 대한 설정
-	// 공격 패턴이 있는 레벨의 경우 공격 패턴 설정
+	const auto move_dir = (look_point - position).Normalized();
+	movement_->MoveDir(move_dir);
+	RegisterComponent(movement_);
+
+	/*
+		#2. 공격 패턴 설정
+		- 컴뱃 및 스테이터스 컴포넌트에 대한 설정
+		공격 패턴이 있는 레벨의 경우 공격 패턴 설정
+	*/
+
 	combat_ = new Combat();
 	status_ = new Status();
 	status_->Level(lv);
@@ -142,6 +249,18 @@ void ExpDust::Render(_double _delta_time)
 void ExpDust::DebugRender(double _delta_time)
 {
 	__super::DebugRender(_delta_time);
+
+	// s, 방향 그려서 회전이 적용되는지 확인
+	const auto position = transform_->Position();
+
+	auto forward = transform_->Forward2D();
+	const float line_length = 75.f;
+	forward *= line_length;
+	forward += position;
+
+	MoveToEx(back_dc_, s_int(position.x), s_int(position.y), nullptr);
+	LineTo(back_dc_, s_int(forward.x), s_int(forward.y));
+	// s, 방향 그려서 회전이 적용되는지 확인
 
 	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
 	int oldMode = SetBkMode(back_dc_, TRANSPARENT);

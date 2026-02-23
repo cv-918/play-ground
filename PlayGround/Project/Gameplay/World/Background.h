@@ -2,11 +2,10 @@
 
 #include "Actors/GameObject.h"
 
-class Background :
-    public GameObject
+class Background : public GameObject
 {
 public:
-    explicit Background() DEFAULT;
+	explicit Background() : nav_mesh_draw_rt_{} {};
 	virtual ~Background() DEFAULT;
 
 public:
@@ -15,10 +14,9 @@ public:
 	virtual void Render(double _delta_time) override;
 
 public:
-	const _Rect& BackgroundRect() const { return background_rect_; }
+	const _Rect& NavMesh() const { return nav_mesh_; }
 
 private:
-	_Rect background_rect_ = {};
-	RECT background_rt_ = {}; // ToRect 로는 background_rt_ 못 넘겨줘서 미리 변환해둠
+	_Rect nav_mesh_;
+	RECT nav_mesh_draw_rt_; // ToRect 로는 FillRect() 에 넘겨줄 수가 없어서 미리 변환해둠
 };
-

@@ -8,6 +8,9 @@ HDC Collider::back_dc_ = nullptr;
 
 _int Collider::Update(_double _delta_time)
 {
+	if (!erase_waiting_list_.empty())
+		erase_waiting_list_.clear();
+
 	// 충돌 타이머 업데이트
 	for (auto& pair : collision_timers_)
 	{
@@ -17,11 +20,25 @@ _int Collider::Update(_double _delta_time)
 			pair.second = 0.0;
 
 			// 충돌 타이머가 0이 된 경우, 충돌 중인 콜라이더 목록에 없다면
-			// 해당 콜라이더와의 충돌이 종료된 것으로 간주하여 목록에서 제거
+			// 해당 콜라이더와의 충돌이 종료된 것으로 간주하여 삭제 목록에 등록
 			if (std::find(collided_colliders_.begin(), collided_colliders_.end(), pair.first) == collided_colliders_.end())
 			{
-				collision_timers_.erase(pair.first);
+				erase_waiting_list_.push_back(pair.first);
 			}
+		}
+	}
+
+	return _int();
+}
+
+_int Collider::LateUpdate(_double _delta_time)
+{
+	if (!erase_waiting_list_.empty())
+	{
+		for (auto& pair : collision_timers_)
+		{
+			if (std::find(collided_colliders_.begin(), collided_colliders_.end(), pair.first) == collided_colliders_.end())
+				collision_timers_.erase(pair.first);
 		}
 	}
 
