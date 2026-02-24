@@ -24,6 +24,7 @@ public:
 
 public:
 	void Translate(const _Vector3& _delta);
+	void TranslateToForward(const _float _delta);
 	void Rotate2D(const _float _delta);
 	void LookAt(const _Vector3& _target);
 
