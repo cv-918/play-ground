@@ -1,9 +1,5 @@
 #pragma once
 
-#include "Core/Base/Bases.h"
-#include "Core/Interface/Interfaces.h"
-#include "Core/Math/Geometry2D.h"
-
 #define _RenderChain RenderChain::Get()
 
 class RenderChain
@@ -27,18 +23,9 @@ private:
 	_bool _DestroyBackBuffer();
 
 public:
-	const HWND Hwnd() const { return hwnd_; }
-	void Hwnd(const HWND _hwnd) { hwnd_ = _hwnd; }
-
-	const HDC Dc() const { return dc_; }
-	const HDC BackDc() const { return back_dc_; }
-
 	const _Size ScreenSize() const { return screen_size_; }
 
 private:
-	HWND	hwnd_			= nullptr;
-	HDC		dc_				= nullptr;
-	HDC		back_dc_		= nullptr;
 	HBITMAP	back_bmp_		= nullptr;
 	HBITMAP	old_back_bmp_	= nullptr;
 

@@ -171,7 +171,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    SetWindowPos(hWnd, nullptr, 0, 0, w, h,
 	   SWP_NOMOVE | SWP_NOZORDER);
 
-   _RenderChain.Hwnd(hWnd);
+   g_hwnd = hWnd; // 전역 변수에 저장
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);

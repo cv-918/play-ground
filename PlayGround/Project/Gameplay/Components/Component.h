@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Core/Base/Bases.h"
-#include "Core/Math/Vector3.h"
-
 class Component : public ComponentBase
 {
 public:

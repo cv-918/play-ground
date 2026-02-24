@@ -230,7 +230,7 @@ void ExpDust::Render(_double _delta_time)
 
 	__super::Render(_delta_time);
 
-	HBRUSH oldBrush = (HBRUSH)SelectObject(back_dc_, color_brush_);
+	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, color_brush_);
 
 	const auto pos = transform_->Position();
 	const _int rt_size = transform_->Scale().Length();
@@ -242,8 +242,8 @@ void ExpDust::Render(_double _delta_time)
 		pos.y + rt_size
 	};
 
-	Ellipse(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
-	SelectObject(back_dc_, oldBrush);
+	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
+	SelectObject(g_back_dc, oldBrush);
 }
 
 void ExpDust::DebugRender(double _delta_time)
@@ -258,12 +258,12 @@ void ExpDust::DebugRender(double _delta_time)
 	forward *= line_length;
 	forward += position;
 
-	MoveToEx(back_dc_, s_int(position.x), s_int(position.y), nullptr);
-	LineTo(back_dc_, s_int(forward.x), s_int(forward.y));
+	MoveToEx(g_back_dc, s_int(position.x), s_int(position.y), nullptr);
+	LineTo(g_back_dc, s_int(forward.x), s_int(forward.y));
 	// s, 방향 그려서 회전이 적용되는지 확인
 
 	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
-	int oldMode = SetBkMode(back_dc_, TRANSPARENT);
+	int oldMode = SetBkMode(g_back_dc, TRANSPARENT);
 
 	const auto pos = transform_->Position();
 	const auto rt_size = 150;
@@ -277,11 +277,11 @@ void ExpDust::DebugRender(double _delta_time)
 
 	// s, 오브젝트 이름 그리기
 	const auto debug_string_level = std::wstring(_T("(Lv : ")) + std::to_wstring(status_->Level()) + std::wstring(_T(")"));
-	DrawText(back_dc_, debug_string_level.c_str(), debug_string_level.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+	DrawText(g_back_dc, debug_string_level.c_str(), debug_string_level.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 	// e, 오브젝트 이름 그리기
 
 	// 3. (선택 사항) 다음 그림을 위해 이전 모드로 복구
-	SetBkMode(back_dc_, oldMode);
+	SetBkMode(g_back_dc, oldMode);
 }
 
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)

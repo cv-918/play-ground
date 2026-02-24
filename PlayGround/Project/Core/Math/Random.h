@@ -1,7 +1,6 @@
 #pragma once
 
 #include <random>
-#include "Core/Base/Bases.h"
 
 /*
 	사용 예시:

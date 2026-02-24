@@ -4,8 +4,6 @@
 #include "Components/Transform.h"
 #include "EngineSystems/Render/RenderChain.h"
 
-HDC GameObject::back_dc_ = nullptr;
-
 GameObject::~GameObject()
 {
 	Release();
@@ -104,7 +102,7 @@ void GameObject::DebugRender(double _delta_time)
 		return;
 
 	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
-	int oldMode = SetBkMode(back_dc_, TRANSPARENT);
+	int oldMode = SetBkMode(g_back_dc, TRANSPARENT);
 
 	const auto pos = transform_->Position();
 	const auto rt_size = 150;
@@ -118,11 +116,11 @@ void GameObject::DebugRender(double _delta_time)
 
 	// s, 오브젝트 이름 그리기
 	const auto debug_string_name = Name();
-	DrawText(back_dc_, debug_string_name.c_str(), debug_string_name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+	DrawText(g_back_dc, debug_string_name.c_str(), debug_string_name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 	// e, 오브젝트 이름 그리기
 
 	// 3. (선택 사항) 다음 그림을 위해 이전 모드로 복구
-	SetBkMode(back_dc_, oldMode);
+	SetBkMode(g_back_dc, oldMode);
 }
 
 void GameObject::RegisterComponent(Component* _component)

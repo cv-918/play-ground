@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClInclude Include="Project\Core\Base\Bases.h" />
     <ClInclude Include="Project\Core\Base\Defines.h" />
+    <ClInclude Include="Project\Core\Base\Extern.h" />
     <ClInclude Include="Project\Core\Interface\Interfaces.h" />
     <ClInclude Include="Project\Core\Math\Geometry2D.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
@@ -173,6 +174,10 @@
     <ClInclude Include="Project\Gameplay\Actors\GameObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\GameState.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\StageManager.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\Scene.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\SceneManager.h" />
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
@@ -212,6 +217,10 @@
     </ClCompile>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\Scene.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />

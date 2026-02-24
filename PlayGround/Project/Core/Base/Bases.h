@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Core/Base/Defines.h"
-#include "Interface/Interfaces.h"
-
 template <typename T>
 class SingletonBase
 {
@@ -68,4 +65,13 @@ public:
 protected:
 	ComponentType type_ = ComponentType::Undefined;
 	class GameObject* gameobject_ = nullptr;
+};
+
+enum class SceneType
+{
+	Intro,
+	Loading,
+	Lobby,
+	GamePlay,
+	Count,
 };
