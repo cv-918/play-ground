@@ -1,8 +1,9 @@
 #include "framework.h"
 #include "RenderChain.h"
 
-#include "Actors/GameObject.h"
-#include "Components/Collider.h"
+HWND g_hwnd		= nullptr;
+HDC g_dc		= nullptr;
+HDC g_back_dc	= nullptr;
 
 RenderChain::~RenderChain()
 {
@@ -11,11 +12,8 @@ RenderChain::~RenderChain()
 
 _bool RenderChain::Initialize()
 {
-	dc_ = GetDC(hwnd_);
+	g_dc = GetDC(g_hwnd);
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
-
-	GameObject::BackDc(back_dc_);
-	Collider::BackDc(back_dc_);
 
     return true;
 }
@@ -24,10 +22,10 @@ _bool RenderChain::Release()
 {
 	_DestroyBackBuffer();
 
-	if (dc_)
+	if (g_dc)
 	{
-		ReleaseDC(hwnd_, dc_);
-		dc_ = nullptr;
+		ReleaseDC(g_hwnd, g_dc);
+		g_dc = nullptr;
 	}
 
 	return true;
@@ -35,12 +33,12 @@ _bool RenderChain::Release()
 
 void RenderChain::Clear()
 {
-	PatBlt(back_dc_, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
+	PatBlt(g_back_dc, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
 }
 
 void RenderChain::Present()
 {
-	BitBlt(dc_, 0, 0, screen_size_.x, screen_size_.y, back_dc_, 0, 0, SRCCOPY);
+	BitBlt(g_dc, 0, 0, screen_size_.x, screen_size_.y, g_back_dc, 0, 0, SRCCOPY);
 }
 
 _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
@@ -51,26 +49,26 @@ _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 	screen_size_.x = _width;
 	screen_size_.y = _height;
 
-	back_dc_ = CreateCompatibleDC(dc_);
-	back_bmp_ = CreateCompatibleBitmap(dc_, screen_size_.x, screen_size_.y);
-	old_back_bmp_ = (HBITMAP)SelectObject(back_dc_, back_bmp_);
+	g_back_dc = CreateCompatibleDC(g_dc);
+	back_bmp_ = CreateCompatibleBitmap(g_dc, screen_size_.x, screen_size_.y);
+	old_back_bmp_ = (HBITMAP)SelectObject(g_back_dc, back_bmp_);
 
 	// (선택) 초기 클리어
-	PatBlt(back_dc_, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
+	PatBlt(g_back_dc, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
 
     return true;
 }
 
 _bool RenderChain::_DestroyBackBuffer()
 {
-	if (!back_dc_)
+	if (!g_back_dc)
 	{
 		return false;
 	}
 
 	if (old_back_bmp_)
 	{
-		SelectObject(back_dc_, old_back_bmp_);
+		SelectObject(g_back_dc, old_back_bmp_);
 		old_back_bmp_ = nullptr;
 	}
 
@@ -80,8 +78,8 @@ _bool RenderChain::_DestroyBackBuffer()
 		back_bmp_ = nullptr;
 	}
 
-	DeleteDC(back_dc_);
-	back_dc_ = nullptr;
+	DeleteDC(g_back_dc);
+	g_back_dc = nullptr;
 
 	return true;
 }

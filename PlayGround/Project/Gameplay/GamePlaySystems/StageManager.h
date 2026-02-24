@@ -1,6 +1,4 @@
 #pragma once
-#include "Core/Base/Bases.h"
-#include "Core/Math/Geometry2D.h"
 
 /*
 	Static Info.

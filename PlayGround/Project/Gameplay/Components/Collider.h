@@ -27,7 +27,6 @@ public:
 	_bool Draw() const { return draw_; }
 	void Draw(const _bool _draw) { draw_ = _draw; }
 
-	static void BackDc(const HDC _dc) { back_dc_ = _dc; }
 	const std::list<Collider*>& CollidedColliders() const { return collided_colliders_; }
 
 public:
@@ -49,8 +48,5 @@ private:
 	std::vector<Collider*> erase_waiting_list_;
 
 	_bool draw_;
-
-protected:
-	static HDC back_dc_; // Ä³½ÃÇØµÐ dc
 };
 

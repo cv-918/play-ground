@@ -13,6 +13,7 @@
 
 #include "GamePlaySystems/StageManager.h"
 #include "GamePlaySystems/GameState.h"
+#include "GamePlaySystems/SceneManager.h"
 
 PlayGround::~PlayGround()
 {
@@ -24,51 +25,55 @@ PlayGround::~PlayGround()
 
 _bool PlayGround::Initialize()
 {
-	_RenderChain.Initialize();
 	_Random.Initialize();
+
+	_RenderChain.Initialize();
+
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::ExpDust, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::ExpDust, true);
+
+	_SceneMgr.Initialize();
 	
-	const auto background = new Background();
-	game_objects_.push_back(background);
+	//const auto background = new Background();
+	//game_objects_.push_back(background);
 
-	// 여기서 다른 유닛들 추가
+	//// 여기서 다른 유닛들 추가
 
-	const auto player = new Player();
-	game_objects_.push_back(player);
-	for (auto& game_object : game_objects_)
-	{
-		game_object->Initialize();
-	}
+	//const auto player = new Player();
+	//game_objects_.push_back(player);
+	//for (auto& game_object : game_objects_)
+	//{
+	//	game_object->Initialize();
+	//}
 
-	const auto& nav_mesh = background->NavMesh();
-	player->SetNavMesh(nav_mesh);
-	_StageMgr.SetNavMesh(nav_mesh);
+	//const auto& nav_mesh = background->NavMesh();
+	//player->SetNavMesh(nav_mesh);
+	//_StageMgr.SetNavMesh(nav_mesh);
 
-	_GameState.Player(player);
+	//_GameState.Player(player);
 
 	return true;
 }
 
 _int PlayGround::Update(_double _delta_time)
 {
-	if (_InputMgr.Down(VK_SPACE))
-	{
-		auto mouse_point = _InputMgr.MousePoint();
+	//if (_InputMgr.Down(VK_SPACE))
+	//{
+	//	auto mouse_point = _InputMgr.MousePoint();
 
-		// 여기서 ExpDust 생성
-		GameObject* new_dust = new ExpDust();
-		new_dust->Initialize();
+	//	// 여기서 ExpDust 생성
+	//	GameObject* new_dust = new ExpDust();
+	//	new_dust->Initialize();
 
-		const auto transform = new_dust->GetTransform();
-		transform->Position(mouse_point.x, mouse_point.y);
+	//	const auto transform = new_dust->GetTransform();
+	//	transform->Position(mouse_point.x, mouse_point.y);
 
-		const auto radius = _Random.Range(15.f, 50.f);
-		transform->Scale(radius, radius);
-		s_cast(ExpDust*, new_dust)->AdjustColliderRadius();
+	//	const auto radius = _Random.Range(15.f, 50.f);
+	//	transform->Scale(radius, radius);
+	//	s_cast(ExpDust*, new_dust)->AdjustColliderRadius();
 
-		game_objects_.push_back(new_dust);
-	}
+	//	game_objects_.push_back(new_dust);
+	//}
 
 	for (auto& game_object : game_objects_)
 	{
@@ -81,6 +86,9 @@ _int PlayGround::Update(_double _delta_time)
 	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
 	// 등록된 애들은 일괄 처리
 
+	_SceneMgr.Update(_delta_time);
+	_SceneMgr.LateUpdate(_delta_time);
+
 	return 0;
 }
 
@@ -88,6 +96,8 @@ void PlayGround::Render(_double _delta_time)
 {
 	// 1) Clear (단색)
 	_RenderChain.Clear();
+
+	_SceneMgr.Render(_delta_time);
 
 	// 2) Render
 	for (auto& game_object : game_objects_)

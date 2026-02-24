@@ -1,0 +1,42 @@
+[ To do list ]
+
+# [ Scene 구조 설계 ]
+- Scene 클래스 설계
+- SceneManager 클래스 설계
+
+* Scene 종류
+1. TitleScene(Intro)
+2. LoadingScene
+3. LobbyScene
+4. GameScene(InGame)
+
+- Scene 전환 로직 설계
+- Scene 전환 방식 : Fade, Slide, 등
+- Scene 전환 시 리소스 로딩 방식 : 동기, 비동기, 등
+
+* 추가 구현 고려 항목
+
+- Scene 전환 효과 설계
+- Scene 전환 시 리소스 관리 설계
+- Scene 전환 시 상태 관리 설계
+- Scene 전환 시 이벤트 시스템 설계
+- Scene 전환 시 애니메이션 시스템 설계
+- Scene 전환 시 사운드 시스템 설계
+- Scene 전환 시 UI 시스템 설계
+- Scene 전환 시 네트워크 시스템 설계
+- Scene 전환 시 입력 시스템 설계
+- Scene 전환 시 오브젝트 관리 시스템 설계
+- Scene 전환 시 메모리 관리 설계
+- Scene 전환 시 성능 최적화 설계
+- Scene 전환 시 디버깅 도구 설계
+- Scene 전환 시 테스트 도구 설계
+- Scene 전환 시 로깅 시스템 설계
+- Scene 전환 시 에러 처리 설계
+- Scene 전환 시 사용자 경험 설계
+- Scene 전환 시 데이터 관리 설계
+- Scene 전환 시 애셋 관리 설계
+- Scene 전환 시 스크립트 관리 설계
+- Scene 전환 시 타이밍 관리 설계
+- Scene 전환 시 트랜지션 관리 설계
+- Scene 전환 시 상태 머신 설계
+- Scene 전환 시 이벤트 트리거 설계

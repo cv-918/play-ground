@@ -81,7 +81,7 @@ void Player::Render(_double _delta_time)
 		pos.y + rt_size
 	};
 
-	Ellipse(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
 	// e, 플레이어 외형 그리기
 }
 
@@ -97,8 +97,8 @@ void Player::DebugRender(_double _delta_time)
 	forward *= line_length;
 	forward += position;
 
-	MoveToEx(back_dc_, s_int(position.x), s_int(position.y), nullptr);
-	LineTo(back_dc_, s_int(forward.x), s_int(forward.y));
+	MoveToEx(g_back_dc, s_int(position.x), s_int(position.y), nullptr);
+	LineTo(g_back_dc, s_int(forward.x), s_int(forward.y));
 	// s, 방향 그려서 회전이 적용되는지 확인
 
 	// s, 디버그 정보 찍기
@@ -275,7 +275,7 @@ void Player::_ShowDebugInfo()
 
 	// 1) 배경 먼저 그리기
 	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICKNESS_HALF, INGAVE_FRAME_THICKNESS_HALF, WINCX - INGAVE_FRAME_THICKNESS_HALF, WINCY - INGAVE_FRAME_THICKNESS_HALF };
-	//Rectangle(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+	//Rectangle(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
 
 	// 2) 텍스트 그리기
 	swprintf_s(buffer, L"[ 디버깅 정보 타입 : %ls ]", labels[debug_type_].c_str());
@@ -319,7 +319,7 @@ void Player::_ShowDebugInfo()
 
 	for (const auto& line : debug_info_lines_)
 	{
-		TextOut(back_dc_, draw_pos_x, draw_pos_y += line_gap, line.c_str(), line.length());
+		TextOut(g_back_dc, draw_pos_x, draw_pos_y += line_gap, line.c_str(), line.length());
 	}
 }
 

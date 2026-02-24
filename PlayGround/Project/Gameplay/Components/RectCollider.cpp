@@ -10,13 +10,13 @@ void RectCollider::Render(double _delta_time)
 
 	// 1. 투명 브러시 생성 및 선택
 	HBRUSH hollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(back_dc_, hollowBrush);
+	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, hollowBrush);
 
 	// 2. 그리기 (이제 내부가 채워지지 않고 테두리만 그려집니다)
-	Rectangle(back_dc_, rect_.Left(), rect_.Top(), rect_.Right(), rect_.Bottom());
+	Rectangle(g_back_dc, rect_.Left(), rect_.Top(), rect_.Right(), rect_.Bottom());
 
 	// 3. 이전 브러시로 복구 (GDI 객체 관리 원칙)
-	SelectObject(back_dc_, oldBrush);
+	SelectObject(g_back_dc, oldBrush);
 }
 
 _bool RectCollider::_CheckCollided(Collider* _other)

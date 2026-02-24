@@ -4,8 +4,6 @@
 #include "Actors/GameObject.h"
 #include "Combat.h"
 
-HDC Collider::back_dc_ = nullptr;
-
 _int Collider::Update(_double _delta_time)
 {
 	if (!erase_waiting_list_.empty())

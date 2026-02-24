@@ -21,7 +21,7 @@ void SphereCollider::Render(double _delta_time)
 
 	// 1. 투명 브러시 생성 및 선택
 	HBRUSH hollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(back_dc_, hollowBrush);
+	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, hollowBrush);
 
 	// 2. 좌표 계산
 	RECT rt;
@@ -31,10 +31,10 @@ void SphereCollider::Render(double _delta_time)
 	rt.bottom = center_.y + radius_;
 
 	// 3. 그리기 (이제 내부가 채워지지 않고 테두리만 그려집니다)
-	Ellipse(back_dc_, rt.left, rt.top, rt.right, rt.bottom);
+	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
 
 	// 4. 이전 브러시로 복구 (GDI 객체 관리 원칙)
-	SelectObject(back_dc_, oldBrush);
+	SelectObject(g_back_dc, oldBrush);
 }
 
 _bool SphereCollider::_CheckCollided(Collider* _other)

@@ -26,3 +26,12 @@
 
 #include <cmath>
 #include <functional>
+
+#include "Core/Base/Defines.h"
+#include "Core/Interface/Interfaces.h"
+
+#include "Core/Base/Extern.h"
+#include "Core/Base/Bases.h"
+
+#include "Core/Math/Geometry2D.h"
+#include "Core/Math/Vector3.h"

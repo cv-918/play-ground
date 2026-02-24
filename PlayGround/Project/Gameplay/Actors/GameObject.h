@@ -1,10 +1,5 @@
 #pragma once
 
-#include "Core/Base/Bases.h"
-#include "Core/Math/Geometry2D.h"
-#include "Core/Math/Vector3.h"
-
-//class Component;
 #include "GamePlay/Components/Component.h"
 
 class Transform;
@@ -54,8 +49,6 @@ public:
 
 	Transform* GetTransform() const { return transform_; }
 
-	static void BackDc(const HDC _dc) { back_dc_ = _dc; }
-
 	_bool IsEnabled() const { return is_enabled_; }
 	void IsEnabled(const _bool _enabled) { is_enabled_ = _enabled; }
 
@@ -71,7 +64,6 @@ private:
 	uint32_t handler_mask_ = IV_ZERO;
 
 protected:
-	static HDC back_dc_; // dc 캐시
 	Transform* transform_ = nullptr; // Transform 캐시
 
 	_bool is_enabled_ = true;

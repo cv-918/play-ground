@@ -1,5 +1,4 @@
 #pragma once
-#include "Core/Base/Bases.h"
 
 #define _ColMgr CollisionManager::Get()
 

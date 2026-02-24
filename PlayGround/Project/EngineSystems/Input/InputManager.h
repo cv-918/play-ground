@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Core/Base/Bases.h"
-#include "Core/Math/Geometry2D.h"
-
 #define _InputMgr InputManager::Get()
 #define INPUT_KEY_MAX 256
 
