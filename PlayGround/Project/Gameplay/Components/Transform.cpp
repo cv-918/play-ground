@@ -8,6 +8,12 @@ void Transform::Translate(const _Vector3& _delta)
 	Position(position_ + _delta);
 }
 
+void Transform::TranslateToForward(const _float _delta)
+{
+	const auto forward = Forward2D();
+	Position(position_ + (forward * _delta));
+}
+
 void Transform::Rotate2D(const _float _delta)
 {
 	_Vector3 rotation = rotation_;
