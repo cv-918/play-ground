@@ -2,6 +2,20 @@
 
 #include <string>
 
+template <typename T>
+class ISingleton abstract
+{
+public:
+	explicit ISingleton() DEFAULT;
+	virtual ~ISingleton() DEFAULT;
+
+	static T& Get()
+	{
+		static T instance;
+		return instance;
+	}
+};
+
 class IInitializable
 {
 #define MAKE_INITIALIZED _MarkAsInitialized()
@@ -10,7 +24,8 @@ public:
 	explicit IInitializable() DEFAULT;
 	virtual ~IInitializable() DEFAULT;
 
-	virtual _bool Initialize() PURE;
+	virtual _bool Initialize() { MAKE_INITIALIZED;  return true; }
+	// 기본 구현은 초기화 성공으로 간주. 필요에 따라 오버라이드하여 초기화 로직 구현.
 
 public:
 	_bool IsInitialized() const { return initialized_; }
@@ -28,20 +43,25 @@ public:
 	explicit IUpdatable() DEFAULT;
 	virtual ~IUpdatable() DEFAULT;
 
-	virtual _int Update(_double _delta_time) PURE;
-	virtual _int LateUpdate(_double _delta_time) PURE;
-	virtual void Render(_double _delta_time) PURE;
+	virtual _int Update(_double _delta_time) { return 0; }
+	virtual _int LateUpdate(_double _delta_time) { return 0; }
+	virtual void Render(_double _delta_time) EMPTY_FUNC;
 
 public:
-	_bool Active() const { return is_active; }
-	void Active(const _bool _active) { is_active = _active; }
+	void Activate() { is_enable_ = true; is_visible_ = true; }
+	void InActivate() { is_enable_ = false; is_visible_ = false; }
 
-	_bool Visible() const { return is_visible; }
-	void Visible(const _bool _visible) { is_visible = _visible; }
+	_bool Active() const { return is_enable_ && is_visible_; }
 
-private:
-	_bool is_active = true;
-	_bool is_visible = true;
+	_bool Enable() const { return is_enable_; }
+	void Enable(const _bool _enabled) { is_enable_ = _enabled; }
+
+	_bool Visible() const { return is_visible_; }
+	void Visible(const _bool _visible) { is_visible_ = _visible; }
+
+protected:
+	_bool is_enable_ = true;
+	_bool is_visible_ = true;
 };
 
 class IReleasable abstract
@@ -50,7 +70,8 @@ public:
 	explicit IReleasable() DEFAULT;
 	virtual ~IReleasable() DEFAULT;
 
-	virtual _bool Release() PURE;
+	virtual _bool Release() { return true; }
+	// 기본 구현은 해제 성공으로 간주. 필요에 따라 오버라이드하여 해제 로직 구현.
 };
 
 class IIdentifiable abstract

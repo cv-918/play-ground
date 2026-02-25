@@ -1,7 +1,7 @@
 #pragma once
-#include "Component.h"
+#include "ComponentBase.h"
 
-class Status : public Component
+class Status : public ComponentBase
 {
 	/*
 		Status Component (데이터 센터)
@@ -31,7 +31,7 @@ class Status : public Component
 	*/
 
 public:
-	explicit Status() : Component(ComponentType::Status) {}
+	explicit Status() : ComponentBase(ComponentType::Status) {}
 
 public:
 	_int Level() const { return lv_; }

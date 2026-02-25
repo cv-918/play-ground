@@ -1,16 +1,16 @@
 #include "framework.h"
-#include "GameObject.h"
+#include "GameObjectBase.h"
 
 #include "Components/Transform.h"
 #include "EngineSystems/Render/RenderChain.h"
 
-GameObject::~GameObject()
+GameObjectBase::~GameObjectBase()
 {
 	Release();
 }
 
 // final 오브젝트의 Initialize 최상단에서 호출
-_bool GameObject::Initialize()
+_bool GameObjectBase::Initialize()
 {
 	// Transform이 없으면 생성해서 등록
 	if (transform_ == nullptr)
@@ -25,7 +25,7 @@ _bool GameObject::Initialize()
 }
 
 // final 오브젝트의 Initialize 최하단에서 호출
-_bool GameObject::Finalize()
+_bool GameObjectBase::Finalize()
 {
 	for (const auto& component : components_)
 	{
@@ -56,18 +56,18 @@ _bool GameObject::Finalize()
 	return true;
 }
 
-_bool GameObject::Release()
+_bool GameObjectBase::Release()
 {
 	for (auto& component : components_)
 		SAFE_DELETE(component);
 
-	std::vector<Component*>().swap(components_);
+	std::vector<ComponentBase*>().swap(components_);
 	return true;
 }
 
-_int GameObject::Update(double _delta_time)
+_int GameObjectBase::Update(double _delta_time)
 {
-	if(!IsEnabled())
+	if(!Enable())
 		return 0;
 
 	for (const auto& component : components_)
@@ -76,9 +76,9 @@ _int GameObject::Update(double _delta_time)
     return 0;
 }
 
-_int GameObject::LateUpdate(double _delta_time)
+_int GameObjectBase::LateUpdate(double _delta_time)
 {
-	if (!IsEnabled())
+	if (!Enable())
 		return 0;
 
 	for (const auto& component : components_)
@@ -87,18 +87,18 @@ _int GameObject::LateUpdate(double _delta_time)
 	return 0;
 }
 
-void GameObject::Render(double _delta_time)
+void GameObjectBase::Render(double _delta_time)
 {
-	if (!IsVisible())
+	if (!Visible())
 		return;
 
 	for (const auto& component : components_)
 		component->Render(_delta_time);
 }
 
-void GameObject::DebugRender(double _delta_time)
+void GameObjectBase::DebugRender(double _delta_time)
 {
-	if (!IsVisible())
+	if (!Visible())
 		return;
 
 	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
@@ -123,7 +123,7 @@ void GameObject::DebugRender(double _delta_time)
 	SetBkMode(g_back_dc, oldMode);
 }
 
-void GameObject::RegisterComponent(Component* _component)
+void GameObjectBase::RegisterComponent(ComponentBase* _component)
 {
 	// 방어 코드: null 등록 방지
 	if (_component == nullptr)
@@ -154,14 +154,14 @@ void GameObject::RegisterComponent(Component* _component)
 	}
 }
 
-void GameObject::DeregisterComponent(const ComponentType _type)
+void GameObjectBase::DeregisterComponent(const ComponentType _type)
 {
 	// Transform을 지우는 경우 캐시 포인터도 같이 정리
 	if (_type == ComponentType::Transform)
 		transform_ = nullptr;
 
 	auto iter = std::remove_if(components_.begin(), components_.end(),
-		[_type](const Component* _comp)
+		[_type](const ComponentBase* _comp)
 		{
 			// null 방어 포함
 			return (_comp != nullptr) && (_comp->Type() == _type);
@@ -176,7 +176,7 @@ void GameObject::DeregisterComponent(const ComponentType _type)
 	components_.erase(iter, components_.end());
 }
 
-Component* GameObject::GetComponent(const _int _id)
+ComponentBase* GameObjectBase::GetComponent(const _int _id)
 {
 	for (const auto& component : components_)
 	{
@@ -187,7 +187,7 @@ Component* GameObject::GetComponent(const _int _id)
 	return nullptr;
 }
 
-Component* GameObject::GetComponent(const ComponentType _type)
+ComponentBase* GameObjectBase::GetComponent(const ComponentType _type)
 {
 	for (const auto& component : components_)
 	{
@@ -198,7 +198,7 @@ Component* GameObject::GetComponent(const ComponentType _type)
 	return nullptr;
 }
 
-Component* GameObject::GetComponent(const ComponentType _type, const _int _index)
+ComponentBase* GameObjectBase::GetComponent(const ComponentType _type, const _int _index)
 {
 	_int count = 0;
 	for (const auto& component : components_)
@@ -215,7 +215,7 @@ Component* GameObject::GetComponent(const ComponentType _type, const _int _index
 	return nullptr;
 }
 
-Component* GameObject::GetComponent(const std::wstring& _name)
+ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name)
 {
 	for (const auto& component : components_)
 	{
@@ -226,7 +226,7 @@ Component* GameObject::GetComponent(const std::wstring& _name)
 	return nullptr;
 }
 
-Component* GameObject::GetComponent(const std::wstring& _name, const _int _index)
+ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name, const _int _index)
 {
 	_int count = 0;
 	for (const auto& component : components_)

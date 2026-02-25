@@ -4,6 +4,8 @@
 #include "Scenes/Scene.h"
 #include "Scenes/IntroScene.h"
 #include "Scenes/LoadingScene.h"
+#include "Scenes/LobbyScene.h"
+#include "Scenes/GamePlayScene.h"
 
 _bool SceneManager::Initialize()
 {
@@ -44,12 +46,20 @@ _int SceneManager::Update(_double _delta_time)
 				next_scene = new LoadingScene();
 				break;
 			case SceneType::Lobby:
+				next_scene = new LobbyScene();
 				break;
 			case SceneType::GamePlay:
+				next_scene = new GamePlayScene();
 				break;
 			default:
 				// logging: 알 수 없는 씬 타입
 				break;
+			}
+
+            if(nullptr == next_scene)
+            {
+                // logging: 씬 생성 실패
+                return 0; // 씬이 변경되지 않았음을 알리는 값
 			}
 
 			curr_scene_ = next_scene;
@@ -81,7 +91,7 @@ _int SceneManager::LateUpdate(_double _delta_time)
 
 void SceneManager::Render(_double _delta_time)
 {
-    if (curr_scene_ && curr_scene_->Active() && curr_scene_->Visible())
+    if (curr_scene_ && curr_scene_->Active())
     {
         curr_scene_->Render(_delta_time);
 	}
@@ -89,15 +99,25 @@ void SceneManager::Render(_double _delta_time)
 
 _bool SceneManager::Release()
 {
-    if (curr_scene_)
-    {
-        curr_scene_->Release();
-        curr_scene_->OnExit();
-        delete curr_scene_;
-        curr_scene_ = nullptr;
-	}
+	// 1. 현재 활성화된 씬 정리 (이미 scenes_ 맵에 포함되어 있다면 아래 루프에서 삭제됨)
+	curr_scene_ = nullptr;
 
-    return true;
+	// 2. 관리 중인 모든 씬 일괄 순회 및 해제
+	for (auto& pair : scenes_)
+	{
+		if (pair.second)
+		{
+			pair.second->Release();
+			// OnExit은 씬 전환 시점이 아니므로 굳이 호출할 필요 없으나, 
+			// 정리 로직이 포함되어 있다면 호출 후 삭제합니다.
+			delete pair.second;
+			pair.second = nullptr;
+		}
+	}
+	scenes_.clear();
+	scene_history_.clear();
+
+	return true;
 }
 
 void SceneManager::ChangeScene(const SceneType _type)

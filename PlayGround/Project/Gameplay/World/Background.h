@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Actors/GameObject.h"
+#include "Actors/GameObjectBase.h"
 
-class Background : public GameObject
+class Background : public GameObjectBase
 {
 public:
 	explicit Background() : nav_mesh_draw_rt_{} {};

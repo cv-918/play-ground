@@ -9,7 +9,7 @@ enum class KeyBoardControlType
 	Axis,
 };
 
-class InputManager : public SingletonBase<InputManager>
+class InputManager : public ISingleton<InputManager>
 {
 public:
 	/* 매 프레임 시작 시 1회 메시지 처리 전에 호출 */

@@ -1,0 +1,114 @@
+Project
+└ App
+└ Core
+└ EngineSystem
+└ Framework
+└ Gameplay
+
+App
+└ EntryPoint.h
+└ EntryPoint.cpp
+└ PlayGround.h
+└ PlayGround.h
+
+Core
+└ Base
+  └ Base.h
+  └ Defines.h
+  └ DrawFunctions.h
+  └ DrawFunctions.cpp
+  └ Extern.h
+
+└ Interface
+  └ Interface.h
+
+└ Math
+  └ Geometry2D.h
+  └ Geometry2D.cpp
+  └ MathFunctions.h
+  └ Random.h
+  └ Random.cpp
+  └ Vector3.h
+
+EngineSystem
+└ Input
+  └ InputManager.h
+  └ InputManager.cpp
+
+└ Physics
+  └ CollisionManager.h
+  └ CollisionManager.cpp
+
+└ Render
+  └ RenderChain.h
+  └ RenderChain.cpp
+
+Framework
+└ framework.h
+└ pch.cpp
+└ Resource.h
+└ targetver.h
+
+
+Gameplay
+└ Actors
+  └ GameObjectBase.h
+  └ GameObjectBase.cpp
+  └ Player.h
+  └ Player.cpp
+  └ ExpDust.h
+  └ ExpDust.cpp
+
+└ Components
+  └ ComponentBase.h
+  └ ComponentBase.cpp
+  └ Collider.h
+  └ Collider.cpp
+  └ RectCollider.h
+  └ RectCollider.cpp
+  └ SphereCollider.h
+  └ SphereCollider.cpp
+  └ Status.h
+  └ Status.cpp
+  └ Combat.h
+  └ Combat.cpp
+  └ Transform.h
+  └ Transform.cpp
+  └ Movement.h
+  └ Movement.cpp
+  └ PlayableMovement.h
+  └ PlayableMovement.cpp
+  └ NonPlayableMovement.h
+  └ NonPlayableMovement.cpp
+
+└ GamePlaySystems
+  └ GameState.h
+  └ GameState.cpp
+  └ SceneManager.h
+  └ SceneManager.cpp
+  └ StageManager.h
+  └ StageManager.cpp
+
+└ Scenes
+  └ Scene.h
+  └ Scene.cpp
+  └ IntroScene.h
+  └ IntroScene.cpp
+  └ LoadingScene.h
+  └ LoadingScene.cpp
+  └ LobbyScene.h
+  └ LobbyScene.cpp
+  └ GamePlayScene.h
+  └ GamePlayScene.cpp
+
+└ UI
+  └ UIBase.h
+  └ UIBase.cpp
+  └ UIButton.h
+  └ UIButton.cpp
+
+└ World
+  └ Background.h
+  └ Background.cpp
+  └ NavMesh.h
+  └ NavMesh.cpp

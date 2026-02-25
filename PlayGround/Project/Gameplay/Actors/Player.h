@@ -1,11 +1,11 @@
 #pragma once
 
-#include "GameObject.h"
+#include "GameObjectBase.h"
 
 class InputManager;
 
 class Player
-	: public GameObject
+	: public GameObjectBase
 	, public ICollidable
 	, public IDamagable
 {

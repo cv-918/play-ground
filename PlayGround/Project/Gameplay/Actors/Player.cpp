@@ -65,7 +65,7 @@ _int Player::Update(_double _delta_time)
 
 void Player::Render(_double _delta_time)
 {
-	if (!IsVisible())
+	if (!Visible())
 		return;
 
 	__super::Render(_delta_time);

@@ -3,7 +3,7 @@
 #define _RenderChain RenderChain::Get()
 
 class RenderChain
-	: public SingletonBase<RenderChain>
+	: public ISingleton<RenderChain>
 	, public IInitializable
 	, public IReleasable
 {

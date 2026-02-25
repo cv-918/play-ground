@@ -18,15 +18,15 @@ enum class GAME_PLAY_STATE
 	ExitingInGame,
 };
 
-class GameObject;
+class GameObjectBase;
 class GameState
-	: public SingletonBase<GameState>
+	: public ISingleton<GameState>
 {
 public:
-	GameObject* Player() const { return player_; }
-	void Player(GameObject* _player) { player_ = _player; }
+	GameObjectBase* Player() const { return player_; }
+	void Player(GameObjectBase* _player) { player_ = _player; }
 
 private:
-	GameObject* player_;
+	GameObjectBase* player_;
 };
 

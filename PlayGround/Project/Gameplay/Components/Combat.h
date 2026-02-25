@@ -1,11 +1,11 @@
 #pragma once
-#include "Component.h"
+#include "ComponentBase.h"
 
-class Combat : public Component
+class Combat : public ComponentBase
 {
 public:
 	explicit Combat()
-		: Component(ComponentType::Combat)
+		: ComponentBase(ComponentType::Combat)
 		, hp_(0), att_(0)
 	{}
 

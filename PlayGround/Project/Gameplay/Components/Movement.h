@@ -1,7 +1,7 @@
 #pragma once
-#include "Component.h"
+#include "ComponentBase.h"
 
-#include "Gameplay/Actors/GameObject.h"
+#include "Gameplay/Actors/GameObjectBase.h"
 #include "Gameplay/Components/Transform.h"
 
 enum class MovementPattern
@@ -13,11 +13,11 @@ enum class MovementPattern
 	ToTarget,		// 타겟 추적 이동
 };
 
-class Movement abstract : public Component
+class Movement abstract : public ComponentBase
 {
 protected:
 	explicit Movement()
-		: Component(ComponentType::Movement)
+		: ComponentBase(ComponentType::Movement)
 		, move_pattern_(MovementPattern::Undefined)
 		, acceleration_(0.f), friction_(0.f)
 		, move_spd_(1.f), move_spd_max_(1.f)

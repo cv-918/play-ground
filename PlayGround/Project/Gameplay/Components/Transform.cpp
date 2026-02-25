@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "Transform.h"
 
-#include "Actors/GameObject.h"
+#include "Actors/GameObjectBase.h"
 
 void Transform::Translate(const _Vector3& _delta)
 {

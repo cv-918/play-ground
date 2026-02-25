@@ -8,19 +8,16 @@ public:
 	virtual ~LoadingScene() DEFAULT;
 
 public:
-	// Scene을(를) 통해 상속됨
-	_bool Initialize() override;
-
-	_int Update(_double _delta_time) override;
-	_int LateUpdate(_double _delta_time) override;
-	void Render(_double _delta_time) override;
-
-	_bool Release() override;
+	virtual _bool Initialize() override;
+	virtual _int Update(_double _delta_time) override;
+	virtual _int LateUpdate(_double _delta_time) override;
+	virtual void Render(_double _delta_time) override;
 
 	void OnEnter() override;
 	void OnExit() override;
 
 private:
+	_double elapsed_time_ = 0.0; // 로딩에 걸린 시간을 나타내는 변수
 	_int loading_progress_ = 0; // 로딩 진행 상황을 나타내는 변수 (0~100)
 	_bool loading_complete_ = false; // 로딩 완료 여부를 나타내는 변수
 };

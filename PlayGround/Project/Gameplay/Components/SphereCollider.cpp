@@ -2,7 +2,7 @@
 #include "SphereCollider.h"
 
 #include "RectCollider.h"
-#include "Actors/GameObject.h"
+#include "Actors/GameObjectBase.h"
 #include "Transform.h"
 
 _int SphereCollider::LateUpdate(double _delta_time)
