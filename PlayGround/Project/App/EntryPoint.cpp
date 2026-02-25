@@ -2,11 +2,11 @@
 //
 
 #include "framework.h"
-
 #include "EntryPoint.h"
+
 #include "App/PlayGround.h"
-#include "EngineSystems/Render/RenderChain.h"
 #include "EngineSystems/Input/InputManager.h"
+#include "EngineSystems/Timer/Timer.h"
 
 PlayGround pg;
 
@@ -56,10 +56,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	while (msg.message != WM_QUIT)
 	{
-        _InputMgr.Get().BeginFrame();
+        _InputMgr.BeginFrame();
+        _Timer.Update();
 
 		// 1) 큐에 쌓인 메시지를 전부 처리
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				break;
@@ -74,13 +75,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (msg.message == WM_QUIT)
 			break;
 
-		// 2) 매 루프마다 프레임 갱신(메시지 유무와 무관)
-		const auto curr = GetTickCount64();
-		double dt = (curr - prev) / 1000.0;  // seconds
-		prev = curr;
+        const auto dt = _Timer.DeltaTime();
 
-		// 폭주 방지
-		if (dt > 0.1) dt = 0.1;
+		//// 2) 매 루프마다 프레임 갱신(메시지 유무와 무관)
+		//const auto curr = GetTickCount64();
+		//double dt = (curr - prev) / 1000.0;  // seconds
+		//prev = curr;
+
+		//// 폭주 방지
+		//if (dt > 0.1) dt = 0.1;
 
 		pg.Update(dt);
 		pg.Render(dt);

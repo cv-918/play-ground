@@ -13,7 +13,6 @@ _bool SceneManager::Initialize()
 	// 예시: 첫 번째 씬을 설정하거나, 리소스 로드 등을 수행할 수 있습니다.
 
 	ChangeScene(SceneType::Intro); // 초기 씬을 Intro으로 설정
-
     return _bool();
 }
 

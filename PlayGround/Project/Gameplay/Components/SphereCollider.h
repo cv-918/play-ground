@@ -7,8 +7,8 @@ public:
 	explicit SphereCollider(const _float _radius) : Collider(ColliderType::Circle), radius_(_radius) {}
 
 public:
-	virtual _int LateUpdate(double _delta_time) override;
-	virtual void Render(double _delta_time) override;
+	virtual _int LateUpdate(_double _delta_time) override;
+	virtual void Render(_double _delta_time) override;
 
 public:
 	_Vector3 Center() const { return center_; }

@@ -158,6 +158,7 @@
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
     <ClInclude Include="Project\Core\Math\Random.h" />
     <ClInclude Include="Project\Core\Math\Vector3.h" />
+    <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Framework\framework.h" />
     <ClInclude Include="Project\Framework\Resource.h" />
     <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
@@ -174,7 +175,9 @@
     <ClInclude Include="Project\App\EntryPoint.h" />
     <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\GameState.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\StageManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
     <ClInclude Include="Project\Gameplay\Scenes\GamePlayScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
@@ -204,6 +207,7 @@
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
+    <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
@@ -222,7 +226,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\GamePlayScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />

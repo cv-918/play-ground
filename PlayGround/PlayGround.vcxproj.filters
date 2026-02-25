@@ -70,6 +70,9 @@
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\UIButton.h" />
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
+    <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -124,5 +127,8 @@
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIButton.cpp" />
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
+    <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
   </ItemGroup>
 </Project>

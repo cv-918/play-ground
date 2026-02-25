@@ -15,7 +15,7 @@ _bool Background::Initialize()
     return true;
 }
 
-_int Background::Update(double _delta_time)
+_int Background::Update(_double _delta_time)
 {
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
@@ -23,7 +23,7 @@ _int Background::Update(double _delta_time)
     return _int();
 }
 
-void Background::Render(double _delta_time)
+void Background::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
 

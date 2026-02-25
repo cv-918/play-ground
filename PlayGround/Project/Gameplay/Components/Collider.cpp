@@ -55,7 +55,7 @@ void Collider::DetectCollision(Collider* _other)
 		if (_RegisterOnCollidedList(_other))
 		{
 			// Enter 신호 전파
-			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
 				});
 		}
@@ -63,7 +63,7 @@ void Collider::DetectCollision(Collider* _other)
 		else
 		{
 			// Stay 신호 전파
-			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
 				});
 		}
@@ -75,7 +75,7 @@ void Collider::DetectCollision(Collider* _other)
 		if (_DeregisterFromCollidedList(_other))
 		{
 			// Exit 신호 전파
-			GameObject()->SendHandlerMessage(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
 				});
 		}

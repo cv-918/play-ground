@@ -246,7 +246,7 @@ void ExpDust::Render(_double _delta_time)
 	SelectObject(g_back_dc, oldBrush);
 }
 
-void ExpDust::DebugRender(double _delta_time)
+void ExpDust::DebugRender(_double _delta_time)
 {
 	__super::DebugRender(_delta_time);
 

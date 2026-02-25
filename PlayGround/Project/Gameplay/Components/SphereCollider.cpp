@@ -5,7 +5,7 @@
 #include "Actors/GameObjectBase.h"
 #include "Transform.h"
 
-_int SphereCollider::LateUpdate(double _delta_time)
+_int SphereCollider::LateUpdate(_double _delta_time)
 {
 	// 충돌체 중심을 게임오브젝트의 트랜스폼 위치로 설정
 	const auto position = gameobject_->GetTransform()->Position();
@@ -14,7 +14,7 @@ _int SphereCollider::LateUpdate(double _delta_time)
 	return _int();
 }
 
-void SphereCollider::Render(double _delta_time)
+void SphereCollider::Render(_double _delta_time)
 {
 	if(!Draw())
 		return;
