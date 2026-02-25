@@ -120,7 +120,7 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		case CollisionLayer::ExpDust:
 		{
 			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
-			_other->GameObject()->SendHandlerMessage(HandlerSystemList::Damage, [](IHandler* _handler) {
+			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(1.f);
 				});
 

@@ -40,12 +40,12 @@ _bool GameObjectBase::Finalize()
 		case ComponentType::Transform:
 			break;
 		case ComponentType::Collider:
-			CheckAndRegisterHandler<ICollidable>(component, HandlerSystemList::Collision);
+			RegisterHandler<ICollidable>(component, HandlerSystemList::Collision);
 			break;
 		case ComponentType::Movement:
 			break;
 		case ComponentType::Combat:
-			CheckAndRegisterHandler<IDamagable>(component, HandlerSystemList::Damage);
+			RegisterHandler<IDamagable>(component, HandlerSystemList::Damage);
 			break;
 		default:
 			break;
@@ -65,7 +65,7 @@ _bool GameObjectBase::Release()
 	return true;
 }
 
-_int GameObjectBase::Update(double _delta_time)
+_int GameObjectBase::Update(_double _delta_time)
 {
 	if(!Enable())
 		return 0;
@@ -76,7 +76,7 @@ _int GameObjectBase::Update(double _delta_time)
     return 0;
 }
 
-_int GameObjectBase::LateUpdate(double _delta_time)
+_int GameObjectBase::LateUpdate(_double _delta_time)
 {
 	if (!Enable())
 		return 0;
@@ -87,7 +87,7 @@ _int GameObjectBase::LateUpdate(double _delta_time)
 	return 0;
 }
 
-void GameObjectBase::Render(double _delta_time)
+void GameObjectBase::Render(_double _delta_time)
 {
 	if (!Visible())
 		return;
@@ -96,7 +96,7 @@ void GameObjectBase::Render(double _delta_time)
 		component->Render(_delta_time);
 }
 
-void GameObjectBase::DebugRender(double _delta_time)
+void GameObjectBase::DebugRender(_double _delta_time)
 {
 	if (!Visible())
 		return;
@@ -174,6 +174,19 @@ void GameObjectBase::DeregisterComponent(const ComponentType _type)
 
 	// 해당 타입 컴포넌트 제거
 	components_.erase(iter, components_.end());
+}
+
+void GameObjectBase::SendMessageToHandlers(HandlerSystemList type, std::function<void(IHandler*)> func)
+{
+	const auto cast_type = s_int(type);
+	if (!(handler_mask_ & (1 << cast_type)))
+		return;
+
+	for (auto* handler : handlers_[cast_type])
+	{
+		if (handler)
+			func(handler);
+	}
 }
 
 ComponentBase* GameObjectBase::GetComponent(const _int _id)

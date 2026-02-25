@@ -11,18 +11,17 @@ class SceneManager
 {
 public:
 	explicit SceneManager()
-		: curr_scene_(nullptr), curr_scene_type_(SceneType::Count), next_scene_type_(SceneType::Count)
-	{
-	}
-
-	virtual ~SceneManager() DEFAULT;
+		: curr_scene_(nullptr), curr_scene_type_(SceneType::Count), next_scene_type_(SceneType::Count) {}
 
 	virtual _bool Initialize() override;
+
 	virtual _int Update(_double _delta_time) override;
-	_int LateUpdate(_double _delta_time) override;
+	virtual _int LateUpdate(_double _delta_time) override;
 	virtual void Render(_double _delta_time) override;
+
 	virtual _bool Release() override;
 
+public:
 	// 씬 변경 요청. 다음 프레임에 씬이 변경됩니다
 	void ChangeScene(SceneType _type);
 

@@ -8,7 +8,7 @@ public:
 	explicit RectCollider(const _Rect _rect) : Collider(ColliderType::Rectangle), rect_(_rect) {}
 
 public:
-	virtual void Render(double _delta_time) override;
+	virtual void Render(_double _delta_time) override;
 
 public:
 	_Rect Rect() const { return rect_; }

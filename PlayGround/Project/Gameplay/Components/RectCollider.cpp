@@ -3,7 +3,7 @@
 
 #include "SphereCollider.h"
 
-void RectCollider::Render(double _delta_time)
+void RectCollider::Render(_double _delta_time)
 {
 	if (!Draw())
 		return;

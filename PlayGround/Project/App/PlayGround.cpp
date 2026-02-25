@@ -4,6 +4,7 @@
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Render/RenderChain.h"
 #include "EngineSystems/Physics/CollisionManager.h"
+#include "EngineSystems/Timer/Timer.h"
 #include "Core/Math/Random.h"
 
 #include "Actors/Player.h"
@@ -25,6 +26,7 @@ PlayGround::~PlayGround()
 
 _bool PlayGround::Initialize()
 {
+	_Timer.Initialize();
 	_Random.Initialize();
 
 	_RenderChain.Initialize();

@@ -30,20 +30,8 @@ public:
 	void DeregisterComponent(const ComponentType _type);
 
 	template<typename T>
-	void CheckAndRegisterHandler(ComponentBase* _component, HandlerSystemList _type);
-
-	// 브로드캐스팅 함수
-	void SendHandlerMessage(HandlerSystemList type, std::function<void(IHandler*)> func)
-	{
-		const auto cast_type = s_int(type);
-		if (!(handler_mask_ & (1 << cast_type))) return;
-
-		for (auto* handler : handlers_[cast_type])
-		{
-			if (handler)
-				func(handler);
-		}
-	}
+	void RegisterHandler(ComponentBase* _component, HandlerSystemList _type);
+	void SendMessageToHandlers(HandlerSystemList type, std::function<void(IHandler*)> func);
 
 	ComponentBase* GetComponent(const _int _id);
 	ComponentBase* GetComponent(const ComponentType _type);
@@ -53,6 +41,8 @@ public:
 
 	Transform* GetTransform() const { return transform_; }
 
+	_bool IsDestroyed() const { return destroyed_; }
+
 private:
 	std::vector<ComponentBase*> components_;
 	std::vector<IHandler*> handlers_[s_int(HandlerSystemList::SystemCount)];
@@ -60,10 +50,13 @@ private:
 
 protected:
 	Transform* transform_ = nullptr; // Transform 캐시
+
+private:
+	_bool destroyed_ = false; // 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
 };
 
 template<typename T>
-inline void GameObjectBase::CheckAndRegisterHandler(ComponentBase* _component, HandlerSystemList _type)
+inline void GameObjectBase::RegisterHandler(ComponentBase* _component, HandlerSystemList _type)
 {
 	if (T* handler = d_cast(T*, _component->GameObject()))
 	{
