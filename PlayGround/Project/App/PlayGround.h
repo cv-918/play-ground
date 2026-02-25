@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Gameplay/Actors/GameObject.h"
+#include "Gameplay/Actors/GameObjectBase.h"
 
-class PlayGround : public GameObject
+class PlayGround : public GameObjectBase
 {
 public:
 	explicit PlayGround() DEFAULT;
@@ -15,5 +15,5 @@ public:
 	LRESULT WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
 
 private:
-	std::vector<GameObject*> game_objects_;
+	std::vector<GameObjectBase*> game_objects_;
 };

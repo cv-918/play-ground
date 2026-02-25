@@ -3,7 +3,10 @@
 
 _bool LoadingScene::Initialize()
 {
-    return _bool();
+	debug_scene_name_ = L"LOADING SCENE";
+
+	MAKE_INITIALIZED;
+	return _bool();
 }
 
 _int LoadingScene::Update(_double _delta_time)
@@ -11,38 +14,50 @@ _int LoadingScene::Update(_double _delta_time)
     if (loading_complete_)
 		return _int();
 
-	static _double elapsed_time = 0.0;
-	elapsed_time += _delta_time;
+	elapsed_time_ += _delta_time * 10.0;
+	loading_progress_ = s_int(elapsed_time_);
 
-	loading_progress_ = s_int(elapsed_time);
-
-	if (10 <= loading_progress_)
+	if (100 <= loading_progress_)
 		loading_complete_ = true;
     
     return _int();
 }
 
 _int LoadingScene::LateUpdate(_double _delta_time)
-{	
-	if (loading_complete_ && _InputMgr.AnyKeyPressed())
+{
+	if (loading_complete_)
 	{
-		_SceneMgr.ChangeScene(SceneType::Lobby);
+		if (_InputMgr.Down(VK_RETURN) || _InputMgr.Down(VK_SPACE))
+		{
+			_SceneMgr.ChangeScene(SceneType::Lobby);
+
+			elapsed_time_ = 0.0;
+			loading_progress_ = 0;
+			loading_complete_ = false;
+
+			return _int();
+		}
 	}
+	else
+	{
+		// 로딩이 완료되지 않은 상태에서 Enter 또는 Space 키를 누르면 로딩을 강제로 완료 처리(초반 테스트용)
+		if (_InputMgr.Down(VK_RETURN) || _InputMgr.Down(VK_SPACE))
+		{
+			loading_progress_ = 100;
+			loading_complete_ = true;
+			return _int();
+		}
+	}	
+
     return _int();
 }
 
 void LoadingScene::Render(_double _delta_time)
 {
-	std::wstring debug_string_name = loading_complete_ ? _T("LOADING COMPLETED! - Press Space to Start")
+	debug_scene_name_ = loading_complete_ ? _T("LOADING COMPLETED! - Press Space or Enter to Start")
 		: _T("LOADING SCENE - Loading... ") + std::to_wstring(loading_progress_) + L"%";
-	static RECT rt = _Rect(_Point(0, 0), _Size(WINCX, WINCY)).ToRECT();
 
-	DrawText(g_back_dc, debug_string_name.c_str(), debug_string_name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-}
-
-_bool LoadingScene::Release()
-{
-    return _bool();
+	__super::Render(_delta_time);
 }
 
 void LoadingScene::OnEnter()

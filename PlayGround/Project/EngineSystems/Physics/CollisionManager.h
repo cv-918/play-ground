@@ -5,7 +5,7 @@
 class Collider;
 
 class CollisionManager
-	: public SingletonBase<CollisionManager>
+	: public ISingleton<CollisionManager>
 {
 public:
     void Update(); // 매 프레임 호출되어 충돌 검사 수행

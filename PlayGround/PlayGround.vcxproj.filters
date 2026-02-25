@@ -31,10 +31,10 @@
     <ClInclude Include="Project\App\PlayGround.h">
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Project\Gameplay\Actors\GameObject.h" />
+    <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Unit.h" />
-    <ClInclude Include="Project\Gameplay\Components\Component.h" />
+    <ClInclude Include="Project\Gameplay\Components\ComponentBase.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
     <ClInclude Include="Project\Gameplay\Actors\Player.h" />
     <ClInclude Include="Project\EngineSystems\Render\RenderChain.h" />
@@ -65,6 +65,11 @@
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
     <ClInclude Include="Project\Core\Base\Extern.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\GamePlayScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\LobbyScene.h" />
+    <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
+    <ClInclude Include="Project\Gameplay\UI\UIButton.h" />
+    <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -86,10 +91,10 @@
     <ClCompile Include="Project\App\PlayGround.cpp">
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Project\Gameplay\Actors\GameObject.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\GameObjectBase.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Unit.cpp" />
-    <ClCompile Include="Project\Gameplay\Components\Component.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\ComponentBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Player.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\RenderChain.cpp" />
@@ -114,5 +119,10 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\GamePlayScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\LobbyScene.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\UIButton.cpp" />
+    <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
   </ItemGroup>
 </Project>

@@ -225,7 +225,7 @@ _int ExpDust::Update(_double _delta_time)
 
 void ExpDust::Render(_double _delta_time)
 {
-	if(!IsVisible())
+	if(!Visible())
 		return;
 
 	__super::Render(_delta_time);

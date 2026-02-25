@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "Collider.h"
 
-#include "Actors/GameObject.h"
+#include "Actors/GameObjectBase.h"
 #include "Combat.h"
 
 _int Collider::Update(_double _delta_time)

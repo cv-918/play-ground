@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "Combat.h"
 
-#include "Actors/GameObject.h"
+#include "Actors/GameObjectBase.h"
 
 void Combat::GetDamage(const _int _damage)
 {
@@ -32,6 +32,6 @@ void Combat::GetDamage(const _int _damage)
 	if(hp_ <= 0)
 	{
 		hp_ = 0;
-		gameobject_->InActive();
+		gameobject_->InActivate();
 	}
 }

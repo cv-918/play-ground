@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component.h"
+#include "ComponentBase.h"
 
 enum class Direction
 {
@@ -10,11 +10,11 @@ enum class Direction
 	Left,
 };
 
-class Transform : public Component
+class Transform : public ComponentBase
 {
 public:
 	explicit Transform()
-		: Component(ComponentType::Transform)
+		: ComponentBase(ComponentType::Transform)
 		, position_(_Vector3::Zero())
 		, rotation_(_Vector3::Zero())
 		, scale_(_Vector3::One())

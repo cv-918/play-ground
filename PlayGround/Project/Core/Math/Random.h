@@ -12,7 +12,7 @@
 #define _Random Random::Get()
 
 class Random
-	: public SingletonBase<Random>
+	: public ISingleton<Random>
 	, public IInitializable
 {
 public:

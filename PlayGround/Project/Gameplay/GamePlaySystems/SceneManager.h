@@ -4,7 +4,7 @@
 
 class Scene;
 class SceneManager
-	: public SingletonBase<SceneManager>
+	: public ISingleton<SceneManager>
 	, public IInitializable
 	, public IUpdatable
 	, public IReleasable

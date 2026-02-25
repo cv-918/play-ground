@@ -22,7 +22,7 @@ enum class STAGE_PLAY_STATE
 };
 
 class StageManager
-	: public SingletonBase<StageManager>
+	: public ISingleton<StageManager>
 	, public IUpdatable
 {
 public:

@@ -62,3 +62,49 @@ typedef double						_double;
 #define SAFE_DELETE(ptr)			{ if(ptr) { delete ptr; ptr = nullptr; } }
 #define SAFE_DELETE_ARRAY(ptr)		{ if(ptr) { delete[] ptr; ptr = nullptr; } }
 #define SAFE_RELEASE(ptr)			{ if(ptr) { ptr->Release(); ptr = nullptr; } }
+
+struct _Color
+{
+	_ubyte r, g, b, a;
+
+	_Color() : r(0), g(0), b(0), a(255) {}
+	_Color(_ubyte _r, _ubyte _g, _ubyte _b, _ubyte _a = 255) : r(_r), g(_g), b(_b), a(_a) {}
+
+	// WinAPI COLORREF로 변환
+	COLORREF ToCOLORREF() const { return RGB(r, g, b); }
+};
+
+// 자주 쓰이는 색상 미리 정의 (선택 사항)
+namespace Colors {
+	const _Color White(255, 255, 255);
+	const _Color Black(0, 0, 0);
+	const _Color Gray(128, 128, 128);
+
+	const _Color Red(255, 0, 0);
+	const _Color Green(0, 255, 0);
+	const _Color Blue(0, 0, 255);
+
+	const _Color LightGray(200, 200, 200);
+	const _Color DarkGray(50, 50, 50);
+	const _Color Orange(255, 165, 0);
+	const _Color Purple(128, 0, 128);
+	const _Color Pink(255, 192, 203);
+	const _Color Brown(165, 42, 42);
+	const _Color Lime(0, 255, 0);
+	const _Color Navy(0, 0, 128);
+	const _Color Teal(0, 128, 128);
+	const _Color Olive(128, 128, 0);
+	const _Color Maroon(128, 0, 0);
+	const _Color Silver(192, 192, 192);
+	const _Color Gold(255, 215, 0);
+	const _Color Violet(238, 130, 238);
+	const _Color Indigo(75, 0, 130);
+	const _Color Coral(255, 127, 80);
+	const _Color Salmon(250, 128, 114);
+	const _Color Pearl(255, 240, 245);
+	
+	const _Color Yellow(255, 255, 0);
+	const _Color Cyan(0, 255, 255);
+	const _Color Magenta(255, 0, 255);
+	const _Color Transparent(0, 0, 0, 0);
+}

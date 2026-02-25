@@ -28,8 +28,9 @@ struct _Vector3;
 struct _Rect
 {
 	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() }, size_{ _Size::Zero() } {}
-	_Rect(const _Point& _lt, const _Point& _rb) : points_{ _lt, _rb }, size_{ _rb.x - _lt.x, _rb.y - _lt.y } {}
+	constexpr _Rect(const _Point& _lt, const _Point& _rb) : points_{ _lt, _rb }, size_{ _rb.x - _lt.x, _rb.y - _lt.y } {}
 	constexpr _Rect(const _Point& _lt, const _Size& _size) : points_{ _lt, _Point{ _lt.x + _size.x, _lt.y + _size.y } }, size_{ _size } {}
+	constexpr _Rect(const _int _left, const _int _top, const _int _right, const _int _bottom) : points_{ _Point(_left, _top), _Point(_right, _bottom) }, size_{ _right - _left, _bottom - _top } {}
 
 	static constexpr _Rect Zero() { return _Rect{}; }
 
