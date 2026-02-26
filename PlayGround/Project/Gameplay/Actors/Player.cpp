@@ -4,13 +4,7 @@
 #include "EngineSystems/Render/RenderChain.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
-#include "Core/Math/MathFunctions.h"
-
-#include "Components/Transform.h"
-#include "Components/Status.h"
 #include "Components/PlayableMovement.h"
-#include "Components/SphereCollider.h"
-#include "Components/Combat.h"
 
 _bool Player::Initialize()
 {
@@ -20,34 +14,30 @@ _bool Player::Initialize()
 	// 플레이어 identifier 설정
 	Name(_T("Player"));
 
-	// 플레이어 초기값 설정
-	transform_->Rotation(0, 1);
-	transform_->Scale(30.f);
-
-	// input manager 캐싱
-	input_manager_ = &_InputMgr.Get();
-
-	// 플레이어 컴포넌트 설정
-	status_ = new Status();
-	RegisterComponent(status_);
-
+	// 플레이어 Movement 컴포넌트 생성 및 등록
 	movement_ = new PlayableMovement();
 	RegisterComponent(movement_);
 
-	combat_ = new Combat();
+	// 플레이어 컴포넌트 설정
+	transform_->Rotation(0, 1);
+	transform_->Scale(30.f);
+
 	combat_->HP(5);
-	RegisterComponent(combat_);
 
-	player_col_size_[SphereCol_Body] = 30.f;
-	player_col_size_[SphereCol_Attack] = 50.f;
-	RegisterComponent(new SphereCollider(player_col_size_[SphereCol_Body]));
-	RegisterComponent(new SphereCollider(player_col_size_[SphereCol_Attack]));
+	// 플레이어 콜라이더 설정
+	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
+	player_col_size_[++default_collider_idx] = 15.f;
+	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(player_col_size_[default_collider_idx]);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, default_collider_idx)));
 
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Body)));
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, SphereCol_Attack)));
+	player_col_size_[++default_collider_idx] = 25.f;
+	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(player_col_size_[default_collider_idx]);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, default_collider_idx)));
+
+	// 매 프레임마다 Get 호출하는 것을 피하기 위해서 플레이어에는 InputManager 를 캐싱해둔다
+	input_manager_ = &_InputMgr.Get();
 
 	Finalize();
-
 	return true;
 }
 
@@ -269,11 +259,11 @@ void Player::_ShowDebugInfo()
 	_tchar buffer[MAX_PATH] = {};
 
 	const _int line_gap = 20;
-	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAVE_FRAME_THICKNESS;
-	_int draw_pos_y = INGAVE_FRAME_THICKNESS_HALF - line_gap + 5;
+	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS;
+	_int draw_pos_y = INGAME_FRAME_THICKNESS_HALF - line_gap + 5;
 
 	// 1) 배경 먼저 그리기
-	RECT rt = { GAME_VIEW_WIDTH + INGAVE_FRAME_THICKNESS_HALF, INGAVE_FRAME_THICKNESS_HALF, WINCX - INGAVE_FRAME_THICKNESS_HALF, WINCY - INGAVE_FRAME_THICKNESS_HALF };
+	RECT rt = { GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS_HALF, INGAME_FRAME_THICKNESS_HALF, WINCX - INGAME_FRAME_THICKNESS_HALF, WINCY - INGAME_FRAME_THICKNESS_HALF };
 	//Rectangle(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
 
 	// 2) 텍스트 그리기

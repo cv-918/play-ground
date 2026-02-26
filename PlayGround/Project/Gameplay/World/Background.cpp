@@ -6,7 +6,7 @@ _bool Background::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	const auto lt = _Point{ INGAVE_FRAME_THICKNESS_HALF, INGAVE_FRAME_THICKNESS_HALF };
+	const auto lt = _Point{ INGAME_FRAME_THICKNESS_HALF, INGAME_FRAME_THICKNESS_HALF };
 	const auto size = _Size{ GAME_SCREEN_CX, GAME_SCREEN_CY };
 
 	nav_mesh_ = _Rect(lt, size);

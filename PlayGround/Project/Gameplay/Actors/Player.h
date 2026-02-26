@@ -1,16 +1,9 @@
 #pragma once
 
-#include "GameObjectBase.h"
+#include "Unit.h"
 
-class InputManager;
-
-class Player
-	: public GameObjectBase
-	, public ICollidable
-	, public IDamagable
+class Player final : public Unit
 {
-	enum PlayerColliderId { SphereCol_Body, SphereCol_Attack, ColCount };
-
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
@@ -33,9 +26,9 @@ public:
 	void SetNavMesh(const _Rect& _rt);
 	
 private:
-	const InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
+	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 
-	_float player_col_size_[ColCount] = {};
+	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {};
 
 	// 컴포넌트 캐싱
 	class PlayableMovement* movement_ = nullptr;

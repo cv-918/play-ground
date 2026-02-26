@@ -1,7 +1,6 @@
 #include "framework.h"
 #include "GameObjectBase.h"
 
-#include "Components/Transform.h"
 #include "EngineSystems/Render/RenderChain.h"
 
 GameObjectBase::~GameObjectBase()
