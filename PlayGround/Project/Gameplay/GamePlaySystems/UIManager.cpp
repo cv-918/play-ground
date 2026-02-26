@@ -62,5 +62,8 @@ void UIManager::AddUI(UIBase* _ui)
 		return;
 
 	// UI 요소를 추가
+	if(false == _ui->IsInitialized())
+		_ui->Initialize();
+
 	ui_list_.push_back(_ui);
 }

@@ -35,7 +35,10 @@ void ObjectManager::Render(_double _delta_time)
 	for (auto* game_object : game_objects_)
 	{
 		if (game_object->Active())
+		{
 			game_object->Render(_delta_time);
+			game_object->DebugRender(_delta_time);
+		}
 	}
 }
 
@@ -63,5 +66,8 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 		return;
 
 	// 게임 오브젝트를 추가
+	if(false == _game_object->IsInitialized())
+		_game_object->Initialize();
+
 	game_objects_.push_back(_game_object);
 }

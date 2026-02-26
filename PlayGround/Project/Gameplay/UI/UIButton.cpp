@@ -1,8 +1,6 @@
 #include "framework.h"
 #include "UIButton.h"
 
-#include "EngineSystems/Input/InputManager.h"
-
 _int UIButton::Update(_double _delta_time)
 {
 	if (IsMouseOver(_InputMgr.MousePoint()))

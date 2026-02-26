@@ -1,12 +1,9 @@
 #pragma once
 
 #include "GamePlaySystems/SceneManager.h"
-#include "EngineSystems/Input/InputManager.h"
 
+class GameObjectBase;
 #include "UI/UIButton.h"
-
-class UIBase;
-
 
 class Scene abstract
 	: public IInitializable
@@ -28,7 +25,15 @@ public:
 	virtual void OnEnter() PURE;
 	virtual void OnExit() PURE;
 
+public:
 	SceneType Type() const { return type_; }
+
+public:
+	// 게임 오브젝트 관리를 위한 메서드. 필요에 따라 게임 오브젝트를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
+	void AddGameObject(GameObjectBase* _game_object);
+
+	// UI 요소 관리를 위한 메서드. 필요에 따라 UI 요소를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
+	void AddUI(UIBase* _ui);
 
 private:
 	SceneType type_ = SceneType::Count;

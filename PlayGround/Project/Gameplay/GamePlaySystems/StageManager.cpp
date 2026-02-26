@@ -1,8 +1,6 @@
 #include "framework.h"
 #include "StageManager.h"
 
-#include "Core/Math/Random.h"
-
 _int StageManager::Update(_double _delta_time)
 {
     return _int();

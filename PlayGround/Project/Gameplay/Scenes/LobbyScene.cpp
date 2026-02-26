@@ -3,6 +3,8 @@
 
 _bool LobbyScene::Initialize()
 {
+	__super::Initialize();
+
 	// 버튼 생성 및 설정
 	UIButton* start_btn = new UIButton();
 	start_btn->SetRect(_Rect(300, 400, 500, 450)); // 화면 중앙 하단쯤
@@ -23,8 +25,6 @@ _bool LobbyScene::Initialize()
 
 void LobbyScene::Render(_double _delta_time)
 {
-
-
 	__super::Render(_delta_time);
 }
 
