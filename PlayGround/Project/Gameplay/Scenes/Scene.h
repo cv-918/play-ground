@@ -35,7 +35,7 @@ public:
 	// UI 요소 관리를 위한 메서드. 필요에 따라 UI 요소를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
 	void AddUI(UIBase* _ui);
 
-private:
+protected:
 	SceneType type_ = SceneType::Count;
 
 	class ObjectManager* object_manager_; // 씬에 포함된 게임 오브젝트들을 관리하는 매니저. 필요에 따라 씬에서 생성된 게임 오브젝트들을 이 매니저에 추가하여 일괄 업데이트 및 렌더링할 수 있습니다.

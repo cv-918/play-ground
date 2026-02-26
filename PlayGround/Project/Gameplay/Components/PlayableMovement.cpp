@@ -1,8 +1,6 @@
 #include "framework.h"
 #include "PlayableMovement.h"
 
-#include "Core/Math/MathFunctions.h"
-
 PlayableMovement::PlayableMovement()
 	: input_manager_(nullptr)
 {

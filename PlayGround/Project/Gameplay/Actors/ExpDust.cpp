@@ -1,17 +1,6 @@
 #include "framework.h"
 #include "ExpDust.h"
 
-#include "EngineSystems/Physics/CollisionManager.h"
-
-#include "Components/Transform.h"
-#include "Components/Status.h"
-#include "Components/NonPlayableMovement.h"
-#include "Components/SphereCollider.h"
-#include "Components/Combat.h"
-
-#include "GamePlaySystems/StageManager.h"
-#include "GamePlaySystems/GameState.h"
-
 _bool ExpDust::Initialize()
 {
 	if (!__super::Initialize())
@@ -19,7 +8,7 @@ _bool ExpDust::Initialize()
 
 	// 더스트 identifier 설정
 	static _int instance_count = 0;
-	Name(_T("ExpDust") + std::to_wstring(++instance_count));
+	Name(_T("Enemy") + std::to_wstring(++instance_count));
 
 	// 더스트 초기값 설정
 	
@@ -52,8 +41,8 @@ _bool ExpDust::Initialize()
 	switch (s_cast(DustGrade, lv))
 	{
 	case DustGrade::One:
-		pattern = MovementPattern::Stopped;
-		move_spd = 0.f;
+		pattern = MovementPattern::Directional;
+		move_spd = 40.f;
 
 		scale = 10.f;
 		position_clampper = (s_int(scale) >> 1);
@@ -73,15 +62,15 @@ _bool ExpDust::Initialize()
 		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Four:
-		pattern = MovementPattern::Stopped;
-		move_spd = 0.f;
+		pattern = MovementPattern::Directional;
+		move_spd = 40.f;
 
 		scale = 50.f;
 		position_clampper = (s_int(scale) >> 1);
 		break;
 	case DustGrade::Five:
 		pattern = MovementPattern::Directional;
-		move_spd = 40.f;
+		move_spd = 20.f;
 
 		scale = 80.f;
 		position_clampper = (s_int(scale) >> 1);
@@ -94,17 +83,17 @@ _bool ExpDust::Initialize()
 	{
 	case MovementPattern::Stopped:
 	{
-		position.x = _Random.Range(INGAVE_FRAME_THICKNESS_HALF + position_clampper,
-			WINCX - INGAVE_FRAME_THICKNESS_HALF - position_clampper);
-		position.y = _Random.Range(INGAVE_FRAME_THICKNESS_HALF + position_clampper,
-			WINCY - INGAVE_FRAME_THICKNESS_HALF - position_clampper);
+		position.x = _Random.Range(INGAME_FRAME_THICKNESS_HALF + position_clampper,
+			WINCX - INGAME_FRAME_THICKNESS_HALF - position_clampper);
+		position.y = _Random.Range(INGAME_FRAME_THICKNESS_HALF + position_clampper,
+			WINCY - INGAME_FRAME_THICKNESS_HALF - position_clampper);
 	}
 	break;
 
 	case MovementPattern::Directional:
 	case MovementPattern::ToTarget:
 	{
-		_Point generated_position = _StageMgr.GeneratePosition(STAGE_PLAY_STATE::Ready == _StageMgr.State());
+		_Point generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.State());
 
 		/*
 			중점에서 생성 위치를 빼면 방향 벡터(v)가 나온다
@@ -178,11 +167,19 @@ _bool ExpDust::Initialize()
 	transform_->Position(position);
 	transform_->LookAt(look_point);
 	
+	// 등급에 따라서 콜라이더 액티브 상태 변경 필요함
 	_float radius = scale * 0.5f;
-	collider_ = new SphereCollider(radius);
-	collider_->Draw(false);
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	body_collider->Radius(scale);
+	body_collider->Draw(false);
 
-	movement_ = new NonPlayableMovement();
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	attack_collider->Radius(scale);
+	attack_collider->Draw(false);
+
+	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, body_collider);
+	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, attack_collider);
+
 	movement_->Pattern(pattern);
 	movement_->MoveSpd(move_spd);
 	if (lv == 3)
@@ -192,7 +189,6 @@ _bool ExpDust::Initialize()
 
 	const auto move_dir = (look_point - position).Normalized();
 	movement_->MoveDir(move_dir);
-	RegisterComponent(movement_);
 
 	/*
 		#2. 공격 패턴 설정
@@ -200,12 +196,7 @@ _bool ExpDust::Initialize()
 		공격 패턴이 있는 레벨의 경우 공격 패턴 설정
 	*/
 
-	combat_ = new Combat();
-	status_ = new Status();
 	status_->Level(lv);
-
-	RegisterComponent(collider_);
-	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, collider_);
 	// e, [ 더스트 컴포넌트 설정 ]
 
 	Finalize();
@@ -316,12 +307,4 @@ void ExpDust::OnCollisionExit(Collider* _this, Collider* _other)
 void ExpDust::GetDamage(_float _damage)
 {
 
-}
-
-void ExpDust::AdjustColliderRadius()
-{
-	if (collider_)
-	{
-		collider_->Radius(transform_->Scale().Length());
-	}
 }

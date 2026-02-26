@@ -2,6 +2,7 @@
 #include "ObjectManager.h"
 
 #include "Actors/GameObjectBase.h"
+#include "Actors/ExpDust.h"
 
 _bool ObjectManager::Initialize()
 {
@@ -70,4 +71,26 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 		_game_object->Initialize();
 
 	game_objects_.push_back(_game_object);
+}
+
+GameObjectBase* ObjectManager::SpawnEnemy(const EnemyInfo& _info)
+{
+	GameObjectBase* enemy = nullptr;
+	switch (_info.category_)
+	{
+	case EnemyCategory::WasExpDust:
+		enemy = new ExpDust(_info);
+		break;
+	default:
+		return nullptr; // 지원하지 않는 카테고리인 경우 nullptr 반환
+	}
+
+	if (enemy->Initialize())
+	{
+		game_objects_.push_back(enemy);
+		return enemy;
+	}
+
+	SAFE_DELETE(enemy);
+	return nullptr;
 }

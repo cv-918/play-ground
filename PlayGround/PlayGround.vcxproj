@@ -161,6 +161,7 @@
     <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Framework\framework.h" />
     <ClInclude Include="Project\Framework\Resource.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
     <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
     <ClInclude Include="Project\Gameplay\Components\Collider.h" />
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
@@ -208,6 +209,7 @@
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />

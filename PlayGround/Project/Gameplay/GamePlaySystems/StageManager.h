@@ -10,7 +10,7 @@
 
 #define _StageMgr StageManager::Get()
 
-enum class STAGE_PLAY_STATE
+enum class StageState
 {
 	Enter,
 	Ready,
@@ -21,18 +21,26 @@ enum class STAGE_PLAY_STATE
 	Exit
 };
 
+class ObjectManager;
+
 class StageManager
 	: public ISingleton<StageManager>
 	, public IUpdatable
 {
 public:
-	// IUpdatable을(를) 통해 상속됨
+	explicit StageManager();
+	virtual ~StageManager() DEFAULT;
+
+public:
 	virtual _int Update(_double _delta_time) override;
 	virtual _int LateUpdate(_double _delta_time) override;
 	virtual void Render(_double _delta_time) override;
 
 public:
-	STAGE_PLAY_STATE State() const { return state_; }
+	StageState State() const { return state_; }
+	void ChangeState(StageState _new_state) { state_ = _new_state; }
+
+	void SetObjectManager(ObjectManager* _object_manager) { object_manager_ = _object_manager; }
 
 	const _Rect& GetNavMesh() const { return *stage_nav_mesh_; }
 	void SetNavMesh(const _Rect& _rt);
@@ -40,15 +48,23 @@ public:
 	_Point GeneratePosition(_bool _inclusive);
 
 private:
+	void _OnEnter();
+	void _OnReady();
+	void _OnPlay();
+	void _OnPause();
+	void _OnClear();
+	void _OnResult();
+	void _OnExit();
+
 	void _UpdateGenerationAreas();
 
 private:
-	STAGE_PLAY_STATE state_;
+	StageState state_;
+	_double stage_timer_ = 0.0;
 
-	// wave 관련 스켈레톤 데이터
-	_int wave_level_;
-	_int wave_type_;
-	_double wave_timer_;
+	_double spawn_timer_ = 0.0;
+	_double spawn_interval_ = 1.0;
+	ObjectManager* object_manager_;
 
 	const _Rect* stage_nav_mesh_;
 	_Rect generation_area_[4];

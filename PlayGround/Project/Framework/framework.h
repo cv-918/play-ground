@@ -36,6 +36,7 @@
 #include "Core/Math/Random.h"
 #include "Core/Math/Geometry2D.h"
 #include "Core/Math/Vector3.h"
+#include "Core/Math/MathFunctions.h"
 
 #include "Core/Base/DrawFunctions.h"
 

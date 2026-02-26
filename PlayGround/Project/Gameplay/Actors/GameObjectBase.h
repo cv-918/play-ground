@@ -1,9 +1,7 @@
 #pragma once
 
 #include "GamePlay/Components/ComponentBase.h"
-
-class Transform;
-class Collider;
+#include "Components/Transform.h"
 
 class GameObjectBase abstract
 	: public IInitializable

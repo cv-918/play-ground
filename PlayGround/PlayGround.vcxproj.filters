@@ -73,6 +73,7 @@
     <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -130,5 +131,6 @@
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
   </ItemGroup>
 </Project>
