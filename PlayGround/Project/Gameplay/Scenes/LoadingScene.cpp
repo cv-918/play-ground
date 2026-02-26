@@ -3,6 +3,8 @@
 
 _bool LoadingScene::Initialize()
 {
+	__super::Initialize();
+
 	debug_scene_name_ = L"LOADING SCENE";
 
 	MAKE_INITIALIZED;
@@ -11,6 +13,8 @@ _bool LoadingScene::Initialize()
 
 _int LoadingScene::Update(_double _delta_time)
 {
+	__super::Update(_delta_time);
+
     if (loading_complete_)
 		return _int();
 
@@ -25,6 +29,8 @@ _int LoadingScene::Update(_double _delta_time)
 
 _int LoadingScene::LateUpdate(_double _delta_time)
 {
+	__super::LateUpdate(_delta_time);
+
 	if (loading_complete_)
 	{
 		if (_InputMgr.Down(VK_RETURN) || _InputMgr.Down(VK_SPACE))

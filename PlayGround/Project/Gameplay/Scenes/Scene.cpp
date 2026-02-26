@@ -1,8 +1,11 @@
 #include "framework.h"
 #include "Scene.h"
 
-#include "Gameplay/GamePlaySystems/ObjectManager.h"
-#include "Gameplay/GamePlaySystems/UIManager.h"
+#include "GamePlaySystems/ObjectManager.h"
+#include "GamePlaySystems/UIManager.h"
+
+#include "Actors/GameObjectBase.h"
+#include "UI/UIBase.h"
 
 Scene::~Scene()
 {
@@ -52,4 +55,22 @@ _bool Scene::Release()
 	ui_manager_->Release();
 
 	return _bool();
+}
+
+void Scene::AddGameObject(GameObjectBase* _game_object)
+{
+	if (nullptr == _game_object)
+		return;
+
+	if (object_manager_)
+		object_manager_->AddGameObject(_game_object);
+}
+
+void Scene::AddUI(UIBase* _ui)
+{
+	if (nullptr == _ui)
+		return;
+
+	if (ui_manager_)
+		ui_manager_->AddUI(_ui);
 }

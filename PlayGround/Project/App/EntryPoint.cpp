@@ -5,8 +5,6 @@
 #include "EntryPoint.h"
 
 #include "App/PlayGround.h"
-#include "EngineSystems/Input/InputManager.h"
-#include "EngineSystems/Timer/Timer.h"
 
 PlayGround pg;
 
