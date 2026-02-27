@@ -1,10 +1,12 @@
 #pragma once
 
+struct _Vector3;
 struct _Point
 {
 	constexpr _Point() : x(IV_ZERO), y(IV_ZERO) {}
 	constexpr _Point(const _int _value) : x(_value), y(_value) {}
 	constexpr _Point(const _int _x, const _int _y) : x(_x), y(_y) {}
+	constexpr _Point(const _Vector3& _vec);
 
 	static constexpr _Point Zero() { return _Point{}; }
 
@@ -24,7 +26,6 @@ struct _Size
 	_int y;
 };
 
-struct _Vector3;
 struct _Rect
 {
 	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() }, size_{ _Size::Zero() } {}
@@ -50,6 +51,8 @@ struct _Rect
 	_int Width() const { return size_.x; }
 	_int Height() const { return size_.y; }
 	_Size Size() const { return size_; }
+
+	_Point Center() const { return _Point(Left() + Width() / 2, Top() + Height() / 2); }
 
 	const RECT ToRECT() const { return RECT{ points_[0].x, points_[0].y, points_[1].x, points_[1].y }; }
 

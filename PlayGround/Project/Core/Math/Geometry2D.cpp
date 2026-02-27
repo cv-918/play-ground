@@ -3,6 +3,10 @@
 
 #include "Vector3.h"
 
+constexpr _Point::_Point(const _Vector3& _vec)
+	: x(_vec.x), y(_vec.y) {
+}
+
 _bool _Rect::PtInRect(const _Point& _pt) const
 {
 	return (_pt.x >= Left() && _pt.x < Right() &&

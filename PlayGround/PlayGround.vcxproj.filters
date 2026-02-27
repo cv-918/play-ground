@@ -33,7 +33,7 @@
     </ClInclude>
     <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
-    <ClInclude Include="Project\Gameplay\Actors\Unit.h" />
+    <ClInclude Include="Project\Gameplay\Actors\UnitBase.h" />
     <ClInclude Include="Project\Gameplay\Components\ComponentBase.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
     <ClInclude Include="Project\Gameplay\Actors\Player.h" />
@@ -97,7 +97,7 @@
     </ClCompile>
     <ClCompile Include="Project\Gameplay\Actors\GameObjectBase.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\Unit.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\UnitBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\ComponentBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Player.cpp" />

@@ -1,5 +1,5 @@
 #pragma once
-#include "Unit.h"
+#include "UnitBase.h"
 
 #include "Components/NonPlayableMovement.h"
 
@@ -51,7 +51,7 @@ public:
 	EnemyInfo GetEnemyInfo() const { return info_; }
 	void SetEnemyInfo(const EnemyInfo& _info) { info_ = _info; }
 
-private:
+protected:
 	EnemyInfo info_;
 };
 

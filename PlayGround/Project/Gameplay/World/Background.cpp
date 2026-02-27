@@ -26,17 +26,5 @@ _int Background::Update(_double _delta_time)
 void Background::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
-
-    // 배경을 그려야한다
-	// 일단은 Rect 로 배경을 채우자
-	// 추후에는 이미지로 변경
-	HPEN hPen = CreatePen(BS_SOLID, 0, RGB(0, 0, 0));
-	HPEN oldPen = (HPEN)SelectObject(g_back_dc, hPen);
-	HBRUSH hBrush = CreateSolidBrush(RGB(135, 206, 235)); // 하늘색
-	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, hBrush);
-	FillRect(g_back_dc, &nav_mesh_draw_rt_, hBrush);
-	SelectObject(g_back_dc, oldBrush);
-	SelectObject(g_back_dc, oldPen);
-	DeleteObject(hBrush);
-	DeleteObject(hPen);
+	_DrawFunc::FillRectangle(nav_mesh_, Colors::White);
 }

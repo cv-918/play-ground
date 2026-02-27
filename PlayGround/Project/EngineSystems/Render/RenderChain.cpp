@@ -5,6 +5,8 @@ HWND g_hwnd		= nullptr;
 HDC g_dc		= nullptr;
 HDC g_back_dc	= nullptr;
 
+Gdiplus::Graphics* g_graphics = nullptr;
+
 RenderChain::~RenderChain()
 {
 	Release();
@@ -12,6 +14,10 @@ RenderChain::~RenderChain()
 
 _bool RenderChain::Initialize()
 {
+	// GDI+ 초기화
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+
 	g_dc = GetDC(g_hwnd);
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
 
@@ -21,6 +27,9 @@ _bool RenderChain::Initialize()
 _bool RenderChain::Release()
 {
 	_DestroyBackBuffer();
+
+	// GDI+ 종료 (반드시 리소스 해제 전에 호출)
+	Gdiplus::GdiplusShutdown(m_gdiplusToken);
 
 	if (g_dc)
 	{
@@ -33,11 +42,24 @@ _bool RenderChain::Release()
 
 void RenderChain::Clear()
 {
+	// 1. 화면 클리어
 	PatBlt(g_back_dc, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
+
+	// 2. 이번 프레임에서 공용으로 쓸 Graphics 객체 생성 (싱글 패턴의 시작)
+	if (nullptr == g_graphics)
+	{
+		g_graphics = new Gdiplus::Graphics(g_back_dc);
+		// 안티앨리어싱 같은 전역 설정은 여기서 한 번만!
+		g_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+	}
 }
 
 void RenderChain::Present()
 {
+	// 3. 그리기가 다 끝났으므로 Graphics 객체 삭제 (중요: BitBlt 이전에 삭제 권장)
+	SAFE_DELETE(g_graphics);
+
+	// 4. 최종 화면 출력
 	BitBlt(g_dc, 0, 0, screen_size_.x, screen_size_.y, g_back_dc, 0, 0, SRCCOPY);
 }
 

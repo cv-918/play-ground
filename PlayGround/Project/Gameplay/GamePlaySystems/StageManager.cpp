@@ -6,7 +6,7 @@
 
 StageManager::StageManager()
 	: state_(StageState::Enter), stage_timer_(0.0)
-	, spawn_timer_(0.0), spawn_interval_(1.0), object_manager_(nullptr)
+	, spawn_timer_(0.0), spawn_interval_(100.0), object_manager_(nullptr)
 	, stage_nav_mesh_(nullptr)
 {
 }
@@ -88,6 +88,10 @@ void StageManager::_OnPlay()
 {
 	// 게임 플레이 로직 처리
 	// 예시: 적 스폰, 아이템 드롭, 타이머 업데이트 등
+
+	// 테스트용으로 스페이스바를 누르면 스폰 타이머를 최대치로 초기화해서 바로 스폰하도록 함
+	if (_InputMgr.Down(VK_SPACE))
+		spawn_timer_ = spawn_interval_;
 
 	// 스폰 타이머 업데이트
 	spawn_timer_ += _Timer.DeltaTime();

@@ -14,9 +14,9 @@ enum class CollisionLayer
 {
 	PlayerBody,
 	PlayerAttack,
-	ExpDust,
-	Bullet,
-	Wall,
+	EnemyBody,
+	EnemyAttack,
+	EnemyBullet,
 	End
 };
 

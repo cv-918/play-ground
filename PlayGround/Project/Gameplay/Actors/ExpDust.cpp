@@ -10,143 +10,105 @@ _bool ExpDust::Initialize()
 	static _int instance_count = 0;
 	Name(_T("Enemy") + std::to_wstring(++instance_count));
 
-	// 더스트 초기값 설정
-	
-	// 랜덤 색상 설정
-	// RGB(100~255 범위의 랜덤한 색상)
-	// 추후에는 레벨에 따른 색상 범위 설정도 고려
-	const _int color_range_min = 100;
-	const _int color_range_max = 255;
-	color_brush_ = CreateSolidBrush(RGB(
-		_Random.Range(color_range_min, color_range_max),
-		_Random.Range(color_range_min, color_range_max),
-		_Random.Range(color_range_min, color_range_max)
-	));
-
-	const auto lv = _Random.Range(1, 5);
-
-	// movement
+	// 컴포넌트 설정
+	// 무브먼트 컴포넌트 설정에 필요한 값
 	MovementPattern pattern = MovementPattern::Undefined;
 	_float move_spd = 0.f;
 
-	// transform
+	// 트랜스폼 컴포넌트 설정에 필요한 값
 	_float scale = 0.f;
 	_Vector3 position;
-	_int position_clampper = 0;
-	_int position_padding_x = _Random.Range(0, 50); // for moving patterns
-	_int position_padding_y = _Random.Range(0, 50); // for moving patterns
 	_Vector3 look_point;
-	
-	// 무브먼트 타입 설정해서 가속도 로직으로 이동할지 일반 로직으로 이동할지 선택
-	switch (s_cast(DustGrade, lv))
+
+	// 콜라이더 컴포넌트 설정에 필요한 값
+	_bool collidable = false;
+	switch (info_.grade_)
 	{
-	case DustGrade::One:
+	case EnemyGrade::Common:
+		// 일반 | 자원 공급용1
 		pattern = MovementPattern::Directional;
 		move_spd = 40.f;
 
 		scale = 10.f;
-		position_clampper = (s_int(scale) >> 1);
+		color_ = Colors::Pearl;
 		break;
-	case DustGrade::Two:
+	case EnemyGrade::UnCommon:
+		// 중급 | 자원 공급용2 | 이동 속도 빠름
 		pattern = MovementPattern::Directional;
 		move_spd = 80.f;
 
 		scale = 10.f;
-		position_clampper = (s_int(scale) >> 1);
+		color_ = Colors::LightPink;
 		break;
-	case DustGrade::Three:
-		pattern = MovementPattern::ToTarget;
+	case EnemyGrade::Danger:
+		// 위험 | 플레이 흐름 변화 유도 | 충돌 데미지 있음
+		pattern = MovementPattern::Directional;
 		move_spd = 60.f;
 
 		scale = 30.f;
-		position_clampper = (s_int(scale) >> 1);
+		collidable = true;
+		color_ = Colors::Pink;
 		break;
-	case DustGrade::Four:
+	case EnemyGrade::Special:
+		// 특수 | 플레이 흐름 변화 유도 | 역할군 부여받음
 		pattern = MovementPattern::Directional;
 		move_spd = 40.f;
 
 		scale = 50.f;
-		position_clampper = (s_int(scale) >> 1);
-		break;
-	case DustGrade::Five:
-		pattern = MovementPattern::Directional;
-		move_spd = 20.f;
+		collidable = true;
+		color_ = Colors::Salmon;
 
-		scale = 80.f;
-		position_clampper = (s_int(scale) >> 1);
+		info_.role_ = s_cast(EnemyRole, _Random.Range(s_int(EnemyRole::Tanky), s_int(EnemyRole::Count) - 1));
 		break;
+	//case EnemyGrade::Count:
+	//	pattern = MovementPattern::Directional;
+	//	move_spd = 20.f;
+	//
+	//	scale = 80.f;
+	//	color_ = Colors::Crimson;
+	//	break;
 	default:
+		// 로깅
 		break;
 	}
+
+	const _int radius = (s_int(scale) >> 1);
 
 	switch (pattern)
 	{
-	case MovementPattern::Stopped:
-	{
-		position.x = _Random.Range(INGAME_FRAME_THICKNESS_HALF + position_clampper,
-			WINCX - INGAME_FRAME_THICKNESS_HALF - position_clampper);
-		position.y = _Random.Range(INGAME_FRAME_THICKNESS_HALF + position_clampper,
-			WINCY - INGAME_FRAME_THICKNESS_HALF - position_clampper);
-	}
-	break;
+	//case MovementPattern::Stopped:
+	//{
+	//	position.x = _Random.Range(INGAME_FRAME_THICKNESS_HALF + radius,
+	//		WINCX - INGAME_FRAME_THICKNESS_HALF - radius);
+	//	position.y = _Random.Range(INGAME_FRAME_THICKNESS_HALF + radius,
+	//		WINCY - INGAME_FRAME_THICKNESS_HALF - radius);
+	//}
+	//break;
 
 	case MovementPattern::Directional:
 	case MovementPattern::ToTarget:
 	{
-		_Point generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.State());
+		// 스테이지가 진행 중일 경우 초기 위치를 화면 밖으로 한정해야 한다
+		// 만약, 위치가 화면 안에 있을 경우 화면 중점에 대한 방향벡터를 구하고 반대 방향으로 밀어낸다
 
-		/*
-			중점에서 생성 위치를 빼면 방향 벡터(v)가 나온다
-			생성 위치를 v 방향으로 radius 만큼 이동시킨 위치가 화면 안에 있을 경우,
-			반대 방향으로 '얼마만큼 -radius만큼?-' 밀어낸다.
-		*/
+		const _Vector3 generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.State());
+		const _Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
+		const _Vector3 to_center = (center - generated_position).Normalized();
 
-		//const auto& generated_position = _StageMgr.GeneratePosition(false);
+		position = generated_position + (to_center * radius);
 
-		_Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
-		const auto to_center = (center - generated_position).Normalized();
-		position = to_center * position_clampper;
-
-		const auto& nav_mesh = _StageMgr.GetNavMesh();
+		const auto& nav_mesh = _StageMgr.GetNavMesh(); // 네비 메시를 태우는건 아니고 범위만 사용한다
 		if (nav_mesh.PtInRect(position))
 		{
-			position = to_center * (position_clampper * -1.f);
+			position += to_center * (radius * -1.f);
 		}
 
-		// 이 영역을 랜덤하게 바라보게끔 한다
+		// 네비 메시의 영역보다 작은(3/4) 영역 내부의 임의의 위치를 바라보도록 설정
 		const auto& look_target_area = nav_mesh * 0.75f;
 		look_point = { _Random.Range(look_target_area.Left(), look_target_area.Right()),
 			_Random.Range(look_target_area.Top(), look_target_area.Bottom()) };
 	}
 	break;
-		//// 스테이지가 준비 중이라면 화면 내부 + 외부 생성
-		//if (STAGE_PLAY_STATE::Ready == _StageMgr.State())
-		//{
-		//	const auto& generated_position = _StageMgr.GeneratePosition(true);
-		//	// 
-		//	//position.x = ;
-		//}
-		//// 스테이지가 진행 중이라면 외부 생성
-		//else
-		//{
-		//	/*
-		//		중점에서 생성 위치를 빼면 방향 벡터(v)가 나온다
-		//		생성 위치를 v 방향으로 radius 만큼 이동시킨 위치가 화면 안에 있을 경우,
-		//		반대 방향으로 '얼마만큼 -radius만큼?-' 밀어낸다.
-		//	*/
-		//	const auto& generated_position = _StageMgr.GeneratePosition(false);
-
-		//	_Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
-		//	const auto to_center = (center - generated_position).Normalized();
-		//	position = to_center * position_clampper;
-
-		//	const auto& nav_mesh = _StageMgr.GetNavMesh();
-		//	if (nav_mesh.PtInRect(position))
-		//	{
-		//		position = to_center * -position_clampper;
-		//	}
-		//}
-		//break;
 	}
 
 	// s, [ 더스트 컴포넌트 설정 ]
@@ -167,28 +129,28 @@ _bool ExpDust::Initialize()
 	transform_->Position(position);
 	transform_->LookAt(look_point);
 	
-	// 등급에 따라서 콜라이더 액티브 상태 변경 필요함
-	_float radius = scale * 0.5f;
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	body_collider->Radius(scale);
-	body_collider->Draw(false);
+	body_collider->Radius(radius);
+	body_collider->Draw(true);
 
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	attack_collider->Radius(scale);
-	attack_collider->Draw(false);
+	attack_collider->Radius(radius);
+	attack_collider->Draw(true);
 
-	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, body_collider);
-	_ColMgr.RegisterCollider(CollisionLayer::ExpDust, attack_collider);
+	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
+
+	if (collidable)
+	{
+		_ColMgr.RegisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+	}
+	else
+	{
+		attack_collider->InActivate();
+	}	
 
 	movement_->Pattern(pattern);
 	movement_->MoveSpd(move_spd);
-	if (lv == 3)
-	{
- 		s_cast(NonPlayableMovement*, movement_)->Target(_GameState.Player());
-	}
-
-	const auto move_dir = (look_point - position).Normalized();
-	movement_->MoveDir(move_dir);
+	movement_->MoveDir((look_point - position).Normalized());
 
 	/*
 		#2. 공격 패턴 설정
@@ -196,11 +158,26 @@ _bool ExpDust::Initialize()
 		공격 패턴이 있는 레벨의 경우 공격 패턴 설정
 	*/
 
-	status_->Level(lv);
+	status_->Level(s_int(info_.grade_));
 	// e, [ 더스트 컴포넌트 설정 ]
 
-	Finalize();
+	object_description_ = _T("Lv. ") + std::to_wstring(status_->Level());
 
+	// 역할군을 부여받았을 경우 해당 정보까지 description 에 추가
+	if (info_.role_ == EnemyRole::Mutant)
+	{
+		std::vector<std::wstring> role_strings = {
+			_T("Tanky | 높은 체력"),
+			_T("HighLoot | 많은 자원"),
+			_T("Ranger | 공격-투사체-"),
+			_T("Mutant | 분열/강화"),
+		};
+
+		object_description_ += _T("\n");
+		object_description_ += role_strings[s_int(info_.role_)];
+	}
+
+	Finalize();
 	return true;
 }
 
@@ -212,87 +189,45 @@ _int ExpDust::Update(_double _delta_time)
 	return 0;
 }
 
-void ExpDust::Render(_double _delta_time)
-{
-	if(!Visible())
-		return;
-
-	__super::Render(_delta_time);
-
-	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, color_brush_);
-
-	const auto pos = transform_->Position();
-	const _int rt_size = transform_->Scale().Length();
-
-	RECT rt = {
-		pos.x - rt_size,
-		pos.y - rt_size,
-		pos.x + rt_size,
-		pos.y + rt_size
-	};
-
-	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
-	SelectObject(g_back_dc, oldBrush);
-}
-
-void ExpDust::DebugRender(_double _delta_time)
-{
-	__super::DebugRender(_delta_time);
-
-	// s, 방향 그려서 회전이 적용되는지 확인
-	const auto position = transform_->Position();
-
-	auto forward = transform_->Forward2D();
-	const float line_length = 75.f;
-	forward *= line_length;
-	forward += position;
-
-	MoveToEx(g_back_dc, s_int(position.x), s_int(position.y), nullptr);
-	LineTo(g_back_dc, s_int(forward.x), s_int(forward.y));
-	// s, 방향 그려서 회전이 적용되는지 확인
-
-	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
-	int oldMode = SetBkMode(g_back_dc, TRANSPARENT);
-
-	const auto pos = transform_->Position();
-	const auto rt_size = 150;
-	const auto half_size = rt_size >> 1;
-
-	RECT rt;
-	rt.left = pos.x - half_size;
-	rt.top = pos.y - half_size + 14;
-	rt.right = pos.x + half_size;
-	rt.bottom = pos.y + half_size + 14;
-
-	// s, 오브젝트 이름 그리기
-	const auto debug_string_level = std::wstring(_T("(Lv : ")) + std::to_wstring(status_->Level()) + std::wstring(_T(")"));
-	DrawText(g_back_dc, debug_string_level.c_str(), debug_string_level.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-	// e, 오브젝트 이름 그리기
-
-	// 3. (선택 사항) 다음 그림을 위해 이전 모드로 복구
-	SetBkMode(g_back_dc, oldMode);
-}
-
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	switch (_other->Layer())
 	{
 	case CollisionLayer::PlayerBody:
-		if (status_->Level() >= 4)
+	{
+		switch (info_.grade_)
 		{
-			const auto player = _other->GameObject();
+		case EnemyGrade::Danger:
+		case EnemyGrade::Special:
+		{
+			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
+			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
+				s_cast(IDamagable*, _handler)->GetDamage(1.f);
+				});
 
-			// 플레이어의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
-			const auto com_combat = player->GetComponent(ComponentType::Combat);
-			s_cast(Combat*, com_combat)->GetDamage(1);
-
+			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
 			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-			const _double attack_speed = 4.f;
-
-			// 플레이어에 대한 충돌 기록 저장
-			_this->SetTimerForTarget(_other, attack_speed);
+			const _double attack_cooltime = 4.f;
+			_this->SetTimerForTarget(_other, attack_cooltime);
 		}
 		break;
+		}
+		//if (status_->Level() >= 4)
+		//{
+		//	const auto player = _other->GameObject();
+
+		//	// 플레이어의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
+		//	const auto com_combat = player->GetComponent(ComponentType::Combat);
+		//	s_cast(Combat*, com_combat)->GetDamage(1);
+
+		//	// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
+		//	const _double attack_speed = 4.f;
+
+		//	// 플레이어에 대한 충돌 기록 저장
+		//	_this->SetTimerForTarget(_other, attack_speed);
+		//}
+	}
+	break;
 	}
 }
 
@@ -306,5 +241,5 @@ void ExpDust::OnCollisionExit(Collider* _this, Collider* _other)
 
 void ExpDust::GetDamage(_float _damage)
 {
-
+	combat_->GetDamage(_damage);
 }

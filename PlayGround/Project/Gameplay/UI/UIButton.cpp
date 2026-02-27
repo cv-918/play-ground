@@ -35,8 +35,8 @@ _int UIButton::Update(_double _delta_time)
 void UIButton::Render(_double _delta_time)
 {
 	// g_back_dc를 사용하여 버튼 배경과 텍스트 출력
-	_DrawFunc::DrawRectangle(GetAbsoluteRect(), Colors::Black);
-	_DrawFunc::DrawString(text_, GetAbsoluteRect());
+	const auto abs_rect = GetAbsoluteRect();
+	_DrawFunc::DrawRectangle(abs_rect, Colors::Black);
 
 	_Color draw_color = Colors::White;
 	switch (state_)
@@ -53,8 +53,7 @@ void UIButton::Render(_double _delta_time)
 		break;
 	}
 
-	_Rect abs_rect = GetAbsoluteRect();
 	_DrawFunc::FillRectangle(abs_rect, draw_color);
 	_DrawFunc::DrawRectangle(abs_rect, Colors::Black);
-	_DrawFunc::DrawString(text_, abs_rect);
+	_DrawFunc::DrawString(abs_rect.Center(), text_);
 }

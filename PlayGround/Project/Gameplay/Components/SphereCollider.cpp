@@ -7,7 +7,11 @@
 
 _int SphereCollider::LateUpdate(_double _delta_time)
 {
+	if (!Enable())
+		return 0;
+
 	// 충돌체 중심을 게임오브젝트의 트랜스폼 위치로 설정
+	// 이거 나중에 어태치 함수 만들어서 참조 값으로 자동으로 붙게 만드는게 나을듯
 	const auto position = gameobject_->GetTransform()->Position();
 	Center(position);
 
@@ -16,6 +20,9 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 
 void SphereCollider::Render(_double _delta_time)
 {
+	if (!Visible())
+		return;
+
 	if(!Draw())
 		return;
 

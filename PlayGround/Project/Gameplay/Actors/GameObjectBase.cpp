@@ -91,6 +91,11 @@ void GameObjectBase::Render(_double _delta_time)
 	if (!Visible())
 		return;
 
+	// 오브젝트 그리기
+	const auto position = transform_->Position();
+	const auto radius = transform_->Scale().x * 0.5f;
+	_DrawFunc::FillCircle(_Point(position.x, position.y), radius, color_);
+
 	for (const auto& component : components_)
 		component->Render(_delta_time);
 }
@@ -100,26 +105,20 @@ void GameObjectBase::DebugRender(_double _delta_time)
 	if (!Visible())
 		return;
 
-	// 1. 배경 모드를 투명(TRANSPARENT)으로 설정
-	int oldMode = SetBkMode(g_back_dc, TRANSPARENT);
+	const auto position = transform_->Position();
+	_DrawFunc::DrawString(_Point(position.x, position.y), Name(), Colors::DarkGray);
 
-	const auto pos = transform_->Position();
-	const auto rt_size = 150;
-	const auto half_size = rt_size >> 1;
+	// 1. 방향 그리기
+	const float line_length = 75.f;
+	const auto line_to = position + transform_->Forward2D() * line_length;
 
-	RECT rt;
-	rt.left = pos.x - half_size;
-	rt.top = pos.y - half_size;
-	rt.right = pos.x + half_size;
-	rt.bottom = pos.y + half_size;
+	_DrawFunc::DrawLine(_Point(position.x, position.y), _Point(line_to.x, line_to.y), Colors::DarkGray);
 
-	// s, 오브젝트 이름 그리기
-	const auto debug_string_name = Name();
-	DrawText(g_back_dc, debug_string_name.c_str(), debug_string_name.length(), &rt, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-	// e, 오브젝트 이름 그리기
+	// 2. 디스크립션 그리기
+	auto description_position = position;
+	description_position.y += 14.f; // 디버그용으로 위치 보정
 
-	// 3. (선택 사항) 다음 그림을 위해 이전 모드로 복구
-	SetBkMode(g_back_dc, oldMode);
+	_DrawFunc::DrawString(_Point(description_position.x, description_position.y), object_description_, Colors::DarkGray);
 }
 
 void GameObjectBase::RegisterComponent(ComponentBase* _component)

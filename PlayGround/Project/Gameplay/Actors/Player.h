@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Unit.h"
+#include "UnitBase.h"
 
 class Player final : public Unit
 {
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
 	virtual void DebugRender(_double _delta_time) override;
 
 	// ICollidable을(를) 통해 상속됨
@@ -21,19 +20,12 @@ private:
 	_int _ControllRoutine(_double _delta_time);
 	void _ControlInfoOnDebug();
 	void _ShowDebugInfo();
-
-public:
-	void SetNavMesh(const _Rect& _rt);
 	
 private:
 	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 
+	// 반지름임
 	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {};
-
-	// 컴포넌트 캐싱
-	class PlayableMovement* movement_ = nullptr;
-	class Combat* combat_ = nullptr;
-	class Status* status_ = nullptr;
 
 	// 디버그
 	enum DrawDebugInfoType

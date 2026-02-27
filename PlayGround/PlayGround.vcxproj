@@ -194,7 +194,7 @@
     <ClInclude Include="Project\EngineSystems\Render\RenderChain.h" />
     <ClInclude Include="Project\App\PlayGround.h" />
     <ClInclude Include="Project\Gameplay\Actors\Player.h" />
-    <ClInclude Include="Project\Gameplay\Actors\Unit.h" />
+    <ClInclude Include="Project\Gameplay\Actors\UnitBase.h" />
     <ClInclude Include="Project\Framework\targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -246,7 +246,7 @@
     <ClCompile Include="Project\EngineSystems\Render\RenderChain.cpp" />
     <ClCompile Include="Project\App\PlayGround.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Player.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\Unit.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\UnitBase.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

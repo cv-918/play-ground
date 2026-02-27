@@ -37,9 +37,6 @@ public:
 private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
-
-	virtual void DebugRender(_double _delta_time) override;
 
 	// ICollidable을(를) 통해 상속됨
 	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
@@ -48,7 +45,4 @@ private:
 
 	// IDamagable을(를) 통해 상속됨
 	virtual void GetDamage(_float _damage) override;
-
-private:
-	HBRUSH color_brush_;
 };

@@ -9,6 +9,5 @@ namespace DrawFunctions
 	void FillRectangle(const _Rect& _rect, const _Color& _color);
 	void DrawCircle(const _Point& _center, float _radius, const _Color& _color, float _thickness = 1.0f);
 	void FillCircle(const _Point& _center, float _radius, const _Color& _color);
-
-	void DrawString(const std::wstring& _text, const _Rect& _clip_rect, uint32_t _format = DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	void DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color = Colors::Black, _float _fontSize = 12.f, _bool _isCenter = true);
 }

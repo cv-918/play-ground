@@ -4,7 +4,7 @@
 class GamePlayScene final : public Scene
 {
 public:
-	explicit GamePlayScene() : Scene(SceneType::GamePlay) {}
+	explicit GamePlayScene() : Scene(SceneType::GamePlay), stage_manager_(nullptr) {}
 	virtual ~GamePlayScene() DEFAULT;
 
 public:
@@ -14,4 +14,7 @@ public:
 
 	void OnEnter() override;
 	void OnExit() override;
+
+private:
+	class StageManager* stage_manager_;
 };

@@ -87,9 +87,11 @@ namespace Colors {
 
 	const _Color LightGray(200, 200, 200);
 	const _Color DarkGray(50, 50, 50);
+
 	const _Color Orange(255, 165, 0);
 	const _Color Purple(128, 0, 128);
-	const _Color Pink(255, 192, 203);
+	const _Color Pink(255, 182, 193);
+	const _Color LightPink(255, 192, 203);
 	const _Color Brown(165, 42, 42);
 	const _Color Lime(0, 255, 0);
 	const _Color Navy(0, 0, 128);
@@ -103,6 +105,12 @@ namespace Colors {
 	const _Color Coral(255, 127, 80);
 	const _Color Salmon(250, 128, 114);
 	const _Color Pearl(255, 240, 245);
+	const _Color Mint(189, 252, 201);
+	const _Color Lavender(230, 230, 250);
+	const _Color SkyBlue(135, 206, 235);
+	const _Color LightBlue(173, 216, 230);
+	const _Color DarkBlue(0, 0, 139);
+	const _Color Crimson(220, 20, 60);
 	
 	const _Color Yellow(255, 255, 0);
 	const _Color Cyan(0, 255, 255);

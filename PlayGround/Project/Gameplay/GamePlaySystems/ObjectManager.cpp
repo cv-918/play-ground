@@ -28,6 +28,8 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 			game_object->LateUpdate(_delta_time);
 	}
 
+	_CleanUp();
+
 	return _int();
 }
 
@@ -93,4 +95,23 @@ GameObjectBase* ObjectManager::SpawnEnemy(const EnemyInfo& _info)
 
 	SAFE_DELETE(enemy);
 	return nullptr;
+}
+
+void ObjectManager::_CleanUp()
+{
+	if (game_objects_.empty())
+		return;
+
+	// 이터레이터를 이용해 IsDestroyed()가 true인 것들만 골라 지우기
+	// std::remove_if는 아주 효율적인 알고리즘입니다.
+	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
+		[](GameObjectBase* obj) {
+			if (obj->IsDestroyed()) {
+				delete obj; // 메모리 해제
+				return true; // 리스트에서 제거 대상
+			}
+			return false;
+		});
+
+	game_objects_.erase(it, game_objects_.end());
 }
