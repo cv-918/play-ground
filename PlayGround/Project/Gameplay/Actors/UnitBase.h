@@ -33,7 +33,7 @@ protected:
 protected:
 	virtual _bool Initialize() override;
 
-protected:
+public:
 	SphereCollider* GetDefaultCollider(const UnitDefaultColliderId _id) const
 	{
 		const auto idx = s_int(_id);
@@ -43,6 +43,8 @@ protected:
 	}
 
 	Movement* GetMovement() const { return movement_; }
+	void SetNavMesh(const _Rect& _rt);
+
 	Combat* GetCombat() const { return combat_; }
 	Status* GetStatus() const { return status_; }
 

@@ -40,6 +40,7 @@ public:
 	Transform* GetTransform() const { return transform_; }
 
 	_bool IsDestroyed() const { return destroyed_; }
+	void Destroy() { destroyed_ = true; }
 
 private:
 	std::vector<ComponentBase*> components_;
@@ -48,9 +49,15 @@ private:
 
 protected:
 	Transform* transform_ = nullptr; // Transform 캐시
+	_Color color_ = Colors::Transparent; // 게임 오브젝트의 색상. 필요에 따라 렌더링 시 활용할 수 있습니다. 리소스가 없는 관계로 이 값으로 대체.
 
 private:
 	_bool destroyed_ = false; // 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
+
+	// 개발 모드 전용 데이터
+protected:
+	std::wstring object_description_; // 게임 오브젝트에 대한 설명이나 디버그 정보를 저장하는 문자열. 개발 중에 객체를 식별하거나 디버깅할 때 활용할 수 있습니다.
+
 };
 
 template<typename T>

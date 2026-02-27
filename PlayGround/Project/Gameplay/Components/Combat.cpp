@@ -32,6 +32,6 @@ void Combat::GetDamage(const _int _damage)
 	if(hp_ <= 0)
 	{
 		hp_ = 0;
-		gameobject_->InActivate();
+		gameobject_->Destroy();
 	}
 }

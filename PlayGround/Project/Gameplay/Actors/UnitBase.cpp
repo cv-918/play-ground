@@ -1,5 +1,7 @@
 #include "framework.h"
-#include "Unit.h"
+#include "UnitBase.h"
+
+#include "Components/Movement.h"
 
 Unit::Unit()
 	: movement_(nullptr), combat_(nullptr), status_(nullptr)
@@ -29,5 +31,11 @@ _bool Unit::Initialize()
 	status_ = new Status();
 	RegisterComponent(status_);
 
-	return _bool();
+	return true;
+}
+
+void Unit::SetNavMesh(const _Rect& _rt)
+{
+	if (movement_)
+		movement_->SetNavMesh(_rt);
 }

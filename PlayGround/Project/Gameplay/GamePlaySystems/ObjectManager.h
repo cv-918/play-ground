@@ -35,6 +35,9 @@ public:
 	GameObjectBase* SpawnEnemy(const EnemyInfo& _info);
 
 private:
+	void _CleanUp();
+
+private:
 	SceneType type_ = SceneType::Count; // 이 매니저가 속한 씬 타입
 	std::vector<GameObjectBase*> game_objects_;
 };

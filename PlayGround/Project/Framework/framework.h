@@ -11,6 +11,11 @@
 // Windows 헤더 파일
 #include <windows.h>
 
+// GDI+ 헤더 파일
+#include <objidl.h>
+#include <gdiplus.h>
+#pragma comment(lib, "Gdiplus.lib")
+
 // C 런타임 헤더 파일입니다.
 #include <stdlib.h>
 #include <malloc.h>

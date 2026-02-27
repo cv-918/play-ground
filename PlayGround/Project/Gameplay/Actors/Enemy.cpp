@@ -10,5 +10,5 @@ _bool Enemy::Initialize()
 	movement_ = new NonPlayableMovement();
 	RegisterComponent(movement_);
 
-	return _bool();
+	return true;
 }

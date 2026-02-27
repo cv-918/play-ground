@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "GamePlayScene.h"
 
+#include "Actors/GameObjectBase.h"
 #include "Actors/Player.h"
 #include "Actors/ExpDust.h"
 #include "Components/Transform.h"
@@ -14,6 +15,7 @@ _bool GamePlayScene::Initialize()
 	__super::Initialize();
 
 	debug_scene_name_ = L"GAMEPLAY SCENE";
+	stage_manager_ = &_StageMgr.Get();
 
 	const auto background = new Background();
 	AddGameObject(background);
@@ -23,8 +25,8 @@ _bool GamePlayScene::Initialize()
 
 	const auto& nav_mesh = background->NavMesh();
 	player->SetNavMesh(nav_mesh);
-	_StageMgr.SetNavMesh(nav_mesh);
-	_StageMgr.SetObjectManager(object_manager_);
+	stage_manager_->SetNavMesh(nav_mesh);
+	stage_manager_->SetObjectManager(object_manager_);
 
 	_GameState.Player(player);
 
@@ -37,25 +39,8 @@ _int GamePlayScene::Update(_double _delta_time)
 	__super::Update(_delta_time);
 
 	// 스테이지 매니저 업데이트
-	_StageMgr.Update(_delta_time);
-	
-	//if (_InputMgr.Down(VK_SPACE))
-	//{
-	//	auto mouse_point = _InputMgr.MousePoint();
+	stage_manager_->Update(_delta_time);
 
-	//	// 여기서 ExpDust 생성
-	//	GameObjectBase* new_dust = new ExpDust();
-	//	new_dust->Initialize();
-
-	//	const auto transform = new_dust->GetTransform();
-	//	transform->Position(mouse_point.x, mouse_point.y);
-
-	//	const auto radius = _Random.Range(15.f, 50.f);
-	//	transform->Scale(radius, radius);
-	//	s_cast(ExpDust*, new_dust)->AdjustColliderRadius();
-
-	//	AddGameObject(new_dust);
-	//}
 	return _int();
 }
 

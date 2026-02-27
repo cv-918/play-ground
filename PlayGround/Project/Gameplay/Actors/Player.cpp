@@ -13,6 +13,7 @@ _bool Player::Initialize()
 
 	// 플레이어 identifier 설정
 	Name(_T("Player"));
+	color_ = Colors::DarkGray;
 
 	// 플레이어 Movement 컴포넌트 생성 및 등록
 	movement_ = new PlayableMovement();
@@ -22,7 +23,7 @@ _bool Player::Initialize()
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
-	combat_->HP(5);
+	combat_->HP(3);
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
@@ -52,43 +53,9 @@ _int Player::Update(_double _delta_time)
 	return 0;
 }
 
-void Player::Render(_double _delta_time)
-{
-	if (!Visible())
-		return;
-
-	__super::Render(_delta_time);
-
-	// s, 플레이어 외형 그리기
-	const auto pos = transform_->Position();
-	const _int rt_size = transform_->Scale().x;
-
-	RECT rt = {
-		pos.x - rt_size,
-		pos.y - rt_size,
-		pos.x + rt_size,
-		pos.y + rt_size
-	};
-
-	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
-	// e, 플레이어 외형 그리기
-}
-
 void Player::DebugRender(_double _delta_time)
 {
 	__super::DebugRender(_delta_time);
-
-	// s, 방향 그려서 회전이 적용되는지 확인
-	const auto position = transform_->Position();
-
-	auto forward = transform_->Forward2D();
-	const float line_length = 75.f;
-	forward *= line_length;
-	forward += position;
-
-	MoveToEx(g_back_dc, s_int(position.x), s_int(position.y), nullptr);
-	LineTo(g_back_dc, s_int(forward.x), s_int(forward.y));
-	// s, 방향 그려서 회전이 적용되는지 확인
 
 	// s, 디버그 정보 찍기
 	_ShowDebugInfo();
@@ -106,7 +73,7 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		// 공격 collider 충돌 처리
 		switch (_other->Layer())
 		{
-		case CollisionLayer::ExpDust:
+		case CollisionLayer::EnemyBody:
 		{
 			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
@@ -310,10 +277,4 @@ void Player::_ShowDebugInfo()
 	{
 		TextOut(g_back_dc, draw_pos_x, draw_pos_y += line_gap, line.c_str(), line.length());
 	}
-}
-
-void Player::SetNavMesh(const _Rect& _rt)
-{
-	if (movement_)
-		movement_->SetNavMesh(_rt);
 }
