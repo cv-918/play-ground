@@ -99,12 +99,16 @@ void StageManager::_OnPlay()
 	{
 		spawn_timer_ = 0.0;
 
+		// id 값이 필요한데 이걸 어떤식으로 처리할 것인가를 설계해야한다
+		// 초기값은 카테고리와 그레이드에 종속되는 구조이기 때문에 이 두 값을 사용해 고유값을 만든다
+
 		// 스폰 로직 처리
 		// 생성할 액터의 정보를 넘기면 ObjectManager가 생성
 		// 스테이지 상태에 따라서 생성할 액터의 종류나 수량이 달라질 수 있음
+		const auto category = EnemyCategory::WasExpDust;
 		const auto grade = _Random.Range(EnemyGrade::Common, EnemyGrade::Special);
-		EnemyInfo info = { EnemyCategory::WasExpDust, grade, EnemyRole::Count };
-		object_manager_->SpawnEnemy(info);
+		EnemyJsonInfo info = { EnemyCategory::WasExpDust, grade, EnemyRole::Count };
+		object_manager_->SpawnEnemy(s_int(category), s_int(grade));
 	}
 }
 

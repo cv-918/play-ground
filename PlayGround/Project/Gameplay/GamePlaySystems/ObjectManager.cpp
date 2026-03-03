@@ -75,13 +75,14 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 	game_objects_.push_back(_game_object);
 }
 
-GameObjectBase* ObjectManager::SpawnEnemy(const EnemyInfo& _info)
+GameObjectBase* ObjectManager::SpawnEnemy(_int _category, _int _grade)
 {
 	GameObjectBase* enemy = nullptr;
-	switch (_info.category_)
+	EnemyJsonInfo info = EnemyJsonInfo(s_cast(EnemyCategory, _category), s_cast(EnemyGrade, _grade), EnemyRole::Count);
+	switch (s_cast(EnemyCategory, _category))
 	{
 	case EnemyCategory::WasExpDust:
-		enemy = new ExpDust(_info);
+		enemy = new ExpDust(info);
 		break;
 	default:
 		return nullptr; // 지원하지 않는 카테고리인 경우 nullptr 반환

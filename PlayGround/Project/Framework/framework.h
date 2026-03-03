@@ -17,7 +17,6 @@
 #pragma comment(lib, "Gdiplus.lib")
 
 // C 런타임 헤더 파일입니다.
-#include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
@@ -47,3 +46,5 @@
 
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Timer/Timer.h"
+
+#include "Common/CommonGamePlayType.h"

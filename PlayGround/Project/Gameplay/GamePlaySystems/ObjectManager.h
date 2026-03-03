@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Actors/Enemy.h"
-
 class GameObjectBase;
 
 /*
@@ -15,7 +13,7 @@ class ObjectManager
 	, public IReleasable
 {
 public:
-	explicit ObjectManager(const SceneType _type) : type_(_type) {}
+	explicit ObjectManager() DEFAULT;
 	virtual ~ObjectManager() { Release(); }
 
 	virtual _bool Initialize() override;
@@ -32,12 +30,11 @@ public:
 
 	// 템플릿 메서드를 사용하여 다양한 타입의 게임 오브젝트를 생성할 수 있도록 지원
 	// 단, 몬스터 생성 메서드, 오브젝트 생성 메서드 등을 구분하고 인자로는 해당 타입의 정보를 받는다
-	GameObjectBase* SpawnEnemy(const EnemyInfo& _info);
+	GameObjectBase* SpawnEnemy(_int _category, _int _grade);
 
 private:
 	void _CleanUp();
 
 private:
-	SceneType type_ = SceneType::Count; // 이 매니저가 속한 씬 타입
 	std::vector<GameObjectBase*> game_objects_;
 };

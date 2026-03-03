@@ -47,6 +47,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg = {};
     if (!pg.Initialize())
     {
+        _DEBUG_MSGBOX_EX(L"PlayGround 초기화 실패");
         return FALSE;
     }
 

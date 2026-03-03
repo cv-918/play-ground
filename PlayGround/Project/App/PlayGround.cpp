@@ -5,6 +5,8 @@
 #include "EngineSystems/Physics/CollisionManager.h"
 #include "GamePlaySystems/SceneManager.h"
 
+#include "GamePlaySystems/EnemyDataManager.h"
+
 _bool PlayGround::Initialize()
 {
 	_Timer.Initialize();
@@ -16,6 +18,12 @@ _bool PlayGround::Initialize()
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
 
 	_SceneMgr.Initialize();
+
+	if (false == _EnemyDataMgr.Load("Data/test.json"))
+	{
+		// json 파일 읽기 에러
+		return false;
+	}
 
 	return true;
 }

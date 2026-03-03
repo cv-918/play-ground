@@ -1,0 +1,84 @@
+[
+  {
+    "category_": 1,
+    "grade_": 1,
+    "role_": 0,
+    "movement_pattern_": 3,
+    "move_speed_": 40.0,
+    "scale_": 10.0,
+    "collidable_": false,
+    "hp_": 1
+  },
+  {
+    "category_": 0,
+    "grade_": 2,
+    "role_": 0,
+    "movement_pattern_": 3,
+    "move_speed_": 80.0,
+    "scale_": 30.0,
+    "collidable_": false,
+    "hp_": 1
+  }
+  {
+    "category_": 0,
+    "grade_": 3,
+    "role_": 0,
+    "movement_pattern_": 3,
+    "move_speed_": 60.0,
+    "scale_": 30.0,
+    "collidable_": true,
+    "hp_": 3
+  }
+  {
+    "category_": 0,
+    "grade_": 4,
+    "role_": 0,
+    "movement_pattern_": 3,
+    "move_speed_": 40.0,
+    "scale_": 50.0,
+    "collidable_": true,
+    "hp_": 5
+  }
+]
+
+--- 설명 ---
+
+* 추가할 데이터
+1. 이름
+
+enum class MovementPattern
+{
+	Undefined = 0,	// 초기화 값
+	Playable,		// 직접 조작
+	Stopped,		// 정지 (이동 없음)
+	Directional,	// 직선 이동
+	Target,			// 타겟 추적 이동
+	Count,
+};
+
+enum class EnemyCategory
+{
+	Undefined = 0,	// 초기화 값
+	WasExpDust,		// 경험치 먼지였던 것
+	Count,
+};
+
+enum class EnemyGrade
+{
+	Undefined = 0,	// 초기화 값
+	Common,			// 일반		| 자원 공급용1
+	UnCommon,		// 중급		| 자원 공급용2
+	Danger,			// 위험		| 플레이 흐름 변화 유도
+	Special,		// 특수		| 플레이 흐름 변화 유도
+	Count,
+};
+
+enum class EnemyRole
+{
+	Undefined = 0,	// 초기화 값
+	Tanky,			// 고체력형 | 높은 HP 배율
+	HighLoot,		// 고보상형	| 높은 자원 배율
+	Ranger,			// 공격형	| 투사체
+	Mutant,			// 변이형	| 분열/강화
+	Count,
+};

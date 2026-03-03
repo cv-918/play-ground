@@ -1,15 +1,5 @@
 #pragma once
 
-enum class ComponentType
-{
-	Undefined,
-	Transform,
-	Status,
-	Movement,
-	Collider,
-	Combat,
-};
-
 enum class CollisionLayer
 {
 	PlayerBody,

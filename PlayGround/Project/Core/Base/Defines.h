@@ -117,3 +117,36 @@ namespace Colors {
 	const _Color Magenta(255, 0, 255);
 	const _Color Transparent(0, 0, 0, 0);
 }
+
+inline void DEBUG_MSGBOX_EX(const _tchar* path, int line, const _tchar* fmt, ...)
+{
+#ifdef _DEBUG
+	_tchar buf[512] = {};
+	va_list args;
+	va_start(args, fmt);
+
+	// 유니코드/멀티바이트 가변 인자 처리 함수
+	_vstprintf_s(buf, _countof(buf), fmt, args);
+	va_end(args);
+
+	_tchar out[2048] = {};
+
+	// _stprintf_s는 유니코드 설정 시 swprintf_s로 치환됩니다.
+	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), path, line);
+
+	_tcscat_s(out, _countof(out), buf);
+	MessageBox(NULL, out, _T("Debug"), MB_OK | MB_ICONERROR);
+#endif // _DEBUG
+}
+
+// 매크로 정의부
+#define __WFILE__STR(x) L ## x
+#define __WFILE__(x) __WFILE__STR(x)
+
+#ifdef _UNICODE
+#define __TFILE__ __WFILE__(__FILE__)
+#else
+#define __TFILE__ __FILE__
+#endif
+
+#define _DEBUG_MSGBOX_EX(fmt, ...)	DEBUG_MSGBOX_EX(__TFILE__, __LINE__, fmt, __VA_ARGS__)

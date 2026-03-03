@@ -1,5 +1,15 @@
 #pragma once
 
+enum class ComponentType
+{
+	Undefined,
+	Transform,
+	Status,
+	Movement,
+	Collider,
+	Combat,
+};
+
 class GameObjectBase;
 class ComponentBase abstract
 	: public IInitializable
