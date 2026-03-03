@@ -42,6 +42,8 @@ public:
 	_bool IsDestroyed() const { return destroyed_; }
 	void Destroy() { destroyed_ = true; }
 
+	virtual void OnDestroy() EMPTY_FUNC;
+
 private:
 	std::vector<ComponentBase*> components_;
 	std::vector<IHandler*> handlers_[s_int(HandlerSystemList::SystemCount)];

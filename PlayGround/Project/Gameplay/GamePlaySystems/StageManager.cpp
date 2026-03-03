@@ -102,7 +102,8 @@ void StageManager::_OnPlay()
 		// 스폰 로직 처리
 		// 생성할 액터의 정보를 넘기면 ObjectManager가 생성
 		// 스테이지 상태에 따라서 생성할 액터의 종류나 수량이 달라질 수 있음
-		EnemyInfo info = { EnemyCategory::WasExpDust, EnemyGrade::Common, EnemyRole::Count };
+		const auto grade = _Random.Range(EnemyGrade::Common, EnemyGrade::Special);
+		EnemyInfo info = { EnemyCategory::WasExpDust, grade, EnemyRole::Count };
 		object_manager_->SpawnEnemy(info);
 	}
 }

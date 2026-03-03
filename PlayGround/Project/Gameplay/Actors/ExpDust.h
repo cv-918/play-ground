@@ -38,6 +38,8 @@ private:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
 
+	virtual void OnDestroy() override;
+
 	// ICollidable을(를) 통해 상속됨
 	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;

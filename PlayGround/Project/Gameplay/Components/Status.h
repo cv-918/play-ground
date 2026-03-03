@@ -40,8 +40,17 @@ public:
 	_int Exp() const { return exp_; }
 	void Exp(const _int _exp) { exp_ = _exp; }
 
+	_int HP() const { return hp_; }
+	void HP(const _int _hp) { hp_ = _hp; }
+
+	_int Att() const { return att_; }
+	void Att(const _int _att) { att_ = _att; }
+
 private:
-	_int lv_ = 1;
+	_int lv_ = 0;
 	_int exp_ = 0;
+
+	_int hp_ = 0;
+	_int att_ = 0;
 };
 

@@ -22,6 +22,10 @@ _bool ExpDust::Initialize()
 
 	// 콜라이더 컴포넌트 설정에 필요한 값
 	_bool collidable = false;
+
+	// 스테이터스 컴포넌트 설정에 필요한 값
+	_int hp = 0;
+
 	switch (info_.grade_)
 	{
 	case EnemyGrade::Common:
@@ -31,6 +35,8 @@ _bool ExpDust::Initialize()
 
 		scale = 10.f;
 		color_ = Colors::Pearl;
+
+		hp = 1;
 		break;
 	case EnemyGrade::UnCommon:
 		// 중급 | 자원 공급용2 | 이동 속도 빠름
@@ -39,6 +45,8 @@ _bool ExpDust::Initialize()
 
 		scale = 10.f;
 		color_ = Colors::LightPink;
+
+		hp = 1;
 		break;
 	case EnemyGrade::Danger:
 		// 위험 | 플레이 흐름 변화 유도 | 충돌 데미지 있음
@@ -48,6 +56,8 @@ _bool ExpDust::Initialize()
 		scale = 30.f;
 		collidable = true;
 		color_ = Colors::Pink;
+
+		hp = 3;
 		break;
 	case EnemyGrade::Special:
 		// 특수 | 플레이 흐름 변화 유도 | 역할군 부여받음
@@ -58,15 +68,9 @@ _bool ExpDust::Initialize()
 		collidable = true;
 		color_ = Colors::Salmon;
 
+		hp = 5;
 		info_.role_ = s_cast(EnemyRole, _Random.Range(s_int(EnemyRole::Tanky), s_int(EnemyRole::Count) - 1));
 		break;
-	//case EnemyGrade::Count:
-	//	pattern = MovementPattern::Directional;
-	//	move_spd = 20.f;
-	//
-	//	scale = 80.f;
-	//	color_ = Colors::Crimson;
-	//	break;
 	default:
 		// 로깅
 		break;
@@ -76,17 +80,8 @@ _bool ExpDust::Initialize()
 
 	switch (pattern)
 	{
-	//case MovementPattern::Stopped:
-	//{
-	//	position.x = _Random.Range(INGAME_FRAME_THICKNESS_HALF + radius,
-	//		WINCX - INGAME_FRAME_THICKNESS_HALF - radius);
-	//	position.y = _Random.Range(INGAME_FRAME_THICKNESS_HALF + radius,
-	//		WINCY - INGAME_FRAME_THICKNESS_HALF - radius);
-	//}
-	//break;
-
 	case MovementPattern::Directional:
-	case MovementPattern::ToTarget:
+	case MovementPattern::Target:
 	{
 		// 스테이지가 진행 중일 경우 초기 위치를 화면 밖으로 한정해야 한다
 		// 만약, 위치가 화면 안에 있을 경우 화면 중점에 대한 방향벡터를 구하고 반대 방향으로 밀어낸다
@@ -111,7 +106,6 @@ _bool ExpDust::Initialize()
 	break;
 	}
 
-	// s, [ 더스트 컴포넌트 설정 ]
 	/*
 		#1. 초기 SRT(Scale, Rotation, Translation) 설정
 		- 트랜스폼 및 무브먼트 컴포넌트에 대한 설정
@@ -159,12 +153,12 @@ _bool ExpDust::Initialize()
 	*/
 
 	status_->Level(s_int(info_.grade_));
-	// e, [ 더스트 컴포넌트 설정 ]
+	status_->HP(hp);
 
 	object_description_ = _T("Lv. ") + std::to_wstring(status_->Level());
 
 	// 역할군을 부여받았을 경우 해당 정보까지 description 에 추가
-	if (info_.role_ == EnemyRole::Mutant)
+	if (info_.role_ != EnemyRole::Count)
 	{
 		std::vector<std::wstring> role_strings = {
 			_T("Tanky | 높은 체력"),
@@ -187,6 +181,15 @@ _int ExpDust::Update(_double _delta_time)
 	if (0 != ret) return ret;
 
 	return 0;
+}
+
+void ExpDust::OnDestroy()
+{
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 }
 
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -212,20 +215,6 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 		}
 		break;
 		}
-		//if (status_->Level() >= 4)
-		//{
-		//	const auto player = _other->GameObject();
-
-		//	// 플레이어의 Combat 컴포넌트에서 GetDamage() 호출해서 데미지 입히기
-		//	const auto com_combat = player->GetComponent(ComponentType::Combat);
-		//	s_cast(Combat*, com_combat)->GetDamage(1);
-
-		//	// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-		//	const _double attack_speed = 4.f;
-
-		//	// 플레이어에 대한 충돌 기록 저장
-		//	_this->SetTimerForTarget(_other, attack_speed);
-		//}
 	}
 	break;
 	}
@@ -241,5 +230,5 @@ void ExpDust::OnCollisionExit(Collider* _this, Collider* _other)
 
 void ExpDust::GetDamage(_float _damage)
 {
-	combat_->GetDamage(_damage);
+	combat_->GetDamage(_damage, status_);
 }

@@ -2,15 +2,17 @@
 #include "Combat.h"
 
 #include "Actors/GameObjectBase.h"
+#include "Components/Status.h"
 
-void Combat::GetDamage(const _int _damage)
+void Combat::GetDamage(_int _damage, Status* _status)
 {
 	// 방어 코드: 데미지가 음수인 경우 무시
-	if (_damage < 0)
+	if (0 > _damage || nullptr == _status)
 		return;
 
+	const auto curr_hp = _status->HP();
 	// 방어 코드: 이미 체력이 0인 경우 무시
-	if (hp_ <= 0)
+	if (0 >= curr_hp)
 		return;
 
 	// 데미지 계산 코드: 공격력, 방어력, 기타 버프/디버프 등을 고려한 최종 데미지 계산
@@ -20,7 +22,7 @@ void Combat::GetDamage(const _int _damage)
 	auto final_damage = input_damage;
 
 	// 체력에서 데미지만큼 감소
-	hp_ -= final_damage;
+	auto new_hp = curr_hp - final_damage;
 
 	// TODO: 피격 이펙트, 사운드 등 추가
 
@@ -29,9 +31,11 @@ void Combat::GetDamage(const _int _damage)
 	// 또한, 체력이 0 이하로 떨어지는 경우에 대한 이벤트나 콜백을 추가해서 다른 시스템과 연동할 수도 있음
 	
 	// 일괄처리 시스템을 구현 후 Combat 시스템에서 체력 0 이하인 경우에 대한 처리를 일괄처리 시스템으로 위임하는 방식으로 변경해야함
-	if(hp_ <= 0)
+	if(new_hp <= 0)
 	{
-		hp_ = 0;
+		new_hp = 0;
 		gameobject_->Destroy();
 	}
+
+	_status->HP(new_hp);
 }

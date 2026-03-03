@@ -23,7 +23,7 @@ _bool Player::Initialize()
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
-	combat_->HP(3);
+	status_->HP(3);
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
@@ -59,6 +59,15 @@ void Player::DebugRender(_double _delta_time)
 
 	// s, 디버그 정보 찍기
 	_ShowDebugInfo();
+}
+
+void Player::OnDestroy()
+{
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+
+	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
 }
 
 void Player::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -102,7 +111,7 @@ void Player::GetDamage(_float _damage)
 {
 	// 플레이어가 데미지를 입었을 때의 처리
 	// 이 코드를 Combat에 둘 것인가 Player에 둘 것인가?
-	combat_->GetDamage(_damage);
+	combat_->GetDamage(_damage, status_);
 }
 
 _int Player::_ControllRoutine(_double _delta_time)
@@ -268,7 +277,7 @@ void Player::_ShowDebugInfo()
 		swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"HP : %d", combat_->HP());
+		swprintf_s(buffer, L"HP : %d", status_->HP());
 		debug_info_lines_.push_back(buffer);
 		break;
 	}

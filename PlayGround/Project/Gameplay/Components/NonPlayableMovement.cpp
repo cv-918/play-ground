@@ -14,7 +14,7 @@ _bool NonPlayableMovement::Initialize()
 	case MovementPattern::Directional:
 		move_func_ = [this](_double _delta_time) { _ProcessOnDirectional(_delta_time); };
 		break;
-	case MovementPattern::ToTarget:
+	case MovementPattern::Target:
 		move_func_ = [this](_double _delta_time) { _ProcessOnToTarget(_delta_time); };
 		break;
 	}
