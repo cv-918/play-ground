@@ -18,6 +18,49 @@ __super:: 호출 안하고 있던 부분 호출하도록 수정
 4. 재화 추가(게임 스테이트 이용해서 최대한 간단하게 추가)
 5. 텍스트, 게이지 ui 제작 후 데이터 연동 및 노출
 
+#1. status, combat 컴포넌트 역할 분담 명료화
+- hp, att 변수 이동 완료
+- 변수 이동 관련 코드 수정 완료
+
+#2.공격 시스템 재연결
+- exp dust hp 설정 완료
+- 크래시 이슈 발견(collision manager 에서 dangling pointer dereference)
+- OnDestroy 함수 추가
+- exp dust, player 에 각각 deregister collider 호출 완료
+=> clean up 을 collision manager update 이후에 수행할지 고려해봐야 함
+
+#3. csv io 만들기
+- json 라이브러리 이식
+=> 필요한 데이터 목록
+
+[EnemyInfo]
+int	category
+int	grade
+int	move_pattern
+int	move_spd
+int	size
+bool	colliable
+int	hp
+float3	color
+
+[EnemyRoleInfo]
+int role
+int value
++extra variables
+
+[PlayInfo] : player default info
+
+#3-1. 설계 고민 : enemy info 구조체를 어디에 둘 것인가?
+이 구조체를 알아야 하는 위치
+1. 각 enemy class
+2. object manager class
+3. enemy data manager class
+=> 결론적으로 GamePlay/Common/CommonGamePlayType.h 에 위치시켰다
+- json 라이브러리 이식 완료
+- ExpDust 초기화 구간에 EnemyInfo 구조체 이용하도록 변경 (진행 중)
+==> 커밋
+
+
 ----
 [ 02.23 회의를 통해 정해진 03.03 까지의 구현 목표 ]
 1. 전투

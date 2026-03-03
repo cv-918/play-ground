@@ -154,6 +154,8 @@
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
     <ClInclude Include="Project\Core\Base\Extern.h" />
     <ClInclude Include="Project\Core\Interface\Interfaces.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.h" />
+    <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
     <ClInclude Include="Project\Core\Math\Geometry2D.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
     <ClInclude Include="Project\Core\Math\Random.h" />
@@ -163,6 +165,7 @@
     <ClInclude Include="Project\Framework\Resource.h" />
     <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
     <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
+    <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
     <ClInclude Include="Project\Gameplay\Components\Collider.h" />
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
     <ClInclude Include="Project\Gameplay\Components\ComponentBase.h" />
@@ -206,6 +209,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.cpp" />
+    <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />

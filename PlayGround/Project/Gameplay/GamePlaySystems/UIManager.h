@@ -8,7 +8,7 @@ class UIManager
 	, public IReleasable
 {
 public:
-	explicit UIManager(const SceneType _type) : type_(_type) {}
+	explicit UIManager() DEFAULT;
 	virtual ~UIManager() { Release(); }
 
 	virtual _bool Initialize() override;
@@ -27,7 +27,6 @@ public:
 	T* CreateUI();
 
 private:
-	SceneType type_ = SceneType::Count; // 이 매니저가 속한 씬 타입
 	std::vector<UIBase*> ui_list_;
 };
 

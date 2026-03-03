@@ -15,8 +15,8 @@ Scene::~Scene()
 
 _bool Scene::Initialize()
 {
-	object_manager_ = new ObjectManager(type_);
-	ui_manager_ = new UIManager(type_);
+	object_manager_ = new ObjectManager();
+	ui_manager_ = new UIManager();
 
 	return _bool();
 }

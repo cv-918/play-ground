@@ -32,7 +32,7 @@ class ExpDust final : public Enemy
 	};
 
 public:
-	explicit ExpDust(const EnemyInfo& _info) : Enemy(_info) {};
+	explicit ExpDust(const EnemyJsonInfo& _info) : Enemy(_info) {};
 
 private:
 	virtual _bool Initialize() override;

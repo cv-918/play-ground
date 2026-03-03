@@ -74,6 +74,9 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
+    <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.h" />
+    <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -132,5 +135,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
+    <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.cpp" />
   </ItemGroup>
 </Project>
