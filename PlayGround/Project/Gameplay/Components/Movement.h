@@ -10,7 +10,7 @@ enum class MovementPattern
 	Playable,		// 직접 조작
 	Stopped,		// 정지 (이동 없음)
 	Directional,	// 직선 이동
-	ToTarget,		// 타겟 추적 이동
+	Target,			// 타겟 추적 이동
 };
 
 class Movement abstract : public ComponentBase

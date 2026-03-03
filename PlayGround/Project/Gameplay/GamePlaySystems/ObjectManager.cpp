@@ -106,7 +106,9 @@ void ObjectManager::_CleanUp()
 	// std::remove_if는 아주 효율적인 알고리즘입니다.
 	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
 		[](GameObjectBase* obj) {
-			if (obj->IsDestroyed()) {
+			if (obj->IsDestroyed())
+			{
+				obj->OnDestroy(); // 파괴 시 필요한 로직 수행
 				delete obj; // 메모리 해제
 				return true; // 리스트에서 제거 대상
 			}

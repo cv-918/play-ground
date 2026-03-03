@@ -1,25 +1,13 @@
 #pragma once
 #include "ComponentBase.h"
 
+class Status;
 class Combat : public ComponentBase
 {
 public:
-	explicit Combat()
-		: ComponentBase(ComponentType::Combat)
-		, hp_(0), att_(0)
-	{}
+	explicit Combat() : ComponentBase(ComponentType::Combat) {}
 
 public:
-	void GetDamage(const _int _damage);
-
-public:
-	_int HP() const { return hp_; }
-	void HP(const _int _hp) { hp_ = _hp; }
-
-	_int Att() const { return att_; }
-	void Att(const _int _att) { att_ = _att; }
-
-private:
-	_int hp_;
-	_int att_;
+	void GetDamage(_int _damage, Status* _status);
+	// 데미지 입히는 함수. 데미지 계산 로직이 포함되어 있음. Status 컴포넌트의 정보를 활용하여 최종 데미지를 계산하고 체력에서 감소시키는 역할을 함.
 };
