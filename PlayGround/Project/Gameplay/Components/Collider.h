@@ -8,14 +8,17 @@ enum class ColliderType
 	None,
 };
 
+class Transform;
 class Collider abstract : public ComponentBase
 {
 public:
-	explicit Collider(const ColliderType _type) : ComponentBase(ComponentType::Collider), type(_type), layer(CollisionLayer::End), draw_(true) {}
+	explicit Collider(const ColliderType _type) : ComponentBase(ComponentType::Collider), type(_type), layer(CollisionLayer::End) {}
 
 public:
-	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
+	_bool Initialize() override;
+
+	_int Update(_double _delta_time) override;
+	_int LateUpdate(_double _delta_time) override;
 
 public:
 	ColliderType Type() const { return type; }
@@ -23,9 +26,6 @@ public:
 
 	CollisionLayer Layer() const { return layer; }
 	void Layer(const CollisionLayer _layer) { layer = _layer; }
-
-	_bool Draw() const { return draw_; }
-	void Draw(const _bool _draw) { draw_ = _draw; }
 
 	const std::list<Collider*>& CollidedColliders() const { return collided_colliders_; }
 
@@ -35,6 +35,9 @@ public:
 
 protected:
 	virtual _bool _CheckCollided(Collider* _other) PURE;
+
+	// _other의 타이머를 체크해서 충돌 가능한 상태인지 반환하는 함수
+	_bool _CheckCollisionTimer(Collider* _other);
 
 	_bool _RegisterOnCollidedList(Collider* _other);
 	_bool _DeregisterFromCollidedList(Collider* _other);
@@ -47,6 +50,7 @@ private:
 	std::map<Collider*, _double> collision_timers_;
 	std::vector<Collider*> erase_waiting_list_;
 
-	_bool draw_;
+protected:
+	Transform* transform_ = nullptr;
 };
 

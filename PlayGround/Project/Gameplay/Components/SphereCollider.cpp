@@ -12,8 +12,7 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 
 	// 충돌체 중심을 게임오브젝트의 트랜스폼 위치로 설정
 	// 이거 나중에 어태치 함수 만들어서 참조 값으로 자동으로 붙게 만드는게 나을듯
-	const auto position = gameobject_->GetTransform()->Position();
-	Center(position);
+	Center(transform_->Position());
 
 	return _int();
 }
@@ -23,25 +22,7 @@ void SphereCollider::Render(_double _delta_time)
 	if (!Visible())
 		return;
 
-	if(!Draw())
-		return;
-
-	// 1. 투명 브러시 생성 및 선택
-	HBRUSH hollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(g_back_dc, hollowBrush);
-
-	// 2. 좌표 계산
-	RECT rt;
-	rt.left = center_.x - radius_;
-	rt.top = center_.y - radius_;
-	rt.right = center_.x + radius_;
-	rt.bottom = center_.y + radius_;
-
-	// 3. 그리기 (이제 내부가 채워지지 않고 테두리만 그려집니다)
-	Ellipse(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
-
-	// 4. 이전 브러시로 복구 (GDI 객체 관리 원칙)
-	SelectObject(g_back_dc, oldBrush);
+	_DrawFunc::DrawCircle(_Point(center_.x, center_.y), radius_, Colors::Black);
 }
 
 _bool SphereCollider::_CheckCollided(Collider* _other)

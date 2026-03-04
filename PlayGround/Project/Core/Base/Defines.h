@@ -58,88 +58,13 @@ typedef double						_double;
 #define s_float(val)				s_cast(float,				val)
 #define s_double(val)				s_cast(double,				val)
 
-// 안전 삭제
+// 안전 메모리 관리
+#define SAFE_NEW(ptr)				{ if(!ptr) { ptr = new std::remove_pointer<decltype(ptr)>::type(); } }
 #define SAFE_DELETE(ptr)			{ if(ptr) { delete ptr; ptr = nullptr; } }
-#define SAFE_RELEASE(ptr)			{ if(ptr) { ptr->Release(); ptr = nullptr; } })
 #define SAFE_DELETE_ARRAY(ptr)		{ if(ptr) { delete[] ptr; ptr = nullptr; } }
 #define SAFE_RELEASE(ptr)			{ if(ptr) { ptr->Release(); ptr = nullptr; } }
 
-struct _Color
-{
-	_ubyte r, g, b, a;
-
-	_Color() : r(0), g(0), b(0), a(255) {}
-	_Color(_ubyte _r, _ubyte _g, _ubyte _b, _ubyte _a = 255) : r(_r), g(_g), b(_b), a(_a) {}
-
-	// WinAPI COLORREF로 변환
-	COLORREF ToCOLORREF() const { return RGB(r, g, b); }
-};
-
-// 자주 쓰이는 색상 미리 정의 (선택 사항)
-namespace Colors {
-	const _Color White(255, 255, 255);
-	const _Color Black(0, 0, 0);
-	const _Color Gray(128, 128, 128);
-
-	const _Color Red(255, 0, 0);
-	const _Color Green(0, 255, 0);
-	const _Color Blue(0, 0, 255);
-
-	const _Color LightGray(200, 200, 200);
-	const _Color DarkGray(50, 50, 50);
-
-	const _Color Orange(255, 165, 0);
-	const _Color Purple(128, 0, 128);
-	const _Color Pink(255, 182, 193);
-	const _Color LightPink(255, 192, 203);
-	const _Color Brown(165, 42, 42);
-	const _Color Lime(0, 255, 0);
-	const _Color Navy(0, 0, 128);
-	const _Color Teal(0, 128, 128);
-	const _Color Olive(128, 128, 0);
-	const _Color Maroon(128, 0, 0);
-	const _Color Silver(192, 192, 192);
-	const _Color Gold(255, 215, 0);
-	const _Color Violet(238, 130, 238);
-	const _Color Indigo(75, 0, 130);
-	const _Color Coral(255, 127, 80);
-	const _Color Salmon(250, 128, 114);
-	const _Color Pearl(255, 240, 245);
-	const _Color Mint(189, 252, 201);
-	const _Color Lavender(230, 230, 250);
-	const _Color SkyBlue(135, 206, 235);
-	const _Color LightBlue(173, 216, 230);
-	const _Color DarkBlue(0, 0, 139);
-	const _Color Crimson(220, 20, 60);
-	
-	const _Color Yellow(255, 255, 0);
-	const _Color Cyan(0, 255, 255);
-	const _Color Magenta(255, 0, 255);
-	const _Color Transparent(0, 0, 0, 0);
-}
-
-inline void DEBUG_MSGBOX_EX(const _tchar* path, int line, const _tchar* fmt, ...)
-{
-#ifdef _DEBUG
-	_tchar buf[512] = {};
-	va_list args;
-	va_start(args, fmt);
-
-	// 유니코드/멀티바이트 가변 인자 처리 함수
-	_vstprintf_s(buf, _countof(buf), fmt, args);
-	va_end(args);
-
-	_tchar out[2048] = {};
-
-	// _stprintf_s는 유니코드 설정 시 swprintf_s로 치환됩니다.
-	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), path, line);
-
-	_tcscat_s(out, _countof(out), buf);
-	MessageBox(NULL, out, _T("Debug"), MB_OK | MB_ICONERROR);
-#endif // _DEBUG
-}
-
-// 매크로 정의부
+// 유니코드/멀티바이트 문자열 처리
 #define __WFILE__STR(x) L ## x
 #define __WFILE__(x) __WFILE__STR(x)
 
@@ -149,4 +74,57 @@ inline void DEBUG_MSGBOX_EX(const _tchar* path, int line, const _tchar* fmt, ...
 #define __TFILE__ __FILE__
 #endif
 
-#define _DEBUG_MSGBOX_EX(fmt, ...)	DEBUG_MSGBOX_EX(__TFILE__, __LINE__, fmt, __VA_ARGS__)
+#define _TF(value) value ? _T("true") : _T("false")
+
+#if _DEBUG
+inline void DebugMsgBox(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
+{
+#ifdef _DEBUG
+	_tchar buf[512] = {};
+	va_list args;
+	va_start(args, _fmt);
+
+	// 유니코드/멀티바이트 가변 인자 처리 함수
+	_vstprintf_s(buf, _countof(buf), _fmt, args);
+	va_end(args);
+
+	_tchar out[2048] = {};
+
+	// _stprintf_s는 유니코드 설정 시 swprintf_s로 치환됩니다.
+	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), _path, _line);
+
+	_tcscat_s(out, _countof(out), buf);
+	MessageBox(NULL, out, _T("Debug"), MB_OK | MB_ICONERROR);
+#endif // _DEBUG
+}
+
+#define _DEBUG_MSGBOX(fmt, ...)		DebugMsgBox(__TFILE__, __LINE__, fmt, __VA_ARGS__)
+
+inline void DevLogW(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
+{
+	_tchar buf[2048] = {};
+
+	va_list args;
+	va_start(args, _fmt);
+
+	// 유니코드/멀티바이트 가변 인자 처리 함수
+	_vstprintf_s(buf, _countof(buf), _fmt, args);
+	va_end(args);
+
+	_tchar out[2048] = {};
+
+	// _stprintf_s는 유니코드 설정 시 swprintf_s로 치환됩니다.
+	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), _path, _line);
+
+	_tcscat_s(out, _countof(out), buf);
+
+	// 줄바꿈 없으면 보기 답답하니까 자동으로 붙임
+	OutputDebugStringW(out);
+	OutputDebugStringW(L"\n");
+}
+
+#define _DEBUG_LOG(fmt, ...)		DevLogW(__TFILE__, __LINE__, fmt, __VA_ARGS__)
+#else
+#define _DEBUG_MSGBOX(fmt, ...)
+#define _DEBUG_LOG(fmt, ...)
+#endif // _DEBUG

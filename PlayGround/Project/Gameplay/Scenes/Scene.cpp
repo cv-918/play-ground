@@ -1,9 +1,6 @@
 #include "framework.h"
 #include "Scene.h"
 
-#include "GamePlaySystems/ObjectManager.h"
-#include "GamePlaySystems/UIManager.h"
-
 #include "Actors/GameObjectBase.h"
 #include "UI/UIBase.h"
 
@@ -15,10 +12,10 @@ Scene::~Scene()
 
 _bool Scene::Initialize()
 {
-	object_manager_ = new ObjectManager();
-	ui_manager_ = new UIManager();
+	SAFE_NEW(object_manager_);
+	SAFE_NEW(ui_manager_);
 
-	return _bool();
+	return true;
 }
 
 _int Scene::Update(_double _delta_time)
@@ -26,7 +23,7 @@ _int Scene::Update(_double _delta_time)
 	object_manager_->Update(_delta_time);
 	ui_manager_->Update(_delta_time);
 
-    return _int();
+	return _int();
 }
 
 _int Scene::LateUpdate(_double _delta_time)
@@ -34,7 +31,7 @@ _int Scene::LateUpdate(_double _delta_time)
 	object_manager_->LateUpdate(_delta_time);
 	ui_manager_->LateUpdate(_delta_time);
 
-    return _int();
+	return _int();
 }
 
 void Scene::Render(_double _delta_time)

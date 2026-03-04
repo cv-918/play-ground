@@ -69,24 +69,28 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 		return;
 
 	// 게임 오브젝트를 추가
-	if(false == _game_object->IsInitialized())
+	if (false == _game_object->IsInitialized())
 		_game_object->Initialize();
 
 	game_objects_.push_back(_game_object);
 }
 
-GameObjectBase* ObjectManager::SpawnEnemy(_int _category, _int _grade)
+GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
 {
 	GameObjectBase* enemy = nullptr;
-	EnemyJsonInfo info = EnemyJsonInfo(s_cast(EnemyCategory, _category), s_cast(EnemyGrade, _grade), EnemyRole::Count);
-	switch (s_cast(EnemyCategory, _category))
+
+	// EnemyJsonInfo의 category_ 필드에 따라 적의 타입을 결정하고, 해당 타입에 맞는 객체를 생성하도록 함
+	// 각 적 타입에	대한 생성 로직에서는 EnemyJsonInfo의 grade_ 필드를 활용하여 적의 등급에 따른 특성 설정도 함께 처리하도록 함
+	switch (_info->category_) // 각 적 타입에 대한 생성 로직은 별도의 함수로 분리하여 관리할 수도 있지만, 현재는 간단한 switch문으로 처리하도록 함
 	{
 	case EnemyCategory::WasExpDust:
-		enemy = new ExpDust(info);
+		enemy = new ExpDust(_info);
 		break;
-	default:
-		return nullptr; // 지원하지 않는 카테고리인 경우 nullptr 반환
 	}
+
+	// 카테고리에 의해 객체가 생성되지 않았거나, 생성된 객체가 nullptr인 경우 nullptr 반환
+	if (nullptr == enemy)
+		return nullptr;
 
 	if (enemy->Initialize())
 	{
@@ -104,14 +108,18 @@ void ObjectManager::_CleanUp()
 		return;
 
 	// 이터레이터를 이용해 IsDestroyed()가 true인 것들만 골라 지우기
-	// std::remove_if는 아주 효율적인 알고리즘입니다.
 	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
 		[](GameObjectBase* obj) {
 			if (obj->IsDestroyed())
 			{
-				obj->OnDestroy(); // 파괴 시 필요한 로직 수행
-				delete obj; // 메모리 해제
-				return true; // 리스트에서 제거 대상
+				// 파괴되는 오브젝트의 이름 로깅
+				_DEBUG_LOG(_T("Destroying GameObject:%s"), obj->Name().c_str());
+
+				// 파괴 시 필요한 로직 수행 후 메모리 해제
+				obj->OnDestroy();
+				delete obj;
+
+				return true;
 			}
 			return false;
 		});

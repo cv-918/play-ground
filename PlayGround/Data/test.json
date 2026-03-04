@@ -7,37 +7,41 @@
     "move_speed_": 40.0,
     "scale_": 10.0,
     "collidable_": false,
-    "hp_": 1
+    "hp_": 1.0,
+	"coin_reward_": 1
   },
   {
-    "category_": 0,
+    "category_": 1,
     "grade_": 2,
     "role_": 0,
     "movement_pattern_": 3,
     "move_speed_": 80.0,
     "scale_": 30.0,
     "collidable_": false,
-    "hp_": 1
-  }
+    "hp_": 1.0,
+	"coin_reward_": 1
+  },
   {
-    "category_": 0,
+    "category_": 1,
     "grade_": 3,
     "role_": 0,
     "movement_pattern_": 3,
     "move_speed_": 60.0,
     "scale_": 30.0,
     "collidable_": true,
-    "hp_": 3
-  }
+    "hp_": 3.0,
+	"coin_reward_": 2
+  },
   {
-    "category_": 0,
+    "category_": 1,
     "grade_": 4,
     "role_": 0,
     "movement_pattern_": 3,
     "move_speed_": 40.0,
     "scale_": 50.0,
     "collidable_": true,
-    "hp_": 5
+    "hp_": 5.0,
+	"coin_reward_": 3
   }
 ]
 

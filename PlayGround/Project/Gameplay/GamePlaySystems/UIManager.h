@@ -11,13 +11,13 @@ public:
 	explicit UIManager() DEFAULT;
 	virtual ~UIManager() { Release(); }
 
-	virtual _bool Initialize() override;
+	_bool Initialize() override;
 
-	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
+	_int Update(_double _delta_time) override;
+	_int LateUpdate(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
-	virtual _bool Release() override;
+	_bool Release() override;
 
 public:
 	// UI 요소 관리를 위한 메서드. 필요에 따라 UI 요소를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.

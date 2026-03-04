@@ -57,3 +57,9 @@ void CollisionManager::DeregisterCollider(CollisionLayer _layer, Collider* _coll
     auto& vec = layer_colliders_[(int)_layer];
     vec.erase(std::remove(vec.begin(), vec.end(), _collider), vec.end());
 }
+
+void CollisionManager::ClearAllColliders()
+{
+    for (_int i = 0; i < s_int(CollisionLayer::End); ++i)
+        layer_colliders_[i].clear();
+}

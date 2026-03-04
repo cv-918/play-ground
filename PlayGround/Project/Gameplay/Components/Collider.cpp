@@ -4,6 +4,18 @@
 #include "Actors/GameObjectBase.h"
 #include "Combat.h"
 
+_bool Collider::Initialize()
+{
+	if (nullptr == gameobject_)
+		return false;
+
+	transform_ = gameobject_->GetTransform();
+	if(nullptr == transform_)
+		return false;
+
+	return true;
+}
+
 _int Collider::Update(_double _delta_time)
 {
 	if (!erase_waiting_list_.empty())
@@ -48,6 +60,10 @@ void Collider::DetectCollision(Collider* _other)
 	if (!_other)
 		return;
 
+	// 충돌 타이머 체크
+	if (!_CheckCollisionTimer(_other))
+		return;
+
 	// 충돌했을 경우
 	if (_CheckCollided(_other))
 	{
@@ -80,6 +96,16 @@ void Collider::DetectCollision(Collider* _other)
 				});
 		}
 	}
+}
+
+_bool Collider::_CheckCollisionTimer(Collider* _other)
+{
+	// 타이머가 존재하지 않거나, 타이머가 0인 경우 충돌 가능
+	auto it = collision_timers_.find(_other);
+	if (it == collision_timers_.end() || it->second <= 0.0)
+		return true;
+
+	return false;
 }
 
 _bool Collider::_RegisterOnCollidedList(Collider* _other)

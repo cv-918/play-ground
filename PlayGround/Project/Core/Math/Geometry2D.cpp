@@ -7,6 +7,40 @@ constexpr _Point::_Point(const _Vector3& _vec)
 	: x(_vec.x), y(_vec.y) {
 }
 
+_Point _Point::operator+(const _Point& _pt) const
+{
+	return _Point(x + _pt.x, y + _pt.y);
+}
+
+_Point _Point::operator+(const _Vector3& _vec) const
+{
+	return _Point(x + s_int(_vec.x), y + s_int(_vec.y));
+}
+
+_Point _Point::operator-(const _Point& _pt) const
+{
+	return _Point(x - _pt.x, y - _pt.y);
+}
+
+_Point _Point::operator-(const _Vector3& _vec) const
+{
+	return _Point(x - s_int(_vec.x), y - s_int(_vec.y));
+}
+
+_Point& _Point::operator+=(const _Vector3& _vec)
+{
+	x += s_int(_vec.x);
+	y += s_int(_vec.y);
+	return *this;
+}
+
+_Point& _Point::operator-=(const _Vector3& _vec)
+{
+	x -= s_int(_vec.x);
+	y -= s_int(_vec.y);
+	return *this;
+}
+
 _bool _Rect::PtInRect(const _Point& _pt) const
 {
 	return (_pt.x >= Left() && _pt.x < Right() &&

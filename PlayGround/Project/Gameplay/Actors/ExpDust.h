@@ -2,8 +2,8 @@
 
 #include "Enemy.h"
 
+// 추후에 몬스터 생성로직 개선되면 이것도 제거
 #include "GamePlaySystems/StageManager.h"
-#include "GamePlaySystems/GameState.h"
 
 class ExpDust final : public Enemy
 {
@@ -32,19 +32,18 @@ class ExpDust final : public Enemy
 	};
 
 public:
-	explicit ExpDust(const EnemyJsonInfo& _info) : Enemy(_info) {};
+	explicit ExpDust(const EnemyJsonInfo* _info) : Enemy(_info) {}
 
 private:
-	virtual _bool Initialize() override;
-	virtual _int Update(_double _delta_time) override;
+	_bool Initialize() override;
+	_int Update(_double _delta_time) override;
 
-	virtual void OnDestroy() override;
+	void OnDestroy() override;
 
 	// ICollidable을(를) 통해 상속됨
-	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
-	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;
-	virtual void OnCollisionExit(Collider* _this, Collider* _other) override;
+	void OnCollisionEnter(Collider* _this, Collider* _other) override;
+	void OnCollisionStay(Collider* _this, Collider* _other) override;
 
 	// IDamagable을(를) 통해 상속됨
-	virtual void GetDamage(_float _damage) override;
+	void GetDamage(_float _damage) override;
 };

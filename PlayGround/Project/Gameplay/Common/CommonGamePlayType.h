@@ -52,13 +52,30 @@ struct EnemyJsonInfo
 	_float scale_ = 0.f;
 	_bool collidable_ = false;
 
-	_int hp_ = 0;
+	_float hp_ = 0;
+	_int coin_reward_ = 0;
 	//_Color color_ = Colors::White;
 	
 	// 필요에 따라 추가 정보 필드 (예: HP 배율, 자원 배율, 공격 패턴 등)
 
 	EnemyJsonInfo() DEFAULT;
-	EnemyJsonInfo(EnemyCategory _category, EnemyGrade _grade, EnemyRole _role)
-		: category_(_category), grade_(_grade), role_(_role) {}
 };
 
+enum class CollisionLayer
+{
+	PlayerBody,
+	PlayerAttack,
+	EnemyBody,
+	EnemyAttack,
+	EnemyBullet,
+	End
+};
+
+enum class SceneType
+{
+	Intro,
+	Loading,
+	Lobby,
+	GamePlay,
+	Count,
+};

@@ -3,7 +3,13 @@
 #include "GamePlaySystems/SceneManager.h"
 
 class GameObjectBase;
+
+#include "GamePlaySystems/ObjectManager.h"
+#include "GamePlaySystems/UIManager.h"
+
 #include "UI/UIButton.h"
+#include "UI/UIText.h"
+#include "UI/UIProgressBar.h"
 
 class Scene abstract
 	: public IInitializable
@@ -14,13 +20,13 @@ public:
 	explicit Scene(const SceneType _type) : type_(_type), object_manager_(nullptr), ui_manager_(nullptr) {};
 	virtual ~Scene();
 
-	virtual _bool Initialize() override;
+	_bool Initialize() override;
 
-	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
+	_int Update(_double _delta_time) override;
+	_int LateUpdate(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
-	virtual _bool Release() override;
+	_bool Release() override;
 
 	virtual void OnEnter() PURE;
 	virtual void OnExit() PURE;
