@@ -89,14 +89,14 @@ void GamePlayScene::OnEnter()
 	const auto player = new Player();
 	AddGameObject(player);
 
-	const auto test_progress = ui_manager_->CreateUI<UIProgressBar>();
-	test_progress->SetRect(_Rect(_Point(50, 150), _Size(200, 30)));
+	//const auto test_progress = ui_manager_->CreateUI<UIProgressBar>();
+	//test_progress->SetRect(_Rect(_Point(50, 150), _Size(200, 30)));
 
 	const auto& nav_mesh = background_->NavMesh();
 
 	player->SetNavMesh(nav_mesh);
 	player->SetPlayScene(this);
-	player->SetHPBar(test_progress, -40.f);
+	//player->SetHPBar(test_progress, -40.f);
 	_GameState.Player(player);
 
 	//// UIText, UIProgressBar Å×½ºÆ®
