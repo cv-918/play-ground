@@ -7,6 +7,8 @@ HDC g_back_dc	= nullptr;
 
 Gdiplus::Graphics* g_graphics = nullptr;
 
+_Size g_screen_size = {};
+
 RenderChain::~RenderChain()
 {
 	Release();
@@ -43,7 +45,7 @@ _bool RenderChain::Release()
 void RenderChain::Clear()
 {
 	// 1. 화면 클리어
-	PatBlt(g_back_dc, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
+	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
 	// 2. 이번 프레임에서 공용으로 쓸 Graphics 객체 생성 (싱글 패턴의 시작)
 	if (nullptr == g_graphics)
@@ -60,7 +62,7 @@ void RenderChain::Present()
 	SAFE_DELETE(g_graphics);
 
 	// 4. 최종 화면 출력
-	BitBlt(g_dc, 0, 0, screen_size_.x, screen_size_.y, g_back_dc, 0, 0, SRCCOPY);
+	BitBlt(g_dc, 0, 0, g_screen_size.x, g_screen_size.y, g_back_dc, 0, 0, SRCCOPY);
 }
 
 _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
@@ -68,15 +70,15 @@ _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 	// 기존 리소스 정리
 	_DestroyBackBuffer();
 
-	screen_size_.x = _width;
-	screen_size_.y = _height;
+	g_screen_size.x = _width;
+	g_screen_size.y = _height;
 
 	g_back_dc = CreateCompatibleDC(g_dc);
-	back_bmp_ = CreateCompatibleBitmap(g_dc, screen_size_.x, screen_size_.y);
+	back_bmp_ = CreateCompatibleBitmap(g_dc, g_screen_size.x, g_screen_size.y);
 	old_back_bmp_ = (HBITMAP)SelectObject(g_back_dc, back_bmp_);
 
 	// (선택) 초기 클리어
-	PatBlt(g_back_dc, 0, 0, screen_size_.x, screen_size_.y, BLACKNESS);
+	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
     return true;
 }

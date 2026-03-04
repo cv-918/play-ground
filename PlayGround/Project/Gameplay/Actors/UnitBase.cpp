@@ -39,3 +39,12 @@ void Unit::SetNavMesh(const _Rect& _rt)
 	if (movement_)
 		movement_->SetNavMesh(_rt);
 }
+
+void Unit::SetHPBar(UIProgressBar* _hp_bar, _float _offset)
+{
+	if (nullptr == _hp_bar)
+		return;
+
+	hp_bar_ = _hp_bar;
+	hp_bar_offset_y_ = _offset;
+}

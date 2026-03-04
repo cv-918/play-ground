@@ -17,6 +17,9 @@ public:
     void RegisterCollider(CollisionLayer _layer, Collider* _collider);
     void DeregisterCollider(CollisionLayer _layer, Collider* _collider);
 
+	// 등록된 모든 콜라이더 해제 (예: 씬 전환 시)
+	void ClearAllColliders();
+
 private:
     // 레이어별로 콜라이더 포인터들을 관리
     std::vector<Collider*> layer_colliders_[s_int(CollisionLayer::End)];

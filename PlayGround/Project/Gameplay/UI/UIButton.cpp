@@ -3,6 +3,12 @@
 
 _int UIButton::Update(_double _delta_time)
 {
+	if (!Enable())
+	{
+		state_ = ButtonState::Disabled;
+		return _int();
+	}
+
 	if (IsMouseOver(_InputMgr.MousePoint()))
 	{
 		if (_InputMgr.Down(VK_LBUTTON))
@@ -34,6 +40,18 @@ _int UIButton::Update(_double _delta_time)
 
 void UIButton::Render(_double _delta_time)
 {
+	if (!Visible())
+		return;
+
+	// 비활성화 상태일 때는 회색으로 표시
+	if (state_ == ButtonState::Disabled)
+	{
+		_DrawFunc::FillRectangle(GetAbsoluteRect(), Colors::Gray);
+		_DrawFunc::DrawRectangle(GetAbsoluteRect(), Colors::Black);
+		_DrawFunc::DrawString(GetAbsoluteRect().Center(), text_, Colors::DarkGray);
+		return;
+	}
+	
 	// g_back_dc를 사용하여 버튼 배경과 텍스트 출력
 	const auto abs_rect = GetAbsoluteRect();
 	_DrawFunc::DrawRectangle(abs_rect, Colors::Black);

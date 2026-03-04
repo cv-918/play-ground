@@ -38,7 +38,7 @@ void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
 	g_graphics->SetSmoothingMode(SmoothingModeAntiAlias);
 }
 
-void DrawFunctions::DrawCircle(const _Point& _center, float _radius, const _Color& _color, float _thickness)
+void DrawFunctions::DrawCircle(const _Point& _center, _float _radius, const _Color& _color, _float _thickness)
 {
 	if (nullptr == g_graphics)
 		return;
@@ -51,7 +51,7 @@ void DrawFunctions::DrawCircle(const _Point& _center, float _radius, const _Colo
 		_radius * 2.f);
 }
 
-void DrawFunctions::FillCircle(const _Point& _center, float _radius, const _Color& _color)
+void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const _Color& _color)
 {
 	if (nullptr == g_graphics)
 		return;

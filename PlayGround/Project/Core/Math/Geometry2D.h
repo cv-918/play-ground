@@ -10,6 +10,14 @@ struct _Point
 
 	static constexpr _Point Zero() { return _Point{}; }
 
+	// 연산자 오버로드
+	_Point operator+(const _Point& _pt) const;
+	_Point operator+(const _Vector3& _vec) const;
+	_Point operator-(const _Point& _pt) const;
+	_Point operator-(const _Vector3& _vec) const;
+	_Point& operator+=(const _Vector3& _vec);
+	_Point& operator-=(const _Vector3& _vec);
+
 	_int x;
 	_int y;
 };

@@ -22,15 +22,10 @@ private:
 	_bool _CreateBackBuffer(const _int _width, const _int _height);
 	_bool _DestroyBackBuffer();
 
-public:
-	const _Size ScreenSize() const { return screen_size_; }
-
 private:
 	HBITMAP	back_bmp_		= nullptr;
 	HBITMAP	old_back_bmp_	= nullptr;
 
 	ULONG_PTR m_gdiplusToken = 0; // GDI+ 사용권을 증명하는 토큰
-
-	_Size screen_size_;
 };
 

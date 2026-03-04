@@ -116,7 +116,7 @@ void GameObjectBase::DebugRender(_double _delta_time)
 
 	// 2. 디스크립션 그리기
 	auto description_position = position;
-	description_position.y += 14.f; // 디버그용으로 위치 보정
+	description_position.y += 16.f; // 디버그용으로 위치 보정
 
 	_DrawFunc::DrawString(_Point(description_position.x, description_position.y), object_description_, Colors::DarkGray);
 }

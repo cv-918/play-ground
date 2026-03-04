@@ -43,13 +43,13 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 		data_table_.clear();
 		for (const auto& item : dataList)
 		{
-			const _int key = s_int(item.category_) + s_int(item.grade_);
+			const auto enemy_id = s_uint(item.category_) + s_uint(item.grade_);
 			// T 구조체는 반드시 'id' 멤버를 가지고 있어야 합니다.
-			if (data_table_.find(key) != data_table_.end())
+			if (data_table_.find(enemy_id) != data_table_.end())
 			{
-				std::cerr << "Warning: Duplicate ID " << key << " in " << _file_path << std::endl;
+				std::cerr << "Warning: Duplicate ID " << enemy_id << " in " << _file_path << std::endl;
 			}
-			data_table_[key] = item;
+			data_table_[enemy_id] = item;
 		}
 		std::cout << typeid(T).name() << " loaded: " << data_table_.size() << " entries." << std::endl;
 		return true;

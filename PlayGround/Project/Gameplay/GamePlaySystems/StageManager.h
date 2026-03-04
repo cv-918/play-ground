@@ -12,6 +12,7 @@
 
 enum class StageState
 {
+	Undefined,
 	Enter,
 	Ready,
 	Play,
@@ -22,23 +23,22 @@ enum class StageState
 };
 
 class ObjectManager;
+class GamePlayScene;
 
 class StageManager
 	: public ISingleton<StageManager>
 	, public IUpdatable
 {
 public:
-	explicit StageManager();
-	virtual ~StageManager() DEFAULT;
+	_int Update(_double _delta_time) override;
+	_int LateUpdate(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
 public:
-	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
+	void PlayScene(GamePlayScene* _play_scene) { play_scene_ = _play_scene; }
 
-public:
-	StageState State() const { return state_; }
-	void ChangeState(StageState _new_state) { state_ = _new_state; }
+	StageState CurrState() const { return curr_state_; }
+	void ChangeState(StageState _new_state);
 
 	void SetObjectManager(ObjectManager* _object_manager) { object_manager_ = _object_manager; }
 
@@ -46,6 +46,8 @@ public:
 	void SetNavMesh(const _Rect& _rt);
 
 	_Point GeneratePosition(_bool _inclusive);
+
+	void OnPlayerDeath();
 
 private:
 	void _OnEnter();
@@ -59,13 +61,16 @@ private:
 	void _UpdateGenerationAreas();
 
 private:
-	StageState state_;
+	GamePlayScene* play_scene_ = nullptr;
+
+	StageState prev_state_ = StageState::Undefined;
+	StageState curr_state_ = StageState::Undefined;
 	_double stage_timer_ = 0.0;
 
 	_double spawn_timer_ = 0.0;
-	_double spawn_interval_ = 1.0;
-	ObjectManager* object_manager_;
+	_double spawn_interval_ = 100.0;
+	ObjectManager* object_manager_ = nullptr;
 
-	const _Rect* stage_nav_mesh_;
+	const _Rect* stage_nav_mesh_ = nullptr;
 	_Rect generation_area_[4];
 };

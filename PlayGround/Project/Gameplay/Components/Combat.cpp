@@ -4,16 +4,29 @@
 #include "Actors/GameObjectBase.h"
 #include "Components/Status.h"
 
-void Combat::GetDamage(_int _damage, Status* _status)
+_float Combat::GetDamage(_float _damage, Status* _status)
 {
+	// 방어 코드: null 포인터인 경우 무시
+	if (nullptr == _status)
+	{
+		_DEBUG_LOG(_T("Combat::GetDamage called with null Status pointer. Ignoring damage application."));
+		return 0.f;
+	}
+
 	// 방어 코드: 데미지가 음수인 경우 무시
-	if (0 > _damage || nullptr == _status)
-		return;
+	if (0 > _damage)
+	{
+		_DEBUG_LOG(_T("Combat::GetDamage called with negative damage value: %.2f. Ignoring damage application."), _damage);
+		return 0.f;
+	}
 
 	const auto curr_hp = _status->HP();
 	// 방어 코드: 이미 체력이 0인 경우 무시
 	if (0 >= curr_hp)
-		return;
+	{
+		_DEBUG_LOG(_T("Combat::GetDamage called but target is already at 0 HP. Ignoring damage application."));
+		return 0.f;
+	}
 
 	// 데미지 계산 코드: 공격력, 방어력, 기타 버프/디버프 등을 고려한 최종 데미지 계산
 	// 예시로, 단순히 공격력에서 방어력을 뺀 값을 데미지로 계산한다고 가정
@@ -22,20 +35,12 @@ void Combat::GetDamage(_int _damage, Status* _status)
 	auto final_damage = input_damage;
 
 	// 체력에서 데미지만큼 감소
-	auto new_hp = curr_hp - final_damage;
-
-	// TODO: 피격 이펙트, 사운드 등 추가
-
-	// 만약 체력이 0 이하라면 소멸 처리
-	// 현재는 InActive()로 처리하지만, 추후에 사망 애니메이션 재생 후 소멸하는 로직으로 변경할 수 있음
-	// 또한, 체력이 0 이하로 떨어지는 경우에 대한 이벤트나 콜백을 추가해서 다른 시스템과 연동할 수도 있음
-	
-	// 일괄처리 시스템을 구현 후 Combat 시스템에서 체력 0 이하인 경우에 대한 처리를 일괄처리 시스템으로 위임하는 방식으로 변경해야함
-	if(new_hp <= 0)
-	{
-		new_hp = 0;
-		gameobject_->Destroy();
-	}
-
+	auto new_hp = MathFunctions::Clamp(curr_hp - final_damage, 0.f, curr_hp);
 	_status->HP(new_hp);
+
+	// 로깅
+	_DEBUG_LOG(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->Name().c_str(), curr_hp, new_hp);
+
+	// 데미지 폰트 노출을 위해서 최종 데미지 반환
+	return final_damage;
 }

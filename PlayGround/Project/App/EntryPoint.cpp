@@ -47,7 +47,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg = {};
     if (!pg.Initialize())
     {
-        _DEBUG_MSGBOX_EX(L"PlayGround 초기화 실패");
+        _DEBUG_MSGBOX(L"PlayGround 초기화 실패");
         return FALSE;
     }
 
@@ -58,7 +58,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         _InputMgr.BeginFrame();
         _Timer.Update();
 
-		// 1) 큐에 쌓인 메시지를 전부 처리
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
@@ -75,14 +74,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			break;
 
         const auto dt = _Timer.DeltaTime();
-
-		//// 2) 매 루프마다 프레임 갱신(메시지 유무와 무관)
-		//const auto curr = GetTickCount64();
-		//double dt = (curr - prev) / 1000.0;  // seconds
-		//prev = curr;
-
-		//// 폭주 방지
-		//if (dt > 0.1) dt = 0.1;
 
 		pg.Update(dt);
 		pg.Render(dt);

@@ -5,19 +5,20 @@ _bool LobbyScene::Initialize()
 {
 	__super::Initialize();
 
+	debug_scene_name_ = L"LOBBY SCENE";
+
 	// 버튼 생성 및 설정
-	UIButton* start_btn = new UIButton();
-	start_btn->SetRect(_Rect(300, 400, 500, 450)); // 화면 중앙 하단쯤
+	const auto start_btn = ui_manager_->CreateUI<UIButton>();
+	
+	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
+	const _Point start_btn_lt(x, 400); // 버튼의 왼쪽 상단 위치
+ 	start_btn->SetRect(_Rect(start_btn_lt, COMMON_BUTTON_SIZE)); // 화면 중앙 하단쯤
 	start_btn->SetText(L"GAME START");
 
-	// 람다를 이용한 클릭 이벤트 연결 (유니티의 버튼 이벤트와 흡사하죠?)
+	// 람다를 이용한 클릭 이벤트 연결
 	start_btn->SetOnClick([]() {
 		_SceneMgr.ChangeScene(SceneType::GamePlay);
 		});
-
-	AddUI(start_btn); // 씬에 버튼 추가
-
-	debug_scene_name_ = L"LOBBY SCENE";
 
 	MAKE_INITIALIZED;
 	return _bool();

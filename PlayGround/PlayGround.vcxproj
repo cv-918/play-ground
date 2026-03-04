@@ -190,6 +190,8 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SceneManager.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\UIButton.h" />
+    <ClInclude Include="Project\Gameplay\UI\UIProgressBar.h" />
+    <ClInclude Include="Project\Gameplay\UI\UIText.h" />
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
@@ -244,6 +246,8 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIButton.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\UIProgressBar.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\UIText.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />

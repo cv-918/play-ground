@@ -1,10 +1,8 @@
 #include "framework.h"
 #include "Player.h"
 
-#include "EngineSystems/Render/RenderChain.h"
-#include "EngineSystems/Physics/CollisionManager.h"
-
 #include "Components/PlayableMovement.h"
+#include "GamePlaySystems/StageManager.h"
 
 _bool Player::Initialize()
 {
@@ -68,6 +66,13 @@ void Player::OnDestroy()
 
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
+
+	// 연결된 hp바 제거
+	if (hp_bar_)
+		hp_bar_->Destroy();
+
+	// 스테이지	매니저에 플레이어가 죽었다는 메시지 보내기
+	_StageMgr.OnPlayerDeath();
 }
 
 void Player::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -105,13 +110,44 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 
 void Player::OnCollisionStay(Collider* _this, Collider* _other)
 {
+	switch (_this->Layer())
+	{
+	case CollisionLayer::PlayerBody:
+		// 몸통 collider 충돌 처리
+		break;
+	case CollisionLayer::PlayerAttack:
+	{
+		// 공격 collider 충돌 처리
+		switch (_other->Layer())
+		{
+		case CollisionLayer::EnemyBody:
+		{
+			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
+			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
+				s_cast(IDamagable*, _handler)->GetDamage(1.f);
+				});
+
+			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
+			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
+			const _double attack_cooltime = 1.f;
+			_this->SetTimerForTarget(_other, attack_cooltime);
+
+			break;
+		}
+		}
+
+		break;
+	}
+	}
 }
 
 void Player::GetDamage(_float _damage)
 {
-	// 플레이어가 데미지를 입었을 때의 처리
-	// 이 코드를 Combat에 둘 것인가 Player에 둘 것인가?
-	combat_->GetDamage(_damage, status_);
+	const auto final_damage = combat_->GetDamage(_damage, status_);
+
+	// 데미지 폰트 출력
+	const auto position = transform_->Position();
+	play_scene_->ShowDamageUI(final_damage, _Point(position.x, position.y));
 }
 
 _int Player::_ControllRoutine(_double _delta_time)
@@ -235,12 +271,8 @@ void Player::_ShowDebugInfo()
 	_tchar buffer[MAX_PATH] = {};
 
 	const _int line_gap = 20;
-	const _int draw_pos_x = GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS;
+	const _int draw_pos_x = s_int(GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS);
 	_int draw_pos_y = INGAME_FRAME_THICKNESS_HALF - line_gap + 5;
-
-	// 1) 배경 먼저 그리기
-	RECT rt = { GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS_HALF, INGAME_FRAME_THICKNESS_HALF, WINCX - INGAME_FRAME_THICKNESS_HALF, WINCY - INGAME_FRAME_THICKNESS_HALF };
-	//Rectangle(g_back_dc, rt.left, rt.top, rt.right, rt.bottom);
 
 	// 2) 텍스트 그리기
 	swprintf_s(buffer, L"[ 디버깅 정보 타입 : %ls ]", labels[debug_type_].c_str());
@@ -277,7 +309,7 @@ void Player::_ShowDebugInfo()
 		swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"HP : %d", status_->HP());
+		swprintf_s(buffer, L"HP : %.0f", status_->HP());
 		debug_info_lines_.push_back(buffer);
 		break;
 	}
