@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 struct _Vector3;
 struct _Point
@@ -6,11 +6,16 @@ struct _Point
 	constexpr _Point() : x(IV_ZERO), y(IV_ZERO) {}
 	constexpr _Point(const _int _value) : x(_value), y(_value) {}
 	constexpr _Point(const _int _x, const _int _y) : x(_x), y(_y) {}
-	constexpr _Point(const _Vector3& _vec);
+
+	// 벡터에서 포인트로 변환하는 생성자
+	_Point(const _Vector3& _vec);
+	// constexpr 함수는 컴파일 타임에 계산되어야 한다
+	// 하지만 _Vector3는 상호 참조를 피하기 위해서 _Vector3는 전방 선언으로 처리되어 있다
+	// 따라서 _Vector3의 멤버에 접근할 수 없어서 이 생성자는 constexpr로 선언할 수 없다
 
 	static constexpr _Point Zero() { return _Point{}; }
 
-	// ������ �����ε�
+	// 연산자 오버로드
 	_Point operator+(const _Point& _pt) const;
 	_Point operator+(const _Vector3& _vec) const;
 	_Point operator-(const _Point& _pt) const;

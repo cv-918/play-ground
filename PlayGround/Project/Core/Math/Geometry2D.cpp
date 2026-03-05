@@ -1,30 +1,29 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "Geometry2D.h"
 
 #include "Vector3.h"
 
-constexpr _Point::_Point(const _Vector3& _vec)
-	: x(_vec.x), y(_vec.y) {
-}
+_Point::_Point(const _Vector3& _vec)
+	: x(_vec.x), y(_vec.y) {}
 
 _Point _Point::operator+(const _Point& _pt) const
 {
-	return _Point(x + _pt.x, y + _pt.y);
+	return (x + _pt.x, y + _pt.y);
 }
 
 _Point _Point::operator+(const _Vector3& _vec) const
 {
-	return _Point(x + s_int(_vec.x), y + s_int(_vec.y));
+	return (x + s_int(_vec.x), y + s_int(_vec.y));
 }
 
 _Point _Point::operator-(const _Point& _pt) const
 {
-	return _Point(x - _pt.x, y - _pt.y);
+	return (x - _pt.x, y - _pt.y);
 }
 
 _Point _Point::operator-(const _Vector3& _vec) const
 {
-	return _Point(x - s_int(_vec.x), y - s_int(_vec.y));
+	return (x - s_int(_vec.x), y - s_int(_vec.y));
 }
 
 _Point& _Point::operator+=(const _Vector3& _vec)
@@ -55,32 +54,32 @@ _bool _Rect::PtInRect(const _Vector3& _vec) const
 
 void _Rect::MoveToCenter(const _Point& _center)
 {
-	// ÇöÀç Å©±âÀÇ Àı¹İ °è»ê
+	// í˜„ì¬ í¬ê¸°ì˜ ì ˆë°˜ ê³„ì‚°
 	_int halfW = size_.x / 2;
 	_int halfH = size_.y / 2;
 
-	// »õ·Î¿î Lt ÁÂÇ¥ ¼³Á¤ (Áß½ÉÁ¡¿¡¼­ Àı¹İ¸¸Å­ µÚ·Î ÀÌµ¿)
+	// ìƒˆë¡œìš´ Lt ì¢Œí‘œ ì„¤ì • (ì¤‘ì‹¬ì ì—ì„œ ì ˆë°˜ë§Œí¼ ë’¤ë¡œ ì´ë™)
 	_Point newLt = { _center.x - halfW, _center.y - halfH };
 
-	// ¸â¹ö º¯¼ö °»½Å (»ı¼ºÀÚ ·ÎÁ÷ È°¿ë)
+	// ë©¤ë²„ ë³€ìˆ˜ ê°±ì‹  (ìƒì„±ì ë¡œì§ í™œìš©)
 	*this = _Rect(newLt, size_);
 }
 
 _Rect& _Rect::operator*=(const _float _scale)
 {
-	// 1. ÇöÀç Áß½ÉÁ¡ ±¸ÇÏ±â
+	// 1. í˜„ì¬ ì¤‘ì‹¬ì  êµ¬í•˜ê¸°
 	_float centerX = Left_f() + (Width() / 2.0f);
 	_float centerY = Top_f() + (Height() / 2.0f);
 
-	// 2. »õ·Î¿î Å©±â °è»ê
+	// 2. ìƒˆë¡œìš´ í¬ê¸° ê³„ì‚°
 	_int newW = s_int(Width() * _scale);
 	_int newH = s_int(Height() * _scale);
 
-	// 3. »õ·Î¿î Å©±âÀÇ Àı¹İ¸¸Å­ Áß½É¿¡¼­ »©¼­ »õ·Î¿î Lt °è»ê
+	// 3. ìƒˆë¡œìš´ í¬ê¸°ì˜ ì ˆë°˜ë§Œí¼ ì¤‘ì‹¬ì—ì„œ ë¹¼ì„œ ìƒˆë¡œìš´ Lt ê³„ì‚°
 	_int newLeft = s_int(centerX - (newW / 2.0f));
 	_int newTop = s_int(centerY - (newH / 2.0f));
 
-	// 4. µ¥ÀÌÅÍ °»½Å
+	// 4. ë°ì´í„° ê°±ì‹ 
 	size_ = { newW, newH };
 	points_[0] = { newLeft, newTop };
 	points_[1] = { newLeft + newW, newTop + newH };

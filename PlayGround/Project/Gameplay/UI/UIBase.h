@@ -1,4 +1,6 @@
-#pragma once
+ï»¿#pragma once
+
+class GameObjectBase;
 
 class UIBase abstract
 	: public IInitializable
@@ -7,44 +9,53 @@ class UIBase abstract
 	, public IIdentifiable
 {
 public:
-	explicit UIBase() DEFAULT;
-	virtual ~UIBase() DEFAULT;
-
 	_bool Initialize() override { MAKE_INITIALIZED; return true; }
-	_int Update(_double _delta_time) override { return 0; }
+
+	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override EMPTY_FUNC;
+
 	_bool Release() override { return true; }
 
 public:
-	// À§Ä¡¿Í Å©±â ¼³Á¤
+	// ìœ„ì¹˜ì™€ í¬ê¸° ì„¤ì •
 	void SetRect(const _Rect& _rect) { rect_ = _rect; }
 	void SetPosition(const _Point& _position);
 	void SetSize(const _Size& _size);
 
-	// ºÎ¸ğ-ÀÚ½Ä °ü°è °ü¸®
+	// ë¶€ëª¨-ìì‹ ê´€ê³„ ê´€ë¦¬
 	void SetParent(UIBase* _parent);
 	void AddChild(UIBase* _child);
 
-	// UI ¿ä¼ÒÀÇ Àı´ë À§Ä¡ °è»ê (ºÎ¸ğ ¿ä¼ÒÀÇ À§Ä¡¸¦ °í·Á)
+	// UI ìš”ì†Œì˜ ì ˆëŒ€ ìœ„ì¹˜ ê³„ì‚° (ë¶€ëª¨ ìš”ì†Œì˜ ìœ„ì¹˜ë¥¼ ê³ ë ¤)
 	_Point GetAbsolutePosition() const;
 	_Rect GetAbsoluteRect() const;
 
-	// ¸¶¿ì½º ¿À¹ö ¿©ºÎ È®ÀÎ
+	// ë§ˆìš°ìŠ¤ ì˜¤ë²„ ì—¬ë¶€ í™•ì¸
 	_bool IsMouseOver(const _Point& _mouse_pos) const;
 
+	// ê°ì²´ ìƒëª… ì£¼ê¸° ê´€ë¦¬
 	_bool IsDestroyed() const { return destroyed_; }
 	void Destroy() { destroyed_ = true; }
 
-	// UI ¿ä¼Ò°¡ ÆÄ±«µÉ ¶§ ÇÊ¿äÇÑ ·ÎÁ÷ÀÌ ÀÖ´Ù¸é ÀÌ ÇÔ¼ö¸¦ ¿À¹ö¶óÀÌµåÇÏ¿© ±¸Çö
-	// ¿¹¸¦ µé¾î, »ç¿îµå Àç»ı, ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı µî ´Ù¾çÇÑ È¿°ú¸¦ ÀÌ ÇÔ¼ö¿¡¼­ Ã³¸®
-	// ÀÌº¥Æ®³ª Äİ¹éÀ» Ãß°¡ÇØ¼­ ´Ù¸¥ ½Ã½ºÅÛ°ú ¿¬µ¿ÇÒ ¼ö ÀÖµµ·Ï È®ÀåÇØµµ ÁÁÀ½
-	virtual void OnDestroy() EMPTY_FUNC;
+	virtual void OnDestroy() EMPTY_FUNC; // UI ìš”ì†Œê°€ íŒŒê´´ë  ë•Œ í•„ìš”í•œ ë¡œì§ì´ ìˆë‹¤ë©´ ì´ í•¨ìˆ˜ë¥¼ ì˜¤ë²„ë¼ì´ë“œí•˜ì—¬ êµ¬í˜„
+										 // ì˜ˆë¥¼ ë“¤ì–´, ì‚¬ìš´ë“œ ì¬ìƒ, ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ ë“± ë‹¤ì–‘í•œ íš¨ê³¼ë¥¼ ì´ í•¨ìˆ˜ì—ì„œ ì²˜ë¦¬
+										 // ì´ë²¤íŠ¸ë‚˜ ì½œë°±ì„ ì¶”ê°€í•´ì„œ ë‹¤ë¥¸ ì‹œìŠ¤í…œê³¼ ì—°ë™í•  ìˆ˜ ìˆë„ë¡ í™•ì¥í•´ë„ ì¢‹ìŒ
+
+	// ì˜¤ë¸Œì íŠ¸ íŠ¸ë˜í‚¹ ì„¤ì •
+	void SetTrackingTarget(GameObjectBase* _target, const _Vector3& _offset);
 
 protected:
-	_Rect rect_; // UIÀÇ À§Ä¡¿Í Å©±â¸¦ ³ªÅ¸³»´Â »ç°¢Çü
+	// UIì˜ ìœ„ì¹˜ì™€ í¬ê¸°ë¥¼ ë‚˜íƒ€ë‚´ëŠ” ì‚¬ê°í˜•
+	_Rect rect_;
 
-	UIBase* parent_ = nullptr; // ºÎ¸ğ UI ¿ä¼Ò¿¡ ´ëÇÑ Æ÷ÀÎÅÍ
-	std::vector<UIBase*> children_; // ÀÚ½Ä UI ¿ä¼ÒµéÀ» ÀúÀåÇÏ´Â º¤ÅÍ
+	// UI ìš”ì†Œì˜ ë¶€ëª¨-ìì‹ ê´€ê³„ë¥¼ ê´€ë¦¬í•˜ê¸° ìœ„í•œ í¬ì¸í„°ì™€ ë²¡í„°. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œ ê°„ì˜ ê³„ì¸µ êµ¬ì¡°ë¥¼ êµ¬ì„±í•˜ì—¬ ë³µì¡í•œ UI ë ˆì´ì•„ì›ƒì„ êµ¬í˜„í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+	UIBase* parent_ = nullptr;
+	std::vector<UIBase*> children_;
 
-	_bool destroyed_ = false; // UI ¿ä¼Ò°¡ ÆÄ±«µÇ¾ú´ÂÁö ¿©ºÎ¸¦ ³ªÅ¸³»´Â ÇÃ·¡±×. ÇÊ¿ä¿¡ µû¶ó UI ¿ä¼ÒÀÇ »ı¸í ÁÖ±â¸¦ °ü¸®ÇÏ´Â µ¥ È°¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	// UI ìš”ì†Œê°€ íŒŒê´´ë˜ì—ˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ë‚˜íƒ€ë‚´ëŠ” í”Œë˜ê·¸. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œì˜ ìƒëª… ì£¼ê¸°ë¥¼ ê´€ë¦¬í•˜ëŠ” ë° í™œìš©í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+	_bool destroyed_ = false;
+
+	// ê²Œì„ ì˜¤ë¸Œì íŠ¸ íŠ¸ë˜í‚¹ì„ ìœ„í•œ ë³€ìˆ˜ë“¤
+	GameObjectBase* tracked_object_ = nullptr; // íŠ¸ë˜í‚¹í•  ê²Œì„ ì˜¤ë¸Œì íŠ¸ì— ëŒ€í•œ í¬ì¸í„°. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œê°€ íŠ¹ì • ê²Œì„ ì˜¤ë¸Œì íŠ¸ì˜ ìœ„ì¹˜ë¥¼ ë”°ë¼ê°€ë„ë¡ êµ¬í˜„í•  ë•Œ ì‚¬ìš©í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+	_Vector3 tracking_offset_ = _Vector3::Zero(); // íŠ¸ë˜í‚¹ ì˜¤í”„ì…‹. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œê°€ íŠ¸ë˜í‚¹í•˜ëŠ” ê²Œì„ ì˜¤ë¸Œì íŠ¸ì— ëŒ€í•´ ìœ„ì¹˜ ë³´ì •ì„ í•  ë•Œ í™œìš©í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 };
