@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "ComponentBase.h"
 
 enum class ColliderType
@@ -36,7 +36,7 @@ public:
 protected:
 	virtual _bool _CheckCollided(Collider* _other) PURE;
 
-	// _otherÀÇ Å¸ÀÌ¸Ó¸¦ Ã¼Å©ÇØ¼­ Ãæµ¹ °¡´ÉÇÑ »óÅÂÀÎÁö ¹İÈ¯ÇÏ´Â ÇÔ¼ö
+	// _otherì˜ íƒ€ì´ë¨¸ë¥¼ ì²´í¬í•´ì„œ ì¶©ëŒ ê°€ëŠ¥í•œ ìƒíƒœì¸ì§€ ë°˜í™˜í•˜ëŠ” í•¨ìˆ˜
 	_bool _CheckCollisionTimer(Collider* _other);
 
 	_bool _RegisterOnCollidedList(Collider* _other);
@@ -46,7 +46,7 @@ private:
 	ColliderType type;
 	CollisionLayer layer;
 
-	std::list<Collider*> collided_colliders_; // Ãæµ¹ ÁßÀÎ Äİ¶óÀÌ´õ ¸ñ·Ï
+	std::list<Collider*> collided_colliders_; // ì¶©ëŒ ì¤‘ì¸ ì½œë¼ì´ë” ëª©ë¡
 	std::map<Collider*, _double> collision_timers_;
 	std::vector<Collider*> erase_waiting_list_;
 

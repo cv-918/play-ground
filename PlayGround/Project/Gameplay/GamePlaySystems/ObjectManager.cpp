@@ -4,11 +4,6 @@
 #include "Actors/GameObjectBase.h"
 #include "Actors/ExpDust.h"
 
-_bool ObjectManager::Initialize()
-{
-	return _bool();
-}
-
 _int ObjectManager::Update(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
@@ -17,7 +12,7 @@ _int ObjectManager::Update(_double _delta_time)
 			game_object->Update(_delta_time);
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int ObjectManager::LateUpdate(_double _delta_time)
@@ -30,7 +25,7 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 
 	_CleanUp();
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void ObjectManager::Render(_double _delta_time)
@@ -57,7 +52,7 @@ _bool ObjectManager::Release()
 	}
 	std::vector<GameObjectBase*>().swap(game_objects_);
 
-	return _bool();
+	return true;
 }
 
 void ObjectManager::AddGameObject(GameObjectBase* _game_object)

@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "Collider.h"
 
 #include "Actors/GameObjectBase.h"
@@ -21,7 +21,7 @@ _int Collider::Update(_double _delta_time)
 	if (!erase_waiting_list_.empty())
 		erase_waiting_list_.clear();
 
-	// Ãæµ¹ Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
+	// ì¶©ëŒ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
 	for (auto& pair : collision_timers_)
 	{
 		pair.second -= _delta_time;
@@ -29,8 +29,8 @@ _int Collider::Update(_double _delta_time)
 		{
 			pair.second = 0.0;
 
-			// Ãæµ¹ Å¸ÀÌ¸Ó°¡ 0ÀÌ µÈ °æ¿ì, Ãæµ¹ ÁßÀÎ ÄÝ¶óÀÌ´õ ¸ñ·Ï¿¡ ¾ø´Ù¸é
-			// ÇØ´ç ÄÝ¶óÀÌ´õ¿ÍÀÇ Ãæµ¹ÀÌ Á¾·áµÈ °ÍÀ¸·Î °£ÁÖÇÏ¿© »èÁ¦ ¸ñ·Ï¿¡ µî·Ï
+			// ì¶©ëŒ íƒ€ì´ë¨¸ê°€ 0ì´ ëœ ê²½ìš°, ì¶©ëŒ ì¤‘ì¸ ì½œë¼ì´ë” ëª©ë¡ì— ì—†ë‹¤ë©´
+			// í•´ë‹¹ ì½œë¼ì´ë”ì™€ì˜ ì¶©ëŒì´ ì¢…ë£Œëœ ê²ƒìœ¼ë¡œ ê°„ì£¼í•˜ì—¬ ì‚­ì œ ëª©ë¡ì— ë“±ë¡
 			if (std::find(collided_colliders_.begin(), collided_colliders_.end(), pair.first) == collided_colliders_.end())
 			{
 				erase_waiting_list_.push_back(pair.first);
@@ -38,7 +38,7 @@ _int Collider::Update(_double _delta_time)
 		}
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int Collider::LateUpdate(_double _delta_time)
@@ -52,7 +52,7 @@ _int Collider::LateUpdate(_double _delta_time)
 		}
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void Collider::DetectCollision(Collider* _other)
@@ -60,37 +60,37 @@ void Collider::DetectCollision(Collider* _other)
 	if (!_other)
 		return;
 
-	// Ãæµ¹ Å¸ÀÌ¸Ó Ã¼Å©
+	// ì¶©ëŒ íƒ€ì´ë¨¸ ì²´í¬
 	if (!_CheckCollisionTimer(_other))
 		return;
 
-	// Ãæµ¹ÇßÀ» °æ¿ì
+	// ì¶©ëŒí–ˆì„ ê²½ìš°
 	if (_CheckCollided(_other))
 	{
-		// Ãæµ¹ ¸ñ·Ï¿¡ Ãß°¡¿¡ ¼º°øÇßÀ» °æ¿ì
+		// ì¶©ëŒ ëª©ë¡ì— ì¶”ê°€ì— ì„±ê³µí–ˆì„ ê²½ìš°
 		if (_RegisterOnCollidedList(_other))
 		{
-			// Enter ½ÅÈ£ ÀüÆÄ
+			// Enter ì‹ í˜¸ ì „íŒŒ
 			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
 				});
 		}
-		// ÀÌ¹Ì Ãæµ¹ ¸ñ·Ï¿¡ ÀÖÀ» °æ¿ì
+		// ì´ë¯¸ ì¶©ëŒ ëª©ë¡ì— ìžˆì„ ê²½ìš°
 		else
 		{
-			// Stay ½ÅÈ£ ÀüÆÄ
+			// Stay ì‹ í˜¸ ì „íŒŒ
 			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
 				});
 		}
 	}
-	// Ãæµ¹ÇÏÁö ¾ÊÀ» °æ¿ì
+	// ì¶©ëŒí•˜ì§€ ì•Šì„ ê²½ìš°
 	else
 	{
-		// Ãæµ¹ ¸ñ·Ï¿¡¼­ Á¦°Å¿¡ ¼º°øÇßÀ» °æ¿ì
+		// ì¶©ëŒ ëª©ë¡ì—ì„œ ì œê±°ì— ì„±ê³µí–ˆì„ ê²½ìš°
 		if (_DeregisterFromCollidedList(_other))
 		{
-			// Exit ½ÅÈ£ ÀüÆÄ
+			// Exit ì‹ í˜¸ ì „íŒŒ
 			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
 				});
@@ -100,7 +100,7 @@ void Collider::DetectCollision(Collider* _other)
 
 _bool Collider::_CheckCollisionTimer(Collider* _other)
 {
-	// Å¸ÀÌ¸Ó°¡ Á¸ÀçÇÏÁö ¾Ê°Å³ª, Å¸ÀÌ¸Ó°¡ 0ÀÎ °æ¿ì Ãæµ¹ °¡´É
+	// íƒ€ì´ë¨¸ê°€ ì¡´ìž¬í•˜ì§€ ì•Šê±°ë‚˜, íƒ€ì´ë¨¸ê°€ 0ì¸ ê²½ìš° ì¶©ëŒ ê°€ëŠ¥
 	auto it = collision_timers_.find(_other);
 	if (it == collision_timers_.end() || it->second <= 0.0)
 		return true;

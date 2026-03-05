@@ -21,7 +21,6 @@ protected:
 public:
 	virtual _bool Initialize() override;
 	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
 
 public:
 	MovementPattern Pattern() const { return move_pattern_; }

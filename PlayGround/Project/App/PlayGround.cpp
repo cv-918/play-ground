@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "PlayGround.h"
 
 #include "EngineSystems/Render/RenderChain.h"
@@ -21,7 +21,7 @@ _bool PlayGround::Initialize()
 
 	if (false == _EnemyDataMgr.Load("Data/test.json"))
 	{
-		// json ÆÄÀÏ ÀĞ±â ¿¡·¯
+		// json íŒŒì¼ ì½ê¸° ì—ëŸ¬
 		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
 		return false;
 	}
@@ -36,15 +36,15 @@ _int PlayGround::Update(_double _delta_time)
 
 	_ColMgr.Update();
 
-	// Update ·çÇÁÀÇ ¸¶Áö¸·¿¡ Ã³¸®ÇÒ ¾ÖµéÀ» ¸ğ¾ÆµÎ´Â Å¬·¡½º¸¦ ¸¸µé°í
-	// µî·ÏµÈ ¾ÖµéÀº ÀÏ°ı Ã³¸®
+	// Update ë£¨í”„ì˜ ë§ˆì§€ë§‰ì— ì²˜ë¦¬í•  ì• ë“¤ì„ ëª¨ì•„ë‘ëŠ” í´ë˜ìŠ¤ë¥¼ ë§Œë“¤ê³ 
+	// ë“±ë¡ëœ ì• ë“¤ì€ ì¼ê´„ ì²˜ë¦¬
 
-	return 0;
+	return UPDATE_CONTINUE;
 }
 
 void PlayGround::Render(_double _delta_time)
 {
-	// 1) Clear (´Ü»ö)
+	// 1) Clear (ë‹¨ìƒ‰)
 	_RenderChain.Clear();
 
 	// 2) Render
@@ -75,7 +75,7 @@ LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lpara
 	case WM_MBUTTONDOWN: _InputMgr.OnMouseButtonDown(VK_MBUTTON, _lparam); break;
 	case WM_MBUTTONUP:   _InputMgr.OnMouseButtonUp(VK_MBUTTON, _lparam); break;
 
-		// X ¹öÆ°(4/5¹ø ¹öÆ°)
+		// X ë²„íŠ¼(4/5ë²ˆ ë²„íŠ¼)
 	case WM_XBUTTONDOWN:
 	{
 		const _int xbtn = GET_XBUTTON_WPARAM(_wparam);
@@ -93,13 +93,13 @@ LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lpara
 
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
-		// 1. F4 Å°°¡ ´­·È´ÂÁö È®ÀÎ
+		// 1. F4 í‚¤ê°€ ëˆŒë ¸ëŠ”ì§€ í™•ì¸
 		if (_wparam == VK_F4)
 		{
-			// 2. Alt Å°°¡ ÇÔ²² ´­·È´ÂÁö È®ÀÎ (LPARAMÀÇ 29¹øÂ° ºñÆ®°¡ 1ÀÌ¸é Alt°¡ ´­¸° »óÅÂ)
+			// 2. Alt í‚¤ê°€ í•¨ê»˜ ëˆŒë ¸ëŠ”ì§€ í™•ì¸ (LPARAMì˜ 29ë²ˆì§¸ ë¹„íŠ¸ê°€ 1ì´ë©´ Altê°€ ëˆŒë¦° ìƒíƒœ)
 			if (_lparam & (1 << 29))
 			{
-				// °ÔÀÓ Á¾·á ¸Ş½ÃÁö ¹ß¼Û
+				// ê²Œì„ ì¢…ë£Œ ë©”ì‹œì§€ ë°œì†¡
 				PostQuitMessage(0);
 				return 0;
 			}
@@ -122,5 +122,5 @@ LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lpara
 		break;
 	}
 
-	return 0;
+	return UPDATE_CONTINUE;
 }

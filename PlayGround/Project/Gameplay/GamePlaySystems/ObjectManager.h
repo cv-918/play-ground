@@ -13,11 +13,8 @@ class ObjectManager
 	, public IReleasable
 {
 public:
-	explicit ObjectManager() DEFAULT;
 	virtual ~ObjectManager() { Release(); }
 
-	_bool Initialize() override;
-	
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
 	void Render(_double _delta_time) override;

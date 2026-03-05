@@ -70,7 +70,7 @@ _int GamePlayScene::Update(_double _delta_time)
 	// 스테이지 매니저 업데이트
 	stage_manager_->Update(_delta_time);
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void GamePlayScene::OnEnter()

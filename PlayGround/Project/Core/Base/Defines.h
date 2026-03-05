@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 typedef bool						_bool;
 
@@ -36,12 +36,17 @@ typedef double						_double;
 #define GAME_SCREEN_CX				WINCX - INGAME_FRAME_THICKNESS
 #define GAME_SCREEN_CY				WINCY - INGAME_FRAME_THICKNESS
 
-// ÃÊ±âÈ­
+// ì—…ë°ì´íŠ¸ íë¦„ ì œì–´
+#define UPDATE_CONTINUE				0
+#define UPDATE_BREAK				1
+#define UPDATE_ERROR				-1
+
+// ì´ˆê¸°í™”
 #define IV_ZERO						0
 #define IV_ONE						1
 #define IV_INVALID					-1
 
-// Ä³½ºÆÃ
+// ìºìŠ¤íŒ…
 #define s_cast(type, val)			static_cast<type>(val)
 #define d_cast(type, val)			dynamic_cast<type>(val)
 #define c_cast(type, val)			const_cast<type>(val)
@@ -58,13 +63,13 @@ typedef double						_double;
 #define s_float(val)				s_cast(float,				val)
 #define s_double(val)				s_cast(double,				val)
 
-// ¾ÈÀü ¸Ş¸ğ¸® °ü¸®
+// ì•ˆì „ ë©”ëª¨ë¦¬ ê´€ë¦¬
 #define SAFE_NEW(ptr)				{ if(!ptr) { ptr = new std::remove_pointer<decltype(ptr)>::type(); } }
 #define SAFE_DELETE(ptr)			{ if(ptr) { delete ptr; ptr = nullptr; } }
 #define SAFE_DELETE_ARRAY(ptr)		{ if(ptr) { delete[] ptr; ptr = nullptr; } }
 #define SAFE_RELEASE(ptr)			{ if(ptr) { ptr->Release(); ptr = nullptr; } }
 
-// À¯´ÏÄÚµå/¸ÖÆ¼¹ÙÀÌÆ® ¹®ÀÚ¿­ Ã³¸®
+// ìœ ë‹ˆì½”ë“œ/ë©€í‹°ë°”ì´íŠ¸ ë¬¸ìì—´ ì²˜ë¦¬
 #define __WFILE__STR(x) L ## x
 #define __WFILE__(x) __WFILE__STR(x)
 
@@ -84,13 +89,13 @@ inline void DebugMsgBox(const _tchar* _path, _int _line, const _tchar* _fmt, ...
 	va_list args;
 	va_start(args, _fmt);
 
-	// À¯´ÏÄÚµå/¸ÖÆ¼¹ÙÀÌÆ® °¡º¯ ÀÎÀÚ Ã³¸® ÇÔ¼ö
+	// ìœ ë‹ˆì½”ë“œ/ë©€í‹°ë°”ì´íŠ¸ ê°€ë³€ ì¸ì ì²˜ë¦¬ í•¨ìˆ˜
 	_vstprintf_s(buf, _countof(buf), _fmt, args);
 	va_end(args);
 
 	_tchar out[2048] = {};
 
-	// _stprintf_s´Â À¯´ÏÄÚµå ¼³Á¤ ½Ã swprintf_s·Î Ä¡È¯µË´Ï´Ù.
+	// _stprintf_sëŠ” ìœ ë‹ˆì½”ë“œ ì„¤ì • ì‹œ swprintf_së¡œ ì¹˜í™˜ë©ë‹ˆë‹¤.
 	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), _path, _line);
 
 	_tcscat_s(out, _countof(out), buf);
@@ -107,18 +112,18 @@ inline void DevLogW(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
 	va_list args;
 	va_start(args, _fmt);
 
-	// À¯´ÏÄÚµå/¸ÖÆ¼¹ÙÀÌÆ® °¡º¯ ÀÎÀÚ Ã³¸® ÇÔ¼ö
+	// ìœ ë‹ˆì½”ë“œ/ë©€í‹°ë°”ì´íŠ¸ ê°€ë³€ ì¸ì ì²˜ë¦¬ í•¨ìˆ˜
 	_vstprintf_s(buf, _countof(buf), _fmt, args);
 	va_end(args);
 
 	_tchar out[2048] = {};
 
-	// _stprintf_s´Â À¯´ÏÄÚµå ¼³Á¤ ½Ã swprintf_s·Î Ä¡È¯µË´Ï´Ù.
+	// _stprintf_sëŠ” ìœ ë‹ˆì½”ë“œ ì„¤ì • ì‹œ swprintf_së¡œ ì¹˜í™˜ë©ë‹ˆë‹¤.
 	_stprintf_s(out, _countof(out), _T("File : %s\nLine : %d\n\n"), _path, _line);
 
 	_tcscat_s(out, _countof(out), buf);
 
-	// ÁÙ¹Ù²Ş ¾øÀ¸¸é º¸±â ´ä´äÇÏ´Ï±î ÀÚµ¿À¸·Î ºÙÀÓ
+	// ì¤„ë°”ê¿ˆ ì—†ìœ¼ë©´ ë³´ê¸° ë‹µë‹µí•˜ë‹ˆê¹Œ ìë™ìœ¼ë¡œ ë¶™ì„
 	OutputDebugStringW(out);
 	OutputDebugStringW(L"\n");
 }

@@ -14,10 +14,5 @@ _bool Movement::Initialize()
 _int Movement::Update(_double _delta_time)
 {
 	move_func_(_delta_time);
-	return _int();
-}
-
-_int Movement::LateUpdate(_double _delta_time)
-{
-	return _int();
+	return UPDATE_CONTINUE;
 }

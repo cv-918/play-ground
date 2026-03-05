@@ -1,31 +1,31 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "CollisionManager.h"
 
 #include "Components/Collider.h"
 
 void CollisionManager::Update()
 {
-    // 1. ¸ğµç ·¹ÀÌ¾î Á¶ÇÕÀ» ¼øÈ¸ (Áßº¹ °Ë»ç ¹æÁö¸¦ À§ÇØ j = iºÎÅÍ ½ÃÀÛ)
+    // 1. ëª¨ë“  ë ˆì´ì–´ ì¡°í•©ì„ ìˆœíšŒ (ì¤‘ë³µ ê²€ì‚¬ ë°©ì§€ë¥¼ ìœ„í•´ j = ië¶€í„° ì‹œì‘)
     for (int i = 0; i < (int)CollisionLayer::End; ++i)
     {
         for (int j = i; j < (int)CollisionLayer::End; ++j)
         {
-            // 2. ÇöÀç µÎ ·¹ÀÌ¾î °£ Ãæµ¹ÀÌ ºñÈ°¼ºÈ­µÇ¾î ÀÖ´Ù¸é °Ç³Ê¶Ü
+            // 2. í˜„ì¬ ë‘ ë ˆì´ì–´ ê°„ ì¶©ëŒì´ ë¹„í™œì„±í™”ë˜ì–´ ìˆë‹¤ë©´ ê±´ë„ˆëœ€
             if (!collision_matrix_[i][j]) continue;
 
-            // 3. µÎ ·¹ÀÌ¾î¿¡ ¼ÓÇÑ ¸ğµç Äİ¶óÀÌ´õ³¢¸® Àü¼ö Á¶»ç
+            // 3. ë‘ ë ˆì´ì–´ì— ì†í•œ ëª¨ë“  ì½œë¼ì´ë”ë¼ë¦¬ ì „ìˆ˜ ì¡°ì‚¬
             for (auto left : layer_colliders_[i])
             {
                 for (auto right : layer_colliders_[j])
                 {
                     if (left == right)
-                        continue; // ÀÚ±â ÀÚ½Å°úÀÇ Ãæµ¹ ¹æÁö
+                        continue; // ìê¸° ìì‹ ê³¼ì˜ ì¶©ëŒ ë°©ì§€
 
-                    // 1. left°¡ right¸¦ °Ë»ç (Enter/Stay/Exit ¹ß»ı)
+                    // 1. leftê°€ rightë¥¼ ê²€ì‚¬ (Enter/Stay/Exit ë°œìƒ)
                     left->DetectCollision(right);
 
-                    // 2. °°Àº ·¹ÀÌ¾î °£ÀÇ Ãæµ¹(i == j)ÀÌ ¾Æ´Ò ¶§¸¸ ¹İ´ë ¹æÇâµµ ¸í½ÃÀûÀ¸·Î È£Ãâ
-                    // ÀÌ·¸°Ô ÇÏ¸é ExpDustµµ PlayerBody¸¦ ÀÎ½ÄÇÒ ¼ö ÀÖ½À´Ï´Ù.
+                    // 2. ê°™ì€ ë ˆì´ì–´ ê°„ì˜ ì¶©ëŒ(i == j)ì´ ì•„ë‹ ë•Œë§Œ ë°˜ëŒ€ ë°©í–¥ë„ ëª…ì‹œì ìœ¼ë¡œ í˜¸ì¶œ
+                    // ì´ë ‡ê²Œ í•˜ë©´ ExpDustë„ PlayerBodyë¥¼ ì¸ì‹í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
                     if (i != j)
                     {
                         right->DetectCollision(left);
@@ -36,12 +36,12 @@ void CollisionManager::Update()
     }
 }
 
-void CollisionManager::SetCollisionLayer(CollisionLayer _left, CollisionLayer _right, bool _enable)
+void CollisionManager::SetCollisionLayer(CollisionLayer _left, CollisionLayer _right, _bool _enable)
 {
     int left = (int)_left;
     int right = (int)_right;
 
-    // ´ëÄª Çà·ÄÀÌ¹Ç·Î µÎ °÷ ¸ğµÎ ¼³Á¤
+    // ëŒ€ì¹­ í–‰ë ¬ì´ë¯€ë¡œ ë‘ ê³³ ëª¨ë‘ ì„¤ì •
     collision_matrix_[left][right] = _enable;
     collision_matrix_[right][left] = _enable;
 }

@@ -3,11 +3,6 @@
 
 #include "UI/UIBase.h"
 
-_bool UIManager::Initialize()
-{
-	return _bool();
-}
-
 _int UIManager::Update(_double _delta_time)
 {
 	for (auto* ui : ui_list_)
@@ -16,7 +11,7 @@ _int UIManager::Update(_double _delta_time)
 			ui->Update(_delta_time);
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int UIManager::LateUpdate(_double _delta_time)
@@ -27,7 +22,7 @@ _int UIManager::LateUpdate(_double _delta_time)
 			ui->LateUpdate(_delta_time);
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void UIManager::Render(_double _delta_time)
@@ -50,7 +45,7 @@ _bool UIManager::Release()
 		}
 	}
 
-	return _bool();
+	return true;
 }
 
 void UIManager::AddUI(UIBase* _ui)

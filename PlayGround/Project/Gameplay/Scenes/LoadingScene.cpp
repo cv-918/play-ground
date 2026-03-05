@@ -3,12 +3,13 @@
 
 _bool LoadingScene::Initialize()
 {
-	__super::Initialize();
+	if (!__super::Initialize())
+		return false;
 
 	debug_scene_name_ = L"LOADING SCENE";
 
 	MAKE_INITIALIZED;
-	return _bool();
+	return true;
 }
 
 _int LoadingScene::Update(_double _delta_time)
@@ -16,7 +17,7 @@ _int LoadingScene::Update(_double _delta_time)
 	__super::Update(_delta_time);
 
     if (loading_complete_)
-		return _int();
+		return UPDATE_CONTINUE;
 
 	elapsed_time_ += _delta_time * 10.0;
 	loading_progress_ = s_int(elapsed_time_);
@@ -24,7 +25,7 @@ _int LoadingScene::Update(_double _delta_time)
 	if (100 <= loading_progress_)
 		loading_complete_ = true;
     
-    return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int LoadingScene::LateUpdate(_double _delta_time)
@@ -41,7 +42,7 @@ _int LoadingScene::LateUpdate(_double _delta_time)
 			loading_progress_ = 0;
 			loading_complete_ = false;
 
-			return _int();
+			return UPDATE_CONTINUE;
 		}
 	}
 	else
@@ -51,11 +52,11 @@ _int LoadingScene::LateUpdate(_double _delta_time)
 		{
 			loading_progress_ = 100;
 			loading_complete_ = true;
-			return _int();
+			return UPDATE_CONTINUE;
 		}
 	}	
 
-    return _int();
+    return UPDATE_CONTINUE;
 }
 
 void LoadingScene::Render(_double _delta_time)

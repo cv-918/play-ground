@@ -23,7 +23,7 @@ _int Scene::Update(_double _delta_time)
 	object_manager_->Update(_delta_time);
 	ui_manager_->Update(_delta_time);
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int Scene::LateUpdate(_double _delta_time)
@@ -31,7 +31,7 @@ _int Scene::LateUpdate(_double _delta_time)
 	object_manager_->LateUpdate(_delta_time);
 	ui_manager_->LateUpdate(_delta_time);
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void Scene::Render(_double _delta_time)
@@ -51,7 +51,7 @@ _bool Scene::Release()
 	object_manager_->Release();
 	ui_manager_->Release();
 
-	return _bool();
+	return true;
 }
 
 void Scene::AddGameObject(GameObjectBase* _game_object)
