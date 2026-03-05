@@ -1,31 +1,26 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "UnitBase.h"
 
 #include "Components/Movement.h"
-
-Unit::Unit()
-	: movement_(nullptr), combat_(nullptr), status_(nullptr)
-{
-}
 
 _bool Unit::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
-	// µğÆúÆ® Äİ¶óÀÌ´õ°¡ ¾ÆÁ÷ µî·ÏµÇÁö ¾Ê¾Ò´Ù¸é »ı¼ºÇØ¼­ µî·Ï
+	// ë””í´íŠ¸ ì½œë¼ì´ë”ê°€ ì•„ì§ ë“±ë¡ë˜ì§€ ì•Šì•˜ë‹¤ë©´ ìƒì„±í•´ì„œ ë“±ë¡
 	if (default_colliders_.empty())
 	{
-		// ±âº» Äİ¶óÀÌ´õ »ı¼º ¹× µî·Ï
+		// ê¸°ë³¸ ì½œë¼ì´ë” ìƒì„± ë° ë“±ë¡
 		for (int i = 0; i < s_int(UnitDefaultColliderId::ColCount); ++i)
 		{
-			auto* collider = new SphereCollider(0.f); // ÃÊ±â ¹İÁö¸§Àº 0À¸·Î ¼³Á¤, ÇÊ¿ä¿¡ µû¶ó Á¶Á¤
+			auto* collider = new SphereCollider(0.f); // ì´ˆê¸° ë°˜ì§€ë¦„ì€ 0ìœ¼ë¡œ ì„¤ì •, í•„ìš”ì— ë”°ë¼ ì¡°ì •
 			RegisterComponent(collider);
 			default_colliders_.push_back(collider);
 		}
 	}
 
-	// ÄÄ¹î ÄÄÆ÷³ÍÆ®¿Í ½ºÅ×ÀÌÅÍ½º ÄÄÆ÷³ÍÆ® »ı¼º ¹× µî·Ï
+	// ì»´ë±ƒ ì»´í¬ë„ŒíŠ¸ì™€ ìŠ¤í…Œì´í„°ìŠ¤ ì»´í¬ë„ŒíŠ¸ ìƒì„± ë° ë“±ë¡
 	combat_ = new Combat();
 	RegisterComponent(combat_);
 	status_ = new Status();
@@ -38,13 +33,4 @@ void Unit::SetNavMesh(const _Rect& _rt)
 {
 	if (movement_)
 		movement_->SetNavMesh(_rt);
-}
-
-void Unit::SetHPBar(UIProgressBar* _hp_bar, _float _offset)
-{
-	if (nullptr == _hp_bar)
-		return;
-
-	hp_bar_ = _hp_bar;
-	hp_bar_offset_y_ = _offset;
 }

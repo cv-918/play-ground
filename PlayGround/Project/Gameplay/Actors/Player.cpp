@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "Player.h"
 
 #include "Components/PlayableMovement.h"
@@ -9,21 +9,21 @@ _bool Player::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	// ÇÃ·¹ÀÌ¾î identifier ¼³Á¤
+	// í”Œë ˆì´ì–´ identifier ì„¤ì •
 	Name(_T("Player"));
 	color_ = Colors::DarkGray;
 
-	// ÇÃ·¹ÀÌ¾î Movement ÄÄÆ÷³ÍÆ® »ý¼º ¹× µî·Ï
+	// í”Œë ˆì´ì–´ Movement ì»´í¬ë„ŒíŠ¸ ìƒì„± ë° ë“±ë¡
 	movement_ = new PlayableMovement();
 	RegisterComponent(movement_);
 
-	// ÇÃ·¹ÀÌ¾î ÄÄÆ÷³ÍÆ® ¼³Á¤
+	// í”Œë ˆì´ì–´ ì»´í¬ë„ŒíŠ¸ ì„¤ì •
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
 	status_->HP(3);
 
-	// ÇÃ·¹ÀÌ¾î ÄÝ¶óÀÌ´õ ¼³Á¤
+	// í”Œë ˆì´ì–´ ì½œë¼ì´ë” ì„¤ì •
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
 	player_col_size_[++default_collider_idx] = 15.f;
 	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(player_col_size_[default_collider_idx]);
@@ -33,7 +33,7 @@ _bool Player::Initialize()
 	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(player_col_size_[default_collider_idx]);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, default_collider_idx)));
 
-	// ¸Å ÇÁ·¹ÀÓ¸¶´Ù Get È£ÃâÇÏ´Â °ÍÀ» ÇÇÇÏ±â À§ÇØ¼­ ÇÃ·¹ÀÌ¾î¿¡´Â InputManager ¸¦ Ä³½ÌÇØµÐ´Ù
+	// ë§¤ í”„ë ˆìž„ë§ˆë‹¤ Get í˜¸ì¶œí•˜ëŠ” ê²ƒì„ í”¼í•˜ê¸° ìœ„í•´ì„œ í”Œë ˆì´ì–´ì—ëŠ” InputManager ë¥¼ ìºì‹±í•´ë‘”ë‹¤
 	input_manager_ = &_InputMgr.Get();
 
 	Finalize();
@@ -55,7 +55,7 @@ void Player::DebugRender(_double _delta_time)
 {
 	__super::DebugRender(_delta_time);
 
-	// s, µð¹ö±× Á¤º¸ Âï±â
+	// s, ë””ë²„ê·¸ ì •ë³´ ì°ê¸°
 	_ShowDebugInfo();
 }
 
@@ -67,11 +67,7 @@ void Player::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
 
-	// ¿¬°áµÈ hp¹Ù Á¦°Å
-	if (hp_bar_)
-		hp_bar_->Destroy();
-
-	// ½ºÅ×ÀÌÁö	¸Å´ÏÀú¿¡ ÇÃ·¹ÀÌ¾î°¡ Á×¾ú´Ù´Â ¸Þ½ÃÁö º¸³»±â
+	// ìŠ¤í…Œì´ì§€	ë§¤ë‹ˆì €ì— í”Œë ˆì´ì–´ê°€ ì£½ì—ˆë‹¤ëŠ” ë©”ì‹œì§€ ë³´ë‚´ê¸°
 	_StageMgr.OnPlayerDeath();
 }
 
@@ -80,22 +76,22 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 	switch (_this->Layer())
 	{
 	case CollisionLayer::PlayerBody:
-		// ¸öÅë collider Ãæµ¹ Ã³¸®
+		// ëª¸í†µ collider ì¶©ëŒ ì²˜ë¦¬
 		break;
 	case CollisionLayer::PlayerAttack:
 	{
-		// °ø°Ý collider Ãæµ¹ Ã³¸®
+		// ê³µê²© collider ì¶©ëŒ ì²˜ë¦¬
 		switch (_other->Layer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
-			// ´õ½ºÆ®ÀÇ IDamagable ÇÚµé·¯ ½Ã½ºÅÛ¿¡ ¸Þ½ÃÁö º¸³»¼­ µ¥¹ÌÁö ÀÔÈ÷±â
+			// ë”ìŠ¤íŠ¸ì˜ IDamagable í•¸ë“¤ëŸ¬ ì‹œìŠ¤í…œì— ë©”ì‹œì§€ ë³´ë‚´ì„œ ë°ë¯¸ì§€ ìž…ížˆê¸°
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(1.f);
 				});
 
-			// °ø°Ý ÄðÅ¸ÀÓ µ¿¾ÈÀº °°Àº ´õ½ºÆ®¿¡ ´ëÇØ¼­´Â Ãæµ¹ÀÌ ÀÏ¾î³ªÁö ¾Êµµ·Ï Å¸ÀÌ¸Ó ¼³Á¤
-			// °ø°Ý¼Óµµ °íÁ¤°ª ÀÏ´ÜÀº ¿©±â¿¡ Áö¿ªº¯¼ö·Î ÇÏµåÄÚµù
+			// ê³µê²© ì¿¨íƒ€ìž„ ë™ì•ˆì€ ê°™ì€ ë”ìŠ¤íŠ¸ì— ëŒ€í•´ì„œëŠ” ì¶©ëŒì´ ì¼ì–´ë‚˜ì§€ ì•Šë„ë¡ íƒ€ì´ë¨¸ ì„¤ì •
+			// ê³µê²©ì†ë„ ê³ ì •ê°’ ì¼ë‹¨ì€ ì—¬ê¸°ì— ì§€ì—­ë³€ìˆ˜ë¡œ í•˜ë“œì½”ë”©
 			const _double attack_cooltime = 1.f;
 			_this->SetTimerForTarget(_other, attack_cooltime);
 
@@ -113,22 +109,22 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 	switch (_this->Layer())
 	{
 	case CollisionLayer::PlayerBody:
-		// ¸öÅë collider Ãæµ¹ Ã³¸®
+		// ëª¸í†µ collider ì¶©ëŒ ì²˜ë¦¬
 		break;
 	case CollisionLayer::PlayerAttack:
 	{
-		// °ø°Ý collider Ãæµ¹ Ã³¸®
+		// ê³µê²© collider ì¶©ëŒ ì²˜ë¦¬
 		switch (_other->Layer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
-			// ´õ½ºÆ®ÀÇ IDamagable ÇÚµé·¯ ½Ã½ºÅÛ¿¡ ¸Þ½ÃÁö º¸³»¼­ µ¥¹ÌÁö ÀÔÈ÷±â
+			// ë”ìŠ¤íŠ¸ì˜ IDamagable í•¸ë“¤ëŸ¬ ì‹œìŠ¤í…œì— ë©”ì‹œì§€ ë³´ë‚´ì„œ ë°ë¯¸ì§€ ìž…ížˆê¸°
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(1.f);
 				});
 
-			// °ø°Ý ÄðÅ¸ÀÓ µ¿¾ÈÀº °°Àº ´õ½ºÆ®¿¡ ´ëÇØ¼­´Â Ãæµ¹ÀÌ ÀÏ¾î³ªÁö ¾Êµµ·Ï Å¸ÀÌ¸Ó ¼³Á¤
-			// °ø°Ý¼Óµµ °íÁ¤°ª ÀÏ´ÜÀº ¿©±â¿¡ Áö¿ªº¯¼ö·Î ÇÏµåÄÚµù
+			// ê³µê²© ì¿¨íƒ€ìž„ ë™ì•ˆì€ ê°™ì€ ë”ìŠ¤íŠ¸ì— ëŒ€í•´ì„œëŠ” ì¶©ëŒì´ ì¼ì–´ë‚˜ì§€ ì•Šë„ë¡ íƒ€ì´ë¨¸ ì„¤ì •
+			// ê³µê²©ì†ë„ ê³ ì •ê°’ ì¼ë‹¨ì€ ì—¬ê¸°ì— ì§€ì—­ë³€ìˆ˜ë¡œ í•˜ë“œì½”ë”©
 			const _double attack_cooltime = 1.f;
 			_this->SetTimerForTarget(_other, attack_cooltime);
 
@@ -145,7 +141,7 @@ void Player::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage, status_);
 
-	// µ¥¹ÌÁö ÆùÆ® Ãâ·Â
+	// ë°ë¯¸ì§€ í°íŠ¸ ì¶œë ¥
 	const auto position = transform_->Position();
 	play_scene_->ShowDamageUI(final_damage, _Point(position.x, position.y));
 }
@@ -167,9 +163,9 @@ void Player::_ControlInfoOnDebug()
 
 	std::vector<std::wstring> labels =
 	{
-		L"[ ÄÁÆ®·Ñ Á¤º¸ : °¡¼Óµµ(1) ]",
-		L"[ ÄÁÆ®·Ñ Á¤º¸ : ¸¶Âû°è¼ö(2) ]",
-		L"[ ÄÁÆ®·Ñ Á¤º¸ : ÃÖ´ë¼Óµµ(3) ]",
+		L"[ ì»¨íŠ¸ë¡¤ ì •ë³´ : ê°€ì†ë„(1) ]",
+		L"[ ì»¨íŠ¸ë¡¤ ì •ë³´ : ë§ˆì°°ê³„ìˆ˜(2) ]",
+		L"[ ì»¨íŠ¸ë¡¤ ì •ë³´ : ìµœëŒ€ì†ë„(3) ]",
 	};
 
 	switch (debug_type_)
@@ -239,7 +235,7 @@ void Player::_ControlInfoOnDebug()
 		}
 		break;
 	default:
-		debug_info_lines_.insert(debug_info_lines_.begin() + 1, L"[ ÄÁÆ®·Ñ Á¤º¸ : None ]");
+		debug_info_lines_.insert(debug_info_lines_.begin() + 1, L"[ ì»¨íŠ¸ë¡¤ ì •ë³´ : None ]");
 		return;
 	}
 
@@ -274,13 +270,13 @@ void Player::_ShowDebugInfo()
 	const _int draw_pos_x = s_int(GAME_VIEW_WIDTH + INGAME_FRAME_THICKNESS);
 	_int draw_pos_y = INGAME_FRAME_THICKNESS_HALF - line_gap + 5;
 
-	// 2) ÅØ½ºÆ® ±×¸®±â
-	swprintf_s(buffer, L"[ µð¹ö±ë Á¤º¸ Å¸ÀÔ : %ls ]", labels[debug_type_].c_str());
+	// 2) í…ìŠ¤íŠ¸ ê·¸ë¦¬ê¸°
+	swprintf_s(buffer, L"[ ë””ë²„ê¹… ì •ë³´ íƒ€ìž… : %ls ]", labels[debug_type_].c_str());
 	debug_info_lines_.push_back(buffer);
 
 	_ControlInfoOnDebug();
 
-	// 3) »ó¼¼ Á¤º¸ ±×¸®±â
+	// 3) ìƒì„¸ ì •ë³´ ê·¸ë¦¬ê¸°
 	switch (debug_type_)
 	{
 	case MouseInfo:
@@ -294,19 +290,19 @@ void Player::_ShowDebugInfo()
 		debug_info_lines_.push_back(buffer);
 		break;
 	case ControlInfo:
-		swprintf_s(buffer, L"À§Ä¡ Á¤º¸ ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
+		swprintf_s(buffer, L"ìœ„ì¹˜ ì •ë³´ ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"ÀÌµ¿·® : %.2f", movement_->MoveVelocity().Magnitude());
+		swprintf_s(buffer, L"ì´ë™ëŸ‰ : %.2f", movement_->MoveVelocity().Magnitude());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"°¡¼Óµµ : %.f", movement_->Acceleration());
+		swprintf_s(buffer, L"ê°€ì†ë„ : %.f", movement_->Acceleration());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"¸¶Âû °è¼ö : %.f", movement_->Friction());
+		swprintf_s(buffer, L"ë§ˆì°° ê³„ìˆ˜ : %.f", movement_->Friction());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"ÃÖ´ë ¼Óµµ : %.f", movement_->MoveSpdMax());
+		swprintf_s(buffer, L"ìµœëŒ€ ì†ë„ : %.f", movement_->MoveSpdMax());
 		debug_info_lines_.push_back(buffer);
 
 		swprintf_s(buffer, L"HP : %.0f", status_->HP());

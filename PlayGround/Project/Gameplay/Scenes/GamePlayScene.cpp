@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "GamePlayScene.h"
 
 #include "Actors/Player.h"
@@ -15,11 +15,11 @@ _bool GamePlayScene::Initialize()
 
 	debug_scene_name_ = L"GAMEPLAY SCENE";
 
-	// ½ºÅ×ÀÌÁö ¸Å´ÏÀú Ä³½Ì ¹× ¾À°ú ¿¬µ¿
+	// ìŠ¤í…Œì´ì§€ ë§¤ë‹ˆì € ìºì‹± ë° ì”¬ê³¼ ì—°ë™
 	stage_manager_ = &_StageMgr;
 	stage_manager_->PlayScene(this);
 
-	// ½ºÅ×ÀÌÁö °´Ã¼ »ý¼º ¹× ¾À¿¡ Ãß°¡
+	// ìŠ¤í…Œì´ì§€ ê°ì²´ ìƒì„± ë° ì”¬ì— ì¶”ê°€
 	background_ = new Background();
 	AddGameObject(background_);
 
@@ -29,19 +29,19 @@ _bool GamePlayScene::Initialize()
 
 	return_btn_ = new UIButton();
 
-	const auto return_btn_lt = GAME_VIEW_CENTER - _Point(COMMON_BUTTON_CX / 2, COMMON_BUTTON_CY / 2); // ¹öÆ° Å©±âÀÇ Àý¹ÝÀ» »©¼­ Áß¾Ó Á¤·Ä
-	return_btn_->SetRect(_Rect(return_btn_lt, _Size(COMMON_BUTTON_CX, COMMON_BUTTON_CY))); // È­¸é Áß¾Ó ÇÏ´ÜÂë
+	const auto return_btn_lt = GAME_VIEW_CENTER - _Point(COMMON_BUTTON_CX / 2, COMMON_BUTTON_CY / 2); // ë²„íŠ¼ í¬ê¸°ì˜ ì ˆë°˜ì„ ë¹¼ì„œ ì¤‘ì•™ ì •ë ¬
+	return_btn_->SetRect(_Rect(return_btn_lt, _Size(COMMON_BUTTON_CX, COMMON_BUTTON_CY))); // í™”ë©´ ì¤‘ì•™ í•˜ë‹¨ì¯¤
 	return_btn_->SetText(L"RETURN TO LOBBY");
 
-	// ¶÷´Ù¸¦ ÀÌ¿ëÇÑ Å¬¸¯ ÀÌº¥Æ® ¿¬°á
+	// ëžŒë‹¤ë¥¼ ì´ìš©í•œ í´ë¦­ ì´ë²¤íŠ¸ ì—°ê²°
 	return_btn_->SetOnClick([]() {
 		_SceneMgr.ChangeScene(SceneType::Lobby);
 		});
 
-	// ¾À¿¡ ¹öÆ° Ãß°¡
+	// ì”¬ì— ë²„íŠ¼ ì¶”ê°€
 	AddUI(return_btn_);
 
-	// °ÔÀÓ ÇÃ·¹ÀÌ Áß¿¡´Â º¸ÀÌÁö ¾Êµµ·Ï ºñÈ°¼ºÈ­
+	// ê²Œìž„ í”Œë ˆì´ ì¤‘ì—ëŠ” ë³´ì´ì§€ ì•Šë„ë¡ ë¹„í™œì„±í™”
 	return_btn_->InActivate();
 
 	MAKE_INITIALIZED;
@@ -61,13 +61,13 @@ _int GamePlayScene::Update(_double _delta_time)
 		break;
 	}
 
-	// °ÔÀÓ ¿ÀºêÁ§Æ® ¸Å´ÏÀú¿Í UI ¸Å´ÏÀú ¾÷µ¥ÀÌÆ®
-	// ½ºÅ×ÀÌÁö »óÅÂ¿¡ µû¶ó ¾÷µ¥ÀÌÆ® ¿©ºÎ °áÁ¤. ¿¹¸¦ µé¾î, ÀÏ½ÃÁ¤Áö³ª °á°ú È­¸é¿¡¼­´Â °ÔÀÓ ¿ÀºêÁ§Æ® ¾÷µ¥ÀÌÆ®¸¦ ¸ØÃß°í UI¸¸ ¾÷µ¥ÀÌÆ®.
-	// ¿ÀºêÁ§Æ® ¾÷µ¥ÀÌÆ®¿Í UI ¾÷µ¥ÀÌÆ®¸¦ ºÐ¸®ÇÏ±â À§ÇØ¼­ __super::Update() ¸¦ È£ÃâÇÏÁö ¾Ê°í, °¢°¢ÀÇ ¸Å´ÏÀú ¾÷µ¥ÀÌÆ®¸¦ Á÷Á¢ È£Ãâ
+	// ê²Œìž„ ì˜¤ë¸Œì íŠ¸ ë§¤ë‹ˆì €ì™€ UI ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸
+	// ìŠ¤í…Œì´ì§€ ìƒíƒœì— ë”°ë¼ ì—…ë°ì´íŠ¸ ì—¬ë¶€ ê²°ì •. ì˜ˆë¥¼ ë“¤ì–´, ì¼ì‹œì •ì§€ë‚˜ ê²°ê³¼ í™”ë©´ì—ì„œëŠ” ê²Œìž„ ì˜¤ë¸Œì íŠ¸ ì—…ë°ì´íŠ¸ë¥¼ ë©ˆì¶”ê³  UIë§Œ ì—…ë°ì´íŠ¸.
+	// ì˜¤ë¸Œì íŠ¸ ì—…ë°ì´íŠ¸ì™€ UI ì—…ë°ì´íŠ¸ë¥¼ ë¶„ë¦¬í•˜ê¸° ìœ„í•´ì„œ __super::Update() ë¥¼ í˜¸ì¶œí•˜ì§€ ì•Šê³ , ê°ê°ì˜ ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸ë¥¼ ì§ì ‘ í˜¸ì¶œ
 	if (update) object_manager_->Update(_delta_time);
 	ui_manager_->Update(_delta_time);
 
-	// ½ºÅ×ÀÌÁö ¸Å´ÏÀú ¾÷µ¥ÀÌÆ®
+	// ìŠ¤í…Œì´ì§€ ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸
 	stage_manager_->Update(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -77,29 +77,32 @@ void GamePlayScene::OnEnter()
 {
 	const auto prev_player = _GameState.Player();
 
-	// ¸¸¾à ÀÌÀü ÇÃ·¹ÀÌ¾î°¡ ³²¾ÆÀÖ´Ù¸é, ±¸Á¶Àû ¹®Á¦°¡ ¹ß»ýÇÑ °ÍÀÌ¹Ç·Î ¸®ÅÏ
+	// ë§Œì•½ ì´ì „ í”Œë ˆì´ì–´ê°€ ë‚¨ì•„ìžˆë‹¤ë©´, êµ¬ì¡°ì  ë¬¸ì œê°€ ë°œìƒí•œ ê²ƒì´ë¯€ë¡œ ë¦¬í„´
 	if (prev_player)
 	{
 		_DEBUG_MSGBOX(L"GamePlayScene::OnEnter - Previous player still exists. This indicates a structural issue. Player will not be recreated.");
 		return;
 	}
 
-	// ÇöÀç ±¸Á¶¿¡¼­´Â ÇÃ·¹ÀÌ¾î¸¦ ¸Å¹ø Àç»ý¼ºÇÑ´Ù
-	// ÇÃ·¹ÀÌ¾î¸¦ ¼¼ÆÃÇÏ±â À§ÇØ ÇÊ¿äÇÑ °ÍµéÀ» ÀÌ°÷¿¡¼­ Ã³¸®ÇÑ´Ù
+	// í˜„ìž¬ êµ¬ì¡°ì—ì„œëŠ” í”Œë ˆì´ì–´ë¥¼ ë§¤ë²ˆ ìž¬ìƒì„±í•œë‹¤
+	// í”Œë ˆì´ì–´ë¥¼ ì„¸íŒ…í•˜ê¸° ìœ„í•´ í•„ìš”í•œ ê²ƒë“¤ì„ ì´ê³³ì—ì„œ ì²˜ë¦¬í•œë‹¤
 	const auto player = new Player();
 	AddGameObject(player);
 
-	//const auto test_progress = ui_manager_->CreateUI<UIProgressBar>();
-	//test_progress->SetRect(_Rect(_Point(50, 150), _Size(200, 30)));
+	const auto test_progress = ui_manager_->CreateUI<UIProgressBar>();
+	test_progress->SetSize(_Size(100, 10));
+
+	// ë§Œì•½ í”Œë ˆì´ì–´ì˜ í¬ê¸°ê°€ ë³€í•˜ëŠ” ì—°ì¶œì´ ë“¤ì–´ê°„ë‹¤ë©´, offset y ê°’ì€ í”Œë ˆì´ì–´ì˜ í¬ê¸°ë¥¼ ê³ ë ¤í•´ì„œ ë™ì ìœ¼ë¡œ ì„¤ì •ë˜ë„ë¡ í•˜ëŠ” ê²ƒì´ ì¢‹ë‹¤. ì§€ê¸ˆì€ ìš°ì„  ê³ ì •ê°’ìœ¼ë¡œ ì„¤ì •í•œë‹¤
+	const _float offset_y = -30.f;
+	test_progress->SetTrackingTarget(player, _Vector3(0.f, offset_y, 0.f)); // í”Œë ˆì´ì–´ ë¨¸ë¦¬ ìœ„ì— ìœ„ì¹˜í•˜ë„ë¡ íŠ¸ëž˜í‚¹ ì„¤ì •
 
 	const auto& nav_mesh = background_->NavMesh();
 
 	player->SetNavMesh(nav_mesh);
 	player->SetPlayScene(this);
-	//player->SetHPBar(test_progress, -40.f);
 	_GameState.Player(player);
 
-	//// UIText, UIProgressBar Å×½ºÆ®
+	//// UIText, UIProgressBar í…ŒìŠ¤íŠ¸
 	//const auto test_text = ui_manager_->CreateUI<UIText>();
 	//test_text->SetText(L"LOBBY SCENE");
 	//test_text->SetRect(_Rect(_Point(50, 50), _Size(200, 50)));
