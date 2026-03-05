@@ -1,29 +1,28 @@
-#pragma once
+ï»¿#pragma once
 
 #define _ColMgr CollisionManager::Get()
 
 class Collider;
 
-class CollisionManager
-	: public ISingleton<CollisionManager>
+class CollisionManager final : public ISingleton<CollisionManager>
 {
 public:
-    void Update(); // ¸Å ÇÁ·¹ÀÓ È£ÃâµÇ¾î Ãæµ¹ °Ë»ç ¼öÇà
+    void Update(); // ë§¤ í”„ë ˆì„ í˜¸ì¶œë˜ì–´ ì¶©ëŒ ê²€ì‚¬ ìˆ˜í–‰
 
-    // Æ¯Á¤ ·¹ÀÌ¾î ½ÖÀÇ Ãæµ¹ ¿©ºÎ¸¦ ¼³Á¤ (UnityÀÇ Collision Matrix ¼³Á¤ ¿ªÇÒ)
-    void SetCollisionLayer(CollisionLayer _left, CollisionLayer _right, bool _enable = true);
+    // íŠ¹ì • ë ˆì´ì–´ ìŒì˜ ì¶©ëŒ ì—¬ë¶€ë¥¼ ì„¤ì • (Unityì˜ Collision Matrix ì„¤ì • ì—­í• )
+    void SetCollisionLayer(CollisionLayer _left, CollisionLayer _right, _bool _enable = true);
 
-    // Äİ¶óÀÌ´õ µî·Ï ¹× ÇØÁ¦
+    // ì½œë¼ì´ë” ë“±ë¡ ë° í•´ì œ
     void RegisterCollider(CollisionLayer _layer, Collider* _collider);
     void DeregisterCollider(CollisionLayer _layer, Collider* _collider);
 
-	// µî·ÏµÈ ¸ğµç Äİ¶óÀÌ´õ ÇØÁ¦ (¿¹: ¾À ÀüÈ¯ ½Ã)
+	// ë“±ë¡ëœ ëª¨ë“  ì½œë¼ì´ë” í•´ì œ (ì˜ˆ: ì”¬ ì „í™˜ ì‹œ)
 	void ClearAllColliders();
 
 private:
-    // ·¹ÀÌ¾îº°·Î Äİ¶óÀÌ´õ Æ÷ÀÎÅÍµéÀ» °ü¸®
+    // ë ˆì´ì–´ë³„ë¡œ ì½œë¼ì´ë” í¬ì¸í„°ë“¤ì„ ê´€ë¦¬
     std::vector<Collider*> layer_colliders_[s_int(CollisionLayer::End)];
 
-    // ·¹ÀÌ¾î °£ Ãæµ¹ È°¼ºÈ­ ¿©ºÎ¸¦ ÀúÀåÇÏ´Â Çà·Ä (Collision Matrix)
+    // ë ˆì´ì–´ ê°„ ì¶©ëŒ í™œì„±í™” ì—¬ë¶€ë¥¼ ì €ì¥í•˜ëŠ” í–‰ë ¬ (Collision Matrix)
     bool collision_matrix_[s_int(CollisionLayer::End)][s_int(CollisionLayer::End)] = { false, };
 };

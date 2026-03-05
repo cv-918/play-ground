@@ -8,10 +8,7 @@ class UIManager
 	, public IReleasable
 {
 public:
-	explicit UIManager() DEFAULT;
 	virtual ~UIManager() { Release(); }
-
-	_bool Initialize() override;
 
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;

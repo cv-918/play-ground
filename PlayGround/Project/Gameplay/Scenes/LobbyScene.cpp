@@ -3,7 +3,8 @@
 
 _bool LobbyScene::Initialize()
 {
-	__super::Initialize();
+	if (!__super::Initialize())
+		return false;
 
 	debug_scene_name_ = L"LOBBY SCENE";
 
@@ -21,7 +22,7 @@ _bool LobbyScene::Initialize()
 		});
 
 	MAKE_INITIALIZED;
-	return _bool();
+	return true;
 }
 
 void LobbyScene::Render(_double _delta_time)

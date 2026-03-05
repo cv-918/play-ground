@@ -3,12 +3,13 @@
 
 _bool IntroScene::Initialize()
 {
-	__super::Initialize();
+	if (!__super::Initialize())
+		return false;
 
 	debug_scene_name_ = L"INTRO SCENE";
 
 	MAKE_INITIALIZED;
-	return _bool();
+	return true;
 }
 
 _int IntroScene::LateUpdate(_double _delta_time)
@@ -18,7 +19,7 @@ _int IntroScene::LateUpdate(_double _delta_time)
     if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
 		_SceneMgr.ChangeScene(SceneType::Loading);
 
-    return _int();
+	return UPDATE_CONTINUE;
 }
 
 void IntroScene::Render(_double _delta_time)

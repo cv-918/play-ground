@@ -23,12 +23,12 @@ _int StageManager::Update(_double _delta_time)
 	case StageState::Exit:		_OnExit();		break;
 	}
 
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 _int StageManager::LateUpdate(_double _delta_time)
 {
-	return _int();
+	return UPDATE_CONTINUE;
 }
 
 void StageManager::Render(_double _delta_time)

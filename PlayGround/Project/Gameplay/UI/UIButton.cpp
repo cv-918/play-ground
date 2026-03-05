@@ -6,7 +6,7 @@ _int UIButton::Update(_double _delta_time)
 	if (!Enable())
 	{
 		state_ = ButtonState::Disabled;
-		return _int();
+		return UPDATE_CONTINUE;
 	}
 
 	if (IsMouseOver(_InputMgr.MousePoint()))
@@ -35,7 +35,7 @@ _int UIButton::Update(_double _delta_time)
 		state_ = ButtonState::Normal;
 	}
 
-    return _int();
+    return UPDATE_CONTINUE;
 }
 
 void UIButton::Render(_double _delta_time)

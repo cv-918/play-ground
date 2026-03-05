@@ -20,7 +20,7 @@ _int Background::Update(_double _delta_time)
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
 
-    return _int();
+    return UPDATE_CONTINUE;
 }
 
 void Background::Render(_double _delta_time)
