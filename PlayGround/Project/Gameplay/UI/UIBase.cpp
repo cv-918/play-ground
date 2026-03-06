@@ -104,5 +104,5 @@ void UIBase::SetTrackingTarget(GameObjectBase* _target, const _Vector3& _offset)
 	tracking_offset_ = _offset;
 
 	// 어떤 UI 가 어떤 게임 오브젝트를 트래킹하는지 디버그용으로 출력
-	_DEBUG_LOG(L"UI %s started tracking target. (Target: %s)", Name().c_str(), _target->Name().c_str());
+	_SYSTEM_LOG_INFO(L"UI %s started tracking target. (Target: %s)", Name().c_str(), _target->Name().c_str());
 }

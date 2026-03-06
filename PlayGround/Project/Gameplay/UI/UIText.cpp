@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "UIText.h"
 
 _int UIText::Update(_double _delta_time)
@@ -7,14 +7,15 @@ _int UIText::Update(_double _delta_time)
 	{
 		lifeTime_ -= (_float)_delta_time;
 
-		// µ¥¹ÌÁö ÆùÆ® ¿¬Ãâ: À§·Î ÀÌµ¿
-		const _float move_speed = 20.f; // ÀÌµ¿ ¼Óµµ (ÇÈ¼¿/ÃÊ)
+		// ë°ë¯¸ì§€ í°íŠ¸ ì—°ì¶œ: ìœ„ë¡œ ì´ë™
+		const _float move_speed = 20.f; // ì´ë™ ì†ë„ (í”½ì…€/ì´ˆ)
 		_int moveDist = s_int(move_speed * (_float)_delta_time);
 		rect_.Lt().y -= moveDist;
 		rect_.Rb().y -= moveDist;
 
-		// ¾ËÆÄ°ª °¨¼Ò (GDI+ Color´Â a, r, g, b¸¦ °¢°¢ Á¶Àý °¡´É)
-		if (color_.a > 5) color_.a -= 2 * 0.75f;
+		// ì•ŒíŒŒê°’ ê°ì†Œ (GDI+ ColorëŠ” a, r, g, bë¥¼ ê°ê° ì¡°ì ˆ ê°€ëŠ¥)
+		const auto minus_alpha = 2 * 0.75f; // í”„ë ˆìž„ë§ˆë‹¤ ê°ì†Œí•  ì•ŒíŒŒê°’
+		if (color_.a > 5) color_.a -= minus_alpha;
 
 		if (lifeTime_ <= 0.f)
 			this->Destroy();

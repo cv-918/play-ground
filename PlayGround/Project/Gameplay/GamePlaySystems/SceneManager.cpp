@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "SceneManager.h"
 
 #include "Scenes/Scene.h"
@@ -9,10 +9,10 @@
 
 _bool SceneManager::Initialize()
 {
-	// ÃÊ±â ¾À ¼³Á¤ µî ÇÊ¿äÇÑ ÃÊ±âÈ­ ÀÛ¾÷ ¼öÇà
-	// ¿¹½Ã: Ã¹ ¹øÂ° ¾ÀÀ» ¼³Á¤ÇÏ°Å³ª, ¸®¼Ò½º ·Îµå µîÀ» ¼öÇàÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	// ì´ˆê¸° ì”¬ ì„¤ì • ë“± í•„ìš”í•œ ì´ˆê¸°í™” ì‘ì—… ìˆ˜í–‰
+	// ì˜ˆì‹œ: ì²« ë²ˆì§¸ ì”¬ì„ ì„¤ì •í•˜ê±°ë‚˜, ë¦¬ì†ŒìŠ¤ ë¡œë“œ ë“±ì„ ìˆ˜í–‰í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 
-	ChangeScene(SceneType::Intro); // ÃÊ±â ¾ÀÀ» IntroÀ¸·Î ¼³Á¤
+	ChangeScene(SceneType::Intro); // ì´ˆê¸° ì”¬ì„ Introìœ¼ë¡œ ì„¤ì •
 	return true;
 }
 
@@ -22,21 +22,21 @@ _int SceneManager::Update(_double _delta_time)
     {
 		_CleanupCurrentScene();
 
-		// ´ÙÀ½ ¾ÀÀÌ ÀÌ¹Ì »ı¼ºµÆ´ÂÁö °Ë»çÇÏ¿© Àç»ç¿ëÇÏ°Å³ª »õ·Î »ı¼ºÇÏ´Â ·ÎÁ÷
+		// ë‹¤ìŒ ì”¬ì´ ì´ë¯¸ ìƒì„±ëëŠ”ì§€ ê²€ì‚¬í•˜ì—¬ ì¬ì‚¬ìš©í•˜ê±°ë‚˜ ìƒˆë¡œ ìƒì„±í•˜ëŠ” ë¡œì§
 		curr_scene_ = _GetCreatedScene(next_scene_type_);
 		if (nullptr == curr_scene_)
 		{
 			curr_scene_ = _CreateNextScene();
 			curr_scene_->Initialize();
 
-			// ¾ÀÀÌ »õ·Î »ı¼ºµÈ °æ¿ì¿¡¸¸ ¸Ê¿¡ Ãß°¡ÇÏ¿© Àç»ç¿ëÇÒ ¼ö ÀÖµµ·Ï ÇÕ´Ï´Ù.
+			// ì”¬ì´ ìƒˆë¡œ ìƒì„±ëœ ê²½ìš°ì—ë§Œ ë§µì— ì¶”ê°€í•˜ì—¬ ì¬ì‚¬ìš©í•  ìˆ˜ ìˆë„ë¡ í•©ë‹ˆë‹¤.
 			scenes_[next_scene_type_] = curr_scene_;
 		}
 
-		// ¿©ÀüÈ÷ ¾ÀÀÌ nullptrÀÎ °æ¿ì´Â Áö¿øµÇÁö ¾Ê´Â ¾À Å¸ÀÔÀÌ ¿äÃ»µÈ °æ¿ìÀÌ¹Ç·Î ¿¡·¯ Ã³¸®
+		// ì—¬ì „íˆ ì”¬ì´ nullptrì¸ ê²½ìš°ëŠ” ì§€ì›ë˜ì§€ ì•ŠëŠ” ì”¬ íƒ€ì…ì´ ìš”ì²­ëœ ê²½ìš°ì´ë¯€ë¡œ ì—ëŸ¬ ì²˜ë¦¬
 		if (nullptr == curr_scene_)
 		{
-			_DEBUG_LOG(_T("Failed to create scene of type: %s"), _GetSceneName(next_scene_type_).c_str());
+			_NULL_DETECTION_MSGBOX_EX(_T("Failed to create scene of type: %s"), _GetSceneName(next_scene_type_).c_str());
 			return UPDATE_ERROR;
 		}
         
@@ -72,17 +72,17 @@ void SceneManager::Render(_double _delta_time)
 
 _bool SceneManager::Release()
 {
-	// 1. ÇöÀç È°¼ºÈ­µÈ ¾À Á¤¸® (ÀÌ¹Ì scenes_ ¸Ê¿¡ Æ÷ÇÔµÇ¾î ÀÖ´Ù¸é ¾Æ·¡ ·çÇÁ¿¡¼­ »èÁ¦µÊ)
+	// 1. í˜„ì¬ í™œì„±í™”ëœ ì”¬ ì •ë¦¬ (ì´ë¯¸ scenes_ ë§µì— í¬í•¨ë˜ì–´ ìˆë‹¤ë©´ ì•„ë˜ ë£¨í”„ì—ì„œ ì‚­ì œë¨)
 	curr_scene_ = nullptr;
 
-	// 2. °ü¸® ÁßÀÎ ¸ğµç ¾À ÀÏ°ı ¼øÈ¸ ¹× ÇØÁ¦
+	// 2. ê´€ë¦¬ ì¤‘ì¸ ëª¨ë“  ì”¬ ì¼ê´„ ìˆœíšŒ ë° í•´ì œ
 	for (auto& pair : scenes_)
 	{
 		if (pair.second)
 		{
 			pair.second->Release();
-			// OnExitÀº ¾À ÀüÈ¯ ½ÃÁ¡ÀÌ ¾Æ´Ï¹Ç·Î ±»ÀÌ È£ÃâÇÒ ÇÊ¿ä ¾øÀ¸³ª, 
-			// Á¤¸® ·ÎÁ÷ÀÌ Æ÷ÇÔµÇ¾î ÀÖ´Ù¸é È£Ãâ ÈÄ »èÁ¦ÇÕ´Ï´Ù.
+			// OnExitì€ ì”¬ ì „í™˜ ì‹œì ì´ ì•„ë‹ˆë¯€ë¡œ êµ³ì´ í˜¸ì¶œí•  í•„ìš” ì—†ìœ¼ë‚˜, 
+			// ì •ë¦¬ ë¡œì§ì´ í¬í•¨ë˜ì–´ ìˆë‹¤ë©´ í˜¸ì¶œ í›„ ì‚­ì œí•©ë‹ˆë‹¤.
 			delete pair.second;
 			pair.second = nullptr;
 		}
@@ -96,7 +96,7 @@ _bool SceneManager::Release()
 void SceneManager::ChangeScene(const SceneType _type)
 {
     next_scene_type_ = _type;
-	_DEBUG_LOG(_T("Scene change requested: %s"), _GetSceneName(_type).c_str());
+	_SYSTEM_LOG_INFO(_T("Scene change requested to [%s]"), _GetSceneName(_type).c_str());
 }
 
 Scene* SceneManager::_CreateNextScene()
@@ -109,7 +109,7 @@ Scene* SceneManager::_CreateNextScene()
 	case SceneType::GamePlay:	return new GamePlayScene();
 	}
 
-	// Áö¿øµÇÁö ¾Ê´Â ¾À Å¸ÀÔÀÌ ¿äÃ»µÈ °æ¿ì nullptr ¹İÈ¯
+	// ì§€ì›ë˜ì§€ ì•ŠëŠ” ì”¬ íƒ€ì…ì´ ìš”ì²­ëœ ê²½ìš° nullptr ë°˜í™˜
 	return nullptr;
 }
 

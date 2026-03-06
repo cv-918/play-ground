@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "ObjectManager.h"
 
 #include "Actors/GameObjectBase.h"
@@ -59,11 +59,11 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 {
 	const auto it = std::find(game_objects_.begin(), game_objects_.end(), _game_object);
 
-	// ÀÌ¹Ì Á¸ÀçÇÏ´Â °ÔÀÓ ¿ÀºêÁ§Æ®´Â Ãß°¡ÇÏÁö ¾ÊÀ½
+	// ì´ë¯¸ ì¡´ìž¬í•˜ëŠ” ê²Œìž„ ì˜¤ë¸Œì íŠ¸ëŠ” ì¶”ê°€í•˜ì§€ ì•ŠìŒ
 	if (it != game_objects_.end())
 		return;
 
-	// °ÔÀÓ ¿ÀºêÁ§Æ®¸¦ Ãß°¡
+	// ê²Œìž„ ì˜¤ë¸Œì íŠ¸ë¥¼ ì¶”ê°€
 	if (false == _game_object->IsInitialized())
 		_game_object->Initialize();
 
@@ -74,16 +74,16 @@ GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
 {
 	GameObjectBase* enemy = nullptr;
 
-	// EnemyJsonInfoÀÇ category_ ÇÊµå¿¡ µû¶ó ÀûÀÇ Å¸ÀÔÀ» °áÁ¤ÇÏ°í, ÇØ´ç Å¸ÀÔ¿¡ ¸Â´Â °´Ã¼¸¦ »ý¼ºÇÏµµ·Ï ÇÔ
-	// °¢ Àû Å¸ÀÔ¿¡	´ëÇÑ »ý¼º ·ÎÁ÷¿¡¼­´Â EnemyJsonInfoÀÇ grade_ ÇÊµå¸¦ È°¿ëÇÏ¿© ÀûÀÇ µî±Þ¿¡ µû¸¥ Æ¯¼º ¼³Á¤µµ ÇÔ²² Ã³¸®ÇÏµµ·Ï ÇÔ
-	switch (_info->category_) // °¢ Àû Å¸ÀÔ¿¡ ´ëÇÑ »ý¼º ·ÎÁ÷Àº º°µµÀÇ ÇÔ¼ö·Î ºÐ¸®ÇÏ¿© °ü¸®ÇÒ ¼öµµ ÀÖÁö¸¸, ÇöÀç´Â °£´ÜÇÑ switch¹®À¸·Î Ã³¸®ÇÏµµ·Ï ÇÔ
+	// EnemyJsonInfoì˜ category_ í•„ë“œì— ë”°ë¼ ì ì˜ íƒ€ìž…ì„ ê²°ì •í•˜ê³ , í•´ë‹¹ íƒ€ìž…ì— ë§žëŠ” ê°ì²´ë¥¼ ìƒì„±í•˜ë„ë¡ í•¨
+	// ê° ì  íƒ€ìž…ì—	ëŒ€í•œ ìƒì„± ë¡œì§ì—ì„œëŠ” EnemyJsonInfoì˜ grade_ í•„ë“œë¥¼ í™œìš©í•˜ì—¬ ì ì˜ ë“±ê¸‰ì— ë”°ë¥¸ íŠ¹ì„± ì„¤ì •ë„ í•¨ê»˜ ì²˜ë¦¬í•˜ë„ë¡ í•¨
+	switch (_info->category_) // ê° ì  íƒ€ìž…ì— ëŒ€í•œ ìƒì„± ë¡œì§ì€ ë³„ë„ì˜ í•¨ìˆ˜ë¡œ ë¶„ë¦¬í•˜ì—¬ ê´€ë¦¬í•  ìˆ˜ë„ ìžˆì§€ë§Œ, í˜„ìž¬ëŠ” ê°„ë‹¨í•œ switchë¬¸ìœ¼ë¡œ ì²˜ë¦¬í•˜ë„ë¡ í•¨
 	{
 	case EnemyCategory::WasExpDust:
 		enemy = new ExpDust(_info);
 		break;
 	}
 
-	// Ä«Å×°í¸®¿¡ ÀÇÇØ °´Ã¼°¡ »ý¼ºµÇÁö ¾Ê¾Ò°Å³ª, »ý¼ºµÈ °´Ã¼°¡ nullptrÀÎ °æ¿ì nullptr ¹ÝÈ¯
+	// ì¹´í…Œê³ ë¦¬ì— ì˜í•´ ê°ì²´ê°€ ìƒì„±ë˜ì§€ ì•Šì•˜ê±°ë‚˜, ìƒì„±ëœ ê°ì²´ê°€ nullptrì¸ ê²½ìš° nullptr ë°˜í™˜
 	if (nullptr == enemy)
 		return nullptr;
 
@@ -102,15 +102,15 @@ void ObjectManager::_CleanUp()
 	if (game_objects_.empty())
 		return;
 
-	// ÀÌÅÍ·¹ÀÌÅÍ¸¦ ÀÌ¿ëÇØ IsDestroyed()°¡ trueÀÎ °Íµé¸¸ °ñ¶ó Áö¿ì±â
+	// ì´í„°ë ˆì´í„°ë¥¼ ì´ìš©í•´ IsDestroyed()ê°€ trueì¸ ê²ƒë“¤ë§Œ ê³¨ë¼ ì§€ìš°ê¸°
 	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
 		[](GameObjectBase* obj) {
 			if (obj->IsDestroyed())
 			{
-				// ÆÄ±«µÇ´Â ¿ÀºêÁ§Æ®ÀÇ ÀÌ¸§ ·Î±ë
-				_DEBUG_LOG(_T("Destroying GameObject:%s"), obj->Name().c_str());
+				// íŒŒê´´ë˜ëŠ” ì˜¤ë¸Œì íŠ¸ì˜ ì´ë¦„ ë¡œê¹…
+				_SYSTEM_LOG_INFO(_T("Destroying GameObject : %s"), obj->Name().c_str());
 
-				// ÆÄ±« ½Ã ÇÊ¿äÇÑ ·ÎÁ÷ ¼öÇà ÈÄ ¸Þ¸ð¸® ÇØÁ¦
+				// íŒŒê´´ ì‹œ í•„ìš”í•œ ë¡œì§ ìˆ˜í–‰ í›„ ë©”ëª¨ë¦¬ í•´ì œ
 				obj->OnDestroy();
 				delete obj;
 

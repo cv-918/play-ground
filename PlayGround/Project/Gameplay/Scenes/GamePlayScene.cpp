@@ -102,11 +102,6 @@ void GamePlayScene::OnEnter()
 	player->SetPlayScene(this);
 	_GameState.Player(player);
 
-	//// UIText, UIProgressBar 테스트
-	//const auto test_text = ui_manager_->CreateUI<UIText>();
-	//test_text->SetText(L"LOBBY SCENE");
-	//test_text->SetRect(_Rect(_Point(50, 50), _Size(200, 50)));
-
 	return_btn_->InActivate();
 	stage_manager_->ChangeState(StageState::Enter);
 }
@@ -124,7 +119,7 @@ void GamePlayScene::ShowResultUI()
 void GamePlayScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
 	const auto test_text_life = ui_manager_->CreateUI<UIText>();
-	test_text_life->SetFontSize(20.f);
+	test_text_life->SetFontSize(30.f);
 	test_text_life->SetText(std::to_wstring(s_int(_damage)));
 	test_text_life->SetLifeTime(4.f);
 	test_text_life->SetRect(_Rect(_position, _Size(200, 50)));

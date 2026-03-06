@@ -22,7 +22,7 @@ _bool PlayGround::Initialize()
 	if (false == _EnemyDataMgr.Load("Data/test.json"))
 	{
 		// json 파일 읽기 에러
-		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
+		_SYSTEM_LOG_ERROR(_T("Failed to load enemy data from JSON."));
 		return false;
 	}
 
