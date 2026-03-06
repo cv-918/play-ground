@@ -21,7 +21,7 @@ _bool Player::Initialize()
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
-	status_->HP(3);
+	status_->SetCurrentHp(3);
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
@@ -148,6 +148,18 @@ void Player::GetDamage(_float _damage)
 
 _int Player::_ControllRoutine(_double _delta_time)
 {
+	if (input_manager_->Down(VK_OEM_MINUS))
+	{
+		GetDamage(1.f);
+		_SYSTEM_LOG_INFO("플레이어가 1 데미지를 입었습니다. (디버그용 입력)");
+	}
+	else if (input_manager_->Down(VK_OEM_PLUS))
+	{
+		status_->SetCurrentHp(status_->GetCurrentHp() + 1);
+		_SYSTEM_LOG_INFO("플레이어의 HP가 1 회복되었습니다. (디버그용 입력)");
+	}
+	
+
 	return 0;
 }
 
@@ -305,7 +317,7 @@ void Player::_ShowDebugInfo()
 		swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
 		debug_info_lines_.push_back(buffer);
 
-		swprintf_s(buffer, L"HP : %.0f", status_->HP());
+		swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());
 		debug_info_lines_.push_back(buffer);
 		break;
 	}

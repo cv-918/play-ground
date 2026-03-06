@@ -50,7 +50,7 @@ _int SceneManager::Update(_double _delta_time)
 		return UPDATE_BREAK;
     }
 
-    if (curr_scene_ && curr_scene_->Active())
+    if (curr_scene_ && curr_scene_->IsActive())
         curr_scene_->Update(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -58,7 +58,7 @@ _int SceneManager::Update(_double _delta_time)
 
 _int SceneManager::LateUpdate(_double _delta_time)
 {
-	if (curr_scene_ && curr_scene_->Active())
+	if (curr_scene_ && curr_scene_->IsActive())
 		curr_scene_->LateUpdate(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -66,7 +66,7 @@ _int SceneManager::LateUpdate(_double _delta_time)
 
 void SceneManager::Render(_double _delta_time)
 {
-    if (curr_scene_ && curr_scene_->Active())
+    if (curr_scene_ && curr_scene_->IsActive())
         curr_scene_->Render(_delta_time);
 }
 

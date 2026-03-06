@@ -21,7 +21,7 @@ enum class UnitDefaultColliderId
 #include "Components/Combat.h"
 
 #include "EngineSystems/Physics/CollisionManager.h"
-#include "UI/UIProgressBar.h"
+#include "UI/Elements/ProgressBar.h"
 
 class Movement;
 

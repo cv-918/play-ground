@@ -1,49 +1,59 @@
-#pragma once
+ï»¿#pragma once
+
+enum class ComponentType
+{
+	Undefined,
+	Transform,
+	Status,
+	Movement,
+	Collider,
+	Combat,
+};
 
 enum class MovementPattern
 {
-	Undefined = 0,	// ÃÊ±âÈ­ °ª
-	Playable,		// Á÷Á¢ Á¶ÀÛ
-	Stopped,		// Á¤Áö (ÀÌµ¿ ¾øÀ½)
-	Directional,	// Á÷¼± ÀÌµ¿
-	Target,			// Å¸°Ù ÃßÀû ÀÌµ¿
+	Undefined = 0,	// ì´ˆê¸°í™” ê°’
+	Playable,		// ì§ì ‘ ì¡°ì‘
+	Stopped,		// ì •ì§€ (ì´ë™ ì—†ìŒ)
+	Directional,	// ì§ì„  ì´ë™
+	Target,			// íƒ€ê²Ÿ ì¶”ì  ì´ë™
 	Count,
 };
 
 enum class EnemyCategory
 {
-	Undefined = 0,	// ÃÊ±âÈ­ °ª
-	WasExpDust,		// °æÇèÄ¡ ¸ÕÁö¿´´ø °Í
+	Undefined = 0,	// ì´ˆê¸°í™” ê°’
+	WasExpDust,		// ê²½í—˜ì¹˜ ë¨¼ì§€ì˜€ë˜ ê²ƒ
 	Count,
 };
 
 enum class EnemyGrade
 {
-	Undefined = 0,	// ÃÊ±âÈ­ °ª
-	Common,			// ÀÏ¹İ		| ÀÚ¿ø °ø±Ş¿ë1
-	UnCommon,		// Áß±Ş		| ÀÚ¿ø °ø±Ş¿ë2
-	Danger,			// À§Çè		| ÇÃ·¹ÀÌ Èå¸§ º¯È­ À¯µµ
-	Special,		// Æ¯¼ö		| ÇÃ·¹ÀÌ Èå¸§ º¯È­ À¯µµ
+	Undefined = 0,	// ì´ˆê¸°í™” ê°’
+	Common,			// ì¼ë°˜		| ìì› ê³µê¸‰ìš©1
+	UnCommon,		// ì¤‘ê¸‰		| ìì› ê³µê¸‰ìš©2
+	Danger,			// ìœ„í—˜		| í”Œë ˆì´ íë¦„ ë³€í™” ìœ ë„
+	Special,		// íŠ¹ìˆ˜		| í”Œë ˆì´ íë¦„ ë³€í™” ìœ ë„
 	Count,
 };
 
 enum class EnemyRole
 {
-	Undefined = 0,	// ÃÊ±âÈ­ °ª
-	Tanky,			// °íÃ¼·ÂÇü | ³ôÀº HP ¹èÀ²
-	HighLoot,		// °íº¸»óÇü	| ³ôÀº ÀÚ¿ø ¹èÀ²
-	Ranger,			// °ø°İÇü	| Åõ»çÃ¼
-	Mutant,			// º¯ÀÌÇü	| ºĞ¿­/°­È­
+	Undefined = 0,	// ì´ˆê¸°í™” ê°’
+	Tanky,			// ê³ ì²´ë ¥í˜• | ë†’ì€ HP ë°°ìœ¨
+	HighLoot,		// ê³ ë³´ìƒí˜•	| ë†’ì€ ìì› ë°°ìœ¨
+	Ranger,			// ê³µê²©í˜•	| íˆ¬ì‚¬ì²´
+	Mutant,			// ë³€ì´í˜•	| ë¶„ì—´/ê°•í™”
 	Count,
 };
 
 struct EnemyJsonInfo
 {
-	// °ø¿ë ÇÊµå
+	// ê³µìš© í•„ë“œ
 	EnemyCategory category_ = EnemyCategory::Undefined;
 	EnemyGrade grade_ = EnemyGrade::Undefined;
 
-	// ¼±ÅÃÀûÀ¸·Î °ªÀÌ Á¸ÀçÇÏ´Â ÇÊµå (¿¹: ¿ªÇÒ±ºÀº Special µî±Ş¿¡¼­¸¸ Á¸Àç)
+	// ì„ íƒì ìœ¼ë¡œ ê°’ì´ ì¡´ì¬í•˜ëŠ” í•„ë“œ (ì˜ˆ: ì—­í• êµ°ì€ Special ë“±ê¸‰ì—ì„œë§Œ ì¡´ì¬)
 	EnemyRole role_ = EnemyRole::Undefined;
 
 	MovementPattern movement_pattern_ = MovementPattern::Undefined;
@@ -56,7 +66,7 @@ struct EnemyJsonInfo
 	_int coin_reward_ = 0;
 	//_Color color_ = Colors::White;
 	
-	// ÇÊ¿ä¿¡ µû¶ó Ãß°¡ Á¤º¸ ÇÊµå (¿¹: HP ¹èÀ², ÀÚ¿ø ¹èÀ², °ø°İ ÆĞÅÏ µî)
+	// í•„ìš”ì— ë”°ë¼ ì¶”ê°€ ì •ë³´ í•„ë“œ (ì˜ˆ: HP ë°°ìœ¨, ìì› ë°°ìœ¨, ê³µê²© íŒ¨í„´ ë“±)
 
 	EnemyJsonInfo() DEFAULT;
 };

@@ -1,9 +1,6 @@
 ﻿#include "framework.h"
 #include "StageManager.h"
 
-#include "GamePlaySystems/ObjectManager.h"
-#include "GamePlaySystems/EnemyDataManager.h"
-
 #include "GamePlay/Scenes/GamePlayScene.h"
 
 _int StageManager::Update(_double _delta_time)
@@ -140,6 +137,8 @@ void StageManager::_OnPlay()
 	{
 		spawn_timer_ = 0.0;
 
+		// 생성할 몬스터 종류와 등급(ID)는 스테이지 매니저에서 결정한다
+		// 현재는 ID를 임의로 카테고리 + 등급 조합으로 구성했지만, ID가 생긴다면 ID로 조회하도록 변경해야함
 		const auto category = EnemyCategory::WasExpDust;
 		const auto grade = _Random.Range(EnemyGrade::Common, EnemyGrade::Special);
 
@@ -147,18 +146,8 @@ void StageManager::_OnPlay()
 		// ID 생성 방식은 JSON 데이터 매니저에서 해당 ID로 데이터를 조회할 수 있도록 일관된 방식으로 생성해야 함
 		const auto enemy_id = s_uint(category) + s_uint(grade);
 
-		// JSON 데이터 매니저에서 해당 등급과 카테고리에 맞는 데이터를 가져온다
-		const auto enemy_spawn_data = _EnemyDataMgr.GetData(enemy_id);
-
-		// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
-		if(nullptr == enemy_spawn_data)
-		{
-			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found for category: %d, grade: %d", s_int(category), s_int(grade)));
-			return;
-		}
-		
-		// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
-		object_manager_->SpawnEnemy(enemy_spawn_data);
+		// 씬에 적 스폰 요청
+		play_scene_->SpawnEnemy(enemy_id);
 	}
 }
 

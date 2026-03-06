@@ -1,15 +1,15 @@
-#include "framework.h"
+﻿#include "framework.h"
 #include "Status.h"
 
 #include "Actors/GameObjectBase.h"
 
-void Status::HP(const _float _hp)
+void Status::SetCurrentHp(const _float _hp)
 {
-	hp_ = _hp;
+	current_hp_ = _hp;
 
-	if (0 >= hp_)
+	if (0 >= current_hp_)
 	{
-		hp_ = 0;
+		current_hp_ = 0;
 		gameobject_->Destroy();
 	}
 }

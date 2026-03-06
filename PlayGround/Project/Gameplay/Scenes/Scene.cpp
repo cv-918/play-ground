@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "Scene.h"
 
 #include "Actors/GameObjectBase.h"
@@ -36,11 +36,11 @@ _int Scene::LateUpdate(_double _delta_time)
 
 void Scene::Render(_double _delta_time)
 {
-	// s, [ Å×½ºÆ®¿ë ¹è°æ ±×¸®±â ]
+	// s, [ í…ŒìŠ¤íŠ¸ìš© ë°°ê²½ ê·¸ë¦¬ê¸° ]
 	static _Rect rt = _Rect(_Point(0, 0), _Size(WINCX, WINCY));
 	_DrawFunc::FillRectangle(rt, Colors::Pearl);
-	_DrawFunc::DrawString(rt.Center(), debug_scene_name_);
-	// e, [ Å×½ºÆ®¿ë ¹è°æ ±×¸®±â ]
+	_DrawFunc::DrawString(rt.GetCenter(), debug_scene_name_);
+	// e, [ í…ŒìŠ¤íŠ¸ìš© ë°°ê²½ ê·¸ë¦¬ê¸° ]
 
 	object_manager_->Render(_delta_time);
 	ui_manager_->Render(_delta_time);

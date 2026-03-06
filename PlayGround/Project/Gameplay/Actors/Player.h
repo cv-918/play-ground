@@ -1,22 +1,22 @@
-#pragma once
+ï»¿#pragma once
 
 #include "UnitBase.h"
 
 class Player final : public Unit
 {
 private:
-	virtual _bool Initialize() override;
-	virtual _int Update(_double _delta_time) override;
-	virtual void DebugRender(_double _delta_time) override;
+	_bool Initialize() override;
+	_int Update(_double _delta_time) override;
+	void DebugRender(_double _delta_time) override;
 
-	virtual void OnDestroy() override;
+	void OnDestroy() override;
 
-	// ICollidableÀ»(¸¦) ÅëÇØ »ó¼ÓµÊ
-	virtual void OnCollisionEnter(Collider* _this, Collider* _other) override;
-	virtual void OnCollisionStay(Collider* _this, Collider* _other) override;
+	// ICollidableì„(ë¥¼) í†µí•´ ìƒì†ë¨
+	void OnCollisionEnter(Collider* _this, Collider* _other) override;
+	void OnCollisionStay(Collider* _this, Collider* _other) override;
 
-	// IDamagableÀ»(¸¦) ÅëÇØ »ó¼ÓµÊ
-	virtual void GetDamage(_float _damage) override;
+	// IDamagableì„(ë¥¼) í†µí•´ ìƒì†ë¨
+	void GetDamage(_float _damage) override;
 
 private:
 	_int _ControllRoutine(_double _delta_time);
@@ -24,12 +24,12 @@ private:
 	void _ShowDebugInfo();
 	
 private:
-	const class InputManager* input_manager_ = nullptr; // ¸Å ÇÁ·¹ÀÓ Get È£Ãâ ¹æÁö¿ë InputManager Ä³½Ì
+	const class InputManager* input_manager_ = nullptr; // ë§¤ í”„ë ˆì„ Get í˜¸ì¶œ ë°©ì§€ìš© InputManager ìºì‹±
 
-	// ¹İÁö¸§ÀÓ
+	// ë°˜ì§€ë¦„ì„
 	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {};
 
-	// µğ¹ö±×
+	// ë””ë²„ê·¸
 	enum DrawDebugInfoType
 	{
 		None,

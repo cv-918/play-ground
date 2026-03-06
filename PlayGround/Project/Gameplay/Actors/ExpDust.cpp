@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "ExpDust.h"
 
 #include "GamePlaySystems/EnemyDataManager.h"
@@ -8,37 +8,37 @@ _bool ExpDust::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	// ´õ½ºÆ® identifier ¼³Á¤
+	// ë”ìŠ¤íŠ¸ identifier ì„¤ì •
 	static _int instance_count = 0;
 	Name(_T("Enemy") + std::to_wstring(++instance_count));
 
-	// ÄÄÆ÷³ÍÆ® ¼³Á¤
+	// ì»´í¬ë„ŒíŠ¸ ì„¤ì •
 
-	// Æ®·£½ºÆû ÄÄÆ÷³ÍÆ® ¼³Á¤¿¡ ÇÊ¿äÇÑ °ª
+	// íŠ¸ëœìŠ¤í¼ ì»´í¬ë„ŒíŠ¸ ì„¤ì •ì— í•„ìš”í•œ ê°’
 	_Vector3 position;
 	_Vector3 look_point;
 
 	switch (info_->grade_)
 	{
 	case EnemyGrade::Common:
-		// ÀÏ¹İ | ÀÚ¿ø °ø±Ş¿ë1
+		// ì¼ë°˜ | ìì› ê³µê¸‰ìš©1
 		color_ = Colors::Pearl;
 		break;
 	case EnemyGrade::UnCommon:
-		// Áß±Ş | ÀÚ¿ø °ø±Ş¿ë2 | ÀÌµ¿ ¼Óµµ ºü¸§
+		// ì¤‘ê¸‰ | ìì› ê³µê¸‰ìš©2 | ì´ë™ ì†ë„ ë¹ ë¦„
 		color_ = Colors::LightPink;
 		break;
 	case EnemyGrade::Danger:
-		// À§Çè | ÇÃ·¹ÀÌ Èå¸§ º¯È­ À¯µµ | Ãæµ¹ µ¥¹ÌÁö ÀÖÀ½
+		// ìœ„í—˜ | í”Œë ˆì´ íë¦„ ë³€í™” ìœ ë„ | ì¶©ëŒ ë°ë¯¸ì§€ ìˆìŒ
 		color_ = Colors::Pink;
 		break;
 	case EnemyGrade::Special:
-		// Æ¯¼ö | ÇÃ·¹ÀÌ Èå¸§ º¯È­ À¯µµ | ¿ªÇÒ±º ºÎ¿©¹ŞÀ½
+		// íŠ¹ìˆ˜ | í”Œë ˆì´ íë¦„ ë³€í™” ìœ ë„ | ì—­í• êµ° ë¶€ì—¬ë°›ìŒ
 		color_ = Colors::Salmon;
 		role_ = s_cast(EnemyRole, _Random.Range(s_int(EnemyRole::Tanky), s_int(EnemyRole::Count) - 1));
 		break;
 	default:
-		// ·Î±ë
+		// ë¡œê¹…
 		break;
 	}
 
@@ -49,8 +49,8 @@ _bool ExpDust::Initialize()
 	case MovementPattern::Directional:
 	case MovementPattern::Target:
 	{
-		// ½ºÅ×ÀÌÁö°¡ ÁøÇà ÁßÀÏ °æ¿ì ÃÊ±â À§Ä¡¸¦ È­¸é ¹ÛÀ¸·Î ÇÑÁ¤ÇØ¾ß ÇÑ´Ù
-		// ¸¸¾à, À§Ä¡°¡ È­¸é ¾È¿¡ ÀÖÀ» °æ¿ì È­¸é ÁßÁ¡¿¡ ´ëÇÑ ¹æÇâº¤ÅÍ¸¦ ±¸ÇÏ°í ¹İ´ë ¹æÇâÀ¸·Î ¹Ğ¾î³½´Ù
+		// ìŠ¤í…Œì´ì§€ê°€ ì§„í–‰ ì¤‘ì¼ ê²½ìš° ì´ˆê¸° ìœ„ì¹˜ë¥¼ í™”ë©´ ë°–ìœ¼ë¡œ í•œì •í•´ì•¼ í•œë‹¤
+		// ë§Œì•½, ìœ„ì¹˜ê°€ í™”ë©´ ì•ˆì— ìˆì„ ê²½ìš° í™”ë©´ ì¤‘ì ì— ëŒ€í•œ ë°©í–¥ë²¡í„°ë¥¼ êµ¬í•˜ê³  ë°˜ëŒ€ ë°©í–¥ìœ¼ë¡œ ë°€ì–´ë‚¸ë‹¤
 
 		const _Vector3 generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.CurrState());
 		const _Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
@@ -58,13 +58,13 @@ _bool ExpDust::Initialize()
 
 		position = generated_position + (to_center * radius);
 
-		const auto& nav_mesh = _StageMgr.GetNavMesh(); // ³×ºñ ¸Ş½Ã¸¦ ÅÂ¿ì´Â°Ç ¾Æ´Ï°í ¹üÀ§¸¸ »ç¿ëÇÑ´Ù
+		const auto& nav_mesh = _StageMgr.GetNavMesh(); // ë„¤ë¹„ ë©”ì‹œë¥¼ íƒœìš°ëŠ”ê±´ ì•„ë‹ˆê³  ë²”ìœ„ë§Œ ì‚¬ìš©í•œë‹¤
 		if (nav_mesh.PtInRect(position))
 		{
 			position += to_center * (radius * -1.f);
 		}
 
-		// ³×ºñ ¸Ş½ÃÀÇ ¿µ¿ªº¸´Ù ÀÛÀº(3/4) ¿µ¿ª ³»ºÎÀÇ ÀÓÀÇÀÇ À§Ä¡¸¦ ¹Ù¶óº¸µµ·Ï ¼³Á¤
+		// ë„¤ë¹„ ë©”ì‹œì˜ ì˜ì—­ë³´ë‹¤ ì‘ì€(3/4) ì˜ì—­ ë‚´ë¶€ì˜ ì„ì˜ì˜ ìœ„ì¹˜ë¥¼ ë°”ë¼ë³´ë„ë¡ ì„¤ì •
 		const auto& look_target_area = nav_mesh * 0.75f;
 		look_point = { _Random.Range(look_target_area.Left(), look_target_area.Right()),
 			_Random.Range(look_target_area.Top(), look_target_area.Bottom()) };
@@ -73,16 +73,16 @@ _bool ExpDust::Initialize()
 	}
 
 	/*
-		#1. ÃÊ±â SRT(Scale, Rotation, Translation) ¼³Á¤
-		- Æ®·£½ºÆû ¹× ¹«ºê¸ÕÆ® ÄÄÆ÷³ÍÆ®¿¡ ´ëÇÑ ¼³Á¤
+		#1. ì´ˆê¸° SRT(Scale, Rotation, Translation) ì„¤ì •
+		- íŠ¸ëœìŠ¤í¼ ë° ë¬´ë¸Œë¨¼íŠ¸ ì»´í¬ë„ŒíŠ¸ì— ëŒ€í•œ ì„¤ì •
 
-		* Å©±â : ·¹º§ ºĞ±â
-		* À§Ä¡ : ÀÌµ¿ Å¸ÀÔ(·¹º§¿¡ ÀÇÇØ ºĞ±â)¿¡ µû¶ó
-				 -> Stopped ÀÎ °æ¿ì ¹«Á¶°Ç È­¸é ³»ºÎ¿¡ »ı¼ºÇØ¾ßÇÔ
-				 -> Directional | ToTarget ÀÏ °æ¿ì ½ºÆù °¡´ÉÇÑ ÀüÃ¼ ¿µ¿ª
-				 -> ½ºÅ×ÀÌÁö ÀÌµ¿¿¡ ÀÇÇÑ ÃÊ±â »ı¼ºÀÎÁö ½ºÅ×ÀÌÁö ÁøÇà ÁßÀÇ Áö¼Ó »ı¼ºÀÎÁö¿¡ µû¶ó¼­ ½ºÆù ¿µ¿ª º¯°æµÇ¾î¾ß ÇÔ
+		* í¬ê¸° : ë ˆë²¨ ë¶„ê¸°
+		* ìœ„ì¹˜ : ì´ë™ íƒ€ì…(ë ˆë²¨ì— ì˜í•´ ë¶„ê¸°)ì— ë”°ë¼
+				 -> Stopped ì¸ ê²½ìš° ë¬´ì¡°ê±´ í™”ë©´ ë‚´ë¶€ì— ìƒì„±í•´ì•¼í•¨
+				 -> Directional | ToTarget ì¼ ê²½ìš° ìŠ¤í° ê°€ëŠ¥í•œ ì „ì²´ ì˜ì—­
+				 -> ìŠ¤í…Œì´ì§€ ì´ë™ì— ì˜í•œ ì´ˆê¸° ìƒì„±ì¸ì§€ ìŠ¤í…Œì´ì§€ ì§„í–‰ ì¤‘ì˜ ì§€ì† ìƒì„±ì¸ì§€ì— ë”°ë¼ì„œ ìŠ¤í° ì˜ì—­ ë³€ê²½ë˜ì–´ì•¼ í•¨
 				 
-		* È¸Àü : ·¹º§(ÀÌµ¿ Å¸ÀÔ) ¹× ÃÊ±â »ı¼º À§Ä¡¿¡ µû¶ó¼­
+		* íšŒì „ : ë ˆë²¨(ì´ë™ íƒ€ì…) ë° ì´ˆê¸° ìƒì„± ìœ„ì¹˜ì— ë”°ë¼ì„œ
 	*/
 
 	transform_->Scale(info_->scale_);
@@ -113,24 +113,24 @@ _bool ExpDust::Initialize()
 	movement_->MoveDir((look_point - position).Normalized());
 
 	/*
-		#2. °ø°İ ÆĞÅÏ ¼³Á¤
-		- ÄÄ¹î ¹× ½ºÅ×ÀÌÅÍ½º ÄÄÆ÷³ÍÆ®¿¡ ´ëÇÑ ¼³Á¤
-		°ø°İ ÆĞÅÏÀÌ ÀÖ´Â ·¹º§ÀÇ °æ¿ì °ø°İ ÆĞÅÏ ¼³Á¤
+		#2. ê³µê²© íŒ¨í„´ ì„¤ì •
+		- ì»´ë±ƒ ë° ìŠ¤í…Œì´í„°ìŠ¤ ì»´í¬ë„ŒíŠ¸ì— ëŒ€í•œ ì„¤ì •
+		ê³µê²© íŒ¨í„´ì´ ìˆëŠ” ë ˆë²¨ì˜ ê²½ìš° ê³µê²© íŒ¨í„´ ì„¤ì •
 	*/
 
-	status_->Level(s_int(info_->grade_));
-	status_->HP(info_->hp_);
+	status_->SetLv(s_int(info_->grade_));
+	status_->SetCurrentHp(info_->hp_);
 
-	object_description_ = _T("Lv. ") + std::to_wstring(status_->Level());
+	object_description_ = _T("Lv. ") + std::to_wstring(status_->GetLv());
 
-	// ¿ªÇÒ±ºÀ» ºÎ¿©¹Ş¾ÒÀ» °æ¿ì ÇØ´ç Á¤º¸±îÁö description ¿¡ Ãß°¡
+	// ì—­í• êµ°ì„ ë¶€ì—¬ë°›ì•˜ì„ ê²½ìš° í•´ë‹¹ ì •ë³´ê¹Œì§€ description ì— ì¶”ê°€
 	if (role_ != EnemyRole::Undefined)
 	{
 		std::vector<std::wstring> role_strings = {
-			_T("Tanky | ³ôÀº Ã¼·Â"),
-			_T("HighLoot | ¸¹Àº ÀÚ¿ø"),
-			_T("Ranger | °ø°İ-Åõ»çÃ¼-"),
-			_T("Mutant | ºĞ¿­/°­È­"),
+			_T("Tanky | ë†’ì€ ì²´ë ¥"),
+			_T("HighLoot | ë§ì€ ìì›"),
+			_T("Ranger | ê³µê²©-íˆ¬ì‚¬ì²´-"),
+			_T("Mutant | ë¶„ì—´/ê°•í™”"),
 		};
 
 		object_description_ += _T("\n");
@@ -143,7 +143,7 @@ _bool ExpDust::Initialize()
 
 _int ExpDust::Update(_double _delta_time)
 {
-	// ¸ó½ºÅÍ ÀÏ½ÃÁ¤Áö »óÅÂÀÏ ¶§´Â ¾÷µ¥ÀÌÆ® ·ÎÁ÷À» ½ÇÇàÇÏÁö ¾Êµµ·Ï Á¦¾î
+	// ëª¬ìŠ¤í„° ì¼ì‹œì •ì§€ ìƒíƒœì¼ ë•ŒëŠ” ì—…ë°ì´íŠ¸ ë¡œì§ì„ ì‹¤í–‰í•˜ì§€ ì•Šë„ë¡ ì œì–´
 	if (_GameState.MonsterPause())
 		return 0;
 
@@ -161,14 +161,14 @@ void ExpDust::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
-	// °íº¸»óÇüÀÇ °æ¿ì ÀÏ¹İ µî±Şº¸´Ù ´õ ¸¹Àº ÄÚÀÎ º¸»ó
+	// ê³ ë³´ìƒí˜•ì˜ ê²½ìš° ì¼ë°˜ ë“±ê¸‰ë³´ë‹¤ ë” ë§ì€ ì½”ì¸ ë³´ìƒ
 	const auto coin_reward_amount = info_->coin_reward_ * ((role_ == EnemyRole::HighLoot) ? 2 : 1);
 	_GameState.AddCoin(coin_reward_amount);
 	
-	// ·Î±ë
+	// ë¡œê¹…
 	_DEBUG_LOG(_T("[Player] Coin count : %d(+%d)"), _GameState.CoinCount(), coin_reward_amount);
 
-	// ÄÚÀÎ È¹µæ ÅØ½ºÆ® ui ³ëÃâ
+	// ì½”ì¸ íšë“ í…ìŠ¤íŠ¸ ui ë…¸ì¶œ
 }
 
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -182,13 +182,13 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 		case EnemyGrade::Danger:
 		case EnemyGrade::Special:
 		{
-			// ´õ½ºÆ®ÀÇ IDamagable ÇÚµé·¯ ½Ã½ºÅÛ¿¡ ¸Ş½ÃÁö º¸³»¼­ µ¥¹ÌÁö ÀÔÈ÷±â
+			// ë”ìŠ¤íŠ¸ì˜ IDamagable í•¸ë“¤ëŸ¬ ì‹œìŠ¤í…œì— ë©”ì‹œì§€ ë³´ë‚´ì„œ ë°ë¯¸ì§€ ì…íˆê¸°
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(1.f);
 				});
 
-			// °ø°İ ÄğÅ¸ÀÓ µ¿¾ÈÀº °°Àº ´õ½ºÆ®¿¡ ´ëÇØ¼­´Â Ãæµ¹ÀÌ ÀÏ¾î³ªÁö ¾Êµµ·Ï Å¸ÀÌ¸Ó ¼³Á¤
-			// °ø°İ¼Óµµ °íÁ¤°ª ÀÏ´ÜÀº ¿©±â¿¡ Áö¿ªº¯¼ö·Î ÇÏµåÄÚµù
+			// ê³µê²© ì¿¨íƒ€ì„ ë™ì•ˆì€ ê°™ì€ ë”ìŠ¤íŠ¸ì— ëŒ€í•´ì„œëŠ” ì¶©ëŒì´ ì¼ì–´ë‚˜ì§€ ì•Šë„ë¡ íƒ€ì´ë¨¸ ì„¤ì •
+			// ê³µê²©ì†ë„ ê³ ì •ê°’ ì¼ë‹¨ì€ ì—¬ê¸°ì— ì§€ì—­ë³€ìˆ˜ë¡œ í•˜ë“œì½”ë”©
 			const _double attack_cooltime = 4.f;
 			_this->SetTimerForTarget(_other, attack_cooltime);
 		}
@@ -210,13 +210,13 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 		case EnemyGrade::Danger:
 		case EnemyGrade::Special:
 		{
-			// ´õ½ºÆ®ÀÇ IDamagable ÇÚµé·¯ ½Ã½ºÅÛ¿¡ ¸Ş½ÃÁö º¸³»¼­ µ¥¹ÌÁö ÀÔÈ÷±â
+			// ë”ìŠ¤íŠ¸ì˜ IDamagable í•¸ë“¤ëŸ¬ ì‹œìŠ¤í…œì— ë©”ì‹œì§€ ë³´ë‚´ì„œ ë°ë¯¸ì§€ ì…íˆê¸°
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(1.f);
 				});
 
-			// °ø°İ ÄğÅ¸ÀÓ µ¿¾ÈÀº °°Àº ´õ½ºÆ®¿¡ ´ëÇØ¼­´Â Ãæµ¹ÀÌ ÀÏ¾î³ªÁö ¾Êµµ·Ï Å¸ÀÌ¸Ó ¼³Á¤
-			// °ø°İ¼Óµµ °íÁ¤°ª ÀÏ´ÜÀº ¿©±â¿¡ Áö¿ªº¯¼ö·Î ÇÏµåÄÚµù
+			// ê³µê²© ì¿¨íƒ€ì„ ë™ì•ˆì€ ê°™ì€ ë”ìŠ¤íŠ¸ì— ëŒ€í•´ì„œëŠ” ì¶©ëŒì´ ì¼ì–´ë‚˜ì§€ ì•Šë„ë¡ íƒ€ì´ë¨¸ ì„¤ì •
+			// ê³µê²©ì†ë„ ê³ ì •ê°’ ì¼ë‹¨ì€ ì—¬ê¸°ì— ì§€ì—­ë³€ìˆ˜ë¡œ í•˜ë“œì½”ë”©
 			const _double attack_cooltime = 4.f;
 			_this->SetTimerForTarget(_other, attack_cooltime);
 		}

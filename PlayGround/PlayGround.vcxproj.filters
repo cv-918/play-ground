@@ -68,7 +68,7 @@
     <ClInclude Include="Project\Gameplay\Scenes\GamePlayScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LobbyScene.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
-    <ClInclude Include="Project\Gameplay\UI\UIButton.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\Button.h" />
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
     <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
@@ -77,8 +77,11 @@
     <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
-    <ClInclude Include="Project\Gameplay\UI\UIText.h" />
-    <ClInclude Include="Project\Gameplay\UI\UIProgressBar.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\Text.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\ProgressBar.h" />
+    <ClInclude Include="Project\Gameplay\Common\CommonGamePlayDefine.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\WidgetBase.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -131,7 +134,7 @@
     <ClCompile Include="Project\Gameplay\Scenes\GamePlayScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LobbyScene.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\UIButton.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
@@ -139,7 +142,9 @@
     <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\UIText.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\UIProgressBar.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
   </ItemGroup>
 </Project>

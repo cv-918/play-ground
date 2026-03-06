@@ -41,16 +41,20 @@ struct _Size
 
 struct _Rect
 {
-	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() }, size_{ _Size::Zero() } {}
-	constexpr _Rect(const _Point& _lt, const _Point& _rb) : points_{ _lt, _rb }, size_{ _rb.x - _lt.x, _rb.y - _lt.y } {}
-	constexpr _Rect(const _Point& _lt, const _Size& _size) : points_{ _lt, _Point{ _lt.x + _size.x, _lt.y + _size.y } }, size_{ _size } {}
-	constexpr _Rect(const _int _left, const _int _top, const _int _right, const _int _bottom) : points_{ _Point(_left, _top), _Point(_right, _bottom) }, size_{ _right - _left, _bottom - _top } {}
+	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() } {}
+	constexpr _Rect(const _Point& _lt, const _Point& _rb) : points_{ _lt, _rb } {}
+	constexpr _Rect(const _Point& _lt, const _Size& _size) : points_{ _lt, _Point{ _lt.x + _size.x, _lt.y + _size.y } } {}
+	constexpr _Rect(const _int _left, const _int _top, const _int _right, const _int _bottom) : points_{ _Point(_left, _top), _Point(_right, _bottom) } {}
 
 	static constexpr _Rect Zero() { return _Rect{}; }
 
-	_Point& Lt() { return points_[0]; }
-	_Point& Rb() { return points_[1]; }
+	_Point GetLt() const { return points_[0]; }
+	_Point GetRt() const { return { points_[1].x, points_[0].y }; }
+	_Point GetRb() const { return points_[1]; }
+	_Point GetLb() const { return { points_[0].x, points_[1].y }; }
 
+	_Point GetCenter() const { return { (points_[0].x + points_[1].x) / 2, (points_[0].y + points_[1].y) / 2 }; }
+	
 	_int Left() const { return points_[0].x; }
 	_int Top() const { return points_[0].y; }
 	_int Right() const { return points_[1].x; }
@@ -61,18 +65,28 @@ struct _Rect
 	_float Right_f() const { return s_float(points_[1].x); }
 	_float Bottom_f() const { return s_float(points_[1].y); }
 
-	_int Width() const { return size_.x; }
-	_int Height() const { return size_.y; }
-	_Size Size() const { return size_; }
+	_int Width() const { return points_[1].x - points_[0].x; }
+	_int Height() const { return points_[1].y - points_[0].y; }
 
-	_Point Center() const { return _Point(Left() + Width() / 2, Top() + Height() / 2); }
+	_Size GetSize() const { return { points_[1].x - points_[0].x, points_[1].y - points_[0].y }; }
 
-	const RECT ToRECT() const { return RECT{ points_[0].x, points_[0].y, points_[1].x, points_[1].y }; }
+	// 위치 이동 함수들
+	void MoveLtTo(const _Point& _lt);
+	void MoveCenterTo(const _Point& _center);
 
+	void MoveX(const _int _dx) { MoveLtTo({ Left() + _dx, Top() }); }
+	void MoveY(const _int _dy) { MoveLtTo({ Left(), Top() + _dy }); }
+
+	// 크기 조절 함수들
+	void ScaleFromLt(const _Size& _new_size);
+	void ScaleFromCenter(const _Size& _new_size);
+
+	void ScaleX(const _int _dWidth) { ScaleFromLt({ Width() + _dWidth, Height() }); }
+	void ScaleY(const _int _dHeight) { ScaleFromLt({ Width(), Height() + _dHeight }); }
+
+	// 점이 사각형 안에 있는지 확인하는 함수들
 	_bool PtInRect(const _Point& _pt) const;
 	_bool PtInRect(const _Vector3& _vec) const;
-
-	void MoveToCenter(const _Point& _center);
 
 public:
 	_Rect& operator*=(const _float _scale);
@@ -80,5 +94,4 @@ public:
 
 private:
 	_Point points_[2]; // lt, rb
-	_Size size_;
 };

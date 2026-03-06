@@ -8,7 +8,7 @@ _int ObjectManager::Update(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->Active())
+		if (game_object->IsActive())
 			game_object->Update(_delta_time);
 	}
 
@@ -19,7 +19,7 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->Active())
+		if (game_object->IsActive())
 			game_object->LateUpdate(_delta_time);
 	}
 
@@ -32,7 +32,7 @@ void ObjectManager::Render(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->Active())
+		if (game_object->IsActive())
 		{
 			game_object->Render(_delta_time);
 			game_object->DebugRender(_delta_time);
@@ -108,7 +108,7 @@ void ObjectManager::_CleanUp()
 			if (obj->IsDestroyed())
 			{
 				// 파괴되는 오브젝트의 이름 로깅
-				_SYSTEM_LOG_INFO(_T("Destroying GameObject : %s"), obj->Name().c_str());
+				_SYSTEM_LOG_INFO(L"ObjectManager: Destroying game object - Name: %s, ID: %d", obj->Name().c_str(), obj->ID());
 
 				// 파괴 시 필요한 로직 수행 후 메모리 해제
 				obj->OnDestroy();

@@ -1,11 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 /*
 	Static Info.
-	°ÔÀÓÀÌ ½ÇÇàµÇ±â Àü ¹Ì¸® Á¤ÀÇµÇ¾î ÀÖ´Â Á¤º¸µé
-
-	0223.
-	½ºÄÌ·¹Åæ ÆäÀÌÁîÀÌ±â ¶§¹®¿¡ ¿©±â¿¡ ÀÖ´Â Á¤º¸µéÀº ¾ğÁ¦µçÁö State Å¬·¡½º·Î ºĞ¸®µÉ ¼ö ÀÖ´Ù
+	ê²Œì„ì´ ì‹¤í–‰ë˜ê¸° ì „ ë¯¸ë¦¬ ì •ì˜ë˜ì–´ ìˆëŠ” ì •ë³´ë“¤
 */
 
 #define _StageMgr StageManager::Get()
@@ -23,6 +20,7 @@ enum class StageState
 };
 
 class ObjectManager;
+class UIManager;
 class GamePlayScene;
 
 class StageManager
@@ -39,8 +37,6 @@ public:
 
 	StageState CurrState() const { return curr_state_; }
 	void ChangeState(StageState _new_state);
-
-	void SetObjectManager(ObjectManager* _object_manager) { object_manager_ = _object_manager; }
 
 	const _Rect& GetNavMesh() const { return *stage_nav_mesh_; }
 	void SetNavMesh(const _Rect& _rt);
@@ -69,7 +65,6 @@ private:
 
 	_double spawn_timer_ = 0.0;
 	_double spawn_interval_ = 100.0;
-	ObjectManager* object_manager_ = nullptr;
 
 	const _Rect* stage_nav_mesh_ = nullptr;
 	_Rect generation_area_[4];

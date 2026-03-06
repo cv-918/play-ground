@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Scene.h"
 
 class StageManager;
@@ -19,6 +19,10 @@ public:
 	void OnExit() override;
 
 public:
+	void SpawnPlayer();
+	void SpawnEnemy(_uint _enemy_id);
+
+	// UI 노출 메서드들
 	void ShowResultUI();
 	void ShowDamageUI(_float _damage, const _Point& _position);
 
@@ -26,5 +30,5 @@ private:
 	StageManager* stage_manager_ = nullptr;
 	Background* background_ = nullptr;
 
-	UIButton* return_btn_ = nullptr;
+	Button* return_btn_ = nullptr;
 };

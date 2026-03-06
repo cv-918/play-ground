@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 
@@ -25,7 +25,7 @@ public:
 	virtual ~IInitializable() DEFAULT;
 
 	virtual _bool Initialize() { MAKE_INITIALIZED;  return true; }
-	// ±âº» ±¸ÇöÀº ÃÊ±âÈ­ ¼º°øÀ¸·Î °£ÁÖ. ÇÊ¿ä¿¡ µû¶ó ¿À¹ö¶óÀÌµåÇÏ¿© ÃÊ±âÈ­ ·ÎÁ÷ ±¸Çö.
+	// ê¸°ë³¸ êµ¬í˜„ì€ ì´ˆê¸°í™” ì„±ê³µìœ¼ë¡œ ê°„ì£¼. í•„ìš”ì— ë”°ë¼ ì˜¤ë²„ë¼ì´ë“œí•˜ì—¬ ì´ˆê¸°í™” ë¡œì§ êµ¬í˜„.
 
 public:
 	_bool IsInitialized() const { return initialized_; }
@@ -51,7 +51,7 @@ public:
 	void Activate() { is_enable_ = true; is_visible_ = true; }
 	void InActivate() { is_enable_ = false; is_visible_ = false; }
 
-	_bool Active() const { return is_enable_ && is_visible_; }
+	_bool IsActive() const { return is_enable_ && is_visible_; }
 
 	_bool Enable() const { return is_enable_; }
 	void Enable(const _bool _enabled) { is_enable_ = _enabled; }
@@ -71,7 +71,7 @@ public:
 	virtual ~IReleasable() DEFAULT;
 
 	virtual _bool Release() { return true; }
-	// ±âº» ±¸ÇöÀº ÇØÁ¦ ¼º°øÀ¸·Î °£ÁÖ. ÇÊ¿ä¿¡ µû¶ó ¿À¹ö¶óÀÌµåÇÏ¿© ÇØÁ¦ ·ÎÁ÷ ±¸Çö.
+	// ê¸°ë³¸ êµ¬í˜„ì€ í•´ì œ ì„±ê³µìœ¼ë¡œ ê°„ì£¼. í•„ìš”ì— ë”°ë¼ ì˜¤ë²„ë¼ì´ë“œí•˜ì—¬ í•´ì œ ë¡œì§ êµ¬í˜„.
 };
 
 class IIdentifiable abstract

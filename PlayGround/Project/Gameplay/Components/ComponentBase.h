@@ -1,14 +1,4 @@
-#pragma once
-
-enum class ComponentType
-{
-	Undefined,
-	Transform,
-	Status,
-	Movement,
-	Collider,
-	Combat,
-};
+﻿#pragma once
 
 class GameObjectBase;
 class ComponentBase abstract
