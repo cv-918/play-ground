@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "StageManager.h"
 
 #include "GamePlaySystems/ObjectManager.h"
@@ -8,10 +8,10 @@
 
 _int StageManager::Update(_double _delta_time)
 {
-	// ½ºÅ×ÀÌÁö »óÅÂ¿Í »ó°ü¾ø´Â ¾÷µ¥ÀÌÆ® ·ÎÁ÷ Ã³¸®
+	// ìŠ¤í…Œì´ì§€ ìƒíƒœì™€ ìƒê´€ì—†ëŠ” ì—…ë°ì´íŠ¸ ë¡œì§ ì²˜ë¦¬
 	stage_timer_ += _delta_time;
 
-	// ½ºÅ×ÀÌÁö »óÅÂ¿¡ µû¸¥ ·ÎÁ÷ Ã³¸®
+	// ìŠ¤í…Œì´ì§€ ìƒíƒœì— ë”°ë¥¸ ë¡œì§ ì²˜ë¦¬
 	switch (curr_state_)
 	{
 	case StageState::Enter:		_OnEnter();		break;
@@ -33,7 +33,7 @@ _int StageManager::LateUpdate(_double _delta_time)
 
 void StageManager::Render(_double _delta_time)
 {
-	// ÇÊ¿äÇÏ´Ù¸é µğ¹ö±× Á¤º¸ ·»´õ
+	// í•„ìš”í•˜ë‹¤ë©´ ë””ë²„ê·¸ ì •ë³´ ë Œë”
 }
 
 void StageManager::ChangeState(StageState _new_state)
@@ -41,7 +41,7 @@ void StageManager::ChangeState(StageState _new_state)
 	prev_state_ = curr_state_;
 	curr_state_ = _new_state;
 
-	_DEBUG_LOG(_T("Stage state changed: %d -> %d"), s_int(prev_state_), s_int(curr_state_));
+	_SYSTEM_LOG_INFO(_T("Stage state changed: %d -> %d"), s_int(prev_state_), s_int(curr_state_));
 }
 
 void StageManager::SetNavMesh(const _Rect& _rt)
@@ -61,10 +61,10 @@ _Point StageManager::GeneratePosition(_bool _inclusive)
 		area_index_max = 4;
 	}
 
-	// ÀÓÀÇÀÇ »ı¼º ±¸¿ªÀ» ¼±ÅÃ
+	// ì„ì˜ì˜ ìƒì„± êµ¬ì—­ì„ ì„ íƒ
 	const auto area_index = _Random.Range(0, area_index_max);
 
-	// »ı¼º ±¸¿ª ¾ÈÀÇ ÀÓÀÇÀÇ ÁÂÇ¥¸¦ ¹İÈ¯
+	// ìƒì„± êµ¬ì—­ ì•ˆì˜ ì„ì˜ì˜ ì¢Œí‘œë¥¼ ë°˜í™˜
 	return {
 		_Random.Range(generation_area_[area_index].Left(), generation_area_[area_index].Right()),
 		_Random.Range(generation_area_[area_index].Top(), generation_area_[area_index].Bottom())
@@ -73,68 +73,68 @@ _Point StageManager::GeneratePosition(_bool _inclusive)
 
 void StageManager::OnPlayerDeath()
 {
-	// ÇÃ·¹ÀÌ¾î°¡ Á×À¸¸é °ÔÀÓ ÀüÃ¼ ÀÏ½ÃÁ¤Áö
+	// í”Œë ˆì´ì–´ê°€ ì£½ìœ¼ë©´ ê²Œì„ ì „ì²´ ì¼ì‹œì •ì§€
 	_GameState.Pause(true);
 
-	// ÇÃ·¹ÀÌ¾î ÂüÁ¶ ÃÊ±âÈ­
+	// í”Œë ˆì´ì–´ ì°¸ì¡° ì´ˆê¸°í™”
 	_GameState.Player(nullptr);
 
-	// °á°ú È­¸éÀ¸·Î ÀüÈ¯
+	// ê²°ê³¼ í™”ë©´ìœ¼ë¡œ ì „í™˜
 	ChangeState(StageState::Result);
 }
 
 void StageManager::_OnEnter()
 {
-	// ÃÊ±âÈ­ ·ÎÁ÷ Ã³¸®
-	// ¿¹½Ã: ¹è°æ ¿¬Ãâ, Å¸ÀÌ¸Ó ½ÃÀÛ, ÃÊ±â ½ºÆù µî
-	// ¿¬Ãâ Ã³¸® ÈÄ Ready »óÅÂ·Î ÀüÈ¯
+	// ì´ˆê¸°í™” ë¡œì§ ì²˜ë¦¬
+	// ì˜ˆì‹œ: ë°°ê²½ ì—°ì¶œ, íƒ€ì´ë¨¸ ì‹œì‘, ì´ˆê¸° ìŠ¤í° ë“±
+	// ì—°ì¶œ ì²˜ë¦¬ í›„ Ready ìƒíƒœë¡œ ì „í™˜
 	ChangeState(StageState::Ready);
 }
 
 void StageManager::_OnReady()
 {
-	// ÁØºñ ·ÎÁ÷ Ã³¸®
-	// Enter »óÅÂ¿¡¼­ Ã³¸®ÇÏÁö ¸øÇÑ	¿¬ÃâÀÌ ÀÖ´Ù¸é ¿©±â¼­ Ã³¸®
-	// ÁØºñ°¡ ¿Ï·áµÇ¸é Play »óÅÂ·Î ÀüÈ¯
+	// ì¤€ë¹„ ë¡œì§ ì²˜ë¦¬
+	// Enter ìƒíƒœì—ì„œ ì²˜ë¦¬í•˜ì§€ ëª»í•œ	ì—°ì¶œì´ ìˆë‹¤ë©´ ì—¬ê¸°ì„œ ì²˜ë¦¬
+	// ì¤€ë¹„ê°€ ì™„ë£Œë˜ë©´ Play ìƒíƒœë¡œ ì „í™˜
 	ChangeState(StageState::Play);
 }
 
 void StageManager::_OnPlay()
 {
-	// °ÔÀÓ ÇÃ·¹ÀÌ ·ÎÁ÷ Ã³¸®
-	// ¿¹½Ã: Àû ½ºÆù, ¾ÆÀÌÅÛ µå·Ó, Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ® µî
+	// ê²Œì„ í”Œë ˆì´ ë¡œì§ ì²˜ë¦¬
+	// ì˜ˆì‹œ: ì  ìŠ¤í°, ì•„ì´í…œ ë“œë¡­, íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸ ë“±
 
-	// Å×½ºÆ®¿ë ¸í·É¾î
+	// í…ŒìŠ¤íŠ¸ìš© ëª…ë ¹ì–´
 	if (_InputMgr.Pressed(VK_CONTROL))
 	{
-		// AÅ°¸¦ ´©¸£¸é ½ºÆù Å¸ÀÌ¸Ó°¡ ÃÊ±âÈ­µÇ¾î Áï½Ã ÀûÀÌ ½ºÆùµÇµµ·Ï ÇÔ
+		// Aí‚¤ë¥¼ ëˆ„ë¥´ë©´ ìŠ¤í° íƒ€ì´ë¨¸ê°€ ì´ˆê¸°í™”ë˜ì–´ ì¦‰ì‹œ ì ì´ ìŠ¤í°ë˜ë„ë¡ í•¨
 		if (_InputMgr.Down('A'))
 		{
 			spawn_timer_ = spawn_interval_;
 
-			_DEBUG_LOG(_T("[Test Function] Spawn timer reset by pressing A key"));
+			_SYSTEM_LOG_INFO(_T("[Test Function] Spawn timer reset by pressing A key"));
 		}
 
-		// DÅ°¸¦ ´©¸£¸é ¸ó½ºÅÍ ÀÏ½ÃÁ¤Áö ÇÃ·¡±×°¡ Åä±ÛµÇµµ·Ï ÇÔ
+		// Dí‚¤ë¥¼ ëˆ„ë¥´ë©´ ëª¬ìŠ¤í„° ì¼ì‹œì •ì§€ í”Œë˜ê·¸ê°€ í† ê¸€ë˜ë„ë¡ í•¨
 		if (_InputMgr.Down('D'))
 		{
 			const auto curr_val = _GameState.MonsterPause();
 			_GameState.MonsterPause(!curr_val);
 
-			_DEBUG_LOG(_T("[Test Function] Monster pause toggled: %s"), _TF(curr_val));
+			_SYSTEM_LOG_INFO(_T("[Test Function] Monster pause toggled: %s"), _TF(curr_val));
 		}
 	}
 
-	// ½ºÆù Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
+	// ìŠ¤í° íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
 	spawn_timer_ += _Timer.DeltaTime();
 
 	/*
-		½ºÆù ·ÎÁ÷ Ã³¸®
-		- ½ºÆù Å¸ÀÌ¸Ó°¡ ½ºÆù °£°İÀ» ÃÊ°úÇßÀ» ¶§ ÀûÀ» ½ºÆùÇÏµµ·Ï ÇÔ
-		- ½ºÆùÇÒ ÀûÀÇ Á¤º¸´Â JSON µ¥ÀÌÅÍ ¸Å´ÏÀú¿¡¼­ °¡Á®¿Àµµ·Ï ÇÔ
-		- °¡Á®¿Â ÀûÀÇ Á¤º¸¸¦ ¹ÙÅÁÀ¸·Î ObjectManager¿¡ ½ºÆù ¿äÃ»À» º¸³»µµ·Ï ÇÔ
-		- ½ºÆùÇÒ ÀûÀÇ Á¾·ù³ª ¼ö·®Àº ½ºÅ×ÀÌÁö »óÅÂ³ª ÁøÇà »óÈ²¿¡ µû¶ó ´Ş¶óÁú ¼ö ÀÖÀ½
-		- ½ºÆùÇÒ ÀûÀÇ À§Ä¡´Â StageManagerÀÇ GeneratePosition ÇÔ¼ö¸¦ ÅëÇØ È­¸é ¹ÛÀÇ ÀÓÀÇÀÇ À§Ä¡·Î ¼³Á¤ÇÏµµ·Ï ÇÔ
+		ìŠ¤í° ë¡œì§ ì²˜ë¦¬
+		- ìŠ¤í° íƒ€ì´ë¨¸ê°€ ìŠ¤í° ê°„ê²©ì„ ì´ˆê³¼í–ˆì„ ë•Œ ì ì„ ìŠ¤í°í•˜ë„ë¡ í•¨
+		- ìŠ¤í°í•  ì ì˜ ì •ë³´ëŠ” JSON ë°ì´í„° ë§¤ë‹ˆì €ì—ì„œ ê°€ì ¸ì˜¤ë„ë¡ í•¨
+		- ê°€ì ¸ì˜¨ ì ì˜ ì •ë³´ë¥¼ ë°”íƒ•ìœ¼ë¡œ ObjectManagerì— ìŠ¤í° ìš”ì²­ì„ ë³´ë‚´ë„ë¡ í•¨
+		- ìŠ¤í°í•  ì ì˜ ì¢…ë¥˜ë‚˜ ìˆ˜ëŸ‰ì€ ìŠ¤í…Œì´ì§€ ìƒíƒœë‚˜ ì§„í–‰ ìƒí™©ì— ë”°ë¼ ë‹¬ë¼ì§ˆ ìˆ˜ ìˆìŒ
+		- ìŠ¤í°í•  ì ì˜ ìœ„ì¹˜ëŠ” StageManagerì˜ GeneratePosition í•¨ìˆ˜ë¥¼ í†µí•´ í™”ë©´ ë°–ì˜ ì„ì˜ì˜ ìœ„ì¹˜ë¡œ ì„¤ì •í•˜ë„ë¡ í•¨
 	*/ 
 	if (spawn_timer_ >= spawn_interval_)
 	{
@@ -143,68 +143,68 @@ void StageManager::_OnPlay()
 		const auto category = EnemyCategory::WasExpDust;
 		const auto grade = _Random.Range(EnemyGrade::Common, EnemyGrade::Special);
 
-		// ÀûÀÇ ID´Â Ä«Å×°í¸®¿Í µî±ŞÀ» Á¶ÇÕÇØ¼­ »ı¼ºÇÏµµ·Ï ÇÔ (¿¹: WasExpDust_Common, WasExpDust_UnCommon, WasExpDust_Danger, WasExpDust_Special)
-		// ID »ı¼º ¹æ½ÄÀº JSON µ¥ÀÌÅÍ ¸Å´ÏÀú¿¡¼­ ÇØ´ç ID·Î µ¥ÀÌÅÍ¸¦ Á¶È¸ÇÒ ¼ö ÀÖµµ·Ï ÀÏ°üµÈ ¹æ½ÄÀ¸·Î »ı¼ºÇØ¾ß ÇÔ
+		// ì ì˜ IDëŠ” ì¹´í…Œê³ ë¦¬ì™€ ë“±ê¸‰ì„ ì¡°í•©í•´ì„œ ìƒì„±í•˜ë„ë¡ í•¨ (ì˜ˆ: WasExpDust_Common, WasExpDust_UnCommon, WasExpDust_Danger, WasExpDust_Special)
+		// ID ìƒì„± ë°©ì‹ì€ JSON ë°ì´í„° ë§¤ë‹ˆì €ì—ì„œ í•´ë‹¹ IDë¡œ ë°ì´í„°ë¥¼ ì¡°íšŒí•  ìˆ˜ ìˆë„ë¡ ì¼ê´€ëœ ë°©ì‹ìœ¼ë¡œ ìƒì„±í•´ì•¼ í•¨
 		const auto enemy_id = s_uint(category) + s_uint(grade);
 
-		// JSON µ¥ÀÌÅÍ ¸Å´ÏÀú¿¡¼­ ÇØ´ç µî±Ş°ú Ä«Å×°í¸®¿¡ ¸Â´Â µ¥ÀÌÅÍ¸¦ °¡Á®¿Â´Ù
+		// JSON ë°ì´í„° ë§¤ë‹ˆì €ì—ì„œ í•´ë‹¹ ë“±ê¸‰ê³¼ ì¹´í…Œê³ ë¦¬ì— ë§ëŠ” ë°ì´í„°ë¥¼ ê°€ì ¸ì˜¨ë‹¤
 		const auto enemy_spawn_data = _EnemyDataMgr.GetData(enemy_id);
 
-		// ¸¸¾à µ¥ÀÌÅÍ¸¦ Ã£Áö ¸øÇß´Ù¸é ·Î±ë ÈÄ ½ºÆù ·ÎÁ÷À» Á¾·áÇÑ´Ù
+		// ë§Œì•½ ë°ì´í„°ë¥¼ ì°¾ì§€ ëª»í–ˆë‹¤ë©´ ë¡œê¹… í›„ ìŠ¤í° ë¡œì§ì„ ì¢…ë£Œí•œë‹¤
 		if(nullptr == enemy_spawn_data)
 		{
-			_DEBUG_LOG(_T("Enemy data not found for category: %d, grade: %d", s_int(category), s_int(grade)));
+			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found for category: %d, grade: %d", s_int(category), s_int(grade)));
 			return;
 		}
 		
-		// À§Ä¡ Á¤º¸, ½ºÆù Á¤º¸¸¦ ³Ñ°Ü¾ßÇÒ ¼öµµ ÀÖÀ½(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
+		// ìœ„ì¹˜ ì •ë³´, ìŠ¤í° ì •ë³´ë¥¼ ë„˜ê²¨ì•¼í•  ìˆ˜ë„ ìˆìŒ(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
 		object_manager_->SpawnEnemy(enemy_spawn_data);
 	}
 }
 
 void StageManager::_OnPause()
 {
-	// ÀÏ½ÃÁ¤Áö ·ÎÁ÷ Ã³¸®
-	// ¿¹½Ã: °ÔÀÓ ÀÏ½ÃÁ¤Áö, Å¸ÀÌ¸Ó ÀÏ½ÃÁ¤Áö, ÀÔ·Â ¹«½Ã µî
+	// ì¼ì‹œì •ì§€ ë¡œì§ ì²˜ë¦¬
+	// ì˜ˆì‹œ: ê²Œì„ ì¼ì‹œì •ì§€, íƒ€ì´ë¨¸ ì¼ì‹œì •ì§€, ì…ë ¥ ë¬´ì‹œ ë“±
 }
 
 void StageManager::_OnClear()
 {
-	// Å¬¸®¾î ·ÎÁ÷ Ã³¸®
-	// ¿¹½Ã: Å¬¸®¾î ¿¬Ãâ, º¸»ó Áö±Ş, ´ÙÀ½ ½ºÅ×ÀÌÁö·Î ÀÌµ¿ µî
-	// °á°ú UI ³ëÃâ ÈÄ ÀÔ·Â¿¡ ÀÇÇØ Result »óÅÂ·Î ÀüÈ¯
+	// í´ë¦¬ì–´ ë¡œì§ ì²˜ë¦¬
+	// ì˜ˆì‹œ: í´ë¦¬ì–´ ì—°ì¶œ, ë³´ìƒ ì§€ê¸‰, ë‹¤ìŒ ìŠ¤í…Œì´ì§€ë¡œ ì´ë™ ë“±
+	// ê²°ê³¼ UI ë…¸ì¶œ í›„ ì…ë ¥ì— ì˜í•´ Result ìƒíƒœë¡œ ì „í™˜
 }
 
 void StageManager::_OnResult()
 {
-	// °á°ú ·ÎÁ÷ Ã³¸®
-	// ¿¹½Ã: Á¡¼ö °è»ê, ·©Å· ¾÷µ¥ÀÌÆ®, °á°ú È­¸é ¿¬Ãâ µî
-	// °á°ú UI ³ëÃâ ÈÄ UI ÀÔ·Â¿¡ ÀÇÇØ Exit »óÅÂ·Î ÀüÈ¯ (Exit »óÅÂ°¡ ±»ÀÌ ÇÊ¿äÇÑ°¡? UI ÀÔ·Â¿¡ ÀÇÇØ ·Îºñ·Î ¹Ù·Î ÀÌµ¿ÇØµµ µÉ °Í °°À½)
+	// ê²°ê³¼ ë¡œì§ ì²˜ë¦¬
+	// ì˜ˆì‹œ: ì ìˆ˜ ê³„ì‚°, ë­í‚¹ ì—…ë°ì´íŠ¸, ê²°ê³¼ í™”ë©´ ì—°ì¶œ ë“±
+	// ê²°ê³¼ UI ë…¸ì¶œ í›„ UI ì…ë ¥ì— ì˜í•´ Exit ìƒíƒœë¡œ ì „í™˜ (Exit ìƒíƒœê°€ êµ³ì´ í•„ìš”í•œê°€? UI ì…ë ¥ì— ì˜í•´ ë¡œë¹„ë¡œ ë°”ë¡œ ì´ë™í•´ë„ ë  ê²ƒ ê°™ìŒ)
 
 	switch (prev_state_)
 	{
 	case StageState::Play:
-		// ÇÃ·¹ÀÌ µµÁß Á×¾úÀ» ¶§ °á°ú È­¸éÀ¸·Î ÀüÈ¯µÈ °æ¿ì
+		// í”Œë ˆì´ ë„ì¤‘ ì£½ì—ˆì„ ë•Œ ê²°ê³¼ í™”ë©´ìœ¼ë¡œ ì „í™˜ëœ ê²½ìš°
 		play_scene_->ShowResultUI();
 		break;
 	case StageState::Pause:
-		// ÀÏ½ÃÁ¤Áö »óÅÂ¿¡¼­ °á°ú È­¸éÀ¸·Î ÀüÈ¯µÈ °æ¿ì
+		// ì¼ì‹œì •ì§€ ìƒíƒœì—ì„œ ê²°ê³¼ í™”ë©´ìœ¼ë¡œ ì „í™˜ëœ ê²½ìš°
 		break;
 	case StageState::Clear:
-		// Å¬¸®¾î »óÅÂ¿¡¼­ °á°ú È­¸éÀ¸·Î ÀüÈ¯µÈ °æ¿ì
+		// í´ë¦¬ì–´ ìƒíƒœì—ì„œ ê²°ê³¼ í™”ë©´ìœ¼ë¡œ ì „í™˜ëœ ê²½ìš°
 		play_scene_->ShowResultUI();
 		break;
 	default:
-		_DEBUG_LOG(_T("Unexpected previous stage state: %d"), s_int(prev_state_));
+		_SYSTEM_LOG_INFO(_T("Unexpected previous stage state: %d"), s_int(prev_state_));
 		return;
 	}
 }
 
 void StageManager::_OnExit()
 {
-	// Á¾·á ·ÎÁ÷ Ã³¸®
-	// °ÔÀÓ Á¾·á ÈÄ ÇÊ¿äÇÑ Á¤¸® ÀÛ¾÷ ¼öÇà
-	// ¸ğµç Ã³¸®°¡ ³¡³µ´Ù¸é ·Îºñ·Î ÀÌµ¿
+	// ì¢…ë£Œ ë¡œì§ ì²˜ë¦¬
+	// ê²Œì„ ì¢…ë£Œ í›„ í•„ìš”í•œ ì •ë¦¬ ì‘ì—… ìˆ˜í–‰
+	// ëª¨ë“  ì²˜ë¦¬ê°€ ëë‚¬ë‹¤ë©´ ë¡œë¹„ë¡œ ì´ë™
 }
 
 void StageManager::_UpdateGenerationAreas()

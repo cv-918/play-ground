@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "Combat.h"
 
 #include "Actors/GameObjectBase.h"
@@ -6,41 +6,42 @@
 
 _float Combat::GetDamage(_float _damage, Status* _status)
 {
-	// ¹æ¾î ÄÚµå: null Æ÷ÀÎÅÍÀÎ °æ¿ì ¹«½Ã
+	// ë°©ì–´ ì½”ë“œ: null í¬ì¸í„°ì¸ ê²½ìš° ë¬´ì‹œ
 	if (nullptr == _status)
 	{
-		_DEBUG_LOG(_T("Combat::GetDamage called with null Status pointer. Ignoring damage application."));
+		_NULL_DETECTION_LOG;
 		return 0.f;
 	}
 
-	// ¹æ¾î ÄÚµå: µ¥¹ÌÁö°¡ À½¼öÀÎ °æ¿ì ¹«½Ã
+	// ë°©ì–´ ì½”ë“œ: ë°ë¯¸ì§€ê°€ ìŒìˆ˜ì¸ ê²½ìš° ë¬´ì‹œ
 	if (0 > _damage)
 	{
-		_DEBUG_LOG(_T("Combat::GetDamage called with negative damage value: %.2f. Ignoring damage application."), _damage);
+		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called with negative damage value: %.2f. Ignoring damage application."), _damage);
 		return 0.f;
 	}
 
 	const auto curr_hp = _status->HP();
-	// ¹æ¾î ÄÚµå: ÀÌ¹Ì Ã¼·ÂÀÌ 0ÀÎ °æ¿ì ¹«½Ã
+
+	// ë°©ì–´ ì½”ë“œ: ì´ë¯¸ ì²´ë ¥ì´ 0ì¸ ê²½ìš° ë¬´ì‹œ
 	if (0 >= curr_hp)
 	{
-		_DEBUG_LOG(_T("Combat::GetDamage called but target is already at 0 HP. Ignoring damage application."));
+		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called but target is already at 0 HP. Ignoring damage application."));
 		return 0.f;
 	}
 
-	// µ¥¹ÌÁö °è»ê ÄÚµå: °ø°İ·Â, ¹æ¾î·Â, ±âÅ¸ ¹öÇÁ/µğ¹öÇÁ µîÀ» °í·ÁÇÑ ÃÖÁ¾ µ¥¹ÌÁö °è»ê
-	// ¿¹½Ã·Î, ´Ü¼øÈ÷ °ø°İ·Â¿¡¼­ ¹æ¾î·ÂÀ» »« °ªÀ» µ¥¹ÌÁö·Î °è»êÇÑ´Ù°í °¡Á¤
-	// ÃßÈÄ¿¡ ÇïÆÛÇÔ¼ö·Î ºĞ¸®ÇÏ°Å³ª, µ¥¹ÌÁö °è»ê ·ÎÁ÷À» º°µµÀÇ ½Ã½ºÅÛÀ¸·Î ¿Å±æ ¼ö ÀÖÀ½
+	// ë°ë¯¸ì§€ ê³„ì‚° ì½”ë“œ: ê³µê²©ë ¥, ë°©ì–´ë ¥, ê¸°íƒ€ ë²„í”„/ë””ë²„í”„ ë“±ì„ ê³ ë ¤í•œ ìµœì¢… ë°ë¯¸ì§€ ê³„ì‚°
+	// ì˜ˆì‹œë¡œ, ë‹¨ìˆœíˆ ê³µê²©ë ¥ì—ì„œ ë°©ì–´ë ¥ì„ ëº€ ê°’ì„ ë°ë¯¸ì§€ë¡œ ê³„ì‚°í•œë‹¤ê³  ê°€ì •
+	// ì¶”í›„ì— í—¬í¼í•¨ìˆ˜ë¡œ ë¶„ë¦¬í•˜ê±°ë‚˜, ë°ë¯¸ì§€ ê³„ì‚° ë¡œì§ì„ ë³„ë„ì˜ ì‹œìŠ¤í…œìœ¼ë¡œ ì˜®ê¸¸ ìˆ˜ ìˆìŒ
 	auto input_damage = _damage;
 	auto final_damage = input_damage;
 
-	// Ã¼·Â¿¡¼­ µ¥¹ÌÁö¸¸Å­ °¨¼Ò
+	// ì²´ë ¥ì—ì„œ ë°ë¯¸ì§€ë§Œí¼ ê°ì†Œ
 	auto new_hp = MathFunctions::Clamp(curr_hp - final_damage, 0.f, curr_hp);
 	_status->HP(new_hp);
 
-	// ·Î±ë
-	_DEBUG_LOG(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->Name().c_str(), curr_hp, new_hp);
+	// ë””ë²„ê·¸ ë¡œê·¸: ë°ë¯¸ì§€ ê³„ì‚° ê²°ê³¼ì™€ ì ìš©ëœ ë°ë¯¸ì§€, ì²´ë ¥ ë³€í™” ë“±ì„ ë¡œê·¸ë¡œ ì¶œë ¥
+	_SYSTEM_LOG_INFO(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->Name().c_str(), curr_hp, new_hp);
 
-	// µ¥¹ÌÁö ÆùÆ® ³ëÃâÀ» À§ÇØ¼­ ÃÖÁ¾ µ¥¹ÌÁö ¹İÈ¯
+	// ë°ë¯¸ì§€ í°íŠ¸ ë…¸ì¶œì„ ìœ„í•´ì„œ ìµœì¢… ë°ë¯¸ì§€ ë°˜í™˜
 	return final_damage;
 }
