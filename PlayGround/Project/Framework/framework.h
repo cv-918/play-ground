@@ -50,5 +50,6 @@
 #include "EngineSystems/Timer/Timer.h"
 
 #include "Common/CommonGamePlayType.h"
+#include "Common/CommonGamePlayDefine.h"
 
 #include "GamePlaySystems/GameState.h"

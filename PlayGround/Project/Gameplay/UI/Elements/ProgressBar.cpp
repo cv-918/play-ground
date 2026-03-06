@@ -1,0 +1,22 @@
+﻿#include "framework.h"
+#include "ProgressBar.h"
+
+void ProgressBar::Render(_double _delta_time)
+{
+	const _Rect rt = GetRect();
+
+	// 1. 배경 그리기 (회색 등)
+	_DrawFunc::FillRectangle(rt, bgColor_);
+
+	// 2. 비율(ratio_)에 따라 게이지가 찰 영역 계산
+	// 좌측(Left)은 고정하고 우측(Right) 좌표만 비율만큼 계산해서 설정
+	_Rect fill_rt = rt;
+	_int fill_width = s_int(rt.Width() * ratio_);
+	ScaleX(fill_width - rt.Width()); // fill_rect의 너비를 fill_width로 조절. ScaleX는 현재 너비에서 fill_width로 조절하는 방식이므로, fill_width - abs_rect.Width() 만큼 조절해야 함
+
+	// 3. 게이지 그리기
+	_DrawFunc::FillRectangle(fill_rt, fillColor_);
+
+	// 4. 테두리 (필요 시)
+	_DrawFunc::DrawRectangle(rt, borderColor_, thickness_);
+}

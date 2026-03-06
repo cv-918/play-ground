@@ -1,28 +1,28 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Core/Math/Geometry2D.h"
 
 struct _Vector3
 {
 public:
-	// »ı¼ºÀÚ
+	// ìƒì„±ì
 	constexpr _Vector3() : x(IV_ZERO), y(IV_ZERO), z(IV_ZERO) {}
 	constexpr _Vector3(_float _x, _float _y, _float _z) : x(_x), y(_y), z(_z) {}
 	constexpr _Vector3(_float _x, _float _y) : x(_x), y(_y), z(IV_ZERO) {}
 	constexpr _Vector3(_int _x, _int _y) : x(s_float(_x)), y(s_float(_y)), z(IV_ZERO) {}
 	constexpr _Vector3(const _Point& _pt) : x(s_float(_pt.x)), y(s_float(_pt.y)), z(IV_ZERO) {}
 
-	// ¿µº¤ÅÍ
-	static constexpr _Vector3 Zero() { return _Vector3{}; }
-	// ´ÜÀ§º¤ÅÍ
-	static constexpr _Vector3 One() { return _Vector3{ 1.0f, 1.0f, 1.0f }; }
+	// ì˜ë²¡í„°
+	static constexpr _Vector3 Zero() { return {}; }
+	// ë‹¨ìœ„ë²¡í„°
+	static constexpr _Vector3 One() { return { 1.0f, 1.0f, 1.0f }; }
 
-	// ±æÀÌ
+	// ê¸¸ì´
 	_float LengthSq() const { return x * x + y * y + z * z; }
 	_float Length() const { return s_float(std::sqrt(LengthSq())); }
-	_float Magnitude() const { return Length(); } // Length¶û ¶È°°Àº ÇÔ¼öÀÎµ¥ ÀÌ¸§¸¸ ´Ù¸£°Ô È£Ãâ(ÆíÀÇ¿ë)
+	_float Magnitude() const { return Length(); } // Lengthë‘ ë˜‘ê°™ì€ í•¨ìˆ˜ì¸ë° ì´ë¦„ë§Œ ë‹¤ë¥´ê²Œ í˜¸ì¶œ(í¸ì˜ìš©)
 
-	// Á¤±ÔÈ­(±æÀÌ°¡ 0ÀÌ¸é ¿µº¤ÅÍ ¹İÈ¯)
+	// ì •ê·œí™”(ê¸¸ì´ê°€ 0ì´ë©´ ì˜ë²¡í„° ë°˜í™˜)
 	_Vector3 Normalized() const
 	{
 		const _float len = Length();
@@ -32,7 +32,7 @@ public:
 		return (*this) / len;
 	}
 
-	// Á¦ÀÚ¸® Á¤±ÔÈ­(±æÀÌ°¡ 0ÀÌ¸é º¯È­ ¾øÀ½)
+	// ì œìë¦¬ ì •ê·œí™”(ê¸¸ì´ê°€ 0ì´ë©´ ë³€í™” ì—†ìŒ)
 	void Normalize()
 	{
 		const _float len = Length();
@@ -44,26 +44,26 @@ public:
 		z /= len;
 	}
 
-	// ³»Àû
+	// ë‚´ì 
 	static _float Dot(const _Vector3& _a, const _Vector3& _b) { return _a.x * _b.x + _a.y * _b.y + _a.z * _b.z; }
 
-	// ¿ÜÀû(3D¿ë, 2D¿¡¼­´Â °ÅÀÇ ¾È ¾¸)
+	// ì™¸ì (3Dìš©, 2Dì—ì„œëŠ” ê±°ì˜ ì•ˆ ì”€)
 	static _Vector3 Cross(const _Vector3& _a, const _Vector3& _b)
 	{
-		return _Vector3(
+		return {
 			_a.y * _b.z - _a.z * _b.y,
 			_a.z * _b.x - _a.x * _b.z,
 			_a.x * _b.y - _a.y * _b.x
-		);
+		};
 	}
 
-	// °Å¸®
+	// ê±°ë¦¬
 	static _float Distance(const _Vector3& _a, const _Vector3& _b) { return (_a - _b).Length(); }
 
-	// ¼±Çü º¸°£
+	// ì„ í˜• ë³´ê°„
 	static _Vector3 Lerp(const _Vector3& _a, const _Vector3& _b, _float _t) { return _a + (_b - _a) * _t; }
 
-	// ±Ù»ç ºñ±³(ºÎµ¿¼Ò¼öÁ¡¿ë)
+	// ê·¼ì‚¬ ë¹„êµ(ë¶€ë™ì†Œìˆ˜ì ìš©)
 	bool NearEquals(const _Vector3& _rhs, _float _epsilon = 1e-5f) const
 	{
 		return (std::fabs(x - _rhs.x) <= _epsilon) &&
@@ -71,23 +71,22 @@ public:
 			(std::fabs(z - _rhs.z) <= _epsilon);
 	}
 
-	// ¿¬»êÀÚ ¿À¹ö·Îµå
+	// ì—°ì‚°ì ì˜¤ë²„ë¡œë“œ
 	_Vector3& operator=(const _float _s) { x = y = z = _s; return *this; }
 	_Vector3& operator=(const _int _i) { x = y = z = s_float(_i); return *this; }
 
-	_Vector3 operator+(const _Vector3& _rhs) const { return _Vector3(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
-	_Vector3 operator+(const _float _s) const { return _Vector3(x + _s, y + _s, z + _s); }
+	_Vector3 operator+(const _Vector3& _rhs) const { return { x + _rhs.x, y + _rhs.y, z + _rhs.z }; }
+	_Vector3 operator+(const _float _s) const { return { x + _s, y + _s, z + _s }; }
 
-	_Vector3 operator-(const _Vector3& _rhs) const { return _Vector3(x - _rhs.x, y - _rhs.y, z - _rhs.z); }
-	_Vector3 operator-(const _float _s) const { return _Vector3(x - _s, y - _s, z - _s); }
+	_Vector3 operator-(const _Vector3& _rhs) const { return { x - _rhs.x, y - _rhs.y, z - _rhs.z }; }
+	_Vector3 operator-(const _float _s) const { return { x - _s, y - _s, z - _s }; }
 
-	_Vector3 operator*(const _float _s) const { return _Vector3(x * _s, y * _s, z * _s); }
+	_Vector3 operator*(const _float _s) const { return { x * _s, y * _s, z * _s }; }
 	_Vector3 operator/(const _float _s) const
 	{
-		// 0 ³ª´°¼À ¹æÁö(»÷µå¹Ú½º¶ó assert·Î ¹Ù²ãµµ µÊ)
-		if (_s == 0.0f)
-			return _Vector3::Zero();
-		return _Vector3(x / _s, y / _s, z / _s);
+		// 0 ë‚˜ëˆ—ì…ˆ ë°©ì§€ (ìƒŒë“œë°•ìŠ¤ë¼ assertë¡œ ë°”ê¿”ë„ ë¨)
+		if (_s == 0.0f) return _Vector3::Zero();
+		return { x / _s, y / _s, z / _s };
 	}
 
 	_Vector3& operator+=(const _Vector3& _rhs) { x += _rhs.x; y += _rhs.y; z += _rhs.z; return *this; }
@@ -119,7 +118,7 @@ public:
 	_float z = IV_ZERO;
 };
 
-// ½ºÄ®¶ó * º¤ÅÍ
+// ìŠ¤ì¹¼ë¼ * ë²¡í„°
 inline _Vector3 operator*(const _float _s, const _Vector3& _v)
 {
 	return _v * _s;

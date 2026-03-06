@@ -1,4 +1,4 @@
-#include "framework.h"
+﻿#include "framework.h"
 #include "Background.h"
 
 _bool Background::Initialize()
@@ -10,8 +10,8 @@ _bool Background::Initialize()
 	const auto size = _Size{ GAME_SCREEN_CX, GAME_SCREEN_CY };
 
 	nav_mesh_ = _Rect(lt, size);
-	nav_mesh_draw_rt_ = nav_mesh_.ToRECT();
 
+	Finalize();
     return true;
 }
 

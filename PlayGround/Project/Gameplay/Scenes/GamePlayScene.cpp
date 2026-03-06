@@ -7,6 +7,7 @@
 #include "GamePlaySystems/ObjectManager.h"
 #include "GamePlaySystems/UIManager.h"
 #include "GamePlaySystems/StageManager.h"
+#include "GamePlaySystems/EnemyDataManager.h"
 
 _bool GamePlayScene::Initialize()
 {
@@ -25,9 +26,8 @@ _bool GamePlayScene::Initialize()
 
 	const auto& nav_mesh = background_->NavMesh();
 	stage_manager_->SetNavMesh(nav_mesh);
-	stage_manager_->SetObjectManager(object_manager_);
 
-	return_btn_ = new UIButton();
+	return_btn_ = new Button();
 
 	const auto return_btn_lt = GAME_VIEW_CENTER - _Point(COMMON_BUTTON_CX / 2, COMMON_BUTTON_CY / 2); // 버튼 크기의 절반을 빼서 중앙 정렬
 	return_btn_->SetRect(_Rect(return_btn_lt, _Size(COMMON_BUTTON_CX, COMMON_BUTTON_CY))); // 화면 중앙 하단쯤
@@ -50,6 +50,12 @@ _bool GamePlayScene::Initialize()
 
 _int GamePlayScene::Update(_double _delta_time)
 {
+	if (_InputMgr.Down(VK_ESCAPE))
+	{
+		_SceneMgr.ChangeScene(SceneType::Lobby);
+		return UPDATE_CONTINUE;
+	}
+
 	_bool update = true;
 
 	const auto curr_state = stage_manager_->CurrState();
@@ -61,14 +67,14 @@ _int GamePlayScene::Update(_double _delta_time)
 		break;
 	}
 
+	// 스테이지 매니저 업데이트
+	stage_manager_->Update(_delta_time);
+
 	// 게임 오브젝트 매니저와 UI 매니저 업데이트
 	// 스테이지 상태에 따라 업데이트 여부 결정. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트.
 	// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
 	if (update) object_manager_->Update(_delta_time);
 	ui_manager_->Update(_delta_time);
-
-	// 스테이지 매니저 업데이트
-	stage_manager_->Update(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
@@ -85,22 +91,9 @@ void GamePlayScene::OnEnter()
 	}
 
 	// 현재 구조에서는 플레이어를 매번 재생성한다
-	// 플레이어를 세팅하기 위해 필요한 것들을 이곳에서 처리한다
-	const auto player = new Player();
-	AddGameObject(player);
+	SpawnPlayer();
 
-	const auto test_progress = ui_manager_->CreateUI<UIProgressBar>();
-	test_progress->SetSize(_Size(100, 10));
 
-	// 만약 플레이어의 크기가 변하는 연출이 들어간다면, offset y 값은 플레이어의 크기를 고려해서 동적으로 설정되도록 하는 것이 좋다. 지금은 우선 고정값으로 설정한다
-	const _float offset_y = -30.f;
-	test_progress->SetTrackingTarget(player, _Vector3(0.f, offset_y, 0.f)); // 플레이어 머리 위에 위치하도록 트래킹 설정
-
-	const auto& nav_mesh = background_->NavMesh();
-
-	player->SetNavMesh(nav_mesh);
-	player->SetPlayScene(this);
-	_GameState.Player(player);
 
 	return_btn_->InActivate();
 	stage_manager_->ChangeState(StageState::Enter);
@@ -109,6 +102,59 @@ void GamePlayScene::OnEnter()
 void GamePlayScene::OnExit()
 {
 	_ColMgr.ClearAllColliders();
+	_GameState.Player(nullptr); // 게임 스테이트에서 플레이어 참조 해제
+}
+
+void GamePlayScene::SpawnPlayer()
+{
+	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
+	// 플레이어 생성 로직 역시 ObjectManager로 넘겨야할 수도 있다
+	const auto player = new Player();
+	AddGameObject(player);
+
+	// 프로그레스바 생성 및 설정. 플레이어는 체력바가 필요하다고 가정하고, 플레이어가 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
+	const auto player_hp_bar = ui_manager_->CreateUI<HpBar>();
+
+	// 프로그레스바의 크기와 오프셋은 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
+	player_hp_bar->SetTrackingTarget(player, DEFAULT_OFFSET_HP_BAR);
+	player_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
+
+	// 스테이지(월드)에 있는 네비메시를 가져와서 플레이어에게 연결
+	const auto& nav_mesh = background_->NavMesh();
+	player->SetNavMesh(nav_mesh);
+
+	// 플레이어가 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
+	player->SetPlayScene(this);
+
+	// 게임 스테이트에 플레이어 캐싱
+	_GameState.Player(player);
+}
+
+void GamePlayScene::SpawnEnemy(_uint _enemy_id)
+{
+	// JSON 데이터 매니저에서 해당 등급과 카테고리에 맞는 데이터를 가져온다
+	const auto enemy_spawn_data = _EnemyDataMgr.GetData(_enemy_id);
+
+	// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
+	if (nullptr == enemy_spawn_data)
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(ID : %d)"), _enemy_id);
+		return;
+	}
+
+	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
+	const auto spawned_enemy = object_manager_->SpawnEnemy(enemy_spawn_data);
+	if (nullptr == spawned_enemy)
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Failed to spawn enemy!(ID : %d)"), _enemy_id);
+		return;
+	}
+
+	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
+	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>();
+
+	// 프로그레스바의 크기와 위치는 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
+	enemy_hp_bar->SetTrackingTarget(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 }
 
 void GamePlayScene::ShowResultUI()
@@ -118,9 +164,9 @@ void GamePlayScene::ShowResultUI()
 
 void GamePlayScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
-	const auto test_text_life = ui_manager_->CreateUI<UIText>();
-	test_text_life->SetFontSize(30.f);
-	test_text_life->SetText(std::to_wstring(s_int(_damage)));
-	test_text_life->SetLifeTime(4.f);
-	test_text_life->SetRect(_Rect(_position, _Size(200, 50)));
+	const auto damage_font = ui_manager_->CreateUI<Text>();
+	damage_font->SetFontSize(30.f);
+	damage_font->SetText(std::to_wstring(s_int(_damage)));
+	damage_font->SetLifeTime(4.f);
+	damage_font->SetRect(_Rect(_position, _Size(200, 50)));
 }

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class UIBase;
 
@@ -17,11 +17,14 @@ public:
 	_bool Release() override;
 
 public:
-	// UI ¿ä¼Ò °ü¸®¸¦ À§ÇÑ ¸Ş¼­µå. ÇÊ¿ä¿¡ µû¶ó UI ¿ä¼Ò¸¦ Ãß°¡, Á¦°Å, °Ë»öÇÏ´Â ±â´ÉÀ» ±¸ÇöÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	// UI ìš”ì†Œ ê´€ë¦¬ë¥¼ ìœ„í•œ ë©”ì„œë“œ. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œë¥¼ ì¶”ê°€, ì œê±°, ê²€ìƒ‰í•˜ëŠ” ê¸°ëŠ¥ì„ êµ¬í˜„í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 	void AddUI(UIBase* _ui);
 
 	template <typename T>
 	T* CreateUI();
+
+private:
+	void _CleanUp();
 
 private:
 	std::vector<UIBase*> ui_list_;
@@ -36,6 +39,7 @@ inline T* UIManager::CreateUI()
 		ui_list_.push_back(ui);
 		return ui;
 	}
+
 	SAFE_DELETE(ui);
 	return nullptr;
 }

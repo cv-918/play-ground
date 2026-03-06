@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "LobbyScene.h"
 
 _bool LobbyScene::Initialize()
@@ -7,19 +7,6 @@ _bool LobbyScene::Initialize()
 		return false;
 
 	debug_scene_name_ = L"LOBBY SCENE";
-
-	// ¹öÆ° »ý¼º ¹× ¼³Á¤
-	const auto start_btn = ui_manager_->CreateUI<UIButton>();
-	
-	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
-	const _Point start_btn_lt(x, 400); // ¹öÆ°ÀÇ ¿ÞÂÊ »ó´Ü À§Ä¡
- 	start_btn->SetRect(_Rect(start_btn_lt, COMMON_BUTTON_SIZE)); // È­¸é Áß¾Ó ÇÏ´ÜÂë
-	start_btn->SetText(L"GAME START");
-
-	// ¶÷´Ù¸¦ ÀÌ¿ëÇÑ Å¬¸¯ ÀÌº¥Æ® ¿¬°á
-	start_btn->SetOnClick([]() {
-		_SceneMgr.ChangeScene(SceneType::GamePlay);
-		});
 
 	MAKE_INITIALIZED;
 	return true;
@@ -32,6 +19,18 @@ void LobbyScene::Render(_double _delta_time)
 
 void LobbyScene::OnEnter()
 {
+	// ë²„íŠ¼ ìƒì„± ë° ì„¤ì •
+	const auto start_btn = ui_manager_->CreateUI<Button>();
+
+	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
+	const _Point start_btn_lt(x, 400); // ë²„íŠ¼ì˜ ì™¼ìª½ ìƒë‹¨ ìœ„ì¹˜
+	start_btn->SetRect(_Rect(start_btn_lt, COMMON_BUTTON_SIZE)); // í™”ë©´ ì¤‘ì•™ í•˜ë‹¨ì¯¤
+	start_btn->SetText(L"GAME START");
+
+	// ëžŒë‹¤ë¥¼ ì´ìš©í•œ í´ë¦­ ì´ë²¤íŠ¸ ì—°ê²°
+	start_btn->SetOnClick([]() {
+		_SceneMgr.ChangeScene(SceneType::GamePlay);
+		});
 }
 
 void LobbyScene::OnExit()

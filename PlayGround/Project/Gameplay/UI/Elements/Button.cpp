@@ -1,7 +1,7 @@
-#include "framework.h"
-#include "UIButton.h"
+ï»¿#include "framework.h"
+#include "Button.h"
 
-_int UIButton::Update(_double _delta_time)
+_int Button::Update(_double _delta_time)
 {
 	if (!Enable())
 	{
@@ -23,7 +23,7 @@ _int UIButton::Update(_double _delta_time)
 		{
 			state_ = ButtonState::Hovered;
 			if (on_click_)
-				on_click_(); // À¯´ÏÆ¼ÀÇ OnClick() ÀÌº¥Æ®¿Í À¯»ç
+				on_click_(); // ìœ ë‹ˆí‹°ì˜ OnClick() ì´ë²¤íŠ¸ì™€ ìœ ì‚¬
 		}
 		else
 		{
@@ -38,22 +38,22 @@ _int UIButton::Update(_double _delta_time)
     return UPDATE_CONTINUE;
 }
 
-void UIButton::Render(_double _delta_time)
+void Button::Render(_double _delta_time)
 {
 	if (!Visible())
 		return;
 
-	// ºñÈ°¼ºÈ­ »óÅÂÀÏ ¶§´Â È¸»öÀ¸·Î Ç¥½Ã
+	// ë¹„í™œì„±í™” ìƒíƒœì¼ ë•ŒëŠ” íšŒìƒ‰ìœ¼ë¡œ í‘œì‹œ
 	if (state_ == ButtonState::Disabled)
 	{
-		_DrawFunc::FillRectangle(GetAbsoluteRect(), Colors::Gray);
-		_DrawFunc::DrawRectangle(GetAbsoluteRect(), Colors::Black);
-		_DrawFunc::DrawString(GetAbsoluteRect().Center(), text_, Colors::DarkGray);
+		_DrawFunc::FillRectangle(GetRect(), Colors::Gray);
+		_DrawFunc::DrawRectangle(GetRect(), Colors::Black);
+		_DrawFunc::DrawString(GetRect().GetCenter(), text_, Colors::DarkGray);
 		return;
 	}
 	
-	// g_back_dc¸¦ »ç¿ëÇÏ¿© ¹öÆ° ¹è°æ°ú ÅØ½ºÆ® Ãâ·Â
-	const auto abs_rect = GetAbsoluteRect();
+	// g_back_dcë¥¼ ì‚¬ìš©í•˜ì—¬ ë²„íŠ¼ ë°°ê²½ê³¼ í…ìŠ¤íŠ¸ ì¶œë ¥
+	const auto abs_rect = GetRect();
 	_DrawFunc::DrawRectangle(abs_rect, Colors::Black);
 
 	_Color draw_color = Colors::White;
@@ -61,9 +61,9 @@ void UIButton::Render(_double _delta_time)
 	{
 	case ButtonState::Normal:
 		break;
-	case ButtonState::Hovered: // ¿¬È¸»ö
+	case ButtonState::Hovered: // ì—°íšŒìƒ‰
 		draw_color = _Color(200, 200, 200); break;
-	case ButtonState::Pressed: // ÁøÈ¸»ö
+	case ButtonState::Pressed: // ì§„íšŒìƒ‰
 		draw_color = _Color(150, 150, 150); break;
 	case ButtonState::Disabled:
 		break;
@@ -73,5 +73,5 @@ void UIButton::Render(_double _delta_time)
 
 	_DrawFunc::FillRectangle(abs_rect, draw_color);
 	_DrawFunc::DrawRectangle(abs_rect, Colors::Black);
-	_DrawFunc::DrawString(abs_rect.Center(), text_);
+	_DrawFunc::DrawString(abs_rect.GetCenter(), text_);
 }

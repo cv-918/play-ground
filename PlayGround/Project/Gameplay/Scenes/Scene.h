@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "GamePlaySystems/SceneManager.h"
 
@@ -7,9 +7,12 @@ class GameObjectBase;
 #include "GamePlaySystems/ObjectManager.h"
 #include "GamePlaySystems/UIManager.h"
 
-#include "UI/UIButton.h"
-#include "UI/UIText.h"
-#include "UI/UIProgressBar.h"
+#include "UI/Widgets/HpBar.h"
+
+// ìœ„ì ¯ë“¤ì´ ì „ë¶€ ë§Œë“¤ì–´ì§€ë©´ ì œê±°í•  í¬í•¨
+#include "UI/Elements/Button.h"
+#include "UI/Elements/Text.h"
+#include "UI/Elements/ProgressBar.h"
 
 class Scene abstract
 	: public IInitializable
@@ -35,19 +38,19 @@ public:
 	SceneType Type() const { return type_; }
 
 public:
-	// °ÔÀÓ ¿ÀºêÁ§Æ® °ü¸®¸¦ À§ÇÑ ¸Ş¼­µå. ÇÊ¿ä¿¡ µû¶ó °ÔÀÓ ¿ÀºêÁ§Æ®¸¦ Ãß°¡, Á¦°Å, °Ë»öÇÏ´Â ±â´ÉÀ» ±¸ÇöÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	// ê²Œì„ ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬ë¥¼ ìœ„í•œ ë©”ì„œë“œ. í•„ìš”ì— ë”°ë¼ ê²Œì„ ì˜¤ë¸Œì íŠ¸ë¥¼ ì¶”ê°€, ì œê±°, ê²€ìƒ‰í•˜ëŠ” ê¸°ëŠ¥ì„ êµ¬í˜„í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 	void AddGameObject(GameObjectBase* _game_object);
 
-	// UI ¿ä¼Ò °ü¸®¸¦ À§ÇÑ ¸Ş¼­µå. ÇÊ¿ä¿¡ µû¶ó UI ¿ä¼Ò¸¦ Ãß°¡, Á¦°Å, °Ë»öÇÏ´Â ±â´ÉÀ» ±¸ÇöÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	// UI ìš”ì†Œ ê´€ë¦¬ë¥¼ ìœ„í•œ ë©”ì„œë“œ. í•„ìš”ì— ë”°ë¼ UI ìš”ì†Œë¥¼ ì¶”ê°€, ì œê±°, ê²€ìƒ‰í•˜ëŠ” ê¸°ëŠ¥ì„ êµ¬í˜„í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 	void AddUI(UIBase* _ui);
 
 protected:
 	SceneType type_ = SceneType::Count;
 
-	class ObjectManager* object_manager_; // ¾À¿¡ Æ÷ÇÔµÈ °ÔÀÓ ¿ÀºêÁ§Æ®µéÀ» °ü¸®ÇÏ´Â ¸Å´ÏÀú. ÇÊ¿ä¿¡ µû¶ó ¾À¿¡¼­ »ı¼ºµÈ °ÔÀÓ ¿ÀºêÁ§Æ®µéÀ» ÀÌ ¸Å´ÏÀú¿¡ Ãß°¡ÇÏ¿© ÀÏ°ı ¾÷µ¥ÀÌÆ® ¹× ·»´õ¸µÇÒ ¼ö ÀÖ½À´Ï´Ù.
-	class UIManager* ui_manager_; // ¾À¿¡ Æ÷ÇÔµÈ UI ¿ä¼ÒµéÀ» °ü¸®ÇÏ´Â ¸Å´ÏÀú. ÇÊ¿ä¿¡ µû¶ó ¾À¿¡¼­ »ı¼ºµÈ UI ¿ä¼ÒµéÀ» ÀÌ ¸Å´ÏÀú¿¡ Ãß°¡ÇÏ¿© ÀÏ°ı ¾÷µ¥ÀÌÆ® ¹× ·»´õ¸µÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	class ObjectManager* object_manager_; // ì”¬ì— í¬í•¨ëœ ê²Œì„ ì˜¤ë¸Œì íŠ¸ë“¤ì„ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì €. í•„ìš”ì— ë”°ë¼ ì”¬ì—ì„œ ìƒì„±ëœ ê²Œì„ ì˜¤ë¸Œì íŠ¸ë“¤ì„ ì´ ë§¤ë‹ˆì €ì— ì¶”ê°€í•˜ì—¬ ì¼ê´„ ì—…ë°ì´íŠ¸ ë° ë Œë”ë§í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+	class UIManager* ui_manager_; // ì”¬ì— í¬í•¨ëœ UI ìš”ì†Œë“¤ì„ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì €. í•„ìš”ì— ë”°ë¼ ì”¬ì—ì„œ ìƒì„±ëœ UI ìš”ì†Œë“¤ì„ ì´ ë§¤ë‹ˆì €ì— ì¶”ê°€í•˜ì—¬ ì¼ê´„ ì—…ë°ì´íŠ¸ ë° ë Œë”ë§í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 
-	// Å×½ºÆ®¿ë µ¥ÀÌÅÍ
+	// í…ŒìŠ¤íŠ¸ìš© ë°ì´í„°
 protected:
 	std::wstring debug_scene_name_;
 };

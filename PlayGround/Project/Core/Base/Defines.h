@@ -54,6 +54,8 @@ typedef double						_double;
 
 #define s_char(val)					s_cast(signed char,			val)
 #define s_uchar(val)				s_cast(unsigned char,		val)
+#define s_byte(val)					s_cast(signed char,			val)
+#define s_ubyte(val)				s_cast(unsigned char,		val)
 #define s_tchar(val)				s_cast(wchar_t,				val)
 #define s_int(val)					s_cast(signed int,			val)
 #define s_uint(val)					s_cast(unsigned int,		val)
