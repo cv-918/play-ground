@@ -9,14 +9,14 @@ class Status;
 class HpBar final : public WidgetBase
 {
 public:
-	virtual ~HpBar();
-
-public:
 	_bool Initialize() override;
 
 private:
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
+
+private:
+	void OnDestroy() override;
 
 public:
 	// 체력바가 나타난 후 일정 시간이 지나면 사라지도록 구현. _duration은 체력바가 완전히 사라지는 데 걸리는 시간(초)

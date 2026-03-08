@@ -45,7 +45,7 @@ void _Rect::MoveLtTo(const _Point& _lt)
 	_Point newLt = _lt;
 
 	// 멤버 변수 갱신 (생성자 로직 활용)
-	*this = _Rect(newLt, GetSize());
+	*this = _Rect{ newLt, GetSize() };
 }
 
 void _Rect::MoveCenterTo(const _Point& _center)
@@ -59,7 +59,7 @@ void _Rect::MoveCenterTo(const _Point& _center)
 	_Point newLt = { _center.x - halfW, _center.y - halfH };
 
 	// 멤버 변수 갱신 (생성자 로직 활용)
-	*this = _Rect(newLt, size);
+	*this = _Rect{ newLt, size };
 }
 
 void _Rect::ScaleFromLt(const _Size& _new_size)
@@ -121,4 +121,28 @@ _Rect _Rect::operator*(const _float _scale) const
 	_Rect temp = *this;
 	temp *= _scale;
 	return temp;
+}
+
+_Size _Size::operator+(const _Size& _size) const
+{
+	return { x + _size.x, y + _size.y };
+}
+
+_Size _Size::operator-(const _Size& _size) const
+{
+	return { x - _size.x, y - _size.y };
+}
+
+_Size& _Size::operator+=(const _Size& _size)
+{
+	x += _size.x;
+	y += _size.y;
+	return *this;
+}
+
+_Size& _Size::operator-=(const _Size& _size)
+{
+	x -= _size.x;
+	y -= _size.y;
+	return *this;
 }

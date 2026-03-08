@@ -132,7 +132,7 @@ void StageManager::_OnPlay()
 		- 가져온 적의 정보를 바탕으로 ObjectManager에 스폰 요청을 보내도록 함
 		- 스폰할 적의 종류나 수량은 스테이지 상태나 진행 상황에 따라 달라질 수 있음
 		- 스폰할 적의 위치는 StageManager의 GeneratePosition 함수를 통해 화면 밖의 임의의 위치로 설정하도록 함
-	*/ 
+	*/
 	if (spawn_timer_ >= spawn_interval_)
 	{
 		spawn_timer_ = 0.0;
@@ -208,26 +208,26 @@ void StageManager::_UpdateGenerationAreas()
 	_int padding_y = s_int(stage_height * 0.175f);
 
 	// left
-	generation_area_[0] = _Rect(
-		_Point(-padding_x, -padding_y),
-		_Point(0, stage_height + padding_y)
-	);
+	generation_area_[0] = _Rect{
+		_Point{ -padding_x, -padding_y },
+		_Point{ 0, stage_height + padding_y }
+	};
 
 	// top
-	generation_area_[1] = _Rect(
-		_Point(-padding_x, -padding_y),
-		_Point(stage_width + padding_x, 0)
-	);
+	generation_area_[1] = _Rect{
+		_Point{ -padding_x, -padding_y },
+		_Point{ stage_width + padding_x, 0}
+	};
 
 	// right
-	generation_area_[2] = _Rect(
-		_Point(stage_width, -padding_y),
-		_Point(stage_width + padding_x, stage_height + padding_y)
-	);
+	generation_area_[2] = _Rect{
+		_Point{ stage_width, -padding_y },
+		_Point{ stage_width + padding_x, stage_height + padding_y }
+	};
 
 	// bottom
-	generation_area_[3] = _Rect(
-		_Point(-padding_x, stage_height),
-		_Point(stage_width + padding_x, stage_height + padding_y)
-	);
+	generation_area_[3] = _Rect{
+		_Point{ -padding_x, stage_height },
+		_Point{ stage_width + padding_x, stage_height + padding_y }
+	};
 }

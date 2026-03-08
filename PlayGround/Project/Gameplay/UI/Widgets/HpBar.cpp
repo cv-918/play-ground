@@ -6,15 +6,12 @@
 #include "Components/ComponentBase.h"
 #include "Components/Status.h"
 
-HpBar::~HpBar()
-{
-	SAFE_DELETE(hp_bar_);
-}
-
 _bool HpBar::Initialize()
 {
 	SAFE_NEW(hp_bar_);
+	hp_bar_->Initialize();
 	hp_bar_->SetSize(DEFAULT_SIZE_HP_BAR);
+	AddElement(hp_bar_);
 
 	return true;
 }
@@ -24,7 +21,7 @@ _int HpBar::Update(_double _delta_time)
 	// 테스트 기능. 'C'를 누르면 체력바가 나타나도록 구현. 실제 게임에서는 적이 데미지를 입었을 때 Appear 함수를 호출하는 방식으로 구현할 예정
 	if (_InputMgr.Down('C'))
 	{
-		this->Appear(); // 3초 동안 체력바가 나타나도록 설정
+		this->Appear(30.0); // 3초 동안 체력바가 나타나도록 설정
 	}
 
 	// 체력바가 나타난 후 일정 시간이 지나면 사라지도록 구현
@@ -32,13 +29,11 @@ _int HpBar::Update(_double _delta_time)
 	{
 		// 알파값 감소	(예시로 0.5초 동안 완전히 사라지도록 설정)
 		const _double fade_duration = 1.0;
-		const _double fade_amount = (_delta_time / fade_duration) * 255; // 프레임마다 감소할 알파값
-		auto& current_color = hp_bar_->FillColor();
-		if (current_color.a > fade_amount)
-			current_color.a -= s_ubyte(fade_amount);
-		else
+		const _double fade_amount = 1.0 - (_delta_time / fade_duration); // 프레임마다 감소할 알파값
+		hp_bar_->SetAlpha(fade_amount); // ProgressBar의 SetAlpha 함수 활용
+		if (fade_amount < 0.0)
 		{
-			current_color.a = 0;
+			hp_bar_->SetAlpha(0.0); // 알파값이 0보다 작아지는 것을 방지
 			on_disappear_ = false;
 			return UPDATE_CONTINUE;
 		}
@@ -70,7 +65,7 @@ _int HpBar::Update(_double _delta_time)
 		}
 		// 대상의 월드 좌표 + 오프셋을 계산하여 UI의 rect_ 위치를 갱신
 		_Vector3 targetPos = tracking_target_->GetTransform()->Position();
-		_Point screenPos = _Point(targetPos + tracking_offset_);
+		_Point screenPos = _Point{ targetPos + tracking_offset_ };
 
 		// UI의 중심이 대상에 오도록 설정하거나, Lt를 설정
 		SetCenter(screenPos); // Geometry2D에 있는 함수 활용
@@ -95,6 +90,10 @@ void HpBar::Render(_double _delta_time)
 	}
 }
 
+void HpBar::OnDestroy()
+{
+}
+
 void HpBar::Appear(_double _duration)
 {
 	appear_timer_ = _duration;
@@ -102,10 +101,7 @@ void HpBar::Appear(_double _duration)
 
 	// 체력바가 나타날 때 알파값을 255로 초기화
 	if (hp_bar_)
-	{
-		auto& current_color = hp_bar_->FillColor();
-		current_color.a = 255;
-	}
+		hp_bar_->SetAlpha(1.0f);
 }
 
 void HpBar::SetTrackingTarget(GameObjectBase* _target, const _Vector3& _offset)

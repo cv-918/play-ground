@@ -20,30 +20,6 @@ _bool GamePlayScene::Initialize()
 	stage_manager_ = &_StageMgr;
 	stage_manager_->PlayScene(this);
 
-	// 스테이지 객체 생성 및 씬에 추가
-	background_ = new Background();
-	AddGameObject(background_);
-
-	const auto& nav_mesh = background_->NavMesh();
-	stage_manager_->SetNavMesh(nav_mesh);
-
-	return_btn_ = new Button();
-
-	const auto return_btn_lt = GAME_VIEW_CENTER - _Point(COMMON_BUTTON_CX / 2, COMMON_BUTTON_CY / 2); // 버튼 크기의 절반을 빼서 중앙 정렬
-	return_btn_->SetRect(_Rect(return_btn_lt, _Size(COMMON_BUTTON_CX, COMMON_BUTTON_CY))); // 화면 중앙 하단쯤
-	return_btn_->SetText(L"RETURN TO LOBBY");
-
-	// 람다를 이용한 클릭 이벤트 연결
-	return_btn_->SetOnClick([]() {
-		_SceneMgr.ChangeScene(SceneType::Lobby);
-		});
-
-	// 씬에 버튼 추가
-	AddUI(return_btn_);
-
-	// 게임 플레이 중에는 보이지 않도록 비활성화
-	return_btn_->InActivate();
-
 	MAKE_INITIALIZED;
 	return true;
 }
@@ -79,6 +55,17 @@ _int GamePlayScene::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+_bool GamePlayScene::Release()
+{
+	__super::Release();
+
+	// 캐싱해둔 액터나 매니저가 있다면 여기서 해제 처리
+	background_ = nullptr;
+	return_btn_ = nullptr;
+
+	return _bool();
+}
+
 void GamePlayScene::OnEnter()
 {
 	const auto prev_player = _GameState.Player();
@@ -90,13 +77,38 @@ void GamePlayScene::OnEnter()
 		return;
 	}
 
+	// 스테이지 객체 생성 및 씬에 추가
+	background_ = new Background();
+	AddGameObject(background_);
+
+	const auto& nav_mesh = background_->NavMesh();
+	stage_manager_->SetNavMesh(nav_mesh);
+
+	return_btn_ = new Button();
+
+	const auto return_btn_lt = GAME_VIEW_CENTER - _Point{ COMMON_BUTTON_CX / 2, COMMON_BUTTON_CY / 2 }; // 버튼 크기의 절반을 빼서 중앙 정렬
+	return_btn_->SetRect(_Rect{ return_btn_lt, _Size{ COMMON_BUTTON_CX, COMMON_BUTTON_CY } }); // 화면 중앙 하단쯤
+	return_btn_->SetText(L"RETURN TO LOBBY");
+
+	// 람다를 이용한 클릭 이벤트 연결
+	return_btn_->SetOnClick([]() {
+		_SceneMgr.ChangeScene(SceneType::Lobby);
+	});
+
+	// 씬에 버튼 추가
+	AddUI(return_btn_);
+
+	// 게임 플레이 중에는 보이지 않도록 비활성화
+	return_btn_->InActivate();
+
 	// 현재 구조에서는 플레이어를 매번 재생성한다
 	SpawnPlayer();
 
-
-
 	return_btn_->InActivate();
 	stage_manager_->ChangeState(StageState::Enter);
+
+	// 플레이 씬에 진입할 때에는 정지 상태를 해제
+	_GameState.Pause(false);
 }
 
 void GamePlayScene::OnExit()
@@ -155,6 +167,7 @@ void GamePlayScene::SpawnEnemy(_uint _enemy_id)
 
 	// 프로그레스바의 크기와 위치는 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
 	enemy_hp_bar->SetTrackingTarget(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+	enemy_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
 }
 
 void GamePlayScene::ShowResultUI()
@@ -168,5 +181,5 @@ void GamePlayScene::ShowDamageUI(_float _damage, const _Point& _position)
 	damage_font->SetFontSize(30.f);
 	damage_font->SetText(std::to_wstring(s_int(_damage)));
 	damage_font->SetLifeTime(4.f);
-	damage_font->SetRect(_Rect(_position, _Size(200, 50)));
+	damage_font->SetRect(_Rect{ _position, _Size{ 200, 50 } });
 }

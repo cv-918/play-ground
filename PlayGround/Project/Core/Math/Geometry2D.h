@@ -6,6 +6,8 @@ struct _Point
 	constexpr _Point() : x(IV_ZERO), y(IV_ZERO) {}
 	constexpr _Point(const _int _value) : x(_value), y(_value) {}
 	constexpr _Point(const _int _x, const _int _y) : x(_x), y(_y) {}
+	constexpr _Point(const _float _value) : x(s_int(_value)), y(s_int(_value)) {}
+	constexpr _Point(const _float _x, const _float _y) : x(s_int(_x)), y(s_int(_y)) {}
 
 	// 벡터에서 포인트로 변환하는 생성자
 	_Point(const _Vector3& _vec);
@@ -34,6 +36,16 @@ struct _Size
 	constexpr _Size(const _int _x, const _int _y) : x(_x), y(_y) {}
 
 	static constexpr _Size Zero() { return _Size{}; }
+	static constexpr _Size One() { return _Size{ 1, 1 }; }
+
+	// 연산자 오버로드
+	_Size operator+(const _Size& _size) const;
+	_Size operator-(const _Size& _size) const;
+	_Size& operator+=(const _Size& _size);
+	_Size& operator-=(const _Size& _size);
+
+	_bool operator==(const _Size& _other) const { return x == _other.x && y == _other.y; }
+	_bool operator!=(const _Size& _other) const { return !(*this == _other); }
 
 	_int x;
 	_int y;
@@ -44,7 +56,8 @@ struct _Rect
 	constexpr _Rect() : points_{ _Point::Zero(), _Point::Zero() } {}
 	constexpr _Rect(const _Point& _lt, const _Point& _rb) : points_{ _lt, _rb } {}
 	constexpr _Rect(const _Point& _lt, const _Size& _size) : points_{ _lt, _Point{ _lt.x + _size.x, _lt.y + _size.y } } {}
-	constexpr _Rect(const _int _left, const _int _top, const _int _right, const _int _bottom) : points_{ _Point(_left, _top), _Point(_right, _bottom) } {}
+	constexpr _Rect(const _int _left, const _int _top, const _int _right, const _int _bottom) : points_{ _Point{_left, _top}, _Point{_right, _bottom} } {}
+	constexpr _Rect(const _Rect& _other) : points_{ _other.points_[0], _other.points_[1] } {}
 
 	static constexpr _Rect Zero() { return _Rect{}; }
 

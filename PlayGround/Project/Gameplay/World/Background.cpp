@@ -9,7 +9,7 @@ _bool Background::Initialize()
 	const auto lt = _Point{ INGAME_FRAME_THICKNESS_HALF, INGAME_FRAME_THICKNESS_HALF };
 	const auto size = _Size{ GAME_SCREEN_CX, GAME_SCREEN_CY };
 
-	nav_mesh_ = _Rect(lt, size);
+	nav_mesh_ = _Rect{ lt, size };
 
 	Finalize();
     return true;

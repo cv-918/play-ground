@@ -22,7 +22,7 @@ void SphereCollider::Render(_double _delta_time)
 	if (!Visible())
 		return;
 
-	_DrawFunc::DrawCircle(_Point(center_.x, center_.y), radius_, Colors::Black);
+	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, Colors::Black);
 }
 
 _bool SphereCollider::_CheckCollided(Collider* _other)
