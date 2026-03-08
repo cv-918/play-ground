@@ -9,6 +9,12 @@ class UIBase abstract
 	, public IIdentifiable
 {
 public:
+	explicit UIBase() {
+		rect_ = _Rect::Zero();
+		destroyed_ = false;
+	}
+
+public:
 	_bool Initialize() override { MAKE_INITIALIZED; return true; }
 	_bool Release() override { return true; }
 
@@ -16,7 +22,7 @@ public:
 	// 위치와 크기 설정
 	_Rect GetRect() const { return rect_; }
 	void SetRect(const _Rect& _rect) { rect_ = _rect; }
-	void SetRect(const _Point _position, const _Size& _size) { rect_ = _Rect(_position, _size); }
+	void SetRect(const _Point _position, const _Size& _size) { rect_ = _Rect{ _position, _size }; }
 
 	_Point GetPosition() const { return rect_.GetLt(); }
 	virtual void SetPosition(const _Point& _position) { rect_.MoveLtTo(_position); }
@@ -48,7 +54,7 @@ public:
 
 private:
 	// UI의 위치와 크기를 나타내는 사각형
-	_Rect rect_;
+	_Rect rect_ = {};
 
 	// UI 요소가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 UI 요소의 생명 주기를 관리하는 데 활용할 수 있습니다.
 	_bool destroyed_ = false;

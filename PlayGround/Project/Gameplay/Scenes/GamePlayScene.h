@@ -15,6 +15,8 @@ public:
 
 	_int Update(_double _delta_time) override;
 
+	_bool Release() override;
+
 	void OnEnter() override;
 	void OnExit() override;
 
@@ -28,7 +30,7 @@ public:
 
 private:
 	StageManager* stage_manager_ = nullptr;
-	Background* background_ = nullptr;
 
+	Background* background_ = nullptr;
 	Button* return_btn_ = nullptr;
 };

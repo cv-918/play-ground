@@ -59,9 +59,9 @@ private:
 
 	_int pressed_key_count_ = IV_ZERO;
 
-	_Point mouse_;
-	_Point prev_mouse_;
-	_Point mouse_delta_;
+	_Point mouse_ = _Point::Zero();
+	_Point prev_mouse_ = _Point::Zero();
+	_Point mouse_delta_ = _Point::Zero();
 
 	_int wheel_delta_ = IV_ZERO;
 

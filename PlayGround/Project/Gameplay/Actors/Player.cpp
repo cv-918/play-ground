@@ -22,6 +22,7 @@ _bool Player::Initialize()
 	transform_->Scale(30.f);
 
 	status_->SetCurrentHp(3);
+	status_->SetMaxHP(3);
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
@@ -143,7 +144,7 @@ void Player::GetDamage(_float _damage)
 
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
-	play_scene_->ShowDamageUI(final_damage, _Point(position.x, position.y));
+	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 }
 
 _int Player::_ControllRoutine(_double _delta_time)

@@ -94,7 +94,7 @@ void GameObjectBase::Render(_double _delta_time)
 	// 오브젝트 그리기
 	const auto position = transform_->Position();
 	const auto radius = transform_->Scale().x * 0.5f;
-	_DrawFunc::FillCircle(_Point(position.x, position.y), radius, color_);
+	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
 
 	for (const auto& component : components_)
 		component->Render(_delta_time);
@@ -106,19 +106,19 @@ void GameObjectBase::DebugRender(_double _delta_time)
 		return;
 
 	const auto position = transform_->Position();
-	_DrawFunc::DrawString(_Point(position.x, position.y), Name(), Colors::DarkGray);
+	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Colors::DarkGray);
 
 	// 1. 방향 그리기
 	const float line_length = 75.f;
 	const auto line_to = position + transform_->Forward2D() * line_length;
 
-	_DrawFunc::DrawLine(_Point(position.x, position.y), _Point(line_to.x, line_to.y), Colors::DarkGray);
+	_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Colors::DarkGray);
 
 	// 2. 디스크립션 그리기
 	auto description_position = position;
 	description_position.y += 16.f; // 디버그용으로 위치 보정
 
-	_DrawFunc::DrawString(_Point(description_position.x, description_position.y), object_description_, Colors::DarkGray);
+	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Colors::DarkGray);
 }
 
 void GameObjectBase::RegisterComponent(ComponentBase* _component)

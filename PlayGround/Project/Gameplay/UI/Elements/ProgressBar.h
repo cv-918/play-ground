@@ -11,23 +11,21 @@ public:
 
 	_float Ratio() const { return ratio_; }
 	void Ratio(_float _ratio) { ratio_ = MathFunctions::Clamp(_ratio, 0.f, 1.f); }
-	_float& Ratio() { return ratio_; }
 
 	_Color BackgroundColor() const { return bgColor_; }
 	void BackgroundColor(const _Color& _color) { bgColor_ = _color; }
-	_Color& BackgroundColor() { return bgColor_; }
 
 	_Color FillColor() const { return fillColor_; }
 	void FillColor(const _Color& _color) { fillColor_ = _color; }
-	_Color& FillColor() { return fillColor_; }
 
 	_Color BorderColor() const { return borderColor_; }
 	void BorderColor(const _Color& _color) { borderColor_ = _color; }
-	_Color& BorderColor() { return borderColor_; }
 
 	_float BorderThickness() const { return thickness_; }
 	void BorderThickness(_float _thickness) { thickness_ = _thickness; }
-	_float& BorderThickness() { return thickness_; }
+
+	_float GetAlpha() const { return alpha_; }
+	void SetAlpha(_float _alpha);
 
 private:
 	// 게이지의 채워진 정도를 나타내는 변수. 비율(0.0 ~ 1.0)로 표현.
@@ -41,4 +39,7 @@ private:
 
 	// 테두리 두께. 필요에 따라 조절 가능
 	_float thickness_ = 1.f;
+
+	// 자체 알파값
+	_float alpha_ = 1.f;
 };

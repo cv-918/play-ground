@@ -4,6 +4,9 @@
 class UIBase;
 class WidgetBase abstract : public UIBase
 {
+public:
+	virtual ~WidgetBase();
+
 protected:
 	_bool Initialize() override;
 

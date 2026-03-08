@@ -1,6 +1,11 @@
 ﻿#include "framework.h"
 #include "WidgetBase.h"
 
+WidgetBase::~WidgetBase()
+{
+	Release();
+}
+
 _bool WidgetBase::Initialize()
 {
     return _bool();
@@ -72,8 +77,20 @@ void WidgetBase::SetSize(const _Size& _size)
 {
 	// 현재 크기와 새 크기의 비율 계산
 	_Size current_size = GetSize();
-	_float width_ratio = s_float(_size.x) / current_size.x;
-	_float height_ratio = s_float(_size.y) / current_size.y;
+
+	_float width_ratio = 1.f;
+	_float height_ratio = 1.f;
+
+	// 크기가 0이 되는 것을 방지하기 위해 최소 크기(1*1)를 설정
+	if (current_size == _Size::Zero())
+	{
+		current_size = _Size::One();
+	}
+	else
+	{
+		width_ratio = s_float(_size.x) / current_size.x;
+		height_ratio = s_float(_size.y) / current_size.y;
+	}
 
 	// 자신의 크기를 새 크기로 설정
 	__super::SetSize(_size);

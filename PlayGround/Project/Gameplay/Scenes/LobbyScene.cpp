@@ -23,8 +23,8 @@ void LobbyScene::OnEnter()
 	const auto start_btn = ui_manager_->CreateUI<Button>();
 
 	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
-	const _Point start_btn_lt(x, 400); // 버튼의 왼쪽 상단 위치
-	start_btn->SetRect(_Rect(start_btn_lt, COMMON_BUTTON_SIZE)); // 화면 중앙 하단쯤
+	const _Point start_btn_lt{ x, 400 }; // 버튼의 왼쪽 상단 위치
+	start_btn->SetRect(_Rect{ start_btn_lt, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
 	start_btn->SetText(L"GAME START");
 
 	// 람다를 이용한 클릭 이벤트 연결
