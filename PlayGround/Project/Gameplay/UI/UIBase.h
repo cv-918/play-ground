@@ -15,7 +15,7 @@ public:
 	}
 
 public:
-	_bool Initialize() override { MAKE_INITIALIZED; return true; }
+	_bool Initialize() override;
 	_bool Release() override { return true; }
 
 public:

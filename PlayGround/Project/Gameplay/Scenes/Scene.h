@@ -8,11 +8,10 @@ class GameObjectBase;
 #include "GamePlaySystems/UIManager.h"
 
 #include "UI/Widgets/HpBar.h"
+#include "UI/Widgets/DamageFont.h"
 
 // 위젯들이 전부 만들어지면 제거할 포함
 #include "UI/Elements/Button.h"
-#include "UI/Elements/Text.h"
-#include "UI/Elements/ProgressBar.h"
 
 class Scene abstract
 	: public IInitializable

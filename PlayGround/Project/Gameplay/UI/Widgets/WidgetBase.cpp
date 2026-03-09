@@ -8,26 +8,37 @@ WidgetBase::~WidgetBase()
 
 _bool WidgetBase::Initialize()
 {
-    return _bool();
+	if (false == __super::Initialize())
+		return false;
+
+	return true;
 }
 
 _int WidgetBase::Update(_double _delta_time)
 {
+	_int ret = __super::Update(_delta_time);
+	if (UPDATE_CONTINUE != ret) return ret;
+
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsDestroyed())
 			element->Update(_delta_time);
 	}
 
+	_UpdateFadeOut(_delta_time);
+
 	return UPDATE_CONTINUE;
 }
 
 _int WidgetBase::LateUpdate(_double _delta_time)
 {
+	_int ret = __super::LateUpdate(_delta_time);
+	if (UPDATE_CONTINUE != ret) return ret;
+
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsDestroyed())
-			element->Update(_delta_time);
+			element->LateUpdate(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;
@@ -35,15 +46,20 @@ _int WidgetBase::LateUpdate(_double _delta_time)
 
 void WidgetBase::Render(_double _delta_time)
 {
+	__super::Render(_delta_time);
+
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsDestroyed())
-			element->Update(_delta_time);
+			element->Render(_delta_time);
 	}
 }
 
 _bool WidgetBase::Release()
 {
+	if (false == __super::Release())
+		return false;
+
 	for (UIBase* element : elements_)
 	{
 		if (element)
@@ -202,7 +218,7 @@ void WidgetBase::OnDestroy()
 	}
 }
 
-void WidgetBase::AddElement(UIBase* _element)
+void WidgetBase::_AddElement(UIBase* _element)
 {
 	// 요소가 유효한지 확인
 	if (_element)
@@ -220,7 +236,7 @@ void WidgetBase::AddElement(UIBase* _element)
 	}
 }
 
-void WidgetBase::RemoveElement(UIBase* _element)
+void WidgetBase::_RemoveElement(UIBase* _element)
 {
 	// 요소가 유효한지 확인
 	if (_element)
@@ -234,6 +250,25 @@ void WidgetBase::RemoveElement(UIBase* _element)
 		else
 		{
 			_SYSTEM_LOG_INFO(L"Element %s not found in widget %s.", _element->Name().c_str(), Name().c_str());
+		}
+	}
+}
+
+void WidgetBase::_UpdateFadeOut(_double _delta_time)
+{
+	if (on_fade_out_)
+	{
+		fade_timer_ += _delta_time;
+		if (_IsFadeOutComplete())
+		{
+			// 페이드 아웃이 완료되면 위젯을 파괴
+			if (destroy_on_fade_out_complete_)
+				Destroy();
+		}
+		else
+		{
+			fade_timer_ = 0.0;
+			on_fade_out_ = false;
 		}
 	}
 }

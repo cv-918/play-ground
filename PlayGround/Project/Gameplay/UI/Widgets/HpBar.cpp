@@ -6,57 +6,61 @@
 #include "Components/ComponentBase.h"
 #include "Components/Status.h"
 
-_bool HpBar::Initialize()
+HpBar::HpBar(GameObjectBase* _target, const _Vector3& _offset)
 {
-	SAFE_NEW(hp_bar_);
-	hp_bar_->Initialize();
-	hp_bar_->SetSize(DEFAULT_SIZE_HP_BAR);
-	AddElement(hp_bar_);
+	if (nullptr == _target)
+		return;
 
-	return true;
+	hp_bar_ = CreateElement<ProgressBar>();
+	hp_bar_->FillColor(Colors::Crimson);
+	hp_bar_->SetSize(DEFAULT_SIZE_HP_BAR);
+
+	SetSize(DEFAULT_SIZE_HP_BAR);
+
+	tracking_target_ = _target;
+	tracking_transform_ = _target->GetTransform(); // 트래킹 대상의 Transform 컴포넌트 가져오기
+	tracking_status_ = s_cast(Status*, _target->GetComponent(ComponentType::Status)); // 트래킹 대상의 Status 컴포넌트 가져오기
+	tracking_offset_ = _offset;
+
+	current_hp_ = tracking_status_->GetCurrentHp();
+
+	_SetFadeDuration(DEFAULT_FADE_DURATION_HP_BAR);
+
+	// 어떤 UI 가 어떤 게임 오브젝트를 트래킹하는지 디버그용으로 출력
+	_SYSTEM_LOG_INFO(L"UI %s started tracking target. (Target: %s)", Name().c_str(), _target->Name().c_str());
 }
 
 _int HpBar::Update(_double _delta_time)
 {
-	// 테스트 기능. 'C'를 누르면 체력바가 나타나도록 구현. 실제 게임에서는 적이 데미지를 입었을 때 Appear 함수를 호출하는 방식으로 구현할 예정
-	if (_InputMgr.Down('C'))
+	_int ret = __super::Update(_delta_time);
+	if (UPDATE_CONTINUE != ret) return ret;
+
+	// 비율 갱신 및 체력바가 나타날 때마다 체력 변화가 있는지 체크하여 체력바의 값을 갱신
+	// 지금은 구조적으로 접근하지 않고 일단 이렇게 구현해둔다
+	const _float currentHP = tracking_status_->GetCurrentHp();
+	if (current_hp_ != currentHP)
 	{
-		this->Appear(30.0); // 3초 동안 체력바가 나타나도록 설정
+		current_hp_ = currentHP;
+
+		const _float maxHP = tracking_status_->GetMaxHP();
+		hp_bar_->Ratio(current_hp_ / maxHP); // ProgressBar의 SetProgress 함수는 0.0f ~ 1.0f 범위의 값을 받는다고 가정
+		Appear(); // 체력 변화가 있을 때마다 체력바가 다시 나타나도록 설정
 	}
 
-	// 체력바가 나타난 후 일정 시간이 지나면 사라지도록 구현
-	if (on_disappear_)
+	if (life_time_timer_ <= DEFAULT_DURATION_HP_BAR)
 	{
-		// 알파값 감소	(예시로 0.5초 동안 완전히 사라지도록 설정)
-		const _double fade_duration = 1.0;
-		const _double fade_amount = 1.0 - (_delta_time / fade_duration); // 프레임마다 감소할 알파값
-		hp_bar_->SetAlpha(fade_amount); // ProgressBar의 SetAlpha 함수 활용
-		if (fade_amount < 0.0)
+		life_time_timer_ += _delta_time;
+
+		if (_IsFadingOut())
 		{
-			hp_bar_->SetAlpha(0.0); // 알파값이 0보다 작아지는 것을 방지
-			on_disappear_ = false;
-			return UPDATE_CONTINUE;
+			const auto progress = 1.0 - _GetFadeProgress();
+			hp_bar_->SetAlpha(progress);
 		}
-	}
-	else
-	{
-		if (appear_timer_ > 0.0)
+		else if (life_time_timer_ >= DEFAULT_DURATION_HP_BAR - DEFAULT_FADE_DURATION_HP_BAR)
 		{
-			appear_timer_ -= _delta_time;
-			if (appear_timer_ <= 0.0)
-			{
-				on_disappear_ = true;
-				appear_timer_ = 0.0;
-			}
+			_StartFadeOut(false);
 		}
-	}
 
-	// 트래킹 대상이 없으면 업데이트할 필요가 없으므로 바로 리턴
-	if (nullptr == tracking_target_)
-		return UPDATE_ERROR;
-
-	if (appear_timer_ > 0.0 || on_disappear_)
-	{
 		// 대상이 파괴되었는지 체크 (지난번에 만든 IsDestroyed 활용)
 		if (tracking_target_->IsDestroyed())
 		{
@@ -69,14 +73,6 @@ _int HpBar::Update(_double _delta_time)
 
 		// UI의 중심이 대상에 오도록 설정하거나, Lt를 설정
 		SetCenter(screenPos); // Geometry2D에 있는 함수 활용
-
-		// 트래킹 대상의 상태에 따라 체력바의 값을 갱신 (예시로 Status 컴포넌트에서 HP 정보를 가져와서 ProgressBar에 반영)
-		if (tracking_status_)
-		{
-			const _float currentHP = tracking_status_->GetCurrentHp();
-			const _float maxHP = tracking_status_->GetMaxHP();
-			hp_bar_->Ratio(currentHP / maxHP); // ProgressBar의 SetProgress 함수는 0.0f ~ 1.0f 범위의 값을 받는다고 가정
-		}
 	}
 	
 	return UPDATE_CONTINUE;
@@ -84,36 +80,17 @@ _int HpBar::Update(_double _delta_time)
 
 void HpBar::Render(_double _delta_time)
 {
-	if (appear_timer_ > 0.0 || on_disappear_)
+	if (life_time_timer_ <= DEFAULT_DURATION_HP_BAR)
 	{
 		hp_bar_->Render(_delta_time);
 	}
 }
 
-void HpBar::OnDestroy()
-{
-}
-
 void HpBar::Appear(_double _duration)
 {
-	appear_timer_ = _duration;
-	on_disappear_ = false;
+	life_time_timer_ = 0.0;
 
 	// 체력바가 나타날 때 알파값을 255로 초기화
 	if (hp_bar_)
 		hp_bar_->SetAlpha(1.0f);
-}
-
-void HpBar::SetTrackingTarget(GameObjectBase* _target, const _Vector3& _offset)
-{
-	if (nullptr == _target)
-		return;
-
-	tracking_target_ = _target;
-	tracking_transform_ =  _target->GetTransform(); // 트래킹 대상의 Transform 컴포넌트 가져오기
-	tracking_status_ = s_cast(Status*, _target->GetComponent(ComponentType::Status)); // 트래킹 대상의 Status 컴포넌트 가져오기
-	tracking_offset_ = _offset;
-
-	// 어떤 UI 가 어떤 게임 오브젝트를 트래킹하는지 디버그용으로 출력
-	_SYSTEM_LOG_INFO(L"UI %s started tracking target. (Target: %s)", Name().c_str(), _target->Name().c_str());
 }

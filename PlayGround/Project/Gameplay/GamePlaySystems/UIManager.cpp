@@ -3,6 +3,11 @@
 
 #include "UI/UIBase.h"
 
+UIManager::~UIManager()
+{
+	Release();
+}
+
 _int UIManager::Update(_double _delta_time)
 {
 	for (auto* ui : ui_list_)

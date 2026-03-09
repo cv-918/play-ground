@@ -82,6 +82,7 @@
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayDefine.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\WidgetBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -146,5 +147,6 @@
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
   </ItemGroup>
 </Project>

@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Core\Base\Bases.h" />
     <ClInclude Include="Project\Core\Base\Defines.h" />
@@ -251,6 +252,7 @@
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />

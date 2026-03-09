@@ -24,8 +24,8 @@ public:
 	explicit IInitializable() DEFAULT;
 	virtual ~IInitializable() DEFAULT;
 
-	virtual _bool Initialize() { MAKE_INITIALIZED;  return true; }
 	// 기본 구현은 초기화 성공으로 간주. 필요에 따라 오버라이드하여 초기화 로직 구현.
+	virtual _bool Initialize() { MAKE_INITIALIZED;  return true; }
 
 public:
 	_bool IsInitialized() const { return initialized_; }
@@ -86,6 +86,34 @@ public:
 
 	std::wstring Name() const { return name_; }
 	void Name(const std::wstring _name) { name_ = _name; }
+
+protected:
+	void _SetNumberingName()
+	{
+		static std::unordered_map<std::wstring, _int> instance_counts; // 클래스별 인스턴스 생성 횟수 추적
+
+		std::string type_name = typeid(*this).name();
+		const std::string base = "class ";
+		type_name = type_name.substr(base.size());
+
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		const std::wstring type_name_w = converter.from_bytes(type_name);
+
+		auto iter = instance_counts.find(type_name_w);
+		if (iter == instance_counts.end())
+		{
+			iter = instance_counts.insert({ type_name_w, 1 }).first;
+			_SYSTEM_LOG_INFO(L"Creating first instance of type: %s", type_name_w.c_str());
+		}
+		else
+		{
+			instance_counts[type_name_w]++;
+		}
+
+		_tchar buff[MAX_PATH]{};
+		swprintf_s(buff, L"%ls %d", type_name_w.c_str(), iter->second);
+		Name(buff);
+	}
 
 protected:
 	_int id_ = IV_INVALID;

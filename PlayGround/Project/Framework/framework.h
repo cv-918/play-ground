@@ -26,9 +26,12 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <string>
 #include <algorithm>
-
 #include <cmath>
+#include <codecvt>
+#include <locale>
 #include <functional>
 
 #include "Core/Base/Defines.h"
