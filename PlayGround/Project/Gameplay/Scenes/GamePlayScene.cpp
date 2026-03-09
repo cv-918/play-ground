@@ -125,11 +125,11 @@ void GamePlayScene::SpawnPlayer()
 	AddGameObject(player);
 
 	// 프로그레스바 생성 및 설정. 플레이어는 체력바가 필요하다고 가정하고, 플레이어가 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-	const auto player_hp_bar = ui_manager_->CreateUI<HpBar>();
+	const auto player_hp_bar = ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
 
-	// 프로그레스바의 크기와 오프셋은 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
-	player_hp_bar->SetTrackingTarget(player, DEFAULT_OFFSET_HP_BAR);
-	player_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
+	//// 프로그레스바의 크기와 오프셋은 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
+	//player_hp_bar->SetTrackingTarget(player, DEFAULT_OFFSET_HP_BAR);
+	//player_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
 
 	// 스테이지(월드)에 있는 네비메시를 가져와서 플레이어에게 연결
 	const auto& nav_mesh = background_->NavMesh();
@@ -163,11 +163,13 @@ void GamePlayScene::SpawnEnemy(_uint _enemy_id)
 	}
 
 	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>();
+	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 
-	// 프로그레스바의 크기와 위치는 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
-	enemy_hp_bar->SetTrackingTarget(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
-	enemy_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
+	//// 프로그레스바의 크기와 위치는 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
+	//enemy_hp_bar->SetTrackingTarget(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+	//enemy_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
+
+	s_cast(Unit*, spawned_enemy)->SetPlayScene(this); // 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
 }
 
 void GamePlayScene::ShowResultUI()
@@ -177,9 +179,6 @@ void GamePlayScene::ShowResultUI()
 
 void GamePlayScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
-	const auto damage_font = ui_manager_->CreateUI<Text>();
-	damage_font->SetFontSize(30.f);
-	damage_font->SetText(std::to_wstring(s_int(_damage)));
-	damage_font->SetLifeTime(4.f);
-	damage_font->SetRect(_Rect{ _position, _Size{ 200, 50 } });
+	const auto damage_font = ui_manager_->CreateUI<DamageFont>(_damage, _position);
+	_SYSTEM_LOG_INFO(L"DamageFont created at position (%d, %d) with damage %.2f", _position.x, _position.y, _damage);
 }

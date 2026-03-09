@@ -120,6 +120,7 @@ _bool ExpDust::Initialize()
 
 	status_->SetLv(s_int(info_->grade_));
 	status_->SetCurrentHp(info_->hp_);
+	status_->SetMaxHP(info_->hp_);
 
 	object_description_ = _T("Lv. ") + std::to_wstring(status_->GetLv());
 
@@ -229,5 +230,9 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 
 void ExpDust::GetDamage(_float _damage)
 {
-	combat_->GetDamage(_damage, status_);
+	const auto final_damage = combat_->GetDamage(_damage, status_);
+
+	// 데미지 폰트 출력
+	const auto position = transform_->Position();
+	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 }

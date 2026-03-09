@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "GameObjectBase.h"
 
 #include "EngineSystems/Render/RenderChain.h"
@@ -8,10 +8,12 @@ GameObjectBase::~GameObjectBase()
 	Release();
 }
 
-// final ¿ÀºêÁ§Æ®ÀÇ Initialize ÃÖ»ó´Ü¿¡¼­ È£Ãâ
+// final ì˜¤ë¸Œì íŠ¸ì˜ Initialize ìµœìƒë‹¨ì—ì„œ í˜¸ì¶œ
 _bool GameObjectBase::Initialize()
 {
-	// TransformÀÌ ¾øÀ¸¸é »ı¼ºÇØ¼­ µî·Ï
+	_SetNumberingName();
+
+	// Transformì´ ì—†ìœ¼ë©´ ìƒì„±í•´ì„œ ë“±ë¡
 	if (transform_ == nullptr)
 	{
 		auto new_transform = new Transform();
@@ -23,15 +25,15 @@ _bool GameObjectBase::Initialize()
 	return true;
 }
 
-// final ¿ÀºêÁ§Æ®ÀÇ Initialize ÃÖÇÏ´Ü¿¡¼­ È£Ãâ
+// final ì˜¤ë¸Œì íŠ¸ì˜ Initialize ìµœí•˜ë‹¨ì—ì„œ í˜¸ì¶œ
 _bool GameObjectBase::Finalize()
 {
 	for (const auto& component : components_)
 	{
-		// ÄÄÆ÷³ÍÆ® ÃÊ±âÈ­
+		// ì»´í¬ë„ŒíŠ¸ ì´ˆê¸°í™”
 		component->Initialize();
 
-		// ÄÄÆ÷³ÍÆ® Å¸ÀÔ¿¡ µû¶ó ÇÊ¿äÇÑ ÇÚµé·¯ ½Ã½ºÅÛ¿¡ µî·Ï
+		// ì»´í¬ë„ŒíŠ¸ íƒ€ì…ì— ë”°ë¼ í•„ìš”í•œ í•¸ë“¤ëŸ¬ ì‹œìŠ¤í…œì— ë“±ë¡
 		switch (component->Type())
 		{
 		case ComponentType::Undefined:
@@ -91,7 +93,7 @@ void GameObjectBase::Render(_double _delta_time)
 	if (!Visible())
 		return;
 
-	// ¿ÀºêÁ§Æ® ±×¸®±â
+	// ì˜¤ë¸Œì íŠ¸ ê·¸ë¦¬ê¸°
 	const auto position = transform_->Position();
 	const auto radius = transform_->Scale().x * 0.5f;
 	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
@@ -108,36 +110,36 @@ void GameObjectBase::DebugRender(_double _delta_time)
 	const auto position = transform_->Position();
 	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Colors::DarkGray);
 
-	// 1. ¹æÇâ ±×¸®±â
+	// 1. ë°©í–¥ ê·¸ë¦¬ê¸°
 	const float line_length = 75.f;
 	const auto line_to = position + transform_->Forward2D() * line_length;
 
 	_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Colors::DarkGray);
 
-	// 2. µğ½ºÅ©¸³¼Ç ±×¸®±â
+	// 2. ë””ìŠ¤í¬ë¦½ì…˜ ê·¸ë¦¬ê¸°
 	auto description_position = position;
-	description_position.y += 16.f; // µğ¹ö±×¿ëÀ¸·Î À§Ä¡ º¸Á¤
+	description_position.y += 16.f; // ë””ë²„ê·¸ìš©ìœ¼ë¡œ ìœ„ì¹˜ ë³´ì •
 
 	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Colors::DarkGray);
 }
 
 void GameObjectBase::RegisterComponent(ComponentBase* _component)
 {
-	// ¹æ¾î ÄÚµå: null µî·Ï ¹æÁö
+	// ë°©ì–´ ì½”ë“œ: null ë“±ë¡ ë°©ì§€
 	if (_component == nullptr)
 		return;
 
-	// 1. ÄÄÆ÷³ÍÆ®¿¡ °ÔÀÓ ¿ÀºêÁ§Æ® Æ÷ÀÎÅÍ¿Í ID ÇÒ´ç
+	// 1. ì»´í¬ë„ŒíŠ¸ì— ê²Œì„ ì˜¤ë¸Œì íŠ¸ í¬ì¸í„°ì™€ ID í• ë‹¹
 	_component->GameObject(this);
 	_component->ID(components_.size());
 
-	// 2-1. ÄÄÆ÷³ÍÆ® ¸®½ºÆ®¿¡ Ãß°¡
+	// 2-1. ì»´í¬ë„ŒíŠ¸ ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
 	components_.push_back(_component);
 
-	// 2-2. Transform ÄÄÆ÷³ÍÆ®ÀÎ °æ¿ì Ä³½Ã Æ÷ÀÎÅÍ °»½Å
+	// 2-2. Transform ì»´í¬ë„ŒíŠ¸ì¸ ê²½ìš° ìºì‹œ í¬ì¸í„° ê°±ì‹ 
 	if (ComponentType::Transform == _component->Type())
 	{
-		// ÀÌ¹Ì TransformÀÌ µî·ÏµÇ¾î ÀÖ´Â °æ¿ì
+		// ì´ë¯¸ Transformì´ ë“±ë¡ë˜ì–´ ìˆëŠ” ê²½ìš°
 		if (transform_)
 		{
 			delete _component;
@@ -145,7 +147,7 @@ void GameObjectBase::RegisterComponent(ComponentBase* _component)
 		}
 		else
 		{
-			// components_¿¡ µé¾î°£ ½ÇÁ¦ Æ÷ÀÎÅÍ¸¦ Ä³½Ã·Î Àâ´Â´Ù
+			// components_ì— ë“¤ì–´ê°„ ì‹¤ì œ í¬ì¸í„°ë¥¼ ìºì‹œë¡œ ì¡ëŠ”ë‹¤
 			transform_ = s_cast(Transform*, components_.back());
 			return;
 		}
@@ -154,14 +156,14 @@ void GameObjectBase::RegisterComponent(ComponentBase* _component)
 
 void GameObjectBase::DeregisterComponent(const ComponentType _type)
 {
-	// TransformÀ» Áö¿ì´Â °æ¿ì Ä³½Ã Æ÷ÀÎÅÍµµ °°ÀÌ Á¤¸®
+	// Transformì„ ì§€ìš°ëŠ” ê²½ìš° ìºì‹œ í¬ì¸í„°ë„ ê°™ì´ ì •ë¦¬
 	if (_type == ComponentType::Transform)
 		transform_ = nullptr;
 
 	auto iter = std::remove_if(components_.begin(), components_.end(),
 		[_type](const ComponentBase* _comp)
 		{
-			// null ¹æ¾î Æ÷ÇÔ
+			// null ë°©ì–´ í¬í•¨
 			return (_comp != nullptr) && (_comp->Type() == _type);
 		}
 	);
@@ -170,7 +172,7 @@ void GameObjectBase::DeregisterComponent(const ComponentType _type)
 	for (_int i = s_int(dist); i < s_int(components_.size()); ++i)
 		components_[i]->ID(i - 1);
 
-	// ÇØ´ç Å¸ÀÔ ÄÄÆ÷³ÍÆ® Á¦°Å
+	// í•´ë‹¹ íƒ€ì… ì»´í¬ë„ŒíŠ¸ ì œê±°
 	components_.erase(iter, components_.end());
 }
 
