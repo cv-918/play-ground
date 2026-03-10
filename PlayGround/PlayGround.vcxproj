@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Core\Base\Bases.h" />
@@ -157,7 +158,7 @@
     <ClInclude Include="Project\Core\Base\Extern.h" />
     <ClInclude Include="Project\Core\Interface\Interfaces.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayDefine.h" />
-    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.h" />
     <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
     <ClInclude Include="Project\Core\Math\Geometry2D.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
@@ -215,7 +216,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
-    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
@@ -239,6 +240,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />

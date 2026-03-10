@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "UnitBase.h"
 
 #include "Components/NonPlayableMovement.h"
@@ -14,6 +14,6 @@ protected:
 protected:
 	const EnemyJsonInfo* info_;
 
-	EnemyRole role_ = EnemyRole::Undefined;
+	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
 };
 

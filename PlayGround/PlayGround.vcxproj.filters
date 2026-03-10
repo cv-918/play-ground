@@ -75,7 +75,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
     <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
-    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Text.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\ProgressBar.h" />
@@ -83,6 +83,7 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\WidgetBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -142,11 +143,12 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
-    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemyDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
   </ItemGroup>
 </Project>

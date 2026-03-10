@@ -7,7 +7,8 @@
 #include "GamePlaySystems/ObjectManager.h"
 #include "GamePlaySystems/UIManager.h"
 #include "GamePlaySystems/StageManager.h"
-#include "GamePlaySystems/EnemyDataManager.h"
+#include "GamePlaySystems/Json/EnemyDataManager.h"
+#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 
 _bool GamePlayScene::Initialize()
 {
@@ -55,6 +56,15 @@ _int GamePlayScene::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void GamePlayScene::Render(_double _delta_time)
+{
+	__super::Render(_delta_time);
+
+	// 우측 상단에 현재 코인 개수 표시 (임시로 텍스트로 표시. 나중에는 아이콘과 함께 표시하는 UI 요소로 대체할 예정)
+	const auto current_coin_count = _GameState.GetCoinCount();
+	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
+}
+
 _bool GamePlayScene::Release()
 {
 	__super::Release();
@@ -91,8 +101,8 @@ void GamePlayScene::OnEnter()
 	return_btn_->SetText(L"RETURN TO LOBBY");
 
 	// 람다를 이용한 클릭 이벤트 연결
-	return_btn_->SetOnClick([]() {
-		_SceneMgr.ChangeScene(SceneType::Lobby);
+	return_btn_->SetOnClick([this]() {
+		stage_manager_->ChangeState(StageState::Exit); // 씬 전환 전에 스테이지 매니저의 Exit 상태로 전환하여 필요한 정리 작업 수행
 	});
 
 	// 씬에 버튼 추가
@@ -101,14 +111,11 @@ void GamePlayScene::OnEnter()
 	// 게임 플레이 중에는 보이지 않도록 비활성화
 	return_btn_->InActivate();
 
-	// 현재 구조에서는 플레이어를 매번 재생성한다
-	SpawnPlayer();
-
 	return_btn_->InActivate();
 	stage_manager_->ChangeState(StageState::Enter);
 
 	// 플레이 씬에 진입할 때에는 정지 상태를 해제
-	_GameState.Pause(false);
+	_GameState.SetPause(false);
 }
 
 void GamePlayScene::OnExit()
@@ -120,16 +127,24 @@ void GamePlayScene::OnExit()
 void GamePlayScene::SpawnPlayer()
 {
 	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
-	// 플레이어 생성 로직 역시 ObjectManager로 넘겨야할 수도 있다
-	const auto player = new Player();
+
+	// JSON 데이터 매니저에서 플레이어 스폰에 필요한 데이터를 가져온다 (현재는 임시로 첫 번째 데이터 사용. 나중에는 플레이어가 선택한 캐릭터에 맞는 데이터를 가져오도록 수정 필요)
+	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
+
+	// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
+	if(nullptr == player_spawn_data)
+	{
+		_NULL_DETECTION_MSGBOX(_T("Failed to load player spawn data!"));
+		return;
+	}
+
+	// 현재 구조에서는 플레이어를 매번 재생성(new)한다
+	// 플레이어 생성 로직 역시 ObjectManager로 넘기는게 깔끔할 것 같다.
+	const auto player = new Player(player_spawn_data);
 	AddGameObject(player);
 
 	// 프로그레스바 생성 및 설정. 플레이어는 체력바가 필요하다고 가정하고, 플레이어가 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
 	const auto player_hp_bar = ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
-
-	//// 프로그레스바의 크기와 오프셋은 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
-	//player_hp_bar->SetTrackingTarget(player, DEFAULT_OFFSET_HP_BAR);
-	//player_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
 
 	// 스테이지(월드)에 있는 네비메시를 가져와서 플레이어에게 연결
 	const auto& nav_mesh = background_->NavMesh();
@@ -140,6 +155,9 @@ void GamePlayScene::SpawnPlayer()
 
 	// 게임 스테이트에 플레이어 캐싱
 	_GameState.Player(player);
+
+	// 플레이 영역을 생성하도록 ObjectManager에 요청. 네비메시의 영역에서 일정 마진을 둔 영역을 계산하여 플레이어가 존재할 수 있는 영역으로 설정
+	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);
 }
 
 void GamePlayScene::SpawnEnemy(_uint _enemy_id)
@@ -165,11 +183,8 @@ void GamePlayScene::SpawnEnemy(_uint _enemy_id)
 	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
 	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 
-	//// 프로그레스바의 크기와 위치는 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
-	//enemy_hp_bar->SetTrackingTarget(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
-	//enemy_hp_bar->SetSize(DEFAULT_SIZE_HP_BAR);
-
-	s_cast(Unit*, spawned_enemy)->SetPlayScene(this); // 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
+	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
+	s_cast(Unit*, spawned_enemy)->SetPlayScene(this);
 }
 
 void GamePlayScene::ShowResultUI()

@@ -261,14 +261,12 @@ void WidgetBase::_UpdateFadeOut(_double _delta_time)
 		fade_timer_ += _delta_time;
 		if (_IsFadeOutComplete())
 		{
+			fade_timer_ = 0.0;
+			on_fade_out_ = false;
+
 			// 페이드 아웃이 완료되면 위젯을 파괴
 			if (destroy_on_fade_out_complete_)
 				Destroy();
-		}
-		else
-		{
-			fade_timer_ = 0.0;
-			on_fade_out_ = false;
 		}
 	}
 }

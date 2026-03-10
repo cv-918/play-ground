@@ -1,0 +1,26 @@
+﻿[
+  {
+	"id_": 1,
+    "name_": "더스티",
+	"hp_": 10.0,
+	"contact_damage_": 3.0,
+	"move_speed_max_": 800.0,
+	"acceleration_": 1600.0,
+	"friction_": 6.0
+  }
+]
+
+--- 설명 ---
+
+struct PlayableCharacterJsonInfo
+{
+	_uint id_ = 0;
+	std::string name_;
+
+	_float hp_ = 0.f;
+	_float contact_damage_ = 0.f;
+
+	_float move_speed_max_ = 0.f;
+	_float acceleration_ = 0.f;
+	_float friction_ = 0.f;
+};

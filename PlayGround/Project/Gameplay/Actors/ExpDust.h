@@ -1,36 +1,12 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Enemy.h"
 
-// ÃßÈÄ¿¡ ¸ó½ºÅÍ »ı¼º·ÎÁ÷ °³¼±µÇ¸é ÀÌ°Íµµ Á¦°Å
+// ì¶”í›„ì— ëª¬ìŠ¤í„° ìƒì„±ë¡œì§ ê°œì„ ë˜ë©´ ì´ê²ƒë„ ì œê±°
 #include "GamePlaySystems/StageManager.h"
 
 class ExpDust final : public Enemy
 {
-	enum class DustGrade
-	{
-		One = 1,	// ÀÛÀº Å©±â | ÀÌµ¿(Á÷¼±, ´À¸²)
-		Two,		// ÀÛÀº Å©±â | ÀÌµ¿(Á÷¼±, ºü¸§)
-		Three,		// º¸Åë Å©±â | ÀÌµ¿(Å¸°Ù, º¸Åë)
-		Four,		// Å« Å©±â | ÀÌµ¿(Á÷¼±, ´À¸²) | °ø°İ(Àü¹æ, Á÷¼±)
-		Five,		// ¸Å¿ì Å« Å©±â | ÀÌµ¿(Á÷¼±, ¸Å¿ì ´À¸²) | °ø°İ(4¹æÇâ, Á÷¼±)
-
-		/*
-			*Å©±â
-			- ÀÛÀº Å©±â		: 10.f
-			- º¸Åë Å©±â		: 30.f
-			- Å« Å©±â		: 50.f
-			- ¸Å¿ì Å« Å©±â	: 80.f
-
-			*ÀÌµ¿
-			- ¸Å¿ì ´À¸²		: 20.f
-			- ´À¸²			: 40.f
-			- º¸Åë			: 60.f
-			- ºü¸§			: 80.f
-			- ¸Å¿ì ºü¸§		: 100.f
-		*/
-	};
-
 public:
 	explicit ExpDust(const EnemyJsonInfo* _info) : Enemy(_info) {}
 
@@ -40,10 +16,10 @@ private:
 
 	void OnDestroy() override;
 
-	// ICollidableÀ»(¸¦) ÅëÇØ »ó¼ÓµÊ
+	// ICollidableì„(ë¥¼) í†µí•´ ìƒì†ë¨
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Collider* _this, Collider* _other) override;
 
-	// IDamagableÀ»(¸¦) ÅëÇØ »ó¼ÓµÊ
+	// IDamagableì„(ë¥¼) í†µí•´ ìƒì†ë¨
 	void GetDamage(_float _damage) override;
 };

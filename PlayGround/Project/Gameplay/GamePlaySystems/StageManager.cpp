@@ -2,6 +2,7 @@
 #include "StageManager.h"
 
 #include "GamePlay/Scenes/GamePlayScene.h"
+#include "GamePlaySystems/Json/EnemyDataManager.h"
 
 _int StageManager::Update(_double _delta_time)
 {
@@ -71,7 +72,7 @@ _Point StageManager::GeneratePosition(_bool _inclusive)
 void StageManager::OnPlayerDeath()
 {
 	// 플레이어가 죽으면 게임 전체 일시정지
-	_GameState.Pause(true);
+	_GameState.SetPause(true);
 
 	// 플레이어 참조 초기화
 	_GameState.Player(nullptr);
@@ -85,6 +86,7 @@ void StageManager::_OnEnter()
 	// 초기화 로직 처리
 	// 예시: 배경 연출, 타이머 시작, 초기 스폰 등
 	// 연출 처리 후 Ready 상태로 전환
+	play_scene_->SpawnPlayer();
 	ChangeState(StageState::Ready);
 }
 
@@ -105,7 +107,7 @@ void StageManager::_OnPlay()
 	if (_InputMgr.Pressed(VK_CONTROL))
 	{
 		// A키를 누르면 스폰 타이머가 초기화되어 즉시 적이 스폰되도록 함
-		if (_InputMgr.Down('A'))
+		if (_InputMgr.Down('C'))
 		{
 			spawn_timer_ = spawn_interval_;
 
@@ -113,7 +115,7 @@ void StageManager::_OnPlay()
 		}
 
 		// D키를 누르면 몬스터 일시정지 플래그가 토글되도록 함
-		if (_InputMgr.Down('D'))
+		if (_InputMgr.Down(VK_SPACE))
 		{
 			const auto curr_val = _GameState.MonsterPause();
 			_GameState.MonsterPause(!curr_val);
@@ -137,17 +139,17 @@ void StageManager::_OnPlay()
 	{
 		spawn_timer_ = 0.0;
 
-		// 생성할 몬스터 종류와 등급(ID)는 스테이지 매니저에서 결정한다
-		// 현재는 ID를 임의로 카테고리 + 등급 조합으로 구성했지만, ID가 생긴다면 ID로 조회하도록 변경해야함
-		const auto category = EnemyCategory::WasExpDust;
-		const auto grade = _Random.Range(EnemyGrade::Common, EnemyGrade::Special);
+		const auto enemy_idx = _Random.Range(0, _EnemyDataMgr.GetDataCount() - 1);
+		const auto enemy_data = _EnemyDataMgr.GetDataByIndex(enemy_idx);
 
-		// 적의 ID는 카테고리와 등급을 조합해서 생성하도록 함 (예: WasExpDust_Common, WasExpDust_UnCommon, WasExpDust_Danger, WasExpDust_Special)
-		// ID 생성 방식은 JSON 데이터 매니저에서 해당 ID로 데이터를 조회할 수 있도록 일관된 방식으로 생성해야 함
-		const auto enemy_id = s_uint(category) + s_uint(grade);
+		if(nullptr == enemy_data)
+		{
+			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(Index : %d)"), enemy_idx);
+			return;
+		}
 
 		// 씬에 적 스폰 요청
-		play_scene_->SpawnEnemy(enemy_id);
+		play_scene_->SpawnEnemy(enemy_data->id_);
 	}
 }
 
@@ -175,6 +177,7 @@ void StageManager::_OnResult()
 	case StageState::Play:
 		// 플레이 도중 죽었을 때 결과 화면으로 전환된 경우
 		play_scene_->ShowResultUI();
+		player_died_ = true;
 		break;
 	case StageState::Pause:
 		// 일시정지 상태에서 결과 화면으로 전환된 경우
@@ -194,6 +197,16 @@ void StageManager::_OnExit()
 	// 종료 로직 처리
 	// 게임 종료 후 필요한 정리 작업 수행
 	// 모든 처리가 끝났다면 로비로 이동
+
+	// 플레이어가 죽어서 결과 화면으로 전환된 경우, 획득한 코인의 절반만 지급. 클리어해서 결과 화면으로 전환된 경우에는 획득한 코인을 모두 지급
+	const auto earned_coin_count = _GameState.GetEarnedCoinCount();
+	_GameState.IncreaseCoinCount(player_died_ ? earned_coin_count >> 1 : earned_coin_count);
+
+	// 게임 상태 초기화
+	player_died_ = false;
+
+	// 로비로 이동
+	_SceneMgr.ChangeScene(SceneType::Lobby);
 }
 
 void StageManager::_UpdateGenerationAreas()
