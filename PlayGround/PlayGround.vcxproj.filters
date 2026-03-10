@@ -84,6 +84,7 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -150,5 +151,6 @@
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
   </ItemGroup>
 </Project>

@@ -69,7 +69,8 @@ enum class EnemySpecialRole
 enum class EnemyProjectilePattern
 {
 	Undefined = 0,	// 초기화 값
-	Direct,			// 직선 발사
+	Direct,			// 진행 방향 | 직선 진행
+	Aimed,			// 타겟 방향 | 직선 진행
 	Count,
 };
 

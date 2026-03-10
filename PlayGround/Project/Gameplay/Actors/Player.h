@@ -23,7 +23,6 @@ private:
 	void GetDamage(_float _damage) override;
 
 private:
-	_int _ControllRoutine(_double _delta_time);
 	void _ShowDebugInfo();
 	
 private:
