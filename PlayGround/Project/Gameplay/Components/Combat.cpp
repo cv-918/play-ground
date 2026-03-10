@@ -4,15 +4,10 @@
 #include "Actors/GameObjectBase.h"
 #include "Components/Status.h"
 
-_float Combat::GetDamage(_float _damage, Status* _status)
-{
-	// 방어 코드: null 포인터인 경우 무시
-	if (nullptr == _status)
-	{
-		_NULL_DETECTION_LOG;
-		return 0.f;
-	}
+#include "GamePlaySystems/StageManager.h"
 
+_float Combat::GetDamage(_float _damage)
+{
 	// 방어 코드: 데미지가 음수인 경우 무시
 	if (0 > _damage)
 	{
@@ -20,7 +15,7 @@ _float Combat::GetDamage(_float _damage, Status* _status)
 		return 0.f;
 	}
 
-	const auto curr_hp = _status->GetCurrentHp();
+	const auto curr_hp = status_->GetCurrentHp();
 
 	// 방어 코드: 이미 체력이 0인 경우 무시
 	if (0 >= curr_hp)
@@ -37,7 +32,7 @@ _float Combat::GetDamage(_float _damage, Status* _status)
 
 	// 체력에서 데미지만큼 감소
 	auto new_hp = MathFunctions::Clamp(curr_hp - final_damage, 0.f, curr_hp);
-	_status->SetCurrentHp(new_hp);
+	status_->SetCurrentHp(new_hp);
 
 	// 디버그 로그: 데미지 계산 결과와 적용된 데미지, 체력 변화 등을 로그로 출력
 	_SYSTEM_LOG_INFO(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->Name().c_str(), curr_hp, new_hp);
