@@ -3,6 +3,7 @@
 
 #include "Actors/GameObjectBase.h"
 #include "Actors/ExpDust.h"
+#include "Actors/Projectile/Bullet.h"
 
 ObjectManager::~ObjectManager()
 {
@@ -113,6 +114,24 @@ GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
 
 	SAFE_DELETE(enemy);
 	return nullptr;
+}
+
+GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
+                                                const _Point& _target, _float _damage, _float _speed)
+{
+	GameObjectBase* bullet = new Bullet(_owner, _damage, _speed);
+    
+    if (bullet->Initialize())
+    {
+        bullet->GetTransform()->Position(_position);
+        bullet->GetTransform()->LookAt(_target);
+        
+        game_objects_.push_back(bullet);
+        return bullet;
+    }
+    
+    SAFE_DELETE(bullet);
+    return nullptr;
 }
 
 void ObjectManager::GeneratePlayArea(const _Rect& _nav_mesh_rect, const _int margin)

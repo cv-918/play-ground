@@ -21,10 +21,10 @@ _bool Unit::Initialize()
 	}
 
 	// 컴뱃 컴포넌트와 스테이터스 컴포넌트 생성 및 등록
-	combat_ = new Combat();
-	RegisterComponent(combat_);
 	status_ = new Status();
 	RegisterComponent(status_);
+	combat_ = new Combat(status_); // Combat 컴포넌트는 Status 컴포넌트를 필요로 하므로, Status 컴포넌트를 먼저 생성하고 전달
+	RegisterComponent(combat_);
 
 	return true;
 }

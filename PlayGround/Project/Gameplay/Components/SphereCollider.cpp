@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "SphereCollider.h"
 
 #include "RectCollider.h"
@@ -7,11 +7,13 @@
 
 _int SphereCollider::LateUpdate(_double _delta_time)
 {
+	__super::LateUpdate(_delta_time);
+
 	if (!Enable())
 		return UPDATE_CONTINUE;
 
-	// Ãæµ¹Ã¼ Áß½ÉÀ» °ÔÀÓ¿ÀºêÁ§Æ®ÀÇ Æ®·£½ºÆû À§Ä¡·Î ¼³Á¤
-	// ÀÌ°Å ³ªÁß¿¡ ¾îÅÂÄ¡ ÇÔ¼ö ¸¸µé¾î¼­ ÂüÁ¶ °ªÀ¸·Î ÀÚµ¿À¸·Î ºÙ°Ô ¸¸µå´Â°Ô ³ªÀ»µí
+	// ì¶©ëŒì²´ ì¤‘ì‹¬ì„ ê²Œì„ì˜¤ë¸Œì íŠ¸ì˜ íŠ¸ëœìŠ¤í¼ ìœ„ì¹˜ë¡œ ì„¤ì •
+	// ì´ê±° ë‚˜ì¤‘ì— ì–´íƒœì¹˜ í•¨ìˆ˜ ë§Œë“¤ì–´ì„œ ì°¸ì¡° ê°’ìœ¼ë¡œ ìë™ìœ¼ë¡œ ë¶™ê²Œ ë§Œë“œëŠ”ê²Œ ë‚˜ì„ë“¯
 	Center(transform_->Position());
 
 	return UPDATE_CONTINUE;
@@ -35,35 +37,35 @@ _bool SphereCollider::_CheckCollided(Collider* _other)
 	{
 	case ColliderType::Rectangle:
 	{
-		// Circle Collider ¿Í Rectangle Collider °£ÀÇ Ãæµ¹ Ã³¸®
+		// Circle Collider ì™€ Rectangle Collider ê°„ì˜ ì¶©ëŒ ì²˜ë¦¬
 		const auto rect_collider = s_cast(RectCollider*, _other);
 		const auto rt = rect_collider->Rect();
 
-		// 1. Á÷»ç°¢Çü ³»¿¡¼­ ¿øÀÇ Áß½É°ú °¡Àå °¡±î¿î Á¡(Closest Point)À» Ã£À½
-		// std::clamp¸¦ »ç¿ëÇÒ ¼öµµ ÀÖÀ¸³ª, È£È¯¼ºÀ» À§ÇØ max/min Á¶ÇÕ »ç¿ë
+		// 1. ì§ì‚¬ê°í˜• ë‚´ì—ì„œ ì›ì˜ ì¤‘ì‹¬ê³¼ ê°€ì¥ ê°€ê¹Œìš´ ì (Closest Point)ì„ ì°¾ìŒ
+		// std::clampë¥¼ ì‚¬ìš©í•  ìˆ˜ë„ ìˆìœ¼ë‚˜, í˜¸í™˜ì„±ì„ ìœ„í•´ max/min ì¡°í•© ì‚¬ìš©
 		_float closestX = std::max(rt.Left_f(), std::min(center_.x, rt.Right_f()));
 		_float closestY = std::max(rt.Top_f(), std::min(center_.y, rt.Bottom_f()));
 
-		// 2. °¡Àå °¡±î¿î Á¡°ú ¿øÀÇ Áß½É »çÀÌÀÇ °Å¸® °è»ê (x, y Â÷ÀÌ)
+		// 2. ê°€ì¥ ê°€ê¹Œìš´ ì ê³¼ ì›ì˜ ì¤‘ì‹¬ ì‚¬ì´ì˜ ê±°ë¦¬ ê³„ì‚° (x, y ì°¨ì´)
 		_float distanceX = center_.x - closestX;
 		_float distanceY = center_.y - closestY;
 
-		// 3. ÇÇÅ¸°í¶ó½º Á¤¸®¸¦ »ç¿ëÇÏ¿© °Å¸®ÀÇ Á¦°öÀ» ±¸ÇÔ
-		// ¼º´É ÃÖÀûÈ­: sqrt() ÇÔ¼ö´Â ¹«°Å¿ì¹Ç·Î Á¦°ö »óÅÂ·Î ºñ±³
+		// 3. í”¼íƒ€ê³ ë¼ìŠ¤ ì •ë¦¬ë¥¼ ì‚¬ìš©í•˜ì—¬ ê±°ë¦¬ì˜ ì œê³±ì„ êµ¬í•¨
+		// ì„±ëŠ¥ ìµœì í™”: sqrt() í•¨ìˆ˜ëŠ” ë¬´ê±°ìš°ë¯€ë¡œ ì œê³± ìƒíƒœë¡œ ë¹„êµ
 		_float distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
 		_float radiusSquared = radius_ * radius_;
 
-		// °Å¸®ÀÇ Á¦°öÀÌ ¹İÁö¸§ÀÇ Á¦°öº¸´Ù ÀÛÀ¸¸é Ãæµ¹
+		// ê±°ë¦¬ì˜ ì œê³±ì´ ë°˜ì§€ë¦„ì˜ ì œê³±ë³´ë‹¤ ì‘ìœ¼ë©´ ì¶©ëŒ
 		return distanceSquared <= radiusSquared;
 	}
 	case ColliderType::Circle:
 	{
-		// Circle Collider °£ÀÇ Ãæµ¹ Ã³¸®
+		// Circle Collider ê°„ì˜ ì¶©ëŒ ì²˜ë¦¬
 		const auto sphere_collider = s_cast(SphereCollider*, _other);
 		_Vector3 other_center = sphere_collider->Center();
 		_float other_radius = sphere_collider->Radius();
 
-		// µÎ ¿øÀÇ Áß½É °Å¸® Á¦°öÀÌ µÎ ¹İÁö¸§ ÇÕÀÇ Á¦°öº¸´Ù ÀÛÀ¸¸é Ãæµ¹
+		// ë‘ ì›ì˜ ì¤‘ì‹¬ ê±°ë¦¬ ì œê³±ì´ ë‘ ë°˜ì§€ë¦„ í•©ì˜ ì œê³±ë³´ë‹¤ ì‘ìœ¼ë©´ ì¶©ëŒ
 		_float dx = center_.x - other_center.x;
 		_float dy = center_.y - other_center.y;
 		_float distanceSquared = (dx * dx) + (dy * dy);
