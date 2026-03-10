@@ -1,13 +1,16 @@
-#pragma once
+ï»¿#pragma once
 #include "ComponentBase.h"
 
 class Status;
 class Combat : public ComponentBase
 {
 public:
-	explicit Combat() : ComponentBase(ComponentType::Combat) {}
+	explicit Combat(Status* const _status) : ComponentBase(ComponentType::Combat), status_(_status) {}
 
 public:
-	// µ¥¹ÌÁö ÀÔÈ÷´Â ÇÔ¼ö. µ¥¹ÌÁö °è»ê ·ÎÁ÷ÀÌ Æ÷ÇÔµÇ¾î ÀÖÀ½. Status ÄÄÆ÷³ÍÆ®ÀÇ Á¤º¸¸¦ È°¿ëÇÏ¿© ÃÖÁ¾ µ¥¹ÌÁö¸¦ °è»êÇÏ°í Ã¼·Â¿¡¼­ °¨¼Ò½ÃÅ°´Â ¿ªÇÒÀ» ÇÔ.
-	_float GetDamage(_float _damage, Status* _status);
+	// ë°ë¯¸ì§€ ì…íˆëŠ” í•¨ìˆ˜. ë°ë¯¸ì§€ ê³„ì‚° ë¡œì§ì´ í¬í•¨ë˜ì–´ ìˆìŒ. Status ì»´í¬ë„ŒíŠ¸ì˜ ì •ë³´ë¥¼ í™œìš©í•˜ì—¬ ìµœì¢… ë°ë¯¸ì§€ë¥¼ ê³„ì‚°í•˜ê³  ì²´ë ¥ì—ì„œ ê°ì†Œì‹œí‚¤ëŠ” ì—­í• ì„ í•¨.
+	_float GetDamage(_float _damage);
+
+private:
+	Status* const status_; // GameObjectì˜ Status ì»´í¬ë„ŒíŠ¸ì— ëŒ€í•œ í¬ì¸í„°. ë°ë¯¸ì§€ ê³„ì‚° ì‹œ í•„ìš”í•œ ì •ë³´(ì˜ˆ: ê³µê²©ë ¥, ë°©ì–´ë ¥ ë“±)ë¥¼ ê°€ì ¸ì˜¤ê¸° ìœ„í•´ ì‚¬ìš©
 };

@@ -35,7 +35,9 @@ public:
 public:
 	void PlayScene(GamePlayScene* _play_scene) { play_scene_ = _play_scene; }
 
-	StageState CurrState() const { return curr_state_; }
+	StageState GetPrevState() const { return prev_state_; }
+	StageState GetCurrState() const { return curr_state_; }
+
 	void ChangeState(StageState _new_state);
 
 	const _Rect& GetNavMesh() const { return *stage_nav_mesh_; }
@@ -44,6 +46,8 @@ public:
 	_Point GeneratePosition(_bool _inclusive);
 
 	void OnPlayerDeath();
+
+	_double GetStageTimer() const { return stage_timer_; }
 
 private:
 	void _OnEnter();

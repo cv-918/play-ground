@@ -52,7 +52,7 @@ _bool ExpDust::Initialize()
 		// 스테이지가 진행 중일 경우 초기 위치를 화면 밖으로 한정해야 한다
 		// 만약, 위치가 화면 안에 있을 경우 화면 중점에 대한 방향벡터를 구하고 반대 방향으로 밀어낸다
 
-		const _Vector3 generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.CurrState());
+		const _Vector3 generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.GetCurrState());
 		const _Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
 		const _Vector3 to_center = (center - generated_position).Normalized();
 
@@ -145,14 +145,10 @@ _bool ExpDust::Initialize()
 
 _int ExpDust::Update(_double _delta_time)
 {
-	// 몬스터 일시정지 상태일 때는 업데이트 로직을 실행하지 않도록 제어
-	if (_GameState.MonsterPause())
-		return 0;
-
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
-
-	return 0;
+	
+	return UPDATE_CONTINUE;
 }
 
 void ExpDust::OnDestroy()
@@ -166,9 +162,6 @@ void ExpDust::OnDestroy()
 	// 고보상형의 경우 일반 등급보다 더 많은 코인 보상
 	//const auto coin_reward_amount = info_->reward_ * ((role_ == EnemySpecialRole::Rich) ? 2 : 1);
 	_GameState.IncreaseEarnedCoinCount(info_->reward_);
-	
-	// 로깅
-	_DEBUG_LOG(_T("[Player] Coin count : %d(+%d)"), _GameState.GetCoinCount(), coin_reward_amount);
 
 	// 코인 획득 텍스트 ui 노출
 }
@@ -231,7 +224,7 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 
 void ExpDust::GetDamage(_float _damage)
 {
-	const auto final_damage = combat_->GetDamage(_damage, status_);
+	const auto final_damage = combat_->GetDamage(_damage);
 
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();

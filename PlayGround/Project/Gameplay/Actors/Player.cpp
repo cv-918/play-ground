@@ -48,9 +48,6 @@ _int Player::Update(_double _delta_time)
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
 
-	ret = _ControllRoutine(_delta_time);
-	if (0 != ret) return ret;
-
 	return 0;
 }
 
@@ -143,30 +140,12 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 
 void Player::GetDamage(_float _damage)
 {
-	const auto final_damage = combat_->GetDamage(_damage, status_);
+	const auto final_damage = combat_->GetDamage(_damage);
 
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 }
-
-_int Player::_ControllRoutine(_double _delta_time)
-{
-	if (input_manager_->Down(VK_OEM_MINUS))
-	{
-		GetDamage(1.f);
-		_SYSTEM_LOG_INFO("플레이어가 1 데미지를 입었습니다. (디버그용 입력)");
-	}
-	else if (input_manager_->Down(VK_OEM_PLUS))
-	{
-		status_->SetCurrentHp(status_->GetCurrentHp() + 1);
-		_SYSTEM_LOG_INFO("플레이어의 HP가 1 회복되었습니다. (디버그용 입력)");
-	}
-	
-
-	return 0;
-}
-
 
 void Player::_ShowDebugInfo()
 {

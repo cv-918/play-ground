@@ -35,7 +35,7 @@ _int GamePlayScene::Update(_double _delta_time)
 
 	_bool update = true;
 
-	const auto curr_state = stage_manager_->CurrState();
+	const auto curr_state = stage_manager_->GetCurrState();
 	switch (curr_state)
 	{
 	case StageState::Pause:
@@ -134,7 +134,7 @@ void GamePlayScene::SpawnPlayer()
 	// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
 	if(nullptr == player_spawn_data)
 	{
-		_NULL_DETECTION_MSGBOX(_T("Failed to load player spawn data!"));
+		_NULL_DETECTION_MSGBOX;
 		return;
 	}
 
@@ -185,6 +185,11 @@ void GamePlayScene::SpawnEnemy(_uint _enemy_id)
 
 	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
 	s_cast(Unit*, spawned_enemy)->SetPlayScene(this);
+}
+
+void GamePlayScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)
+{
+	object_manager_->SpawnProjectile(_owner, _position, _target, _damage, _speed);
 }
 
 void GamePlayScene::ShowResultUI()
