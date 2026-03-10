@@ -15,6 +15,10 @@ _bool LobbyScene::Initialize()
 void LobbyScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
+
+	// 우측 상단에 현재 코인 개수 표시 (임시로 텍스트로 표시. 나중에는 아이콘과 함께 표시하는 UI 요소로 대체할 예정)
+	const auto current_coin_count = _GameState.GetCoinCount();
+	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
 }
 
 void LobbyScene::OnEnter()

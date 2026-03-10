@@ -1,5 +1,24 @@
 ﻿#pragma once
 
+enum class CollisionLayer
+{
+	PlayerBody,
+	PlayerAttack,
+	EnemyBody,
+	EnemyAttack,
+	EnemyBullet,
+	End
+};
+
+enum class SceneType
+{
+	Intro,
+	Loading,
+	Lobby,
+	GamePlay,
+	Count,
+};
+
 enum class ComponentType
 {
 	Undefined,
@@ -27,65 +46,67 @@ enum class EnemyCategory
 	Count,
 };
 
-enum class EnemyGrade
+enum class EnemyTier
 {
 	Undefined = 0,	// 초기화 값
-	Common,			// 일반		| 자원 공급용1
-	UnCommon,		// 중급		| 자원 공급용2
+	Normal,			// 일반		| 자원 공급용1
+	Elite,			// 중급		| 자원 공급용2
 	Danger,			// 위험		| 플레이 흐름 변화 유도
 	Special,		// 특수		| 플레이 흐름 변화 유도
 	Count,
 };
 
-enum class EnemyRole
+enum class EnemySpecialRole
 {
 	Undefined = 0,	// 초기화 값
-	Tanky,			// 고체력형 | 높은 HP 배율
-	HighLoot,		// 고보상형	| 높은 자원 배율
-	Ranger,			// 공격형	| 투사체
-	Mutant,			// 변이형	| 분열/강화
+	Tank,			// 고체력형 | 높은 HP 배율
+	Rich,			// 고보상형	| 높은 자원 배율
+	Shooter,		// 공격형	| 투사체
+	Splitter,		// 변이형	| 분열/강화
+	Count,
+};
+
+enum class EnemyProjectilePattern
+{
+	Undefined = 0,	// 초기화 값
+	Direct,			// 직선 발사
 	Count,
 };
 
 struct EnemyJsonInfo
 {
-	// 공용 필드
-	EnemyCategory category_ = EnemyCategory::Undefined;
-	EnemyGrade grade_ = EnemyGrade::Undefined;
+	_uint id_ = 0;
+	std::string name_;
 
-	// 선택적으로 값이 존재하는 필드 (예: 역할군은 Special 등급에서만 존재)
-	EnemyRole role_ = EnemyRole::Undefined;
+	EnemyTier tier_ = EnemyTier::Undefined;
+	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
+
+	_float hp_ = 0.f;
+	_float contact_damage_ = 0.f;
+
+	_uint reward_ = 0;
+
+	EnemyProjectilePattern projectile_pattern_ = EnemyProjectilePattern::Undefined;
+	_float projectile_damage_ = 0.f;
+	_float projectile_speed_ = 0.f;
+
+	_uint split_count_ = 0; // 분열형 몬스터가 분열할 때 생성되는 자식 몬스터의 수
 
 	MovementPattern movement_pattern_ = MovementPattern::Undefined;
-	_float move_speed_ = 0.f;
+	_uint move_speed_unit_ = 0; // 몬스터의 기본 이동 속도. 실제 이동 속도는 이 값에 20.f를 곱해서 계산
 
 	_float scale_ = 0.f;
-	_bool collidable_ = false;
-
-	_float hp_ = 0;
-	_int coin_reward_ = 0;
-	//_Color color_ = Colors::White;
-	
-	// 필요에 따라 추가 정보 필드 (예: HP 배율, 자원 배율, 공격 패턴 등)
-
-	EnemyJsonInfo() DEFAULT;
 };
 
-enum class CollisionLayer
+struct PlayableCharacterJsonInfo
 {
-	PlayerBody,
-	PlayerAttack,
-	EnemyBody,
-	EnemyAttack,
-	EnemyBullet,
-	End
-};
+	_uint id_ = 0;
+	std::string name_;
 
-enum class SceneType
-{
-	Intro,
-	Loading,
-	Lobby,
-	GamePlay,
-	Count,
+	_float hp_ = 0.f;
+	_float contact_damage_ = 0.f;
+
+	_float move_speed_max_ = 0.f;
+	_float acceleration_ = 0.f;
+	_float friction_ = 0.f;
 };

@@ -5,7 +5,8 @@
 #include "EngineSystems/Physics/CollisionManager.h"
 #include "GamePlaySystems/SceneManager.h"
 
-#include "GamePlaySystems/EnemyDataManager.h"
+#include "GamePlaySystems/Json/EnemyDataManager.h"
+#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -19,10 +20,15 @@ _bool PlayGround::Initialize()
 
 	_SceneMgr.Initialize();
 
-	if (false == _EnemyDataMgr.Load("Data/test.json"))
+	if (false == _EnemyDataMgr.Load("Data/Enemy.json"))
 	{
-		// json 파일 읽기 에러
 		_SYSTEM_LOG_ERROR(_T("Failed to load enemy data from JSON."));
+		return false;
+	}
+
+	if(false == _CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
+	{
+		_SYSTEM_LOG_ERROR(_T("Failed to load playable character data from JSON."));
 		return false;
 	}
 
@@ -31,6 +37,14 @@ _bool PlayGround::Initialize()
 
 _int PlayGround::Update(_double _delta_time)
 {
+	if (_InputMgr.Down(VK_F3))
+	{
+		_GameState.debug_mode_ = !_GameState.debug_mode_;
+		_SYSTEM_LOG_INFO("Debug mode %s", _GameState.debug_mode_ ? "enabled" : "disabled");
+
+		return UPDATE_CONTINUE;
+	}
+
 	_SceneMgr.Update(_delta_time);
 	_SceneMgr.LateUpdate(_delta_time);
 

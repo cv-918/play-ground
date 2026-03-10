@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -13,11 +13,29 @@ public:
 	virtual ~JsonDataManager() DEFAULT;
 
 public:
-	// µ¥ÀÌÅÍ ·Îµå (JSON ¹è¿­ ÇüÅÂ ÆÄÀÏ ÀĞ±â)
+	// ë°ì´í„° ë¡œë“œ (JSON ë°°ì—´ í˜•íƒœ íŒŒì¼ ì½ê¸°)
 	_bool Load(const std::string& _file_path);
 
-	// ID·Î µ¥ÀÌÅÍ Ã£±â
-	const T* GetData(_uint _id) const;
+	// IDë¡œ ë°ì´í„° ì°¾ê¸°
+	const T* GetData(_uint _id) const
+	{
+		auto it = data_table_.find(_id);
+		return (it != data_table_.end()) ? &it->second : nullptr;
+	}
+
+	const T* GetDataByIndex(size_t _index) const
+	{
+		if (_index >= data_table_.size())
+		{
+			return nullptr;
+		}
+		auto it = data_table_.begin();
+		std::advance(it, _index);
+		return &it->second;
+	}
+
+	// ë°ì´í„° ê°œìˆ˜ ë°˜í™˜
+	size_t GetDataCount() const { return data_table_.size(); }
 
 private:
 	std::unordered_map<_uint, T> data_table_;
@@ -29,7 +47,7 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 	std::ifstream file(_file_path);
 	if (!file.is_open())
 	{
-		std::cerr << "Error: Cannot open " << _file_path << std::endl;
+		_DEBUG_MSGBOX(_T("Failed to open file: %s"), _TF(_file_path.c_str()));
 		return false;
 	}
 
@@ -43,27 +61,20 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 		data_table_.clear();
 		for (const auto& item : dataList)
 		{
-			const auto enemy_id = s_uint(item.category_) + s_uint(item.grade_);
-			// T ±¸Á¶Ã¼´Â ¹İµå½Ã 'id' ¸â¹ö¸¦ °¡Áö°í ÀÖ¾î¾ß ÇÕ´Ï´Ù.
-			if (data_table_.find(enemy_id) != data_table_.end())
+			// T êµ¬ì¡°ì²´ëŠ” ë°˜ë“œì‹œ 'id' ë©¤ë²„ë¥¼ ê°€ì§€ê³  ìˆì–´ì•¼ í•©ë‹ˆë‹¤.
+			if (data_table_.find(item.id_) != data_table_.end())
 			{
-				std::cerr << "Warning: Duplicate ID " << enemy_id << " in " << _file_path << std::endl;
+				// ID ì¤‘ë³µ ë°œê²¬ ì‹œ ë¡œê¹…
+				_DEBUG_MSGBOX(_T("Duplicate ID %d in %s"), item.id_, _TF(_file_path.c_str()));
 			}
-			data_table_[enemy_id] = item;
+			data_table_[item.id_] = item;
 		}
-		std::cout << typeid(T).name() << " loaded: " << data_table_.size() << " entries." << std::endl;
+		_SYSTEM_LOG_INFO(_T("%s loaded: %d entries."), typeid(T).name(), data_table_.size());
 		return true;
 	}
 	catch (json::exception& e)
 	{
-		std::cerr << "JSON Parse Error in " << _file_path << ": " << e.what() << std::endl;
+		_DEBUG_MSGBOX(_T("Failed to parse JSON file: %s\nError: %s"), _file_path.c_str(), e.what());
 		return false;
 	}
-}
-
-template<typename T>
-inline const T* JsonDataManager<T>::GetData(_uint _id) const
-{
-	auto it = data_table_.find(_id);
-	return (it != data_table_.end()) ? &it->second : nullptr;
 }

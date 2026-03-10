@@ -4,8 +4,12 @@
 
 class Player final : public Unit
 {
+public:
+	explicit Player(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
+
 private:
 	_bool Initialize() override;
+
 	_int Update(_double _delta_time) override;
 	void DebugRender(_double _delta_time) override;
 
@@ -20,25 +24,15 @@ private:
 
 private:
 	_int _ControllRoutine(_double _delta_time);
-	void _ControlInfoOnDebug();
 	void _ShowDebugInfo();
 	
 private:
+	const PlayableCharacterJsonInfo* info_;
+
 	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 
-	// 반지름임
-	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {};
+	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {}; // 반지름임
 
-	// 디버그
-	enum DrawDebugInfoType
-	{
-		None,
-		MouseInfo,
-		ControlInfo,
-		TypeCount,
-	};
-
-	DrawDebugInfoType debug_type_ = DrawDebugInfoType::None;
 	_int debug_control_data_idx_ = IV_ZERO;
 	std::vector<std::wstring> debug_info_lines_;
 };

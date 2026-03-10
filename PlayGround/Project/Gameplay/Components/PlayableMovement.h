@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "Movement.h"
 
 class PlayableMovement final : public Movement
 {
 public:
-	explicit PlayableMovement();
+	explicit PlayableMovement(const PlayableCharacterJsonInfo* _info);
 	virtual ~PlayableMovement() DEFAULT;
 
 public:
@@ -14,6 +14,6 @@ private:
 	void _ProcessOnPlayerControl(_double _delta_time);
 
 private:
-	const InputManager* input_manager_; // ¸Å ÇÁ·¹ÀÓ Get È£Ãâ ¹æÁö¿ë InputManager Ä³½Ì
+	const InputManager* input_manager_ = nullptr; // ë§¤ í”„ë ˆì„ Get í˜¸ì¶œ ë°©ì§€ìš© InputManager ìºì‹±
 	KeyBoardControlType controller_type_;
 };

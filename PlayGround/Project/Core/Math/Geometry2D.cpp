@@ -3,7 +3,7 @@
 
 #include "Vector3.h"
 
-_Point::_Point(const _Vector3& _vec) : x(_vec.x), y(_vec.y) {}
+_Point::_Point(const _Vector3& _vec) : x(s_int(_vec.x)), y(s_int(_vec.y)) {}
 
 _Point _Point::operator+(const _Point& _pt) const
 {

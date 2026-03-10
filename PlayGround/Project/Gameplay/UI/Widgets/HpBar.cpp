@@ -18,16 +18,15 @@ HpBar::HpBar(GameObjectBase* _target, const _Vector3& _offset)
 	SetSize(DEFAULT_SIZE_HP_BAR);
 
 	tracking_target_ = _target;
-	tracking_transform_ = _target->GetTransform(); // 트래킹 대상의 Transform 컴포넌트 가져오기
-	tracking_status_ = s_cast(Status*, _target->GetComponent(ComponentType::Status)); // 트래킹 대상의 Status 컴포넌트 가져오기
+	tracking_transform_ = _target->GetTransform();
+	tracking_status_ = s_cast(Status*, _target->GetComponent(ComponentType::Status));
 	tracking_offset_ = _offset;
 
 	current_hp_ = tracking_status_->GetCurrentHp();
 
 	_SetFadeDuration(DEFAULT_FADE_DURATION_HP_BAR);
 
-	// 어떤 UI 가 어떤 게임 오브젝트를 트래킹하는지 디버그용으로 출력
-	_SYSTEM_LOG_INFO(L"UI %s started tracking target. (Target: %s)", Name().c_str(), _target->Name().c_str());
+	// 프로그레스바의 크기와 오프셋은 트래킹 오브젝트의 크기에 따라서 달라질 수 있다
 }
 
 _int HpBar::Update(_double _delta_time)

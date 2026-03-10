@@ -8,12 +8,12 @@ class GamePlayScene final : public Scene
 {
 public:
 	explicit GamePlayScene() : Scene(SceneType::GamePlay) {}
-	virtual ~GamePlayScene() DEFAULT;
 
 public:
 	_bool Initialize() override;
 
 	_int Update(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
 	_bool Release() override;
 

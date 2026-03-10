@@ -1,8 +1,6 @@
 ﻿#include "framework.h"
 #include "ExpDust.h"
 
-#include "GamePlaySystems/EnemyDataManager.h"
-
 _bool ExpDust::Initialize()
 {
 	if (!__super::Initialize())
@@ -10,7 +8,9 @@ _bool ExpDust::Initialize()
 
 	// 더스트 identifier 설정
 	static _int instance_count = 0;
-	Name(_T("Enemy") + std::to_wstring(++instance_count));
+
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	Name(converter.from_bytes(info_->name_) + std::to_wstring(++instance_count));
 
 	// 컴포넌트 설정
 
@@ -18,24 +18,24 @@ _bool ExpDust::Initialize()
 	_Vector3 position;
 	_Vector3 look_point;
 
-	switch (info_->grade_)
+	switch (info_->tier_)
 	{
-	case EnemyGrade::Common:
+	case EnemyTier::Normal:
 		// 일반 | 자원 공급용1
 		color_ = Colors::Pearl;
 		break;
-	case EnemyGrade::UnCommon:
+	case EnemyTier::Elite:
 		// 중급 | 자원 공급용2 | 이동 속도 빠름
 		color_ = Colors::LightPink;
 		break;
-	case EnemyGrade::Danger:
+	case EnemyTier::Danger:
 		// 위험 | 플레이 흐름 변화 유도 | 충돌 데미지 있음
 		color_ = Colors::Pink;
 		break;
-	case EnemyGrade::Special:
+	case EnemyTier::Special:
 		// 특수 | 플레이 흐름 변화 유도 | 역할군 부여받음
 		color_ = Colors::Salmon;
-		role_ = s_cast(EnemyRole, _Random.Range(s_int(EnemyRole::Tanky), s_int(EnemyRole::Count) - 1));
+		role_ = s_cast(EnemySpecialRole, _Random.Range(s_int(EnemySpecialRole::Tank), s_int(EnemySpecialRole::Count) - 1));
 		break;
 	default:
 		// 로깅
@@ -99,7 +99,7 @@ _bool ExpDust::Initialize()
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
 
-	if (info_->collidable_)
+	if (info_->contact_damage_ > 0.f)
 	{
 		_ColMgr.RegisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 	}
@@ -109,7 +109,7 @@ _bool ExpDust::Initialize()
 	}	
 
 	movement_->Pattern(info_->movement_pattern_);
-	movement_->MoveSpd(info_->move_speed_);
+	movement_->MoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
 	movement_->MoveDir((look_point - position).Normalized());
 
 	/*
@@ -118,14 +118,15 @@ _bool ExpDust::Initialize()
 		공격 패턴이 있는 레벨의 경우 공격 패턴 설정
 	*/
 
-	status_->SetLv(s_int(info_->grade_));
+	status_->SetLv(s_int(info_->tier_));
 	status_->SetCurrentHp(info_->hp_);
 	status_->SetMaxHP(info_->hp_);
+	status_->SetAtt(info_->contact_damage_);
 
 	object_description_ = _T("Lv. ") + std::to_wstring(status_->GetLv());
 
 	// 역할군을 부여받았을 경우 해당 정보까지 description 에 추가
-	if (role_ != EnemyRole::Undefined)
+	if (role_ != EnemySpecialRole::Undefined)
 	{
 		std::vector<std::wstring> role_strings = {
 			_T("Tanky | 높은 체력"),
@@ -163,11 +164,11 @@ void ExpDust::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
 	// 고보상형의 경우 일반 등급보다 더 많은 코인 보상
-	const auto coin_reward_amount = info_->coin_reward_ * ((role_ == EnemyRole::HighLoot) ? 2 : 1);
-	_GameState.AddCoin(coin_reward_amount);
+	//const auto coin_reward_amount = info_->reward_ * ((role_ == EnemySpecialRole::Rich) ? 2 : 1);
+	_GameState.IncreaseEarnedCoinCount(info_->reward_);
 	
 	// 로깅
-	_DEBUG_LOG(_T("[Player] Coin count : %d(+%d)"), _GameState.CoinCount(), coin_reward_amount);
+	_DEBUG_LOG(_T("[Player] Coin count : %d(+%d)"), _GameState.GetCoinCount(), coin_reward_amount);
 
 	// 코인 획득 텍스트 ui 노출
 }
@@ -178,14 +179,14 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 	{
 	case CollisionLayer::PlayerBody:
 	{
-		switch (info_->grade_)
+		switch (info_->tier_)
 		{
-		case EnemyGrade::Danger:
-		case EnemyGrade::Special:
+		case EnemyTier::Danger:
+		case EnemyTier::Special:
 		{
 			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
-			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
-				s_cast(IDamagable*, _handler)->GetDamage(1.f);
+			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
+				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
 				});
 
 			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
@@ -206,14 +207,14 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 	{
 	case CollisionLayer::PlayerBody:
 	{
-		switch (info_->grade_)
+		switch (info_->tier_)
 		{
-		case EnemyGrade::Danger:
-		case EnemyGrade::Special:
+		case EnemyTier::Danger:
+		case EnemyTier::Special:
 		{
 			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
-			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [](IHandler* _handler) {
-				s_cast(IDamagable*, _handler)->GetDamage(1.f);
+			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
+				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
 				});
 
 			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
