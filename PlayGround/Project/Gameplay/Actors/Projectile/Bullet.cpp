@@ -68,7 +68,7 @@ void Bullet::DebugRender(_double _delta_time)
 
 void Bullet::OnDestroy()
 {
-    _ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
 }
 
 void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
