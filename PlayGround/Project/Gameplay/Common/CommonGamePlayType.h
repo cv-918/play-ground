@@ -107,7 +107,7 @@ struct PlayableCharacterJsonInfo
 	_float hp_ = 0.f;
 	_float contact_damage_ = 0.f;
 
-	_float move_speed_max_ = 0.f;
-	_float acceleration_ = 0.f;
-	_float friction_ = 0.f;
+	_float move_speed_max_ = 0.f;	// 최대 이동 속도
+	_float acceleration_ = 0.f;		// 가속도. 높을수록 빠르게 최대 이동 속도에 도달
+	_float friction_ = 0.f;			// 마찰 계수. 높을수록 빠르게 감속
 };

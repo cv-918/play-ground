@@ -149,7 +149,7 @@ inline void DevLogW(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
 
 // 널 포인터 감지 메시지 박스 매크로. 디버그 모드에서만 활성화되고, nullptr이 감지되었을 때 메시지 박스를 띄웁니다.
 #define _NULL_DETECTION_MSGBOX				_DEBUG_MSGBOX(L"Null pointer detected!")
-#define _NULL_DETECTION_MSGBOX_EX(fmt, ...)	_DEBUG_MSGBOX(L"Null pointer detected!\n Msg : ", fmt, __VA_ARGS__)
+#define _NULL_DETECTION_MSGBOX_EX(fmt, ...)	_DEBUG_MSGBOX(L"Null pointer detected!\nMsg : %s", fmt, __VA_ARGS__)
 
 #else
 #define _DEBUG_MSGBOX(fmt, ...)

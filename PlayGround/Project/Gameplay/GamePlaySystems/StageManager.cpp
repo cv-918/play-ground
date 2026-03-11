@@ -124,17 +124,7 @@ void StageManager::_OnPlay()
 		}
 	}
 
-	// 스폰 타이머 업데이트
 	spawn_timer_ += _Timer.DeltaTime();
-
-	/*
-		스폰 로직 처리
-		- 스폰 타이머가 스폰 간격을 초과했을 때 적을 스폰하도록 함
-		- 스폰할 적의 정보는 JSON 데이터 매니저에서 가져오도록 함
-		- 가져온 적의 정보를 바탕으로 ObjectManager에 스폰 요청을 보내도록 함
-		- 스폰할 적의 종류나 수량은 스테이지 상태나 진행 상황에 따라 달라질 수 있음
-		- 스폰할 적의 위치는 StageManager의 GeneratePosition 함수를 통해 화면 밖의 임의의 위치로 설정하도록 함
-	*/
 	if (spawn_timer_ >= spawn_interval_)
 	{
 		spawn_timer_ = 0.0;
@@ -149,7 +139,6 @@ void StageManager::_OnPlay()
 			return;
 		}
 
-		// 씬에 적 스폰 요청
 		play_scene_->SpawnEnemy(enemy_data->id_);
 	}
 }
