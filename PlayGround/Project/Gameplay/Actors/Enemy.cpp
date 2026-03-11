@@ -35,7 +35,7 @@ _int Enemy::LateUpdate(_double _delta_time)
 	if (_GameState.MonsterPause())
 		return 0;
 
-	_int ret = __super::Update(_delta_time);
+	_int ret = __super::LateUpdate(_delta_time);
 	if (0 != ret) return ret;
 
 	return UPDATE_CONTINUE;
@@ -48,7 +48,7 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 	static _float common_range_distance = 200.f;
 
 	// 투사체 발사 간격. 필요에 따라 몬스터별로 발사 간격을 다르게 설정하거나, JSON 데이터에서 발사 간격 정보를 받아서 활용할 수도 있습니다.
-	static _double common_fire_interval = 1.f;
+	static _double common_fire_interval = 5.f;
 
 	projectile_fire_timer_ += _delta_time;
 	_bool fire = false;
@@ -67,11 +67,15 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 	// 몬스터의 종류에 따라 JSON 데이터에서 투사체 발사 정보를 받아서 발사 패턴을 다양하게 구현할 수 있습니다. 예를 들어, 플레이어를 추적해서 발사하는 패턴, 일정 방향으로 발사하는 패턴, 랜덤한 방향으로 발사하는 패턴 등 다양한 패턴을 구현할 수 있습니다.
 
 	const auto pos = transform_->Position();
-	const auto target = pos + transform_->Forward2D() * 5.f;
+
+	const auto player = _GameState.GetPlayer();
+	const auto target_pos = player->GetTransform()->Position();
+
+	//const auto target = pos + transform_->Forward2D() * 5.f;
 	switch (info_->projectile_pattern_)
 	{
 	case EnemyProjectilePattern::Direct:
-		play_scene_->SpawnProjectile(this, pos, target, info_->projectile_damage_, info_->projectile_speed_);
+		play_scene_->SpawnProjectile(this, pos, target_pos, info_->projectile_damage_, 240.f/*info_->projectile_speed_*/);
 		break;
 	}
 }

@@ -129,10 +129,10 @@ _bool ExpDust::Initialize()
 	if (role_ != EnemySpecialRole::Undefined)
 	{
 		std::vector<std::wstring> role_strings = {
-			_T("Tanky | 높은 체력"),
-			_T("HighLoot | 많은 자원"),
-			_T("Ranger | 공격-투사체-"),
-			_T("Mutant | 분열/강화"),
+			_T("Tank | 높은 체력"),
+			_T("Rich | 많은 자원"),
+			_T("Shooter | 투사체"),
+			_T("Splitter | 분열/강화"),
 		};
 
 		object_description_ += _T("\n");

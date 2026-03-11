@@ -36,9 +36,16 @@ public:
 	void GeneratePlayArea(const _Rect& _nav_mesh_rect, const _int margin);
 
 private:
-	void _CleanUp();
+	// 오브젝트 추가 경로 통제하기 위한 메서드
+	void _PushGameObject(GameObjectBase* _game_object);
+
+	// Update 루프 안에서 생성, 파괴된 게임 오브젝트를 일괄 관리하는 메서드
+	void _MergeNewGameObjects();
+	void _RemoveDestroyedGameObjects();
 
 private:
 	std::vector<GameObjectBase*> game_objects_;
+	std::vector<GameObjectBase*> new_game_objects_; // 업데이트 중에 추가된 게임 오브젝트들을 임시로 저장하는 컨테이너. 업데이트가 시작 전에 game_objects_에 병합하여 관리
+
 	_Rect* play_area_ = nullptr; // 몬스터나 오브젝트가 존재할 수 있는 영역
 };

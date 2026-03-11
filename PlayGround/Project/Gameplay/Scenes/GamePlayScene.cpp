@@ -78,7 +78,7 @@ _bool GamePlayScene::Release()
 
 void GamePlayScene::OnEnter()
 {
-	const auto prev_player = _GameState.Player();
+	const auto prev_player = _GameState.GetPlayer();
 
 	// 만약 이전 플레이어가 남아있다면, 구조적 문제가 발생한 것이므로 리턴
 	if (prev_player)
@@ -121,7 +121,7 @@ void GamePlayScene::OnEnter()
 void GamePlayScene::OnExit()
 {
 	_ColMgr.ClearAllColliders();
-	_GameState.Player(nullptr); // 게임 스테이트에서 플레이어 참조 해제
+	_GameState.SetPlayer(nullptr); // 게임 스테이트에서 플레이어 참조 해제
 }
 
 void GamePlayScene::SpawnPlayer()
@@ -154,7 +154,7 @@ void GamePlayScene::SpawnPlayer()
 	player->SetPlayScene(this);
 
 	// 게임 스테이트에 플레이어 캐싱
-	_GameState.Player(player);
+	_GameState.SetPlayer(player);
 
 	// 플레이 영역을 생성하도록 ObjectManager에 요청. 네비메시의 영역에서 일정 마진을 둔 영역을 계산하여 플레이어가 존재할 수 있는 영역으로 설정
 	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);

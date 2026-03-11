@@ -49,25 +49,33 @@ void Bullet::Render(_double _delta_time)
 {
     // 총알 렌더링 (간단한 원으로 표현)
     const auto pos = transform_->Position();
-    _DrawFunc::DrawCircle(pos, collider_->Radius(), Colors::Red, true);
+    _DrawFunc::FillCircle(pos, collider_->Radius(), Colors::DeepGray);
+}
+
+void Bullet::DebugRender(_double _delta_time)
+{
+	if (!Visible())
+		return;
+
+	const auto position = transform_->Position();
+	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Colors::DarkGray);
+
+	auto description_position = position;
+	description_position.y += 16.f; // 디버그용으로 위치 보정
+
+	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Colors::DarkGray);
 }
 
 void Bullet::OnDestroy()
 {
-    if (collider_)
-    {
-		_ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
-        SAFE_DELETE(collider_);
-    }
+    _ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
 }
 
 void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-    // 상대방이 데미지를 받을 수 있는 객체인지 확인
-    auto* target = dynamic_cast<IDamagable*>(_other->GameObject());
-    if (target && _other->GameObject() != owner_)
-    {
-        target->GetDamage(damage_);
-        Destroy();  // 충돌 후 총알 제거
-    }
+	_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
+		s_cast(IDamagable*, _handler)->GetDamage(damage_);
+		});
+
+	Destroy();  // 충돌 후 총알 제거
 }

@@ -16,6 +16,7 @@ _bool PlayGround::Initialize()
 	_RenderChain.Initialize();
 
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBody, true);
+	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBullet, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
 
 	_SceneMgr.Initialize();

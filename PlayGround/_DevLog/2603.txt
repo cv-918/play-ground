@@ -212,3 +212,14 @@ int value
 - 이동 로직 및 알파 Disappear 로직 수정 완료
 
 => 이 기능을 WidgetBase 로 올리는 것이 나을 것 같아서 수정함
+
+:: 2026년 3월 11일 수요일
+[ Collider::LateUpdate() 에서 삭제하다가 발생하는 크래시 이슈 ]
+=> 삭제 로직을 이상하게 짰었다. 정상적인 로직으로 수정 완료.
+
+[ Collider의 위치가 Enemy를 따라가지 않는 이슈 ]
+=> __super::LateUpdate 를 호출하지 않고 있었음. 수정 완료.
+
+[ Bullet 을 세 개째 추가하면 무조건 크래시 발생하는 이슈 ]
+- 아. 찾았다. 이거 동적 생성 때문에 range-for 틀어져서 발생한 이슈네. 아오.
+=> _MergeNewGameObjects, _RemoveDestroyedGameObjects 로 Update 루프 안에서 생성, 파괴된 게임 오브젝트 일괄 관리

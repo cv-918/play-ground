@@ -16,6 +16,7 @@ private:
     _bool Initialize() override;
     _int Update(_double _delta_time) override;
     void Render(_double _delta_time) override;
+	void DebugRender(_double _delta_time) override;
     void OnDestroy() override;
 
     // ICollidable 인터페이스 구현
@@ -27,6 +28,6 @@ private:
     
     _float damage_ = 0.f;             // 피해량
     _float speed_ = 0.f;              // 이동 속도
-    _float lifetime_ = 3.0;           // 생존 시간 (초)
+    _float lifetime_ = 30.0;           // 생존 시간 (초)
     _float elapsed_time_ = 0.f;
 };
