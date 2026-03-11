@@ -68,7 +68,11 @@ void Bullet::DebugRender(_double _delta_time)
 
 void Bullet::OnDestroy()
 {
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
+    if (collider_)
+    {
+		_ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
+        SAFE_DELETE(collider_);
+    }
 }
 
 void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -77,5 +81,6 @@ void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 		s_cast(IDamagable*, _handler)->GetDamage(damage_);
 		});
 
-	Destroy();  // 충돌 후 총알 제거
+        Destroy();  // 충돌 후 총알 제거
+    }
 }
