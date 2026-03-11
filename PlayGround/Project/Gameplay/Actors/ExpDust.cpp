@@ -35,7 +35,6 @@ _bool ExpDust::Initialize()
 	case EnemyTier::Special:
 		// 특수 | 플레이 흐름 변화 유도 | 역할군 부여받음
 		color_ = Colors::Salmon;
-		role_ = s_cast(EnemySpecialRole, _Random.Range(s_int(EnemySpecialRole::Tank), s_int(EnemySpecialRole::Count) - 1));
 		break;
 	default:
 		// 로깅
@@ -118,26 +117,13 @@ _bool ExpDust::Initialize()
 		공격 패턴이 있는 레벨의 경우 공격 패턴 설정
 	*/
 
-	status_->SetLv(s_int(info_->tier_));
+	const auto lv = s_int(info_->tier_);
+	status_->SetLv(lv);
 	status_->SetCurrentHp(info_->hp_);
 	status_->SetMaxHP(info_->hp_);
 	status_->SetAtt(info_->contact_damage_);
 
-	object_description_ = _T("Lv. ") + std::to_wstring(status_->GetLv());
-
-	// 역할군을 부여받았을 경우 해당 정보까지 description 에 추가
-	if (role_ != EnemySpecialRole::Undefined)
-	{
-		std::vector<std::wstring> role_strings = {
-			_T("Tank | 높은 체력"),
-			_T("Rich | 많은 자원"),
-			_T("Shooter | 투사체"),
-			_T("Splitter | 분열/강화"),
-		};
-
-		object_description_ += _T("\n");
-		object_description_ += role_strings[s_int(role_) - 1];
-	}
+	object_description_ = _T("Lv. ") + std::to_wstring(lv);
 
 	Finalize();
 	return true;

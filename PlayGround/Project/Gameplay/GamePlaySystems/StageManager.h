@@ -68,7 +68,7 @@ private:
 	_double stage_timer_ = 0.0;
 
 	_double spawn_timer_ = 0.0;
-	_double spawn_interval_ = 100.0;
+	_double spawn_interval_ = 0.0;
 
 	_bool player_died_ = false; // 플레이어가 죽었는지 여부를 추적하는 플래그. 플레이어가 죽었을 때 결과 화면으로 전환할 때 사용
 								// 임시로 여기에 선언
