@@ -11,6 +11,9 @@ public:
 	explicit ComponentBase(const ComponentType _type) : type_(_type) {}
 
 public:
+	_bool Initialize() override;
+
+public:
 	ComponentType Type() const { return type_; }
 
 	GameObjectBase* GameObject() const { return gameobject_; }

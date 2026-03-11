@@ -12,6 +12,8 @@ ObjectManager::~ObjectManager()
 
 _int ObjectManager::Update(_double _delta_time)
 {
+	_MergeNewGameObjects();
+
 	for (auto* game_object : game_objects_)
 	{
 		if (game_object->IsActive())
@@ -42,7 +44,7 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 		}
 	}
 
-	_CleanUp();
+	_RemoveDestroyedGameObjects();
 
 	return UPDATE_CONTINUE;
 }
@@ -88,7 +90,7 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 	if (false == _game_object->IsInitialized())
 		_game_object->Initialize();
 
-	game_objects_.push_back(_game_object);
+	_PushGameObject(_game_object);
 }
 
 GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
@@ -108,7 +110,7 @@ GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
 
 	if (enemy->Initialize())
 	{
-		game_objects_.push_back(enemy);
+		_PushGameObject(enemy);
 		return enemy;
 	}
 
@@ -126,7 +128,8 @@ GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Po
         bullet->GetTransform()->Position(_position);
         bullet->GetTransform()->LookAt(_target);
         
-        game_objects_.push_back(bullet);
+		_PushGameObject(bullet);
+		_SYSTEM_LOG_INFO(L"Spawned projectile - Name: %s", bullet->Name().c_str());
         return bullet;
     }
     
@@ -148,7 +151,45 @@ void ObjectManager::GeneratePlayArea(const _Rect& _nav_mesh_rect, const _int mar
 	play_area_ = new _Rect(play_area_rect);
 }
 
-void ObjectManager::_CleanUp()
+void ObjectManager::_PushGameObject(GameObjectBase* _game_object)
+{
+	if (_game_object == nullptr)
+	{
+		_SYSTEM_LOG_ERROR(L"ObjectManager::_PushGameObject - Attempted to push a null game object.");
+		return;
+	}
+
+	if (false == _game_object->IsInitialized())
+	{
+		if (!_game_object->Initialize())
+		{
+			_SYSTEM_LOG_ERROR(L"ObjectManager::_PushGameObject - Failed to initialize game object: %s", _game_object->Name().c_str());
+			delete _game_object;
+			return;
+		}
+	}
+
+	new_game_objects_.push_back(_game_object);
+	_SYSTEM_LOG_INFO(L"ObjectManager: Added game object - Name: %s, ID: %d", _game_object->Name().c_str(), _game_object->ID());
+}
+
+void ObjectManager::_MergeNewGameObjects()
+{
+	if (new_game_objects_.empty())
+		return;
+
+	for (auto* new_obj : new_game_objects_)
+	{
+		static _uint object_count = 0;
+		new_obj->ID(object_count++);
+		game_objects_.push_back(new_obj);
+		_SYSTEM_LOG_INFO(L"ObjectManager: Merged new game object - Name: %s, ID: %d", new_obj->Name().c_str(), new_obj->ID());
+	}
+
+	std::vector<GameObjectBase*>().swap(new_game_objects_);
+}
+
+void ObjectManager::_RemoveDestroyedGameObjects()
 {
 	if (game_objects_.empty())
 		return;

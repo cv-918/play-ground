@@ -6,6 +6,9 @@
 
 _bool Collider::Initialize()
 {
+	if (false == __super::Initialize())
+		return false;
+
 	if (nullptr == gameobject_)
 		return false;
 
@@ -43,14 +46,14 @@ _int Collider::Update(_double _delta_time)
 
 _int Collider::LateUpdate(_double _delta_time)
 {
-	if (!erase_waiting_list_.empty())
-	{
-		for (auto& pair : collision_timers_)
-		{
-			if (std::find(collided_colliders_.begin(), collided_colliders_.end(), pair.first) == collided_colliders_.end())
-				collision_timers_.erase(pair.first);
-		}
-	}
+	if (erase_waiting_list_.empty())
+		return UPDATE_CONTINUE;
+
+	// 삭제 대기 목록의 항목들을 collision_timers_에서 제거
+	for (auto& collider : erase_waiting_list_)
+		collision_timers_.erase(collider);
+
+	std::vector<Collider*>().swap(erase_waiting_list_);
 
 	return UPDATE_CONTINUE;
 }

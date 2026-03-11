@@ -75,7 +75,7 @@ void StageManager::OnPlayerDeath()
 	_GameState.SetPause(true);
 
 	// 플레이어 참조 초기화
-	_GameState.Player(nullptr);
+	_GameState.SetPlayer(nullptr);
 
 	// 결과 화면으로 전환
 	ChangeState(StageState::Result);
@@ -149,7 +149,7 @@ void StageManager::_OnPlay()
 		}
 
 		// 씬에 적 스폰 요청
-		play_scene_->SpawnEnemy(enemy_data->id_);
+		play_scene_->SpawnEnemy(/*enemy_data->id_*/11);
 	}
 }
 

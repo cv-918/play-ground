@@ -23,8 +23,8 @@ class GameState
 	: public ISingleton<GameState>
 {
 public:
-	GameObjectBase* Player() const { return player_; }
-	void Player(GameObjectBase* _player) { player_ = _player; }
+	GameObjectBase* GetPlayer() const { return player_; }
+	void SetPlayer(GameObjectBase* _player) { player_ = _player; }
 
 	_bool GetPause() const { return pause_; }
 	void SetPause(const _bool _pause);
