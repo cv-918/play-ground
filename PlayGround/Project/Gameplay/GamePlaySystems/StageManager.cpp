@@ -138,6 +138,7 @@ void StageManager::_OnPlay()
 	if (spawn_timer_ >= spawn_interval_)
 	{
 		spawn_timer_ = 0.0;
+		spawn_interval_ = _Random.Range(3.0, 6.0); // 스폰 간격을 1초에서 3초 사이의 랜덤한 값으로 설정
 
 		const auto enemy_idx = _Random.Range(0, _EnemyDataMgr.GetDataCount() - 1);
 		const auto enemy_data = _EnemyDataMgr.GetDataByIndex(enemy_idx);
@@ -149,7 +150,7 @@ void StageManager::_OnPlay()
 		}
 
 		// 씬에 적 스폰 요청
-		play_scene_->SpawnEnemy(/*enemy_data->id_*/11);
+		play_scene_->SpawnEnemy(enemy_data->id_);
 	}
 }
 

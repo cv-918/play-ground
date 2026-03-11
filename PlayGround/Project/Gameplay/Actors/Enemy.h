@@ -20,8 +20,6 @@ protected:
 protected:
 	const EnemyJsonInfo* info_;
 
-	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
-
 	_double projectile_fire_timer_ = 0.0; // 투사체 발사 타이머. 발사 간격에 따라 증가시키면서 투사체 발사 여부를 결정하는 데 사용
 };
 
