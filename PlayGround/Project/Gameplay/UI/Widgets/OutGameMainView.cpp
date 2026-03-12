@@ -1,9 +1,9 @@
 ﻿#include "framework.h"
-#include "LobbyMainView.h"
+#include "OutGameMainView.h"
 
 #include "../Elements/Button.h"
 
-LobbyMainView::LobbyMainView(const std::function<void()>& _start_btn_callback, const std::function<void()>& _attr_btn_callback)
+OutGameMainView::OutGameMainView(const std::function<void()>& _start_btn_callback, const std::function<void()>& _attr_btn_callback)
 {
 	// 좌표 (중앙)
 	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
@@ -25,6 +25,6 @@ LobbyMainView::LobbyMainView(const std::function<void()>& _start_btn_callback, c
 	attr_btn->SetOnClick(_attr_btn_callback);
 }
 
-LobbyMainView::~LobbyMainView()
+OutGameMainView::~OutGameMainView()
 {
 }

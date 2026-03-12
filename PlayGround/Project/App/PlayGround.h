@@ -12,5 +12,5 @@ public:
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 
-	LRESULT WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
+	LRESULT HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);
 };

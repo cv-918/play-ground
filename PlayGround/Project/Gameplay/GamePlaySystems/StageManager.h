@@ -21,7 +21,7 @@ enum class StageState
 
 class ObjectManager;
 class UIManager;
-class GamePlayScene;
+class InGameScene;
 
 class StageManager
 	: public ISingleton<StageManager>
@@ -33,7 +33,7 @@ public:
 	void Render(_double _delta_time) override;
 
 public:
-	void PlayScene(GamePlayScene* _play_scene) { play_scene_ = _play_scene; }
+	void PlayScene(InGameScene* _play_scene) { play_scene_ = _play_scene; }
 
 	StageState GetPrevState() const { return prev_state_; }
 	StageState GetCurrState() const { return curr_state_; }
@@ -61,7 +61,7 @@ private:
 	void _UpdateGenerationAreas();
 
 private:
-	GamePlayScene* play_scene_ = nullptr;
+	InGameScene* play_scene_ = nullptr;
 
 	StageState prev_state_ = StageState::Undefined;
 	StageState curr_state_ = StageState::Undefined;

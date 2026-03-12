@@ -1,10 +1,10 @@
 ﻿#include "framework.h"
-#include "LobbyScene.h"
+#include "OutGameScene.h"
 
-#include "UI/Widgets/LobbyMainView.h"
-#include "UI/Widgets/LobbyAttributeView.h"
+#include "UI/Widgets/OutGameMainView.h"
+#include "UI/Widgets/OutGameAttributeView.h"
 
-LobbyScene::~LobbyScene()
+OutGameScene::~OutGameScene()
 {
 	// 뷰 전환 시 생성된 UI 요소들에 대한 정리 작업 처리
 	for (auto& pair : view_map_)
@@ -18,7 +18,7 @@ LobbyScene::~LobbyScene()
 	std::map<OutGameViewState, WidgetBase*>().swap(view_map_);
 }
 
-_bool LobbyScene::Initialize()
+_bool OutGameScene::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
@@ -29,7 +29,7 @@ _bool LobbyScene::Initialize()
 	return true;
 }
 
-_int LobbyScene::Update(_double _delta_time)
+_int OutGameScene::Update(_double _delta_time)
 {
 	__super::Update(_delta_time);
 
@@ -39,7 +39,7 @@ _int LobbyScene::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void LobbyScene::Render(_double _delta_time)
+void OutGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
 
@@ -51,16 +51,16 @@ void LobbyScene::Render(_double _delta_time)
 	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
 }
 
-void LobbyScene::OnEnter()
+void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
 }
 
-void LobbyScene::OnExit()
+void OutGameScene::OnExit()
 {
 }
 
-void LobbyScene::_ChangeView(OutGameViewState _new_view_state)
+void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 {
 	if (view_state_ == _new_view_state)
 		return;
@@ -72,7 +72,7 @@ void LobbyScene::_ChangeView(OutGameViewState _new_view_state)
 	_OpenView();
 }
 
-void LobbyScene::_CloseView()
+void OutGameScene::_CloseView()
 {
 	switch (view_state_)
 	{
@@ -85,7 +85,7 @@ void LobbyScene::_CloseView()
 	}
 }
 
-void LobbyScene::_OpenView()
+void OutGameScene::_OpenView()
 {
 	const auto find = view_map_.find(view_state_);
 
@@ -100,21 +100,21 @@ void LobbyScene::_OpenView()
 	}	
 }
 
-WidgetBase* LobbyScene::_CreateView()
+WidgetBase* OutGameScene::_CreateView()
 {
 	_SYSTEM_LOG_INFO(_T("Created new view: %s"), _GetViewName(view_state_).c_str());
 
 	WidgetBase* view = nullptr;
 	switch (view_state_)
 	{
-	case LobbyScene::OutGameViewState::Main:
-		view = new LobbyMainView(
-			[this]() { _SceneMgr.ChangeScene(SceneType::GamePlay); },
+	case OutGameScene::OutGameViewState::Main:
+		view = new OutGameMainView(
+			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { _ChangeView(OutGameViewState::Attribute); }
 		);
 		break;
-	case LobbyScene::OutGameViewState::Attribute:
-		view = new LobbyAttributeView(
+	case OutGameScene::OutGameViewState::Attribute:
+		view = new OutGameAttributeView(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
 		break;
@@ -124,13 +124,13 @@ WidgetBase* LobbyScene::_CreateView()
 	return view;
 }
 
-std::wstring LobbyScene::_GetViewName(OutGameViewState _view_state) const
+std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 {
 	switch (_view_state)
 	{
-	case LobbyScene::OutGameViewState::Main:
+	case OutGameScene::OutGameViewState::Main:
 		return L"Main View";
-	case LobbyScene::OutGameViewState::Attribute:
+	case OutGameScene::OutGameViewState::Attribute:
 		return L"Attribute View";
 	default:
 		return L"Unknown View";

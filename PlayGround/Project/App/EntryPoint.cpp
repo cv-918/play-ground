@@ -95,7 +95,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -122,54 +122,47 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+	hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, WINCX, WINCY, nullptr, nullptr, hInstance, nullptr);
+	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, WINCX, WINCY, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
-   // 1) 스타일에서 최소/최대화 버튼 제거
-   LONG style = GetWindowLong(hWnd, GWL_STYLE);
-   style &= ~WS_MINIMIZEBOX;
-   style &= ~WS_MAXIMIZEBOX;
+	// 1) 스타일에서 최소/최대화 버튼 제거
+	LONG style = GetWindowLong(hWnd, GWL_STYLE);
+	style &= ~WS_MINIMIZEBOX;
+	style &= ~WS_MAXIMIZEBOX;
 
-   // (선택) 사이즈 조절도 막고 싶으면
-   style &= ~WS_THICKFRAME;   // 창 테두리 드래그 리사이즈 제거
-   style &= ~WS_SIZEBOX;      // (WS_THICKFRAME과 동일 의미로 쓰이기도 함)
+	// 2) 사이즈 조절 막기
+	style &= ~WS_THICKFRAME;   // 창 테두리 드래그 리사이즈 제거
+	style &= ~WS_SIZEBOX;      // (WS_THICKFRAME과 동일 의미로 쓰이기도 함)
 
-   SetWindowLong(hWnd, GWL_STYLE, style);
+	SetWindowLong(hWnd, GWL_STYLE, style);
 
-   // 2) 닫기(X) 제거: 시스템 메뉴에서 Close 제거
-   HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
-   if (hSysMenu)
-   {
-	   DeleteMenu(hSysMenu, SC_CLOSE, MF_BYCOMMAND);
-   }
+	// 3) 스타일 변경 반영
+	SetWindowPos(hWnd, nullptr, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-   // 3) 스타일 변경 반영
-   SetWindowPos(hWnd, nullptr, 0, 0, 0, 0,
-	   SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	// 4) 크기 및 위치 조정
+	RECT wr{ 0, 0, WINCX, WINCY };
+	AdjustWindowRectEx(&wr, WS_OVERLAPPEDWINDOW, FALSE, 0);
 
-   // 4) 크기 및 위치 조정
-   RECT wr{ 0, 0, WINCX, WINCY };
-   AdjustWindowRectEx(&wr, WS_OVERLAPPEDWINDOW, FALSE, 0);
+	int w = wr.right - wr.left;
+	int h = wr.bottom - wr.top;
 
-   int w = wr.right - wr.left;
-   int h = wr.bottom - wr.top;
+	SetWindowPos(hWnd, nullptr, 0, 0, w, h,
+		SWP_NOMOVE | SWP_NOZORDER);
 
-   SetWindowPos(hWnd, nullptr, 0, 0, w, h,
-	   SWP_NOMOVE | SWP_NOZORDER);
+	g_hwnd = hWnd; // 전역 변수에 저장
 
-   g_hwnd = hWnd; // 전역 변수에 저장
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-
-   return TRUE;
+	return TRUE;
 }
 
 //
@@ -184,41 +177,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    pg.WndProc(hWnd, message, wParam, lParam);
+    LRESULT ret = 0;
+    if (ret = pg.HandleWindowMessage(hWnd, message, wParam, lParam))
+        return ret;
+
     switch (message)
     {
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            EndPaint(hWnd, &ps);
-        }
-        break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
     }
-    return 0;
+    
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 // 정보 대화 상자의 메시지 처리기입니다.

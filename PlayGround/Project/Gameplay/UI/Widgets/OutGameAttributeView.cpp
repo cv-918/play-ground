@@ -1,9 +1,9 @@
 ﻿#include "framework.h"
-#include "LobbyAttributeView.h"
+#include "OutGameAttributeView.h"
 
 #include "../Elements/Button.h"
 
-LobbyAttributeView::LobbyAttributeView(const std::function<void()>& _return_btn_callback)
+OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_btn_callback)
 {
 	// 좌표 (우측 하단)
 	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
@@ -17,6 +17,6 @@ LobbyAttributeView::LobbyAttributeView(const std::function<void()>& _return_btn_
 	return_btn->SetOnClick(_return_btn_callback);
 }
 
-LobbyAttributeView::~LobbyAttributeView()
+OutGameAttributeView::~OutGameAttributeView()
 {
 }

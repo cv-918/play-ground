@@ -1,5 +1,5 @@
 ﻿#include "framework.h"
-#include "GamePlayScene.h"
+#include "InGameScene.h"
 
 #include "Actors/Player.h"
 #include "GamePlay/World/Background.h"
@@ -10,7 +10,7 @@
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 
-_bool GamePlayScene::Initialize()
+_bool InGameScene::Initialize()
 {
 	if (false == __super::Initialize())
 		return false;
@@ -25,11 +25,11 @@ _bool GamePlayScene::Initialize()
 	return true;
 }
 
-_int GamePlayScene::Update(_double _delta_time)
+_int InGameScene::Update(_double _delta_time)
 {
 	if (_InputMgr.Down(VK_ESCAPE))
 	{
-		_SceneMgr.ChangeScene(SceneType::Lobby);
+		_SceneMgr.ChangeScene(SceneType::OutGame);
 		return UPDATE_CONTINUE;
 	}
 
@@ -56,7 +56,7 @@ _int GamePlayScene::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void GamePlayScene::Render(_double _delta_time)
+void InGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
 
@@ -65,7 +65,7 @@ void GamePlayScene::Render(_double _delta_time)
 	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
 }
 
-_bool GamePlayScene::Release()
+_bool InGameScene::Release()
 {
 	__super::Release();
 
@@ -76,7 +76,7 @@ _bool GamePlayScene::Release()
 	return _bool();
 }
 
-void GamePlayScene::OnEnter()
+void InGameScene::OnEnter()
 {
 	const auto prev_player = _GameState.GetPlayer();
 
@@ -110,21 +110,19 @@ void GamePlayScene::OnEnter()
 
 	// 게임 플레이 중에는 보이지 않도록 비활성화
 	return_btn_->InActivate();
-
-	return_btn_->InActivate();
 	stage_manager_->ChangeState(StageState::Enter);
 
 	// 플레이 씬에 진입할 때에는 정지 상태를 해제
 	_GameState.SetPause(false);
 }
 
-void GamePlayScene::OnExit()
+void InGameScene::OnExit()
 {
 	_ColMgr.ClearAllColliders();
 	_GameState.SetPlayer(nullptr); // 게임 스테이트에서 플레이어 참조 해제
 }
 
-void GamePlayScene::SpawnPlayer()
+void InGameScene::SpawnPlayer()
 {
 	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
 
@@ -160,7 +158,7 @@ void GamePlayScene::SpawnPlayer()
 	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);
 }
 
-void GamePlayScene::SpawnEnemy(_uint _enemy_id)
+void InGameScene::SpawnEnemy(_uint _enemy_id)
 {
 	// JSON 데이터 매니저에서 해당 등급과 카테고리에 맞는 데이터를 가져온다
 	const auto enemy_spawn_data = _EnemyDataMgr.GetData(_enemy_id);
@@ -187,17 +185,17 @@ void GamePlayScene::SpawnEnemy(_uint _enemy_id)
 	s_cast(Unit*, spawned_enemy)->SetPlayScene(this);
 }
 
-void GamePlayScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)
+void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)
 {
 	object_manager_->SpawnProjectile(_owner, _position, _target, _damage, _speed);
 }
 
-void GamePlayScene::ShowResultUI()
+void InGameScene::ShowResultUI()
 {
 	return_btn_->Activate();
 }
 
-void GamePlayScene::ShowDamageUI(_float _damage, const _Point& _position)
+void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
 	const auto damage_font = ui_manager_->CreateUI<DamageFont>(_damage, _position);
 	_SYSTEM_LOG_INFO(L"DamageFont created at position (%d, %d) with damage %.2f", _position.x, _position.y, _damage);

@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Scene.h"
 
-class LobbyScene final : public Scene
+class OutGameScene final : public Scene
 {
 	enum class OutGameViewState
 	{
@@ -11,8 +11,8 @@ class LobbyScene final : public Scene
 	};
 
 public:
-	explicit LobbyScene() : Scene(SceneType::Lobby) {}
-	virtual ~LobbyScene();
+	explicit OutGameScene() : Scene(SceneType::OutGame) {}
+	virtual ~OutGameScene();
 
 public:
 	_bool Initialize() override;

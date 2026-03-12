@@ -69,7 +69,7 @@ void PlayGround::Render(_double _delta_time)
 	_RenderChain.Present();
 }
 
-LRESULT PlayGround::WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam)
+LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam)
 {
 	switch (_msg)
 	{

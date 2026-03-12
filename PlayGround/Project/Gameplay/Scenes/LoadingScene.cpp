@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "LoadingScene.h"
 
 _bool LoadingScene::Initialize()
@@ -36,7 +36,7 @@ _int LoadingScene::LateUpdate(_double _delta_time)
 	{
 		if (_InputMgr.Down(VK_RETURN) || _InputMgr.Down(VK_SPACE))
 		{
-			_SceneMgr.ChangeScene(SceneType::Lobby);
+			_SceneMgr.ChangeScene(SceneType::OutGame);
 
 			elapsed_time_ = 0.0;
 			loading_progress_ = 0;
@@ -47,7 +47,7 @@ _int LoadingScene::LateUpdate(_double _delta_time)
 	}
 	else
 	{
-		// ·ÎµùÀÌ ¿Ï·áµÇÁö ¾ÊÀº »óÅÂ¿¡¼­ Enter ¶Ç´Â Space Å°¸¦ ´©¸£¸é ·ÎµùÀ» °­Á¦·Î ¿Ï·á Ã³¸®(ÃÊ¹İ Å×½ºÆ®¿ë)
+		// ë¡œë”©ì´ ì™„ë£Œë˜ì§€ ì•Šì€ ìƒíƒœì—ì„œ Enter ë˜ëŠ” Space í‚¤ë¥¼ ëˆ„ë¥´ë©´ ë¡œë”©ì„ ê°•ì œë¡œ ì™„ë£Œ ì²˜ë¦¬(ì´ˆë°˜ í…ŒìŠ¤íŠ¸ìš©)
 		if (_InputMgr.Down(VK_RETURN) || _InputMgr.Down(VK_SPACE))
 		{
 			loading_progress_ = 100;
