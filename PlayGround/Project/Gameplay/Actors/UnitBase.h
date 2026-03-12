@@ -13,7 +13,7 @@ enum class UnitDefaultColliderId
 	ColCount,
 };
 
-#include "Gameplay/Scenes/GamePlayScene.h"
+#include "Gameplay/Scenes/InGameScene.h"
 
 #include "Components/SphereCollider.h"
 #include "Components/RectCollider.h"
@@ -34,7 +34,7 @@ protected:
 	_bool Initialize() override;
 
 public:
-	void SetPlayScene(GamePlayScene* _scene) { play_scene_ = _scene; }
+	void SetPlayScene(InGameScene* _scene) { play_scene_ = _scene; }
 
 	SphereCollider* GetDefaultCollider(const UnitDefaultColliderId _id) const
 	{
@@ -52,7 +52,7 @@ public:
 
 protected:
 	// 유닛이 속한 씬에 대한 포인터. 필요에 따라 유닛이 속한 씬의 정보나 기능을 참조할 때 사용할 수 있습니다.
-	GamePlayScene* play_scene_ = nullptr;
+	InGameScene* play_scene_ = nullptr;
 
 	// 유닛이 기본적으로 갖는 콜라이더들. Body, Attack 등으로 구분해서 저장. 필요에 따라 BoxCollider 등 다른 타입의 콜라이더도 추가 가능
 	std::vector<SphereCollider*> default_colliders_;

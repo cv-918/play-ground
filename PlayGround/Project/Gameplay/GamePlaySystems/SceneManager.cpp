@@ -4,8 +4,8 @@
 #include "Scenes/Scene.h"
 #include "Scenes/IntroScene.h"
 #include "Scenes/LoadingScene.h"
-#include "Scenes/LobbyScene.h"
-#include "Scenes/GamePlayScene.h"
+#include "Scenes/OutGameScene.h"
+#include "Scenes/InGameScene.h"
 
 _bool SceneManager::Initialize()
 {
@@ -105,8 +105,8 @@ Scene* SceneManager::_CreateNextScene()
 	{
 	case SceneType::Intro:		return new IntroScene();
 	case SceneType::Loading:	return new LoadingScene();
-	case SceneType::Lobby:		return new LobbyScene();
-	case SceneType::GamePlay:	return new GamePlayScene();
+	case SceneType::OutGame:	return new OutGameScene();
+	case SceneType::InGame:		return new InGameScene();
 	}
 
 	// 지원되지 않는 씬 타입이 요청된 경우 nullptr 반환
@@ -134,9 +134,9 @@ std::wstring SceneManager::_GetSceneName(SceneType _type) const
 	{
 	case SceneType::Intro:		return L"Intro";
 	case SceneType::Loading:	return L"Loading";
-	case SceneType::Lobby:		return L"Lobby";
-	case SceneType::GamePlay:	return L"GamePlay";
+	case SceneType::OutGame:	return L"OutGame";
+	case SceneType::InGame:		return L"InGame";
 	}
 
-	return std::wstring();
+	return L"Unknown";
 }

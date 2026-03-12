@@ -1,7 +1,7 @@
 ﻿#include "framework.h"
 #include "StageManager.h"
 
-#include "GamePlay/Scenes/GamePlayScene.h"
+#include "GamePlay/Scenes/InGameScene.h"
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 
 _int StageManager::Update(_double _delta_time)
@@ -196,7 +196,7 @@ void StageManager::_OnExit()
 	player_died_ = false;
 
 	// 로비로 이동
-	_SceneMgr.ChangeScene(SceneType::Lobby);
+	_SceneMgr.ChangeScene(SceneType::OutGame);
 }
 
 void StageManager::_UpdateGenerationAreas()

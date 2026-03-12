@@ -1,0 +1,348 @@
+﻿폴더 PATH의 목록입니다.
+볼륨 일련 번호는 1E37-466E입니다.
+C:.
+│  PlayGround.aps
+│  PlayGround.ico
+│  PlayGround.sln
+│  PlayGround.vcxproj
+│  PlayGround.vcxproj.filters
+│  PlayGround.vcxproj.user
+│  small.ico
+│  tree.txt
+│  
+├─Data
+│      Enemy.json
+│      PlayableCharacter.json
+│      
+├─Project
+│  ├─App
+│  │      EntryPoint.cpp
+│  │      EntryPoint.h
+│  │      PlayGround.cpp
+│  │      PlayGround.h
+│  │      
+│  ├─Core
+│  │  ├─Base
+│  │  │      Bases.h
+│  │  │      Defines.h
+│  │  │      DrawFunctions.cpp
+│  │  │      DrawFunctions.h
+│  │  │      Extern.h
+│  │  │      
+│  │  ├─Interface
+│  │  │      Interfaces.h
+│  │  │      
+│  │  └─Math
+│  │          Geometry2D.cpp
+│  │          Geometry2D.h
+│  │          MathFunctions.h
+│  │          Random.cpp
+│  │          Random.h
+│  │          Vector3.h
+│  │          
+│  ├─EngineSystems
+│  │  ├─Input
+│  │  │      InputManager.cpp
+│  │  │      InputManager.h
+│  │  │      
+│  │  ├─Json
+│  │  │      json.hpp
+│  │  │      JsonDataManager.cpp
+│  │  │      JsonDataManager.h
+│  │  │      
+│  │  ├─Physics
+│  │  │      CollisionManager.cpp
+│  │  │      CollisionManager.h
+│  │  │      
+│  │  ├─Render
+│  │  │      RenderChain.cpp
+│  │  │      RenderChain.h
+│  │  │      
+│  │  └─Timer
+│  │          Timer.cpp
+│  │          Timer.h
+│  │          
+│  ├─Framework
+│  │      framework.h
+│  │      pch.cpp
+│  │      PlayGround.rc
+│  │      Resource.h
+│  │      targetver.h
+│  │      
+│  └─Gameplay
+│      ├─Actors
+│      │  │  Enemy.cpp
+│      │  │  Enemy.h
+│      │  │  ExpDust.cpp
+│      │  │  ExpDust.h
+│      │  │  GameObjectBase.cpp
+│      │  │  GameObjectBase.h
+│      │  │  Player.cpp
+│      │  │  Player.h
+│      │  │  UnitBase.cpp
+│      │  │  UnitBase.h
+│      │  │  
+│      │  └─Projectile
+│      │          Bullet.cpp
+│      │          Bullet.h
+│      │          
+│      ├─Common
+│      │      CommonGamePlayDefine.h
+│      │      CommonGamePlayType.h
+│      │      
+│      ├─Components
+│      │      Collider.cpp
+│      │      Collider.h
+│      │      Combat.cpp
+│      │      Combat.h
+│      │      ComponentBase.cpp
+│      │      ComponentBase.h
+│      │      Movement.cpp
+│      │      Movement.h
+│      │      NonPlayableMovement.cpp
+│      │      NonPlayableMovement.h
+│      │      PlayableMovement.cpp
+│      │      PlayableMovement.h
+│      │      RectCollider.cpp
+│      │      RectCollider.h
+│      │      SphereCollider.cpp
+│      │      SphereCollider.h
+│      │      Status.cpp
+│      │      Status.h
+│      │      Transform.cpp
+│      │      Transform.h
+│      │      
+│      ├─GamePlaySystems
+│      │  │  GameState.cpp
+│      │  │  GameState.h
+│      │  │  ObjectManager.cpp
+│      │  │  ObjectManager.h
+│      │  │  SceneManager.cpp
+│      │  │  SceneManager.h
+│      │  │  StageManager.cpp
+│      │  │  StageManager.h
+│      │  │  UIManager.cpp
+│      │  │  UIManager.h
+│      │  │  
+│      │  └─Json
+│      │          EnemyDataManager.cpp
+│      │          EnemyDataManager.h
+│      │          PlayableCharacterDataManager.cpp
+│      │          PlayableCharacterDataManager.h
+│      │          
+│      ├─Scenes
+│      │      InGameScene.cpp
+│      │      InGameScene.h
+│      │      IntroScene.cpp
+│      │      IntroScene.h
+│      │      LoadingScene.cpp
+│      │      LoadingScene.h
+│      │      OutGameScene.cpp
+│      │      OutGameScene.h
+│      │      Scene.cpp
+│      │      Scene.h
+│      │      
+│      ├─UI
+│      │  │  UIBase.cpp
+│      │  │  UIBase.h
+│      │  │  
+│      │  ├─Elements
+│      │  │      Button.cpp
+│      │  │      Button.h
+│      │  │      ProgressBar.cpp
+│      │  │      ProgressBar.h
+│      │  │      Text.cpp
+│      │  │      Text.h
+│      │  │      
+│      │  └─Widgets
+│      │          DamageFont.cpp
+│      │          DamageFont.h
+│      │          HpBar.cpp
+│      │          HpBar.h
+│      │          LobbyAttributeView.cpp
+│      │          LobbyAttributeView.h
+│      │          LobbyMainView.cpp
+│      │          LobbyMainView.h
+│      │          WidgetBase.cpp
+│      │          WidgetBase.h
+│      │          
+│      └─World
+│              Background.cpp
+│              Background.h
+│              NavMesh.cpp
+│              NavMesh.h
+│              
+├─_Bin
+│  ├─Debug
+│  │  └─x86
+│  │          PlayGround.exe
+│  │          PlayGround.pdb
+│  │          
+│  └─Release
+│      └─x86
+│          │  031101.7z
+│          │  PlayGround.exe
+│          │  PlayGround.pdb
+│          │  
+│          └─Data
+│                  Enemy.json
+│                  PlayableCharacter.json
+│                  
+├─_DevLog
+│  │  2601.txt
+│  │  2602.txt
+│  │  2603.txt
+│  │  260304 정기 회의.txt
+│  │  Idea.txt
+│  │  
+│  └─Documents
+│          ClassDiagram.md
+│          Component.txt
+│          입력 기능 목록.txt
+│          파일 계층 구조.txt
+│          
+└─_Intermediate
+    ├─Debug
+    │  └─x86
+    │      │  Background.obj
+    │      │  Bullet.obj
+    │      │  Button.obj
+    │      │  Collider.obj
+    │      │  CollisionManager.obj
+    │      │  Combat.obj
+    │      │  ComponentBase.obj
+    │      │  DamageFont.obj
+    │      │  DrawFunctions.obj
+    │      │  Enemy.obj
+    │      │  EnemyDataManager.obj
+    │      │  EntryPoint.obj
+    │      │  ExpDust.obj
+    │      │  GameObjectBase.obj
+    │      │  GamePlayScene.obj
+    │      │  GameState.obj
+    │      │  Geometry2D.obj
+    │      │  HpBar.obj
+    │      │  InputManager.obj
+    │      │  IntroScene.obj
+    │      │  JsonDataManager.obj
+    │      │  LoadingScene.obj
+    │      │  LobbyScene.obj
+    │      │  Movement.obj
+    │      │  NavMesh.obj
+    │      │  NonPlayableMovement.obj
+    │      │  ObjectManager.obj
+    │      │  pch.obj
+    │      │  PlayableCharacterDataManager.obj
+    │      │  PlayableMovement.obj
+    │      │  Player.obj
+    │      │  PlayGround.Build.CppClean.log
+    │      │  PlayGround.exe.recipe
+    │      │  PlayGround.ilk
+    │      │  PlayGround.log
+    │      │  PlayGround.obj
+    │      │  PlayGround.pch
+    │      │  PlayGround.res
+    │      │  PlayGround.vcxproj.FileListAbsolute.txt
+    │      │  ProgressBar.obj
+    │      │  Random.obj
+    │      │  RectCollider.obj
+    │      │  RenderChain.obj
+    │      │  Scene.obj
+    │      │  SceneManager.obj
+    │      │  SphereCollider.obj
+    │      │  StageManager.obj
+    │      │  Status.obj
+    │      │  Text.obj
+    │      │  Timer.obj
+    │      │  Transform.obj
+    │      │  UIBase.obj
+    │      │  UIManager.obj
+    │      │  UnitBase.obj
+    │      │  vc142.idb
+    │      │  vc142.pdb
+    │      │  WidgetBase.obj
+    │      │  
+    │      └─PlayGround.tlog
+    │              CL.command.1.tlog
+    │              CL.read.1.tlog
+    │              CL.write.1.tlog
+    │              link.command.1.tlog
+    │              link.read.1.tlog
+    │              link.write.1.tlog
+    │              PlayGround.lastbuildstate
+    │              rc.command.1.tlog
+    │              rc.read.1.tlog
+    │              rc.write.1.tlog
+    │              
+    └─Release
+        └─x86
+            │  Background.obj
+            │  Bullet.obj
+            │  Button.obj
+            │  Collider.obj
+            │  CollisionManager.obj
+            │  Combat.obj
+            │  ComponentBase.obj
+            │  DamageFont.obj
+            │  DrawFunctions.obj
+            │  Enemy.obj
+            │  EnemyDataManager.obj
+            │  EntryPoint.obj
+            │  ExpDust.obj
+            │  GameObjectBase.obj
+            │  GamePlayScene.obj
+            │  GameState.obj
+            │  Geometry2D.obj
+            │  HpBar.obj
+            │  InputManager.obj
+            │  IntroScene.obj
+            │  JsonDataManager.obj
+            │  LoadingScene.obj
+            │  LobbyScene.obj
+            │  Movement.obj
+            │  NavMesh.obj
+            │  NonPlayableMovement.obj
+            │  ObjectManager.obj
+            │  pch.obj
+            │  PlayableCharacterDataManager.obj
+            │  PlayableMovement.obj
+            │  Player.obj
+            │  PlayGround.Build.CppClean.log
+            │  PlayGround.exe.recipe
+            │  PlayGround.iobj
+            │  PlayGround.ipdb
+            │  PlayGround.log
+            │  PlayGround.obj
+            │  PlayGround.pch
+            │  PlayGround.res
+            │  PlayGround.vcxproj.FileListAbsolute.txt
+            │  ProgressBar.obj
+            │  Random.obj
+            │  RectCollider.obj
+            │  RenderChain.obj
+            │  Scene.obj
+            │  SceneManager.obj
+            │  SphereCollider.obj
+            │  StageManager.obj
+            │  Status.obj
+            │  Text.obj
+            │  Timer.obj
+            │  Transform.obj
+            │  UIBase.obj
+            │  UIManager.obj
+            │  UnitBase.obj
+            │  vc142.pdb
+            │  WidgetBase.obj
+            │  
+            └─PlayGround.tlog
+                    CL.command.1.tlog
+                    CL.read.1.tlog
+                    CL.write.1.tlog
+                    link.command.1.tlog
+                    link.read.1.tlog
+                    link.write.1.tlog
+                    PlayGround.lastbuildstate
+                    rc.command.1.tlog
+                    rc.read.1.tlog
+                    rc.write.1.tlog
+                    

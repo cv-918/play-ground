@@ -65,8 +65,8 @@
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
     <ClInclude Include="Project\Core\Base\Extern.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
-    <ClInclude Include="Project\Gameplay\Scenes\GamePlayScene.h" />
-    <ClInclude Include="Project\Gameplay\Scenes\LobbyScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\InGameScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Button.h" />
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
@@ -85,8 +85,8 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
-    <ClInclude Include="Project\Gameplay\UI\Widgets\LobbyMainView.h" />
-    <ClInclude Include="Project\Gameplay\UI\Widgets\LobbyAttributeView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameMainView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameAttributeView.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -136,8 +136,8 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
-    <ClCompile Include="Project\Gameplay\Scenes\GamePlayScene.cpp" />
-    <ClCompile Include="Project\Gameplay\Scenes\LobbyScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
@@ -154,7 +154,7 @@
     <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Widgets\LobbyMainView.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Widgets\LobbyAttributeView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameMainView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameAttributeView.cpp" />
   </ItemGroup>
 </Project>

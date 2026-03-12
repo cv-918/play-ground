@@ -14,8 +14,8 @@ enum class SceneType
 {
 	Intro,
 	Loading,
-	Lobby,
-	GamePlay,
+	OutGame,
+	InGame,
 	Count,
 };
 

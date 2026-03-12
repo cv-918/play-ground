@@ -4,10 +4,10 @@
 class StageManager;
 class Background;
 
-class GamePlayScene final : public Scene
+class InGameScene final : public Scene
 {
 public:
-	explicit GamePlayScene() : Scene(SceneType::GamePlay) {}
+	explicit InGameScene() : Scene(SceneType::InGame) {}
 
 public:
 	_bool Initialize() override;
