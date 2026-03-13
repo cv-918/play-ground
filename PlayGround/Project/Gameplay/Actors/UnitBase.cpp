@@ -3,7 +3,7 @@
 
 #include "Components/Movement.h"
 
-_bool Unit::Initialize()
+_bool UnitBase::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
@@ -29,7 +29,7 @@ _bool Unit::Initialize()
 	return true;
 }
 
-void Unit::SetNavMesh(const _Rect& _rt)
+void UnitBase::SetNavMesh(const _Rect& _rt)
 {
 	if (movement_)
 		movement_->SetNavMesh(_rt);

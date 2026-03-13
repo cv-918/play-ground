@@ -85,8 +85,11 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
-    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameMainView.h" />
-    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameAttributeView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameMainView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameAttributeView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -154,7 +157,10 @@
     <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameMainView.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameAttributeView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
   </ItemGroup>
 </Project>

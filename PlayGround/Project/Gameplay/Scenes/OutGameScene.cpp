@@ -1,8 +1,8 @@
 ﻿#include "framework.h"
 #include "OutGameScene.h"
 
-#include "UI/Widgets/OutGameMainView.h"
-#include "UI/Widgets/OutGameAttributeView.h"
+#include "UI/Views/OutGameMainView.h"
+#include "UI/Views/OutGameAttributeView.h"
 
 OutGameScene::~OutGameScene()
 {

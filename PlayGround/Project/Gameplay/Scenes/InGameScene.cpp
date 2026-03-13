@@ -182,7 +182,7 @@ void InGameScene::SpawnEnemy(_uint _enemy_id)
 	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 
 	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
-	s_cast(Unit*, spawned_enemy)->SetPlayScene(this);
+	s_cast(UnitBase*, spawned_enemy)->SetPlayScene(this);
 }
 
 void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "WidgetBase.h"
+#include "../Widgets/WidgetBase.h"
 
 class OutGameMainView final : public WidgetBase
 {
