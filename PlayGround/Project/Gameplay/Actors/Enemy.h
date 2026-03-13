@@ -3,7 +3,7 @@
 
 #include "Components/NonPlayableMovement.h"
 
-class Enemy abstract : public Unit
+class Enemy abstract : public UnitBase
 {
 protected:
 	explicit Enemy(const EnemyJsonInfo* _info) : info_(_info) {}

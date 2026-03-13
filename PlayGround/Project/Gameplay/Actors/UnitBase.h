@@ -25,7 +25,7 @@ enum class UnitDefaultColliderId
 
 class Movement;
 
-class Unit abstract
+class UnitBase abstract
 	: public GameObjectBase
 	, public ICollidable
 	, public IDamagable

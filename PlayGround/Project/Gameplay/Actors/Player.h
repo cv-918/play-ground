@@ -2,7 +2,7 @@
 
 #include "UnitBase.h"
 
-class Player final : public Unit
+class Player final : public UnitBase
 {
 public:
 	explicit Player(const PlayableCharacterJsonInfo* _info) : info_(_info) {}

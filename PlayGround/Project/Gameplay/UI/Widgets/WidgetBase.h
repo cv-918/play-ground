@@ -39,10 +39,10 @@ private:
 
 protected:
 	// 위젯 클래스 내부에서만 UI 요소를 생성할 수 있도록 제한. 필요에 따라 위젯 클래스 내부에서 UI 요소를 생성할 때 활용할 수 있습니다.
-	template<typename T>
-	T* CreateElement()
+	template<typename T, typename... Args>
+	T* CreateElement(Args&&... _args)
 	{
-		T* element = new T();
+		T* element = new T(std::forward<Args>(_args)...);
 		if (element->Initialize())
 		{
 			_AddElement(element);

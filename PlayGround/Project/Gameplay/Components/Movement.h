@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "ComponentBase.h"
 
 #include "Gameplay/Actors/GameObjectBase.h"
@@ -19,8 +19,8 @@ protected:
 	{}
 
 public:
-	virtual _bool Initialize() override;
-	virtual _int Update(_double _delta_time) override;
+	_bool Initialize() override;
+	_int Update(_double _delta_time) override;
 
 public:
 	MovementPattern Pattern() const { return move_pattern_; }
@@ -65,11 +65,11 @@ protected:
 
 	_Vector3 move_direction_;
 
-	// s, [ °¡¼Óµµ ·ÎÁ÷À» ÀÌ¿ëÇÑ ¿òÁ÷ÀÓ¿¡ »ç¿ëµÇ´Â º¯¼ö ]
+	// s, [ ê°€ì†ë„ ë¡œì§ì„ ì´ìš©í•œ ì›€ì§ì„ì— ì‚¬ìš©ë˜ëŠ” ë³€ìˆ˜ ]
 	_Vector3 move_velocity_;
-	_float acceleration_; // °¡¼Óµµ (ÇÈ¼¿/ÃÊ^2)
-	_float friction_; // ¸¶Âû °è¼ö (³ôÀ»¼ö·Ï »¡¸® ¸ØÃã)
-	// e, [ °¡¼Óµµ ·ÎÁ÷À» ÀÌ¿ëÇÑ ¿òÁ÷ÀÓ¿¡ »ç¿ëµÇ´Â º¯¼ö ]
+	_float acceleration_; // ê°€ì†ë„ (í”½ì…€/ì´ˆ^2)
+	_float friction_; // ë§ˆì°° ê³„ìˆ˜ (ë†’ì„ìˆ˜ë¡ ë¹¨ë¦¬ ë©ˆì¶¤)
+	// e, [ ê°€ì†ë„ ë¡œì§ì„ ì´ìš©í•œ ì›€ì§ì„ì— ì‚¬ìš©ë˜ëŠ” ë³€ìˆ˜ ]
 
 	_float move_spd_;
 	_float move_spd_max_;
@@ -77,7 +77,7 @@ protected:
 	_float rotate_spd_;
 	_float rotate_spd_max_;
 
-	// Àû¿ëµÈ ÀÌµ¿ ÇÔ¼ö Æ÷ÀÎÅÍ
+	// ì ìš©ëœ ì´ë™ í•¨ìˆ˜ í¬ì¸í„°
 	std::function<void(_double)> move_func_;
 
 	_Rect nav_mesh_;
@@ -85,9 +85,9 @@ protected:
 
 	class Transform* transform_;
 
-	/*	Ãß°¡ ±¸Çö ¾ÆÀÌµğ¾î : ¸ñÀûÁö ¼³Á¤ ÀÌµ¿¹æ½Ä(Å¬¸¯ÇÑ À§Ä¡±îÁö ÀÌµ¿ÇÏ´Â °Í°ú °°Àº ·ÎÁ÷)
-		- ÄÁÆ®·Ñ Å¸ÀÔÀ» Ãß°¡ÇØ¼­ ±¸Çö
-		- ¸ñÀûÁö±îÁö ³²Àº °Å¸®°¡ ÇÁ·¹ÀÓ´ç ÀÌµ¿°Å¸®º¸´Ù ÀÛÀ» °æ¿ì ¸ñÀûÁö·Î Æ÷Áö¼Ç °íÁ¤
+	/*	ì¶”ê°€ êµ¬í˜„ ì•„ì´ë””ì–´ : ëª©ì ì§€ ì„¤ì • ì´ë™ë°©ì‹(í´ë¦­í•œ ìœ„ì¹˜ê¹Œì§€ ì´ë™í•˜ëŠ” ê²ƒê³¼ ê°™ì€ ë¡œì§)
+		- ì»¨íŠ¸ë¡¤ íƒ€ì…ì„ ì¶”ê°€í•´ì„œ êµ¬í˜„
+		- ëª©ì ì§€ê¹Œì§€ ë‚¨ì€ ê±°ë¦¬ê°€ í”„ë ˆì„ë‹¹ ì´ë™ê±°ë¦¬ë³´ë‹¤ ì‘ì„ ê²½ìš° ëª©ì ì§€ë¡œ í¬ì§€ì…˜ ê³ ì •
 	*/
 };
 
