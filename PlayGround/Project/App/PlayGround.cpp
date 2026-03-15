@@ -7,6 +7,7 @@
 
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -27,9 +28,15 @@ _bool PlayGround::Initialize()
 		return false;
 	}
 
-	if(false == _CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
+	if (false == _CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
 	{
 		_SYSTEM_LOG_ERROR(_T("Failed to load playable character data from JSON."));
+		return false;
+	}
+
+	if (false == _AttributeNodeDataMgr.Load("Data/AttributeNode.json"))
+	{
+		_SYSTEM_LOG_ERROR(_T("Failed to load attribute node data from JSON."));
 		return false;
 	}
 

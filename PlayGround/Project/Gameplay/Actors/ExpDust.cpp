@@ -41,7 +41,7 @@ _bool ExpDust::Initialize()
 		break;
 	}
 
-	const auto radius = info_->scale_ * 0.5f;
+	const auto radius = info_->body_size_ * 0.5f;
 
 	switch (info_->movement_pattern_)
 	{
@@ -84,7 +84,7 @@ _bool ExpDust::Initialize()
 		* 회전 : 레벨(이동 타입) 및 초기 생성 위치에 따라서
 	*/
 
-	transform_->Scale(info_->scale_);
+	transform_->Scale(info_->body_size_);
 	transform_->Position(position);
 	transform_->LookAt(look_point);
 	
@@ -163,15 +163,11 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 		case EnemyTier::Danger:
 		case EnemyTier::Special:
 		{
-			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
 				});
 
-			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
-			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-			const _double attack_cooltime = 4.f;
-			_this->SetTimerForTarget(_other, attack_cooltime);
+			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 		}
 		break;
 		}
@@ -191,15 +187,11 @@ void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 		case EnemyTier::Danger:
 		case EnemyTier::Special:
 		{
-			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
-				});
+			});
 
-			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
-			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-			const _double attack_cooltime = 4.f;
-			_this->SetTimerForTarget(_other, attack_cooltime);
+			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 		}
 		break;
 		}

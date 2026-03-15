@@ -90,6 +90,7 @@
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -162,5 +163,6 @@
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
   </ItemGroup>
 </Project>
