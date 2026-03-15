@@ -74,16 +74,22 @@ enum class EnemyProjectilePattern
 	Count,
 };
 
-struct EnemyJsonInfo
+struct UnitJsonInfo
 {
 	_uint id_ = 0;
 	std::string name_;
 
-	EnemyTier tier_ = EnemyTier::Undefined;
-	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
+	_float body_size_ = 0.f;
+	_double attack_speed_ = 0.f;
 
 	_float hp_ = 0.f;
 	_float contact_damage_ = 0.f;
+};
+
+struct EnemyJsonInfo : public UnitJsonInfo
+{
+	EnemyTier tier_ = EnemyTier::Undefined;
+	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
 
 	_uint reward_ = 0;
 
@@ -95,19 +101,50 @@ struct EnemyJsonInfo
 
 	MovementPattern movement_pattern_ = MovementPattern::Undefined;
 	_uint move_speed_unit_ = 0; // 몬스터의 기본 이동 속도. 실제 이동 속도는 이 값에 20.f를 곱해서 계산
-
-	_float scale_ = 0.f;
 };
 
-struct PlayableCharacterJsonInfo
+struct PlayableCharacterJsonInfo : public UnitJsonInfo
 {
-	_uint id_ = 0;
-	std::string name_;
-
-	_float hp_ = 0.f;
-	_float contact_damage_ = 0.f;
+	_float attack_size_ = 0.f;
 
 	_float move_speed_max_ = 0.f;	// 최대 이동 속도
 	_float acceleration_ = 0.f;		// 가속도. 높을수록 빠르게 최대 이동 속도에 도달
 	_float friction_ = 0.f;			// 마찰 계수. 높을수록 빠르게 감속
+};
+
+enum class NodeType { Undefined, Common, Major, Keystone };
+enum class NodeState { Undefined, Hidden, Discovered, Unlocked, Acquired };
+enum class AttributeType
+{
+	Undefined = 0,	// 초기화 값
+	SpecialAbility,	// 특수 능력 (예: "적 처치 시 체력 회복")
+	Attack,
+	Hp,
+	MoveSpeed,
+	AttackRange,
+};
+
+struct AttributeNodeInfo {
+	// --- 기본 정보 ---
+	_uint id_ = 0;
+	std::string name_;
+	NodeType type_ = NodeType::Undefined;
+	std::string desc_;
+
+	// --- 3단계 시스템용 변수 ---
+	NodeState state_ = NodeState::Undefined;
+	_uint curr_lv_ = 0;
+	_uint last_lv_ = 0;
+
+	// --- 로직용 연결 데이터 ---
+	_uint character_unlock_id_ = 0;
+	// pair<자식 노드 ID, 방향 정보(int/enum)>
+	std::vector<std::pair<_uint, _uint>> children_nodes_info_;
+
+	// 이 아래의 것들은 효과 스크립트를 따로 빼야한다
+	//// --- 효과 데이터 ---
+	//AttributeType stat_type_ = AttributeType::Undefined;
+	//_uint stat_grade_ = 0;
+	
+	// _uint cost_ = 0; // 노드 레벨업 비용. 레벨업마다 증가하는 형태로, cost_per_lv_ 같은 변수를 추가하여 계산할 수도 있음
 };

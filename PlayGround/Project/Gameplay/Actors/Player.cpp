@@ -27,13 +27,11 @@ _bool Player::Initialize()
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
-	player_col_size_[++default_collider_idx] = 15.f;
-	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(player_col_size_[default_collider_idx]);
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, default_collider_idx)));
+	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(info_->body_size_);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 
-	player_col_size_[++default_collider_idx] = 25.f;
-	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(player_col_size_[default_collider_idx]);
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, default_collider_idx)));
+	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(info_->attack_size_);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 
 	// 기타 멤버 변수 초기화 및 캐싱
 	color_ = Colors::DarkGray;
@@ -76,26 +74,23 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	switch (_this->Layer())
 	{
+		/* 몸통 collider 충돌 처리 */
 	case CollisionLayer::PlayerBody:
-		// 몸통 collider 충돌 처리
 		break;
+		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
 	{
-		// 공격 collider 충돌 처리
 		switch (_other->Layer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
-			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
+			// Enemy의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
 				});
 
-			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
-			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-			const _double attack_cooltime = 1.f;
-			_this->SetTimerForTarget(_other, attack_cooltime);
-
+			// 공격한 Enemy에 대한 타이머 기록
+			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 			break;
 		}
 		}
@@ -109,26 +104,23 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 {
 	switch (_this->Layer())
 	{
+		/* 몸통 collider 충돌 처리 */
 	case CollisionLayer::PlayerBody:
-		// 몸통 collider 충돌 처리
 		break;
+		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
 	{
-		// 공격 collider 충돌 처리
 		switch (_other->Layer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
-			// 더스트의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
+			// Enemy의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
 			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
 				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
-				});
+			});
 
-			// 공격 쿨타임 동안은 같은 더스트에 대해서는 충돌이 일어나지 않도록 타이머 설정
-			// 공격속도 고정값 일단은 여기에 지역변수로 하드코딩
-			const _double attack_cooltime = 1.f;
-			_this->SetTimerForTarget(_other, attack_cooltime);
-
+			// 공격한 Enemy에 대한 타이머 기록
+			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 			break;
 		}
 		}
@@ -276,6 +268,18 @@ void Player::_ShowDebugInfo()
 
 	swprintf_s(buffer, L"접촉 공격력 : %d", status_->GetAtt());
 	debug_info_lines_.emplace_back(buffer);
+
+	debug_info_lines_.emplace_back(L"");
+	debug_info_lines_.emplace_back(L"==== 충돌 리스트 ====");
+	const auto timers = GetDefaultCollider(UnitDefaultColliderId::Attack)->GetCollisionTimers();
+	for (const auto& pair : timers)
+	{
+		const auto collider = pair.first;
+		const auto time = pair.second;
+		swprintf_s(buffer, L"충돌 대상 : %s | 남은 쿨타임 : %.2f", collider->GameObject()->Name().c_str(), time);
+		debug_info_lines_.emplace_back(buffer);
+	}
+	debug_info_lines_.emplace_back(L"=====================");
 
 	// 4) 디버그 정보 그리기
 	for (const auto& line : debug_info_lines_)

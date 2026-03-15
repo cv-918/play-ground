@@ -27,10 +27,7 @@ private:
 	
 private:
 	const PlayableCharacterJsonInfo* info_;
-
 	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
-
-	_float player_col_size_[s_int(UnitDefaultColliderId::ColCount)] = {}; // 반지름임
 
 	_int debug_control_data_idx_ = IV_ZERO;
 	std::vector<std::wstring> debug_info_lines_;

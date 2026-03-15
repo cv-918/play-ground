@@ -1,13 +1,24 @@
 ﻿#pragma once
-
 #include "EngineSystems/Json/JsonDataManager.h"
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+	PlayableCharacterJsonInfo,
+	id_,
+	name_,
+	body_size_,
+	attack_speed_,
+	hp_,
+	contact_damage_,
+	attack_size_,
+	move_speed_max_,
+	acceleration_,
+	friction_
+)
+
 #define _CharacterDagaMgr PlayableCharacterDataManager::Get()
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PlayableCharacterJsonInfo, id_, name_, hp_, contact_damage_, move_speed_max_, acceleration_, friction_)
 
 class PlayableCharacterDataManager
 	: public JsonDataManager<PlayableCharacterJsonInfo>
 	, public ISingleton<PlayableCharacterDataManager>
-{
-};
+{};
 

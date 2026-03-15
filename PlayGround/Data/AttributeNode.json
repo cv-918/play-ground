@@ -1,0 +1,67 @@
+[
+  {
+    "id_": 0,
+    "name_": "깨어난 먼지 : 더스티",
+    "type_": 2,
+    "desc_": "이제부터 먼지를 모을 수 있습니다!",
+    "state_": 3,
+    "curr_lv_": 1,
+    "last_lv_": 1,
+    "character_unlock_id_": 1,
+    "children_nodes_info_": [
+      [ 10, 1 ],
+      [ 11, 3 ],
+      [ 12, 5 ],
+      [ 13, 7 ]
+    ],
+    "stat_type_": 1
+  },
+  {
+    "id_": 10,
+    "name_": "산성 먼지",
+    "type_": 1,
+    "desc_": "먼지의 부식력 심화시킵니다. (공격력 증가 + %d)",
+    "state_": 1,
+    "curr_lv_": 0,
+    "last_lv_": 3,
+    "character_unlock_id_": 1,
+    "children_nodes_info_": [],
+    "stat_type_": 2
+  },
+  {
+    "id_": 11,
+    "name_": "뭉치뭉치!",
+    "type_": 1,
+    "desc_": "먼지입자들이 서로를 끌어당겨 응집합니다. (체력 증가 + %d)",
+    "state_": 1,
+    "curr_lv_": 0,
+    "last_lv_": 3,
+    "character_unlock_id_": 1,
+    "children_nodes_info_": [],
+    "stat_type_": 3
+  },
+  {
+    "id_": 12,
+    "name_": "흰 천과 바람만 있다면",
+    "type_": 1,
+    "desc_": "흰 천과 바람만 있다면 어디든 갈 수 있어요. (이동속도 증가 + %d)",
+    "state_": 1,
+    "curr_lv_": 0,
+    "last_lv_": 3,
+    "character_unlock_id_": 1,
+    "children_nodes_info_": [],
+    "stat_type_": 4
+  },
+  {
+    "id_": 13,
+    "name_": "커튼 콜",
+    "type_": 1,
+    "desc_": "정신을 집중해 좀 더 멀리 비비적거립니다. (체력 증가 + %d)",
+    "state_": 1,
+    "curr_lv_": 0,
+    "last_lv_": 3,
+    "character_unlock_id_": 1,
+    "children_nodes_info_": [],
+    "stat_type_": 5
+  }
+]
