@@ -44,6 +44,12 @@ void UIManager::Render(_double _delta_time)
 
 void UIManager::AddUI(UIBase* _ui)
 {
+	if (nullptr == _ui)
+	{
+		_SYSTEM_LOG_ERROR(L"UIManager::AddUI - Attempted to add a null UI element.");
+		return;
+	}
+
 	const auto it = std::find(ui_list_.begin(), ui_list_.end(), _ui);
 
 	// 이미 존재하는 UI 요소는 추가하지 않음
@@ -62,7 +68,7 @@ void UIManager::_CleanUp()
 	// 파괴된 UI 요소를 제거
 	ui_list_.erase(std::remove_if(ui_list_.begin(), ui_list_.end(),
 		[](UIBase* ui) {
-			if (ui->IsDestroyed())
+			if (ui->IsPendingDestruction())
 			{
 				// 파괴되는 UI의 이름 로깅
 				_SYSTEM_LOG_INFO(L"UIManager: Destroying UI element - Name: %s, ID: %d", ui->Name().c_str(), ui->ID());

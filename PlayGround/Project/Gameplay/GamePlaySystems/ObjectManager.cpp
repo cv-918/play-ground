@@ -69,6 +69,12 @@ void ObjectManager::Render(_double _delta_time)
 
 void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 {
+	if (nullptr == _game_object)
+	{
+		_SYSTEM_LOG_ERROR(L"ObjectManager::AddGameObject - Attempted to add a null game object.");
+		return;
+	}
+
 	const auto it = std::find(game_objects_.begin(), game_objects_.end(), _game_object);
 
 	// 이미 존재하는 게임 오브젝트는 추가하지 않음
@@ -185,7 +191,7 @@ void ObjectManager::_RemoveDestroyedGameObjects()
 	// 이터레이터를 이용해 IsDestroyed()가 true인 것들만 골라 지우기
 	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
 		[](GameObjectBase* obj) {
-			if (obj->IsDestroyed())
+			if (obj->IsPendingDestruction())
 			{
 				// 파괴되는 오브젝트의 이름 로깅
 				_SYSTEM_LOG_INFO(L"ObjectManager: Destroying game object - Name: %s, ID: %d", obj->Name().c_str(), obj->ID());

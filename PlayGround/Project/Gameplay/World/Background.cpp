@@ -17,6 +17,6 @@ _bool Background::Initialize()
 
 void Background::Render(_double _delta_time)
 {
-	__super::Render(_delta_time);
+	//__super::Render(_delta_time);
 	_DrawFunc::FillRectangle(nav_mesh_, Colors::White);
 }

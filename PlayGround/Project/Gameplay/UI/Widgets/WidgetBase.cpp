@@ -14,7 +14,7 @@ _int WidgetBase::Update(_double _delta_time)
 
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->Update(_delta_time);
 	}
 
@@ -30,7 +30,7 @@ _int WidgetBase::LateUpdate(_double _delta_time)
 
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->LateUpdate(_delta_time);
 	}
 
@@ -43,7 +43,7 @@ void WidgetBase::Render(_double _delta_time)
 
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->Render(_delta_time);
 	}
 }
@@ -60,7 +60,7 @@ void WidgetBase::SetPosition(const _Point& _position)
 	// 포함된 요소들을 오프셋만큼 이동
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 		{
 			_Point element_pos = element->GetPosition();
 			element->SetPosition(element_pos + offset); // 요소의 위치를 오프셋만큼 이동
@@ -93,7 +93,7 @@ void WidgetBase::SetSize(const _Size& _size)
 	// 포함된 요소들의 위치와 크기를 비율에 맞게 조정
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 		{
 			// 요소의 현재 위치와 크기 가져오기
 			_Point element_pos = element->GetPosition();
@@ -120,7 +120,7 @@ void WidgetBase::SetCenter(const _Point& _center)
 	// 포함된 요소들을 오프셋만큼 이동
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 		{
 			_Point element_pos = element->GetPosition();
 			element->SetPosition(element_pos + offset); // 요소의 위치를 오프셋만큼 이동
@@ -136,7 +136,7 @@ void WidgetBase::MoveX(const _int _dx)
 	// 포함된 요소들을 X축으로 이동
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->MoveX(_dx); // 요소의 위치를 X축으로 이동
 	}
 }
@@ -149,7 +149,7 @@ void WidgetBase::MoveY(const _int _dy)
 	// 포함된 요소들을 Y축으로 이동
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->MoveY(_dy); // 요소의 위치를 Y축으로 이동
 	}
 }
@@ -166,7 +166,7 @@ void WidgetBase::ScaleX(const _int _dWidth)
 	// 포함된 요소들의 위치와 크기를 X축으로 조절
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->ScaleX(width_ratio); // 요소의 크기를 X축으로 조절
 	}
 }
@@ -183,7 +183,7 @@ void WidgetBase::ScaleY(const _int _dHeight)
 	// 포함된 요소들의 위치와 크기를 Y축으로 조절
 	for (UIBase* element : elements_)
 	{
-		if (element && !element->IsDestroyed())
+		if (element && !element->IsPendingDestruction())
 			element->ScaleY(height_ratio); // 요소의 크기를 Y축으로 조절
 	}
 }
@@ -227,7 +227,7 @@ void WidgetBase::_UpdateFadeOut(_double _delta_time)
 
 			// 페이드 아웃이 완료되면 위젯을 파괴
 			if (destroy_on_fade_out_complete_)
-				Destroy();
+				ReserveDestruction();
 		}
 	}
 }

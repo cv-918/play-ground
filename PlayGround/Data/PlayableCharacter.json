@@ -5,7 +5,7 @@
 		"body_size_": 20.0,
 		"attack_speed_": 1.0,
 		"hp_": 10.0,
-		"contact_damage_": 3.0,
+		"contact_damage_": 6.0,
 		"attack_size_": 40.0,
 		"move_speed_max_": 800.0,
 		"acceleration_": 1600.0,
