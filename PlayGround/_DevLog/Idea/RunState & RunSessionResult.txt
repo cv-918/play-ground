@@ -1,0 +1,8 @@
+Run 시작
+→ RunState 생성 및 초기화
+→ 플레이 중 계속 갱신
+→ 종료 조건 발생
+→ RunState를 바탕으로 RunSessionResult 생성
+→ MetaProgress 반영
+→ 결과 UI / OutGameScene에 전달
+→ RunState 폐기 또는 초기화

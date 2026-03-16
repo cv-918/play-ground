@@ -37,8 +37,8 @@ public:
 	_bool IsMouseOver(const _Point& _mouse_pos) const { return rect_.PtInRect(_mouse_pos); }
 
 	// 객체 생명 주기 관리
-	_bool IsDestroyed() const { return destroyed_; }
-	void Destroy() { destroyed_ = true; }
+	_bool IsPendingDestruction() const { return pending_destruction_; }
+	void ReserveDestruction() { pending_destruction_ = true; }
 
 	virtual void OnDestroy() EMPTY_FUNC; // UI 요소가 파괴될 때 필요한 로직이 있다면 이 함수를 오버라이드하여 구현
 										 // 예를 들어, 사운드 재생, 애니메이션 재생 등 다양한 효과를 이 함수에서 처리
@@ -49,5 +49,5 @@ private:
 	_Rect rect_ = _Rect::Zero();
 
 	// UI 요소가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 UI 요소의 생명 주기를 관리하는 데 활용할 수 있습니다.
-	_bool destroyed_ = false;
+	_bool pending_destruction_ = false;
 };

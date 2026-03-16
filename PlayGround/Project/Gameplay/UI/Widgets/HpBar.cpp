@@ -61,9 +61,9 @@ _int HpBar::Update(_double _delta_time)
 		}
 
 		// 대상이 파괴되었는지 체크 (지난번에 만든 IsDestroyed 활용)
-		if (tracking_target_->IsDestroyed())
+		if (tracking_target_->IsPendingDestruction())
 		{
-			this->Destroy(); // 대상이 없으면 UI도 자폭
+			this->ReserveDestruction(); // 대상이 없으면 UI도 자폭
 			return UPDATE_CONTINUE;
 		}
 		// 대상의 월드 좌표 + 오프셋을 계산하여 UI의 rect_ 위치를 갱신

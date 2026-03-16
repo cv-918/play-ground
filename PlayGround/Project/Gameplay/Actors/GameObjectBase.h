@@ -37,8 +37,8 @@ public:
 
 	Transform* GetTransform() const { return transform_; }
 
-	_bool IsDestroyed() const { return destroyed_; }
-	void ReserveDestruction() { destroyed_ = true; }
+	_bool IsPendingDestruction() const { return pending_destruction_; }
+	void ReserveDestruction() { pending_destruction_ = true; }
 
 	// 오브젝트 파괴 시 필요한 로직이 있다면 이 함수를 오버라이드하여 구현
 	// 예를 들어, 파괴 이펙트 재생, 사운드 재생, 점수 증가 등 다양한 효과를 이 함수에서 처리
@@ -61,7 +61,7 @@ protected:
 
 private:
 	// 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
-	_bool destroyed_ = false;
+	_bool pending_destruction_ = false;
 
 	// 개발 모드 전용 데이터
 protected:

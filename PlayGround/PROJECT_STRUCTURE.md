@@ -1,10 +1,8 @@
-﻿# Project Structure (Updated: 2026-03-13 16:26)
+﻿# Project Structure (Updated: 2026-03-17 00:08)
 
 ```text
 Root
 +--- Data
-+--- html
-|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -18,6 +16,7 @@ Root
 |   |   |   |   DrawFunctions.cpp
 |   |   |   |   DrawFunctions.h
 |   |   |   |   Extern.h
+|   |   |   |   UtilityFunctions.h
 |   |   +--- Interface
 |   |   |   |   Interfaces.h
 |   |   +--- Math
@@ -88,10 +87,14 @@ Root
 |   |   |   |   Transform.h
 |   |   +--- GamePlaySystems
 |   |   |   +--- Json
+|   |   |   |   |   AttributeNodeDataManager.cpp
+|   |   |   |   |   AttributeNodeDataManager.h
 |   |   |   |   |   EnemyDataManager.cpp
 |   |   |   |   |   EnemyDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
+|   |   |   |   |   UserDataManager.cpp
+|   |   |   |   |   UserDataManager.h
 |   |   |   |   GameState.cpp
 |   |   |   |   GameState.h
 |   |   |   |   SceneManager.cpp
@@ -100,6 +103,8 @@ Root
 |   |   |   |   StageManager.h
 |   |   |   |   UIManager.cpp
 |   |   |   |   UIManager.h
+|   |   |   |   UserProfile.cpp
+|   |   |   |   UserProfile.h
 |   |   +--- Scenes
 |   |   |   |   InGameScene.cpp
 |   |   |   |   InGameScene.h
@@ -127,6 +132,12 @@ Root
 |   |   |   |   |   OutGameMainView.cpp
 |   |   |   |   |   OutGameMainView.h
 |   |   |   +--- Widgets
+|   |   |   |   |   AttributeNode.cpp
+|   |   |   |   |   AttributeNode.h
+|   |   |   |   |   AttributeNodeToolTip.cpp
+|   |   |   |   |   AttributeNodeToolTip.h
+|   |   |   |   |   AttributeNodeTree.cpp
+|   |   |   |   |   AttributeNodeTree.h
 |   |   |   |   |   DamageFont.cpp
 |   |   |   |   |   DamageFont.h
 |   |   |   |   |   HpBar.cpp
@@ -140,11 +151,9 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
-|   +--- html
-|   |   +--- search
-|   +--- latex
 +--- _DevLog
 |   +--- Documents
+|   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
 |   PlayGround.ico

@@ -154,21 +154,28 @@ void GameObjectBase::DeregisterComponent(const ComponentType _type)
 	if (_type == ComponentType::Transform)
 		transform_ = nullptr;
 
-	auto iter = std::remove_if(components_.begin(), components_.end(),
+	auto iter = std::remove_if(
+		components_.begin(),
+		components_.end(),
 		[_type](const ComponentBase* _comp)
 		{
-			// null 방어 포함
 			return (_comp != nullptr) && (_comp->Type() == _type);
 		}
 	);
 
-	const auto dist = std::distance(components_.begin(), iter);
-	for (_int i = s_int(dist); i < s_int(components_.size()); ++i)
-		components_[i]->ID(i - 1);
+	// 삭제 대상 delete
+	for (auto it = iter; it != components_.end(); ++it)
+		SAFE_DELETE(*it);
 
-	// 해당 타입 컴포넌트 제거
+	// 컨테이너에서 제거
 	components_.erase(iter, components_.end());
-	SAFE_DELETE(*iter);
+
+	// ID 재정렬
+	for (_uint i = 0; i < components_.size(); ++i)
+	{
+		if (components_[i])
+			components_[i]->ID(i);
+	}
 }
 
 void GameObjectBase::SendMessageToHandlers(HandlerSystemList type, std::function<void(IHandler*)> func)
