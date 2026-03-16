@@ -16,7 +16,6 @@ class GameObjectBase;
 class Scene abstract
 	: public IInitializable
 	, public IUpdatable
-	, public IReleasable
 {
 public:
 	explicit Scene(const SceneType _type) : type_(_type), object_manager_(nullptr), ui_manager_(nullptr) {};
@@ -28,10 +27,8 @@ public:
 	_int LateUpdate(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 
-	_bool Release() override;
-
-	virtual void OnEnter() PURE;
-	virtual void OnExit() PURE;
+	virtual void OnEnter() EMPTY_FUNC;
+	virtual void OnExit() EMPTY_FUNC;
 
 public:
 	SceneType Type() const { return type_; }

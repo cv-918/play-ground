@@ -190,7 +190,7 @@ void StageManager::_OnExit()
 
 	// 플레이어가 죽어서 결과 화면으로 전환된 경우, 획득한 코인의 절반만 지급. 클리어해서 결과 화면으로 전환된 경우에는 획득한 코인을 모두 지급
 	const auto earned_coin_count = _GameState.GetEarnedCoinCount();
-	_GameState.IncreaseCoinCount(player_died_ ? earned_coin_count >> 1 : earned_coin_count);
+	_UserProfile.IncreaseCoins(player_died_ ? earned_coin_count >> 1 : earned_coin_count);
 
 	// 게임 상태 초기화
 	player_died_ = false;

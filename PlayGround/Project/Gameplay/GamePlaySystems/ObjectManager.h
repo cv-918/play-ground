@@ -10,7 +10,6 @@ class GameObjectBase;
 class ObjectManager
 	: public IInitializable
 	, public IUpdatable
-	, public IReleasable
 {
 public:
 	virtual ~ObjectManager();
@@ -19,8 +18,6 @@ public:
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
 	void Render(_double _delta_time) override;
-
-	_bool Release() override;
 
 public:
 	// 게임 오브젝트 관리를 위한 메서드. 필요에 따라 게임 오브젝트를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.

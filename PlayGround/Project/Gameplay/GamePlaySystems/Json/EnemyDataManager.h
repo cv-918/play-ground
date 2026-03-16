@@ -25,5 +25,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 class EnemyDataManager
 	: public JsonDataManager<EnemyJsonInfo>
 	, public ISingleton<EnemyDataManager>
-{};
+{
+	// JsonDataManager을(를) 통해 상속됨
+	_bool Save(const std::string& _file_path) override;
+};
 

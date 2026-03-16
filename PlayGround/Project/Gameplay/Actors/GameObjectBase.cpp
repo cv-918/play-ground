@@ -5,7 +5,13 @@
 
 GameObjectBase::~GameObjectBase()
 {
-	Release();
+	for (auto& component : components_)
+		SAFE_DELETE(component);
+
+	//for (auto& handler_list : handlers_)
+	//	handler_list.clear();
+
+	//handler_mask_ = IV_ZERO;
 }
 
 // final 오브젝트의 Initialize 최상단에서 호출
@@ -54,15 +60,6 @@ _bool GameObjectBase::Finalize()
 	}
 
 	MAKE_INITIALIZED;
-	return true;
-}
-
-_bool GameObjectBase::Release()
-{
-	for (auto& component : components_)
-		SAFE_DELETE(component);
-
-	std::vector<ComponentBase*>().swap(components_);
 	return true;
 }
 
@@ -129,14 +126,7 @@ void GameObjectBase::RegisterComponent(ComponentBase* _component)
 	if (_component == nullptr)
 		return;
 
-	// 1. 컴포넌트에 게임 오브젝트 포인터와 ID 할당
-	_component->GameObject(this);
-	_component->ID(components_.size());
-
-	// 2-1. 컴포넌트 리스트에 추가
-	components_.push_back(_component);
-
-	// 2-2. Transform 컴포넌트인 경우 캐시 포인터 갱신
+	// Transform 컴포넌트인 경우
 	if (ComponentType::Transform == _component->Type())
 	{
 		// 이미 Transform이 등록되어 있는 경우
@@ -145,13 +135,17 @@ void GameObjectBase::RegisterComponent(ComponentBase* _component)
 			delete _component;
 			return;
 		}
-		else
-		{
-			// components_에 들어간 실제 포인터를 캐시로 잡는다
-			transform_ = s_cast(Transform*, components_.back());
-			return;
-		}
+		
+		transform_ = s_cast(Transform*, _component);
 	}
+
+
+	// 컴포넌트에 게임 오브젝트 포인터와 ID 할당
+	_component->GameObject(this);
+	_component->ID(components_.size());
+
+	// 컴포넌트 리스트에 추가
+	components_.push_back(_component);
 }
 
 void GameObjectBase::DeregisterComponent(const ComponentType _type)
@@ -174,6 +168,7 @@ void GameObjectBase::DeregisterComponent(const ComponentType _type)
 
 	// 해당 타입 컴포넌트 제거
 	components_.erase(iter, components_.end());
+	SAFE_DELETE(*iter);
 }
 
 void GameObjectBase::SendMessageToHandlers(HandlerSystemList type, std::function<void(IHandler*)> func)

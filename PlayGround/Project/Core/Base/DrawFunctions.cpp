@@ -1,6 +1,6 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 
-// GDI+ ³×ÀÓ½ºÆäÀÌ½º ¸í½ÃÀû »ç¿ë
+// GDI+ ë„¤ìž„ìŠ¤íŽ˜ì´ìŠ¤ ëª…ì‹œì  ì‚¬ìš©
 using namespace Gdiplus;
 
 void DrawFunctions::DrawLine(const _Point& _start, const _Point& _end, const _Color& _color, _float _thickness)
@@ -19,7 +19,7 @@ void DrawFunctions::DrawRectangle(const _Rect& _rect, const _Color& _color, _flo
 
 	Pen pen(Color(_color.a, _color.r, _color.g, _color.b), _thickness);
 
-	// GDI+´Â ÁÂ»ó´Ü ÁÂÇ¥¿Í °¡·Î/¼¼·Î ±æÀÌ¸¦ »ç¿ëÇÕ´Ï´Ù.
+	// GDI+ëŠ” ì¢Œìƒë‹¨ ì¢Œí‘œì™€ ê°€ë¡œ/ì„¸ë¡œ ê¸¸ì´ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
 	g_graphics->DrawRectangle(&pen, (REAL)_rect.Left(), (REAL)_rect.Top(), (REAL)_rect.Width(), (REAL)_rect.Height());
 }
 
@@ -28,13 +28,13 @@ void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
 	if (nullptr == g_graphics)
 		return;
 
-	// Ã¤¿ì±â´Â ¾ÈÆ¼¾Ù¸®¾î½ÌÀ» ²ô´Â °Ô °æ°è¸éÀÌ ´õ ±ò²ûÇÒ ¶§°¡ ¸¹½À´Ï´Ù. (¼±ÅÃ »çÇ×)
+	// ì±„ìš°ê¸°ëŠ” ì•ˆí‹°ì•¨ë¦¬ì–´ì‹±ì„ ë„ëŠ” ê²Œ ê²½ê³„ë©´ì´ ë” ê¹”ë”í•  ë•Œê°€ ë§ŽìŠµë‹ˆë‹¤. (ì„ íƒ ì‚¬í•­)
 	g_graphics->SetSmoothingMode(SmoothingModeNone);
 
 	SolidBrush brush(Color(_color.a, _color.r, _color.g, _color.b));
 	g_graphics->FillRectangle(&brush, (REAL)_rect.Left(), (REAL)_rect.Top(), (REAL)_rect.Width(), (REAL)_rect.Height());
 
-	// ÀÌÈÄ ±×¸®±â´Â ´Ù½Ã ¾ÈÆ¼¾Ù¸®¾î½Ì Àû¿ë
+	// ì´í›„ ê·¸ë¦¬ê¸°ëŠ” ë‹¤ì‹œ ì•ˆí‹°ì•¨ë¦¬ì–´ì‹± ì ìš©
 	g_graphics->SetSmoothingMode(SmoothingModeAntiAlias);
 }
 
@@ -64,37 +64,95 @@ void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const _Col
 		_radius * 2.f);
 }
 
-void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _fontSize, _bool _isCenter)
+void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _bool _is_center)
 {
 	if (nullptr == g_graphics)
 		return;
 
-	// 1. ÆùÆ® ÆÐ¹Ð¸® ¼³Á¤ (±âº»ÀûÀ¸·Î "¸¼Àº °íµñ" »ç¿ë)
+	// 1. í°íŠ¸ íŒ¨ë°€ë¦¬ ì„¤ì • (ê¸°ë³¸ì ìœ¼ë¡œ "ë§‘ì€ ê³ ë”•" ì‚¬ìš©)
 	static FontFamily fontFamily(L"Malgun Gothic");
 	static FontFamily fontFamily_d2_coding(L"D2Coding");
 	static FontFamily fontFamily_pretendard(L"Pretendard Regular");
 
-	// 2. ÆùÆ® °´Ã¼ »ý¼º (Å©±â, ½ºÅ¸ÀÏ, ´ÜÀ§ ¼³Á¤)
-	static Font font(&fontFamily_d2_coding, _fontSize, FontStyleBold, UnitPixel);
+	// 2. í°íŠ¸ ê°ì²´ ìƒì„± (í¬ê¸°, ìŠ¤íƒ€ì¼, ë‹¨ìœ„ ì„¤ì •)
+	static Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
 
-	// 3. ºê·¯½Ã »ý¼º
+	// 3. ë¸ŒëŸ¬ì‹œ ìƒì„±
 	SolidBrush brush(Color(_color.a, _color.r, _color.g, _color.b));
 
-	if (_isCenter)
+	if (_is_center)
 	{
-		// Áß¾Ó Á¤·ÄÀ» À§ÇÑ StringFormat ¼³Á¤
+		// ì¤‘ì•™ ì •ë ¬ì„ ìœ„í•œ StringFormat ì„¤ì •
 		StringFormat stringFormat;
-		stringFormat.SetAlignment(StringAlignmentCenter);     // °¡·Î Áß¾Ó
-		stringFormat.SetLineAlignment(StringAlignmentCenter); // ¼¼·Î Áß¾Ó
+		stringFormat.SetAlignment(StringAlignmentCenter);     // ê°€ë¡œ ì¤‘ì•™
+		stringFormat.SetLineAlignment(StringAlignmentCenter); // ì„¸ë¡œ ì¤‘ì•™
 
-		// PointF´Â Áß¾Ó ÁÂÇ¥°¡ µË´Ï´Ù.
+		// PointFëŠ” ì¤‘ì•™ ì¢Œí‘œê°€ ë©ë‹ˆë‹¤.
 		PointF point(_pos.x, _pos.y);
 		g_graphics->DrawString(_text.c_str(), -1, &font, point, &stringFormat, &brush);
 	}
 	else
 	{
-		// ÀÏ¹Ý ÁÂ»ó´Ü ±âÁØ Ãâ·Â
+		// ì¼ë°˜ ì¢Œìƒë‹¨ ê¸°ì¤€ ì¶œë ¥
 		PointF point(_pos.x, _pos.y);
 		g_graphics->DrawString(_text.c_str(), -1, &font, point, &brush);
 	}
+}
+
+void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _float _max_width, _bool _is_center)
+{
+	if (nullptr == g_graphics) return;
+
+	static FontFamily fontFamily_d2_coding(L"D2Coding");
+	static Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
+	SolidBrush brush(Color(_color.a, _color.r, _color.g, _color.b));
+
+	// 1. í…ìŠ¤íŠ¸ê°€ ê·¸ë ¤ì§ˆ ì‚¬ê°í˜• ì˜ì—­(Layout Rectangle) ì„¤ì •
+	// ë†’ì´(Height)ë¥¼ ì¶©ë¶„ížˆ í¬ê²Œ ìž¡ìœ¼ë©´ í…ìŠ¤íŠ¸ ì–‘ì— ë”°ë¼ ì•„ëž˜ë¡œ ë¬´í•œížˆ ëŠ˜ì–´ë‚©ë‹ˆë‹¤.
+	RectF layoutRect(_pos.x, _pos.y, _max_width, 1000.0f);
+
+	// 2. ì¶œë ¥ í¬ë§· ì„¤ì •
+	StringFormat stringFormat;
+
+	// ìžë™ ê°œí–‰ ì„¤ì • (ê¸°ë³¸ê°’ì´ì§€ë§Œ ëª…ì‹œì ìœ¼ë¡œ í™•ì¸)
+	stringFormat.SetFormatFlags(StringFormatFlagsLineLimit);
+
+	// ë‹¨ì–´ ë‹¨ìœ„ë¡œ ëŠê¸°ê²Œ ì„¤ì •
+	stringFormat.SetTrimming(StringTrimmingWord);
+
+	if (_is_center)
+	{
+		stringFormat.SetAlignment(StringAlignmentCenter);
+		// ì£¼ì˜: ì„¸ë¡œ ì •ë ¬(LineAlignment)ê¹Œì§€ Centerë¡œ í•˜ë©´ 
+		// 1000.0f ë†’ì´ì˜ ì •ì¤‘ì•™ì— ë°°ì¹˜ë˜ë¯€ë¡œ, ìžë™ ê°œí–‰ ì‹œì—ëŠ” ë³´í†µ ì‚¬ìš©í•˜ì§€ ì•Šê±°ë‚˜ 
+		// layoutRectì˜ ë†’ì´ë¥¼ ì¡°ì ˆí•´ì•¼ í•©ë‹ˆë‹¤.
+	}
+
+	// 3. PointFê°€ ì•„ë‹Œ RectFë¥¼ ì „ë‹¬í•˜ì—¬ ê·¸ë¦¬ê¸°
+	g_graphics->DrawString(_text.c_str(), -1, &font, layoutRect, &stringFormat, &brush);
+
+	// ê°œí–‰ì„ í¬í•¨í•œ ì‹¤ì œ ë Œë”ë§ í¬ê¸° ì¸¡ì •
+	RectF boundRect;
+	g_graphics->MeasureString(_text.c_str(), -1, &font, layoutRect, &stringFormat, &boundRect);
+
+	// boundRect.Heightë¥¼ ë³´ë©´ í…ìŠ¤íŠ¸ê°€ ê°œí–‰ë˜ì–´ ì°¨ì§€í•˜ëŠ” ì „ì²´ ë†’ì´ë¥¼ ì•Œ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+}
+
+// í…ìŠ¤íŠ¸ì˜ í¬ê¸°ë¥¼ ë°˜í™˜í•˜ëŠ” í•¨ìˆ˜ ì˜ˆì‹œ
+Gdiplus::SizeF DrawFunctions::MeasureString(const std::wstring& _text, _float _font_size)
+{
+	if (nullptr == g_graphics)
+		return { 0, 0 };
+
+	// DrawStringì—ì„œ ì‚¬ìš©í•˜ëŠ” ê²ƒê³¼ ë™ì¼í•œ ì„¤ì •ì˜ í°íŠ¸ ê°ì²´ ìƒì„±
+	static FontFamily fontFamily_d2_coding(L"D2Coding");
+	Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
+
+	RectF layoutRect(0, 0, 10000.0f, 10000.0f); // ì¶©ë¶„ížˆ í° ê°€ìƒì˜ ì˜ì—­
+	RectF boundRect; // ê³„ì‚°ëœ ê²°ê³¼ê°€ ë‹´ê¸¸ ì‚¬ê°í˜•
+
+	// í…ìŠ¤íŠ¸ì˜ ì‹¤ì œ í¬ê¸°ë¥¼ ì¸¡ì •
+	g_graphics->MeasureString(_text.c_str(), -1, &font, layoutRect, &boundRect);
+
+	return { boundRect.Width, boundRect.Height };
 }

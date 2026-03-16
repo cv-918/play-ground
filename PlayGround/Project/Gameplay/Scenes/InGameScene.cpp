@@ -15,7 +15,7 @@ _bool InGameScene::Initialize()
 	if (false == __super::Initialize())
 		return false;
 
-	debug_scene_name_ = L"GAMEPLAY SCENE";
+	debug_scene_name_ = L"IN-GAME SCENE";
 
 	// 스테이지 매니저 캐싱 및 씬과 연동
 	stage_manager_ = &_StageMgr;
@@ -60,20 +60,7 @@ void InGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
 
-	// 우측 상단에 현재 코인 개수 표시 (임시로 텍스트로 표시. 나중에는 아이콘과 함께 표시하는 UI 요소로 대체할 예정)
-	const auto current_coin_count = _GameState.GetCoinCount();
-	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
-}
-
-_bool InGameScene::Release()
-{
-	__super::Release();
-
-	// 캐싱해둔 액터나 매니저가 있다면 여기서 해제 처리
-	background_ = nullptr;
-	return_btn_ = nullptr;
-
-	return _bool();
+	// 일단, 코인 개수 표시는 지우고 RunState 만들면, 해당 클래스로부터 획득 코인 개수를 표시하는 방식으로 변경한다
 }
 
 void InGameScene::OnEnter()

@@ -1,23 +1,21 @@
-#pragma once
+ï»¿#pragma once
 #include "Scene.h"
 
 class LoadingScene final : public Scene
 {
 public:
 	explicit LoadingScene() : Scene(SceneType::Loading) {}
-	virtual ~LoadingScene() DEFAULT;
 
 public:
-	virtual _bool Initialize() override;
-	virtual _int Update(_double _delta_time) override;
-	virtual _int LateUpdate(_double _delta_time) override;
-	virtual void Render(_double _delta_time) override;
+	_bool Initialize() override;
+	_int Update(_double _delta_time) override;
+	_int LateUpdate(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
-	void OnEnter() override;
 	void OnExit() override;
 
 private:
-	_double elapsed_time_ = 0.0; // ·Îµù¿¡ °É¸° ½Ã°£À» ³ªÅ¸³»´Â º¯¼ö
-	_int loading_progress_ = 0; // ·Îµù ÁøÇà »óÈ²À» ³ªÅ¸³»´Â º¯¼ö (0~100)
-	_bool loading_complete_ = false; // ·Îµù ¿Ï·á ¿©ºÎ¸¦ ³ªÅ¸³»´Â º¯¼ö
+	_double elapsed_time_ = 0.0; // ë¡œë”©ì— ê±¸ë¦° ì‹œê°„ì„ ë‚˜íƒ€ë‚´ëŠ” ë³€ìˆ˜
+	_int loading_progress_ = 0; // ë¡œë”© ì§„í–‰ ìƒí™©ì„ ë‚˜íƒ€ë‚´ëŠ” ë³€ìˆ˜ (0~100)
+	_bool loading_complete_ = false; // ë¡œë”© ì™„ë£Œ ì—¬ë¶€ë¥¼ ë‚˜íƒ€ë‚´ëŠ” ë³€ìˆ˜
 };

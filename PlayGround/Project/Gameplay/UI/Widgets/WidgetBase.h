@@ -5,17 +5,12 @@ class UIBase;
 class WidgetBase abstract : public UIBase
 {
 public:
-	virtual ~WidgetBase();
+	~WidgetBase() override;
 
 public:
-	_bool Initialize() override;
-
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
-
 	void Render(_double _delta_time) override;
-
-	_bool Release() override;
 
 public:
 	// 포함하고 있는 UI 요소들의 위치와 크기를 설정하는 메서드. 필요에 따라 포함된 UI 요소들의 위치와 크기를 일괄적으로 조정할 때 활용할 수 있습니다.
@@ -35,7 +30,6 @@ public:
 private:
 	// 위젯은 여러 UI 요소를 포함할 수 있으므로, UI 요소를 추가하는 메서드를 제공
 	void _AddElement(UIBase* _element);
-	void _RemoveElement(UIBase* _element);
 
 protected:
 	// 위젯 클래스 내부에서만 UI 요소를 생성할 수 있도록 제한. 필요에 따라 위젯 클래스 내부에서 UI 요소를 생성할 때 활용할 수 있습니다.

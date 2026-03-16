@@ -124,7 +124,8 @@ enum class AttributeType
 	AttackRange,
 };
 
-struct AttributeNodeInfo {
+struct AttributeNodeJsonInfo
+{
 	// --- 기본 정보 ---
 	_uint id_ = 0;
 	std::string name_;
@@ -140,11 +141,28 @@ struct AttributeNodeInfo {
 	_uint character_unlock_id_ = 0;
 	// pair<자식 노드 ID, 방향 정보(int/enum)>
 	std::vector<std::pair<_uint, _uint>> children_nodes_info_;
-
-	// 이 아래의 것들은 효과 스크립트를 따로 빼야한다
-	//// --- 효과 데이터 ---
-	//AttributeType stat_type_ = AttributeType::Undefined;
-	//_uint stat_grade_ = 0;
-	
-	// _uint cost_ = 0; // 노드 레벨업 비용. 레벨업마다 증가하는 형태로, cost_per_lv_ 같은 변수를 추가하여 계산할 수도 있음
 };
+
+struct UserDataJsonInfo
+{
+	_uint id_ = 0;
+
+	// 유저 데이터에 필요한 변수들을 여기에 추가. 예시에서는 코인 수와 획득한 노드 ID 리스트를 포함.
+	_uint coin_count_ = 0; // 플레이어가 획득한 코인 수
+	std::vector<std::pair<_uint, _uint>> acquired_node_ids_; // 플레이어가 획득한 노드의 ID, 레벨 쌍. 필요에 따라 노드 레벨업 시스템이 구현되면 이 부분을 활용하여 플레이어가 획득한 노드와 그 레벨을 관리할 수 있습니다.
+};
+
+//// 노드 레벨 별로 저장이 필요한 데이터들
+//struct AttributeNodeLevelJsonInfo
+//{
+//	_uint node_id_ = 0;
+//
+//	// 레벨 별로 저장이 필요한 데이터들을 여기에 추가. 예시에서는 공격력 증가량과 이동 속도 증가량을 포함.
+//	_uint level_ = 0;
+//	_float attack_increase_ = 0.f; // 공격력 증가량
+//	_float hp_increase_ = 0.f; // 체력 증가량
+//	_float move_speed_increase_ = 0.f; // 이동 속도 증가량
+//
+//	AttributeType stat_type_ = AttributeType::Undefined; // 노드가 증가시키는 능력치의 유형. 필요에 따라 공격력, 체력, 이동 속도 등 다양한 능력치 유형을 정의하고 활용할 수 있습니다.
+//	_uint cost_ = 0; // 노드 레벨업 비용. 레벨업마다 증가하는 형태로, cost_per_lv_ 같은 변수를 추가하여 계산할 수도 있음
+//};

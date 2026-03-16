@@ -6,9 +6,6 @@ template <typename T>
 class ISingleton abstract
 {
 public:
-	explicit ISingleton() DEFAULT;
-	virtual ~ISingleton() DEFAULT;
-
 	static T& Get()
 	{
 		static T instance;
@@ -96,8 +93,7 @@ protected:
 		const std::string base = "class ";
 		type_name = type_name.substr(base.size());
 
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-		const std::wstring type_name_w = converter.from_bytes(type_name);
+		const std::wstring type_name_w = _UtilFunc::ToWString(type_name);
 
 		auto iter = instance_counts.find(type_name_w);
 		if (iter == instance_counts.end())

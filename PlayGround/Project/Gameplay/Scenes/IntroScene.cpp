@@ -1,4 +1,4 @@
-#include "framework.h"
+﻿#include "framework.h"
 #include "IntroScene.h"
 
 _bool IntroScene::Initialize()
@@ -20,17 +20,4 @@ _int IntroScene::LateUpdate(_double _delta_time)
 		_SceneMgr.ChangeScene(SceneType::Loading);
 
 	return UPDATE_CONTINUE;
-}
-
-void IntroScene::Render(_double _delta_time)
-{
-	__super::Render(_delta_time);
-}
-
-void IntroScene::OnEnter()
-{
-}
-
-void IntroScene::OnExit()
-{
 }

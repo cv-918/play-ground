@@ -5,18 +5,10 @@ class GameObjectBase;
 class UIBase abstract
 	: public IInitializable
 	, public IUpdatable
-	, public IReleasable
 	, public IIdentifiable
 {
 public:
-	explicit UIBase() {
-		rect_ = _Rect::Zero();
-		destroyed_ = false;
-	}
-
-public:
 	_bool Initialize() override;
-	_bool Release() override { return true; }
 
 public:
 	// 위치와 크기 설정
@@ -54,7 +46,7 @@ public:
 
 private:
 	// UI의 위치와 크기를 나타내는 사각형
-	_Rect rect_ = {};
+	_Rect rect_ = _Rect::Zero();
 
 	// UI 요소가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 UI 요소의 생명 주기를 관리하는 데 활용할 수 있습니다.
 	_bool destroyed_ = false;

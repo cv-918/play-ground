@@ -67,10 +67,6 @@ void LoadingScene::Render(_double _delta_time)
 	__super::Render(_delta_time);
 }
 
-void LoadingScene::OnEnter()
-{
-}
-
 void LoadingScene::OnExit()
 {
 	loading_progress_ = 0;

@@ -3,7 +3,25 @@
 
 class AttributeNode final : public WidgetBase
 {
+public:
+	explicit AttributeNode(const AttributeNodeJsonInfo* _node_info, const _Point& _pos, AttributeNode* _parent);
+
+public:
+	const AttributeNodeJsonInfo* GetInfo() const { return info_; }
+
+	const std::map<_uint, AttributeNode*>& GetChildNodes() { return child_nodes_; }
+	void SetChildNodes(const std::map<_uint, AttributeNode*>& _child_nodes) { child_nodes_ = _child_nodes; }
+
 private:
+	// 노드의 데이터를 담고 있는 구조체에 대한 포인터. 필요에 따라 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
+	const AttributeNodeJsonInfo* info_ = nullptr;
+
+	// 부모 노드에 대한 포인터. 필요에 따라 부모 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
+	AttributeNode* parent_node_ = nullptr;
+
+	// 자식 노드 ID와 노드 객체를 매핑하는 맵. 필요에 따라 자식 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
+	std::map<_uint, AttributeNode*> child_nodes_;
+
 	// 이미지가 없기 때문에 텍스트로 속성 노드를 표시한다고 가정. 필요에 따라 이미지나 아이콘을 추가하여 시각적으로 표현할 수도 있습니다.
 	std::wstring icon_replacing_text_;
 };
