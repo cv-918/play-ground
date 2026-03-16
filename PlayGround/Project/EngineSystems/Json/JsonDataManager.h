@@ -13,8 +13,8 @@ public:
 	virtual ~JsonDataManager() DEFAULT;
 
 public:
-	// 데이터 로드 (JSON 배열 형태 파일 읽기)
-	_bool Load(const std::string& _file_path);
+	virtual _bool Load(const std::string& _file_path);
+	virtual _bool Save(const std::string& _file_path) PURE;
 
 	// ID로 데이터 찾기
 	const T* GetData(_uint _id) const
@@ -23,6 +23,7 @@ public:
 		return (it != data_table_.end()) ? &it->second : nullptr;
 	}
 
+	// 인덱스로 데이터 찾기 (ID가 아닌 순서대로 접근)
 	const T* GetDataByIndex(size_t _index) const
 	{
 		if (_index >= data_table_.size())
@@ -69,7 +70,7 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 			}
 			data_table_[item.id_] = item;
 		}
-		_SYSTEM_LOG_INFO(_T("%s loaded: %d entries."), typeid(T).name(), data_table_.size());
+		_SYSTEM_LOG_INFO(_T("%s loaded: %d entries."), _UtilFunc::ToWString(typeid(T).name()).c_str(), data_table_.size());
 		return true;
 	}
 	catch (json::exception& e)
@@ -78,3 +79,30 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 		return false;
 	}
 }
+
+//template<typename T>
+//inline _bool JsonDataManager<T>::Save(const std::string& _file_path) const
+//{
+//	std::ofstream file(_file_path);
+//	if (!file.is_open())
+//	{
+//		_DEBUG_MSGBOX(_T("Failed to open file for writing: %s"), _TF(_file_path.c_str()));
+//		return false;
+//	}
+//	try
+//	{
+//		std::vector<T> dataList;
+//		for (const auto& pair : data_table_)
+//		{
+//			dataList.push_back(pair.second);
+//		}
+//		json j = dataList;
+//		file << j.dump(4); // 4는 들여쓰기 수준을 나타냅니다.
+//		return true;
+//	}
+//	catch (json::exception& e)
+//	{
+//		_DEBUG_MSGBOX(_T("Failed to serialize JSON file: %s\nError: %s"), _file_path.c_str(), e.what());
+//		return false;
+//	}
+//}

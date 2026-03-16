@@ -91,6 +91,10 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
+    <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -164,5 +168,8 @@
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
   </ItemGroup>
 </Project>

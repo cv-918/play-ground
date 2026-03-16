@@ -8,6 +8,7 @@
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
+#include "GamePlaySystems/Json/UserDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -15,12 +16,11 @@ _bool PlayGround::Initialize()
 	_Random.Initialize();
 
 	_RenderChain.Initialize();
+	_SceneMgr.Initialize();
 
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBody, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBullet, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
-
-	_SceneMgr.Initialize();
 
 	if (false == _EnemyDataMgr.Load("Data/Enemy.json"))
 	{
@@ -37,6 +37,12 @@ _bool PlayGround::Initialize()
 	if (false == _AttributeNodeDataMgr.Load("Data/AttributeNode.json"))
 	{
 		_SYSTEM_LOG_ERROR(_T("Failed to load attribute node data from JSON."));
+		return false;
+	}
+
+	if (false == _UserDataMgr.Load("Data/UserData.json"))
+	{
+		_SYSTEM_LOG_ERROR(_T("Failed to load user data from JSON."));
 		return false;
 	}
 

@@ -33,7 +33,7 @@ _int Bullet::Update(_double _delta_time)
 	elapsed_time_ += _delta_time;
 	if (elapsed_time_ >= lifetime_)
 	{
-		Destroy();
+		ReserveDestruction();
 		return UPDATE_CONTINUE;
 	}
 
@@ -77,5 +77,5 @@ void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 		s_cast(IDamagable*, _handler)->GetDamage(damage_);
 		});
 
-	Destroy();  // 충돌 후 총알 제거
+	ReserveDestruction();  // 충돌 후 총알 제거
 }

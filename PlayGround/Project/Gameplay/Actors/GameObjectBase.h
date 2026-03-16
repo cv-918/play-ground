@@ -6,7 +6,6 @@
 class GameObjectBase abstract
 	: public IInitializable
 	, public IUpdatable
-	, public IReleasable
 	, public IIdentifiable
 {
 public:
@@ -15,7 +14,6 @@ public:
 public:
 	_bool Initialize() override;
 	_bool Finalize();
-	_bool Release() override;
 
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
@@ -40,7 +38,7 @@ public:
 	Transform* GetTransform() const { return transform_; }
 
 	_bool IsDestroyed() const { return destroyed_; }
-	void Destroy() { destroyed_ = true; }
+	void ReserveDestruction() { destroyed_ = true; }
 
 	// 오브젝트 파괴 시 필요한 로직이 있다면 이 함수를 오버라이드하여 구현
 	// 예를 들어, 파괴 이펙트 재생, 사운드 재생, 점수 증가 등 다양한 효과를 이 함수에서 처리

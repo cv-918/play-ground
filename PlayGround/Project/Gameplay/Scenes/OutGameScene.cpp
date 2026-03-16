@@ -8,14 +8,7 @@ OutGameScene::~OutGameScene()
 {
 	// 뷰 전환 시 생성된 UI 요소들에 대한 정리 작업 처리
 	for (auto& pair : view_map_)
-	{
-		if (pair.second)
-		{
-			pair.second->Release();
-			delete pair.second;
-		}
-	}
-	std::map<OutGameViewState, WidgetBase*>().swap(view_map_);
+		SAFE_DELETE(pair.second);
 }
 
 _bool OutGameScene::Initialize()
@@ -23,7 +16,7 @@ _bool OutGameScene::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	debug_scene_name_ = L"LOBBY SCENE";
+	debug_scene_name_ = L"OUT-GAME SCENE";
 
 	MAKE_INITIALIZED;
 	return true;
@@ -45,19 +38,11 @@ void OutGameScene::Render(_double _delta_time)
 
 	if (current_view_)
 		current_view_->Render(_delta_time);
-
-	// 우측 상단에 현재 코인 개수 표시 (임시로 텍스트로 표시. 나중에는 아이콘과 함께 표시하는 UI 요소로 대체할 예정)
-	const auto current_coin_count = _GameState.GetCoinCount();
-	_DrawFunc::DrawString({ g_screen_size.x - 120.f, 10.f }, L"Coins: " + std::to_wstring(current_coin_count), Colors::Black, 16.f, false);
 }
 
 void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
-}
-
-void OutGameScene::OnExit()
-{
 }
 
 void OutGameScene::_ChangeView(OutGameViewState _new_view_state)

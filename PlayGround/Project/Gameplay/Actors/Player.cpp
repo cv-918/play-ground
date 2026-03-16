@@ -10,8 +10,7 @@ _bool Player::Initialize()
 		return false;
 
 	// 플레이어 identifier 설정
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	Name(converter.from_bytes(info_->name_));
+	Name(_UtilFunc::ToWString(info_->name_));
 
 	// 플레이어 Movement 컴포넌트 생성 및 등록
 	movement_ = new PlayableMovement(info_);

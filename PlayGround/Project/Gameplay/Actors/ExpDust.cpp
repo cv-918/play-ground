@@ -8,9 +8,7 @@ _bool ExpDust::Initialize()
 
 	// 더스트 identifier 설정
 	static _int instance_count = 0;
-
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	Name(converter.from_bytes(info_->name_) + std::to_wstring(++instance_count));
+	Name(_UtilFunc::ToWString(info_->name_) + std::to_wstring(++instance_count));
 
 	// 컴포넌트 설정
 

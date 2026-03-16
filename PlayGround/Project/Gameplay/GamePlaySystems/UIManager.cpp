@@ -5,7 +5,8 @@
 
 UIManager::~UIManager()
 {
-	Release();
+	for (const auto* ui : ui_list_)
+		SAFE_DELETE(ui);
 }
 
 _int UIManager::Update(_double _delta_time)
@@ -39,21 +40,6 @@ void UIManager::Render(_double _delta_time)
 		if (ui->IsActive())
 			ui->Render(_delta_time);
 	}
-}
-
-_bool UIManager::Release()
-{
-	for (auto* ui : ui_list_)
-	{
-		if (ui)
-		{
-			ui->Release();
-			delete ui;
-		}
-	}
-	std::vector<UIBase*>().swap(ui_list_);
-
-	return true;
 }
 
 void UIManager::AddUI(UIBase* _ui)

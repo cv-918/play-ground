@@ -12,7 +12,7 @@ class OutGameScene final : public Scene
 
 public:
 	explicit OutGameScene() : Scene(SceneType::OutGame) {}
-	virtual ~OutGameScene();
+	~OutGameScene() override;
 
 public:
 	_bool Initialize() override;
@@ -20,7 +20,6 @@ public:
 	void Render(_double _delta_time) override;
 
 	void OnEnter() override;
-	void OnExit() override;
 
 private:
 	// 뷰 전환 메소드

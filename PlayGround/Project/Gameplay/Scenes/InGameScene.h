@@ -13,7 +13,6 @@ public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
-	_bool Release() override;
 
 	void OnEnter() override;
 	void OnExit() override;

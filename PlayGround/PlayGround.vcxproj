@@ -95,6 +95,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -112,6 +113,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,11 +156,15 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
@@ -258,6 +264,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
@@ -270,6 +278,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />

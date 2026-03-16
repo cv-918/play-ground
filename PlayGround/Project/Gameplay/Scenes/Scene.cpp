@@ -6,14 +6,20 @@
 
 Scene::~Scene()
 {
-	SAFE_RELEASE(object_manager_);
-	SAFE_RELEASE(ui_manager_);
+	SAFE_DELETE(object_manager_);
+	SAFE_DELETE(ui_manager_);
 }
 
 _bool Scene::Initialize()
 {
 	SAFE_NEW(object_manager_);
 	SAFE_NEW(ui_manager_);
+
+	if (!object_manager_ || !ui_manager_)
+	{
+		_SYSTEM_LOG_ERROR(_T("Scene initialization failed: ObjectManager or UIManager could not be created."));
+		return false;
+	}
 
 	return true;
 }
@@ -44,14 +50,6 @@ void Scene::Render(_double _delta_time)
 
 	object_manager_->Render(_delta_time);
 	ui_manager_->Render(_delta_time);
-}
-
-_bool Scene::Release()
-{
-	object_manager_->Release();
-	ui_manager_->Release();
-
-	return true;
 }
 
 void Scene::AddGameObject(GameObjectBase* _game_object)

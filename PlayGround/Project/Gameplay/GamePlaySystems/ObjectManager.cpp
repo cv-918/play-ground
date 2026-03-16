@@ -7,7 +7,13 @@
 
 ObjectManager::~ObjectManager()
 {
-	Release();
+	for (auto* game_object : game_objects_)
+		SAFE_DELETE(game_object);
+
+	for (auto* new_obj : new_game_objects_)
+		SAFE_DELETE(new_obj);
+
+	SAFE_DELETE(play_area_);
 }
 
 _int ObjectManager::Update(_double _delta_time)
@@ -38,7 +44,7 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 				if (!play_area_->PtInRect(obj_pos))
 				{
 					_SYSTEM_LOG_INFO(L"ObjectManager: Game object out of play area - Name: %s, ID: %d, Position: (%.2f, %.2f)", game_object->Name().c_str(), game_object->ID(), obj_pos.x, obj_pos.y);
-					game_object->Destroy(); // 플레이 영역 밖으로 나간 오브젝트는 파괴 처리
+					game_object->ReserveDestruction(); // 플레이 영역 밖으로 나간 오브젝트는 파괴 처리
 				}
 			}
 		}
@@ -59,23 +65,6 @@ void ObjectManager::Render(_double _delta_time)
 			game_object->DebugRender(_delta_time);
 		}
 	}
-}
-
-_bool ObjectManager::Release()
-{
-	for (auto* game_object : game_objects_)
-	{
-		if (game_object)
-		{
-			game_object->Release();
-			delete game_object;
-		}
-	}
-	std::vector<GameObjectBase*>().swap(game_objects_);
-
-	SAFE_DELETE(play_area_);
-
-	return true;
 }
 
 void ObjectManager::AddGameObject(GameObjectBase* _game_object)
@@ -185,7 +174,6 @@ void ObjectManager::_MergeNewGameObjects()
 		game_objects_.push_back(new_obj);
 		_SYSTEM_LOG_INFO(L"ObjectManager: Merged new game object - Name: %s, ID: %d", new_obj->Name().c_str(), new_obj->ID());
 	}
-
 	std::vector<GameObjectBase*>().swap(new_game_objects_);
 }
 

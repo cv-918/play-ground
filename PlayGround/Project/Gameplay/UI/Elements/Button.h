@@ -12,10 +12,6 @@ enum class ButtonState
 class Button final : public UIBase
 {
 public:
-	explicit Button() DEFAULT;
-	virtual ~Button() DEFAULT;
-
-public:
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 

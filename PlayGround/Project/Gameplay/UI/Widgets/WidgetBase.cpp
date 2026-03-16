@@ -3,15 +3,8 @@
 
 WidgetBase::~WidgetBase()
 {
-	Release();
-}
-
-_bool WidgetBase::Initialize()
-{
-	if (false == __super::Initialize())
-		return false;
-
-	return true;
+	for (const auto* element : elements_)
+		SAFE_DELETE(element);
 }
 
 _int WidgetBase::Update(_double _delta_time)
@@ -53,20 +46,6 @@ void WidgetBase::Render(_double _delta_time)
 		if (element && !element->IsDestroyed())
 			element->Render(_delta_time);
 	}
-}
-
-_bool WidgetBase::Release()
-{
-	if (false == __super::Release())
-		return false;
-
-	for (UIBase* element : elements_)
-	{
-		if (element)
-			element->Release();
-	}
-
-	return true;
 }
 
 void WidgetBase::SetPosition(const _Point& _position)
@@ -232,24 +211,6 @@ void WidgetBase::_AddElement(UIBase* _element)
 		else
 		{
 			_SYSTEM_LOG_INFO(L"Element %s is already added to widget %s.", _element->Name().c_str(), Name().c_str());
-		}
-	}
-}
-
-void WidgetBase::_RemoveElement(UIBase* _element)
-{
-	// 요소가 유효한지 확인
-	if (_element)
-	{
-		auto it = std::find(elements_.begin(), elements_.end(), _element);
-		if (it != elements_.end())
-		{
-			elements_.erase(it);
-			_SYSTEM_LOG_INFO(L"Element %s removed from widget %s.", _element->Name().c_str(), Name().c_str());
-		}
-		else
-		{
-			_SYSTEM_LOG_INFO(L"Element %s not found in widget %s.", _element->Name().c_str(), Name().c_str());
 		}
 	}
 }

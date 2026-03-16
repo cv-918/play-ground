@@ -1,23 +1,5 @@
 ﻿#pragma once
 
-typedef bool						_bool;
-
-typedef unsigned char				_ubyte;
-typedef signed char					_byte;
-typedef wchar_t						_tchar;
-
-typedef unsigned short				_ushort;
-typedef signed short				_short;
-
-typedef unsigned int				_uint;
-typedef signed int					_int;
-
-typedef unsigned long				_ulong;
-typedef signed long					_long;
-
-typedef float						_float;
-typedef double						_double;
-
 #define PURE						= 0
 #define DEFAULT						= default
 #define EMPTY_FUNC					{}
@@ -29,7 +11,6 @@ typedef double						_double;
 
 #define PI							3.1415926535f
 
-#define GAME_VIEW_WIDTH				WINCX * 0.66f
 #define INGAME_FRAME_THICKNESS		10
 #define INGAME_FRAME_THICKNESS_HALF	(INGAME_FRAME_THICKNESS / 2)
 
