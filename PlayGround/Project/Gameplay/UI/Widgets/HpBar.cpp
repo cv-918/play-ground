@@ -53,7 +53,7 @@ _int HpBar::Update(_double _delta_time)
 		if (_IsFadingOut())
 		{
 			const auto progress = 1.0 - _GetFadeProgress();
-			hp_bar_->SetAlpha(progress);
+			hp_bar_->SetAlpha(s_float(progress));
 		}
 		else if (life_time_timer_ >= DEFAULT_DURATION_HP_BAR - DEFAULT_FADE_DURATION_HP_BAR)
 		{

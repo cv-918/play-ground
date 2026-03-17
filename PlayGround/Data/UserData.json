@@ -1,13 +1,8 @@
-﻿[
-  {
-    "id_": 0,
-    "coin_count_": 0,
-    "acquired_node_ids_": [
-      [ 0, 0 ],
-      [ 10, 0 ],
-      [ 11, 0 ],
-      [ 12, 0 ],
-      [ 13, 0 ]
-    ]
-  }
+[
+    {
+        "acquired_node_ids_": [],
+        "coin_count_": 5,
+        "id_": 0,
+        "stage_progress_": 1
+    }
 ]

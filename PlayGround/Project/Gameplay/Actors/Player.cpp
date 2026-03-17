@@ -66,7 +66,10 @@ void Player::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
 
 	// 스테이지	매니저에 플레이어가 죽었다는 메시지 보내기
-	_StageMgr.OnPlayerDeath();
+	if (status_->IsDead())
+	{
+		_StageMgr.OnPlayerDeath();
+	}
 }
 
 void Player::OnCollisionEnter(Collider* _this, Collider* _other)

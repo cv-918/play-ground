@@ -15,28 +15,12 @@ _bool Enemy::Initialize()
 
 _int Enemy::Update(_double _delta_time)
 {
-	// 몬스터 일시정지 상태일 때는 업데이트 로직을 실행하지 않도록 제어
-	if (_GameState.MonsterPause())
-		return 0;
-
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
 
 	// 투사체 발사 로직
 	if (EnemyProjectilePattern::Undefined != info_->projectile_pattern_)
 		HandleProjectilePattern(_delta_time);
-
-	return UPDATE_CONTINUE;
-}
-
-_int Enemy::LateUpdate(_double _delta_time)
-{
-	// 몬스터 일시정지 상태일 때는 업데이트 로직을 실행하지 않도록 제어
-	if (_GameState.MonsterPause())
-		return 0;
-
-	_int ret = __super::LateUpdate(_delta_time);
-	if (0 != ret) return ret;
 
 	return UPDATE_CONTINUE;
 }
@@ -68,7 +52,7 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 
 	const auto pos = transform_->Position();
 
-	const auto player = _GameState.GetPlayer();
+	const auto player = _RunState.GetPlayer();
 	const auto target_pos = player->GetTransform()->Position();
 
 	//const auto target = pos + transform_->Forward2D() * 5.f;

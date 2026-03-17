@@ -49,6 +49,9 @@ public:
 	_int GetAtt() const { return att_; }
 	void SetAtt(const _int _att) { att_ = _att; }
 
+	_bool IsDead() const { return is_dead_; }
+	void MarkAsDead() { is_dead_ = true; }
+
 private:
 	_int lv_ = 0;
 	_int exp_ = 0;
@@ -56,5 +59,7 @@ private:
 	_float current_hp_ = 0.f;
 	_float max_hp_ = 0.f;
 	_int att_ = 0;
+
+	_bool is_dead_ = false;
 };
 

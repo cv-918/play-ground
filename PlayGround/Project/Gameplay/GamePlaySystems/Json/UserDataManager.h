@@ -5,7 +5,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	UserDataJsonInfo,
 	id_,
 	coin_count_,
-	acquired_node_ids_
+	acquired_node_ids_,
+	stage_progress_
 )
 
 #define _UserDataMgr UserDataManager::Get()
@@ -14,6 +15,9 @@ class UserDataManager final
 	: public ISingleton<UserDataManager>
 	, public JsonDataManager<UserDataJsonInfo>
 {
+public:
+	explicit UserDataManager();
+
 public:
 	_bool Load(const std::string& _file_path) override;
 

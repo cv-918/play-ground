@@ -68,11 +68,16 @@ namespace Colors {
 	const _Color SkyBlue(135, 206, 235);
 	const _Color LightBlue(173, 216, 230);
 	const _Color Teal(0, 128, 128);
+	const _Color Turquoise(64, 224, 208);
+	const _Color Aqua(0, 255, 255);
+	const _Color DustyBlue(176, 196, 222);
 
 	// 그린 계열 (Green)
 	const _Color Lime(0, 255, 0);
 	const _Color Mint(189, 252, 201);
 	const _Color Olive(128, 128, 0);
+	const _Color SageGreen(188, 203, 184);
+	const _Color MossGreen(138, 154, 91);
 
 	// 퍼플 계열 (Purple & Violet)
 	const _Color Purple(128, 0, 128);

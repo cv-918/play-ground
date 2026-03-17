@@ -57,5 +57,6 @@
 #include "Common/CommonGamePlayType.h"
 #include "Common/CommonGamePlayDefine.h"
 
-#include "GamePlaySystems/GameState.h"
 #include "GamePlaySystems/UserProfile.h"
+#include "GamePlaySystems/GameState.h"
+#include "GamePlaySystems/RunState.h"

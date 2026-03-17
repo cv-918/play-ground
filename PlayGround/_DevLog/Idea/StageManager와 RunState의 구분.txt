@@ -1,0 +1,78 @@
+StageManager와 RunState는 모두 인게임 플레이를 다루지만,
+그 성격은 **"통제관(Controller)"**과 **"기록관(Data Holder)"**으로 명확히 나뉩니다. 두 클래스가 충돌하지 않도록 정보를 구분하는 가이드라인을 설정해 드릴게요.
+
+1. 역할 구분 핵심 원칙
+StageManager (The Manager): **"어떻게 흘러가야 하는가?"**를 결정합니다.
+스테이지의 흐름(Enter, Play, Result 등), 시간 경과, 몬스터 스폰 로직 등 **실행 로직(Logic)**과 **통제(Control)**를 담당합니다.
+
+RunState (The Record): **"지금까지 무엇이 일어났는가?"**를 저장합니다.
+플레이어가 이번 판(Run) 동안 달성한 수치, 획득한 아이템 등 **결과를 위한 데이터(State)**를 담당합니다.
+
+2. 세부 데이터 관리 가이드라인
+GPT가 제안한 RunSessionResult 개념을 포함하여, 관리해야 할 데이터들을 다음과 같이 배치하세요.
+
+A. StageManager가 관리해야 할 정보 (런타임 제어)
+스테이지가 종료되면 사라지거나 다음 스테이지에서 초기화되어도 무방한 휘발성 통제 데이터입니다.
+
+- 스테이지 상태: StageState (Enter, Play, Exit 등)
+- 생성 관련 타이머: spawn_timer_, spawn_interval_
+- 플레이 시간: stage_timer_ (현재 스테이지가 얼마나 진행되었는지)
+- 오브젝트 생성 구역 정보: generation_area_, stage_nav_mesh_
+
+B. RunState가 관리해야 할 정보 (런타임 데이터)
+스테이지가 끝나고 결과 화면(Result)에 보여주거나 UserProfile에 반영해야 할 결산용 데이터입니다.
+
+- 획득 재화: earned_coin_count_ (현재 GameState에서 관리하던 것을 이쪽으로 이동)
+- 플레이 기록: 처치한 몬스터 수, 획득한 경험치, 도달한 최대 웨이브 등
+- 사망 여부: player_died_ (현재 StageManager에 임시로 있는 플래그를 이쪽으로 이동)
+
+C. RunSessionResult (결과 데이터)
+RunState가 종료 시점에 계산하여 내놓는 최종 요약본입니다.
+
+- 최종 지급 코인: final_payout_coin (사망 여부에 따른 보너스/패널티가 계산된 값)
+- 최종 랭크/등급: 이번 판의 성적
+
+3. 클래스 간 협력 흐름 (Collaboration)
+두 클래스는 다음과 같은 순서로 소통하게 됩니다.
+
+A. 런 시작 (_OnEnter)
+: StageManager가 RunState::Reset()을 호출하여 기록지를 깨끗하게 비웁니다.
+
+B. 플레이 중 (_OnPlay)
+: 몬스터가 죽거나 코인을 먹으면, 적 또는 플레이어 객체가 RunState::AddCoin()을 직접 호출하여 데이터를 쌓습니다. StageManager는 이를 신경 쓰지 않고 오직 스폰만 관리합니다.
+
+C. 플레이어 사망 (OnPlayerDeath)
+: StageManager가 RunState::SetDead(true)를 호출하여 상태를 기록합니다.
+
+D. 런 종료 (_OnExit)
+: StageManager는 RunState::CreateResult()를 호출하여 RunSessionResult를 받습니다.
+: 받은 결과를 _UserProfile.IncreaseCoins()에 전달합니다.
+: _UserDataMgr.Save()를 호출하여 영구 저장합니다.
+
+4. 코드 리팩토링 제안 (StageManager.cpp)
+가이드라인에 따라 StageManager::_OnExit() 로직은 다음과 같이 깔끔하게 변경될 수 있습니다.
+
+void StageManager::_OnExit()
+{
+    // 1. RunState로부터 이번 판의 최종 결과지를 받음
+    RunSessionResult result = _RunState->CreateResult();
+
+    // 2. 결과지에 적힌 최종 코인을 유저 프로필에 합산
+    _UserProfile.IncreaseCoins(result.final_payout_coin);
+
+    // 3. 파일에 영구 저장
+    _UserDataMgr.Save();
+
+    // 4. 다음 판을 위해 상태 초기화
+    _RunState->Reset();
+
+    // 로비로 이동
+    _SceneMgr.ChangeScene(SceneType::OutGame);
+}
+
+
+💡 요약 가이드
+**"동작(Logic)"**인가? → StageManager
+**"누적된 수치(Stats)"**인가? → RunState
+
+이렇게 구분하면 StageManager는 코드가 비대해지는 것을 막을 수 있고, RunState는 나중에 유니티로 넘어갈 때 "이번 판의 보상 로직"만 쏙 뽑아서 C# 클래스로 옮기기 매우 편해집니다.

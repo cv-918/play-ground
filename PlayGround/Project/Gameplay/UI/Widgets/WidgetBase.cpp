@@ -167,7 +167,7 @@ void WidgetBase::ScaleX(const _int _dWidth)
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsPendingDestruction())
-			element->ScaleX(width_ratio); // 요소의 크기를 X축으로 조절
+			element->ScaleX(s_int(width_ratio)); // 요소의 크기를 X축으로 조절
 	}
 }
 
@@ -184,7 +184,7 @@ void WidgetBase::ScaleY(const _int _dHeight)
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsPendingDestruction())
-			element->ScaleY(height_ratio); // 요소의 크기를 Y축으로 조절
+			element->ScaleY(s_int(height_ratio)); // 요소의 크기를 Y축으로 조절
 	}
 }
 

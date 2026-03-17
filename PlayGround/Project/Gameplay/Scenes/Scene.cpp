@@ -51,21 +51,3 @@ void Scene::Render(_double _delta_time)
 	object_manager_->Render(_delta_time);
 	ui_manager_->Render(_delta_time);
 }
-
-void Scene::AddGameObject(GameObjectBase* _game_object)
-{
-	if (nullptr == _game_object)
-		return;
-
-	if (object_manager_)
-		object_manager_->AddGameObject(_game_object);
-}
-
-void Scene::AddUI(UIBase* _ui)
-{
-	if (nullptr == _ui)
-		return;
-
-	if (ui_manager_)
-		ui_manager_->AddUI(_ui);
-}
