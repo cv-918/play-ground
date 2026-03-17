@@ -161,8 +161,12 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
@@ -262,6 +266,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
@@ -277,6 +282,9 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGameResultView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />

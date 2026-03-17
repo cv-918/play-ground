@@ -154,16 +154,6 @@ void ObjectManager::_PushGameObject(GameObjectBase* _game_object)
 		return;
 	}
 
-	if (false == _game_object->IsInitialized())
-	{
-		if (!_game_object->Initialize())
-		{
-			_SYSTEM_LOG_ERROR(L"ObjectManager::_PushGameObject - Failed to initialize game object: %s", _game_object->Name().c_str());
-			delete _game_object;
-			return;
-		}
-	}
-
 	new_game_objects_.push_back(_game_object);
 	_SYSTEM_LOG_INFO(L"ObjectManager: Added game object - Name: %s, ID: %d", _game_object->Name().c_str(), _game_object->ID());
 }

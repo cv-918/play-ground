@@ -23,6 +23,9 @@ public:
 	// 게임 오브젝트 관리를 위한 메서드. 필요에 따라 게임 오브젝트를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
 	void AddGameObject(GameObjectBase* _game_object);
 
+	template<typename T, typename... Args>
+	T* CreateActor(Args&&... _args);
+
 	// 템플릿 메서드를 사용하여 다양한 타입의 게임 오브젝트를 생성할 수 있도록 지원
 	// 단, 몬스터 생성 메서드, 오브젝트 생성 메서드 등을 구분하고 인자로는 해당 타입의 정보를 받는다
 	GameObjectBase* SpawnEnemy(const EnemyJsonInfo* _info);
@@ -46,3 +49,17 @@ private:
 
 	_Rect* play_area_ = nullptr; // 몬스터나 오브젝트가 존재할 수 있는 영역
 };
+
+template<typename T, typename ...Args>
+inline T* ObjectManager::CreateActor(Args && ..._args)
+{
+	T* actor = new T(std::forward<Args>(_args)...);
+	if (actor->Initialize())
+	{
+		_PushGameObject(actor);
+		return actor;
+	}
+
+	SAFE_DELETE(actor);
+	return nullptr;
+}

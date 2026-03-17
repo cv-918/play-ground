@@ -1,8 +1,13 @@
 ﻿#pragma once
 #include "Scene.h"
 
-class StageManager;
-class Background;
+enum class InGameViewState
+{
+	Undefined = 0,
+	InGame,
+	Pause,
+	Result,
+};
 
 class InGameScene final : public Scene
 {
@@ -19,17 +24,24 @@ public:
 
 public:
 	// GameObject 생성 메서드들
-	void SpawnPlayer();
 	void SpawnEnemy(_uint _enemy_id);
 	void SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed);
 
 	// UI 노출 메서드들
-	void ShowResultUI();
 	void ShowDamageUI(_float _damage, const _Point& _position);
 
-private:
-	StageManager* stage_manager_ = nullptr;
+	// 뷰 전환 메소드
+	void ChangeView(InGameViewState _new_view_state);
 
-	Background* background_ = nullptr;
-	Button* return_btn_ = nullptr;
+private:
+	void _CreateEssentialActors();
+	WidgetBase* _CreateView();
+
+private:
+	class StageManager* stage_manager_ = nullptr;
+	class Background* background_ = nullptr;
+
+	InGameViewState view_state_ = InGameViewState::Undefined;
+	std::map<InGameViewState, class WidgetBase*> view_map_;
+	WidgetBase* current_view_ = nullptr;
 };

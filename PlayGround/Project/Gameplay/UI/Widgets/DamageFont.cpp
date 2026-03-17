@@ -36,7 +36,7 @@ _int DamageFont::Update(_double _delta_time)
 	if (_IsFadingOut())
 	{
 		const auto progress = 1.0 - _GetFadeProgress();
-		damage_text_->SetAlpha(progress);
+		damage_text_->SetAlpha(s_float(progress));
 	}
 	// 데미지 폰트가 일정 시간 이상 지속되면 사라지는 중으로 전환
 	else if (life_time_timer_ >= DEFAULT_DURATION_DAMAGE_FONT - DEFAULT_FADE_DURATION_DAMAGE_FONT)

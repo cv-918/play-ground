@@ -10,9 +10,7 @@ protected:
 
 protected:
 	_bool Initialize() override;
-
 	_int Update(_double _delta_time) override;
-	_int LateUpdate(_double _delta_time) override;
 
 	// 투사체 발사 로직
 	void HandleProjectilePattern(_double _delta_time);

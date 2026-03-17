@@ -38,6 +38,17 @@ void OutGameScene::Render(_double _delta_time)
 
 	if (current_view_)
 		current_view_->Render(_delta_time);
+
+	// 화면 우측 상단에 획득한 코인 개수 표시
+	if (view_state_ == OutGameViewState::Attribute)
+	{
+		_DrawFunc::DrawString(
+			_Point{ GAME_VIEW_WIDTH - 200, 20 },
+			L"Coins: " + std::to_wstring(_UserProfile.GetCoinCount()),
+			Colors::Black,
+			20
+		);
+	}
 }
 
 void OutGameScene::OnEnter()

@@ -9,7 +9,8 @@
 #define GAME_VIEW_RECT		_Rect{ _Point{0, 0}, _Size{ GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT } }
 
 #pragma region [ 시스템 로직 관련 ]
-#define DEFAULT_SPAWN_MARGIN	500
+#define DEFAULT_SPAWN_MARGIN		500
+#define DEFAULT_STAGE_DURATION		4.0
 #pragma endregion
 
 #pragma region [ UI 관련 ]

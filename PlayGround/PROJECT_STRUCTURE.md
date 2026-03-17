@@ -1,8 +1,10 @@
-﻿# Project Structure (Updated: 2026-03-17 00:08)
+﻿# Project Structure (Updated: 2026-03-17 09:57)
 
 ```text
 Root
 +--- Data
++--- html
+|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp

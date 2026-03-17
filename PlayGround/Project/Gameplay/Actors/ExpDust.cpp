@@ -143,11 +143,13 @@ void ExpDust::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
-	// 고보상형의 경우 일반 등급보다 더 많은 코인 보상
-	//const auto coin_reward_amount = info_->reward_ * ((role_ == EnemySpecialRole::Rich) ? 2 : 1);
-	_GameState.IncreaseEarnedCoinCount(info_->reward_);
+	if (status_->IsDead())
+	{
+		_RunState.IncreaseEarnedCoinCount(info_->reward_);
 
-	// 코인 획득 텍스트 ui 노출
+		// 코인 획득 텍스트 ui 노출(선택)
+		// play_scene_->ShowCoinEarnedUI(info_->reward_, transform_->Position());
+	}
 }
 
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)

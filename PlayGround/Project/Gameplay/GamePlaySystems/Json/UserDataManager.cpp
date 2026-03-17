@@ -3,6 +3,17 @@
 
 #include "../UserProfile.h"
 
+UserDataManager::UserDataManager()
+{
+	atexit([]() {
+		// 프로그램 종료 시 UserDataManager의 소멸자에서 Save를 호출하여 데이터를 저장하도록 설정
+		if (!_UserDataMgr.Save("Data/UserData.json"))
+		{
+			_DEBUG_MSGBOX(_T("Failed to save user data on exit."));
+		}
+		});
+}
+
 _bool UserDataManager::Load(const std::string& _file_path)
 {
 	std::ifstream file(_file_path);

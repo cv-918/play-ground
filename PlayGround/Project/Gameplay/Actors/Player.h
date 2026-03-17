@@ -7,9 +7,7 @@ class Player final : public UnitBase
 public:
 	explicit Player(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
 
-private:
 	_bool Initialize() override;
-
 	_int Update(_double _delta_time) override;
 	void DebugRender(_double _delta_time) override;
 

@@ -95,6 +95,10 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -171,5 +175,9 @@
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGameResultView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
   </ItemGroup>
 </Project>
