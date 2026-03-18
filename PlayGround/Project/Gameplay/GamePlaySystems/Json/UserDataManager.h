@@ -5,6 +5,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	UserDataJsonInfo,
 	id_,
 	coin_count_,
+	unlocked_character_ids_,
 	acquired_node_ids_,
 	stage_progress_
 )
@@ -17,6 +18,7 @@ class UserDataManager final
 {
 public:
 	explicit UserDataManager();
+	~UserDataManager() override;
 
 public:
 	_bool Load(const std::string& _file_path) override;

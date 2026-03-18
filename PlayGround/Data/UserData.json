@@ -1,8 +1,20 @@
 [
     {
-        "acquired_node_ids_": [],
+        "acquired_node_ids_": [
+            [
+                0,
+                1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
         "coin_count_": 5,
         "id_": 0,
-        "stage_progress_": 1
+        "stage_progress_": 1,
+        "unlocked_character_ids_": [
+            1
+        ]
     }
 ]

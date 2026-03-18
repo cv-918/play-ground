@@ -65,7 +65,7 @@ _bool GameObjectBase::Finalize()
 
 _int GameObjectBase::Update(_double _delta_time)
 {
-	if(!Enable())
+	if(!IsEnable())
 		return 0;
 
 	for (const auto& component : components_)
@@ -76,7 +76,7 @@ _int GameObjectBase::Update(_double _delta_time)
 
 _int GameObjectBase::LateUpdate(_double _delta_time)
 {
-	if (!Enable())
+	if (!IsEnable())
 		return 0;
 
 	for (const auto& component : components_)
@@ -87,7 +87,7 @@ _int GameObjectBase::LateUpdate(_double _delta_time)
 
 void GameObjectBase::Render(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	// 오브젝트 그리기
@@ -101,7 +101,7 @@ void GameObjectBase::Render(_double _delta_time)
 
 void GameObjectBase::DebugRender(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	const auto position = transform_->Position();

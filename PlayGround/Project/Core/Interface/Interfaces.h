@@ -50,11 +50,11 @@ public:
 
 	_bool IsActive() const { return is_enable_ && is_visible_; }
 
-	_bool Enable() const { return is_enable_; }
-	void Enable(const _bool _enabled) { is_enable_ = _enabled; }
+	_bool IsEnable() const { return is_enable_; }
+	void SetEnable(const _bool _enabled) { is_enable_ = _enabled; }
 
-	_bool Visible() const { return is_visible_; }
-	void Visible(const _bool _visible) { is_visible_ = _visible; }
+	_bool IsVisible() const { return is_visible_; }
+	void SetVisible(const _bool _visible) { is_visible_ = _visible; }
 
 protected:
 	_bool is_enable_ = true;
