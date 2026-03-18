@@ -17,7 +17,7 @@ _bool Bullet::Initialize()
 
 	// 콜라이더 생성 및 설정
 	collider_ = new SphereCollider(5.f);
-	collider_->Visible(true);
+	collider_->SetVisible(true);
 	RegisterComponent(collider_);
 
 	// 충돌 레이어 등록 (적의 총알은 플레이어와 충돌)
@@ -54,7 +54,7 @@ void Bullet::Render(_double _delta_time)
 
 void Bullet::DebugRender(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	const auto position = transform_->Position();

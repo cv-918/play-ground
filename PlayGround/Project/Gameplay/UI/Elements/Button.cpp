@@ -3,7 +3,7 @@
 
 _int Button::Update(_double _delta_time)
 {
-	if (!Enable())
+	if (!IsEnable())
 	{
 		state_ = ButtonState::Disabled;
 		return UPDATE_CONTINUE;
@@ -40,7 +40,7 @@ _int Button::Update(_double _delta_time)
 
 void Button::Render(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	// 비활성화 상태일 때는 회색으로 표시

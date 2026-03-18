@@ -8,9 +8,8 @@ public:
 	explicit OutGameAttributeView(
 		const std::function<void()>& _return_btn_callback
 	);
-	virtual ~OutGameAttributeView();
 
 private:
-	AttributeNodeTree* attribute_node_tree_ = nullptr;
+	void Render(_double _delta_time) override;
 };
 

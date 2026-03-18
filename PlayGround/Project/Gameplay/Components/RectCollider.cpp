@@ -1,11 +1,11 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "RectCollider.h"
 
 #include "SphereCollider.h"
 
 void RectCollider::Render(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	_DrawFunc::DrawRectangle(rect_, Colors::Black);
@@ -21,10 +21,10 @@ _bool RectCollider::_CheckCollided(Collider* _other)
 	{
 	case ColliderType::Rectangle:
 	{
-		// Rectangle Collider °£ÀÇ Ãæµ¹ Ã³¸®
+		// Rectangle Collider ê°„ì˜ ì¶©ëŒ ì²˜ë¦¬
 		const auto other_rect = s_cast(RectCollider*, _other)->Rect();
 
-		// AABB Ãæµ¹ ÆÇÁ¤
+		// AABB ì¶©ëŒ íŒì •
 		return (rect_.Left() < other_rect.Right() &&
 			rect_.Right() > other_rect.Left() &&
 			rect_.Top() < other_rect.Bottom() &&
@@ -32,12 +32,12 @@ _bool RectCollider::_CheckCollided(Collider* _other)
 	}
 	case ColliderType::Circle:
 	{
-		// Rectangle Collider ¿Í Circle Collider °£ÀÇ Ãæµ¹ Ã³¸®
+		// Rectangle Collider ì™€ Circle Collider ê°„ì˜ ì¶©ëŒ ì²˜ë¦¬
 		const auto sphere = s_cast(SphereCollider*, _other);
 		_Vector3 center = sphere->Center();
 		_float radius = sphere->Radius();
 
-		// ¿øÀÇ Áß½ÉÀ» »ç°¢Çü ¹üÀ§·Î Å¬·¥ÇÎ
+		// ì›ì˜ ì¤‘ì‹¬ì„ ì‚¬ê°í˜• ë²”ìœ„ë¡œ í´ë¨í•‘
 		_float closestX = (std::max)(rect_.Left_f(), (std::min)(center.x, rect_.Right_f()));
 		_float closestY = (std::max)(rect_.Top_f(), (std::min)(center.y, rect_.Bottom_f()));
 

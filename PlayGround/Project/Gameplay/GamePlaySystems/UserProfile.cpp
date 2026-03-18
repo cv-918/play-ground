@@ -1,6 +1,46 @@
 ﻿#include "framework.h"
 #include "UserProfile.h"
 
+#include "GamePlaySystems/Json/AttributeNodeDataManager.h"
+
+void UserProfile::ResetUserData()
+{
+	coin_count_ = 0;
+	std::vector<_uint>().swap(unlocked_character_ids_); // unlocked_character_ids_ 벡터를 초기화하여 메모리 해제
+	std::vector<std::pair<_uint, _uint>>().swap(acquired_node_ids_); // acquired_node_ids_ 벡터를 초기화하여 메모리 해제
+	stage_progress_ = 0;
+}
+
+void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
+{
+	coin_count_ = _info.coin_count_;
+	unlocked_character_ids_ = _info.unlocked_character_ids_;
+	acquired_node_ids_ = _info.acquired_node_ids_;
+	stage_progress_ = _info.stage_progress_;
+
+	// 최초에 unlock 캐릭터가 아무것도 없을 경우 0(더스티)을 넣어준다
+	// 여기서 하는게 맞는지 모르겠지만 일단 여기서
+	if (unlocked_character_ids_.empty())
+	{
+		unlocked_character_ids_.push_back(s_uint(PlayableCharacterId::Dusty));
+		_SYSTEM_LOG_INFO(_T("No unlocked characters found. Default character (Dusty) has been added to the unlocked character list."));
+	}
+
+	UpdateAttributeStat(); // 유저 데이터를 저장한 후 어트리뷰트 수치를 업데이트하여 최신 상태로 유지
+}
+
+UserDataJsonInfo UserProfile::GetUserData() const
+{
+	UserDataJsonInfo info;
+	info.id_ = 0; // 필요 시 세이브 데이터 슬롯 id 할당
+	info.coin_count_ = coin_count_;
+	info.unlocked_character_ids_ = unlocked_character_ids_;
+	info.acquired_node_ids_ = acquired_node_ids_;
+	info.stage_progress_ = stage_progress_;
+
+	return info;
+}
+
 void UserProfile::IncreaseCoins(const _uint _count)
 {
 	coin_count_ += _count;
@@ -21,5 +61,202 @@ _bool UserProfile::SpendCoins(const _uint _count)
 	{
 		// 코인이 부족한 경우 처리 로직이 필요한 경우 여기에 작성 (예: 경고 메시지 표시 등)
 		return false;
+	}
+}
+
+void UserProfile::UpdateAttributeStat()
+{
+	// 모든 획득 노드를 순회하며 attribute_stat_ 수치를 누적 계산
+	attribute_stat_ = AttributeStat(); // 기존 수치 초기화
+
+	// acquired_node_ids_ 목록을 순회하면서 각 노드의 어트리뷰트 수치를 attribute_stat_ 에 반영
+	for (const auto& pair : acquired_node_ids_)
+	{
+		const auto node_id = pair.first;
+		const auto node_lv = pair.second;
+
+		const auto attribute_data = _AttributeNodeDataMgr.GetData(node_id);
+		if (nullptr == attribute_data)
+		{
+			_NULL_DETECTION_MSGBOX;
+			continue;
+		}
+
+		// 노드의 능력치 증가 계산 방식에 따라 attribute_stat_에 수치 반영
+		switch (attribute_data->stat_type_)
+		{
+		case AttributeType::SpecialAbility:
+			// attribute_data->special_ability_id_값을 이용해서 스페셜 어빌리티 스크립트 참조
+			// 이쪽 부분은 아무래도 특수 능력이다보니 일반화 시키기 어렵고 하나하나 꽂아줘야할 확률도 있다
+			break;
+		case AttributeType::Attack:
+			// AttributeType::SpecialAbility 를 제외한 나머지 타입의 로직
+			// attribute_data->stat_type_ 값을 이용해서 어트리뷰트 레벨 인포 스크립트 참조
+			// node_lv 에 맞는 Row 를 찾아서 그 Row 의 데이블을 가져옴
+			// 가져온 데이터의 calc_type_ 값에 따라 덧셈 방식인지 곱셈 방식인지 판단해서 attribute_stat_의 해당 수치에 반영
+
+			// 일단은 임시 계산식을 넣어서 테스트
+			switch (attribute_data->calc_type_)
+			{
+			case AttributeCalculationType::Additive:
+				attribute_stat_.attack_increase_ += node_lv * 10.f; // 예시로 노드 레벨당 공격력 10 증가하는 것으로 가정
+				break;
+			case AttributeCalculationType::Multiplicative:
+				attribute_stat_.attack_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 공격력 5% 증가하는 것으로 가정
+				break;
+			default:
+				_DEBUG_MSGBOX(_T("Undefined AttributeCalculationType for node ID %u"), node_id);
+				break;
+			}
+			break;
+
+		case AttributeType::Hp:
+			switch (attribute_data->calc_type_)
+			{
+			case AttributeCalculationType::Additive:
+				attribute_stat_.hp_increase_ += node_lv * 20.f; // 예시로 노드 레벨당 체력 20 증가하는 것으로 가정
+				break;
+			case AttributeCalculationType::Multiplicative:
+				attribute_stat_.hp_increase_rate_ *= 1.f + (node_lv * 0.1f); // 예시로 노드 레벨당 체력 10% 증가하는 것으로 가정
+				break;
+			}
+			break;
+
+		case AttributeType::MoveSpeed:
+			switch (attribute_data->calc_type_)
+			{
+			case AttributeCalculationType::Additive:
+				attribute_stat_.move_speed_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 이동 속도 0.5 증가하는 것으로 가정
+				break;
+			case AttributeCalculationType::Multiplicative:
+				attribute_stat_.move_speed_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 이동 속도 5% 증가하는 것으로 가정
+				break;
+			}
+			break;
+
+		case AttributeType::AttackRange:
+			switch (attribute_data->calc_type_)
+			{
+			case AttributeCalculationType::Additive:
+				attribute_stat_.attack_range_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 공격 범위 0.5 증가하는 것으로 가정
+				break;
+			case AttributeCalculationType::Multiplicative:
+				attribute_stat_.attack_range_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 공격 범위 5% 증가하는 것으로 가정
+				break;
+			}
+			break;
+
+		case AttributeType::CollectionRange:
+			switch (attribute_data->calc_type_)
+			{
+			case AttributeCalculationType::Additive:
+				attribute_stat_.collection_range_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 수집 범위 0.5 증가하는 것으로 가정
+				break;
+			case AttributeCalculationType::Multiplicative:
+				attribute_stat_.collection_range_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 수집 범위 5% 증가하는 것으로 가정
+				break;
+			}
+			break;
+
+		default:
+			_DEBUG_MSGBOX(_T("Undefined AttributeType for node ID %u"), node_id);
+			break;
+		}
+	}
+}
+
+void UserProfile::NodeLevelUp(const _uint node_id)
+{
+	auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
+		[&](const std::pair<_uint, _uint>& pair) { return pair.first == node_id; });
+	if (it != acquired_node_ids_.end())
+	{
+		// 노드 데이터를 가져와서
+		const auto data = _AttributeNodeDataMgr.GetData(node_id);
+		if (nullptr == data)
+		{
+			_NULL_DETECTION_MSGBOX;
+			return;
+		}
+
+		// 레벨업 가능 여부 판단 (예: 최대 레벨 체크 등). 필요에 따라 노드 레벨업 시 추가적인 로직을 작성할 수 있습니다.)
+		if (it->second < data->max_lv_)
+			++it->second;
+
+		_SYSTEM_LOG_INFO(_T("Node ID %u leveled up to level %u"), node_id, it->second);
+	}
+	else
+	{
+		// 노드를 처음 획득하는 경우 레벨 1로 추가
+		acquired_node_ids_.emplace_back(node_id , s_uint(1));
+		_SYSTEM_LOG_INFO(_T("Node ID %u acquired at level 1"), node_id);
+	}
+
+	UpdateAttributeStat(); // 노드 레벨업 후 어트리뷰트 수치를 업데이트하여 최신 상태로 유지
+}
+
+NodeState UserProfile::GetNodeState(const AttributeNodeJsonInfo* _info) const
+{
+	NodeState state = NodeState::Undefined;
+	if (nullptr == _info)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return state;
+	}
+
+	if (std::find(unlocked_character_ids_.begin(), unlocked_character_ids_.end(), _info->unlock_character_id_) == unlocked_character_ids_.end())
+	{
+		state = NodeState::Hidden; // 발견되지 않은 노드
+	}
+	else
+	{
+		if (_info->parent_node_id_ != -1)
+		{
+			auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
+				[&](const std::pair<_uint, _uint>& pair) { return pair.first == _info->parent_node_id_; });
+			if (it != acquired_node_ids_.end() && it->second >= _info->required_parent_node_lv_)
+			{
+				state = NodeState::Unlocked; // 잠금 해제된 노드
+			}
+			else
+			{
+				state = NodeState::Locked; // 발견된 노드
+			}
+		}
+		else
+		{
+			state = NodeState::Unlocked; // 부모 노드가 없는 경우 잠금 해제된 상태로 시작
+		}
+		auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
+			[&](const std::pair<_uint, _uint>& pair) { return pair.first == _info->id_; });
+		if (it != acquired_node_ids_.end() && it->second > 0)
+		{
+			// 최대 레벨일 경우
+			if (it->second >= _info->max_lv_)
+			{
+				state = NodeState::Mastered; // 마스터한 노드
+			}
+			else
+			{
+				state = NodeState::Acquired; // 습득한 노드
+			}
+		}
+	}
+
+	return state;
+}
+
+_uint UserProfile::GetNodeLevel(const _uint node_id) const
+{
+	auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
+		[&](const std::pair<_uint, _uint>& pair) { return pair.first == node_id; });
+
+	if (it != acquired_node_ids_.end())
+	{
+		return it->second; // 노드 레벨 반환
+	}
+	else
+	{
+		return 0; // 노드를 획득하지 않은 경우 레벨 0으로 간주
 	}
 }

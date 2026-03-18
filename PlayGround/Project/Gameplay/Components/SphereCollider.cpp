@@ -9,7 +9,7 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 {
 	__super::LateUpdate(_delta_time);
 
-	if (!Enable())
+	if (!IsEnable())
 		return UPDATE_CONTINUE;
 
 	// 충돌체 중심을 게임오브젝트의 트랜스폼 위치로 설정
@@ -21,7 +21,7 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 
 void SphereCollider::Render(_double _delta_time)
 {
-	if (!Visible())
+	if (!IsVisible())
 		return;
 
 	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, Colors::Black);

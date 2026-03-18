@@ -88,11 +88,11 @@ _bool ExpDust::Initialize()
 	
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	body_collider->Radius(radius);
-	body_collider->Visible(true);
+	body_collider->SetVisible(true);
 
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	attack_collider->Radius(radius);
-	attack_collider->Visible(true);
+	attack_collider->SetVisible(true);
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
 

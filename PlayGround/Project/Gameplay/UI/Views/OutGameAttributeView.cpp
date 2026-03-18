@@ -31,9 +31,50 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	//grid->SetCenter(GAME_VIEW_CENTER);
 
 	// 어트리뷰트 트리 생성
-	attribute_node_tree_ = CreateElement<AttributeNodeTree>();
+	CreateElement<AttributeNodeTree>();
 }
 
-OutGameAttributeView::~OutGameAttributeView()
+void OutGameAttributeView::Render(_double _delta_time)
 {
+	__super::Render(_delta_time);
+
+	if (_GameState.debug_mode_)
+	{
+		const auto attribute_stat = _UserProfile.GetAttributeStat();
+
+		// 모든 어트리뷰트 스탯 정보 출력
+		_tchar buffer[MAX_PATH] = {};
+		swprintf_s(buffer, L"=== Attribute Stat ===");
+		_DrawFunc::DrawString(_Point{ 20, 20 }, buffer, Colors::Black, 14.f, false);
+
+		swprintf_s(buffer, L"공격력 증가량 : %.0f", attribute_stat.attack_increase_);
+		_DrawFunc::DrawString(_Point{ 20, 50 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"공격력 배율 : %.0f", attribute_stat.attack_increase_rate_);
+		_DrawFunc::DrawString(_Point{ 20, 80 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"최대 HP 증가량 : %.0f", attribute_stat.hp_increase_);
+		_DrawFunc::DrawString(_Point{ 20, 110 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"최대 HP 배율 : %.0f", attribute_stat.hp_increase_rate_);
+		_DrawFunc::DrawString(_Point{ 20, 140 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"이동속도 증가량 : %.0f", attribute_stat.move_speed_increase_);
+		_DrawFunc::DrawString(_Point{ 20, 170 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"이동속도 배율 : %.0f", attribute_stat.move_speed_increase_rate_);
+		_DrawFunc::DrawString(_Point{ 20, 200 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"공격 범위 증가량 : %.0f", attribute_stat.attack_range_increase_);
+		_DrawFunc::DrawString(_Point{ 20, 230 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"공격 범위 배율 : %.0f", attribute_stat.attack_range_increase_rate_);
+		_DrawFunc::DrawString(_Point{ 20, 260 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"수집 범위 증가량 : %.0f", attribute_stat.collection_range_increase_);
+		_DrawFunc::DrawString(_Point{ 20, 290 }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"수집 범위 배율 : %.0f", attribute_stat.collection_range_increase_rate_);
+		_DrawFunc::DrawString(_Point{ 20, 320 }, buffer, Colors::Black, 12.f, false);
+	}
 }

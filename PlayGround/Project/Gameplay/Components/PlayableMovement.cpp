@@ -10,6 +10,8 @@ PlayableMovement::PlayableMovement(const PlayableCharacterJsonInfo* _info)
 	input_manager_ = &_InputMgr.Get();
 	controller_type_ = input_manager_->ControllerType();
 
+	// 이동속도도 어트리뷰트 적용해야하는데 아직 이동 수식이 완전치 않아서 적용 보류
+	// 현재 공식대로 연산했을 때 최대 속도에 도달하지 못하는 문제가 있음. 공식 수정 후 적용 예정
 	move_spd_max_ = _info->move_speed_max_;
 	acceleration_ = _info->acceleration_;
 	friction_ = _info->friction_;

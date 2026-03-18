@@ -17,18 +17,24 @@ _bool Player::Initialize()
 	RegisterComponent(movement_);
 
 	// 플레이어 컴포넌트 설정
+	const auto attribute_stat = _UserProfile.GetAttributeStat();
+
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
-	status_->SetCurrentHp(info_->hp_);
-	status_->SetMaxHP(info_->hp_);
-	status_->SetAtt(info_->contact_damage_);
+	const auto start_hp = (info_->hp_ + attribute_stat.hp_increase_) * attribute_stat.hp_increase_rate_;
+	status_->SetCurrentHp(start_hp);
+	status_->SetMaxHP(start_hp);
+
+	const auto start_att = (info_->contact_damage_ + attribute_stat.attack_increase_) * attribute_stat.attack_increase_rate_;
+	status_->SetAtt(start_att);
 
 	// 플레이어 콜라이더 설정
 	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
 	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(info_->body_size_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 
+	const auto start_attack_radius = (info_->attack_size_ + attribute_stat.attack_range_increase_) * attribute_stat.attack_range_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
 	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(info_->attack_size_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 

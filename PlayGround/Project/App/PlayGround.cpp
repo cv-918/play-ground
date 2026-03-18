@@ -43,7 +43,7 @@ _bool PlayGround::Initialize()
 	if (false == _UserDataMgr.Load("Data/UserData.json"))
 	{
 		_SYSTEM_LOG_ERROR(_T("Failed to load user data from JSON."));
-		return false;
+		//return false;
 	}
 
 	return true;

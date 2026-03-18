@@ -27,7 +27,7 @@ _int AttributeNodeToolTip::Update(_double _delta_time)
 
 void AttributeNodeToolTip::Render(_double _delta_time)
 {
-	if (false == Visible())
+	if (false == IsVisible())
 		return;
 
 	__super::Render(_delta_time);
@@ -56,7 +56,9 @@ void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)
 
 	_tchar buffer[MAX_PATH] = {};
 	swprintf_s(buffer, L"%s", _UtilFunc::ToWString(target_info->desc_).c_str());
-	swprintf_s(buffer, buffer, target_info->curr_lv_);
+
+	const auto node_curr_lv = _UserProfile.GetNodeLevel(target_info->id_);
+	swprintf_s(buffer, buffer, node_curr_lv);
 
 	tooltip_text_ = L"Node: " + target_name + L"\n\n";
 	tooltip_text_ += L"Additional Info:\n";

@@ -9,8 +9,11 @@ public:
 public:
 	const AttributeNodeJsonInfo* GetInfo() const { return info_; }
 
-	const std::map<_uint, AttributeNode*>& GetChildNodes() { return child_nodes_; }
-	void SetChildNodes(const std::map<_uint, AttributeNode*>& _child_nodes) { child_nodes_ = _child_nodes; }
+	const std::map<NodeDirection, AttributeNode*>& GetChildNodes() { return child_nodes_; }
+	void SetChildNodes(const std::map<NodeDirection, AttributeNode*>& _child_nodes) { child_nodes_ = _child_nodes; }
+
+private:
+	void _UpdateState();
 
 private:
 	// 노드의 데이터를 담고 있는 구조체에 대한 포인터. 필요에 따라 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
@@ -19,11 +22,14 @@ private:
 	// 부모 노드에 대한 포인터. 필요에 따라 부모 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
 	AttributeNode* parent_node_ = nullptr;
 
-	// 자식 노드 ID와 노드 객체를 매핑하는 맵. 필요에 따라 자식 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
-	std::map<_uint, AttributeNode*> child_nodes_;
+	// 자식 노드 방향과 노드 객체를 매핑하는 맵. 필요에 따라 자식 노드의 상태나 레벨에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
+	std::map<NodeDirection, AttributeNode*> child_nodes_;
 
-	// 이미지가 없기 때문에 텍스트로 속성 노드를 표시한다고 가정. 필요에 따라 이미지나 아이콘을 추가하여 시각적으로 표현할 수도 있습니다.
-	std::wstring icon_replacing_text_;
+	// 노드의 현재 상태를 나타내는 변수. 필요에 따라 노드의 상태에 따라 다른 UI 요소를 표시할 때 활용할 수 있습니다.
+	NodeState state_ = NodeState::Undefined;
+
+	// 노드의 버튼 UI 요소에 대한 포인터. 필요에 따라 노드의 상태나 레벨에 따라 버튼의 활성화 여부나 텍스트를 변경할 때 활용할 수 있습니다.
+	class Button* btn_ = nullptr;
 };
 
 /*

@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-17 09:57)
+﻿# Project Structure (Updated: 2026-03-18 17:59)
 
 ```text
 Root
@@ -99,6 +99,8 @@ Root
 |   |   |   |   |   UserDataManager.h
 |   |   |   |   GameState.cpp
 |   |   |   |   GameState.h
+|   |   |   |   RunState.cpp
+|   |   |   |   RunState.h
 |   |   |   |   SceneManager.cpp
 |   |   |   |   SceneManager.h
 |   |   |   |   StageManager.cpp
@@ -129,6 +131,12 @@ Root
 |   |   |   |   |   Text.cpp
 |   |   |   |   |   Text.h
 |   |   |   +--- Views
+|   |   |   |   |   InGamePauseView.cpp
+|   |   |   |   |   InGamePauseView.h
+|   |   |   |   |   InGamePlayView.cpp
+|   |   |   |   |   InGamePlayView.h
+|   |   |   |   |   InGameResultView.cpp
+|   |   |   |   |   InGameResultView.h
 |   |   |   |   |   OutGameAttributeView.cpp
 |   |   |   |   |   OutGameAttributeView.h
 |   |   |   |   |   OutGameMainView.cpp
