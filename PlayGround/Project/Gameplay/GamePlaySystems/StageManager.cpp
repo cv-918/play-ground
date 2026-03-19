@@ -6,10 +6,10 @@
 
 _int StageManager::Update(_double _delta_time)
 {
-	// 스테이지 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
+	// 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
 	
 
-	// 스테이지 상태에 따른 로직 처리
+	// 상태에 따른 로직 처리
 	switch (curr_state_)
 	{
 	case StageState::Enter:		_OnEnter();		break;
@@ -109,7 +109,9 @@ void StageManager::_OnEnter()
 	// 스테이지 타이머 설정 (DEFAULT_STAGE_DURATION + 어트리뷰트로 추가된 시간)
 	// 현재는 어트리뷰트로 추가된 시간은 없으므로 DEFAULT_STAGE_DURATION만 설정
 	stage_elapsed_time_ = 0.0;
-	stage_duration_ = DEFAULT_STAGE_DURATION;
+
+	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
+	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
 
 	// 게임 상태 초기화
 	_GameState.SetPause(false);

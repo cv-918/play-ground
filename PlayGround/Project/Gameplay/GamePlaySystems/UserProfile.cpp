@@ -82,84 +82,35 @@ void UserProfile::UpdateAttributeStat()
 			continue;
 		}
 
-		// 노드의 능력치 증가 계산 방식에 따라 attribute_stat_에 수치 반영
+		// 노드 레벨에 따른 총 증가 수치 계산
+		const auto total_value = node_lv * attribute_data->stat_value_;
+
+		_float* target_stat = nullptr; // attribute_stat_의 해당 수치를 가리키는 포인터
 		switch (attribute_data->stat_type_)
 		{
+		case AttributeType::Undefined:
+			_DEBUG_MSGBOX(_T("Undefined AttributeType for node ID %u"), node_id);
+			break;
+
 		case AttributeType::SpecialAbility:
 			// attribute_data->special_ability_id_값을 이용해서 스페셜 어빌리티 스크립트 참조
 			// 이쪽 부분은 아무래도 특수 능력이다보니 일반화 시키기 어렵고 하나하나 꽂아줘야할 확률도 있다
-			break;
-		case AttributeType::Attack:
-			// AttributeType::SpecialAbility 를 제외한 나머지 타입의 로직
-			// attribute_data->stat_type_ 값을 이용해서 어트리뷰트 레벨 인포 스크립트 참조
-			// node_lv 에 맞는 Row 를 찾아서 그 Row 의 데이블을 가져옴
-			// 가져온 데이터의 calc_type_ 값에 따라 덧셈 방식인지 곱셈 방식인지 판단해서 attribute_stat_의 해당 수치에 반영
-
-			// 일단은 임시 계산식을 넣어서 테스트
-			switch (attribute_data->calc_type_)
+			switch (attribute_data->special_ability_id_)
 			{
-			case AttributeCalculationType::Additive:
-				attribute_stat_.attack_increase_ += node_lv * 10.f; // 예시로 노드 레벨당 공격력 10 증가하는 것으로 가정
+			case SpecialAbilityId::Undefined:
+				_DEBUG_MSGBOX(_T("Undefined SpecialAbilityId for node ID %u"), node_id);
 				break;
-			case AttributeCalculationType::Multiplicative:
-				attribute_stat_.attack_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 공격력 5% 증가하는 것으로 가정
+			case SpecialAbilityId::DustCollect:
+				attribute_stat_.special_ability_dust_collect_ = true;
 				break;
 			default:
-				_DEBUG_MSGBOX(_T("Undefined AttributeCalculationType for node ID %u"), node_id);
-				break;
-			}
-			break;
-
-		case AttributeType::Hp:
-			switch (attribute_data->calc_type_)
-			{
-			case AttributeCalculationType::Additive:
-				attribute_stat_.hp_increase_ += node_lv * 20.f; // 예시로 노드 레벨당 체력 20 증가하는 것으로 가정
-				break;
-			case AttributeCalculationType::Multiplicative:
-				attribute_stat_.hp_increase_rate_ *= 1.f + (node_lv * 0.1f); // 예시로 노드 레벨당 체력 10% 증가하는 것으로 가정
-				break;
-			}
-			break;
-
-		case AttributeType::MoveSpeed:
-			switch (attribute_data->calc_type_)
-			{
-			case AttributeCalculationType::Additive:
-				attribute_stat_.move_speed_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 이동 속도 0.5 증가하는 것으로 가정
-				break;
-			case AttributeCalculationType::Multiplicative:
-				attribute_stat_.move_speed_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 이동 속도 5% 증가하는 것으로 가정
-				break;
-			}
-			break;
-
-		case AttributeType::AttackRange:
-			switch (attribute_data->calc_type_)
-			{
-			case AttributeCalculationType::Additive:
-				attribute_stat_.attack_range_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 공격 범위 0.5 증가하는 것으로 가정
-				break;
-			case AttributeCalculationType::Multiplicative:
-				attribute_stat_.attack_range_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 공격 범위 5% 증가하는 것으로 가정
-				break;
-			}
-			break;
-
-		case AttributeType::CollectionRange:
-			switch (attribute_data->calc_type_)
-			{
-			case AttributeCalculationType::Additive:
-				attribute_stat_.collection_range_increase_ += node_lv * 0.5f; // 예시로 노드 레벨당 수집 범위 0.5 증가하는 것으로 가정
-				break;
-			case AttributeCalculationType::Multiplicative:
-				attribute_stat_.collection_range_increase_rate_ *= 1.f + (node_lv * 0.05f); // 예시로 노드 레벨당 수집 범위 5% 증가하는 것으로 가정
+				_DEBUG_MSGBOX(_T("Unexpected SpecialAbilityId %d for node ID %u"), s_int(attribute_data->special_ability_id_), node_id);
 				break;
 			}
 			break;
 
 		default:
-			_DEBUG_MSGBOX(_T("Undefined AttributeType for node ID %u"), node_id);
+			attribute_stat_.IncreaseStat(attribute_data->stat_type_, attribute_data->calc_type_, total_value);
 			break;
 		}
 	}
@@ -180,15 +131,22 @@ void UserProfile::NodeLevelUp(const _uint node_id)
 		}
 
 		// 레벨업 가능 여부 판단 (예: 최대 레벨 체크 등). 필요에 따라 노드 레벨업 시 추가적인 로직을 작성할 수 있습니다.)
-		if (it->second < data->max_lv_)
+		const auto condition_level = it->second < data->max_lv_;
+
+		const auto total_cost = s_uint(data->cost_ * (data->cost_growth_rate_ * std::max(s_uint(1), it->second)));
+		const auto condition_cost = coin_count_ >= total_cost;
+		if (condition_level && condition_cost)
+		{
 			++it->second;
+			coin_count_ -= total_cost;
+		}
 
 		_SYSTEM_LOG_INFO(_T("Node ID %u leveled up to level %u"), node_id, it->second);
 	}
 	else
 	{
 		// 노드를 처음 획득하는 경우 레벨 1로 추가
-		acquired_node_ids_.emplace_back(node_id , s_uint(1));
+		acquired_node_ids_.emplace_back(node_id, s_uint(1));
 		_SYSTEM_LOG_INFO(_T("Node ID %u acquired at level 1"), node_id);
 	}
 

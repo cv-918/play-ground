@@ -19,6 +19,12 @@ void ProgressBar::Render(_double _delta_time)
 
 	// 4. 테두리 (필요 시)
 	_DrawFunc::DrawRectangle(rt, borderColor_, thickness_);
+
+	// 5. 텍스트 (예: "체력", "남은 시간" 등)
+	if (!text_.empty())
+	{
+		_DrawFunc::DrawString(rt.GetCenter(), text_, Colors::Black, 12.f, true);
+	}
 }
 
 void ProgressBar::SetAlpha(_float _alpha)

@@ -99,6 +99,19 @@
 
 * [곁다리 작업] Enable -> IsEnable, SetEnable / Visible -> IsVisible, SetVisible 로 전환
 
+
+2026년 3월 19일 목요일
+* [ 어트리뷰트 추가 절차 ] 문서 작성
+
+* CommonGamePlayType.h region 으로 묶으면서 정리
+
+* AttributeNodeJsonInfo 에 회의에서 나왔던 4개 데이터 추가
+- value, tier, cost, cost_growth_rate
+
+* 런 타임 증가 어트리뷰트 추가 및 적용, 테스트 완료
+
+* ProgressBar 에 Text 기능 추가
+
 ------------------------------------------------------------------------
 
 오전 9:13 2026-03-04

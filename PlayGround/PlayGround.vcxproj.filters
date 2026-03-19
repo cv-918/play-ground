@@ -99,6 +99,7 @@
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
+    <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">

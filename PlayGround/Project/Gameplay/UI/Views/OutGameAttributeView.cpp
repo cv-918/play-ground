@@ -45,36 +45,15 @@ void OutGameAttributeView::Render(_double _delta_time)
 		// 모든 어트리뷰트 스탯 정보 출력
 		_tchar buffer[MAX_PATH] = {};
 		swprintf_s(buffer, L"=== Attribute Stat ===");
-		_DrawFunc::DrawString(_Point{ 20, 20 }, buffer, Colors::Black, 14.f, false);
 
-		swprintf_s(buffer, L"공격력 증가량 : %.0f", attribute_stat.attack_increase_);
-		_DrawFunc::DrawString(_Point{ 20, 50 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"공격력 배율 : %.0f", attribute_stat.attack_increase_rate_);
-		_DrawFunc::DrawString(_Point{ 20, 80 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"최대 HP 증가량 : %.0f", attribute_stat.hp_increase_);
-		_DrawFunc::DrawString(_Point{ 20, 110 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"최대 HP 배율 : %.0f", attribute_stat.hp_increase_rate_);
-		_DrawFunc::DrawString(_Point{ 20, 140 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"이동속도 증가량 : %.0f", attribute_stat.move_speed_increase_);
-		_DrawFunc::DrawString(_Point{ 20, 170 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"이동속도 배율 : %.0f", attribute_stat.move_speed_increase_rate_);
-		_DrawFunc::DrawString(_Point{ 20, 200 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"공격 범위 증가량 : %.0f", attribute_stat.attack_range_increase_);
-		_DrawFunc::DrawString(_Point{ 20, 230 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"공격 범위 배율 : %.0f", attribute_stat.attack_range_increase_rate_);
-		_DrawFunc::DrawString(_Point{ 20, 260 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"수집 범위 증가량 : %.0f", attribute_stat.collection_range_increase_);
-		_DrawFunc::DrawString(_Point{ 20, 290 }, buffer, Colors::Black, 12.f, false);
-
-		swprintf_s(buffer, L"수집 범위 배율 : %.0f", attribute_stat.collection_range_increase_rate_);
-		_DrawFunc::DrawString(_Point{ 20, 320 }, buffer, Colors::Black, 12.f, false);
+		const auto x = 20;
+		auto y = 20; auto index = 0;
+		for(const auto& pair : attribute_stat.GetStats())
+		{
+			const auto& type = pair.first;
+			const auto& stat = pair.second;
+			swprintf_s(buffer, L"[%s] 덧셈 증가량: %.0f, 곱셈 증가율: %.0f%%", _CommonGamePlayFunc::GetAttributeTypeName(type).c_str(), stat.additive_increase_, (stat.multiplicative_increase_rate_) * 100.f);
+			_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+		}
 	}
 }
