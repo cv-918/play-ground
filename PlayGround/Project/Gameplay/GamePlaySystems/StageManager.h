@@ -46,7 +46,9 @@ public:
 	void OnPlayerDeath();
 
 	_double GetStageProgress() const { return stage_duration_ > 0.0 ? stage_elapsed_time_ / stage_duration_ : 0.0; }
-	_double GetStageTimer() const { return stage_duration_; }
+
+	_double GetStageElapsedTime() const { return stage_elapsed_time_; }
+	_double GetStageDuration() const { return stage_duration_; }
 
 private:
 	// 각 상태별 로직 처리 메서드

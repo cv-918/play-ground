@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-18 17:59)
+﻿# Project Structure (Updated: 2026-03-19 17:50)
 
 ```text
 Root
@@ -65,6 +65,7 @@ Root
 |   |   |   |   UnitBase.h
 |   |   +--- Common
 |   |   |   |   CommonGamePlayDefine.h
+|   |   |   |   CommonGamePlayFunctions.h
 |   |   |   |   CommonGamePlayType.h
 |   |   +--- Components
 |   |   |   |   Collider.cpp

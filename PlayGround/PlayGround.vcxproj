@@ -163,6 +163,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   <ItemGroup>
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
+    <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />

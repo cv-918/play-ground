@@ -2,6 +2,7 @@
 #include "AttributeNodeToolTip.h"
 
 #include "AttributeNode.h"
+#include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 
 _bool AttributeNodeToolTip::Initialize()
 {
@@ -49,18 +50,39 @@ void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)
 	if (nullptr == _target_node)
 		return;
 
+	/*
+		[%s] %s				// grade, name
+		비용 : %d [%d / %d]	// cost, curr_lv, max_lv
+
+		%s(%d)				// description, total_value
+	*/
+
+	// 타겟 노드 설정
 	target_node_ = _target_node;
 
-	const auto target_info = target_node_->GetInfo();
-	const auto target_name = target_node_->Name();
-
+	// 툴팁 텍스트 구성
 	_tchar buffer[MAX_PATH] = {};
+	tooltip_text_.clear();
+
+	const auto target_info = target_node_->GetInfo();
+	
+	const auto grade = target_info->grade_;
+	const auto name = target_node_->Name();
+	swprintf_s(buffer, L"[%s] %s", _CommonGamePlayFunc::GetNodeGradeName(grade).c_str(), name.c_str());
+	tooltip_text_ += std::wstring(buffer);
+
+	const auto cost = target_info->cost_;
+	const auto cost_growth = target_info->cost_growth_rate_;
+	const auto curr_lv = _UserProfile.GetNodeLevel(target_info->id_);
+	const auto max_lv = target_info->max_lv_;
+
+	const auto total_cost = s_uint(cost * (cost_growth * std::max(s_uint(1), curr_lv)));
+	swprintf_s(buffer, L"업그레이드 비용 : %d [%d / %d]", total_cost, curr_lv, max_lv);
+	tooltip_text_ += L"\n" + std::wstring(buffer);
+
+	const auto value = target_info->stat_value_;
+	const auto total_value = s_int(value * curr_lv);
 	swprintf_s(buffer, L"%s", _UtilFunc::ToWString(target_info->desc_).c_str());
-
-	const auto node_curr_lv = _UserProfile.GetNodeLevel(target_info->id_);
-	swprintf_s(buffer, buffer, node_curr_lv);
-
-	tooltip_text_ = L"Node: " + target_name + L"\n\n";
-	tooltip_text_ += L"Additional Info:\n";
-	tooltip_text_ += buffer;
+	swprintf_s(buffer, buffer, total_value);
+	tooltip_text_ += L"\n\n" + std::wstring(buffer);
 }

@@ -12,7 +12,7 @@ HpBar::HpBar(GameObjectBase* _target, const _Vector3& _offset)
 		return;
 
 	hp_bar_ = CreateElement<ProgressBar>();
-	hp_bar_->FillColor(Colors::Crimson);
+	hp_bar_->SetFillColor(Colors::Crimson);
 	hp_bar_->SetSize(DEFAULT_SIZE_HP_BAR);
 
 	SetSize(DEFAULT_SIZE_HP_BAR);
@@ -42,7 +42,7 @@ _int HpBar::Update(_double _delta_time)
 		current_hp_ = currentHP;
 
 		const _float maxHP = tracking_status_->GetMaxHP();
-		hp_bar_->Ratio(current_hp_ / maxHP); // ProgressBar의 SetProgress 함수는 0.0f ~ 1.0f 범위의 값을 받는다고 가정
+		hp_bar_->SetRatio(current_hp_ / maxHP); // ProgressBar의 SetProgress 함수는 0.0f ~ 1.0f 범위의 값을 받는다고 가정
 		Appear(); // 체력 변화가 있을 때마다 체력바가 다시 나타나도록 설정
 	}
 

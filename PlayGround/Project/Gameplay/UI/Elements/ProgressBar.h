@@ -9,23 +9,25 @@ public:
 public:
 	void SetColors(const _Color& _bg, const _Color& _fill, const _Color& _border) { bgColor_ = _bg; fillColor_ = _fill; borderColor_ = _border; }
 
-	_float Ratio() const { return ratio_; }
-	void Ratio(_float _ratio) { ratio_ = MathFunctions::Clamp(_ratio, 0.f, 1.f); }
+	_float GetRatio() const { return ratio_; }
+	void SetRatio(_float _ratio) { ratio_ = MathFunctions::Clamp(_ratio, 0.f, 1.f); }
 
-	_Color BackgroundColor() const { return bgColor_; }
-	void BackgroundColor(const _Color& _color) { bgColor_ = _color; }
+	_Color GetBackgroundColor() const { return bgColor_; }
+	void SetBackgroundColor(const _Color& _color) { bgColor_ = _color; }
 
-	_Color FillColor() const { return fillColor_; }
-	void FillColor(const _Color& _color) { fillColor_ = _color; }
+	_Color GetFillColor() const { return fillColor_; }
+	void SetFillColor(const _Color& _color) { fillColor_ = _color; }
 
-	_Color BorderColor() const { return borderColor_; }
-	void BorderColor(const _Color& _color) { borderColor_ = _color; }
+	_Color GetBorderColor() const { return borderColor_; }
+	void SetBorderColor(const _Color& _color) { borderColor_ = _color; }
 
-	_float BorderThickness() const { return thickness_; }
-	void BorderThickness(_float _thickness) { thickness_ = _thickness; }
+	_float GetBorderThickness() const { return thickness_; }
+	void SetBorderThickness(_float _thickness) { thickness_ = _thickness; }
 
 	_float GetAlpha() const { return alpha_; }
 	void SetAlpha(_float _alpha);
+
+	void SetText(const std::wstring& _text) { text_ = _text; }
 
 private:
 	// 게이지의 채워진 정도를 나타내는 변수. 비율(0.0 ~ 1.0)로 표현.
@@ -42,4 +44,7 @@ private:
 
 	// 자체 알파값
 	_float alpha_ = 1.f;
+
+	// 게이지 위에 표시될 텍스트 (예: "체력", "남은 시간" 등). 필요에 따라 설정 가능
+	std::wstring text_;
 };

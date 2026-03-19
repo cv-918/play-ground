@@ -22,11 +22,11 @@ _bool Player::Initialize()
 	transform_->Rotation(0, 1);
 	transform_->Scale(30.f);
 
-	const auto start_hp = (info_->hp_ + attribute_stat.hp_increase_) * attribute_stat.hp_increase_rate_;
+	const auto start_hp = (info_->hp_ + attribute_stat.GetStat(AttributeType::Hp).additive_increase_) * attribute_stat.GetStat(AttributeType::Hp).multiplicative_increase_rate_;
 	status_->SetCurrentHp(start_hp);
 	status_->SetMaxHP(start_hp);
 
-	const auto start_att = (info_->contact_damage_ + attribute_stat.attack_increase_) * attribute_stat.attack_increase_rate_;
+	const auto start_att = (info_->contact_damage_ + attribute_stat.GetStat(AttributeType::Attack).additive_increase_) * attribute_stat.GetStat(AttributeType::Attack).multiplicative_increase_rate_;
 	status_->SetAtt(start_att);
 
 	// 플레이어 콜라이더 설정
@@ -34,7 +34,7 @@ _bool Player::Initialize()
 	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(info_->body_size_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 
-	const auto start_attack_radius = (info_->attack_size_ + attribute_stat.attack_range_increase_) * attribute_stat.attack_range_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
+	const auto start_attack_radius = (info_->attack_size_ + attribute_stat.GetStat(AttributeType::AttackRange).additive_increase_) * attribute_stat.GetStat(AttributeType::AttackRange).multiplicative_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
 	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(info_->attack_size_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
 
@@ -257,7 +257,7 @@ void Player::_ShowDebugInfo()
 	swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
 	debug_info_lines_.emplace_back(buffer);
 
-	swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f", movement_->MoveVelocity().Magnitude());
+	swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f, %.2f", movement_->MoveVelocity().x, movement_->MoveVelocity().y);
 	debug_info_lines_.emplace_back(buffer);
 
 	swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());

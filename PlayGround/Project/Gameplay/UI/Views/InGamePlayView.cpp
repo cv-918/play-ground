@@ -9,7 +9,7 @@ InGamePlayView::InGamePlayView()
 	// 이 뷰는 게임 플레이 중에만 활성화되는 UI 요소들을 포함하는 위젯입니다. 예를 들어, 플레이어의 체력 바, 점수 표시, 남은 시간 표시 등 게임 플레이와 관련된 UI 요소들을 이 뷰에 추가할 수 있습니다.
 	// 화면 중앙 하단, Stage Duration 게이지
 	stage_duration_gauge_ = CreateElement<ProgressBar>();
-	stage_duration_gauge_->FillColor(Colors::SlateGray);
+	stage_duration_gauge_->SetFillColor(Colors::SlateGray);
 	stage_duration_gauge_->SetSize({ 300, 20 });
 	stage_duration_gauge_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 40 });
 
@@ -19,7 +19,13 @@ InGamePlayView::InGamePlayView()
 _int InGamePlayView::Update(_double _delta_time)
 {
 	// 비율 업데이트
-	stage_duration_gauge_->Ratio(_StageMgr.GetStageProgress());
+	stage_duration_gauge_->SetRatio(_StageMgr.GetStageProgress());
+
+	_tchar buffer[MAX_PATH] = {};
+	const auto elapsed_time = _StageMgr.GetStageElapsedTime();
+	const auto duration = _StageMgr.GetStageDuration();
+	swprintf_s(buffer, L"%.2lf / %.2lf", elapsed_time, duration);
+	stage_duration_gauge_->SetText(buffer);
 
 	return UPDATE_CONTINUE;
 }
