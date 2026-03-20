@@ -25,6 +25,23 @@ _int Enemy::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void Enemy::OnDestroy()
+{
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+
+	if (status_->IsDead())
+	{
+		_RunState.GetEnemyKillReward(info_);
+
+		// 코인 획득 텍스트 ui 노출(선택)
+		// play_scene_->ShowCoinEarnedUI(info_->reward_, transform_->Position());
+	}
+}
+
 void Enemy::HandleProjectilePattern(_double _delta_time)
 {
 	// 투사체 발사 범위. 필요에 따라 몬스터가 플레이어를 추적해서 투사체를 발사하는 패턴에서 활용할 수 있습니다.

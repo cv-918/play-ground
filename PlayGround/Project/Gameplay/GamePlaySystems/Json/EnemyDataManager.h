@@ -11,7 +11,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	contact_damage_,
 	tier_,
 	role_,
-	reward_,
+	exp_reward_,
 	projectile_pattern_,
 	projectile_damage_,
 	projectile_speed_,

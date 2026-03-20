@@ -24,6 +24,9 @@ public:
 
 	NodeState GetNodeState(const AttributeNodeJsonInfo* _info) const;
 	_uint GetNodeLevel(const _uint node_id) const;
+
+	// --- 스테이지 관련 ---
+	_uint GetStageProgress() const { return stage_progress_; }
 	
 private:
 	// 플레이어가 획득한 코인 수를 나타내는 변수. 필요에 따라 게임 내에서 코인 획득과 소비를 관리하는 데 활용할 수 있습니다.

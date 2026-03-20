@@ -135,23 +135,6 @@ _int ExpDust::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void ExpDust::OnDestroy()
-{
-	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
-
-	if (status_->IsDead())
-	{
-		_RunState.IncreaseEarnedCoinCount(info_->reward_);
-
-		// 코인 획득 텍스트 ui 노출(선택)
-		// play_scene_->ShowCoinEarnedUI(info_->reward_, transform_->Position());
-	}
-}
-
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	switch (_other->Layer())

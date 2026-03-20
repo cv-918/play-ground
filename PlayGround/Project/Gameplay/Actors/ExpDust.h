@@ -14,8 +14,6 @@ private:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
 
-	void OnDestroy() override;
-
 	// ICollidable을(를) 통해 상속됨
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Collider* _this, Collider* _other) override;

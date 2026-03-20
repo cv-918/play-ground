@@ -42,4 +42,7 @@
 
 // 
 #define ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER 20.f
+
+#define DEFAULT_SPAWN_COUNT 10
+#define KILL_COUNT_UNIT_FOR_CLEAR 10
 #pragma endregion

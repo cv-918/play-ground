@@ -163,6 +163,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   <ItemGroup>
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
@@ -245,6 +247,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   <ItemGroup>
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />

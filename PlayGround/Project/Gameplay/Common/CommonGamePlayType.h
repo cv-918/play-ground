@@ -97,19 +97,24 @@ struct UnitJsonInfo
 
 struct EnemyJsonInfo : public UnitJsonInfo
 {
+	// ------ 몬스터 분류 관련 ------
 	EnemyTier tier_ = EnemyTier::Undefined;
 	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
 
-	_uint reward_ = 0;
+	// ------ 보상 관련 ------
+	_uint exp_reward_ = 0;
+	_uint dust_reward_ = 0; // 드랍하는 먼지 보상량
+	_uint dust_resource_count_ = 0; // 드랍하는 먼지 수
 
+	// ------ 투사체 관련 ------
+	// 투사체 종류가 다양해진다면, 투사체 스크립트 따로 빼서 넘기는게 나을 수도 있다. 그렇지 않을 경우 이대로
 	EnemyProjectilePattern projectile_pattern_ = EnemyProjectilePattern::Undefined;
 	_float projectile_damage_ = 0.f;
 	_float projectile_speed_ = 0.f;
 
-	_uint split_count_ = 0; // 분열형 몬스터가 분열할 때 생성되는 자식 몬스터의 수
-
+	// ------ 이동 관련 ------
 	MovementPattern movement_pattern_ = MovementPattern::Undefined;
-	_uint move_speed_unit_ = 0; // 몬스터의 기본 이동 속도. 실제 이동 속도는 이 값에 20.f를 곱해서 계산
+	_uint move_speed_unit_ = 0; // 몬스터의 이동 속도 단위. 실제 이동 속도는 이 값에 20.f를 곱해서 계산
 };
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo
