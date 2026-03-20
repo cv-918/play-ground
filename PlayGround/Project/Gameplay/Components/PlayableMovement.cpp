@@ -79,10 +79,10 @@ void PlayableMovement::_ProcessOnPlayerControl(_double _delta_time)
 	}
 
 	_Vector3 input_dir;
-	input_dir.y += input_manager_->Pressed('S') ? 1.f : 0.f;
-	input_dir.y -= input_manager_->Pressed('W') ? 1.f : 0.f;
-	input_dir.x += input_manager_->Pressed('D') ? 1.f : 0.f;
-	input_dir.x -= input_manager_->Pressed('A') ? 1.f : 0.f;
+	input_dir.y += input_manager_->Pressed(VK_DOWN) ? 1.f : 0.f;
+	input_dir.y -= input_manager_->Pressed(VK_UP) ? 1.f : 0.f;
+	input_dir.x += input_manager_->Pressed(VK_RIGHT) ? 1.f : 0.f;
+	input_dir.x -= input_manager_->Pressed(VK_LEFT) ? 1.f : 0.f;
 
 	if (input_dir.LengthSq() > 0.f)
 		input_dir.Normalize();

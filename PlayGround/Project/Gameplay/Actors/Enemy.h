@@ -3,7 +3,7 @@
 
 #include "Components/NonPlayableMovement.h"
 
-class Enemy abstract : public UnitBase
+class Enemy : public UnitBase
 {
 protected:
 	explicit Enemy(const EnemyJsonInfo* _info) : info_(_info) {}
@@ -11,6 +11,8 @@ protected:
 protected:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
+
+	void OnDestroy() override;
 
 	// 투사체 발사 로직
 	void HandleProjectilePattern(_double _delta_time);

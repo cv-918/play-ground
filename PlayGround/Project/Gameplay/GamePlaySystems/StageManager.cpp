@@ -106,12 +106,14 @@ void StageManager::_OnEnter()
 	spawn_timer_ = 0.0;
 	spawn_interval_ = 0.0;
 
-	// 스테이지 타이머 설정 (DEFAULT_STAGE_DURATION + 어트리뷰트로 추가된 시간)
-	// 현재는 어트리뷰트로 추가된 시간은 없으므로 DEFAULT_STAGE_DURATION만 설정
+	// 스테이지 타이머 설정
 	stage_elapsed_time_ = 0.0;
 
 	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
 	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
+
+	// 초기 스폰 처리
+
 
 	// 게임 상태 초기화
 	_GameState.SetPause(false);
