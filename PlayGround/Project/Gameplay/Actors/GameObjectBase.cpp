@@ -46,7 +46,8 @@ _bool GameObjectBase::Finalize()
 			break;
 		case ComponentType::Transform:
 			break;
-		case ComponentType::Collider:
+		case ComponentType::SphereCollider:
+		case ComponentType::RectCollider:
 			RegisterHandler<ICollidable>(component, HandlerSystemList::Collision);
 			break;
 		case ComponentType::Movement:

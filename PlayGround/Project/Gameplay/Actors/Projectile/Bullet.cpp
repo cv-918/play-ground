@@ -49,7 +49,7 @@ void Bullet::Render(_double _delta_time)
 {
 	// 총알 렌더링 (간단한 원으로 표현)
 	const auto pos = transform_->Position();
-	_DrawFunc::FillCircle(pos, collider_->Radius(), Colors::DeepGray);
+	_DrawFunc::FillCircle(pos, collider_->GetRadius(), Colors::DeepGray);
 }
 
 void Bullet::DebugRender(_double _delta_time)

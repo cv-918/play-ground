@@ -8,12 +8,14 @@
 class ExpDust final : public Enemy
 {
 public:
-	explicit ExpDust(const EnemyJsonInfo* _info) : Enemy(_info) {}
+	explicit ExpDust(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
+		: Enemy(_info, _creation_info) {}
 
-private:
+public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
 
+private:
 	// ICollidable을(를) 통해 상속됨
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Collider* _this, Collider* _other) override;

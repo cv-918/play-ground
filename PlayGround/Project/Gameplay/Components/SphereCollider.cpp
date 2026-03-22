@@ -7,15 +7,14 @@
 
 _int SphereCollider::LateUpdate(_double _delta_time)
 {
-	__super::LateUpdate(_delta_time);
+	auto ret = __super::LateUpdate(_delta_time);
+	if (UPDATE_CONTINUE != ret)
+		return ret;
 
 	if (!IsEnable())
 		return UPDATE_CONTINUE;
 
-	// 충돌체 중심을 게임오브젝트의 트랜스폼 위치로 설정
-	// 이거 나중에 어태치 함수 만들어서 참조 값으로 자동으로 붙게 만드는게 나을듯
-	Center(transform_->Position());
-
+	SetCenter(transform_->Position());
 	return UPDATE_CONTINUE;
 }
 
@@ -24,7 +23,7 @@ void SphereCollider::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, Colors::Black);
+	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, GetDebugColor());
 }
 
 _bool SphereCollider::_CheckCollided(Collider* _other)
@@ -62,8 +61,8 @@ _bool SphereCollider::_CheckCollided(Collider* _other)
 	{
 		// Circle Collider 간의 충돌 처리
 		const auto sphere_collider = s_cast(SphereCollider*, _other);
-		_Vector3 other_center = sphere_collider->Center();
-		_float other_radius = sphere_collider->Radius();
+		_Vector3 other_center = sphere_collider->GetCenter();
+		_float other_radius = sphere_collider->GetRadius();
 
 		// 두 원의 중심 거리 제곱이 두 반지름 합의 제곱보다 작으면 충돌
 		_float dx = center_.x - other_center.x;

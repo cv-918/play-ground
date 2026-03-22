@@ -86,5 +86,4 @@ _Vector3 Transform::GetDirection(const Direction _dir)
 void Transform::Position(const _Vector3 _pos)
 {
 	position_ = _pos;
-	//gameobject_->OnUpdatePosition();
 }

@@ -2,8 +2,6 @@
 
 #include "GamePlaySystems/SceneManager.h"
 
-class GameObjectBase;
-
 #include "GamePlaySystems/ObjectManager.h"
 #include "GamePlaySystems/UIManager.h"
 
@@ -12,6 +10,10 @@ class GameObjectBase;
 
 // 위젯들이 전부 만들어지면 제거할 포함
 #include "UI/Elements/Button.h"
+
+class GameObjectBase;
+class ObjectManager;
+class UIManager;
 
 class Scene abstract
 	: public IInitializable
@@ -30,13 +32,16 @@ public:
 	virtual void OnExit() EMPTY_FUNC;
 
 public:
-	SceneType Type() const { return type_; }
+	SceneType GetSceneType() const { return type_; }
+
+	ObjectManager* GetObjectManager() const { return object_manager_; }
+	UIManager* GetUIManager() const { return ui_manager_; }
 
 protected:
 	SceneType type_ = SceneType::Count;
 
-	class ObjectManager* object_manager_; // 씬에 포함된 게임 오브젝트들을 관리하는 매니저. 필요에 따라 씬에서 생성된 게임 오브젝트들을 이 매니저에 추가하여 일괄 업데이트 및 렌더링할 수 있습니다.
-	class UIManager* ui_manager_; // 씬에 포함된 UI 요소들을 관리하는 매니저. 필요에 따라 씬에서 생성된 UI 요소들을 이 매니저에 추가하여 일괄 업데이트 및 렌더링할 수 있습니다.
+	ObjectManager* object_manager_; // 씬에 포함된 게임 오브젝트들을 관리하는 매니저. 필요에 따라 씬에서 생성된 게임 오브젝트들을 이 매니저에 추가하여 일괄 업데이트 및 렌더링할 수 있습니다.
+	UIManager* ui_manager_; // 씬에 포함된 UI 요소들을 관리하는 매니저. 필요에 따라 씬에서 생성된 UI 요소들을 이 매니저에 추가하여 일괄 업데이트 및 렌더링할 수 있습니다.
 
 	// 테스트용 데이터
 protected:

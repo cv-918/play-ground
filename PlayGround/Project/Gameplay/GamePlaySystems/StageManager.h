@@ -19,9 +19,9 @@ enum class StageState
 	Exit
 };
 
+class InGameScene;
 class ObjectManager;
 class UIManager;
-class InGameScene;
 
 class StageManager
 	: public ISingleton<StageManager>
@@ -31,22 +31,20 @@ public:
 	_int Update(_double _delta_time) override;
 
 public:
-	void SetPlayScene(InGameScene* _play_scene) { play_scene_ = _play_scene; }
-
-	StageState GetPrevState() const { return prev_state_; }
-	StageState GetCurrState() const { return curr_state_; }
+	void SetPlayScene(InGameScene* _play_scene);
 
 	void ChangeState(StageState _new_state);
+	StageState GetPrevState() const { return prev_state_; }
+	StageState GetCurrState() const { return curr_state_; }
 
 	const _Rect& GetNavMesh() const { return *stage_nav_mesh_; }
 	void SetNavMesh(const _Rect& _rt);
 
-	_Point GeneratePosition(_bool _inclusive);
+	_Point GeneratePosition(_bool _in_screen, _bool _include_center);
 
 	void OnPlayerDeath();
 
 	_double GetStageProgress() const { return stage_duration_ > 0.0 ? stage_elapsed_time_ / stage_duration_ : 0.0; }
-
 	_double GetStageElapsedTime() const { return stage_elapsed_time_; }
 	_double GetStageDuration() const { return stage_duration_; }
 
@@ -63,8 +61,12 @@ private:
 
 	void _UpdateGenerationAreas();
 
+	_bool _SpawnEnemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info);
+
 private:
 	InGameScene* play_scene_ = nullptr;
+	ObjectManager* object_manager_ = nullptr;
+	UIManager* ui_manager_ = nullptr;
 
 	StageState prev_state_ = StageState::Undefined;
 	StageState curr_state_ = StageState::Undefined;

@@ -12,7 +12,7 @@ class Transform;
 class Collider abstract : public ComponentBase
 {
 public:
-	explicit Collider(const ColliderType _type) : ComponentBase(ComponentType::Collider), type(_type), layer(CollisionLayer::End) {}
+	explicit Collider(ComponentType _component_type, const ColliderType _collider_type) : ComponentBase(_component_type), type(_collider_type), layer(CollisionLayer::End) {}
 
 public:
 	_bool Initialize() override;
@@ -35,6 +35,7 @@ public:
 
 	// 디버그 전용 기능
 	const std::map<Collider*, _double> GetCollisionTimers() const { return collision_timers_; }
+	_bool IsColliding() const { return is_colliding_; }
 
 protected:
 	virtual _bool _CheckCollided(Collider* _other) PURE;
@@ -46,12 +47,17 @@ protected:
 	_bool _DeregisterFromCollidedList(Collider* _other);
 
 private:
+	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }
+
+private:
 	ColliderType type;
 	CollisionLayer layer;
 
 	std::list<Collider*> collided_colliders_; // 충돌 중인 콜라이더 목록
 	std::map<Collider*, _double> collision_timers_;
 	std::vector<Collider*> erase_waiting_list_;
+
+	_bool is_colliding_ = false;
 
 protected:
 	Transform* transform_ = nullptr;

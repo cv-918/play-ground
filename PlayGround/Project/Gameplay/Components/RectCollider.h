@@ -5,7 +5,7 @@ class RectCollider :
 	public Collider
 {
 public:
-	explicit RectCollider(const _Rect _rect) : Collider(ColliderType::Rectangle), rect_(_rect) {}
+	explicit RectCollider(const _Rect _rect) : Collider(ComponentType::RectCollider, ColliderType::Rectangle), rect_(_rect) {}
 
 public:
 	void Render(_double _delta_time) override;

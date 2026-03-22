@@ -34,8 +34,8 @@ _bool RectCollider::_CheckCollided(Collider* _other)
 	{
 		// Rectangle Collider 와 Circle Collider 간의 충돌 처리
 		const auto sphere = s_cast(SphereCollider*, _other);
-		_Vector3 center = sphere->Center();
-		_float radius = sphere->Radius();
+		_Vector3 center = sphere->GetCenter();
+		_float radius = sphere->GetRadius();
 
 		// 원의 중심을 사각형 범위로 클램핑
 		_float closestX = (std::max)(rect_.Left_f(), (std::min)(center.x, rect_.Right_f()));

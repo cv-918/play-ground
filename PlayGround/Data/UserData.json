@@ -12,9 +12,13 @@
             [
                 6,
                 1
+            ],
+            [
+                2,
+                2
             ]
         ],
-        "coin_count_": 4,
+        "coin_count_": 100,
         "id_": 0,
         "stage_progress_": 1,
         "unlocked_character_ids_": [

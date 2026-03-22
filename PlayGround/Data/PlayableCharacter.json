@@ -6,7 +6,8 @@
 		"attack_speed_": 1.0,
 		"hp_": 10.0,
 		"contact_damage_": 6.0,
-		"attack_size_": 40.0,
+		"attack_range_": 40.0,
+		"collector_size_": 30.0,
 		"move_speed_max_": 800.0,
 		"acceleration_": 1600.0,
 		"friction_": 6.0

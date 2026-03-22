@@ -21,6 +21,9 @@ _bool Collider::Initialize()
 
 _int Collider::Update(_double _delta_time)
 {
+	if (!IsEnable())
+		return UPDATE_CONTINUE;
+
 	if (!erase_waiting_list_.empty())
 		erase_waiting_list_.clear();
 
@@ -46,6 +49,9 @@ _int Collider::Update(_double _delta_time)
 
 _int Collider::LateUpdate(_double _delta_time)
 {
+	if (!IsEnable())
+		return UPDATE_CONTINUE;
+
 	if (erase_waiting_list_.empty())
 		return UPDATE_CONTINUE;
 
@@ -61,6 +67,9 @@ _int Collider::LateUpdate(_double _delta_time)
 void Collider::DetectCollision(Collider* _other)
 {
 	if (!_other)
+		return;
+
+	if (!IsEnable())
 		return;
 
 	// 충돌 타이머 체크
@@ -120,6 +129,7 @@ _bool Collider::_RegisterOnCollidedList(Collider* _other)
 	if (it == collided_colliders_.end())
 	{
 		collided_colliders_.push_back(_other);
+		_UpdateIsCollidingState();
 		return true;
 	}
 
@@ -135,6 +145,7 @@ _bool Collider::_DeregisterFromCollidedList(Collider* _other)
 	if (it != collided_colliders_.end())
 	{
 		collided_colliders_.erase(it);
+		_UpdateIsCollidingState();
 		return true;
 	}
 

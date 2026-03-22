@@ -51,8 +51,10 @@ namespace CommonGamePlayFunctions
 			return L"Status";
 		case ComponentType::Movement:
 			return L"Movement";
-		case ComponentType::Collider:
-			return L"Collider";
+		case ComponentType::SphereCollider:
+			return L"SphereCollider";
+		case ComponentType::RectCollider:
+			return L"RectCollider";
 		case ComponentType::Combat:
 			return L"Combat";
 		default:

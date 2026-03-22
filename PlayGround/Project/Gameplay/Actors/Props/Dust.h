@@ -6,7 +6,7 @@ class Dust final
 	, public ICollidable
 {
 public:
-	explicit Dust() = default;
+	explicit Dust(_Vector3 _pos, _Vector3 _dir, _float _spd);
 
 private:
 	_bool Initialize() override;
@@ -16,6 +16,13 @@ private:
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 
 private:
-	GameObjectBase* tracking_target_ = nullptr; // 트래킹할 게임 오브젝트에 대한 포인터. 필요에 따라 UI 요소가 특정 게임 오브젝트의 위치를 따라가도록 구현할 때 사용할 수 있습니다.
+	_Vector3 spawn_pos_ = {};
+	_Vector3 move_dir_ = {};
+	_float move_spd_ = 0.f;
+
+	class SphereCollider* collider_ = nullptr; // 먼지의 충돌 영역을 나타내는 SphereCollider 컴포넌트에 대한 포인터. 필요에 따라 충돌 감지 및 처리 로직에서 활용할 수 있습니다.
+
+	Transform* tracking_transform_ = nullptr; // 트래킹 대상의 Transform 컴포넌트에 대한 포인터. 필요에 따라 트래킹 대상의 위치, 회전, 크기를 실시간으로 업데이트하여 UI 요소가 해당 대상과 일치하도록 구현할 때 사용할 수 있습니다.
+	_double tracking_time_ = 0.0; // 트래킹이 시작된 시점부터의 누적 시간. 필요에 따라 트래킹 대상과의 거리 계산, 트래킹 지속 시간 제한, 트래킹 효과의 점진적 변화 등을 구현할 때 활용할 수 있습니다.
 };
 

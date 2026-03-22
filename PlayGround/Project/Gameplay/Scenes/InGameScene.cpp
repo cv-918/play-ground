@@ -110,33 +110,6 @@ void InGameScene::OnExit()
 	_ColMgr.ClearAllColliders();
 }
 
-void InGameScene::SpawnEnemy(_uint _enemy_id)
-{
-	// JSON 데이터 매니저에서 해당 등급과 카테고리에 맞는 데이터를 가져온다
-	const auto enemy_spawn_data = _EnemyDataMgr.GetData(_enemy_id);
-
-	// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
-	if (nullptr == enemy_spawn_data)
-	{
-		_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(ID : %d)"), _enemy_id);
-		return;
-	}
-
-	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
-	const auto spawned_enemy = object_manager_->SpawnEnemy(enemy_spawn_data);
-	if (nullptr == spawned_enemy)
-	{
-		_NULL_DETECTION_MSGBOX_EX(_T("Failed to spawn enemy!(ID : %d)"), _enemy_id);
-		return;
-	}
-
-	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-	const auto enemy_hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
-
-	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
-	s_cast(UnitBase*, spawned_enemy)->SetPlayScene(this);
-}
-
 void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)
 {
 	object_manager_->SpawnProjectile(_owner, _position, _target, _damage, _speed);
