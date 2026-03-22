@@ -30,13 +30,23 @@ _bool Player::Initialize()
 	status_->SetAtt(start_att);
 
 	// 플레이어 콜라이더 설정
-	_int default_collider_idx = s_int(UnitDefaultColliderId::Body) - 1;
-	GetDefaultCollider(UnitDefaultColliderId::Body)->Radius(info_->body_size_);
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
+	const auto body_col = GetDefaultCollider(UnitDefaultColliderId::Body);
+	body_col->SetRadius(info_->body_size_); // 플레이어의 몸통 콜라이더는 플레이어 크기에 비례해서 설정
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, body_col);
 
-	const auto start_attack_radius = (info_->attack_size_ + attribute_stat.GetStat(AttributeType::AttackRange).additive_increase_) * attribute_stat.GetStat(AttributeType::AttackRange).multiplicative_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
-	GetDefaultCollider(UnitDefaultColliderId::Attack)->Radius(info_->attack_size_);
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, s_cast(SphereCollider*, GetComponent(ComponentType::Collider, ++default_collider_idx)));
+	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	const auto attack_stat = attribute_stat.GetStat(AttributeType::AttackRange);
+	const auto start_attack_radius = (info_->attack_range_ + attack_stat.additive_increase_) * attack_stat.multiplicative_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
+	attack_col->SetRadius(start_attack_radius);
+	attack_col->SetDebugColor(Colors::Gray, Colors::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
+
+	const auto collector_stat = attribute_stat.GetStat(AttributeType::CollectionRange);
+	const auto start_collector_size = (info_->collector_size_ + collector_stat.additive_increase_) * collector_stat.multiplicative_increase_rate_; // 수집 콜라이더는 플레이어 크기에 비례해서 설정
+	const auto collector_col = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
+	collector_col->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
+	RegisterComponent(collector_col);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col);
 
 	// 기타 멤버 변수 초기화 및 캐싱
 	color_ = Colors::DarkGray;

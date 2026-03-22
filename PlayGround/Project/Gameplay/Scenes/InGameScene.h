@@ -24,7 +24,6 @@ public:
 
 public:
 	// GameObject 생성 메서드들
-	void SpawnEnemy(_uint _enemy_id);
 	void SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed);
 
 	// UI 노출 메서드들

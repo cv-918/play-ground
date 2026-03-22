@@ -12,10 +12,11 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	tier_,
 	role_,
 	exp_reward_,
+	dust_reward_,
+	dust_resource_count_,
 	projectile_pattern_,
 	projectile_damage_,
 	projectile_speed_,
-	split_count_,
 	movement_pattern_,
 	move_speed_unit_
 )

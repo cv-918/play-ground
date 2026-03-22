@@ -1,10 +1,8 @@
-﻿# Project Structure (Updated: 2026-03-20 16:06)
+﻿# Project Structure (Updated: 2026-03-22 14:49)
 
 ```text
 Root
 +--- Data
-+--- html
-|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -55,6 +53,11 @@ Root
 |   |   |   +--- Projectile
 |   |   |   |   |   Bullet.cpp
 |   |   |   |   |   Bullet.h
+|   |   |   +--- Props
+|   |   |   |   |   Dust.cpp
+|   |   |   |   |   Dust.h
+|   |   |   |   |   Props.cpp
+|   |   |   |   |   Props.h
 |   |   |   |   Enemy.cpp
 |   |   |   |   Enemy.h
 |   |   |   |   ExpDust.cpp

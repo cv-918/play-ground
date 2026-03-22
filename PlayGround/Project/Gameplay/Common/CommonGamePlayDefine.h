@@ -46,3 +46,9 @@
 #define DEFAULT_SPAWN_COUNT 10
 #define KILL_COUNT_UNIT_FOR_CLEAR 10
 #pragma endregion
+
+#pragma region [ 디버그 관련 ]
+#define COLLIDER_DEBUG_COLOR_BODY		Colors::Green
+#define COLLIDER_DEBUG_COLOR_ATTACK		Colors::Red
+#define COLLIDER_DEBUG_COLOR_COLLECTOR	Colors::Charcoal
+#pragma endregion

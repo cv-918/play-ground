@@ -10,88 +10,28 @@ _bool ExpDust::Initialize()
 	static _int instance_count = 0;
 	Name(_UtilFunc::ToWString(info_->name_) + std::to_wstring(++instance_count));
 
+	// 색상 설정
+	std::map<EnemyTier, _Color> tier_color_map = {
+	{ EnemyTier::Normal, Colors::Pearl },
+	{ EnemyTier::Elite, Colors::LightPink },
+	{ EnemyTier::Danger, Colors::Pink },
+	{ EnemyTier::Special, Colors::Salmon }
+	};
+	color_ = tier_color_map[info_->tier_];
+
 	// 컴포넌트 설정
-
-	// 트랜스폼 컴포넌트 설정에 필요한 값
-	_Vector3 position;
-	_Vector3 look_point;
-
-	switch (info_->tier_)
-	{
-	case EnemyTier::Normal:
-		// 일반 | 자원 공급용1
-		color_ = Colors::Pearl;
-		break;
-	case EnemyTier::Elite:
-		// 중급 | 자원 공급용2 | 이동 속도 빠름
-		color_ = Colors::LightPink;
-		break;
-	case EnemyTier::Danger:
-		// 위험 | 플레이 흐름 변화 유도 | 충돌 데미지 있음
-		color_ = Colors::Pink;
-		break;
-	case EnemyTier::Special:
-		// 특수 | 플레이 흐름 변화 유도 | 역할군 부여받음
-		color_ = Colors::Salmon;
-		break;
-	default:
-		// 로깅
-		break;
-	}
-
+	transform_->Scale(info_->body_size_);
+	transform_->Position(creation_info_.position_);
+	transform_->LookAt(creation_info_.look_point_);
+	
 	const auto radius = info_->body_size_ * 0.5f;
 
-	switch (info_->movement_pattern_)
-	{
-	case MovementPattern::Directional:
-	case MovementPattern::Target:
-	{
-		// 스테이지가 진행 중일 경우 초기 위치를 화면 밖으로 한정해야 한다
-		// 만약, 위치가 화면 안에 있을 경우 화면 중점에 대한 방향벡터를 구하고 반대 방향으로 밀어낸다
-
-		const _Vector3 generated_position = _StageMgr.GeneratePosition(StageState::Ready == _StageMgr.GetCurrState());
-		const _Vector3 center = _Vector3(WIN_CENTER_X, WIN_CENTER_Y);
-		const _Vector3 to_center = (center - generated_position).Normalized();
-
-		position = generated_position + (to_center * radius);
-
-		const auto& nav_mesh = _StageMgr.GetNavMesh(); // 네비 메시를 태우는건 아니고 범위만 사용한다
-		if (nav_mesh.PtInRect(position))
-		{
-			position += to_center * (radius * -1.f);
-		}
-
-		// 네비 메시의 영역보다 작은(3/4) 영역 내부의 임의의 위치를 바라보도록 설정
-		const auto& look_target_area = nav_mesh * 0.75f;
-		look_point = { _Random.Range(look_target_area.Left(), look_target_area.Right()),
-			_Random.Range(look_target_area.Top(), look_target_area.Bottom()) };
-	}
-	break;
-	}
-
-	/*
-		#1. 초기 SRT(Scale, Rotation, Translation) 설정
-		- 트랜스폼 및 무브먼트 컴포넌트에 대한 설정
-
-		* 크기 : 레벨 분기
-		* 위치 : 이동 타입(레벨에 의해 분기)에 따라
-				 -> Stopped 인 경우 무조건 화면 내부에 생성해야함
-				 -> Directional | ToTarget 일 경우 스폰 가능한 전체 영역
-				 -> 스테이지 이동에 의한 초기 생성인지 스테이지 진행 중의 지속 생성인지에 따라서 스폰 영역 변경되어야 함
-				 
-		* 회전 : 레벨(이동 타입) 및 초기 생성 위치에 따라서
-	*/
-
-	transform_->Scale(info_->body_size_);
-	transform_->Position(position);
-	transform_->LookAt(look_point);
-	
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	body_collider->Radius(radius);
+	body_collider->SetRadius(radius);
 	body_collider->SetVisible(true);
 
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	attack_collider->Radius(radius);
+	attack_collider->SetRadius(radius);
 	attack_collider->SetVisible(true);
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
@@ -107,8 +47,8 @@ _bool ExpDust::Initialize()
 
 	movement_->Pattern(info_->movement_pattern_);
 	movement_->MoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
-	movement_->MoveDir((look_point - position).Normalized());
-
+	movement_->MoveDir(transform_->Forward2D().Normalized());
+	
 	/*
 		#2. 공격 패턴 설정
 		- 컴뱃 및 스테이터스 컴포넌트에 대한 설정

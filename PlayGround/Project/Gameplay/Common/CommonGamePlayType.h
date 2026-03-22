@@ -5,9 +5,11 @@ enum class CollisionLayer
 {
 	PlayerBody,
 	PlayerAttack,
+	PlayerCollector,
 	EnemyBody,
 	EnemyAttack,
 	EnemyBullet,
+	PropsBody,
 	End
 };
 #pragma endregion
@@ -28,7 +30,8 @@ enum class ComponentType
 	Transform,
 	Status,
 	Movement,
-	Collider,
+	SphereCollider,
+	RectCollider,
 	Combat,
 };
 
@@ -83,6 +86,19 @@ enum class PlayableCharacterId
 	Dusty,
 };
 
+enum class PropsType
+{
+	Undefined = 0,
+	Dust,
+};
+
+enum class PropsState
+{
+	Undefined = 0,
+	Idle,
+	Tracking,
+};
+
 struct UnitJsonInfo
 {
 	_uint id_ = 0;
@@ -119,11 +135,18 @@ struct EnemyJsonInfo : public UnitJsonInfo
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo
 {
-	_float attack_size_ = 0.f;
+	_float attack_range_ = 0.f;
+	_float collector_size_ = 0.f;
 
 	_float move_speed_max_ = 0.f;	// 최대 이동 속도
 	_float acceleration_ = 0.f;		// 가속도. 높을수록 빠르게 최대 이동 속도에 도달
 	_float friction_ = 0.f;			// 마찰 계수. 높을수록 빠르게 감속
+};
+
+struct UnitCreationInfo
+{
+	_Vector3 position_;
+	_Vector3 look_point_;
 };
 #pragma endregion
 
@@ -333,5 +356,21 @@ struct UserDataJsonInfo
 
 	// 플레이어의 현재 스테이지 진행 상황을 나타내는 변수. 필요에 따라 플레이어가 클리어한 스테이지 수나 현재 스테이지 번호 등을 관리하는 데 활용할 수 있습니다.
 	_uint stage_progress_ = 0;
+};
+#pragma endregion
+
+#pragma region [ 디버그 정보 관련 ]
+enum class __DebugColliderRenderState
+{
+	// 비활성화 상태. 콜라이더 렌더링이 완전히 꺼진 상태입니다.
+	OnDisabled,
+	
+	// 일반 상태. 충돌 상태와 무관하게 모든 콜라이더가 초록색으로 렌더링됩니다.
+	OnNormal,
+
+	// 충돌 상태. 충돌이 감지된 콜라이더는 빨간색으로 렌더링되고, 충돌이 감지되지 않은 콜라이더는 초록색으로 렌더링됩니다.
+	OnCollision,
+
+	Count,
 };
 #pragma endregion

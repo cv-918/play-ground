@@ -53,6 +53,10 @@ namespace Colors {
 	const _Color SlateGray(112, 128, 144);
 	const _Color DarkGray(50, 50, 50);
 	const _Color DeepGray(30, 30, 30);
+	const _Color Charcoal(54, 69, 79);
+	const _Color AshGray(178, 190, 181);
+	const _Color Gunmetal(42, 52, 57);
+	const _Color DustyGray(169, 169, 169);
 
 	// 레드 & 핑크 계열 (Red & Pink)
 	const _Color Crimson(220, 20, 60);

@@ -28,7 +28,6 @@ public:
 
 	// 템플릿 메서드를 사용하여 다양한 타입의 게임 오브젝트를 생성할 수 있도록 지원
 	// 단, 몬스터 생성 메서드, 오브젝트 생성 메서드 등을 구분하고 인자로는 해당 타입의 정보를 받는다
-	GameObjectBase* SpawnEnemy(const EnemyJsonInfo* _info);
 	GameObjectBase* SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
                                      const _Point& _target, _float _damage, _float _speed);
 

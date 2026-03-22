@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#define _MathFunc MathFunctions
 namespace MathFunctions
 {
     template<typename T>

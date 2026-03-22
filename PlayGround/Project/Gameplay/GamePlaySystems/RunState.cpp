@@ -3,6 +3,21 @@
 
 #include "GamePlaySystems/StageManager.h"
 
+void RunState::Reset()
+{
+	// 플레이어 참조 초기화 및 사망 여부 초기화
+	player_ = nullptr;
+	is_player_died_ = false;
+
+	// 인게임 진입 후 획득한 코인 수 및 경험치 초기화
+	earned_coin_count_ = 0;
+	gained_experience_ = 0;
+
+	// 킬 카운트 초기화 및 클리어 조건 설정
+	kill_count_ = 0;
+	kill_count_for_clear_ = KILL_COUNT_UNIT_FOR_CLEAR * _UserProfile.GetStageProgress();
+}
+
 void RunState::GetEnemyKillReward(const EnemyJsonInfo* _info)
 {
 	if (nullptr == _info)

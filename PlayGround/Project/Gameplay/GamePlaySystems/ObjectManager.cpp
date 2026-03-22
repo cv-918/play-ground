@@ -88,31 +88,6 @@ void ObjectManager::AddGameObject(GameObjectBase* _game_object)
 	_PushGameObject(_game_object);
 }
 
-GameObjectBase* ObjectManager::SpawnEnemy(const EnemyJsonInfo* _info)
-{
-	if (nullptr == _info)
-	{
-		_SYSTEM_LOG_ERROR(L"ObjectManager::SpawnEnemy - Invalid EnemyJsonInfo pointer.");
-		return nullptr;
-	}
-
-	// EnemyCategory를 삭제했기 때문에 우선은 ExpDust로 고정해서 생성. 나중에 EnemyCategory와 같은 값이 다시 생긴다면 그에 맞춰서 생성 로직 추가
-	GameObjectBase* enemy = new ExpDust(_info);
-
-	// 카테고리에 의해 객체가 생성되지 않았거나, 생성된 객체가 nullptr인 경우 nullptr 반환
-	if (nullptr == enemy)
-		return nullptr;
-
-	if (enemy->Initialize())
-	{
-		_PushGameObject(enemy);
-		return enemy;
-	}
-
-	SAFE_DELETE(enemy);
-	return nullptr;
-}
-
 GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
                                                 const _Point& _target, _float _damage, _float _speed)
 {

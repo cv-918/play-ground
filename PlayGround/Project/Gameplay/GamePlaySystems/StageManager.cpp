@@ -4,6 +4,8 @@
 #include "GamePlay/Scenes/InGameScene.h"
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 
+#include "GamePlay/Actors/ExpDust.h"
+
 _int StageManager::Update(_double _delta_time)
 {
 	// 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
@@ -22,6 +24,19 @@ _int StageManager::Update(_double _delta_time)
 	}
 
 	return UPDATE_CONTINUE;
+}
+
+void StageManager::SetPlayScene(InGameScene* _play_scene)
+{
+	if (nullptr == _play_scene)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	play_scene_ = _play_scene;
+	object_manager_ = play_scene_->GetObjectManager();
+	ui_manager_ = play_scene_->GetUIManager();
 }
 
 void StageManager::ChangeState(StageState _new_state)
@@ -52,14 +67,24 @@ void StageManager::SetNavMesh(const _Rect& _rt)
 	_UpdateGenerationAreas();
 }
 
-_Point StageManager::GeneratePosition(_bool _inclusive)
+_Point StageManager::GeneratePosition(_bool _in_screen, _bool _include_center)
 {
+	if (_in_screen)
+	{
+		return {
+			_Random.Range(stage_nav_mesh_->Left(), stage_nav_mesh_->Right()),
+			_Random.Range(stage_nav_mesh_->Top(), stage_nav_mesh_->Bottom())
+		};
+	}
+
 	std::vector<_Rect> areas = { generation_area_[0], generation_area_[0], generation_area_[0], generation_area_[0] };
 	_uint area_index_max = 3;
 
-	if (_inclusive)
+	if (_include_center)
 	{
-		areas.insert(areas.begin(), *stage_nav_mesh_);
+		const auto quarter_and_three_rt = *stage_nav_mesh_ * 0.75f;
+
+		areas.insert(areas.begin(), quarter_and_three_rt);
 		area_index_max = 4;
 	}
 
@@ -102,6 +127,8 @@ void StageManager::_OnEnter()
 	ChangeState(StageState::Ready);
 	*/
 
+	_RunState.Reset();
+
 	// 스폰 타이머 리셋
 	spawn_timer_ = 0.0;
 	spawn_interval_ = 0.0;
@@ -113,7 +140,26 @@ void StageManager::_OnEnter()
 	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
 
 	// 초기 스폰 처리
+	const auto additional_spawn_count = _UserProfile.GetStageProgress() * 0.1f;
+	const auto initial_spawn_count = DEFAULT_SPAWN_COUNT + additional_spawn_count;
 
+	// 일단은 모든 에너미를 랜덤으로 처리, 스테이지 데이터 마련되면 스테이지 진행 데이터에 맞춰서 각 몬스터 확률형 생성
+	for (_int i = 0; i < initial_spawn_count; ++i)
+	{
+		const auto enemy_idx = _Random.Range(0, _EnemyDataMgr.GetDataCount() - 1);
+		const auto enemy_data = _EnemyDataMgr.GetDataByIndex(enemy_idx);
+
+		if (nullptr == enemy_data)
+		{
+			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(Index : %d)"), enemy_idx);
+			return;
+		}
+
+		UnitCreationInfo creation_info;
+		creation_info.position_ = GeneratePosition(true, true);
+		creation_info.look_point_ = GeneratePosition(true, true);
+		_SpawnEnemy(enemy_data, creation_info);
+	}
 
 	// 게임 상태 초기화
 	_GameState.SetPause(false);
@@ -177,7 +223,24 @@ void StageManager::_OnPlay(_double _delta_time)
 			return;
 		}
 
-		play_scene_->SpawnEnemy(enemy_data->id_);
+		UnitCreationInfo creation_info;
+		creation_info.position_ = GeneratePosition(false, false);
+
+		const _Vector3 center = _Vector3{ s_float(stage_nav_mesh_->GetCenter().x), s_float(stage_nav_mesh_->GetCenter().y), 0.f };
+		const _Vector3 to_center = (center - creation_info.position_).Normalized();
+		const _float radius = enemy_data->body_size_ * 0.5f;
+
+		const _Vector3 point_to_center = creation_info.position_ + to_center * radius;
+
+		// 충돌 여부를 확인하고, 화면에 보이지 않는 영역까지 밀어내기
+		if(stage_nav_mesh_->PtInRect(point_to_center))
+		{
+			// 생성 지점에서 중심 방향으로 body_size의 절반만큼 이동한 지점이 네비게이션 메시 안에 있다면, 생성 지점을 중심 방향으로 body_size의 절반만큼 이동시킴
+			creation_info.position_ += to_center * (radius * -1.f);
+		}
+		
+		creation_info.look_point_ = GeneratePosition(true, true);
+		_SpawnEnemy(enemy_data, creation_info);
 	}
 }
 
@@ -282,4 +345,31 @@ void StageManager::_UpdateGenerationAreas()
 		_Point{ -padding_x, stage_height },
 		_Point{ stage_width + padding_x, stage_height + padding_y }
 	};
+}
+
+_bool StageManager::_SpawnEnemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
+{
+	if (nullptr == _info)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return false;
+	}
+
+	// What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-
+	// 스폰 시에 넘겨야할 정보다 더 필요하다면 CreationInfo에 추가한다
+	// 나중에 종류가 다양해지면, enemy의 카테고리 같은걸 확인해서 생성을 ExpDust로 할지 다른 클래스로 할지 분기처리 해야한다
+	const auto spawned_enemy = object_manager_->CreateActor<ExpDust>(_info, _creation_info);
+	if (nullptr == spawned_enemy)
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Failed to spawn enemy!(ID : %d)"), _info->id_);
+		return false;
+	}
+
+	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
+	ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+
+	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
+	spawned_enemy->SetPlayScene(play_scene_);
+
+	return true;
 }
