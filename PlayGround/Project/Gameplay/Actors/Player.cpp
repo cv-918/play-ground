@@ -2,7 +2,6 @@
 #include "Player.h"
 
 #include "Components/PlayableMovement.h"
-#include "GamePlaySystems/StageManager.h"
 
 _bool Player::Initialize()
 {
@@ -75,16 +74,21 @@ void Player::DebugRender(_double _delta_time)
 
 void Player::OnDestroy()
 {
-	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-
-	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
+	//const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	//const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	//
+	//_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
+	//_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
 
 	// 스테이지	매니저에 플레이어가 죽었다는 메시지 보내기
 	if (status_->IsDead())
 	{
-		_StageMgr.OnPlayerDeath();
+		// 플레이어가 죽으면 게임 전체 일시정지
+		_GameState.SetPause(true);
+		_RunState.MarkAsPlayerDied();
+
+		// 결과 화면으로 전환
+		_StageMgr.ChangeState(StageState::Result);
 	}
 }
 

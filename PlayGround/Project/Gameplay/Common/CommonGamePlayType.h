@@ -24,6 +24,18 @@ enum class SceneType
 	Count,
 };
 
+enum class StageState
+{
+	Undefined,
+	Enter,
+	Ready,
+	Play,
+	Pause,
+	Clear,
+	Result,
+	Exit
+};
+
 enum class ComponentType
 {
 	Undefined,
@@ -147,6 +159,14 @@ struct UnitCreationInfo
 {
 	_Vector3 position_;
 	_Vector3 look_point_;
+};
+
+struct RunSessionResult
+{
+	_bool is_cleared_ = false;
+	_uint earned_coin_count_ = 0;
+	_uint gained_experience_ = 0;
+	_double play_time_ = 0.0;
 };
 #pragma endregion
 
@@ -346,7 +366,10 @@ struct UserDataJsonInfo
 	_uint id_ = 0;
 
 	// 유저 데이터에 필요한 변수들을 여기에 추가. 예시에서는 코인 수와 획득한 노드 ID 리스트를 포함.
-	_uint coin_count_ = 0;
+	_uint dust_count_ = 0;
+
+	// 플레이어가 획득한 총 경험치. 필요에 따라 경험치 시스템이 구현되면 이 부분을 활용하여 플레이어의 경험치를 관리할 수 있습니다.
+	_uint experience_ = 0;
 
 	// 플레이어가 잠금 해제한 캐릭터의 ID 리스트. 필요에 따라 캐릭터 잠금 해제 시스템이 구현되면 이 부분을 활용하여 플레이어가 잠금 해제한 캐릭터를 관리할 수 있습니다.
 	std::vector<_uint> unlocked_character_ids_;

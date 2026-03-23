@@ -33,7 +33,6 @@ public:
 	void ChangeView(InGameViewState _new_view_state);
 
 private:
-	void _CreateEssentialActors();
 	WidgetBase* _CreateView();
 
 private:

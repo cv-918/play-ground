@@ -14,7 +14,7 @@ public:
 	// --- 코인 관련 ---
 	void IncreaseCoins(const _uint _count);
 	_bool SpendCoins(const _uint _count);
-	_uint GetCoinCount() const { return coin_count_; }
+	_uint GetCoinCount() const { return dust_count_; }
 
 	// --- 어트리뷰트 관련 ---
 	void UpdateAttributeStat();
@@ -26,11 +26,15 @@ public:
 	_uint GetNodeLevel(const _uint node_id) const;
 
 	// --- 스테이지 관련 ---
+	void ApplyRunSessionResult(const RunSessionResult& _result);
 	_uint GetStageProgress() const { return stage_progress_; }
 	
 private:
 	// 플레이어가 획득한 코인 수를 나타내는 변수. 필요에 따라 게임 내에서 코인 획득과 소비를 관리하는 데 활용할 수 있습니다.
-	_uint coin_count_ = 0;
+	_uint dust_count_ = 0;
+
+	// 플레이어가 획득한 총 경험치. 필요에 따라 경험치 시스템이 구현되면 이 부분을 활용하여 플레이어의 경험치를 관리할 수 있습니다.
+	_uint experience_ = 0;
 
 	// 플레이어가 잠금 해제한 캐릭터의 ID 리스트. 필요에 따라 캐릭터 잠금 해제 시스템이 구현되면 이 부분을 활용하여 플레이어가 잠금 해제한 캐릭터를 관리할 수 있습니다.
 	std::vector<_uint> unlocked_character_ids_;

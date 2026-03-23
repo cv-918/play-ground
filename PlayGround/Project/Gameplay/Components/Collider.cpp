@@ -4,6 +4,21 @@
 #include "Actors/GameObjectBase.h"
 #include "Combat.h"
 
+#include "EngineSystems/Physics/CollisionManager.h"
+
+Collider::~Collider()
+{
+	// 시스템에 접근해서 자신에 대한 등록을 해제
+	_ColMgr.DeregisterCollider(layer_, this);
+
+	// 충돌 리스트를 순회하면서 충돌 기록이 있는 모든 콜라이더에 삭제 알림
+	for (auto& collider : collided_colliders_)
+	{
+		if (collider)
+			collider->_DeregisterFromCollidedList(this);
+	}
+}
+
 _bool Collider::Initialize()
 {
 	if (false == __super::Initialize())

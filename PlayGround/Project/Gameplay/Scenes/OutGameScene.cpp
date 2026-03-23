@@ -16,8 +16,6 @@ _bool OutGameScene::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	debug_scene_name_ = L"OUT-GAME SCENE";
-
 	MAKE_INITIALIZED;
 	return true;
 }

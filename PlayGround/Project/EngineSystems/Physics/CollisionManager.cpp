@@ -48,18 +48,39 @@ void CollisionManager::SetCollisionLayer(CollisionLayer _left, CollisionLayer _r
 
 void CollisionManager::RegisterCollider(CollisionLayer _layer, Collider* _collider)
 {
+	// layer 범위 체크
+	if ((int)_layer < 0 || (int)_layer >= (int)CollisionLayer::End)
+		return;
+
+	// nullptr 체크
+	if (!_collider)
+		return;
+
 	_collider->Layer(_layer);
     layer_colliders_[(int)_layer].push_back(_collider);
 }
 
 void CollisionManager::DeregisterCollider(CollisionLayer _layer, Collider* _collider)
 {
+    // layer 범위 체크
+    if ((int)_layer < 0 || (int)_layer >= (int)CollisionLayer::End)
+        return;
+
+    // nullptr 체크
+    if (!_collider)
+		return;
+
     auto& vec = layer_colliders_[(int)_layer];
     vec.erase(std::remove(vec.begin(), vec.end(), _collider), vec.end());
 }
 
 void CollisionManager::ClearAllColliders()
 {
-    for (_int i = 0; i < s_int(CollisionLayer::End); ++i)
-        layer_colliders_[i].clear();
+    for (auto& vec : layer_colliders_)
+    {
+        vec.clear();
+		std::vector<Collider*>().swap(vec); // 메모리 해제
+    }
+
+    layer_colliders_->clear();
 }

@@ -4,11 +4,6 @@
 #include "Components/SphereCollider.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
-Dust::Dust(_Vector3 _pos, _Vector3 _dir, _float _spd)
-	: Props(PropsType::Dust)
-	, spawn_pos_(_pos), move_dir_(_dir), move_spd_(_spd)
-{};
-
 _bool Dust::Initialize()
 {
 	if (false == __super::Initialize())
@@ -17,16 +12,15 @@ _bool Dust::Initialize()
 	const auto DEFAULT_SCALE = 5.f;
 
 	transform_->Scale(DEFAULT_SCALE);
-	const auto position = transform_->Position();
-	const auto look_point = position + move_dir_ * 5.f;
-	transform_->LookAt(look_point);
-	transform_->Position(spawn_pos_);
+	transform_->LookAt(creation_info_.look_point_);
+	transform_->Position(creation_info_.position_);
 
 	collider_ = new SphereCollider(DEFAULT_SCALE);
 	RegisterComponent(collider_);
 
 	_ColMgr.RegisterCollider(CollisionLayer::PropsBody, collider_);
 
+	Finalize();
 	return true;
 }
 
@@ -58,6 +52,12 @@ _int Dust::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void Dust::OnDestroy()
+{
+	// 여기서 추가 자원 획득 어트리뷰트 적용
+	_RunState.IncreaseEarnedCoinCount(dust_amount_);
+}
+
 void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	const auto this_layer = _this->Layer();
@@ -70,7 +70,8 @@ void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 		{
 		case CollisionLayer::PlayerCollector:
 		{
-			tracking_transform_ = _this->GameObject()->GetTransform();
+			tracking_transform_ = _other->GameObject()->GetTransform();
+			state_ = PropsState::Tracking;
 
 			// 트래킹 대상 설정 후에는 충돌검사 하지 않도록 제거
 			_ColMgr.DeregisterCollider(CollisionLayer::PropsBody, collider_);

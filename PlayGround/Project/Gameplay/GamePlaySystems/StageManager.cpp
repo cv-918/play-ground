@@ -3,8 +3,14 @@
 
 #include "GamePlay/Scenes/InGameScene.h"
 #include "GamePlaySystems/Json/EnemyDataManager.h"
+#include "GamePlaySystems/Json/UserDataManager.h"
+#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 
-#include "GamePlay/Actors/ExpDust.h"
+#include "GamePlay/World/Background.h"
+#include "Actors/Player.h"
+#include "Actors/ExpDust.h"
+
+#include "Actors/Props/Dust.h"
 
 _int StageManager::Update(_double _delta_time)
 {
@@ -95,17 +101,36 @@ _Point StageManager::GeneratePosition(_bool _in_screen, _bool _include_center)
 	return {
 		_Random.Range(generation_area_[area_index].Left(), generation_area_[area_index].Right()),
 		_Random.Range(generation_area_[area_index].Top(), generation_area_[area_index].Bottom())
-	};;
+	};
 }
 
-void StageManager::OnPlayerDeath()
+void StageManager::ProgressRunSessionResult()
 {
-	// 플레이어가 죽으면 게임 전체 일시정지
-	_GameState.SetPause(true);
-	_RunState.MarkAsPlayerDied();
+	// 1. RunState로부터 이번 판의 최종 성적표를 받음
+	RunSessionResult result = _RunState.CreateResult();
 
-	// 결과 화면으로 전환
-	ChangeState(StageState::Result);
+	// 2. 유저 프로필에 영구 반영
+	_UserProfile.ApplyRunSessionResult(result);
+
+	// 3. 안전하게 저장 (아까 논의한 Atomic Save 적용 포인트)
+	_UserDataMgr.Save("Data/UserData.json");
+
+	// 4. 다음 판을 위해 비우기
+	_RunState.Clear();
+}
+
+_bool StageManager::SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data)
+{
+	switch (_props_type)
+	{
+	case PropsType::Dust:
+		object_manager_->CreateActor<Dust>(_creation_info, _Random.Range(3.f, 25.f), *r_cast(_uint*, _extra_data));
+		break;
+	default:
+		break;
+	}
+
+	return true;
 }
 
 void StageManager::_OnEnter()
@@ -114,32 +139,37 @@ void StageManager::_OnEnter()
 	// 예시: 배경 연출, 타이머 시작, 초기 스폰 등
 	// 연출 처리 후 Ready 상태로 전환
 
-	/*
-	// 1. 시간 및 타이머 초기화
-	stage_timer_ = 0.0;
-	spawn_timer_ = 0.0;
+	// 배경 생성. 배경은 네비메시 정보를 가지고 있기 때문에 가장 먼저 생성
+	const auto background = object_manager_->CreateActor<Background>();
+	if (nullptr == background)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
 
-	// 2. 이번 판의 기록(RunState) 초기화
-	_RunState.Reset(); // RunState에 Reset() 함수를 만들어 두는 것을 추천합니다.
+	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
+	if (nullptr == player_spawn_data)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
 
-	// 3. 플레이어 생성 및 연출 시작
-	play_scene_->SpawnPlayer();
-	ChangeState(StageState::Ready);
-	*/
+	// 네비 메시를 미리 가져와두고 플레이어와 몬스터 생성 시 활용. 배경이 네비 메시 정보를 가지고 있기 때문에 배경 생성 이후에 가져올 수 있음
+	const auto& nav_mesh = background->NavMesh();
 
-	_RunState.Reset();
+	// 네비메시 정보를 기반으로 액터 생성 구역 및 존재 가능 영역 설정
+	SetNavMesh(nav_mesh);
+	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);
 
-	// 스폰 타이머 리셋
-	spawn_timer_ = 0.0;
-	spawn_interval_ = 0.0;
-
-	// 스테이지 타이머 설정
-	stage_elapsed_time_ = 0.0;
-
-	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
-	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
-
-	// 초기 스폰 처리
+	// 플레이어 생성 및 UI 생성
+	const auto player = object_manager_->CreateActor<Player>(player_spawn_data);
+	player->SetNavMesh(nav_mesh);
+	player->SetPlayScene(play_scene_);
+	player->GetTransform()->Position(GAME_VIEW_CENTER);
+	_RunState.SetPlayer(player);
+	ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
+	
+	// 초기 에너미 스폰 처리
 	const auto additional_spawn_count = _UserProfile.GetStageProgress() * 0.1f;
 	const auto initial_spawn_count = DEFAULT_SPAWN_COUNT + additional_spawn_count;
 
@@ -161,7 +191,18 @@ void StageManager::_OnEnter()
 		_SpawnEnemy(enemy_data, creation_info);
 	}
 
+	// 스폰 타이머 리셋
+	spawn_timer_ = 0.0;
+	spawn_interval_ = 0.0;
+
+	// 스테이지 타이머 설정
+	stage_elapsed_time_ = 0.0;
+
+	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
+	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
+
 	// 게임 상태 초기화
+	_RunState.Ready();
 	_GameState.SetPause(false);
 	ChangeState(StageState::Ready);
 }
@@ -286,28 +327,10 @@ void StageManager::_OnExit()
 	// 게임 종료 후 필요한 정리 작업 수행
 	// 모든 처리가 끝났다면 로비로 이동
 
-	/*
-	// 1. RunState로부터 이번 판의 최종 성적표를 받음
-	RunSessionResult result = _RunState.CreateResult();
-
-	// 2. 유저 프로필에 영구 반영
-	_UserProfile.IncreaseCoins(result.final_payout_coin);
-
-	// 3. 안전하게 저장 (아까 논의한 Atomic Save 적용 포인트)
-	_UserDataMgr.Save();
-
-	// 4. 다음 판을 위해 비우기
-	_RunState.Reset();
-
-	// 로비로 이동
-	_SceneMgr.ChangeScene(SceneType::OutGame);
-	*/
-
-	// 플레이어가 죽어서 결과 화면으로 전환된 경우, 획득한 코인의 절반만 지급. 클리어해서 결과 화면으로 전환된 경우에는 획득한 코인을 모두 지급
-	const auto earned_coin_count = _RunState.GetEarnedCoinCount();
-	_UserProfile.IncreaseCoins(_RunState.IsPlayerDied()  ? earned_coin_count >> 1 : earned_coin_count);
-
-	// 로비로 이동
+	// 1) 이번 판의 결과를 RunState에 기록하고, UserProfile에 반영하여 영구 저장까지 진행하는 함수를 호출
+	ProgressRunSessionResult();
+	
+	// 2) 로비로 이동
 	_SceneMgr.ChangeScene(SceneType::OutGame);
 }
 

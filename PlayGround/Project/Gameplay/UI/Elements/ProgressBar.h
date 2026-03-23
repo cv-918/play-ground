@@ -21,6 +21,9 @@ public:
 	_Color GetBorderColor() const { return borderColor_; }
 	void SetBorderColor(const _Color& _color) { borderColor_ = _color; }
 
+	_bool IsBorderEnabled() const { return is_border_enabled_; }
+	void SetBorderEnabled(_bool _enabled) { is_border_enabled_ = _enabled; }
+
 	_float GetBorderThickness() const { return thickness_; }
 	void SetBorderThickness(_float _thickness) { thickness_ = _thickness; }
 
@@ -40,6 +43,7 @@ private:
 	_Color borderColor_ = Colors::Black;
 
 	// 테두리 두께. 필요에 따라 조절 가능
+	_bool is_border_enabled_ = true; // 테두리 표시 여부를 나타내는 변수. 필요에 따라 테두리를 켜거나 끌 수 있습니다.
 	_float thickness_ = 1.f;
 
 	// 자체 알파값

@@ -11,14 +11,19 @@
             ],
             [
                 6,
-                1
+                2
             ],
             [
                 2,
-                2
+                0
+            ],
+            [
+                5,
+                5
             ]
         ],
-        "coin_count_": 100,
+        "dust_count_": 150,
+        "experience_": 3,
         "id_": 0,
         "stage_progress_": 1,
         "unlocked_character_ids_": [
