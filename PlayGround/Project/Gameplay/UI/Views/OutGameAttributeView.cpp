@@ -40,14 +40,14 @@ void OutGameAttributeView::Render(_double _delta_time)
 
 	if (_GameState.debug_mode_)
 	{
-		const auto attribute_stat = _UserProfile.GetAttributeStat();
-
-		// 모든 어트리뷰트 스탯 정보 출력
 		_tchar buffer[MAX_PATH] = {};
-		swprintf_s(buffer, L"=== Attribute Stat ===");
-
 		const auto x = 20;
 		auto y = 20; auto index = 0;
+
+		// 모든 어트리뷰트 스탯 정보 출력
+		swprintf_s(buffer, L"=== Attribute Stat ===");
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+		const auto attribute_stat = _UserProfile.GetAttributeStat();
 		for(const auto& pair : attribute_stat.GetStats())
 		{
 			const auto& type = pair.first;
@@ -55,5 +55,26 @@ void OutGameAttributeView::Render(_double _delta_time)
 			swprintf_s(buffer, L"[%s] 덧셈 증가량: %.0f, 곱셈 증가율: %.0f%%", _CommonGamePlayFunc::GetAttributeTypeName(type).c_str(), stat.additive_increase_, (stat.multiplicative_increase_rate_) * 100.f);
 			_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 		}
+
+		++index;
+
+		swprintf_s(buffer, L"=== Collectable ===");
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"Dust cloud : %d", _UserProfile.GetCoinCount());
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+
+		//swprintf_s(buffer, L"=== Experience ===");
+		//_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"Experience : %d", _UserProfile.GetExperience());
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 	}
+
+	//_DrawFunc::DrawString(
+	//	_Point{ GAME_VIEW_WIDTH - 200, 20 },
+	//	L"Coins: " + std::to_wstring(_UserProfile.GetCoinCount()),
+	//	Colors::Black,
+	//	20
+	//);
 }

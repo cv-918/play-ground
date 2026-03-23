@@ -32,7 +32,8 @@ public:
 
 public:
 	void DetectCollision(Collider* _other);
-	void SetTimerForTarget(Collider* _other, _double _time) { collision_timers_[_other] = _time; }
+	void SetTimerForTarget(Collider* _other, _double _time);
+	void EraseTimerTarget(Collider* _other);
 
 	// 디버그 전용 기능
 	const std::map<Collider*, _double> GetCollisionTimers() const { return collision_timers_; }

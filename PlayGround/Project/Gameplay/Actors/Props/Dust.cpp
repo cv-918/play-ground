@@ -20,6 +20,8 @@ _bool Dust::Initialize()
 
 	_ColMgr.RegisterCollider(CollisionLayer::PropsBody, collider_);
 
+	color_ = Colors::LightGray;
+
 	Finalize();
 	return true;
 }
@@ -50,6 +52,17 @@ _int Dust::Update(_double _delta_time)
 	}
 
 	return UPDATE_CONTINUE;
+}
+
+void Dust::Render(_double _delta_time)
+{
+	if (!IsVisible())
+		return;
+
+	// 오브젝트 그리기
+	const auto position = transform_->Position();
+	const auto radius = transform_->Scale().x * 0.5f;
+	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
 }
 
 void Dust::OnDestroy()

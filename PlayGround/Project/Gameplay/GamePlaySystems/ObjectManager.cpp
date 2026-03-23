@@ -130,7 +130,7 @@ void ObjectManager::_PushGameObject(GameObjectBase* _game_object)
 	}
 
 	new_game_objects_.push_back(_game_object);
-	_SYSTEM_LOG_INFO(L"ObjectManager: Added game object - Name: %s, ID: %d", _game_object->Name().c_str(), _game_object->ID());
+	//_SYSTEM_LOG_INFO(L"ObjectManager: Added game object - Name: %s, ID: %d", _game_object->Name().c_str(), _game_object->ID());
 }
 
 void ObjectManager::_MergeNewGameObjects()
@@ -143,7 +143,7 @@ void ObjectManager::_MergeNewGameObjects()
 		static _uint object_count = 0;
 		new_obj->ID(object_count++);
 		game_objects_.push_back(new_obj);
-		_SYSTEM_LOG_INFO(L"ObjectManager: Merged new game object - Name: %s, ID: %d", new_obj->Name().c_str(), new_obj->ID());
+		//_SYSTEM_LOG_INFO(L"ObjectManager: Merged new game object - Name: %s, ID: %d", new_obj->Name().c_str(), new_obj->ID());
 	}
 	std::vector<GameObjectBase*>().swap(new_game_objects_);
 }
@@ -159,7 +159,7 @@ void ObjectManager::_RemoveDestroyedGameObjects()
 			if (obj->IsPendingDestruction())
 			{
 				// 파괴되는 오브젝트의 이름 로깅
-				_SYSTEM_LOG_INFO(L"ObjectManager: Destroying game object - Name: %s, ID: %d", obj->Name().c_str(), obj->ID());
+				//_SYSTEM_LOG_INFO(L"ObjectManager: Destroying game object - Name: %s, ID: %d", obj->Name().c_str(), obj->ID());
 
 				// 파괴 시 필요한 로직 수행 후 메모리 해제
 				obj->OnDestroy();
