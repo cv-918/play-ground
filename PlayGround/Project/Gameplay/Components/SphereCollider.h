@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Collider.h"
 
 class SphereCollider : public Collider
@@ -31,6 +31,8 @@ public:
 		color_[++idx] = _collision;
 	}
 
+	void SetDrawAlways(const _bool _draw_always) { draw_always_ = _draw_always; }
+
 private:
 	const _Color& GetDebugColor() const {
 		if (!IsEnable())
@@ -50,4 +52,6 @@ private:
 		Colors::Green,      // OnNormal
 		Colors::Red         // OnCollision
 	};
+
+	_bool draw_always_ = false; // 디버그 모드가 아니더라도 항상 그릴지 여부. 필요에 따라 활성화할 수 있음
 };

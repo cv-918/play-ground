@@ -3,6 +3,11 @@
 
 #include "Components/PlayableMovement.h"
 
+Player::~Player()
+{
+	bool debug = true;
+}
+
 _bool Player::Initialize()
 {
 	if (!__super::Initialize())
@@ -38,12 +43,14 @@ _bool Player::Initialize()
 	const auto start_attack_radius = (info_->attack_range_ + attack_stat.additive_increase_) * attack_stat.multiplicative_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
 	attack_col->SetRadius(start_attack_radius);
 	attack_col->SetDebugColor(Colors::Gray, Colors::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
+	attack_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
 
 	const auto collector_stat = attribute_stat.GetStat(AttributeType::CollectionRange);
 	const auto start_collector_size = (info_->collector_size_ + collector_stat.additive_increase_) * collector_stat.multiplicative_increase_rate_; // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	const auto collector_col = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	collector_col->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
+	collector_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
 	RegisterComponent(collector_col);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col);
 
@@ -293,7 +300,16 @@ void Player::_ShowDebugInfo()
 
 	debug_info_lines_.emplace_back(L"");
 	debug_info_lines_.emplace_back(L"==== 충돌 리스트 ====");
-	const auto timers = GetDefaultCollider(UnitDefaultColliderId::Attack)->GetCollisionTimers();
+	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	const auto collideds = attack_col->CollidedColliders();
+	for(const auto& collider : collideds)
+	{
+		swprintf_s(buffer, L"충돌 대상 : %s", collider->GameObject()->Name().c_str());
+		debug_info_lines_.emplace_back(buffer);
+	}
+
+	debug_info_lines_.emplace_back(L"==== 충돌 타이머 리스트 ====");
+	const auto timers = attack_col->GetCollisionTimers();
 	for (const auto& pair : timers)
 	{
 		const auto collider = pair.first;

@@ -8,15 +8,17 @@
 
 Collider::~Collider()
 {
-	// 시스템에 접근해서 자신에 대한 등록을 해제
-	_ColMgr.DeregisterCollider(layer_, this);
-
-	// 충돌 리스트를 순회하면서 충돌 기록이 있는 모든 콜라이더에 삭제 알림
-	for (auto& collider : collided_colliders_)
+	for (const auto& collider : collided_colliders_)
 	{
 		if (collider)
+		{
 			collider->_DeregisterFromCollidedList(this);
+			collider->EraseTimerTarget(this);
+		}
 	}
+
+	// 시스템에 접근해서 자신에 대한 등록을 해제
+	_ColMgr.DeregisterCollider(layer_, this);
 }
 
 _bool Collider::Initialize()
@@ -28,7 +30,7 @@ _bool Collider::Initialize()
 		return false;
 
 	transform_ = gameobject_->GetTransform();
-	if(nullptr == transform_)
+	if (nullptr == transform_)
 		return false;
 
 	return true;
@@ -97,6 +99,9 @@ void Collider::DetectCollision(Collider* _other)
 		// 충돌 목록에 추가에 성공했을 경우
 		if (_RegisterOnCollidedList(_other))
 		{
+			// 누구의 목록에 어떤 오브젝트가 들어갔는지 로깅
+			_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
+
 			// Enter 신호 전파
 			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
@@ -117,12 +122,37 @@ void Collider::DetectCollision(Collider* _other)
 		// 충돌 목록에서 제거에 성공했을 경우
 		if (_DeregisterFromCollidedList(_other))
 		{
+			// 누구의 목록에서 어떤 오브젝트가 빠졌는지 로깅
+			_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
+
 			// Exit 신호 전파
 			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 				s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
 				});
 		}
 	}
+}
+
+void Collider::SetTimerForTarget(Collider* _other, _double _time)
+{
+	if (!_other)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	collision_timers_[_other] = _time;
+}
+
+void Collider::EraseTimerTarget(Collider* _other)
+{
+	if (!_other)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	collision_timers_.erase(_other);
 }
 
 _bool Collider::_CheckCollisionTimer(Collider* _other)
@@ -153,6 +183,9 @@ _bool Collider::_RegisterOnCollidedList(Collider* _other)
 
 _bool Collider::_DeregisterFromCollidedList(Collider* _other)
 {
+	if (collided_colliders_.empty())
+		return false;
+
 	if (!_other)
 		return false;
 
@@ -164,5 +197,5 @@ _bool Collider::_DeregisterFromCollidedList(Collider* _other)
 		return true;
 	}
 
-	return _bool(false);
+	return false;
 }

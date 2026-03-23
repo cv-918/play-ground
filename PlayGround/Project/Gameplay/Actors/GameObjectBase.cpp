@@ -109,10 +109,13 @@ void GameObjectBase::DebugRender(_double _delta_time)
 	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Colors::DarkGray);
 
 	// 1. 방향 그리기
-	const float line_length = 75.f;
-	const auto line_to = position + transform_->Forward2D() * line_length;
+	if (_GameState.debug_mode_)
+	{
+		const float line_length = 75.f;
+		const auto line_to = position + transform_->Forward2D() * line_length;
 
-	_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Colors::DarkGray);
+		_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Colors::DarkGray);
+	}
 
 	// 2. 디스크립션 그리기
 	auto description_position = position;

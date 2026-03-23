@@ -206,11 +206,11 @@ void WidgetBase::_AddElement(UIBase* _element)
 		if (std::find(elements_.begin(), elements_.end(), _element) == elements_.end())
 		{
 			elements_.push_back(_element);
-			_SYSTEM_LOG_INFO(L"Element %s added to widget %s.", _element->Name().c_str(), Name().c_str());
+			//_SYSTEM_LOG_INFO(L"Element %s added to widget %s.", _element->Name().c_str(), Name().c_str());
 		}
 		else
 		{
-			_SYSTEM_LOG_INFO(L"Element %s is already added to widget %s.", _element->Name().c_str(), Name().c_str());
+			//_SYSTEM_LOG_INFO(L"Element %s is already added to widget %s.", _element->Name().c_str(), Name().c_str());
 		}
 	}
 }

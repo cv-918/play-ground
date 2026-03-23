@@ -16,6 +16,9 @@ public:
 	_bool SpendCoins(const _uint _count);
 	_uint GetCoinCount() const { return dust_count_; }
 
+	// --- ---
+	_uint GetExperience() const { return experience_; }
+
 	// --- 어트리뷰트 관련 ---
 	void UpdateAttributeStat();
 	void NodeLevelUp(const _uint node_id);
