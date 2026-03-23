@@ -6,19 +6,21 @@ class Dust final
 	, public ICollidable
 {
 public:
-	explicit Dust(_Vector3 _pos, _Vector3 _dir, _float _spd);
+	explicit Dust(const UnitCreationInfo& _creation_info, _float _spd, _uint _dust_amount)
+		: Props(PropsType::Dust, _creation_info), move_spd_(_spd), dust_amount_(_dust_amount) {}
 
-private:
+public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
+
+	void OnDestroy() override;
 
 	// ICollidable을(를) 통해 상속됨
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 
 private:
-	_Vector3 spawn_pos_ = {};
-	_Vector3 move_dir_ = {};
 	_float move_spd_ = 0.f;
+	_uint dust_amount_ = 0; // 먼지의 양을 나타내는 변수. 필요에 따라 플레이어가 먼지를 수집할 때 이 값을 활용하여 플레이어의 자원이나 점수를 증가시키는 로직에서 사용할 수 있습니다.
 
 	class SphereCollider* collider_ = nullptr; // 먼지의 충돌 영역을 나타내는 SphereCollider 컴포넌트에 대한 포인터. 필요에 따라 충돌 감지 및 처리 로직에서 활용할 수 있습니다.
 

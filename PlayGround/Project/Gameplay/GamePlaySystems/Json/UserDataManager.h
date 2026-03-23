@@ -4,7 +4,8 @@
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	UserDataJsonInfo,
 	id_,
-	coin_count_,
+	dust_count_,
+	experience_,
 	unlocked_character_ids_,
 	acquired_node_ids_,
 	stage_progress_

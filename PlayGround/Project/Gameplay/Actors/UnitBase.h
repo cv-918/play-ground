@@ -13,14 +13,16 @@ enum class UnitDefaultColliderId
 	ColCount,
 };
 
+#include "EngineSystems/Physics/CollisionManager.h"
+
 #include "Gameplay/Scenes/InGameScene.h"
+#include "GamePlaySystems/StageManager.h"
 
 #include "Components/SphereCollider.h"
 #include "Components/RectCollider.h"
 #include "Components/Status.h"
 #include "Components/Combat.h"
 
-#include "EngineSystems/Physics/CollisionManager.h"
 #include "UI/Elements/ProgressBar.h"
 
 class Movement;

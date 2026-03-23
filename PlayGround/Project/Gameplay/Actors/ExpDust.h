@@ -1,9 +1,5 @@
 ﻿#pragma once
-
 #include "Enemy.h"
-
-// 추후에 몬스터 생성로직 개선되면 이것도 제거
-#include "GamePlaySystems/StageManager.h"
 
 class ExpDust final : public Enemy
 {
@@ -13,7 +9,6 @@ public:
 
 public:
 	_bool Initialize() override;
-	_int Update(_double _delta_time) override;
 
 private:
 	// ICollidable을(를) 통해 상속됨

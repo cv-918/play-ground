@@ -6,8 +6,6 @@ _bool IntroScene::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	debug_scene_name_ = L"INTRO SCENE";
-
 	MAKE_INITIALIZED;
 	return true;
 }

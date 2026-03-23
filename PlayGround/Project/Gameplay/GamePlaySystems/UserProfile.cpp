@@ -5,7 +5,7 @@
 
 void UserProfile::ResetUserData()
 {
-	coin_count_ = 0;
+	dust_count_ = 0;
 	std::vector<_uint>().swap(unlocked_character_ids_); // unlocked_character_ids_ 벡터를 초기화하여 메모리 해제
 	std::vector<std::pair<_uint, _uint>>().swap(acquired_node_ids_); // acquired_node_ids_ 벡터를 초기화하여 메모리 해제
 	stage_progress_ = 0;
@@ -13,7 +13,7 @@ void UserProfile::ResetUserData()
 
 void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 {
-	coin_count_ = _info.coin_count_;
+	dust_count_ = _info.dust_count_;
 	unlocked_character_ids_ = _info.unlocked_character_ids_;
 	acquired_node_ids_ = _info.acquired_node_ids_;
 	stage_progress_ = _info.stage_progress_;
@@ -33,7 +33,8 @@ UserDataJsonInfo UserProfile::GetUserData() const
 {
 	UserDataJsonInfo info;
 	info.id_ = 0; // 필요 시 세이브 데이터 슬롯 id 할당
-	info.coin_count_ = coin_count_;
+	info.dust_count_ = dust_count_;
+	info.experience_ = experience_;
 	info.unlocked_character_ids_ = unlocked_character_ids_;
 	info.acquired_node_ids_ = acquired_node_ids_;
 	info.stage_progress_ = stage_progress_;
@@ -43,17 +44,17 @@ UserDataJsonInfo UserProfile::GetUserData() const
 
 void UserProfile::IncreaseCoins(const _uint _count)
 {
-	coin_count_ += _count;
-	_SYSTEM_LOG_INFO(_T("Coins increased by %u. Current coin count: %u"), _count, coin_count_);
+	dust_count_ += _count;
+	_SYSTEM_LOG_INFO(_T("Coins increased by %u. Current coin count: %u"), _count, dust_count_);
 
 	// 코인 획득 시 추가적인 로직이 필요한 경우 여기에 작성 (예: UI 업데이트, 사운드 효과 재생 등)
 }
 
 _bool UserProfile::SpendCoins(const _uint _count)
 {
-	if (coin_count_ >= _count)
+	if (dust_count_ >= _count)
 	{
-		coin_count_ -= _count;
+		dust_count_ -= _count;
 		// 코인 소비 시 추가적인 로직이 필요한 경우 여기에 작성 (예: UI 업데이트, 사운드 효과 재생 등)
 		return true;
 	}
@@ -134,11 +135,11 @@ void UserProfile::NodeLevelUp(const _uint node_id)
 		const auto condition_level = it->second < data->max_lv_;
 
 		const auto total_cost = s_uint(data->cost_ * (data->cost_growth_rate_ * std::max(s_uint(1), it->second)));
-		const auto condition_cost = coin_count_ >= total_cost;
+		const auto condition_cost = dust_count_ >= total_cost;
 		if (condition_level && condition_cost)
 		{
 			++it->second;
-			coin_count_ -= total_cost;
+			dust_count_ -= total_cost;
 		}
 
 		_SYSTEM_LOG_INFO(_T("Node ID %u leveled up to level %u"), node_id, it->second);
@@ -217,4 +218,12 @@ _uint UserProfile::GetNodeLevel(const _uint node_id) const
 	{
 		return 0; // 노드를 획득하지 않은 경우 레벨 0으로 간주
 	}
+}
+
+void UserProfile::ApplyRunSessionResult(const RunSessionResult& _result)
+{
+	const auto earned_coin_count = _result.earned_coin_count_;
+	IncreaseCoins(_result.is_cleared_ ? earned_coin_count : earned_coin_count >> 1);
+
+	experience_ += _result.gained_experience_;
 }

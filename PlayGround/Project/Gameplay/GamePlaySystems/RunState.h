@@ -6,7 +6,9 @@ class GameObjectBase;
 class RunState final : public ISingleton<RunState>
 {
 public:
-	void Reset();
+	void Ready();
+	void Clear();
+	RunSessionResult CreateResult() const;
 
 	GameObjectBase* GetPlayer() const { return player_; }
 	void SetPlayer(GameObjectBase* _player) { player_ = _player; }
@@ -18,6 +20,10 @@ public:
 
 	_uint GetEarnedCoinCount() const { return earned_coin_count_; }
 	void IncreaseEarnedCoinCount(_uint _count) { earned_coin_count_ += _count; }
+
+	_float GetKillCountRatio() const { return kill_count_for_clear_ > 0 ? s_float(kill_count_) / kill_count_for_clear_ : 0.f; }
+	_uint GetKillCount() const { return kill_count_; }
+	_uint GetKillCountForClear() const { return kill_count_for_clear_; }
 
 private:
 	GameObjectBase* player_ = nullptr;

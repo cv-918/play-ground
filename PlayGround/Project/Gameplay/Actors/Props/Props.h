@@ -11,13 +11,15 @@
 class Props abstract : public GameObjectBase
 {
 public:
-	explicit Props(PropsType _type) : type_(_type) {}
+	explicit Props(PropsType _type, const UnitCreationInfo& _creation_info)
+		: type_(_type), creation_info_(_creation_info) {}
 
 public:
 	void ChangeState(PropsState _state);
 
 protected:
 	PropsType type_ = PropsType::Undefined;
+	const UnitCreationInfo creation_info_;
 
 	PropsState state_ = PropsState::Undefined;
 };

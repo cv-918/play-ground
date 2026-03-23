@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "../Widgets/WidgetBase.h"
 
+class ProgressBar;
+
 class InGamePlayView final : public WidgetBase
 {
 public:
@@ -10,6 +12,7 @@ public:
 	void Render(_double _delta_time) override;
 
 private:
-	class ProgressBar* stage_duration_gauge_ = nullptr;
+	ProgressBar* stage_duration_gauge_ = nullptr;
+	ProgressBar* stage_clear_progress_ = nullptr;
 };
 

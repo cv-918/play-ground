@@ -3,7 +3,13 @@
 
 #include "GamePlaySystems/StageManager.h"
 
-void RunState::Reset()
+void RunState::Ready()
+{
+	// 클리어 조건 설정
+	kill_count_for_clear_ = KILL_COUNT_UNIT_FOR_CLEAR * _UserProfile.GetStageProgress();
+}
+
+void RunState::Clear()
 {
 	// 플레이어 참조 초기화 및 사망 여부 초기화
 	player_ = nullptr;
@@ -15,7 +21,16 @@ void RunState::Reset()
 
 	// 킬 카운트 초기화 및 클리어 조건 설정
 	kill_count_ = 0;
-	kill_count_for_clear_ = KILL_COUNT_UNIT_FOR_CLEAR * _UserProfile.GetStageProgress();
+}
+
+RunSessionResult RunState::CreateResult() const
+{
+	return RunSessionResult{
+		!is_player_died_,
+		earned_coin_count_,
+		gained_experience_,
+		_StageMgr.GetStageElapsedTime()
+	};
 }
 
 void RunState::GetEnemyKillReward(const EnemyJsonInfo* _info)
@@ -28,9 +43,6 @@ void RunState::GetEnemyKillReward(const EnemyJsonInfo* _info)
 
 	// 킬 카운트 증가
 	++kill_count_;
-
-	// 코인 획득
-	IncreaseEarnedCoinCount(_info->exp_reward_);
 
 	// 경험치 획득
 	gained_experience_ += _info->exp_reward_;

@@ -6,8 +6,6 @@ _bool LoadingScene::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	debug_scene_name_ = L"LOADING SCENE";
-
 	MAKE_INITIALIZED;
 	return true;
 }
@@ -64,7 +62,14 @@ void LoadingScene::Render(_double _delta_time)
 	debug_scene_name_ = loading_complete_ ? _T("LOADING COMPLETED! - Press Space or Enter to Start")
 		: _T("LOADING SCENE - Loading... ") + std::to_wstring(loading_progress_) + L"%";
 
-	__super::Render(_delta_time);
+	// s, [ 테스트용 배경 그리기 ]
+	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
+	_DrawFunc::FillRectangle(rt, Colors::Pearl);
+	_DrawFunc::DrawString(rt.GetCenter(), debug_scene_name_);
+	// e, [ 테스트용 배경 그리기 ]
+
+	object_manager_->Render(_delta_time);
+	ui_manager_->Render(_delta_time);
 }
 
 void LoadingScene::OnExit()

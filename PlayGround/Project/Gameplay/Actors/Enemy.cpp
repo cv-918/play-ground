@@ -6,9 +6,59 @@ _bool Enemy::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	// 무브먼트 컴포넌트 생성 및 등록
+	// 이름 설정
+	static std::map<std::wstring, _uint> enemy_instance_count_map;
+	const auto name_w = _UtilFunc::ToWString(info_->name_);
+	if(enemy_instance_count_map.end() == enemy_instance_count_map.find(name_w))
+	{
+		enemy_instance_count_map.insert({ name_w, 1 });
+	}
+	else
+	{
+		++enemy_instance_count_map[name_w];
+	}
+	Name(name_w + std::to_wstring(enemy_instance_count_map[name_w]));
+
+	// 트랜스폼
+	transform_->Scale(info_->body_size_);
+	transform_->Position(creation_info_.position_);
+	transform_->LookAt(creation_info_.look_point_);
+
+	// 무브먼트
 	movement_ = new NonPlayableMovement();
+	movement_->Pattern(info_->movement_pattern_);
+	movement_->MoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
+	movement_->MoveDir(transform_->Forward2D().Normalized());
 	RegisterComponent(movement_);
+
+	// 스테이터스
+	const auto lv = s_int(info_->tier_);
+	status_->SetLv(lv);
+	status_->SetCurrentHp(info_->hp_);
+	status_->SetMaxHP(info_->hp_);
+	status_->SetAtt(info_->contact_damage_);
+	object_description_ = _T("Lv. ") + std::to_wstring(lv);
+
+	// 콜라이더
+	const auto radius = info_->body_size_ * 0.5f;
+
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	body_collider->SetRadius(radius);
+	body_collider->SetVisible(true);
+
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	attack_collider->SetRadius(radius);
+	attack_collider->SetVisible(true);
+
+	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
+	if (info_->contact_damage_ > 0.f)
+	{
+		_ColMgr.RegisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+	}
+	else
+	{
+		attack_collider->InActivate();
+	}
 
 	return true;
 }
@@ -27,11 +77,11 @@ _int Enemy::Update(_double _delta_time)
 
 void Enemy::OnDestroy()
 {
-	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+	//const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	//const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	//
+	//_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+	//_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
 	if (status_->IsDead())
 	{
@@ -39,6 +89,23 @@ void Enemy::OnDestroy()
 
 		// 코인 획득 텍스트 ui 노출(선택)
 		// play_scene_->ShowCoinEarnedUI(info_->reward_, transform_->Position());
+
+		// 먼지 드랍
+		if (0 < info_->dust_resource_count_)
+		{
+			const auto pos = transform_->Position();
+
+			// 먼지 드랍량 증가는 여기서 추가적으로 구현 가능. 예를 들어, 몬스터의 체력이나 난이도에 비례해서 드랍량을 증가시키는 로직을 추가할 수 있습니다.
+			for(_uint i = 0; i < info_->dust_resource_count_; ++i)
+			{
+				const auto x = _Random.Range(-1, 1);
+				const auto y = _Random.Range(-1, 1);
+				UnitCreationInfo creation_info;
+				creation_info.position_ = pos;
+				creation_info.look_point_ = pos + _Vector3(x, y, 0);
+				_StageMgr.SpawnProps(PropsType::Dust, creation_info, (void*)&info_->dust_reward_);
+			}
+		}
 	}
 }
 

@@ -1,25 +1,17 @@
 ﻿#include "framework.h"
 #include "InGameScene.h"
 
-#include "Actors/Player.h"
-#include "GamePlay/World/Background.h"
-
 #include "UI/Views/InGamePauseView.h"
 #include "UI/Views/InGameResultView.h"
 #include "UI/Views/InGamePlayView.h"
 
-#include "GamePlaySystems/ObjectManager.h"
-#include "GamePlaySystems/UIManager.h"
 #include "GamePlaySystems/StageManager.h"
-#include "GamePlaySystems/Json/EnemyDataManager.h"
-#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "EngineSystems/Physics/CollisionManager.h"
 
 _bool InGameScene::Initialize()
 {
 	if (false == __super::Initialize())
 		return false;
-
-	debug_scene_name_ = L"IN-GAME SCENE";
 
 	// 스테이지 매니저 캐싱 및 씬과 연동
 	stage_manager_ = &_StageMgr;
@@ -93,14 +85,6 @@ void InGameScene::Render(_double _delta_time)
 
 void InGameScene::OnEnter()
 {
-	// 필수 액터 생성 메서드 호출. 예를 들어, 배경, 네비메시, 플레이어, UI 요소 등을 생성하는 메서드를 호출하여 씬이 시작될 때 필요한 요소들을 초기화
-	_CreateEssentialActors();
-
-	// 네비메시 정보를 스테이지 매니저와 오브젝트 매니저에 전달
-	const auto& nav_mesh = background_->NavMesh();
-	stage_manager_->SetNavMesh(nav_mesh); // 스테이지 매니저가 네비메시를 액터 생성 구역 로직에 활용할 수 있도록 설정
-	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN); // 네비메시의 영역에서 일정 마진을 둔 영역을 계산하여 인게임 액터가 존재할 수 있는 영역으로 설정
-
 	// 스테이지 매니저의 상태를 Enter 상태로 변경하여 스테이지 매니저가 Enter 상태에서 수행해야 하는 로직을 실행하도록 함. 예를 들어, Enter 상태에서는 스테이지 시작 시 필요한 초기화 작업이나 연출 등을 수행할 수 있음
 	stage_manager_->ChangeState(StageState::Enter);
 }
@@ -163,37 +147,6 @@ void InGameScene::ChangeView(InGameViewState _new_view_state)
 	}
 }
 
-void InGameScene::_CreateEssentialActors()
-{
-	// 배경 생성. 배경은 네비메시 정보를 가지고 있기 때문에 가장 먼저 생성
-	background_ = object_manager_->CreateActor<Background>();
-
-	// 플레이어 생성. 플레이어는 배경의 네비메시 정보를 필요로 할 수 있기 때문에 배경 생성 이후에 생성
-	// 위치 정보, 스폰 정보를 넘겨야할 수도 있음(What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-)
-	// JSON 데이터 매니저에서 플레이어 스폰에 필요한 데이터를 가져온다 (현재는 임시로 첫 번째 데이터 사용. 나중에는 플레이어가 선택한 캐릭터에 맞는 데이터를 가져오도록 수정 필요)
-	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
-
-	// 만약 데이터를 찾지 못했다면 로깅 후 스폰 로직을 종료한다
-	if (nullptr == player_spawn_data)
-	{
-		_NULL_DETECTION_MSGBOX;
-		return;
-	}
-
-	const auto player = object_manager_->CreateActor<Player>(player_spawn_data);
-	ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
-
-	// 스테이지(월드)에 있는 네비메시를 가져와서 플레이어에게 연결
-	const auto& nav_mesh = background_->NavMesh();
-	player->SetNavMesh(nav_mesh);
-
-	// 플레이어가 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
-	player->SetPlayScene(this);
-
-	// 게임 스테이트에 플레이어 캐싱
-	_RunState.SetPlayer(player);
-}
-
 WidgetBase* InGameScene::_CreateView()
 {
 	switch (view_state_)
@@ -207,7 +160,7 @@ WidgetBase* InGameScene::_CreateView()
 		);
 	case InGameViewState::Result:
 		return ui_manager_->CreateUI<InGameResultView>(
-			[this]() { _UserProfile.IncreaseCoins(_RunState.IsPlayerDied() ? _RunState.GetEarnedCoinCount() >> 1 : _RunState.GetEarnedCoinCount()); _SceneMgr.ChangeScene(SceneType::InGame); },
+			[this]() { stage_manager_->ProgressRunSessionResult(); _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }
 		);
 	}

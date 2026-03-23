@@ -12,7 +12,8 @@ class Transform;
 class Collider abstract : public ComponentBase
 {
 public:
-	explicit Collider(ComponentType _component_type, const ColliderType _collider_type) : ComponentBase(_component_type), type(_collider_type), layer(CollisionLayer::End) {}
+	explicit Collider(ComponentType _component_type, const ColliderType _collider_type) : ComponentBase(_component_type), type_(_collider_type), layer_(CollisionLayer::End) {}
+	~Collider() override;
 
 public:
 	_bool Initialize() override;
@@ -21,11 +22,11 @@ public:
 	_int LateUpdate(_double _delta_time) override;
 
 public:
-	ColliderType Type() const { return type; }
-	void Type(const ColliderType _type) { type = _type; }
+	ColliderType Type() const { return type_; }
+	void Type(const ColliderType _type) { type_ = _type; }
 
-	CollisionLayer Layer() const { return layer; }
-	void Layer(const CollisionLayer _layer) { layer = _layer; }
+	CollisionLayer Layer() const { return layer_; }
+	void Layer(const CollisionLayer _layer) { layer_ = _layer; }
 
 	const std::list<Collider*>& CollidedColliders() const { return collided_colliders_; }
 
@@ -50,8 +51,8 @@ private:
 	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }
 
 private:
-	ColliderType type;
-	CollisionLayer layer;
+	ColliderType type_;
+	CollisionLayer layer_;
 
 	std::list<Collider*> collided_colliders_; // 충돌 중인 콜라이더 목록
 	std::map<Collider*, _double> collision_timers_;
