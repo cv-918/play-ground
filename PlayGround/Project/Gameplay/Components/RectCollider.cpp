@@ -11,12 +11,12 @@ void RectCollider::Render(_double _delta_time)
 	_DrawFunc::DrawRectangle(rect_, Colors::Black);
 }
 
-_bool RectCollider::_CheckCollided(Collider* _other)
+_bool RectCollider::CheckCollided(Collider* _other)
 {
 	if (!_other)
 		return false;
 
-	const auto other_type = _other->Type();
+	const auto other_type = _other->GetType();
 	switch (other_type)
 	{
 	case ColliderType::Rectangle:

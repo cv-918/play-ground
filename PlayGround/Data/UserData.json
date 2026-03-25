@@ -11,7 +11,7 @@
             ],
             [
                 6,
-                2
+                5
             ],
             [
                 2,
@@ -22,10 +22,10 @@
                 5
             ]
         ],
-        "dust_count_": 233,
-        "experience_": 0,
+        "dust_count_": 487,
+        "experience_": 35,
         "id_": 0,
-        "stage_progress_": 1,
+        "stage_progress_": 2,
         "unlocked_character_ids_": [
             1
         ]

@@ -48,11 +48,11 @@ _bool Player::Initialize()
 
 	const auto collector_stat = attribute_stat.GetStat(AttributeType::CollectionRange);
 	const auto start_collector_size = (info_->collector_size_ + collector_stat.additive_increase_) * collector_stat.multiplicative_increase_rate_; // 수집 콜라이더는 플레이어 크기에 비례해서 설정
-	const auto collector_col = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
-	collector_col->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
-	collector_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
-	RegisterComponent(collector_col);
-	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col);
+	collector_col_ = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
+	collector_col_->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
+	collector_col_->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
+	RegisterComponent(collector_col_);
+	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col_);
 
 	// 기타 멤버 변수 초기화 및 캐싱
 	color_ = Colors::DarkGray;
@@ -60,14 +60,6 @@ _bool Player::Initialize()
 
 	Finalize();
 	return true;
-}
-
-_int Player::Update(_double _delta_time)
-{
-	_int ret = __super::Update(_delta_time);
-	if (0 != ret) return ret;
-
-	return 0;
 }
 
 void Player::DebugRender(_double _delta_time)
@@ -81,11 +73,12 @@ void Player::DebugRender(_double _delta_time)
 
 void Player::OnDestroy()
 {
-	//const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	//const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	//
-	//_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
-	//_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	
+	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::PlayerCollector, collector_col_);
 
 	// 스테이지	매니저에 플레이어가 죽었다는 메시지 보내기
 	if (status_->IsDead())
@@ -101,7 +94,7 @@ void Player::OnDestroy()
 
 void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-	switch (_this->Layer())
+	switch (_this->GetLayer())
 	{
 		/* 몸통 collider 충돌 처리 */
 	case CollisionLayer::PlayerBody:
@@ -109,7 +102,7 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
 	{
-		switch (_other->Layer())
+		switch (_other->GetLayer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
@@ -131,7 +124,7 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 
 void Player::OnCollisionStay(Collider* _this, Collider* _other)
 {
-	switch (_this->Layer())
+	switch (_this->GetLayer())
 	{
 		/* 몸통 collider 충돌 처리 */
 	case CollisionLayer::PlayerBody:
@@ -139,7 +132,7 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
 	{
-		switch (_other->Layer())
+		switch (_other->GetLayer())
 		{
 		case CollisionLayer::EnemyBody:
 		{
@@ -166,6 +159,11 @@ void Player::GetDamage(_float _damage)
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
+
+	if (status_->IsDead())
+	{
+		_bool debug = true;
+	}
 }
 
 void Player::_ShowDebugInfo()

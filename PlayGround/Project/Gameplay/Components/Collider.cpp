@@ -8,16 +8,12 @@
 
 Collider::~Collider()
 {
-	for (const auto& collider : collided_colliders_)
+	for (auto* other : collided_colliders_)
 	{
-		if (collider)
-		{
-			collider->_DeregisterFromCollidedList(this);
-			collider->EraseTimerTarget(this);
-		}
+		other->DeregisterFromCollidedList(this);
+		other->EraseTimerTarget(this);
 	}
 
-	// 시스템에 접근해서 자신에 대한 등록을 해제
 	_ColMgr.DeregisterCollider(layer_, this);
 }
 
@@ -81,56 +77,55 @@ _int Collider::LateUpdate(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void Collider::DetectCollision(Collider* _other)
+void Collider::RegisterOnCollidedList(Collider* _other)
 {
-	if (!_other)
-		return;
-
-	if (!IsEnable())
-		return;
-
-	// 충돌 타이머 체크
-	if (!_CheckCollisionTimer(_other))
-		return;
-
-	// 충돌했을 경우
-	if (_CheckCollided(_other))
+	if (_IsAlreadyColliding(_other))
 	{
-		// 충돌 목록에 추가에 성공했을 경우
-		if (_RegisterOnCollidedList(_other))
-		{
-			// 누구의 목록에 어떤 오브젝트가 들어갔는지 로깅
-			_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
+		if (!_IsCollidableWith(_other))
+			return;
 
-			// Enter 신호 전파
-			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-				s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
-				});
-		}
-		// 이미 충돌 목록에 있을 경우
-		else
-		{
-			// Stay 신호 전파
-			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-				s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
-				});
-		}
+		// Stay 신호 전파
+		GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+			s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
+			});
 	}
-	// 충돌하지 않을 경우
 	else
 	{
-		// 충돌 목록에서 제거에 성공했을 경우
-		if (_DeregisterFromCollidedList(_other))
-		{
-			// 누구의 목록에서 어떤 오브젝트가 빠졌는지 로깅
-			_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
+		collided_colliders_.push_back(_other);
+		_UpdateIsCollidingState();
 
-			// Exit 신호 전파
-			GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-				s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
-				});
-		}
+		// 누구의 목록에 어떤 오브젝트가 들어갔는지 로깅
+		_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
+
+		if (!_IsCollidableWith(_other))
+			return;
+
+		// Enter 신호 전파
+		GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+			s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
+			});
 	}
+}
+
+void Collider::DeregisterFromCollidedList(Collider* _other)
+{
+	if (collided_colliders_.empty())
+		return;
+
+	if (!_IsAlreadyColliding(_other))
+		return;
+
+	auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
+	collided_colliders_.erase(it);
+	_UpdateIsCollidingState();
+
+	// 누구의 목록에서 어떤 오브젝트가 빠졌는지 로깅
+	_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
+
+	// Exit 신호 전파
+	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+		s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
+		});
 }
 
 void Collider::SetTimerForTarget(Collider* _other, _double _time)
@@ -155,47 +150,12 @@ void Collider::EraseTimerTarget(Collider* _other)
 	collision_timers_.erase(_other);
 }
 
-_bool Collider::_CheckCollisionTimer(Collider* _other)
+_bool Collider::_IsCollidableWith(Collider* _other)
 {
 	// 타이머가 존재하지 않거나, 타이머가 0인 경우 충돌 가능
 	auto it = collision_timers_.find(_other);
 	if (it == collision_timers_.end() || it->second <= 0.0)
 		return true;
-
-	return false;
-}
-
-_bool Collider::_RegisterOnCollidedList(Collider* _other)
-{
-	if (!_other)
-		return false;
-
-	auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
-	if (it == collided_colliders_.end())
-	{
-		collided_colliders_.push_back(_other);
-		_UpdateIsCollidingState();
-		return true;
-	}
-
-	return false;
-}
-
-_bool Collider::_DeregisterFromCollidedList(Collider* _other)
-{
-	if (collided_colliders_.empty())
-		return false;
-
-	if (!_other)
-		return false;
-
-	auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
-	if (it != collided_colliders_.end())
-	{
-		collided_colliders_.erase(it);
-		_UpdateIsCollidingState();
-		return true;
-	}
 
 	return false;
 }

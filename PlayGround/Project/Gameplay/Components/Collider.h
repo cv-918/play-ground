@@ -17,36 +17,36 @@ public:
 
 public:
 	_bool Initialize() override;
-
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
 
 public:
-	ColliderType Type() const { return type_; }
-	void Type(const ColliderType _type) { type_ = _type; }
+	virtual _bool CheckCollided(Collider* _other) PURE;
+	void RegisterOnCollidedList(Collider* _other);
+	void DeregisterFromCollidedList(Collider* _other);
 
-	CollisionLayer Layer() const { return layer_; }
-	void Layer(const CollisionLayer _layer) { layer_ = _layer; }
+	ColliderType GetType() const { return type_; }
+
+	CollisionLayer GetLayer() const { return layer_; }
+	void SetLayer(const CollisionLayer _layer) { layer_ = _layer; }
 
 	const std::list<Collider*>& CollidedColliders() const { return collided_colliders_; }
 
 public:
-	void DetectCollision(Collider* _other);
 	void SetTimerForTarget(Collider* _other, _double _time);
 	void EraseTimerTarget(Collider* _other);
+
+	_bool _IsAlreadyColliding(Collider* _other) const { return std::find(collided_colliders_.begin(), collided_colliders_.end(), _other) != collided_colliders_.end(); }
 
 	// 디버그 전용 기능
 	const std::map<Collider*, _double> GetCollisionTimers() const { return collision_timers_; }
 	_bool IsColliding() const { return is_colliding_; }
 
 protected:
-	virtual _bool _CheckCollided(Collider* _other) PURE;
-
 	// _other의 타이머를 체크해서 충돌 가능한 상태인지 반환하는 함수
-	_bool _CheckCollisionTimer(Collider* _other);
+	_bool _IsCollidableWith(Collider* _other);
 
-	_bool _RegisterOnCollidedList(Collider* _other);
-	_bool _DeregisterFromCollidedList(Collider* _other);
+	
 
 private:
 	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }

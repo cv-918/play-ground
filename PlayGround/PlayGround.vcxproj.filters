@@ -102,6 +102,7 @@
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -184,5 +185,6 @@
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
   </ItemGroup>
 </Project>

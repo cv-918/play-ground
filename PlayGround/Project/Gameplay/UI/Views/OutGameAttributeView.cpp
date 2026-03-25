@@ -64,10 +64,13 @@ void OutGameAttributeView::Render(_double _delta_time)
 		swprintf_s(buffer, L"Dust cloud : %d", _UserProfile.GetCoinCount());
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 
-		//swprintf_s(buffer, L"=== Experience ===");
-		//_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
-
 		swprintf_s(buffer, L"Experience : %d", _UserProfile.GetExperience());
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"=== User Info ===");
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
+
+		swprintf_s(buffer, L"Stage Progress : %d", _UserProfile.GetStageProgress());
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 	}
 

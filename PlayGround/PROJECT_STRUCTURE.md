@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-23 16:51)
+﻿# Project Structure (Updated: 2026-03-25 12:14)
 
 ```text
 Root
@@ -101,6 +101,8 @@ Root
 |   |   |   |   |   EnemyDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
+|   |   |   |   |   StageJsonDataManager.cpp
+|   |   |   |   |   StageJsonDataManager.h
 |   |   |   |   |   UserDataManager.cpp
 |   |   |   |   |   UserDataManager.h
 |   |   |   |   GameState.cpp

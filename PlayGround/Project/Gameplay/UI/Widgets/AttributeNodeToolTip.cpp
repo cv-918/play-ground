@@ -67,17 +67,24 @@ void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)
 	const auto target_info = target_node_->GetInfo();
 	
 	const auto grade = target_info->grade_;
-	const auto name = target_node_->Name();
-	swprintf_s(buffer, L"[%s] %s", _CommonGamePlayFunc::GetNodeGradeName(grade).c_str(), name.c_str());
+	const auto name = _UtilFunc::ToWString(target_info->name_);
+	const auto curr_lv = _UserProfile.GetNodeLevel(target_info->id_);
+	const auto max_lv = target_info->max_lv_;
+
+	swprintf_s(buffer, L"[%s] %s [%d / %d]", _CommonGamePlayFunc::GetNodeGradeName(grade).c_str(), name.c_str(), curr_lv, max_lv);
 	tooltip_text_ += std::wstring(buffer);
 
 	const auto cost = target_info->cost_;
 	const auto cost_growth = target_info->cost_growth_rate_;
-	const auto curr_lv = _UserProfile.GetNodeLevel(target_info->id_);
-	const auto max_lv = target_info->max_lv_;
-
 	const auto total_cost = s_uint(cost * (cost_growth * std::max(s_uint(1), curr_lv)));
-	swprintf_s(buffer, L"업그레이드 비용 : %d [%d / %d]", total_cost, curr_lv, max_lv);
+	if (curr_lv == max_lv)
+	{
+		swprintf_s(buffer, L"업그레이드 비용 : --");
+	}
+	else
+	{
+		swprintf_s(buffer, L"업그레이드 비용 : %d", total_cost);
+	}
 	tooltip_text_ += L"\n" + std::wstring(buffer);
 
 	const auto value = target_info->stat_value_;

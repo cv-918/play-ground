@@ -9,6 +9,7 @@
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 #include "GamePlaySystems/Json/UserDataManager.h"
+#include "GamePlaySystems/Json/StageJsonDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -23,28 +24,34 @@ _bool PlayGround::Initialize()
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerCollector, CollisionLayer::PropsBody, true);
 
-	if (false == _EnemyDataMgr.Load("Data/Enemy.json"))
+	if (!_EnemyDataMgr.Load("Data/Enemy.json"))
 	{
-		_SYSTEM_LOG_ERROR(_T("Failed to load enemy data from JSON."));
+		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
 		return false;
 	}
 
-	if (false == _CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
+	if (!_CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
 	{
-		_SYSTEM_LOG_ERROR(_T("Failed to load playable character data from JSON."));
+		_DEBUG_MSGBOX(_T("Failed to load playable character data from JSON."));
 		return false;
 	}
 
-	if (false == _AttributeNodeDataMgr.Load("Data/AttributeNode.json"))
+	if (!_AttributeNodeDataMgr.Load("Data/AttributeNode.json"))
 	{
-		_SYSTEM_LOG_ERROR(_T("Failed to load attribute node data from JSON."));
+		_DEBUG_MSGBOX(_T("Failed to load attribute node data from JSON."));
 		return false;
 	}
 
-	if (false == _UserDataMgr.Load("Data/UserData.json"))
+	if (!_StageDataMgr.Load("Data/Stage.json", "Data/SpawnPool.json"))
 	{
-		_SYSTEM_LOG_ERROR(_T("Failed to load user data from JSON."));
-		//return false;
+		_DEBUG_MSGBOX(_T("Failed to load stage data from JSON."));
+		return false;
+	}
+
+	if (!_UserDataMgr.Load("Data/UserData.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load user data from JSON."));
+		return false;
 	}
 
 	return true;
@@ -62,8 +69,6 @@ _int PlayGround::Update(_double _delta_time)
 
 	_SceneMgr.Update(_delta_time);
 	_SceneMgr.LateUpdate(_delta_time);
-
-	_ColMgr.Update();
 
 	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
 	// 등록된 애들은 일괄 처리

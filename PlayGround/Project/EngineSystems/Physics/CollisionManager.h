@@ -20,6 +20,9 @@ public:
 	void ClearAllColliders();
 
 private:
+	_bool IsColliding(Collider* _a, Collider* _b); // 실제 충돌 검사 로직 (Collider 클래스의 _CheckCollided 호출)
+
+private:
     // 레이어별로 콜라이더 포인터들을 관리
     std::vector<Collider*> layer_colliders_[s_int(CollisionLayer::End)];
 

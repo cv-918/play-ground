@@ -16,7 +16,7 @@ public:
 	_bool SpendCoins(const _uint _count);
 	_uint GetCoinCount() const { return dust_count_; }
 
-	// --- ---
+	// --- 경험치, 레벨 관련 ---
 	_uint GetExperience() const { return experience_; }
 
 	// --- 어트리뷰트 관련 ---
@@ -30,6 +30,7 @@ public:
 
 	// --- 스테이지 관련 ---
 	void ApplyRunSessionResult(const RunSessionResult& _result);
+	void IncreaseStageProgress() { ++stage_progress_; }
 	_uint GetStageProgress() const { return stage_progress_; }
 	
 private:

@@ -14,5 +14,6 @@ public:
 private:
 	ProgressBar* stage_duration_gauge_ = nullptr;
 	ProgressBar* stage_clear_progress_ = nullptr;
+	ProgressBar* next_stage_progress_ = nullptr;
 };
 
