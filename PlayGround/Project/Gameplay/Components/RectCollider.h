@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Collider.h"
 
 class RectCollider :
@@ -11,7 +11,7 @@ public:
 	void Render(_double _delta_time) override;
 
 protected:
-	_bool _CheckCollided(Collider* _other) override;
+	_bool CheckCollided(Collider* _other) override;
 
 public:
 	_Rect Rect() const { return rect_; }

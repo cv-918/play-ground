@@ -5,6 +5,7 @@
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/UserDataManager.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "GamePlaySystems/Json/StageJsonDataManager.h"
 
 #include "GamePlay/World/Background.h"
 #include "Actors/Player.h"
@@ -14,42 +15,28 @@
 
 _int StageManager::Update(_double _delta_time)
 {
-	// 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
-	
+	// 1) 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
 
-	// 상태에 따른 로직 처리
+	// 2) 상태에 따른 로직 처리
 	switch (curr_state_)
 	{
-	case StageState::Enter:		_OnEnter();		break;
-	case StageState::Ready:		_OnReady();		break;
+	case StageState::Enter:		_OnEnter();					break;
+	case StageState::Ready:		_OnReady();					break;
 	case StageState::Play:		_OnPlay(_delta_time);		break;
-	case StageState::Pause:		_OnPause();		break;
-	case StageState::Clear:		_OnClear();		break;
-	case StageState::Result:	_OnResult();	break;
-	case StageState::Exit:		_OnExit();		break;
+	case StageState::Pause:		_OnPause();					break;
+	case StageState::Clear:		_OnClear();					break;
+	case StageState::Result:	_OnResult();				break;
+	case StageState::Exit:		_OnExit();					break;
 	}
 
 	return UPDATE_CONTINUE;
-}
-
-void StageManager::SetPlayScene(InGameScene* _play_scene)
-{
-	if (nullptr == _play_scene)
-	{
-		_NULL_DETECTION_MSGBOX;
-		return;
-	}
-
-	play_scene_ = _play_scene;
-	object_manager_ = play_scene_->GetObjectManager();
-	ui_manager_ = play_scene_->GetUIManager();
 }
 
 void StageManager::ChangeState(StageState _new_state)
 {
 	prev_state_ = curr_state_;
 	curr_state_ = _new_state;
-	_SYSTEM_LOG_INFO(_T("Stage state changed: %d -> %d"), s_int(prev_state_), s_int(curr_state_));
+	_SYSTEM_LOG_INFO(_T("Stage state changed: %s -> %s"), _CommonGamePlayFunc::GetStageStateTypeName(prev_state_).c_str(), _CommonGamePlayFunc::GetStageStateTypeName(curr_state_).c_str());
 
 	switch (curr_state_)
 	{
@@ -67,43 +54,6 @@ void StageManager::ChangeState(StageState _new_state)
 	}
 }
 
-void StageManager::SetNavMesh(const _Rect& _rt)
-{
-	stage_nav_mesh_ = &_rt;
-	_UpdateGenerationAreas();
-}
-
-_Point StageManager::GeneratePosition(_bool _in_screen, _bool _include_center)
-{
-	if (_in_screen)
-	{
-		return {
-			_Random.Range(stage_nav_mesh_->Left(), stage_nav_mesh_->Right()),
-			_Random.Range(stage_nav_mesh_->Top(), stage_nav_mesh_->Bottom())
-		};
-	}
-
-	std::vector<_Rect> areas = { generation_area_[0], generation_area_[0], generation_area_[0], generation_area_[0] };
-	_uint area_index_max = 3;
-
-	if (_include_center)
-	{
-		const auto quarter_and_three_rt = *stage_nav_mesh_ * 0.75f;
-
-		areas.insert(areas.begin(), quarter_and_three_rt);
-		area_index_max = 4;
-	}
-
-	// 임의의 생성 구역을 선택
-	const auto area_index = _Random.Range(0, area_index_max);
-
-	// 생성 구역 안의 임의의 좌표를 반환
-	return {
-		_Random.Range(generation_area_[area_index].Left(), generation_area_[area_index].Right()),
-		_Random.Range(generation_area_[area_index].Top(), generation_area_[area_index].Bottom())
-	};
-}
-
 void StageManager::ProgressRunSessionResult()
 {
 	// 1. RunState로부터 이번 판의 최종 성적표를 받음
@@ -117,6 +67,24 @@ void StageManager::ProgressRunSessionResult()
 
 	// 4. 다음 판을 위해 비우기
 	_RunState.Clear();
+}
+
+void StageManager::MarkCanProgressNextStage()
+{
+	can_progress_next_stage_ = true;
+}
+
+void StageManager::SetPlayScene(InGameScene* _play_scene)
+{
+	if (nullptr == _play_scene)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	play_scene_ = _play_scene;
+	object_manager_ = play_scene_->GetObjectManager();
+	ui_manager_ = play_scene_->GetUIManager();
 }
 
 _bool StageManager::SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data)
@@ -158,7 +126,7 @@ void StageManager::_OnEnter()
 	const auto& nav_mesh = background->NavMesh();
 
 	// 네비메시 정보를 기반으로 액터 생성 구역 및 존재 가능 영역 설정
-	SetNavMesh(nav_mesh);
+	_SetNavMesh(nav_mesh);
 	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);
 
 	// 플레이어 생성 및 UI 생성
@@ -168,27 +136,14 @@ void StageManager::_OnEnter()
 	player->GetTransform()->Position(GAME_VIEW_CENTER);
 	_RunState.SetPlayer(player);
 	ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
-	
-	// 초기 에너미 스폰 처리
+
+	// 초기 에너미 스폰
 	const auto additional_spawn_count = _UserProfile.GetStageProgress() * 0.1f;
 	const auto initial_spawn_count = DEFAULT_SPAWN_COUNT + additional_spawn_count;
-
-	// 일단은 모든 에너미를 랜덤으로 처리, 스테이지 데이터 마련되면 스테이지 진행 데이터에 맞춰서 각 몬스터 확률형 생성
-	for (_int i = 0; i < initial_spawn_count; ++i)
+	if (!_SpawnEnemy(false, initial_spawn_count))
 	{
-		const auto enemy_idx = _Random.Range(0, _EnemyDataMgr.GetDataCount() - 1);
-		const auto enemy_data = _EnemyDataMgr.GetDataByIndex(enemy_idx);
-
-		if (nullptr == enemy_data)
-		{
-			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(Index : %d)"), enemy_idx);
-			return;
-		}
-
-		UnitCreationInfo creation_info;
-		creation_info.position_ = GeneratePosition(true, true);
-		creation_info.look_point_ = GeneratePosition(true, true);
-		_SpawnEnemy(enemy_data, creation_info);
+		_DEBUG_MSGBOX(_T("Failed to spawn initial enemies."));
+		return;
 	}
 
 	// 스폰 타이머 리셋
@@ -220,68 +175,31 @@ void StageManager::_OnPlay(_double _delta_time)
 	// 게임 플레이 로직 처리
 	// 예시: 적 스폰, 아이템 드롭, 타이머 업데이트 등
 
-	stage_elapsed_time_ += _delta_time;
 	if (stage_elapsed_time_ >= stage_duration_)
 	{
-		// 스테이지 결과 화면으로 전환
 		ChangeState(StageState::Result);
 		return;
 	}
 
-	// 테스트용 명령어
-	if (_InputMgr.Pressed(VK_CONTROL))
-	{
-		// A키를 누르면 스폰 타이머가 초기화되어 즉시 적이 스폰되도록 함
-		if (_InputMgr.Down('C'))
-		{
-			spawn_timer_ = spawn_interval_;
+	_int ret = _HandleInputDuringPlay(_delta_time);
+	if (UPDATE_CONTINUE != ret)
+		return;
 
-			_SYSTEM_LOG_INFO(_T("[Test Function] Spawn timer reset by pressing A key"));
-		}
+	// 스테이지 타이머 업데이트
+	stage_elapsed_time_ += _delta_time;
 
-		// D키를 누르면 몬스터 일시정지 플래그가 토글되도록 함
-		if (_InputMgr.Down(VK_SPACE))
-		{
-			const auto curr_val = _GameState.GetPause();
-			_GameState.SetPause(!curr_val);
-
-			_SYSTEM_LOG_INFO(_T("[Test Function] Monster pause toggled: %s"), _TF(curr_val));
-		}
-	}
-
+	// 스폰 타이머 및 인터벌 업데이트
 	spawn_timer_ += _Timer.DeltaTime();
+	spawn_interval_ = 3.0 / (1.0 + (stage_elapsed_time_ / 60.0) * 0.5); // 나중에 DifficultyInfo에서 spawn_scaling_factor를 가져와 적용
+
 	if (spawn_timer_ >= spawn_interval_)
 	{
 		spawn_timer_ = 0.0;
-		spawn_interval_ = _Random.Range(3.0, 6.0); // 스폰 간격을 1초에서 3초 사이의 랜덤한 값으로 설정
-
-		const auto enemy_idx = _Random.Range(0, _EnemyDataMgr.GetDataCount() - 1);
-		const auto enemy_data = _EnemyDataMgr.GetDataByIndex(enemy_idx);
-
-		if(nullptr == enemy_data)
+		if (!_SpawnEnemy())
 		{
-			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(Index : %d)"), enemy_idx);
+			_DEBUG_MSGBOX(_T("Failed to spawn enemies during play."));
 			return;
 		}
-
-		UnitCreationInfo creation_info;
-		creation_info.position_ = GeneratePosition(false, false);
-
-		const _Vector3 center = _Vector3{ s_float(stage_nav_mesh_->GetCenter().x), s_float(stage_nav_mesh_->GetCenter().y), 0.f };
-		const _Vector3 to_center = (center - creation_info.position_).Normalized();
-		const _float radius = enemy_data->body_size_ * 0.5f;
-
-		const _Vector3 point_to_center = creation_info.position_ + to_center * radius;
-
-		// 충돌 여부를 확인하고, 화면에 보이지 않는 영역까지 밀어내기
-		if(stage_nav_mesh_->PtInRect(point_to_center))
-		{
-			// 생성 지점에서 중심 방향으로 body_size의 절반만큼 이동한 지점이 네비게이션 메시 안에 있다면, 생성 지점을 중심 방향으로 body_size의 절반만큼 이동시킴
-			creation_info.position_ += to_center * (radius * -1.f);
-		}
-		
-		creation_info.look_point_ = GeneratePosition(true, true);
-		_SpawnEnemy(enemy_data, creation_info);
 	}
 }
 
@@ -329,9 +247,63 @@ void StageManager::_OnExit()
 
 	// 1) 이번 판의 결과를 RunState에 기록하고, UserProfile에 반영하여 영구 저장까지 진행하는 함수를 호출
 	ProgressRunSessionResult();
-	
+
 	// 2) 로비로 이동
 	_SceneMgr.ChangeScene(SceneType::OutGame);
+}
+
+_int StageManager::_HandleInputDuringPlay(_double _delta_time)
+{
+	// 테스트 전용 인풋 처리. 나중에 필요 없으면 제거
+#ifdef _DEBUG
+	if (_InputMgr.Pressed(VK_CONTROL))
+	{
+		// A키를 누르면 스폰 타이머가 초기화되어 즉시 적이 스폰되도록 함
+		if (_InputMgr.Down('C'))
+		{
+			spawn_timer_ = spawn_interval_;
+			_SYSTEM_LOG_INFO(_T("[Test Function] Spawn timer reset by pressing A key"));
+		}
+	}
+#endif // _DEBUG
+
+	if (can_progress_next_stage_)
+	{
+		if (_InputMgr.Pressed(VK_SPACE))
+		{
+			proceed_to_next_stage_timer_ += _delta_time;
+		}
+		else
+		{
+			proceed_to_next_stage_timer_ = 0.0;
+		}
+
+		if (proceed_to_next_stage_timer_ >= PROCEED_TO_NEXT_STAGE_HOLD_TIME)
+		{
+			proceed_to_next_stage_timer_ = 0.0;
+
+			const auto curr_stage_lv = _UserProfile.GetStageProgress();
+			if (curr_stage_lv < 5)
+			{
+				_UserProfile.IncreaseStageProgress();
+			}
+
+			// 결과 적용 및 스테이지 재시작
+			ProgressRunSessionResult();
+			_SceneMgr.ChangeScene(SceneType::InGame);
+
+			_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());
+			return UPDATE_BREAK;
+		}
+	}
+
+	return UPDATE_CONTINUE;
+}
+
+void StageManager::_SetNavMesh(const _Rect& _rt)
+{
+	stage_nav_mesh_ = &_rt;
+	_UpdateGenerationAreas();
 }
 
 void StageManager::_UpdateGenerationAreas()
@@ -370,29 +342,141 @@ void StageManager::_UpdateGenerationAreas()
 	};
 }
 
-_bool StageManager::_SpawnEnemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
+_Point StageManager::_GeneratePosition(_bool _in_screen, _bool _include_center)
 {
-	if (nullptr == _info)
+	if (_in_screen)
 	{
-		_NULL_DETECTION_MSGBOX;
+		return {
+			_Random.Range(stage_nav_mesh_->Left(), stage_nav_mesh_->Right()),
+			_Random.Range(stage_nav_mesh_->Top(), stage_nav_mesh_->Bottom())
+		};
+	}
+
+	std::vector<_Rect> areas = { generation_area_[0], generation_area_[0], generation_area_[0], generation_area_[0] };
+	_uint area_index_max = 3;
+
+	if (_include_center)
+	{
+		const auto quarter_and_three_rt = *stage_nav_mesh_ * 0.75f;
+
+		areas.insert(areas.begin(), quarter_and_three_rt);
+		area_index_max = 4;
+	}
+
+	// 임의의 생성 구역을 선택
+	const auto area_index = _Random.Range(0, area_index_max);
+
+	// 생성 구역 안의 임의의 좌표를 반환
+	return {
+		_Random.Range(generation_area_[area_index].Left(), generation_area_[area_index].Right()),
+		_Random.Range(generation_area_[area_index].Top(), generation_area_[area_index].Bottom())
+	};
+}
+
+_bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
+{
+	// 1) 현재 스테이지 설정 및 풀 정보 가져오기
+	const auto stage_progress = _UserProfile.GetStageProgress();
+	const auto stage_info = _StageDataMgr.GetStageInfo(stage_progress);
+	if (!stage_info)
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Stage info not found!(Stage Progress : %d)"), stage_progress);
 		return false;
 	}
 
-	// What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-
-	// 스폰 시에 넘겨야할 정보다 더 필요하다면 CreationInfo에 추가한다
-	// 나중에 종류가 다양해지면, enemy의 카테고리 같은걸 확인해서 생성을 ExpDust로 할지 다른 클래스로 할지 분기처리 해야한다
-	const auto spawned_enemy = object_manager_->CreateActor<ExpDust>(_info, _creation_info);
-	if (nullptr == spawned_enemy)
+	const auto pool_info = _StageDataMgr.GetSpawnPoolInfo(stage_info->spawn_pool_id_);
+	if (!pool_info)
 	{
-		_NULL_DETECTION_MSGBOX_EX(_T("Failed to spawn enemy!(ID : %d)"), _info->id_);
+		_NULL_DETECTION_MSGBOX_EX(_T("Spawn pool info not found!(Spawn Pool ID : %d)"), stage_info->spawn_pool_id_);
 		return false;
 	}
 
-	// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-	ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+	// 2) 풀에서 적 선택 및 생성
+	for (_int i = 0; i < _count; ++i)
+	{
+		// 가중치 기반 몬스터 선택
+		const auto enemy_id = _SelectMonsterFromPool(pool_info->spawn_enemies_info_);
+		const auto enemy_data = _EnemyDataMgr.GetData(enemy_id);
 
-	// 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
-	spawned_enemy->SetPlayScene(play_scene_);
+		if (nullptr == enemy_data)
+		{
+			_NULL_DETECTION_MSGBOX_EX(_T("Enemy data not found!(ID : %d)"), enemy_id);
+			return false;
+		}
+
+		UnitCreationInfo creation_info;
+		creation_info.position_ = _GeneratePosition(!_on_play, !_on_play);
+		creation_info.look_point_ = _GeneratePosition(true, true);
+
+		// 스태 스케일링 (Over-scaling 방지 적용)
+		// 시간이 지날수록 몬스터의 공격력/체력 배율을 높임
+		creation_info.stat_multiplier_ = GetTimeScalingFactor();
+
+		// 플레이 중에 스폰되는 경우에는 화면 밖으로 밀어내기
+		// Enter 상태에서 초기 스폰되는 경우, 플레이어가 생성 위치와 충돌하지 않도록 조정하는 작업이 추가로 필요함
+		if (_on_play)
+		{
+			const _Vector3 center = _Vector3{ s_float(stage_nav_mesh_->GetCenter().x), s_float(stage_nav_mesh_->GetCenter().y), 0.f };
+			const _Vector3 to_center = (center - creation_info.position_).Normalized();
+			const _float radius = enemy_data->body_size_ * 0.5f;
+
+			const _Vector3 point_to_center = creation_info.position_ + to_center * radius;
+
+			// 충돌 여부를 확인하고, 화면에 보이지 않는 영역까지 밀어내기
+			if (stage_nav_mesh_->PtInRect(point_to_center))
+			{
+				// 생성 지점에서 중심 방향으로 body_size의 절반만큼 이동한 지점이 네비게이션 메시 안에 있다면, 생성 지점을 중심 방향으로 body_size의 절반만큼 이동시킴
+				creation_info.position_ += to_center * (radius * -1.f);
+			}
+		}
+
+		// What-Json Spawn Data-, Where-Fixed Position by NavMesh-, How-Effect or Role Etc-
+		// 스폰 시에 넘겨야할 정보다 더 필요하다면 CreationInfo에 추가한다
+		// 나중에 종류가 다양해지면, enemy의 카테고리 같은걸 확인해서 생성을 ExpDust로 할지 다른 클래스로 할지 분기처리 해야한다
+		const auto spawned_enemy = object_manager_->CreateActor<ExpDust>(enemy_data, creation_info);
+		if (nullptr == spawned_enemy)
+		{
+			_NULL_DETECTION_MSGBOX_EX(_T("Failed to spawn enemy!(ID : %d)"), enemy_data->id_);
+			return false;
+		}
+		spawned_enemy->SetPlayScene(play_scene_); // 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
+
+		// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
+		ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+
+		// 어떤 몬스터가 스폰됐는지 로깅 (테스트용, 나중에 필요 없으면 제거)
+		_SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);
+	}
 
 	return true;
+}
+
+_uint StageManager::_SelectMonsterFromPool(const std::vector<SpawnEnemyJsonInfo>& _pool)
+{
+	// 1. 전체 가중치 합 계산
+	_uint total_weight = 0;
+	for (const auto& enemy : _pool)
+		total_weight += enemy.weight_;
+
+	if (total_weight == 0)
+	{
+		_DEBUG_MSGBOX(_T("Total weight of spawn pool is zero! Check the spawn pool configuration."));
+		return 0;
+	}
+
+	// 2. 0 ~ total_weight 사이의 난수 생성
+	_uint random_val = _Random.Range(0, total_weight - 1);
+
+	// 3. 난수가 어느 구간에 속하는지 확인
+	_uint current_sum = 0;
+	for (const auto& enemy : _pool)
+	{
+		current_sum += enemy.weight_;
+		if (random_val < current_sum)
+		{
+			return enemy.id_; // 당첨된 몬스터 ID 반환
+		}
+	}
+
+	return 0;
 }

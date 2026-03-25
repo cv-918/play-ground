@@ -29,12 +29,12 @@ void SphereCollider::Render(_double _delta_time)
 	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, GetDebugColor());
 }
 
-_bool SphereCollider::_CheckCollided(Collider* _other)
+_bool SphereCollider::CheckCollided(Collider* _other)
 {
 	if (!_other)
 		return false;
 
-	const auto other_type = _other->Type();
+	const auto other_type = _other->GetType();
 	switch (other_type)
 	{
 	case ColliderType::Rectangle:

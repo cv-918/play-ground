@@ -159,6 +159,7 @@ struct UnitCreationInfo
 {
 	_Vector3 position_;
 	_Vector3 look_point_;
+	_float stat_multiplier_ = 1.f; // 스탯 배율. 필요에 따라 몬스터의 체력이나 공격력을 스테이지 진행 시간에 비례해서 증가시키는 로직에서 활용할 수 있습니다.
 };
 
 struct RunSessionResult
@@ -168,6 +169,35 @@ struct RunSessionResult
 	_uint gained_experience_ = 0;
 	_double play_time_ = 0.0;
 };
+
+struct StageJsonInfo
+{
+	_uint id_ = 0;
+
+	/** 이 스테이지에서 사용할 스폰 풀의 ID. 필요에 따라 스폰 풀 정보를 활용하여 스테이지 진행 중에 적을 스폰하는 로직에서 사용할 수 있습니다. */
+	_uint spawn_pool_id_ = 0;
+};
+
+struct SpawnEnemyJsonInfo
+{
+	/** 설정하고자 하는 적의 ID. Enemy.json에 기반합니다. */
+	_uint id_ = 0;
+
+	/** 스폰 가중치 (같은 스폰 그룹 내에서 이 값이 높을수록 더 자주 스폰됨) */
+	_uint weight_ = 0;
+
+	/** 이 적이 스폰되는 간격 (초 단위). 필요에 따라 스폰 간격이 짧을수록 더 자주 스폰되는 형태로 구현할 수 있습니다. */
+	_float spawn_interval_ = 0.f;
+};
+
+struct StageSpawnPoolJsonInfo
+{
+	_uint id_ = 0;
+
+	/** 스테이지에 등장하는 적들의 정보. 필요에 따라 이 정보를 활용하여 스테이지 진행 중에 적을 스폰하는 로직에서 사용할 수 있습니다. */
+	std::vector<SpawnEnemyJsonInfo> spawn_enemies_info_;
+};
+
 #pragma endregion
 
 #pragma region [ 컨텐츠 관련 ]

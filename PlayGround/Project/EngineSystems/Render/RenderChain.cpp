@@ -1,5 +1,10 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "RenderChain.h"
+
+// GDI+ ê´€ë ¨ ìƒì„± ì˜¤ë¥˜ê°€ ë°œìƒí•˜ëŠ” íŒŒì¼ì—ì„œë§Œ ë§¤í¬ë¡œë¥¼ ì ì‹œ ë•ë‹ˆë‹¤.
+#ifdef _DEBUG
+#undef new
+#endif
 
 HWND g_hwnd		= nullptr;
 HDC g_dc		= nullptr;
@@ -16,12 +21,12 @@ RenderChain::~RenderChain()
 
 _bool RenderChain::Initialize()
 {
-	// GDI+ ÃÊ±âÈ­
+	// GDI+ ì´ˆê¸°í™”
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
 
 	g_dc = GetDC(g_hwnd);
-	_CreateBackBuffer(WINCX, WINCY); // ÀÌ¹ÌÁö IO ¾øÀÌ ¹é¹öÆÛ »ı¼º
+	_CreateBackBuffer(WINCX, WINCY); // ì´ë¯¸ì§€ IO ì—†ì´ ë°±ë²„í¼ ìƒì„±
 
     return true;
 }
@@ -30,7 +35,7 @@ _bool RenderChain::Release()
 {
 	_DestroyBackBuffer();
 
-	// GDI+ Á¾·á (¹İµå½Ã ¸®¼Ò½º ÇØÁ¦ Àü¿¡ È£Ãâ)
+	// GDI+ ì¢…ë£Œ (ë°˜ë“œì‹œ ë¦¬ì†ŒìŠ¤ í•´ì œ ì „ì— í˜¸ì¶œ)
 	Gdiplus::GdiplusShutdown(m_gdiplusToken);
 
 	if (g_dc)
@@ -44,30 +49,30 @@ _bool RenderChain::Release()
 
 void RenderChain::Clear()
 {
-	// 1. È­¸é Å¬¸®¾î
+	// 1. í™”ë©´ í´ë¦¬ì–´
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
-	// 2. ÀÌ¹ø ÇÁ·¹ÀÓ¿¡¼­ °ø¿ëÀ¸·Î ¾µ Graphics °´Ã¼ »ı¼º (½Ì±Û ÆĞÅÏÀÇ ½ÃÀÛ)
+	// 2. ì´ë²ˆ í”„ë ˆì„ì—ì„œ ê³µìš©ìœ¼ë¡œ ì“¸ Graphics ê°ì²´ ìƒì„± (ì‹±ê¸€ íŒ¨í„´ì˜ ì‹œì‘)
 	if (nullptr == g_graphics)
 	{
 		g_graphics = new Gdiplus::Graphics(g_back_dc);
-		// ¾ÈÆ¼¾Ù¸®¾î½Ì °°Àº Àü¿ª ¼³Á¤Àº ¿©±â¼­ ÇÑ ¹ø¸¸!
+		// ì•ˆí‹°ì•¨ë¦¬ì–´ì‹± ê°™ì€ ì „ì—­ ì„¤ì •ì€ ì—¬ê¸°ì„œ í•œ ë²ˆë§Œ!
 		g_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 	}
 }
 
 void RenderChain::Present()
 {
-	// 3. ±×¸®±â°¡ ´Ù ³¡³µÀ¸¹Ç·Î Graphics °´Ã¼ »èÁ¦ (Áß¿ä: BitBlt ÀÌÀü¿¡ »èÁ¦ ±ÇÀå)
+	// 3. ê·¸ë¦¬ê¸°ê°€ ë‹¤ ëë‚¬ìœ¼ë¯€ë¡œ Graphics ê°ì²´ ì‚­ì œ (ì¤‘ìš”: BitBlt ì´ì „ì— ì‚­ì œ ê¶Œì¥)
 	SAFE_DELETE(g_graphics);
 
-	// 4. ÃÖÁ¾ È­¸é Ãâ·Â
+	// 4. ìµœì¢… í™”ë©´ ì¶œë ¥
 	BitBlt(g_dc, 0, 0, g_screen_size.x, g_screen_size.y, g_back_dc, 0, 0, SRCCOPY);
 }
 
 _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 {
-	// ±âÁ¸ ¸®¼Ò½º Á¤¸®
+	// ê¸°ì¡´ ë¦¬ì†ŒìŠ¤ ì •ë¦¬
 	_DestroyBackBuffer();
 
 	g_screen_size.x = _width;
@@ -77,7 +82,7 @@ _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 	back_bmp_ = CreateCompatibleBitmap(g_dc, g_screen_size.x, g_screen_size.y);
 	old_back_bmp_ = (HBITMAP)SelectObject(g_back_dc, back_bmp_);
 
-	// (¼±ÅÃ) ÃÊ±â Å¬¸®¾î
+	// (ì„ íƒ) ì´ˆê¸° í´ë¦¬ì–´
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
     return true;

@@ -22,7 +22,5 @@ class PlayableCharacterDataManager
 	: public JsonDataManager<PlayableCharacterJsonInfo>
 	, public ISingleton<PlayableCharacterDataManager>
 {
-	// JsonDataManager을(를) 통해 상속됨
-	_bool Save(const std::string& _file_path) override;
 };
 

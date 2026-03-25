@@ -42,7 +42,6 @@
 #include "Core/Interface/Interfaces.h"
 #include "Core/Math/MathFunctions.h"
 
-
 #include "Core/Math/Random.h"
 #include "Core/Math/Geometry2D.h"
 #include "Core/Math/Vector3.h"
@@ -61,3 +60,18 @@
 #include "GamePlaySystems/UserProfile.h"
 #include "GamePlaySystems/GameState.h"
 #include "GamePlaySystems/RunState.h"
+
+#include "EngineSystems/Json/json.hpp"
+
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <cstdlib>
+#include <crtdbg.h>
+
+#ifndef DBG_NEW 
+
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW 
+
+#endif
+#endif // _DEBUG

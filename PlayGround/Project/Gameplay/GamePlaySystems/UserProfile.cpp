@@ -6,6 +6,7 @@
 void UserProfile::ResetUserData()
 {
 	dust_count_ = 0;
+	experience_ = 0;
 	std::vector<_uint>().swap(unlocked_character_ids_); // unlocked_character_ids_ 벡터를 초기화하여 메모리 해제
 	std::vector<std::pair<_uint, _uint>>().swap(acquired_node_ids_); // acquired_node_ids_ 벡터를 초기화하여 메모리 해제
 	stage_progress_ = 0;
@@ -14,6 +15,7 @@ void UserProfile::ResetUserData()
 void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 {
 	dust_count_ = _info.dust_count_;
+	experience_ = _info.experience_;
 	unlocked_character_ids_ = _info.unlocked_character_ids_;
 	acquired_node_ids_ = _info.acquired_node_ids_;
 	stage_progress_ = _info.stage_progress_;

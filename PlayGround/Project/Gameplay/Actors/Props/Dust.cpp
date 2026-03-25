@@ -73,8 +73,8 @@ void Dust::OnDestroy()
 
 void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-	const auto this_layer = _this->Layer();
-	const auto other_layer = _other->Layer();
+	const auto this_layer = _this->GetLayer();
+	const auto other_layer = _other->GetLayer();
 
 	switch (this_layer)
 	{

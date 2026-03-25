@@ -33,10 +33,15 @@ _bool Enemy::Initialize()
 
 	// 스테이터스
 	const auto lv = s_int(info_->tier_);
-	status_->SetLv(lv);
-	status_->SetCurrentHp(info_->hp_);
-	status_->SetMaxHP(info_->hp_);
-	status_->SetAtt(info_->contact_damage_);
+	const auto scaled_lv = lv * creation_info_.stat_multiplier_;
+	status_->SetLv(lv * scaled_lv);
+
+	const auto scaled_hp = info_->hp_ * creation_info_.stat_multiplier_;
+	status_->SetCurrentHp(scaled_hp);
+	status_->SetMaxHP(scaled_hp);
+
+	const auto scaled_att = info_->contact_damage_ * creation_info_.stat_multiplier_;
+	status_->SetAtt(scaled_att);
 	object_description_ = _T("Lv. ") + std::to_wstring(lv);
 
 	// 콜라이더
@@ -77,11 +82,11 @@ _int Enemy::Update(_double _delta_time)
 
 void Enemy::OnDestroy()
 {
-	//const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	//const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	//
-	//_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
-	//_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
 	if (status_->IsDead())
 	{

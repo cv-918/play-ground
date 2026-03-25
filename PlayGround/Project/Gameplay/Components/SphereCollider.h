@@ -11,7 +11,7 @@ public:
 	void Render(_double _delta_time) override;
 
 protected:
-	_bool _CheckCollided(Collider* _other) override;
+	_bool CheckCollided(Collider* _other) override;
 
 public:
 	_Vector3 GetCenter() const { return center_; }

@@ -51,6 +51,9 @@ void RunState::GetEnemyKillReward(const EnemyJsonInfo* _info)
 	if (kill_count_ >= kill_count_for_clear_)
 	{
 		// 클리어 처리 (예: StageManager의 ChangeState를 호출하여 Clear 상태로 전환)
-		_StageMgr.ChangeState(StageState::Clear);
+		// _StageMgr.ChangeState(StageState::Clear);
+
+		// 다음 스테이지로 진행이 가능한 상태로 열어줌
+		_StageMgr.MarkCanProgressNextStage();
 	}
 }

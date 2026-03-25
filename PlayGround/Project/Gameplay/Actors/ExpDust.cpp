@@ -21,7 +21,7 @@ _bool ExpDust::Initialize()
 
 void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-	switch (_other->Layer())
+	switch (_other->GetLayer())
 	{
 	case CollisionLayer::PlayerBody:
 	{
@@ -45,7 +45,7 @@ void ExpDust::OnCollisionEnter(Collider* _this, Collider* _other)
 
 void ExpDust::OnCollisionStay(Collider* _this, Collider* _other)
 {
-	switch (_other->Layer())
+	switch (_other->GetLayer())
 	{
 	case CollisionLayer::PlayerBody:
 	{

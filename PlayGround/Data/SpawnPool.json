@@ -1,0 +1,27 @@
+﻿[
+	{
+		"id_": 1,
+		"spawn_enemies_info_": [
+			{
+				"id_": 1,
+				"weight_": 60,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 2,
+				"weight_": 25,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 3,
+				"weight_": 10,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 11,
+				"weight_": 5,
+				"spawn_interval_": 1.0
+			}
+		]
+	}
+]

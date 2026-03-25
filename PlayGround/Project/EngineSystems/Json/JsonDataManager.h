@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "EngineSystems/Json/json.hpp"
 using json = nlohmann::json;
 
 template <typename T>
@@ -14,7 +13,7 @@ public:
 
 public:
 	virtual _bool Load(const std::string& _file_path);
-	virtual _bool Save(const std::string& _file_path) PURE;
+	virtual _bool Save(const std::string& _file_path) { return true; }
 
 	// ID로 데이터 찾기
 	const T* GetData(_uint _id) const

@@ -39,6 +39,31 @@ namespace CommonGamePlayFunctions
 		}
 	}
 
+	inline std::wstring GetStageStateTypeName(StageState _stage_type)
+	{
+		switch (_stage_type)
+		{
+		case StageState::Undefined:
+			return L"Undefined";
+		case StageState::Enter:
+			return L"Enter";
+		case StageState::Ready:
+			return L"Ready";
+		case StageState::Play:
+			return L"Play";
+		case StageState::Pause:
+			return L"Pause";
+		case StageState::Clear:
+			return L"Clear";
+		case StageState::Result:
+			return L"Result";
+		case StageState::Exit:
+			return L"Exit";
+		default:
+			return L"Undefined";
+		}
+	}
+
 	inline std::wstring GetComponentTypeName(ComponentType _component_type)
 	{
 		switch (_component_type)
