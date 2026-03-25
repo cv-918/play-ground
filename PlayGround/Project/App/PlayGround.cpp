@@ -13,17 +13,19 @@
 
 _bool PlayGround::Initialize()
 {
+	// --- 시스템 초기화 ---
 	_Timer.Initialize();
 	_Random.Initialize();
 
-	_RenderChain.Initialize();
-	_SceneMgr.Initialize();
+	render_chain_ = &_RenderChain;
+	render_chain_->Initialize();
 
-	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyAttack, true);
-	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBullet, true);
-	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
-	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerCollector, CollisionLayer::PropsBody, true);
+	scene_manager_ = &_SceneMgr;
+	scene_manager_->Initialize();
 
+	input_manager_ = &_InputMgr;
+
+	// --- 게임 데이터 로드 ---
 	if (!_EnemyDataMgr.Load("Data/Enemy.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
@@ -54,12 +56,18 @@ _bool PlayGround::Initialize()
 		return false;
 	}
 
+	// --- 충돌 레이어 설정 ---
+	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyAttack, true);
+	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBullet, true);
+	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
+	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerCollector, CollisionLayer::PropsBody, true);
+
 	return true;
 }
 
 _int PlayGround::Update(_double _delta_time)
 {
-	if (_InputMgr.Down(VK_F3))
+	if (input_manager_->Down(VK_F3))
 	{
 		_GameState.debug_mode_ = !_GameState.debug_mode_;
 		_SYSTEM_LOG_INFO("Debug mode %s", _GameState.debug_mode_ ? "enabled" : "disabled");
@@ -67,25 +75,17 @@ _int PlayGround::Update(_double _delta_time)
 		return UPDATE_CONTINUE;
 	}
 
-	_SceneMgr.Update(_delta_time);
-	_SceneMgr.LateUpdate(_delta_time);
-
-	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
-	// 등록된 애들은 일괄 처리
+	scene_manager_->Update(_delta_time);
+	scene_manager_->LateUpdate(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
 
 void PlayGround::Render(_double _delta_time)
 {
-	// 1) Clear (단색)
-	_RenderChain.Clear();
-
-	// 2) Render
-	_SceneMgr.Render(_delta_time);
-
-	// 3) Present
-	_RenderChain.Present();
+	render_chain_->Clear();
+	scene_manager_->Render(_delta_time);
+	render_chain_->Present();
 }
 
 LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam)
@@ -93,35 +93,35 @@ LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, L
 	switch (_msg)
 	{
 	case WM_MOUSEMOVE:
-		_InputMgr.OnMouseMove(_wparam, _lparam);
+		input_manager_->OnMouseMove(_wparam, _lparam);
 		break;
 
 	case WM_MOUSEWHEEL:
-		_InputMgr.OnMouseWheel(_wparam, _lparam);
+		input_manager_->OnMouseWheel(_wparam, _lparam);
 		break;
 
-	case WM_LBUTTONDOWN: _InputMgr.OnMouseButtonDown(VK_LBUTTON, _lparam); break;
-	case WM_LBUTTONUP:   _InputMgr.OnMouseButtonUp(VK_LBUTTON, _lparam); break;
+	case WM_LBUTTONDOWN: input_manager_->OnMouseButtonDown(VK_LBUTTON, _lparam); break;
+	case WM_LBUTTONUP:   input_manager_->OnMouseButtonUp(VK_LBUTTON, _lparam); break;
 
-	case WM_RBUTTONDOWN: _InputMgr.OnMouseButtonDown(VK_RBUTTON, _lparam); break;
-	case WM_RBUTTONUP:   _InputMgr.OnMouseButtonUp(VK_RBUTTON, _lparam); break;
+	case WM_RBUTTONDOWN: input_manager_->OnMouseButtonDown(VK_RBUTTON, _lparam); break;
+	case WM_RBUTTONUP:   input_manager_->OnMouseButtonUp(VK_RBUTTON, _lparam); break;
 
-	case WM_MBUTTONDOWN: _InputMgr.OnMouseButtonDown(VK_MBUTTON, _lparam); break;
-	case WM_MBUTTONUP:   _InputMgr.OnMouseButtonUp(VK_MBUTTON, _lparam); break;
+	case WM_MBUTTONDOWN: input_manager_->OnMouseButtonDown(VK_MBUTTON, _lparam); break;
+	case WM_MBUTTONUP:   input_manager_->OnMouseButtonUp(VK_MBUTTON, _lparam); break;
 
 		// X 버튼(4/5번 버튼)
 	case WM_XBUTTONDOWN:
 	{
 		const _int xbtn = GET_XBUTTON_WPARAM(_wparam);
 		const WPARAM vk = (xbtn == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
-		_InputMgr.OnMouseButtonDown(vk, _lparam);
+		input_manager_->OnMouseButtonDown(vk, _lparam);
 		break;
 	}
 	case WM_XBUTTONUP:
 	{
 		const _int xbtn = GET_XBUTTON_WPARAM(_wparam);
 		const WPARAM vk = (xbtn == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
-		_InputMgr.OnMouseButtonUp(vk, _lparam);
+		input_manager_->OnMouseButtonUp(vk, _lparam);
 		break;
 	}
 
@@ -139,20 +139,20 @@ LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, L
 			}
 		}
 
-		_InputMgr.OnKeyDown(_wparam, _lparam);
+		input_manager_->OnKeyDown(_wparam, _lparam);
 		break;
 
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
-		_InputMgr.OnKeyUp(_wparam, _lparam);
+		input_manager_->OnKeyUp(_wparam, _lparam);
 		break;
 
 	case WM_CHAR:
-		_InputMgr.OnChar(s_tchar(_wparam));
+		input_manager_->OnChar(s_tchar(_wparam));
 		break;
 
 	case WM_KILLFOCUS:
-		_InputMgr.ResetAll();
+		input_manager_->ResetAll();
 		break;
 	}
 

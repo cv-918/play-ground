@@ -28,6 +28,6 @@ private:
     
     _float damage_ = 0.f;             // 피해량
     _float speed_ = 0.f;              // 이동 속도
-    _float lifetime_ = 30.0;           // 생존 시간 (초)
-    _float elapsed_time_ = 0.f;
+    _double lifetime_ = 30.0;           // 생존 시간 (초)
+    _double elapsed_time_ = 0.f;
 };

@@ -116,6 +116,8 @@ _int InGameScene::LateUpdate(_double _delta_time)
 		ui_manager_->LateUpdate(_delta_time);
 	}
 
+	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
+	// 등록된 애들은 일괄 처리
 	if (on_play_state)
 		_ColMgr.Update();
 
@@ -141,7 +143,6 @@ void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _positio
 void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
 	const auto damage_font = ui_manager_->CreateUI<DamageFont>(_damage, _position);
-	_SYSTEM_LOG_INFO(L"DamageFont created at position (%d, %d) with damage %.2f", _position.x, _position.y, _damage);
 }
 
 void InGameScene::ChangeView(InGameViewState _new_view_state)

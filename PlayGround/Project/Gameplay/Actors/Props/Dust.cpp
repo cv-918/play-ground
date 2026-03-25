@@ -31,7 +31,7 @@ _int Dust::Update(_double _delta_time)
 	switch (state_)
 	{
 	case PropsState::Idle:
-		transform_->TranslateToForward(move_spd_ * _delta_time);
+		transform_->TranslateToForward(move_spd_ * s_float(_delta_time));
 		break;
 
 	case PropsState::Tracking:
@@ -40,7 +40,7 @@ _int Dust::Update(_double _delta_time)
 
 		const auto target_pos = tracking_transform_->Position();
 		const auto pos = transform_->Position();
-		const auto new_pos = _MathFunc::Lerp(pos, target_pos, tracking_time_);
+		const auto new_pos = _MathFunc::Lerp(pos, target_pos, s_float(tracking_time_));
 		transform_->Position(new_pos);
 
 		const auto dist = _Vector3::Distance(pos, target_pos);

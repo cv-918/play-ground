@@ -1,10 +1,5 @@
 ﻿#pragma once
 
-/*
-	Static Info.
-	게임이 실행되기 전 미리 정의되어 있는 정보들
-*/
-
 #define _StageMgr StageManager::Get()
 
 class InGameScene;
@@ -23,6 +18,8 @@ public:
 	void ProgressRunSessionResult();
 	void MarkCanProgressNextStage();
 
+	_bool SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data);
+
 	void SetPlayScene(InGameScene* _play_scene);
 	StageState GetCurrState() const { return curr_state_; }
 
@@ -38,11 +35,8 @@ public:
 
 	_double GetTimeScalingFactor() const { return std::min(1.0f + stage_elapsed_time_ / 60.0f * 0.2f, 10.0/*최대 10배 제한*/); }
 
-	_bool SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data);
-
 private:
-	// 각 상태별 로직 처리 메서드
-	// 지금은 그냥 이대로 쓰고 나중에 함수포인터를 두고 상태 전환될 때 함수포인터를 바인딩하는 방식으로 리팩토링
+	// 각 상태별 로직 처리 메서드 (지금은 그냥 이대로 쓰고 나중에 함수포인터를 두고 상태 전환될 때 함수포인터를 바인딩하는 방식으로 리팩토링)
 	void _OnEnter();
 	void _OnReady();
 	void _OnPlay(_double _delta_time);

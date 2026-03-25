@@ -63,14 +63,10 @@ void InGamePlayView::Render(_double _delta_time)
 		// --- 화면 우측 상단에 디버그 정보 출력 ---
 		// 1) 스폰 타이머 정보 출력
 		swprintf_s(buffer, L"%.2lf / %.2lf", _StageMgr.GetSpawnTimer(), _StageMgr.GetSpawnInterval());
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 20.f, false);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
 
 		// 2) 타임 스케일링 팩터 정보 출력
 		swprintf_s(buffer, L"Time Scaling Factor: %.2lf", _StageMgr.GetTimeScalingFactor());
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 20.f, false);
-
-		/*const _Point duration_gauge_position = stage_duration_gauge_->GetPosition();
-		const _Point caption_position = { duration_gauge_position.x, s_int(duration_gauge_position.y - 20.f) };
-		_DrawFunc::DrawString(caption_position, _T("다음 번 바람이 불기까지..."), Colors::Black, 20.f, false);*/
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
 	}
 }

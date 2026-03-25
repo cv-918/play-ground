@@ -31,4 +31,23 @@ void InGameResultView::Render(_double _delta_time)
 	_DrawFunc::FillRectangle(rt, _Color(0, 0, 0, 128)); // RGBA(0, 0, 0, 128) = 반투명한 검은색
 
 	__super::Render(_delta_time);
+
+	const auto result = _RunState.CreateResult();
+	
+	_tchar buffer[MAX_PATH] = {};
+	const auto x = GAME_VIEW_WIDTH_H; auto y = GAME_VIEW_HEIGHT_H - 100; // 버튼이 화면 중앙에 위치하므로
+	auto index = 0;
+
+	result.is_cleared_ ? swprintf_s(buffer, L"=== Stage Clear! ===") : swprintf_s(buffer, L"=== Stage Failed ===");
+	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Colors::White, 18.f);
+
+	result.earned_coin_count_ > 0
+		? swprintf_s(buffer, L"Earned Coins: %d", result.is_cleared_ ? result.earned_coin_count_ : result.earned_coin_count_ >> 1)
+		: swprintf_s(buffer, L"No Coins Earned");
+	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Colors::White, 14.f);
+
+	result.gained_experience_ > 0
+		? swprintf_s(buffer, L"Gained Experience: %d", result.gained_experience_)
+		: swprintf_s(buffer, L"No Experience Gained");
+	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Colors::White, 14.f);
 }

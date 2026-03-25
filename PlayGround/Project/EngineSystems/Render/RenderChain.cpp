@@ -16,14 +16,22 @@ _Size g_screen_size = {};
 
 RenderChain::~RenderChain()
 {
-	Release();
+	// GDI+ 종료 (반드시 리소스 해제 전에 호출)
+	Gdiplus::GdiplusShutdown(m_gdiplusToken);
+	if (g_dc)
+	{
+		ReleaseDC(g_hwnd, g_dc);
+		g_dc = nullptr;
+	}
+
+	_DestroyBackBuffer();
 }
 
 _bool RenderChain::Initialize()
 {
 	// GDI+ 초기화
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, nullptr);
 
 	g_dc = GetDC(g_hwnd);
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
@@ -31,28 +39,12 @@ _bool RenderChain::Initialize()
     return true;
 }
 
-_bool RenderChain::Release()
-{
-	_DestroyBackBuffer();
-
-	// GDI+ 종료 (반드시 리소스 해제 전에 호출)
-	Gdiplus::GdiplusShutdown(m_gdiplusToken);
-
-	if (g_dc)
-	{
-		ReleaseDC(g_hwnd, g_dc);
-		g_dc = nullptr;
-	}
-
-	return true;
-}
-
 void RenderChain::Clear()
 {
-	// 1. 화면 클리어
+	// 1) 화면 클리어(단색)
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
-	// 2. 이번 프레임에서 공용으로 쓸 Graphics 객체 생성 (싱글 패턴의 시작)
+	// 2) 이번 프레임에서 공용으로 쓸 Graphics 객체 생성 (싱글 패턴의 시작)
 	if (nullptr == g_graphics)
 	{
 		g_graphics = new Gdiplus::Graphics(g_back_dc);
@@ -63,10 +55,10 @@ void RenderChain::Clear()
 
 void RenderChain::Present()
 {
-	// 3. 그리기가 다 끝났으므로 Graphics 객체 삭제 (중요: BitBlt 이전에 삭제 권장)
+	// 3) 그리기가 다 끝났으므로 Graphics 객체 삭제 (중요: BitBlt 이전에 삭제 권장)
 	SAFE_DELETE(g_graphics);
 
-	// 4. 최종 화면 출력
+	// 4) 최종 화면 출력
 	BitBlt(g_dc, 0, 0, g_screen_size.x, g_screen_size.y, g_back_dc, 0, 0, SRCCOPY);
 }
 

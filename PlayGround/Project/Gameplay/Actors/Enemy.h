@@ -11,12 +11,21 @@ protected:
 
 protected:
 	_bool Initialize() override;
-	_int Update(_double _delta_time) override;
 
+private:
+	_int Update(_double _delta_time) override;
 	void OnDestroy() override;
+
+	void OnCollisionEnter(Collider* _this, Collider* _other) override;
+	void OnCollisionStay(Collider* _this, Collider* _other) override;
+
+	void GetDamage(_float _damage) override;
 
 	// 투사체 발사 로직
 	void HandleProjectilePattern(_double _delta_time);
+
+private:
+	void _AttackPlayer(Collider* _attack_col, Collider* _player_body_collider);
 
 protected:
 	const EnemyJsonInfo* info_ = nullptr;

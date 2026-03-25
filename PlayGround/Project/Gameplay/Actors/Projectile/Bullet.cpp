@@ -40,7 +40,7 @@ _int Bullet::Update(_double _delta_time)
 	// 이동 (현재 Look 방향으로 이동)
 	const auto forward = transform_->Forward2D();
 	const auto current_pos = transform_->Position();
-	transform_->Position(current_pos + forward * speed_ * _delta_time);
+	transform_->Position(current_pos + forward * speed_ * s_float(_delta_time));
 
 	return UPDATE_CONTINUE;
 }

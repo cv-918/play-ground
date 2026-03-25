@@ -32,11 +32,10 @@ void InGamePauseView::Render(_double _delta_time)
 	
 	__super::Render(_delta_time);
 
-	// 나중에 지울 것
-	_DrawFunc::DrawString(
-		_Point{ GAME_VIEW_WIDTH - 200, 20 },
-		L"Earned Coins: " + std::to_wstring(_RunState.GetEarnedCoinCount()),
-		Colors::Black,
-		20
-	);
+	_tchar buffer[MAX_PATH] = {};
+	const auto x = GAME_VIEW_WIDTH_H; auto y = GAME_VIEW_HEIGHT_H - 100; // 버튼이 화면 중앙에 위치하므로
+	auto index = 0;
+
+	swprintf_s(buffer, L"Earned Coins: %d", _RunState.GetEarnedCoinCount());
+	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Colors::White, 14.f);
 }

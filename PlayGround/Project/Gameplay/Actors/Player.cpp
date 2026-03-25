@@ -23,14 +23,14 @@ _bool Player::Initialize()
 	// 플레이어 컴포넌트 설정
 	const auto attribute_stat = _UserProfile.GetAttributeStat();
 
-	transform_->Rotation(0, 1);
-	transform_->Scale(30.f);
+	//transform_->Rotation(0, 1);
+	transform_->Scale(info_->body_size_);
 
-	const auto start_hp = (info_->hp_ + attribute_stat.GetStat(AttributeType::Hp).additive_increase_) * attribute_stat.GetStat(AttributeType::Hp).multiplicative_increase_rate_;
+	const auto start_hp = attribute_stat.GetStat(AttributeType::Hp).GetTotalIncrease(info_->hp_);
 	status_->SetCurrentHp(start_hp);
 	status_->SetMaxHP(start_hp);
 
-	const auto start_att = (info_->contact_damage_ + attribute_stat.GetStat(AttributeType::Attack).additive_increase_) * attribute_stat.GetStat(AttributeType::Attack).multiplicative_increase_rate_;
+	const auto start_att = attribute_stat.GetStat(AttributeType::Attack).GetTotalIncrease(info_->contact_damage_);
 	status_->SetAtt(start_att);
 
 	// 플레이어 콜라이더 설정
@@ -39,15 +39,13 @@ _bool Player::Initialize()
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, body_col);
 
 	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	const auto attack_stat = attribute_stat.GetStat(AttributeType::AttackRange);
-	const auto start_attack_radius = (info_->attack_range_ + attack_stat.additive_increase_) * attack_stat.multiplicative_increase_rate_; // 공격 범위는 플레이어 크기에 비례해서 설정
+	const auto start_attack_radius = attribute_stat.GetStat(AttributeType::AttackRange).GetTotalIncrease(info_->attack_range_); // 공격 범위는 플레이어 크기에 비례해서 설정
 	attack_col->SetRadius(start_attack_radius);
 	attack_col->SetDebugColor(Colors::Gray, Colors::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
 	attack_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
 
-	const auto collector_stat = attribute_stat.GetStat(AttributeType::CollectionRange);
-	const auto start_collector_size = (info_->collector_size_ + collector_stat.additive_increase_) * collector_stat.multiplicative_increase_rate_; // 수집 콜라이더는 플레이어 크기에 비례해서 설정
+	const auto start_collector_size = attribute_stat.GetStat(AttributeType::CollectionRange).GetTotalIncrease(info_->collector_size_); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	collector_col_ = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	collector_col_->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
 	collector_col_->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
@@ -101,24 +99,13 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 		break;
 		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
-	{
 		switch (_other->GetLayer())
 		{
 		case CollisionLayer::EnemyBody:
-		{
-			// Enemy의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
-			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
-				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
-				});
-
-			// 공격한 Enemy에 대한 타이머 기록
-			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
+			_AttackEnemy(_this, _other);
 			break;
 		}
-		}
-
 		break;
-	}
 	}
 }
 
@@ -131,24 +118,13 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 		break;
 		/* 공격 collider 충돌 처리 */
 	case CollisionLayer::PlayerAttack:
-	{
 		switch (_other->GetLayer())
 		{
 		case CollisionLayer::EnemyBody:
-		{
-			// Enemy의 IDamagable 핸들러 시스템에 메시지 보내서 데미지 입히기
-			_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {
-				s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
-			});
-
-			// 공격한 Enemy에 대한 타이머 기록
-			_this->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
+			_AttackEnemy(_this, _other);
 			break;
 		}
-		}
-
 		break;
-	}
 	}
 }
 
@@ -163,6 +139,23 @@ void Player::GetDamage(_float _damage)
 	if (status_->IsDead())
 	{
 		_bool debug = true;
+	}
+}
+
+void Player::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
+{
+	const auto target_enemy = _enemy_body_collider->GameObject();
+	target_enemy->SendMessageToHandlers(
+		HandlerSystemList::Damage,
+		[this](IHandler* _handler) { s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt()); }
+	);
+
+	const auto status = s_cast(Status*, target_enemy->GetComponent(ComponentType::Status));
+
+	// 공격 속도에 따른 타이머 설정. 플레이어가 공격한 적이 아직 죽지 않았다면, 일정 시간 동안은 같은 적에게 다시 공격하지 않도록 타이머를 설정
+	if (!status->IsDead())
+	{
+		_attack_col->SetTimerForTarget(_enemy_body_collider, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 	}
 }
 

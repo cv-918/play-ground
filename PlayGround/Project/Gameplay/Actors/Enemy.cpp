@@ -36,11 +36,11 @@ _bool Enemy::Initialize()
 	const auto scaled_lv = lv * creation_info_.stat_multiplier_;
 	status_->SetLv(lv * scaled_lv);
 
-	const auto scaled_hp = info_->hp_ * creation_info_.stat_multiplier_;
+	const auto scaled_hp = s_int(info_->hp_ * creation_info_.stat_multiplier_);
 	status_->SetCurrentHp(scaled_hp);
 	status_->SetMaxHP(scaled_hp);
 
-	const auto scaled_att = info_->contact_damage_ * creation_info_.stat_multiplier_;
+	const auto scaled_att = s_int(info_->contact_damage_ * creation_info_.stat_multiplier_);
 	status_->SetAtt(scaled_att);
 	object_description_ = _T("Lv. ") + std::to_wstring(lv);
 
@@ -107,11 +107,40 @@ void Enemy::OnDestroy()
 				const auto y = _Random.Range(-1, 1);
 				UnitCreationInfo creation_info;
 				creation_info.position_ = pos;
-				creation_info.look_point_ = pos + _Vector3(x, y, 0);
+				creation_info.look_point_ = pos + _Vector3(x, y);
 				_StageMgr.SpawnProps(PropsType::Dust, creation_info, (void*)&info_->dust_reward_);
 			}
 		}
 	}
+}
+
+void Enemy::OnCollisionEnter(Collider* _this, Collider* _other)
+{
+	switch (_other->GetLayer())
+	{
+	case CollisionLayer::PlayerBody:
+		_AttackPlayer(_this, _other);
+		break;
+	}
+}
+
+void Enemy::OnCollisionStay(Collider* _this, Collider* _other)
+{
+	switch (_other->GetLayer())
+	{
+	case CollisionLayer::PlayerBody:
+		_AttackPlayer(_this, _other);
+		break;
+	}
+}
+
+void Enemy::GetDamage(_float _damage)
+{
+	const auto final_damage = combat_->GetDamage(_damage);
+
+	// 데미지 폰트 출력
+	const auto position = transform_->Position();
+	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 }
 
 void Enemy::HandleProjectilePattern(_double _delta_time)
@@ -150,5 +179,25 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 	case EnemyProjectilePattern::Direct:
 		play_scene_->SpawnProjectile(this, pos, target_pos, info_->projectile_damage_, 240.f/*info_->projectile_speed_*/);
 		break;
+	}
+}
+
+void Enemy::_AttackPlayer(Collider* _attack_col, Collider* _player_body_collider)
+{
+	if (info_->contact_damage_ <= 0.f)
+		return;
+	
+	const auto target_player = _player_body_collider->GameObject();
+	target_player->SendMessageToHandlers(
+		HandlerSystemList::Damage,
+		[this](IHandler* _handler) { s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt()); }
+	);
+
+	const auto status = s_cast(Status*, target_player->GetComponent(ComponentType::Status));
+
+	// 공격 속도에 따른 타이머 설정. 몬스터가 플레이어를 공격한 후 일정 시간 동안은 같은 플레이어에게 다시 공격하지 않도록 타이머를 설정
+	if (!status->IsDead())
+	{
+		_attack_col->SetTimerForTarget(_player_body_collider, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 	}
 }

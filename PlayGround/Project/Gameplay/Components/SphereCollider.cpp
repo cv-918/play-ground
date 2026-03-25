@@ -26,7 +26,7 @@ void SphereCollider::Render(_double _delta_time)
 	if (!draw_always_ && !_GameState.debug_mode_)
 		return;
 
-	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, GetDebugColor());
+	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, GetDebugColor(), 1.75f);
 }
 
 _bool SphereCollider::CheckCollided(Collider* _other)

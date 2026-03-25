@@ -74,19 +74,6 @@ void StageManager::MarkCanProgressNextStage()
 	can_progress_next_stage_ = true;
 }
 
-void StageManager::SetPlayScene(InGameScene* _play_scene)
-{
-	if (nullptr == _play_scene)
-	{
-		_NULL_DETECTION_MSGBOX;
-		return;
-	}
-
-	play_scene_ = _play_scene;
-	object_manager_ = play_scene_->GetObjectManager();
-	ui_manager_ = play_scene_->GetUIManager();
-}
-
 _bool StageManager::SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data)
 {
 	switch (_props_type)
@@ -99,6 +86,19 @@ _bool StageManager::SpawnProps(PropsType _props_type, const UnitCreationInfo& _c
 	}
 
 	return true;
+}
+
+void StageManager::SetPlayScene(InGameScene* _play_scene)
+{
+	if (nullptr == _play_scene)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	play_scene_ = _play_scene;
+	object_manager_ = play_scene_->GetObjectManager();
+	ui_manager_ = play_scene_->GetUIManager();
 }
 
 void StageManager::_OnEnter()
@@ -190,11 +190,13 @@ void StageManager::_OnPlay(_double _delta_time)
 
 	// 스폰 타이머 및 인터벌 업데이트
 	spawn_timer_ += _Timer.DeltaTime();
-	spawn_interval_ = 3.0 / (1.0 + (stage_elapsed_time_ / 60.0) * 0.5); // 나중에 DifficultyInfo에서 spawn_scaling_factor를 가져와 적용
+	spawn_interval_ = 1.5 / (1.0 + (stage_elapsed_time_ / 60.0) * 0.5); // 나중에 DifficultyInfo에서 spawn_scaling_factor를 가져와 적용
 
 	if (spawn_timer_ >= spawn_interval_)
 	{
 		spawn_timer_ = 0.0;
+
+		// 스폰 마릿수 변경하려면 여기서 미리 계산해야한다.
 		if (!_SpawnEnemy())
 		{
 			_DEBUG_MSGBOX(_T("Failed to spawn enemies during play."));
@@ -283,7 +285,7 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 			proceed_to_next_stage_timer_ = 0.0;
 
 			const auto curr_stage_lv = _UserProfile.GetStageProgress();
-			if (curr_stage_lv < 5)
+			if (curr_stage_lv < _StageDataMgr.GetStageCount())
 			{
 				_UserProfile.IncreaseStageProgress();
 			}
@@ -453,7 +455,7 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 
 _uint StageManager::_SelectMonsterFromPool(const std::vector<SpawnEnemyJsonInfo>& _pool)
 {
-	// 1. 전체 가중치 합 계산
+	// 1. 전체 가중치 합 계산 (여기는 나중에 SpawnPoolJsonInfo에 총 가중치 합을 미리 계산해서 저장해두는 방식으로 최적화 가능)
 	_uint total_weight = 0;
 	for (const auto& enemy : _pool)
 		total_weight += enemy.weight_;
