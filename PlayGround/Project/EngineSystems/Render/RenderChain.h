@@ -1,18 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
 #define _RenderChain RenderChain::Get()
 
 class RenderChain
 	: public ISingleton<RenderChain>
 	, public IInitializable
-	, public IReleasable
 {
 public:
-	virtual ~RenderChain();
+	~RenderChain() override;
 
 public:
-	virtual _bool Initialize() override;
-	virtual _bool Release() override;
+	_bool Initialize() override;
 
 public:
 	void Clear();
@@ -26,6 +24,6 @@ private:
 	HBITMAP	back_bmp_		= nullptr;
 	HBITMAP	old_back_bmp_	= nullptr;
 
-	ULONG_PTR m_gdiplusToken = 0; // GDI+ »ç¿ë±ÇÀ» Áõ¸íÇÏ´Â ÅäÅ«
+	ULONG_PTR m_gdiplusToken = 0; // GDI+ ì‚¬ìš©ê¶Œì„ ì¦ëª…í•˜ëŠ” í† í°
 };
 

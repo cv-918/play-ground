@@ -75,7 +75,7 @@ void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, co
 	static FontFamily fontFamily_pretendard(L"Pretendard Regular");
 
 	// 2. 폰트 객체 생성 (크기, 스타일, 단위 설정)
-	static Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
+	Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
 
 	// 3. 브러시 생성
 	SolidBrush brush(Color(_color.a, _color.r, _color.g, _color.b));
@@ -104,7 +104,7 @@ void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, co
 	if (nullptr == g_graphics) return;
 
 	static FontFamily fontFamily_d2_coding(L"D2Coding");
-	static Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
+	Font font(&fontFamily_d2_coding, _font_size, FontStyleBold, UnitPixel);
 	SolidBrush brush(Color(_color.a, _color.r, _color.g, _color.b));
 
 	// 1. 텍스트가 그려질 사각형 영역(Layout Rectangle) 설정

@@ -32,6 +32,8 @@ public:
 	const StageJsonInfo* GetStageInfo(_uint _id) const;
 	const StageSpawnPoolJsonInfo* GetSpawnPoolInfo(_uint _id) const;
 
+	_uint GetStageCount() const { return s_uint(stage_table_.size()); }
+
 private:
 	std::unordered_map<_uint, StageJsonInfo> stage_table_;
 	std::unordered_map<_uint, StageSpawnPoolJsonInfo> pool_table_;

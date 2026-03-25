@@ -21,6 +21,7 @@ public:
 	void GetDamage(_float _damage) override;
 
 private:
+	void _AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider);
 	void _ShowDebugInfo();
 	
 private:

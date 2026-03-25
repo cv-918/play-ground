@@ -1,12 +1,12 @@
-#pragma once
+ï»¿#pragma once
 
 #include <random>
 
 /*
-	»ç¿ë ¿¹½Ã:
-	Random::Init(); // ÃÊ±âÈ­ (ÇÑ ¹ø¸¸ È£Ãâ)
-	int randInt = Random::Range(1, 10); // 1ºÎÅÍ 10±îÁöÀÇ Á¤¼ö ³­¼ö
-	float randFloat = Random::Range(0.0f, 1.0f); // 0.0ºÎÅÍ 1.0±îÁöÀÇ ½Ç¼ö ³­¼ö
+	ì‚¬ìš© ì˜ˆì‹œ:
+	Random::Init(); // ì´ˆê¸°í™” (í•œ ë²ˆë§Œ í˜¸ì¶œ)
+	int randInt = Random::Range(1, 10); // 1ë¶€í„° 10ê¹Œì§€ì˜ ì •ìˆ˜ ë‚œìˆ˜
+	float randFloat = Random::Range(0.0f, 1.0f); // 0.0ë¶€í„° 1.0ê¹Œì§€ì˜ ì‹¤ìˆ˜ ë‚œìˆ˜
 */
 
 #define _Random Random::Get()
@@ -19,7 +19,7 @@ public:
 	Random() : engine(std::random_device{}()) {}
 
 public:
-	virtual _bool Initialize() override;
+	_bool Initialize() override;
 
 public:
 	static _int Range(_int min, _int max)

@@ -332,6 +332,16 @@ struct Stat
 	_float additive_increase_ = 0.f;			// 덧셈 방식 증가량
 	_bool is_multiplicative_active_ = false;	// 곱셈 방식 증가가 활성화되었는지 여부 (현재 미사용)
 	_float multiplicative_increase_rate_ = 1.f; // 곱셈 방식 증가율 (1.f는 기본 상태, 예: 공격력 *1.1은 1.1f로 설정)
+
+	_float GetTotalIncrease(_float base_value) const
+	{
+		_float total_value = base_value;
+		if (is_additive_active_)
+			total_value += additive_increase_;
+		if (is_multiplicative_active_)
+			total_value *= multiplicative_increase_rate_;
+		return total_value;
+	}
 };
 
 struct AttributeStat
@@ -388,6 +398,8 @@ private:
 		{ AttributeType::Runtime, {}},
 	};
 };
+
+
 #pragma endregion
 
 #pragma region [ 유저 데이터 관련 ]
