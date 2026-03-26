@@ -94,4 +94,7 @@ namespace Colors {
 	const _Color Brown(165, 42, 42);
 	const _Color Gold(255, 215, 0);
 	const _Color Pearl(255, 240, 245);
+
+	// 녹슨 색상들 (Rusty Colors)
+	const _Color Rust(183, 65, 14);
 }

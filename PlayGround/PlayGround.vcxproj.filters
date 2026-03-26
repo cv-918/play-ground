@@ -103,6 +103,16 @@
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\AtmosphericCorrosionObject.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -186,5 +196,15 @@
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\AtmosphericCorrosionObject.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.cpp" />
   </ItemGroup>
 </Project>

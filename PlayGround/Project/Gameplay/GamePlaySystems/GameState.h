@@ -7,7 +7,8 @@
 
 #define _GameState GameState::Get()
 
-class GameObjectBase;
+class InGameScene;
+
 class GameState final : public ISingleton<GameState>
 {
 public:

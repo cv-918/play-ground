@@ -70,7 +70,12 @@ _int GameObjectBase::Update(_double _delta_time)
 		return 0;
 
 	for (const auto& component : components_)
+	{
+		if (!component->IsEnable())
+			continue;
+
 		component->Update(_delta_time);
+	}
 
     return 0;
 }
@@ -81,7 +86,12 @@ _int GameObjectBase::LateUpdate(_double _delta_time)
 		return 0;
 
 	for (const auto& component : components_)
+	{
+		if (!component->IsEnable())
+			continue;
+
 		component->LateUpdate(_delta_time);
+	}
 
 	return 0;
 }
@@ -97,7 +107,12 @@ void GameObjectBase::Render(_double _delta_time)
 	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
 
 	for (const auto& component : components_)
+	{
+		if (!component->IsVisible())
+			continue;
+
 		component->Render(_delta_time);
+	}
 }
 
 void GameObjectBase::DebugRender(_double _delta_time)

@@ -60,7 +60,7 @@ void SceneManager::_CreateNextScene()
 {
 	switch (next_scene_type_)
 	{
-	case SceneType::Intro:		curr_scene_ = new IntroScene();	break;
+	case SceneType::Intro:		curr_scene_ = new IntroScene();		break;
 	case SceneType::Loading:	curr_scene_ = new LoadingScene();	break;
 	case SceneType::OutGame:	curr_scene_ = new OutGameScene();	break;
 	case SceneType::InGame:		curr_scene_ = new InGameScene();	break;

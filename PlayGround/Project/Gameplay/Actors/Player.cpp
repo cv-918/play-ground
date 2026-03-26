@@ -2,6 +2,7 @@
 #include "Player.h"
 
 #include "Components/PlayableMovement.h"
+#include "GamePlaySystems/SkillManager.h"
 
 Player::~Player()
 {
@@ -54,10 +55,33 @@ _bool Player::Initialize()
 
 	// 기타 멤버 변수 초기화 및 캐싱
 	color_ = Colors::DarkGray;
-	input_manager_ = &_InputMgr.Get(); // 매 프레임마다 Get 호출하는 것을 피하기 위해서
+	input_manager_ = &_InputMgr.Get();
+	skill_manager_ = &_SkillMgr.Get();
+
+	skill_manager_->EqupSkills(1, 2);
 
 	Finalize();
 	return true;
+}
+
+_int Player::Update(_double _delta_time)
+{
+	auto ret = __super::Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	if (input_manager_->Down(VK_CONTROL))
+	{
+		skill_manager_->UseSkill(0, this, transform_->Forward2D());
+		_SYSTEM_LOG_INFO(L"Player used skill 0");
+	}
+	if (input_manager_->Down(VK_MENU))
+	{
+		skill_manager_->UseSkill(1, this, transform_->Forward2D());
+		_SYSTEM_LOG_INFO(L"Player used skill 0");
+	}
+
+	return UPDATE_CONTINUE;
 }
 
 void Player::DebugRender(_double _delta_time)

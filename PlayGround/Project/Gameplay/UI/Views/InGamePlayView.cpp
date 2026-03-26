@@ -3,6 +3,7 @@
 
 #include "../Elements/ProgressBar.h"
 #include "GamePlaySystems/StageManager.h"
+#include "GamePlaySystems/SkillManager.h"
 
 InGamePlayView::InGamePlayView()
 {
@@ -67,6 +68,15 @@ void InGamePlayView::Render(_double _delta_time)
 
 		// 2) 타임 스케일링 팩터 정보 출력
 		swprintf_s(buffer, L"Time Scaling Factor: %.2lf", _StageMgr.GetTimeScalingFactor());
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+
+		// 3) 스킬 쿨다운 정보 출력
+		const auto& skill_cooldowns = _SkillMgr.GetSkillCooldownRatio(0);
+		swprintf_s(buffer, L"Skill 0 Cooldown Ratio: %.2lf", skill_cooldowns);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+
+		const auto& skill_cooldowns_1 = _SkillMgr.GetSkillCooldownRatio(1);
+		swprintf_s(buffer, L"Skill 1 Cooldown Ratio: %.2lf", skill_cooldowns_1);
 		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
 	}
 }

@@ -5,8 +5,9 @@
 #include "EngineSystems/Physics/CollisionManager.h"
 #include "GamePlaySystems/SceneManager.h"
 
-#include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "GamePlaySystems/Json/SkillJsonDataManager.h"
+#include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 #include "GamePlaySystems/Json/UserDataManager.h"
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
@@ -26,15 +27,21 @@ _bool PlayGround::Initialize()
 	input_manager_ = &_InputMgr;
 
 	// --- 게임 데이터 로드 ---
-	if (!_EnemyDataMgr.Load("Data/Enemy.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
-		return false;
-	}
-
 	if (!_CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load playable character data from JSON."));
+		return false;
+	}
+
+	if (!_SkillDataMgr.Load("Data/Skill.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load skill data from JSON."));
+		return false;
+	}
+
+	if (!_EnemyDataMgr.Load("Data/Enemy.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
 		return false;
 	}
 
@@ -154,6 +161,11 @@ LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, L
 	case WM_KILLFOCUS:
 		input_manager_->ResetAll();
 		break;
+
+	case WM_SYSCOMMAND:
+		// Alt 키나 F10으로 메뉴바에 포커스가 가는 것을 방지
+		if ((_wparam & 0xFFF0) == SC_KEYMENU)
+			return UPDATE_BREAK;
 	}
 
 	return UPDATE_CONTINUE;
