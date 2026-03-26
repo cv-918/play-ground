@@ -10,6 +10,9 @@ public:
 	void Clear();
 	RunSessionResult CreateResult() const;
 
+	InGameScene* GetInGameScene() const { return ingame_scene_; }
+	void SetInGameScene(InGameScene* _scene) { ingame_scene_ = _scene; }
+
 	GameObjectBase* GetPlayer() const { return player_; }
 	void SetPlayer(GameObjectBase* _player) { player_ = _player; }
 
@@ -26,6 +29,8 @@ public:
 	_uint GetKillCountForClear() const { return kill_count_for_clear_; }
 
 private:
+	InGameScene* ingame_scene_ = nullptr; // 현재 활성화된 게임 씬에 대한 포인터. 필요에 따라 현재 씬의 상태를 확인하거나 씬 전환 로직에서 활용할 수 있습니다.
+
 	GameObjectBase* player_ = nullptr;
 	_bool is_player_died_ = false; // 플레이어의 사망 여부를 나타내는 변수. 필요에 따라 게임 오버 처리나 결과 화면에서 활용할 수 있습니다.
 

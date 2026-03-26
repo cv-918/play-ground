@@ -6,12 +6,19 @@
 
 #include "GamePlaySystems/StageManager.h"
 
+// 추후에는, 반환 값을 피격 연산 결과를 담는 구조체로 변경해서 더 많은 정보를 리턴하도록 개선하는 것이 좋을 것 같다
 _float Combat::GetDamage(_float _damage)
 {
 	// 방어 코드: 데미지가 음수인 경우 무시
 	if (0 > _damage)
 	{
 		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called with negative damage value: %.2f. Ignoring damage application."), _damage);
+		return 0.f;
+	}
+
+	if (status_->IsInvincible())
+	{
+		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called but target is invincible. Ignoring damage application."));
 		return 0.f;
 	}
 

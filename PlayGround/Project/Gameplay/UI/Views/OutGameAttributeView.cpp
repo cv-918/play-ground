@@ -2,8 +2,10 @@
 #include "OutGameAttributeView.h"
 
 #include "../Elements/Button.h"
-//#include "../Elements/Grid.h"
+#include "../Elements/Grid.h"
 #include "../Widgets/AttributeNodeTree.h"
+
+#include "GamePlaySystems/Json/SkillJsonDataManager.h"
 
 OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_btn_callback)
 {
@@ -17,6 +19,28 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	return_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
 	return_btn->SetText(L"RETURN");
 	return_btn->SetOnClick(_return_btn_callback);
+
+	GridCreateInfo skill_list_grid_layout;
+	skill_list_grid_layout.rows = 1;
+	skill_list_grid_layout.cols = 6;
+	skill_list_grid_layout.cell_size = _Size{ 64, 64 };
+	skill_list_grid_layout.line_color = Colors::Black;
+	skill_list_grid_layout.line_thickness = 1.0f;
+
+	auto pos = GAME_VIEW_CENTER;
+	pos.y -= 250;
+
+	const auto skill_list_grid = CreateElement<Grid>(skill_list_grid_layout);
+	skill_list_grid->Initialize();
+	skill_list_grid->SetCenter(pos);
+
+	const auto table = _SkillDataMgr.GetTable(); // 스킬 데이터 로드 (디버그용))
+	_int col_index = -1;
+	for (const auto& pair : table)
+	{
+		const auto& skill_info = pair.second;
+		skill_list_grid->SetCellText(0, ++col_index, _UtilFunc::ToWString(skill_info.name_), Colors::Black, 12.f);
+	}
 
 	// 어트리뷰트 트리 생성
 	CreateElement<AttributeNodeTree>();
@@ -45,7 +69,6 @@ void OutGameAttributeView::Render(_double _delta_time)
 		}
 
 		++index;
-
 		swprintf_s(buffer, L"=== Collectable ===");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 
@@ -55,6 +78,7 @@ void OutGameAttributeView::Render(_double _delta_time)
 		swprintf_s(buffer, L"Experience : %d", _UserProfile.GetExperience());
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 
+		++index;
 		swprintf_s(buffer, L"=== User Info ===");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Colors::Black, 12.f, false);
 

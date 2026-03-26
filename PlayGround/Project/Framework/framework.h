@@ -50,6 +50,7 @@
 #include "Core/Base/Extern.h"
 #include "Core/Base/DrawFunctions.h"
 
+#include "EngineSystems/Json/json.hpp"
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Timer/Timer.h"
 
@@ -61,7 +62,7 @@
 #include "GamePlaySystems/GameState.h"
 #include "GamePlaySystems/RunState.h"
 
-#include "EngineSystems/Json/json.hpp"
+
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC

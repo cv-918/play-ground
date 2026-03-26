@@ -52,6 +52,9 @@ public:
 	_bool IsDead() const { return is_dead_; }
 	void MarkAsDead() { is_dead_ = true; }
 
+	_bool IsInvincible() const { return is_invincible_; }
+	void SetInvincible(const _bool _invincible) { is_invincible_ = _invincible; }
+
 private:
 	_int lv_ = 0;
 	_int exp_ = 0;
@@ -60,6 +63,7 @@ private:
 	_float max_hp_ = 0.f;
 	_int att_ = 0;
 
-	_bool is_dead_ = false;
+	_bool is_dead_ = false; // 캐릭터의 생사 여부를 관리하는 플래그. 필요에 따라 구현.
+	_bool is_invincible_ = false; // 무적 상태 여부를 관리하는 플래그. 필요에 따라 구현.
 };
 

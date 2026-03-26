@@ -6,6 +6,7 @@
 #include "UI/Views/InGamePlayView.h"
 
 #include "GamePlaySystems/StageManager.h"
+#include "GamePlaySystems/SkillManager.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
 _bool InGameScene::Initialize()
@@ -16,6 +17,8 @@ _bool InGameScene::Initialize()
 	// 스테이지 매니저 캐싱 및 씬과 연동
 	stage_manager_ = &_StageMgr;
 	stage_manager_->SetPlayScene(this);
+
+	_RunState.SetInGameScene(this);
 
 	MAKE_INITIALIZED;
 	return true;
@@ -49,8 +52,13 @@ _int InGameScene::Update(_double _delta_time)
 	// 스테이지 상태에 따라 업데이트 여부 결정. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트.
 	// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
 	_bool on_pause_state = false;
+	_bool on_play_state = false;
 	switch (stage_manager_->GetCurrState())
 	{
+	case StageState::Play:
+		on_play_state = true;
+		break;
+
 	case StageState::Pause:
 	case StageState::Clear:
 	case StageState::Result:
@@ -73,13 +81,18 @@ _int InGameScene::Update(_double _delta_time)
 		ui_manager_->Update(_delta_time);
 	}
 
+	if (on_play_state)
+	{
+		_SkillMgr.Update(_delta_time);
+	}
+
 	return UPDATE_CONTINUE;
 }
 
 _int InGameScene::LateUpdate(_double _delta_time)
 {
 	// 스테이지 상태에 따라 업데이트 여부 결정. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트.
-// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
+	// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
 	_bool on_pause_state = false;
 	_bool on_play_state = false;
 	switch (stage_manager_->GetCurrState())
@@ -118,8 +131,12 @@ _int InGameScene::LateUpdate(_double _delta_time)
 
 	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
 	// 등록된 애들은 일괄 처리
+
+	// 이거 Collider의 위치 갱신 로직이 LateUpdate에 있어서 일단 여기서 돌려야 한다
 	if (on_play_state)
+	{
 		_ColMgr.Update();
+	}
 
 	return UPDATE_CONTINUE;
 }

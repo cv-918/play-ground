@@ -1,12 +1,12 @@
-#pragma once
+ï»¿#pragma once
 #include "Movement.h"
 
-// NonPlayableMovement ¿¡¼­ Á¦°øÇÒ ÀÌµ¿ ¹æ½Ä¿¡ ´ëÇÑ°É ¹øµé·Î ¹­¾î¼­ ¼³Á¤ ¹× ÃÊ±âÈ­ÇÒ ¼öµµ ÀÖÀ½
+// NonPlayableMovement ì—ì„œ ì œê³µí•  ì´ë™ ë°©ì‹ì— ëŒ€í•œê±¸ ë²ˆë“¤ë¡œ ë¬¶ì–´ì„œ ì„¤ì • ë° ì´ˆê¸°í™”í•  ìˆ˜ë„ ìˆìŒ
 class GameObjectBase;
 class NonPlayableMovement final : public Movement
 {
 public:
-	virtual _bool Initialize() override;
+	_bool Initialize() override;
 
 private:
 	void _ProcessOnstopped(_double _delta_time);
@@ -17,5 +17,5 @@ public:
 	void Target(GameObjectBase* _object) { target_ = _object; }
 
 private:
-	GameObjectBase* target_;
+	GameObjectBase* target_ = nullptr;
 };

@@ -15,6 +15,9 @@ public:
 	virtual _bool Load(const std::string& _file_path);
 	virtual _bool Save(const std::string& _file_path) { return true; }
 
+	const std::unordered_map<_uint, T>& GetTable() const { return data_table_; }
+	const _uint GetDataCount() const { return data_table_.size(); }
+
 	// ID로 데이터 찾기
 	const T* GetData(_uint _id) const
 	{
@@ -33,9 +36,6 @@ public:
 		std::advance(it, _index);
 		return &it->second;
 	}
-
-	// 데이터 개수 반환
-	size_t GetDataCount() const { return data_table_.size(); }
 
 private:
 	std::unordered_map<_uint, T> data_table_;
@@ -78,30 +78,3 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 		return false;
 	}
 }
-
-//template<typename T>
-//inline _bool JsonDataManager<T>::Save(const std::string& _file_path) const
-//{
-//	std::ofstream file(_file_path);
-//	if (!file.is_open())
-//	{
-//		_DEBUG_MSGBOX(_T("Failed to open file for writing: %s"), _TF(_file_path.c_str()));
-//		return false;
-//	}
-//	try
-//	{
-//		std::vector<T> dataList;
-//		for (const auto& pair : data_table_)
-//		{
-//			dataList.push_back(pair.second);
-//		}
-//		json j = dataList;
-//		file << j.dump(4); // 4는 들여쓰기 수준을 나타냅니다.
-//		return true;
-//	}
-//	catch (json::exception& e)
-//	{
-//		_DEBUG_MSGBOX(_T("Failed to serialize JSON file: %s\nError: %s"), _file_path.c_str(), e.what());
-//		return false;
-//	}
-//}

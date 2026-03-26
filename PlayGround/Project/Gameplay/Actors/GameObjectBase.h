@@ -45,6 +45,10 @@ public:
 	// 이벤트나 콜백을 추가해서 다른 시스템과 연동할 수 있도록 확장해도 좋음
 	virtual void OnDestroy() EMPTY_FUNC;
 
+	// 색상 및 알파 설정 함수
+	void SetColor(const _Color& _color) { color_ = _color; }
+	void SetAlpha(const _ubyte _alpha) { color_.a = _alpha; }
+
 private:
 	// 게임 오브젝트가 갖는 컴포넌트들을 저장하는 컨테이너. 필요에 따라 다양한 타입의 컴포넌트를 추가하여 게임 오브젝트의 기능을 확장할 수 있습니다.
 	std::vector<ComponentBase*> components_;

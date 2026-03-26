@@ -1,0 +1,53 @@
+﻿[
+  {
+    "id_": 0,
+    "name_": "먼지 돌풍",
+    "desc_": "전방으로 작지만 매운 먼지 바람을 발사합니다.",
+    "type_": 1,
+    "max_lv_": 1,
+    "unlock_type_": 0,
+    "cooldown_": 3,
+    "duration_": 0,
+    "dot_interval_": 0,
+    "area_of_effect_": 0,
+    "damage_multiplier_": 0,
+    "flat_damage_": 12,
+    "proj_count_": 1,
+    "proj_speed_": 1000,
+    "proj_lifetime_": 30
+  },
+  {
+    "id_": 1,
+    "name_": "부식",
+    "desc_": "주변의 적에게 먼지를 뿜어서 부식을 유발합니다.",
+    "type_": 1,
+    "max_lv_": 1,
+    "unlock_type_": 0,
+    "cooldown_": 4,
+    "duration_": 3,
+    "dot_interval_": 1,
+    "area_of_effect_": 80,
+    "damage_multiplier_": 0,
+    "flat_damage_": 3,
+    "proj_count_": 0,
+    "proj_speed_": 0,
+    "proj_lifetime_": 0
+  },
+  {
+    "id_": 2,
+    "name_": "다크사이트",
+    "desc_": "일정 시간 동안 빠르게 움직이며 먼지를 흐트러뜨려 적의 공격을 회피한다.",
+    "type_": 1,
+    "max_lv_": 1,
+    "unlock_type_": 0,
+    "cooldown_": 4,
+    "duration_": 1.5,
+    "dot_interval_": 0,
+    "area_of_effect_": 0,
+    "damage_multiplier_": 0,
+    "flat_damage_": 0,
+    "proj_count_": 0,
+    "proj_speed_": 0,
+    "proj_lifetime_": 0
+  }
+]

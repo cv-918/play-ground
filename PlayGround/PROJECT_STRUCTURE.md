@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-25 16:21)
+﻿# Project Structure (Updated: 2026-03-26 18:06)
 
 ```text
 Root
@@ -101,16 +101,29 @@ Root
 |   |   |   |   |   EnemyDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
+|   |   |   |   |   SkillJsonDataManager.cpp
+|   |   |   |   |   SkillJsonDataManager.h
 |   |   |   |   |   StageJsonDataManager.cpp
 |   |   |   |   |   StageJsonDataManager.h
 |   |   |   |   |   UserDataManager.cpp
 |   |   |   |   |   UserDataManager.h
+|   |   |   +--- Skills
+|   |   |   |   |   Dust_AtmosphericCorrosion.cpp
+|   |   |   |   |   Dust_AtmosphericCorrosion.h
+|   |   |   |   |   Dust_DrakSight.cpp
+|   |   |   |   |   Dust_DrakSight.h
+|   |   |   |   |   Dust_DustGust.cpp
+|   |   |   |   |   Dust_DustGust.h
+|   |   |   |   |   SkillBase.cpp
+|   |   |   |   |   SkillBase.h
 |   |   |   |   GameState.cpp
 |   |   |   |   GameState.h
 |   |   |   |   RunState.cpp
 |   |   |   |   RunState.h
 |   |   |   |   SceneManager.cpp
 |   |   |   |   SceneManager.h
+|   |   |   |   SkillManager.cpp
+|   |   |   |   SkillManager.h
 |   |   |   |   StageManager.cpp
 |   |   |   |   StageManager.h
 |   |   |   |   UIManager.cpp
