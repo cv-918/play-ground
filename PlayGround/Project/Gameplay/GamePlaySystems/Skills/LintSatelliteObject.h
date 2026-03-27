@@ -15,6 +15,7 @@ public:
 private:
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Collider* _this, Collider* _other) override;
@@ -29,5 +30,15 @@ private:
 	_float  start_angle_offset_ = 0.f;
 
 	class SphereCollider* collider_ = nullptr;
+
+private:
+	struct Afterimage
+	{
+		_Vector3 position;
+		_float   alpha; // 1.0f ~ 0.0f
+	};
+
+	std::list<Afterimage> afterimages_;
+	_float shadow_tick_ = 0.f; // 잔상 생성 주기 관리
 };
 

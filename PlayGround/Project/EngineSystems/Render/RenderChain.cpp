@@ -44,11 +44,12 @@ void RenderChain::Clear()
 	// 1) 화면 클리어(단색)
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
-	// 2) 이번 프레임에서 공용으로 쓸 Graphics 객체 생성 (싱글 패턴의 시작)
-	if (nullptr == g_graphics)
+	// 2) 이번 프레임에서 공용으로 쓸 Graphics 객체 생성
+	if (!g_graphics)
 	{
 		g_graphics = new Gdiplus::Graphics(g_back_dc);
-		// 안티앨리어싱 같은 전역 설정은 여기서 한 번만!
+
+		// 안티앨리어싱 같은 전역 설정은 여기서 한 번
 		g_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 	}
 }

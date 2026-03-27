@@ -49,6 +49,22 @@ _int LintSatelliteObject::Update(_double _delta_time)
 	// 회전 각도 업데이트 (proj_speed를 각속도로 활용)
 	current_angle_ += s_float(skill_info_->proj_speed_ * _delta_time);
 
+	// 1. 잔상 데이터 업데이트
+	shadow_tick_ += s_float(_delta_time);
+	if (shadow_tick_ > 0.05f) // 0.05초마다 잔상 기록
+	{
+		afterimages_.push_back({ transform_->Position(), 0.6f });
+		shadow_tick_ = 0.f;
+	}
+
+	// 오래된 잔상 흐리게 만들기 및 삭제
+	for (auto it = afterimages_.begin(); it != afterimages_.end();)
+	{
+		it->alpha -= s_float(_delta_time) * 1.5f; // 소멸 속도
+		if (it->alpha <= 0.f) it = afterimages_.erase(it);
+		else ++it;
+	}
+
 	return UPDATE_CONTINUE;
 }
 
@@ -71,6 +87,41 @@ _int LintSatelliteObject::LateUpdate(_double _delta_time)
 	transform_->Position(new_pos);
 
 	return UPDATE_CONTINUE;
+}
+
+void LintSatelliteObject::Render(_double _delta_time)
+{
+	// 2. 잔상 먼저 그리기 (선형 보간으로 점점 투명하게)
+	for (const auto& shadow : afterimages_)
+	{
+		static Gdiplus::SolidBrush shadow_brush(Gdiplus::Color(s_byte(255 * shadow.alpha), 200, 200, 200));
+		shadow_brush.SetColor(Gdiplus::Color(s_byte(255 * shadow.alpha), 200, 200, 200));
+
+		g_graphics->FillEllipse(&shadow_brush,
+			shadow.position.x - 10.f, shadow.position.y - 10.f, 20.f, 20.f);
+	}
+
+	// 3. 본체 그리기 (보풀 질감을 위해 외곽선에 변화를 준 Path 추천)
+	static Gdiplus::SolidBrush main_brush(Gdiplus::Color(255, 220, 220, 220));
+	static Gdiplus::Pen fluff_pen(Gdiplus::Color(255, 180, 180, 180), 2.f);
+
+	_float radius = transform_->Scale().x * 0.5f;
+	_Vector3 pos = transform_->Position();
+
+	// 단순 원형 본체
+	g_graphics->FillEllipse(&main_brush, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+
+	// 보풀 느낌을 위한 무작위 외곽선 (간단한 예시)
+	for (int i = 0; i < 8; ++i)
+	{
+		_float angle = _MathFunc::ToRadian(i * 45.f + s_float(current_angle_));
+		_float s_dist = radius * 1.2f;
+		g_graphics->DrawLine(&fluff_pen,
+			pos.x + cosf(angle) * (radius * 0.8f), pos.y + sinf(angle) * (radius * 0.8f),
+			pos.x + cosf(angle) * s_dist, pos.y + sinf(angle) * s_dist);
+	}
+
+	__super::Render(_delta_time);
 }
 
 void LintSatelliteObject::OnCollisionEnter(Collider* _this, Collider* _other)
