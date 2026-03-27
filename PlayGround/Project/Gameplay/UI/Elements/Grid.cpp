@@ -166,7 +166,7 @@ void Grid::ClearCellFillColor(_int _row, _int _col)
 
 	auto& cell = cells_[ToCellIndex(_row, _col)];
 	cell.has_fill_color = false;
-	cell.fill_color = Colors::Transparent;
+	cell.fill_color = Palette::Transparent;
 }
 
 Button* Grid::AddCellButton(_int _row, _int _col, const std::wstring& _text, const std::function<void()>& _on_click)

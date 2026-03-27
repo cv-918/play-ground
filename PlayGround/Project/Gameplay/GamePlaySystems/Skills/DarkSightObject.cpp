@@ -12,12 +12,12 @@ _bool DarkSightObject::Initialize()
 	transform_->Position(creation_info_.position_);
 	transform_->Scale(skill_info_->area_of_effect_);
 
-	color_ = Colors::Gunmetal;
-	color_.a >>= 1;
+	color_ = Palette::Gunmetal;
+	SetAlpha(0.5f);
 
 	life_timer_ = skill_info_->duration_;
 
-	owner_->SetAlpha(128); // 투명도 50%로 설정
+	owner_->SetAlpha(0.5f); // 투명도 50%로 설정
 
 	owner_status_ = s_cast(Status*, owner_->GetComponent(ComponentType::Status));
 	owner_status_->SetInvincible(true); // 무적 상태로 설정

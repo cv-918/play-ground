@@ -44,7 +44,7 @@ void Scene::Render(_double _delta_time)
 {
 	// s, [ 테스트용 배경 그리기 ]
 	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
-	_DrawFunc::FillRectangle(rt, Colors::Pearl);
+	_DrawFunc::FillRectangle(rt, Palette::Pearl);
 	_DrawFunc::DrawString(rt.GetCenter(), _CommonGamePlayFunc::GetSceneTypeName(type_));
 	// e, [ 테스트용 배경 그리기 ]
 

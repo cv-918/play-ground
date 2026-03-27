@@ -162,6 +162,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
+    <ClInclude Include="Project\EngineSystems\Render\GraphicResourceManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
@@ -259,6 +260,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\GraphicResourceManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />

@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-27 14:00)
+﻿# Project Structure (Updated: 2026-03-27 15:59)
 
 ```text
 Root
@@ -39,6 +39,8 @@ Root
 |   |   |   |   CollisionManager.cpp
 |   |   |   |   CollisionManager.h
 |   |   +--- Render
+|   |   |   |   GraphicResourceManager.cpp
+|   |   |   |   GraphicResourceManager.h
 |   |   |   |   RenderChain.cpp
 |   |   |   |   RenderChain.h
 |   |   +--- Timer

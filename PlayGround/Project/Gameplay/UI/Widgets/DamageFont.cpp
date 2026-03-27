@@ -7,7 +7,7 @@ DamageFont::DamageFont(const _float _dmg, const _Point& _pos)
 {
 	damage_text_ = CreateElement<Text>();
 	damage_text_->SetText(std::to_wstring(s_int(_dmg)));
-	damage_text_->SetColor(Colors::Black);
+	damage_text_->SetColor(Palette::Black);
 	damage_text_->SetFontSize(DEFAULT_FONT_SIZE_DAMAGE_FONT);
 
 	// 데미지 폰트의 위치는 생성자에서 전달받은 위치로 설정

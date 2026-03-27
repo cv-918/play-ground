@@ -50,7 +50,7 @@
 #pragma endregion
 
 #pragma region [ 디버그 관련 ]
-#define COLLIDER_DEBUG_COLOR_BODY		Colors::Green
-#define COLLIDER_DEBUG_COLOR_ATTACK		Colors::Red
-#define COLLIDER_DEBUG_COLOR_COLLECTOR	Colors::Charcoal
+#define COLLIDER_DEBUG_COLOR_BODY		Palette::Green
+#define COLLIDER_DEBUG_COLOR_ATTACK		Palette::Red
+#define COLLIDER_DEBUG_COLOR_COLLECTOR	Palette::Charcoal
 #pragma endregion

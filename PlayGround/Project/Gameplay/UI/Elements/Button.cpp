@@ -47,16 +47,16 @@ void Button::Render(_double _delta_time)
 	// 비활성화 상태일 때는 회색으로 표시
 	if (state_ == ButtonState::Disabled)
 	{
-		_DrawFunc::FillRectangle(rt, Colors::Gray);
-		_DrawFunc::DrawRectangle(rt, Colors::Black);
-		_DrawFunc::DrawString(rt.GetCenter(), text_, Colors::DarkGray);
+		_DrawFunc::FillRectangle(rt, Palette::Gray);
+		_DrawFunc::DrawRectangle(rt, Palette::Black);
+		_DrawFunc::DrawString(rt.GetCenter(), text_, Palette::DarkGray);
 		return;
 	}
 	
 	// g_back_dc를 사용하여 버튼 배경과 텍스트 출력
-	_DrawFunc::DrawRectangle(rt, Colors::Black);
+	_DrawFunc::DrawRectangle(rt, Palette::Black);
 
-	_Color draw_color = Colors::White;
+	_Color draw_color = Palette::White;
 	switch (state_)
 	{
 	case ButtonState::Normal:
@@ -72,6 +72,6 @@ void Button::Render(_double _delta_time)
 	}
 
 	_DrawFunc::FillRectangle(rt, draw_color);
-	_DrawFunc::DrawRectangle(rt, Colors::Black);
+	_DrawFunc::DrawRectangle(rt, Palette::Black);
 	_DrawFunc::DrawString(rt.GetCenter(), text_);
 }

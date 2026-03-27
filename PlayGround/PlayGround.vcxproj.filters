@@ -115,6 +115,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.h" />
+    <ClInclude Include="Project\EngineSystems\Render\GraphicResourceManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -210,5 +211,6 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\GraphicResourceManager.cpp" />
   </ItemGroup>
 </Project>

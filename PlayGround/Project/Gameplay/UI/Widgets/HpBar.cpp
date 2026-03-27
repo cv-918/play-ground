@@ -12,7 +12,7 @@ HpBar::HpBar(GameObjectBase* _target, const _Vector3& _offset)
 		return;
 
 	hp_bar_ = CreateElement<ProgressBar>();
-	hp_bar_->SetFillColor(Colors::Crimson);
+	hp_bar_->SetFillColor(Palette::Crimson);
 	hp_bar_->SetSize(DEFAULT_SIZE_HP_BAR);
 
 	SetSize(DEFAULT_SIZE_HP_BAR);

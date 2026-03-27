@@ -47,7 +47,7 @@ public:
 
 	// 색상 및 알파 설정 함수
 	void SetColor(const _Color& _color) { color_ = _color; }
-	void SetAlpha(const _ubyte _alpha) { color_.a = _alpha; }
+	void SetAlpha(_float _alpha) { color_ = _Color(s_ubyte(_alpha * UCHAR_MAX), color_.GetR(), color_.GetG(), color_.GetB()); }
 
 private:
 	// 게임 오브젝트가 갖는 컴포넌트들을 저장하는 컨테이너. 필요에 따라 다양한 타입의 컴포넌트를 추가하여 게임 오브젝트의 기능을 확장할 수 있습니다.
@@ -69,7 +69,7 @@ private:
 
 	// 개발 모드 전용 데이터
 protected:
-	_Color color_ = Colors::Transparent; // 게임 오브젝트의 색상. 필요에 따라 렌더링 시 활용할 수 있습니다. 리소스가 없는 관계로 이 값으로 대체.
+	_Color color_ = Palette::Transparent; // 게임 오브젝트의 색상. 필요에 따라 렌더링 시 활용할 수 있습니다. 리소스가 없는 관계로 이 값으로 대체.
 	std::wstring object_description_; // 게임 오브젝트에 대한 설명이나 디버그 정보를 저장하는 문자열. 개발 중에 객체를 식별하거나 디버깅할 때 활용할 수 있습니다.
 };
 

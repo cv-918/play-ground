@@ -48,9 +48,9 @@ private:
 	_float radius_ = 0.f;
 
 	_Color color_[s_int(__DebugColliderRenderState::Count)] = {
-		Colors::Gray,		// OnDisabled
-		Colors::Green,      // OnNormal
-		Colors::Red         // OnCollision
+		Palette::Gray,		// OnDisabled
+		Palette::Green,      // OnNormal
+		Palette::Red         // OnCollision
 	};
 
 	_bool draw_always_ = false; // 디버그 모드가 아니더라도 항상 그릴지 여부. 필요에 따라 활성화할 수 있음

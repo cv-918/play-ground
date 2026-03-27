@@ -20,7 +20,7 @@ _bool Dust::Initialize()
 
 	_ColMgr.RegisterCollider(CollisionLayer::PropsBody, collider_);
 
-	color_ = Colors::LightGray;
+	color_ = Palette::LightGray;
 
 	Finalize();
 	return true;
