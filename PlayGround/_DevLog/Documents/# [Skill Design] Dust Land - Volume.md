@@ -1,50 +1,73 @@
-# [Skill Design] Dust Land - Volume 1. Skills
+﻿# [Skill Design] Dust Land - Initial Skill Set (Vol. 1)
 
-## 0. Common Specification
-- **Data Format:** JSON (via `JsonDataManager`)
-- **Rendering:** GDI+ (Alpha Blending, PathGradient)
-- **State System:** Discovery -> Unlock -> Acquisition
+## 0. 공통 시스템 사양 (Global Rules)
+* **Data Management:** 모든 수치는 `SkillData.json`에서 관리 (`JsonDataManager` 로드).
+* **Coordinate System:** 주인공(Player) 중심의 월드 좌표계 및 정면 벡터 참조.
+* **Rendering:** GDI+ `Graphics` 객체의 최상단 레이어 (Alpha Blending 적용).
 
 ---
 
-## 1. Active Skills
+## 1. 공격형 액티브 스킬 (Offensive Skills)
 
 ### [ID: 0] 먼지 돌풍 (Dust Blast)
-- **Concept:** 직선 관통형 공격
-- **Mechanics:** - 주인공 정면 방향으로 투사체 발사.
-  - `proj_lifetime_` 동안 모든 적을 관통하며 다단 히트.
-- **Data:**
-  | Damage | Speed | Cooldown |
-  | :--- | :--- | :--- |
-  | 12 (Flat) | 1000 | 3.0s |
+> **기획 의도:** 직선상의 화력을 집중하여 적의 포위망을 일시적으로 뚫어내는 **'돌파구'** 역할을 합니다. 관통 성능을 통해 후방의 위험 요소를 견제하며 거리 조절의 재미를 줍니다.
 
-### [ID: 1] 부식 (Corrosion)
-- **Concept:** 광역 장판형 CC 및 DoT
-- **Mechanics:** - `area_of_effect_` 반경 내 적들에게 '이동 불가' 상태 부여.
-  - 1초 간격으로 지속 피해 적용.
-- **Data:**
-  | AoE | Duration | Interval | Damage |
-  | :--- | :--- | :--- | :--- |
-  | 100 | 3.0s | 1.0s | 3 |
+| 항목 | 값 | 비고 |
+| :--- | :--- | :--- |
+| **데미지** | 12 (Flat) | `flat_damage_` |
+| **투사체 속도** | 1000 | `proj_speed_` |
+| **지속 프레임** | 30 | `proj_lifetime_` |
+| **재사용 대기시간** | 3.0s | `cooldown_` |
 
-### [ID: 3] 보풀 위성 (Lint Satellite)
-- **Concept:** 공전형 방어 위성
-- **Mechanics:** - 주인공 주변을 `proj_speed_` 속도로 회전.
-  - 근접한 적에게 지속적인 넉백과 피해.
-- **Data:**
-  | Count | Orbit Radius | Rotation Speed |
-  | :--- | :--- | :--- |
-  | 2 | 120 | 180 deg/s |
+* **[예외 처리]**
+    * 화면 밖으로 나간 투사체는 즉시 메모리 해제(Object Pool 반환).
+    * 벽(NavMesh 외부) 충돌 시 소멸하지 않고 관통 유지.
 
 ---
 
-## 2. Utility Skills
+### [ID: 1] 부식 (Corrosion)
+> **기획 의도:** **'영역 장악'** 및 **'위기 탈출'**용 스킬입니다. 적들이 근접했을 때 발을 묶어 재정비 시간을 벌어주며, 장판 위의 적들을 서서히 무너뜨리는 전략적 가치를 제공합니다.
+
+| 항목 | 값 | 비고 |
+| :--- | :--- | :--- |
+| **영역 반경** | 100 | `area_of_effect_` |
+| **지속 시간** | 3.0s | `duration_` |
+| **피해 주기** | 1.0s | `dot_interval_` |
+| **틱 데미지** | 3 | `flat_damage_` |
+
+* **[예외 처리]**
+    * 보스급 적에게는 '이동 불가' 대신 '이동 속도 50% 저하' 보정 적용.
+    * 장판 이미지의 중심부와 외곽의 투명도를 다르게 하여 범위 시인성 확보.
+
+---
+
+### [ID: 3] 보풀 위성 (Lint Satellite)
+> **기획 의도:** 주인공 주변의 **'심리적 안전거리 확보'**가 핵심입니다. 측면과 후면에서 접근하는 적들을 자동으로 쳐내어 플레이어가 전방 공격에만 집중할 수 있도록 돕는 보조 방어형 공격기입니다.
+
+| 항목 | 값 | 비고 |
+| :--- | :--- | :--- |
+| **공전 반경** | 120 | `area_of_effect_` |
+| **회전 속도** | 180 deg/s | `proj_speed_` |
+| **위성 개수** | 2 | `proj_count_` |
+| **충돌 데미지** | 8 | `flat_damage_` |
+
+* **[예외 처리]**
+    * **주의:** 적의 투사체를 파괴하지 않으며, 오직 적 유닛 본체에만 데미지를 입힘.
+    * 주인공 급가속 시 위성 좌표가 뒤처지지 않도록 `LateUpdate` 동기화.
+
+---
+
+## 2. 유틸리티 스킬 (Utility Skills)
 
 ### [ID: 2] 다크사이트 (Darksight)
-- **Concept:** 은신 및 가속 (회피기)
-- **Mechanics:** - 지속 시간 동안 무적 판정 및 이동 속도 1.5배 증가.
-  - GDI+ `ColorMatrix`를 활용한 반투명 연출 및 잔상 효과.
-- **Data:**
-  | Duration | Cooldown | Speed Multiplier |
-  | :--- | :--- | :--- |
-  | 1.5s | 4.0s | 1.5x |
+> **기획 의도:** 플레이어의 **'변수 창출'**과 **'생동감 있는 기동성'**을 담당합니다. 무적 시간과 가속을 활용해 포위망을 뚫거나 아이템을 확보하는 등 능동적인 위치 선정을 유도합니다.
+
+| 항목 | 값 | 비고 |
+| :--- | :--- | :--- |
+| **지속 시간** | 1.5s | `duration_` |
+| **재사용 대기시간** | 4.0s | `cooldown_` |
+| **이동 속도 보정** | 1.5x | `speed_multiplier` |
+
+* **[예외 처리]**
+    * 스킬 종료 시점에 적 유닛과 히트박스가 겹칠 경우, 가장 가까운 빈 공간으로 자동 위치 보정(Push-out).
+    * GDI+ 잔상 연출 시 이전 프레임 위치 리스트를 관리하여 렌더링.

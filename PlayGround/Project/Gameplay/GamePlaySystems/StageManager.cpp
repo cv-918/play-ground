@@ -190,7 +190,7 @@ void StageManager::_OnPlay(_double _delta_time)
 
 	// 스폰 타이머 및 인터벌 업데이트
 	spawn_timer_ += _Timer.DeltaTime();
-	spawn_interval_ = 1.5 / (1.0 + (stage_elapsed_time_ / 60.0) * 0.5); // 나중에 DifficultyInfo에서 spawn_scaling_factor를 가져와 적용
+	spawn_interval_ = 1.0 / (1.0 + (stage_elapsed_time_ / 60.0) * 0.5); // 나중에 DifficultyInfo에서 spawn_scaling_factor를 가져와 적용
 
 	if (spawn_timer_ >= spawn_interval_)
 	{
