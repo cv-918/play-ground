@@ -84,7 +84,7 @@ enum class EnemySpecialRole
 	Count,
 };
 
-enum class EnemyProjectilePattern
+enum class ProjectilePattern
 {
 	Undefined = 0,	// 초기화 값
 	Direct,			// 진행 방향 | 직선 진행
@@ -136,7 +136,7 @@ struct EnemyJsonInfo : public UnitJsonInfo
 
 	// ------ 투사체 관련 ------
 	// 투사체 종류가 다양해진다면, 투사체 스크립트 따로 빼서 넘기는게 나을 수도 있다. 그렇지 않을 경우 이대로
-	EnemyProjectilePattern projectile_pattern_ = EnemyProjectilePattern::Undefined;
+	ProjectilePattern projectile_pattern_ = ProjectilePattern::Undefined;
 	_float projectile_damage_ = 0.f;
 	_float projectile_speed_ = 0.f;
 
@@ -160,6 +160,9 @@ struct UnitCreationInfo
 	_Vector3 position_;
 	_Vector3 look_point_;
 	_float stat_multiplier_ = 1.f; // 스탯 배율. 필요에 따라 몬스터의 체력이나 공격력을 스테이지 진행 시간에 비례해서 증가시키는 로직에서 활용할 수 있습니다.
+
+	// 이 유닛을 소유하는 게임 오브젝트에 대한 포인터. 필요에 따라 스킬 오브젝트가 소환될 때, 이 정보를 활용하여 스킬 오브젝트가 소유자(예: 플레이어 캐릭터)의 위치나 방향을 참조하거나, 소유자와 상호작용하는 로직에서 활용할 수 있습니다.
+	class GameObjectBase* owner_ = nullptr;
 };
 
 struct RunSessionResult
@@ -475,6 +478,9 @@ struct SkillJsonInfo
 
 	/** 투사체의 생명 시간 (초 단위). 필요에 따라 스킬이 발사하는 투사체가 일정 시간 후에 소멸하는 형태로 구현할 수 있습니다. */
 	_double proj_lifetime_ = 0.0;
+
+	/** 투사체의 크기. 필요에 따라 스킬이 발사하는 투사체의 크기를 관리하는 로직에서 활용할 수 있습니다. */
+	_float proj_size_ = 0.f;
 	///@}
 	/** @} */
 };

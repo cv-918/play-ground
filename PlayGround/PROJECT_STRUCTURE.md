@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-26 18:06)
+﻿# Project Structure (Updated: 2026-03-27 11:58)
 
 ```text
 Root
@@ -114,6 +114,8 @@ Root
 |   |   |   |   |   Dust_DrakSight.h
 |   |   |   |   |   Dust_DustGust.cpp
 |   |   |   |   |   Dust_DustGust.h
+|   |   |   |   |   Dust_LintSatellite.cpp
+|   |   |   |   |   Dust_LintSatellite.h
 |   |   |   |   |   SkillBase.cpp
 |   |   |   |   |   SkillBase.h
 |   |   |   |   GameState.cpp

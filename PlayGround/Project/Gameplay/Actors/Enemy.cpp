@@ -74,7 +74,7 @@ _int Enemy::Update(_double _delta_time)
 	if (0 != ret) return ret;
 
 	// 투사체 발사 로직
-	if (EnemyProjectilePattern::Undefined != info_->projectile_pattern_)
+	if (ProjectilePattern::Undefined != info_->projectile_pattern_)
 		HandleProjectilePattern(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -176,7 +176,7 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 	//const auto target = pos + transform_->Forward2D() * 5.f;
 	switch (info_->projectile_pattern_)
 	{
-	case EnemyProjectilePattern::Direct:
+	case ProjectilePattern::Direct:
 		play_scene_->SpawnProjectile(this, pos, target_pos, info_->projectile_damage_, 240.f/*info_->projectile_speed_*/);
 		break;
 	}
