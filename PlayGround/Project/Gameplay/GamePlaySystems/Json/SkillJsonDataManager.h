@@ -17,7 +17,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	flat_damage_,
 	proj_count_,
 	proj_speed_,
-	proj_lifetime_
+	proj_lifetime_,
+	proj_size_
 )
 
 #define _SkillDataMgr SkillJsonDataManager::Get()

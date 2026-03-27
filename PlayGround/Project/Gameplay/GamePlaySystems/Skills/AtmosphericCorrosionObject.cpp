@@ -5,6 +5,7 @@
 #include "Components/Status.h"
 #include "Components/Movement.h"
 #include "EngineSystems/Physics/CollisionManager.h"
+#include "LintSatelliteObject.h"
 
 _bool AtmosphericCorrosionObject::Initialize()
 {
@@ -18,7 +19,6 @@ _bool AtmosphericCorrosionObject::Initialize()
 	color_.a >>= 1;
 
 	collider_ = new SphereCollider(skill_info_->area_of_effect_ * 0.5f);
-	collider_->SetDrawAlways(true);
 	RegisterComponent(collider_);
 
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, collider_);

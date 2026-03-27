@@ -58,7 +58,7 @@ _bool Player::Initialize()
 	input_manager_ = &_InputMgr.Get();
 	skill_manager_ = &_SkillMgr.Get();
 
-	skill_manager_->EqupSkills(1, 2);
+	skill_manager_->EqupSkills(1, 3);
 
 	Finalize();
 	return true;

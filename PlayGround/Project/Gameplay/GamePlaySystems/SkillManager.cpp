@@ -6,6 +6,7 @@
 #include "GamePlaySystems/Skills/Dust_DustGust.h"
 #include "GamePlaySystems/Skills/Dust_AtmosphericCorrosion.h"
 #include "GamePlaySystems/Skills/Dust_DrakSight.h"
+#include "GameplaySystems/Skills/Dust_LintSatellite.h"
 
 SkillManager::~SkillManager()
 {
@@ -75,6 +76,7 @@ SkillBase* SkillManager::_CreateSkillInstance(_uint _id)
 	case 0: return new Dust_DustGust(data);
 	case 1: return new Dust_AtmosphericCorrosion(data);
 	case 2: return new Dust_DrakSight(data);
+	case 3: return new Dust_LintSatellite(data);
 	}
 
 	return nullptr;

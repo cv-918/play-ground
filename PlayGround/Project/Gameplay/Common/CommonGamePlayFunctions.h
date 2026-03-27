@@ -149,13 +149,13 @@ namespace CommonGamePlayFunctions
 		}
 	}
 
-	inline std::wstring GetEnemyProjectilePatternName(EnemyProjectilePattern _enemy_projectile_pattern)
+	inline std::wstring GetEnemyProjectilePatternName(ProjectilePattern _enemy_projectile_pattern)
 	{
 		switch (_enemy_projectile_pattern)
 		{
-		case EnemyProjectilePattern::Direct:
+		case ProjectilePattern::Direct:
 			return L"Direct";
-		case EnemyProjectilePattern::Aimed:
+		case ProjectilePattern::Aimed:
 			return L"Aimed";
 		default:
 			return L"Undefined";

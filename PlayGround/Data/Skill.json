@@ -2,7 +2,7 @@
   {
     "id_": 0,
     "name_": "먼지 돌풍",
-    "desc_": "전방으로 작지만 매운 먼지 바람을 발사합니다.",
+    "desc_": "전방으로 작지만 매운 먼지 바람을 발사합니다. 바람은 적을 관통하며 공격합니다.",
     "type_": 1,
     "max_lv_": 1,
     "unlock_type_": 0,
@@ -14,29 +14,31 @@
     "flat_damage_": 12,
     "proj_count_": 1,
     "proj_speed_": 1000,
-    "proj_lifetime_": 30
+    "proj_lifetime_": 30,
+    "proj_size_": 40
   },
   {
     "id_": 1,
     "name_": "부식",
-    "desc_": "주변의 적에게 먼지를 뿜어서 부식을 유발합니다.",
+    "desc_": "주변의 적에게 먼지를 뿜어서 부식을 유발합니다. 부식에 맞은 적은 이동할 수 없으며 천천히 피해를 입습니다.",
     "type_": 1,
     "max_lv_": 1,
     "unlock_type_": 0,
     "cooldown_": 4,
     "duration_": 3,
     "dot_interval_": 1,
-    "area_of_effect_": 80,
+    "area_of_effect_": 100,
     "damage_multiplier_": 0,
     "flat_damage_": 3,
     "proj_count_": 0,
     "proj_speed_": 0,
-    "proj_lifetime_": 0
+    "proj_lifetime_": 0,
+    "proj_size_": 0
   },
   {
     "id_": 2,
     "name_": "다크사이트",
-    "desc_": "일정 시간 동안 빠르게 움직이며 먼지를 흐트러뜨려 적의 공격을 회피한다.",
+    "desc_": "일정 시간 동안 빠르게 움직이며 먼지를 흐트러뜨려 적의 공격을 회피합니다.",
     "type_": 1,
     "max_lv_": 1,
     "unlock_type_": 0,
@@ -48,6 +50,25 @@
     "flat_damage_": 0,
     "proj_count_": 0,
     "proj_speed_": 0,
-    "proj_lifetime_": 0
+    "proj_lifetime_": 0,
+    "proj_size_": 0
+  },
+  {
+    "id_": 3,
+    "name_": "보풀 위성",
+    "desc_": "주변을 빠르게 회전하는 보풀 뭉치를 생성합니다. 적의 접근을 차단하고 지속적인 피해를 입힙니다.",
+    "type_": 1,
+    "max_lv_": 1,
+    "unlock_type_": 0,
+    "cooldown_": 5,
+    "duration_": 4,
+    "dot_interval_": 0.5,
+    "area_of_effect_": 120,
+    "damage_multiplier_": 0,
+    "flat_damage_": 8,
+    "proj_count_": 2,
+    "proj_speed_": 180,
+    "proj_lifetime_": 0,
+    "proj_size_": 30
   }
 ]

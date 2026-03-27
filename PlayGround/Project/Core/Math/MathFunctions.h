@@ -30,4 +30,14 @@ namespace MathFunctions
         _t = _t * _t * (3 - 2 * _t);
         return _edge0 + (_edge1 - _edge0) * _t;
 	}
+
+	// Degree -> Radian 변환 함수
+	inline _float ToRadian(_float _degree) {
+		return _degree * (PI / 180.f);
+	}
+
+	// Radian -> Degree 변환 함수
+	inline _float ToDegree(_float _radian) {
+		return _radian * (180.f / PI);
+	}
 }

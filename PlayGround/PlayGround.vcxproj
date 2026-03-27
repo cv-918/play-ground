@@ -179,6 +179,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
@@ -297,6 +299,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />

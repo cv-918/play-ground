@@ -11,10 +11,11 @@ _bool DustGustObject::Initialize()
 	if (!__super::Initialize())
 		return false;
 
+	transform_->Scale(skill_info_->proj_size_);
 	transform_->Position(creation_info_.position_);
 	transform_->LookAt(creation_info_.look_point_);
 
-	const auto collider = new SphereCollider(40.f * 0.5f);
+	const auto collider = new SphereCollider(skill_info_->proj_size_ * 0.5f);
 	collider->SetDrawAlways(true);
 	RegisterComponent(collider);
 
