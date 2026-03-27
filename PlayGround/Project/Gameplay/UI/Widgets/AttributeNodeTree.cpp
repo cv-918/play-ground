@@ -137,7 +137,7 @@ void AttributeNodeTree::_DrawConnections(AttributeNode* _node)
 	{
 		const auto child_node = child_pair.second;
 		// 노드 간의 연결선을 그리는 로직. 예시에서는 간단히 선을 그리는 방식으로 구현.
-		_DrawFunc::DrawLine(_node->GetCenter(), child_node->GetCenter(), Colors::DarkGray, 2.f);
+		_DrawFunc::DrawLine(_node->GetCenter(), child_node->GetCenter(), Palette::DarkGray, 2.f);
 		// 재귀적으로 자식 노드의 연결선도 그려준다.
 		_DrawConnections(child_node);
 	}

@@ -38,9 +38,9 @@ private:
 	_float ratio_ = 1.f;
 
 	// 배경색, 채워지는 색, 테두리 색. 필요에 따라 조절 가능
-	_Color bgColor_ = Colors::LightGray;
-	_Color fillColor_ = Colors::DarkGray;
-	_Color borderColor_ = Colors::Black;
+	_Color bgColor_ = Palette::LightGray;
+	_Color fillColor_ = Palette::DarkGray;
+	_Color borderColor_ = Palette::Black;
 
 	// 테두리 두께. 필요에 따라 조절 가능
 	_bool is_border_enabled_ = true; // 테두리 표시 여부를 나타내는 변수. 필요에 따라 테두리를 켜거나 끌 수 있습니다.

@@ -49,7 +49,7 @@ void Bullet::Render(_double _delta_time)
 {
 	// 총알 렌더링 (간단한 원으로 표현)
 	const auto pos = transform_->Position();
-	_DrawFunc::FillCircle(pos, collider_->GetRadius(), Colors::DeepGray);
+	_DrawFunc::FillCircle(pos, collider_->GetRadius(), Palette::DeepGray);
 }
 
 void Bullet::DebugRender(_double _delta_time)
@@ -58,12 +58,12 @@ void Bullet::DebugRender(_double _delta_time)
 		return;
 
 	const auto position = transform_->Position();
-	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Colors::DarkGray);
+	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Palette::DarkGray);
 
 	auto description_position = position;
 	description_position.y += 16.f; // 디버그용으로 위치 보정
 
-	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Colors::DarkGray);
+	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
 }
 
 void Bullet::OnDestroy()

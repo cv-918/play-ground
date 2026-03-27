@@ -8,7 +8,7 @@ void RectCollider::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	_DrawFunc::DrawRectangle(rect_, Colors::Black);
+	_DrawFunc::DrawRectangle(rect_, Palette::Black);
 }
 
 _bool RectCollider::CheckCollided(Collider* _other)

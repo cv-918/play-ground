@@ -38,11 +38,11 @@ void AttributeNodeToolTip::Render(_double _delta_time)
 
 	const auto position = GetPosition();
 	const auto size = GetSize();
-	_DrawFunc::FillRectangle({ position, size }, Colors::White); // 툴팁 배경 채우기
-	_DrawFunc::DrawRectangle({ position, size }, Colors::DarkGray, 2.f); // 툴팁 배경 그리기
+	_DrawFunc::FillRectangle({ position, size }, Palette::White); // 툴팁 배경 채우기
+	_DrawFunc::DrawRectangle({ position, size }, Palette::DarkGray, 2.f); // 툴팁 배경 그리기
 
 	const auto tooltip_pos = position + _Point(10, 10); // 노드 위에 툴팁 위치 설정
-	_DrawFunc::DrawString(tooltip_pos, tooltip_text_, Colors::Black, 14.f, 230.f, false);
+	_DrawFunc::DrawString(tooltip_pos, tooltip_text_, Palette::Black, 14.f, 230.f, false);
 }
 
 void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)

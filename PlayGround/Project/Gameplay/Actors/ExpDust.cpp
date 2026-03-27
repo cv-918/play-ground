@@ -8,10 +8,10 @@ _bool ExpDust::Initialize()
 
 	// 색상 설정
 	std::map<EnemyTier, _Color> tier_color_map = {
-	{ EnemyTier::Normal, Colors::Pearl },
-	{ EnemyTier::Elite, Colors::LightPink },
-	{ EnemyTier::Danger, Colors::Pink },
-	{ EnemyTier::Special, Colors::Salmon }
+	{ EnemyTier::Normal, Palette::Pearl },
+	{ EnemyTier::Elite, Palette::LightPink },
+	{ EnemyTier::Danger, Palette::Pink },
+	{ EnemyTier::Special, Palette::Salmon }
 	};
 	color_ = tier_color_map[info_->tier_];
 

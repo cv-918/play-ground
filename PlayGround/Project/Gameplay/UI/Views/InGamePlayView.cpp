@@ -12,21 +12,21 @@ InGamePlayView::InGamePlayView()
 	stage_duration_gauge_ = CreateElement<ProgressBar>();
 	stage_duration_gauge_->SetSize({ 300, 10 });
 	stage_duration_gauge_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 60 });
-	stage_duration_gauge_->SetFillColor(Colors::SlateGray);
+	stage_duration_gauge_->SetFillColor(Palette::SlateGray);
 	stage_duration_gauge_->SetBorderEnabled(false);
 
 	// 화면 중앙 하단, Stage Clear Progress 게이지
 	stage_clear_progress_ = CreateElement<ProgressBar>();
 	stage_clear_progress_->SetSize({ 300, 10 });
 	stage_clear_progress_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 50 });
-	stage_clear_progress_->SetFillColor(Colors::MossGreen);
+	stage_clear_progress_->SetFillColor(Palette::MossGreen);
 	stage_clear_progress_->SetBorderEnabled(false);
 
 	// 화면 중앙 하단, Next Stage Progress 게이지
 	next_stage_progress_ = CreateElement<ProgressBar>();
 	next_stage_progress_->SetSize({ 300, 10 });
 	next_stage_progress_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 40 });
-	next_stage_progress_->SetFillColor(Colors::Teal);
+	next_stage_progress_->SetFillColor(Palette::Teal);
 	next_stage_progress_->SetBorderEnabled(false);
 }
 
@@ -64,19 +64,19 @@ void InGamePlayView::Render(_double _delta_time)
 		// --- 화면 우측 상단에 디버그 정보 출력 ---
 		// 1) 스폰 타이머 정보 출력
 		swprintf_s(buffer, L"%.2lf / %.2lf", _StageMgr.GetSpawnTimer(), _StageMgr.GetSpawnInterval());
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Palette::Black, 12.f, false);
 
 		// 2) 타임 스케일링 팩터 정보 출력
 		swprintf_s(buffer, L"Time Scaling Factor: %.2lf", _StageMgr.GetTimeScalingFactor());
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Palette::Black, 12.f, false);
 
 		// 3) 스킬 쿨다운 정보 출력
 		const auto& skill_cooldowns = _SkillMgr.GetSkillCooldownRatio(0);
 		swprintf_s(buffer, L"Skill 0 Cooldown Ratio: %.2lf", skill_cooldowns);
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Palette::Black, 12.f, false);
 
 		const auto& skill_cooldowns_1 = _SkillMgr.GetSkillCooldownRatio(1);
 		swprintf_s(buffer, L"Skill 1 Cooldown Ratio: %.2lf", skill_cooldowns_1);
-		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Colors::Black, 12.f, false);
+		_DrawFunc::DrawString(_Point{ print_x, print_y * ++index }, buffer, Palette::Black, 12.f, false);
 	}
 }

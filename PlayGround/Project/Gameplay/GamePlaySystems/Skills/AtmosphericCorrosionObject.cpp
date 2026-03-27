@@ -15,8 +15,8 @@ _bool AtmosphericCorrosionObject::Initialize()
 	transform_->Position(creation_info_.position_);
 	transform_->Scale(skill_info_->area_of_effect_);
 	
-	color_ = Colors::Rust;
-	color_.a >>= 1;
+	color_ = Palette::Rust;
+	SetAlpha(0.5f);
 
 	collider_ = new SphereCollider(skill_info_->area_of_effect_ * 0.5f);
 	RegisterComponent(collider_);

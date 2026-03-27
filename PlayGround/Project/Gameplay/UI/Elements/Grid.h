@@ -10,7 +10,7 @@ struct GridCreateInfo
 	_int rows = 1; // 그리드의 행 수.
 	_int cols = 1; // 그리드의 열 수.
 	_Size cell_size = _Size{ 50, 50 }; // 각 셀의 크기.
-	_Color line_color = Colors::Black; // 그리드 선의 색상.
+	_Color line_color = Palette::Black; // 그리드 선의 색상.
 	_float line_thickness = 1.0f; // 그리드 선의 두께.
 };
 
@@ -38,7 +38,7 @@ public:
 	_Point GetCellCenter(_int _row, _int _col) const;
 
 	// 특정 셀에 텍스트 설정 및 제거
-	void SetCellText(_int _row, _int _col, const std::wstring& _text, const _Color& _text_color = Colors::Black, _float _font_size = 12.f);
+	void SetCellText(_int _row, _int _col, const std::wstring& _text, const _Color& _text_color = Palette::Black, _float _font_size = 12.f);
 	void ClearCellText(_int _row, _int _col);
 
 	// 특정 셀에 채우기 색상 설정 및 제거
@@ -55,11 +55,11 @@ private:
 	struct CellData
 	{
 		_bool has_fill_color = false;
-		_Color fill_color = Colors::Transparent;
+		_Color fill_color = Palette::Transparent;
 
 		_bool has_text = false;
 		std::wstring text;
-		_Color text_color = Colors::Black;
+		_Color text_color = Palette::Black;
 		_float text_font_size = 12.f;
 
 		Button* button = nullptr;

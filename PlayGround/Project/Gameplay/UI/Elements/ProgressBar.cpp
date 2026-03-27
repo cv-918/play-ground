@@ -27,7 +27,7 @@ void ProgressBar::Render(_double _delta_time)
 	// 5. 텍스트 (예: "체력", "남은 시간" 등)
 	if (!text_.empty())
 	{
-		_DrawFunc::DrawString(rt.GetCenter(), text_, Colors::Black, 12.f, true);
+		_DrawFunc::DrawString(rt.GetCenter(), text_, Palette::Black, 12.f, true);
 	}
 }
 
@@ -36,7 +36,7 @@ void ProgressBar::SetAlpha(_float _alpha)
 	alpha_ = MathFunctions::Clamp(_alpha, 0.f, 1.f);
 
 	// 알파값이 변경될 때마다 색상의 알파 채널도 업데이트
-	bgColor_.a = s_ubyte(UCHAR_MAX * alpha_);
-	fillColor_.a = s_ubyte(UCHAR_MAX * alpha_);
-	borderColor_.a = s_ubyte(UCHAR_MAX * alpha_);
+	bgColor_.SetAlpha(_alpha);
+	fillColor_.SetAlpha(_alpha);
+	borderColor_.SetAlpha(_alpha);
 }

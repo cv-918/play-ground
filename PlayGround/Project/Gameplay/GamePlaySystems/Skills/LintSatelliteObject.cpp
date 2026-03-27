@@ -14,8 +14,8 @@ _bool LintSatelliteObject::Initialize()
 	// 보풀 뭉치 자체의 크기 (임의로 30.f 설정, 필요시 JSON에 규격 추가 권장)
 	transform_->Scale(skill_info_->proj_size_);
 
-	color_ = Colors::Rust;
-	color_.a >>= 1;
+	color_ = Palette::Rust;
+	SetAlpha(0.5f);
 
 	// 시작 각도 설정 (CreationInfo의 LookPoint 등을 활용하거나 외부에서 주입)
 	// 여기서는 단순하게 생성 시점의 좌표를 기반으로 초기 각도를 계산하거나 랜덤 부여 가능
@@ -91,32 +91,29 @@ _int LintSatelliteObject::LateUpdate(_double _delta_time)
 
 void LintSatelliteObject::Render(_double _delta_time)
 {
-	// 2. 잔상 먼저 그리기 (선형 보간으로 점점 투명하게)
+	// 잔상 먼저 그리기 (선형 보간으로 점점 투명하게)
 	for (const auto& shadow : afterimages_)
 	{
-		static Gdiplus::SolidBrush shadow_brush(Gdiplus::Color(s_byte(255 * shadow.alpha), 200, 200, 200));
-		shadow_brush.SetColor(Gdiplus::Color(s_byte(255 * shadow.alpha), 200, 200, 200));
-
-		g_graphics->FillEllipse(&shadow_brush,
-			shadow.position.x - 10.f, shadow.position.y - 10.f, 20.f, 20.f);
+		const auto shadow_brush = _GraphicSourceMgr.GetBrush(_Color(255 * shadow.alpha, 200, 200, 200));
+		g_graphics->FillEllipse(shadow_brush, shadow.position.x - 10.f, shadow.position.y - 10.f, 20.f, 20.f);
 	}
 
-	// 3. 본체 그리기 (보풀 질감을 위해 외곽선에 변화를 준 Path 추천)
-	static Gdiplus::SolidBrush main_brush(Gdiplus::Color(255, 220, 220, 220));
-	static Gdiplus::Pen fluff_pen(Gdiplus::Color(255, 180, 180, 180), 2.f);
+	// 본체 그리기 (보풀 질감을 위해 외곽선에 변화를 준 Path 추천)
+	auto main_brush = _GraphicSourceMgr.GetBrush(_Color(255, 220, 220, 220));
+	auto fluff_pen = _GraphicSourceMgr.GetPen(_Color(255, 180, 180, 180), 2.f);
 
 	_float radius = transform_->Scale().x * 0.5f;
 	_Vector3 pos = transform_->Position();
 
 	// 단순 원형 본체
-	g_graphics->FillEllipse(&main_brush, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+	g_graphics->FillEllipse(main_brush, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
 
 	// 보풀 느낌을 위한 무작위 외곽선 (간단한 예시)
 	for (int i = 0; i < 8; ++i)
 	{
 		_float angle = _MathFunc::ToRadian(i * 45.f + s_float(current_angle_));
 		_float s_dist = radius * 1.2f;
-		g_graphics->DrawLine(&fluff_pen,
+		g_graphics->DrawLine(fluff_pen,
 			pos.x + cosf(angle) * (radius * 0.8f), pos.y + sinf(angle) * (radius * 0.8f),
 			pos.x + cosf(angle) * s_dist, pos.y + sinf(angle) * s_dist);
 	}

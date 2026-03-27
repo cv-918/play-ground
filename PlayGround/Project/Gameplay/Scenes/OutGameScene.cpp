@@ -45,9 +45,9 @@ void OutGameScene::Render(_double _delta_time)
 	//path.AddEllipse(gaugeRect);
 
 	//Gdiplus::PathGradientBrush pgb(&path);
-	//Gdiplus::Color centerColor(255, 60, 60, 60);    // 중심: 진한 회색
+	//_Color centerColor(255, 60, 60, 60);    // 중심: 진한 회색
 	//int count = 1;
-	//Gdiplus::Color edgeColor(255, 20, 20, 20);      // 외곽: 더 어두운 색
+	//_Color edgeColor(255, 20, 20, 20);      // 외곽: 더 어두운 색
 
 	//pgb.SetCenterColor(centerColor);
 	//pgb.SetSurroundColors(&edgeColor, &count);
@@ -55,12 +55,12 @@ void OutGameScene::Render(_double _delta_time)
 	//g_graphics->FillEllipse((Gdiplus::Brush*)&pgb, gaugeRect);
 
 	//// 2. 게이지 테두리 (비어있는 부분)
-	//Gdiplus::Pen basePen(Gdiplus::Color(100, 80, 80, 80), 15); // 반투명 회색, 두께 15
+	//Gdiplus::Pen basePen(_Color(100, 80, 80, 80), 15); // 반투명 회색, 두께 15
 	//g_graphics->DrawEllipse(&basePen, gaugeRect);
 
 	//// 3. 실제 진행률 표시 (Arc)
 	//// 시작 각도: 270도 (12시 방향), 스윕 각도: 360도 * (진행률/100)
-	//Gdiplus::Pen progressPen(Gdiplus::Color(255, 0, 200, 255), 15); // 형광 파란색
+	//Gdiplus::Pen progressPen(_Color(255, 0, 200, 255), 15); // 형광 파란색
 	//progressPen.SetStartCap(Gdiplus::LineCapRound);        // 시작점 둥글게
 	//progressPen.SetEndCap(Gdiplus::LineCapRound);          // 끝점 둥글게
 
@@ -69,7 +69,7 @@ void OutGameScene::Render(_double _delta_time)
 	//// 4. 중앙에 텍스트 표시
 	//Gdiplus::FontFamily fontFamily(L"Arial");
 	//Gdiplus::Font font(&fontFamily, 24, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-	//Gdiplus::SolidBrush textBrush(Gdiplus::Color::White);
+	//Gdiplus::SolidBrush textBrush(_Color::White);
 	//
 	//Gdiplus::StringFormat format;
 	//format.SetAlignment(Gdiplus::StringAlignmentCenter);

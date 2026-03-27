@@ -37,5 +37,5 @@ void InGamePauseView::Render(_double _delta_time)
 	auto index = 0;
 
 	swprintf_s(buffer, L"Earned Coins: %d", _RunState.GetEarnedCoinCount());
-	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Colors::White, 14.f);
+	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Palette::White, 14.f);
 }

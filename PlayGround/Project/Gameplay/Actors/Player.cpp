@@ -42,19 +42,19 @@ _bool Player::Initialize()
 	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	const auto start_attack_radius = attribute_stat.GetStat(AttributeType::AttackRange).GetTotalIncrease(info_->attack_range_); // 공격 범위는 플레이어 크기에 비례해서 설정
 	attack_col->SetRadius(start_attack_radius);
-	attack_col->SetDebugColor(Colors::Gray, Colors::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
+	attack_col->SetDebugColor(Palette::Gray, Palette::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
 	attack_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
 
 	const auto start_collector_size = attribute_stat.GetStat(AttributeType::CollectionRange).GetTotalIncrease(info_->collector_size_); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	collector_col_ = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
-	collector_col_->SetDebugColor(Colors::Gray, Colors::AshGray, Colors::Charcoal);
+	collector_col_->SetDebugColor(Palette::Gray, Palette::AshGray, Palette::Charcoal);
 	collector_col_->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
 	RegisterComponent(collector_col_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col_);
 
 	// 기타 멤버 변수 초기화 및 캐싱
-	color_ = Colors::DarkGray;
+	color_ = Palette::DarkGray;
 	input_manager_ = &_InputMgr.Get();
 	skill_manager_ = &_SkillMgr.Get();
 
@@ -336,5 +336,5 @@ void Player::_ShowDebugInfo()
 
 	// 4) 디버그 정보 그리기
 	for (const auto& line : debug_info_lines_)
-		_DrawFunc::DrawString(_Point{ draw_pos_x, draw_pos_y += line_gap }, line, Colors::Black, 12.f, false);
+		_DrawFunc::DrawString(_Point{ draw_pos_x, draw_pos_y += line_gap }, line, Palette::Black, 12.f, false);
 }
