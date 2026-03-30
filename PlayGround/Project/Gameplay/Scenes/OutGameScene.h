@@ -12,7 +12,6 @@ class OutGameScene final : public Scene
 
 public:
 	explicit OutGameScene() : Scene(SceneType::OutGame) {}
-	~OutGameScene() override;
 
 public:
 	_bool Initialize() override;
@@ -24,8 +23,6 @@ public:
 private:
 	// 뷰 전환 메소드
 	void _ChangeView(OutGameViewState _new_view_state);
-	void _CloseView();
-	void _OpenView();
 	WidgetBase* _CreateView();
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;

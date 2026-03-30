@@ -11,19 +11,31 @@ _int Button::Update(_double _delta_time)
 
 	if (IsMouseOver(_InputMgr.MousePoint()))
 	{
-		if (_InputMgr.Down(VK_LBUTTON))
+     if (_InputMgr.Down(VK_RBUTTON))
 		{
-			state_ = ButtonState::Pressed;
+			state_ = ButtonState::Pressed_R;
+		}
+		else if (_InputMgr.Pressed(VK_RBUTTON))
+		{
+			state_ = ButtonState::Pressed_R;
+		}
+		else if (_InputMgr.Up(VK_RBUTTON))
+		{
+			state_ = ButtonState::Hovered;
+			RClick(); // 버튼 우클릭 이벤트 발생
+		}
+		else if (_InputMgr.Down(VK_LBUTTON))
+		{
+			state_ = ButtonState::Pressed_L;
 		}
 		else if (_InputMgr.Pressed(VK_LBUTTON))
 		{
-			state_ = ButtonState::Pressed;
+			state_ = ButtonState::Pressed_L;
 		}
 		else if (_InputMgr.Up(VK_LBUTTON))
 		{
 			state_ = ButtonState::Hovered;
-			if (on_click_)
-				on_click_(); // 유니티의 OnClick() 이벤트와 유사
+			LClick(); // 버튼 클릭 이벤트 발생
 		}
 		else
 		{
@@ -49,7 +61,7 @@ void Button::Render(_double _delta_time)
 	{
 		_DrawFunc::FillRectangle(rt, Palette::Gray);
 		_DrawFunc::DrawRectangle(rt, Palette::Black);
-		_DrawFunc::DrawString(rt.GetCenter(), text_, Palette::DarkGray);
+		_DrawFunc::DrawString(rt.Center(), text_, Palette::DarkGray);
 		return;
 	}
 	
@@ -63,8 +75,10 @@ void Button::Render(_double _delta_time)
 		break;
 	case ButtonState::Hovered: // 연회색
 		draw_color = _Color(200, 200, 200); break;
-	case ButtonState::Pressed: // 진회색
+	case ButtonState::Pressed_L: // 진회색
 		draw_color = _Color(150, 150, 150); break;
+ case ButtonState::Pressed_R: // 우클릭 프레스(청회색)
+		draw_color = _Color(150, 170, 200); break;
 	case ButtonState::Disabled:
 		break;
 	default:
@@ -73,5 +87,5 @@ void Button::Render(_double _delta_time)
 
 	_DrawFunc::FillRectangle(rt, draw_color);
 	_DrawFunc::DrawRectangle(rt, Palette::Black);
-	_DrawFunc::DrawString(rt.GetCenter(), text_);
+	_DrawFunc::DrawString(rt.Center(), text_);
 }

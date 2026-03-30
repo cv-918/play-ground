@@ -394,7 +394,7 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 	}
 
 	// 2) 풀에서 적 선택 및 생성
-	for (_int i = 0; i < _count; ++i)
+	for (_uint i = 0; i < _count; ++i)
 	{
 		// 가중치 기반 몬스터 선택
 		const auto enemy_id = _SelectMonsterFromPool(pool_info->spawn_enemies_info_);
@@ -418,14 +418,14 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 		// Enter 상태에서 초기 스폰되는 경우, 플레이어가 생성 위치와 충돌하지 않도록 조정하는 작업이 추가로 필요함
 		if (_on_play)
 		{
-			const _Vector3 center = _Vector3{ s_float(stage_nav_mesh_->GetCenter().x), s_float(stage_nav_mesh_->GetCenter().y), 0.f };
+			const _Vector3 center = _Vector3{ s_float(stage_nav_mesh_->Center().x), s_float(stage_nav_mesh_->Center().y), 0.f };
 			const _Vector3 to_center = (center - creation_info.position_).Normalized();
 			const _float radius = enemy_data->body_size_ * 0.5f;
 
 			const _Vector3 point_to_center = creation_info.position_ + to_center * radius;
 
 			// 충돌 여부를 확인하고, 화면에 보이지 않는 영역까지 밀어내기
-			if (stage_nav_mesh_->PtInRect(point_to_center))
+			if (stage_nav_mesh_->PtInRect(point_to_center.operator _Vector2()))
 			{
 				// 생성 지점에서 중심 방향으로 body_size의 절반만큼 이동한 지점이 네비게이션 메시 안에 있다면, 생성 지점을 중심 방향으로 body_size의 절반만큼 이동시킴
 				creation_info.position_ += to_center * (radius * -1.f);

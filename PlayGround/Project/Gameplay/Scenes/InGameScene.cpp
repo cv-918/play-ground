@@ -84,6 +84,7 @@ _int InGameScene::Update(_double _delta_time)
 	if (on_play_state)
 	{
 		_SkillMgr.Update(_delta_time);
+		_ParticleService.Update(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;
@@ -136,9 +137,37 @@ _int InGameScene::LateUpdate(_double _delta_time)
 	if (on_play_state)
 	{
 		_ColMgr.Update();
+		_CameraMgr.Update(_delta_time);
+		_ParticleService.LateUpdate(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;
+}
+
+void InGameScene::Render(_double _delta_time)
+{
+	// 1. 카메라 오프셋 가져오기
+	_Point offset = _CameraMgr.GetOffset();
+
+	// 2. 그래픽스 변환 적용 (전체 월드 흔들기)
+	g_graphics->TranslateTransform((Gdiplus::REAL)offset.x, (Gdiplus::REAL)offset.y);
+
+	// 3. 월드 요소들 렌더링 (배경, 캐릭터, 몬스터 등)
+	// 이 안에서 호출되는 모든 DrawFunctions가 흔들린 좌표에 그려집니다.
+	// s, [ 테스트용 배경 그리기 ]
+	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
+	_DrawFunc::FillRectangle(rt, Palette::Pearl);
+	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
+	// e, [ 테스트용 배경 그리기 ]
+
+	object_manager_->Render(_delta_time);
+	_ParticleService.Render(_delta_time);
+
+	// 4. 변환 초기화 (UI는 흔들리면 안 되므로!)
+	g_graphics->ResetTransform();
+
+	// 5. UI 렌더링 (고정된 위치)
+	ui_manager_->Render(_delta_time);
 }
 
 void InGameScene::OnEnter()

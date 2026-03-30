@@ -1,8 +1,12 @@
-﻿# Project Structure (Updated: 2026-03-27 15:59)
+﻿# Project Structure (Updated: 2026-03-30 17:00)
 
 ```text
 Root
 +--- Data
+|   +--- Resources
+|   |   +--- Textures
+|   |   |   +--- Chatacters
+|   |   |   +--- World
 +--- html
 |   +--- search
 +--- Project
@@ -27,6 +31,8 @@ Root
 |   |   |   |   MathFunctions.h
 |   |   |   |   Random.cpp
 |   |   |   |   Random.h
+|   |   |   |   Vector2.cpp
+|   |   |   |   Vector2.h
 |   |   |   |   Vector3.h
 |   +--- EngineSystems
 |   |   +--- Input
@@ -39,8 +45,12 @@ Root
 |   |   |   |   CollisionManager.cpp
 |   |   |   |   CollisionManager.h
 |   |   +--- Render
+|   |   |   |   CameraManager.cpp
+|   |   |   |   CameraManager.h
 |   |   |   |   GraphicResourceManager.cpp
 |   |   |   |   GraphicResourceManager.h
+|   |   |   |   ParticleService.cpp
+|   |   |   |   ParticleService.h
 |   |   |   |   RenderChain.cpp
 |   |   |   |   RenderChain.h
 |   |   +--- Timer

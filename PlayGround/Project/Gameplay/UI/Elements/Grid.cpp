@@ -54,11 +54,11 @@ _int Grid::Update(_double _delta_time)
 
 void Grid::Render(_double _delta_time)
 {
-  if (!IsVisible())
+	if (!IsVisible())
 		return;
 
 	const _Rect grid_rect = GetRect();
-	const _Point start_pos = grid_rect.GetLt();
+	const _Point start_pos = grid_rect.Lt();
 
 	for (_int row = 0; row < info_.rows; ++row)
 	{
@@ -79,7 +79,7 @@ void Grid::Render(_double _delta_time)
 			}
 			else if (cell.has_text)
 			{
-				_DrawFunc::DrawString(cell_rect.GetCenter(), cell.text, cell.text_color, cell.text_font_size);
+				_DrawFunc::DrawString(cell_rect.Center(), cell.text, cell.text_color, cell.text_font_size);
 			}
 		}
 	}
@@ -91,7 +91,7 @@ void Grid::Render(_double _delta_time)
 		const _int y = start_pos.y + row * info_.cell_size.y;
 		const _Point line_start{ start_pos.x, y };
 		const _Point line_end{ start_pos.x + grid_rect.Width(), y };
-		
+
 		_DrawFunc::DrawLine(line_start, line_end, info_.line_color, info_.line_thickness);
 	}
 
@@ -101,7 +101,7 @@ void Grid::Render(_double _delta_time)
 		const _int x = start_pos.x + col * info_.cell_size.x;
 		const _Point line_start{ x, start_pos.y };
 		const _Point line_end{ x, start_pos.y + grid_rect.Height() };
-		
+
 		_DrawFunc::DrawLine(line_start, line_end, info_.line_color, info_.line_thickness);
 	}
 }
@@ -110,7 +110,7 @@ _Rect Grid::GetCellRect(_int _row, _int _col) const
 {
 	// 범위 검증
 	if (_row < 0 || _row >= info_.rows || _col < 0 || _col >= info_.cols)
-		return _Rect::Zero();
+		return _Rect();
 
 	const _Point grid_pos = GetPosition();
 	const _Point cell_pos = {
@@ -124,7 +124,7 @@ _Rect Grid::GetCellRect(_int _row, _int _col) const
 _Point Grid::GetCellCenter(_int _row, _int _col) const
 {
 	const _Rect cell_rect = GetCellRect(_row, _col);
-	return cell_rect.GetCenter();
+	return cell_rect.Center();
 }
 
 void Grid::SetCellText(_int _row, _int _col, const std::wstring& _text, const _Color& _text_color, _float _font_size)
@@ -169,7 +169,7 @@ void Grid::ClearCellFillColor(_int _row, _int _col)
 	cell.fill_color = Palette::Transparent;
 }
 
-Button* Grid::AddCellButton(_int _row, _int _col, const std::wstring& _text, const std::function<void()>& _on_click)
+Button* Grid::AddCellButton(_int _row, _int _col, const std::wstring& _text, const std::function<void()>& _on_click, const std::function<void()>& _on_right_click)
 {
 	if (!IsValidCell(_row, _col))
 		return nullptr;
@@ -187,7 +187,8 @@ Button* Grid::AddCellButton(_int _row, _int _col, const std::wstring& _text, con
 	}
 
 	cell.button->SetText(_text);
-	cell.button->SetOnClick(_on_click);
+	cell.button->SetOnLClick(_on_click);
+	cell.button->SetOnRClick(_on_right_click);
 	cell.button->SetRect(GetCellRect(_row, _col));
 
 	return cell.button;

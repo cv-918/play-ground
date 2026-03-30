@@ -14,6 +14,8 @@ public:
 	_int Update(_double _delta_time) override;
 
 public:
+	const SkillJsonInfo* GetInfo() const { return info_; }
+
 	_bool IsReady() const { return curr_cool_timer_ <= 0.0; }
 	_float GetCooldownRatio() const { return info_->cooldown_ > 0.0 ? s_float(curr_cool_timer_ / info_->cooldown_) : 0.f; }
 

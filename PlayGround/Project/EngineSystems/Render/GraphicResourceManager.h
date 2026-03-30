@@ -17,14 +17,14 @@ public:
 	Gdiplus::Pen* GetPen(const _Color _color, _byte _alpha, _float _thickness = 1.f);
 
 	// --- 폰트(Font) 리소스 ---
-	Gdiplus::Font* GetFont(const std::wstring& _family, _float _size, _int _style = Gdiplus::FontStyleRegular);
+	Gdiplus::Font* GetFont(_float _size, _int _style = Gdiplus::FontStyleRegular);
 
 	// --- 텍스처(Image) 리소스 ---
 	Gdiplus::Image* GetTexture(const std::wstring& _path);
 
 	// --- 텍스처 브러시 (TextureBrush) ---
-	Gdiplus::TextureBrush* GetTextureBrush(const std::wstring& _path);
-	//Gdiplus::TextureBrush* GetTextureBrush(const std::wstring& _path, Gdiplus::WrapMode _wrap_mode);
+	Gdiplus::TextureBrush* GetTextureBrush(const std::wstring& _path, Gdiplus::WrapMode _wrap_mode = Gdiplus::WrapMode::WrapModeTile);
+	Gdiplus::TextureBrush* GetTextureBrush(_ulonglong _key);
 
 	Gdiplus::StringFormat* GetStringFormat(_bool _is_center);
 
@@ -35,7 +35,7 @@ private:
 	std::unordered_map<_ulonglong, Gdiplus::Pen*> pens_; // "ColorKey_Thickness" 형태의 키 사용
 	std::unordered_map<_ulonglong, Gdiplus::Font*> fonts_;
 	std::unordered_map<std::wstring, Gdiplus::Image*> textures_;
-	std::unordered_map<std::wstring, Gdiplus::TextureBrush*> tex_brushes_;
+	std::unordered_map<_ulonglong, Gdiplus::TextureBrush*> tex_brushes_;
 
 	Gdiplus::StringFormat* format_center_ = nullptr;
 	Gdiplus::StringFormat* format_left_ = nullptr;

@@ -44,6 +44,7 @@
 
 #include "Core/Math/Random.h"
 #include "Core/Math/Geometry2D.h"
+#include "Core/Math/Vector2.h"
 #include "Core/Math/Vector3.h"
 
 // 정의 자료형들도 Extern 변수로 사용할 수 있기 때문에 여기에서 포함
@@ -51,6 +52,8 @@
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Timer/Timer.h"
 #include "EngineSystems/Render/GraphicResourceManager.h"
+#include "EngineSystems/Render/CameraManager.h"
+#include "EngineSystems/Render/ParticleService.h"
 
 #include "Core/Base/Extern.h"
 #include "Core/Base/DrawFunctions.h"
@@ -62,8 +65,6 @@
 #include "GamePlaySystems/UserProfile.h"
 #include "GamePlaySystems/GameState.h"
 #include "GamePlaySystems/RunState.h"
-
-
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC

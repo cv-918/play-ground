@@ -27,7 +27,7 @@ void ProgressBar::Render(_double _delta_time)
 	// 5. 텍스트 (예: "체력", "남은 시간" 등)
 	if (!text_.empty())
 	{
-		_DrawFunc::DrawString(rt.GetCenter(), text_, Palette::Black, 12.f, true);
+		_DrawFunc::DrawString(rt.Center(), text_, Palette::Black, 12.f, true);
 	}
 }
 

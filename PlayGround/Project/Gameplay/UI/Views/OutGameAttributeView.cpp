@@ -6,6 +6,9 @@
 #include "../Widgets/AttributeNodeTree.h"
 
 #include "GamePlaySystems/Json/SkillJsonDataManager.h"
+#include "GamePlaySystems/SkillManager.h"
+
+#include "GamePlaySystems/Skills/SkillBase.h"
 
 OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_btn_callback)
 {
@@ -15,14 +18,16 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	const _int gap = 10;
 
 	// 돌아가기 버튼
-	const auto return_btn = CreateElement<Button>();
-	return_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
-	return_btn->SetText(L"RETURN");
-	return_btn->SetOnClick(_return_btn_callback);
+	return_btn_ = CreateElement<Button>();
+	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
+	return_btn_->SetText(L"RETURN");
+	return_btn_->SetOnLClick(_return_btn_callback);
 
+	// 스킬 목록 그리드
+	const auto table = _SkillDataMgr.GetTable(); // 스킬 데이터 로드 (디버그용))
 	GridCreateInfo skill_list_grid_layout;
 	skill_list_grid_layout.rows = 1;
-	skill_list_grid_layout.cols = 6;
+	skill_list_grid_layout.cols = table.size();
 	skill_list_grid_layout.cell_size = _Size{ 64, 64 };
 	skill_list_grid_layout.line_color = Palette::Black;
 	skill_list_grid_layout.line_thickness = 1.0f;
@@ -34,16 +39,30 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	skill_list_grid->Initialize();
 	skill_list_grid->SetCenter(pos);
 
-	const auto table = _SkillDataMgr.GetTable(); // 스킬 데이터 로드 (디버그용))
 	_int col_index = -1;
 	for (const auto& pair : table)
 	{
 		const auto& skill_info = pair.second;
 		skill_list_grid->SetCellText(0, ++col_index, _UtilFunc::ToWString(skill_info.name_), Palette::Black, 12.f);
+		skill_list_grid->AddCellButton(0, col_index, _UtilFunc::ToWString(skill_info.name_),
+			[col_index]() { _SkillMgr.ToggleSkillEquipState(0, col_index); },
+			[col_index]() { _SkillMgr.ToggleSkillEquipState(1, col_index); });
 	}
 
 	// 어트리뷰트 트리 생성
 	CreateElement<AttributeNodeTree>();
+}
+
+_int OutGameAttributeView::Update(_double _delta_time)
+{
+	__super::Update(_delta_time);
+
+	if (_InputMgr.Down(VK_ESCAPE))
+	{
+		return_btn_->LClick();
+	}
+
+	return UPDATE_CONTINUE;
 }
 
 void OutGameAttributeView::Render(_double _delta_time)
@@ -83,6 +102,20 @@ void OutGameAttributeView::Render(_double _delta_time)
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 
 		swprintf_s(buffer, L"Stage Progress : %d", _UserProfile.GetStageProgress());
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
+
+		++index;
+		swprintf_s(buffer, L"=== Equipped Skills ===");
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
+
+		_SkillMgr.GetEquippedSkill(0)
+			? swprintf_s(buffer, L"Slot 1 : %s", _UtilFunc::ToWString(_SkillMgr.GetEquippedSkill(0)->GetInfo()->name_).c_str())
+			: swprintf_s(buffer, L"Slot 1 : Empty");
+		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
+
+		_SkillMgr.GetEquippedSkill(1)
+			? swprintf_s(buffer, L"Slot 2 : %s", _UtilFunc::ToWString(_SkillMgr.GetEquippedSkill(1)->GetInfo()->name_).c_str())
+			: swprintf_s(buffer, L"Slot 2 : Empty");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 	}
 }

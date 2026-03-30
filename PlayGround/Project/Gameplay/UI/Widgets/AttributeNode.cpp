@@ -49,7 +49,7 @@ void AttributeNode::_UpdateState()
 		btn_->SetEnable(true);
 
 		// 노드 클릭 시 레벨업 처리 로직 추가. 필요에 따라 노드 레벨업 시 추가적인 로직을 작성할 수 있습니다.
-		btn_->SetOnClick([this]()
+		btn_->SetOnLClick([this]()
 			{
 				// 노드 클릭 시 처리할 로직을 여기에 작성. 예: 노드 레벨업, 노드 정보 표시 등
 				_SYSTEM_LOG_INFO(_T("Node %u clicked"), info_->id_);

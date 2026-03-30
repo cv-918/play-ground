@@ -4,13 +4,6 @@
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
 
-OutGameScene::~OutGameScene()
-{
-	// 뷰 전환 시 생성된 UI 요소들에 대한 정리 작업 처리
-	for (auto& pair : view_map_)
-		SAFE_DELETE(pair.second);
-}
-
 _bool OutGameScene::Initialize()
 {
 	if (!__super::Initialize())
@@ -22,10 +15,23 @@ _bool OutGameScene::Initialize()
 
 _int OutGameScene::Update(_double _delta_time)
 {
-	__super::Update(_delta_time);
+	auto ret = __super::Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
 
-	if (current_view_)
-		current_view_->Update(_delta_time);
+	switch (view_state_)
+	{
+	case OutGameScene::OutGameViewState::Main:
+		if (_InputMgr.Down('T'))
+		{
+			_ChangeView(OutGameViewState::Attribute);
+		}
+		break;
+	case OutGameScene::OutGameViewState::Attribute:
+		break;
+	default:
+		break;
+	}
 
 	return UPDATE_CONTINUE;
 }
@@ -33,9 +39,6 @@ _int OutGameScene::Update(_double _delta_time)
 void OutGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
-
-	if (current_view_)
-		current_view_->Render(_delta_time);
 
 	//Gdiplus::Rect gaugeRect(50, 50, 200, 200); // 게이지 크기 및 위치
 	//float progress = 75.0f;           // 75% 진행 상태
@@ -94,61 +97,42 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 
 	_SYSTEM_LOG_INFO(_T("Changing view from %s to %s"), _GetViewName(view_state_).c_str(), _GetViewName(_new_view_state).c_str());
 
-	_CloseView();
+	if (current_view_)
+		current_view_->InActivate();
+
 	view_state_ = _new_view_state;
-	_OpenView();
-}
-
-void OutGameScene::_CloseView()
-{
-	switch (view_state_)
-	{
-	case OutGameViewState::Main:
-		// 메인 뷰로 전환하는 로직 처리
-		break;
-	case OutGameViewState::Attribute:
-		// 어트리뷰트 뷰로 전환하는 로직 처리
-		break;
-	}
-}
-
-void OutGameScene::_OpenView()
-{
 	const auto find = view_map_.find(view_state_);
-
-	// 해당 뷰에 대한 UI 요소가 아직 생성되지 않은 경우, 새로 생성하는 로직 처리
 	if (find == view_map_.end())
 	{
-		current_view_ = _CreateView();
+		view_map_[view_state_] = _CreateView();
+		current_view_ = view_map_[view_state_];
 	}
 	else
 	{
 		current_view_ = find->second;
-	}	
+		current_view_->Activate();
+	}
 }
 
 WidgetBase* OutGameScene::_CreateView()
 {
 	_SYSTEM_LOG_INFO(_T("Created new view: %s"), _GetViewName(view_state_).c_str());
 
-	WidgetBase* view = nullptr;
 	switch (view_state_)
 	{
 	case OutGameScene::OutGameViewState::Main:
-		view = new OutGameMainView(
+		return ui_manager_->CreateUI<OutGameMainView>(
 			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { _ChangeView(OutGameViewState::Attribute); }
 		);
-		break;
 	case OutGameScene::OutGameViewState::Attribute:
-		view = new OutGameAttributeView(
+		return ui_manager_->CreateUI<OutGameAttributeView>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
 		break;
 	}
 
-	view_map_[view_state_] = view;
-	return view;
+	return nullptr;
 }
 
 std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const

@@ -21,15 +21,23 @@ using _double = double;
 
 struct _Color : public Gdiplus::Color
 {
-	_Color() : Gdiplus::Color() {}
-	_Color(_byte a, _byte r, _byte g, _byte b) : Gdiplus::Color(a, r, g, b) {}
-	_Color(_byte r, _byte g, _byte b) : Gdiplus::Color(r, g, b) {}
-	_Color(const _Color& color) : Gdiplus::Color(color) {}
+	_Color() {}
+	_Color(_byte _a, _byte _r, _byte _g, _byte _b) : Gdiplus::Color(_a, _r, _g, _b) {}
+	_Color(_byte _r, _byte _g, _byte _b) : Gdiplus::Color(_r, _g, _b) {}
+	_Color(const _Color& _color) : Gdiplus::Color(_color) {}
 
 	// 기존 RGB 값 유지하면서 알파 채널만 업데이트
-	void SetAlpha(_float alpha) {
-		if (alpha < 0.f) alpha = 0.f;
-		if (alpha > 1.f) alpha = 1.f;
-		Argb = (Argb & 0x00FFFFFF) | (static_cast<_ubyte>(alpha * UCHAR_MAX) << 24);
+	void SetAlpha(_float _alpha) {
+		if (_alpha < 0.f) _alpha = 0.f;
+		if (_alpha > 1.f) _alpha = 1.f;
+		Argb = (Argb & 0x00FFFFFF) | (static_cast<_ubyte>(_alpha * UCHAR_MAX) << 24);
 	}
 };
+
+namespace Path
+{
+	const std::wstring Root = L"Data/Resources/";
+	const std::wstring Texture = Root + L"Textures/";
+	const std::wstring Character = Texture + L"Characters/";
+	const std::wstring World = Texture + L"World/";
+}

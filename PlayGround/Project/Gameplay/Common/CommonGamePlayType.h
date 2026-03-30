@@ -354,8 +354,9 @@ struct AttributeStat
 		auto it = attribute_stats_.find(_type);
 		if (it != attribute_stats_.end())
 			return it->second;
-		else
-			return Stat(); // 기본값 반환
+
+		static Stat default_stat; // 기본값을 담는 정적 변수
+		return default_stat;
 	}
 
 	const std::map<AttributeType, Stat>& GetStats() const { return attribute_stats_; }
