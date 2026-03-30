@@ -1,4 +1,4 @@
-#include "framework.h"
+ï»¿#include "framework.h"
 #include "NonPlayableMovement.h"
 
 _bool NonPlayableMovement::Initialize()
@@ -25,12 +25,12 @@ _bool NonPlayableMovement::Initialize()
 
 void NonPlayableMovement::_ProcessOnstopped(_double _delta_time)
 {
-	// ÀÚÃ¼ÀûÀÎ ÀÌµ¿ ¿Ü¿¡ '¹Ğ¸²' °°Àº ³»¿ëÀÌ ÇÊ¿äÇÏ´Ù¸é ¿©±â¿¡¼­ ±¸Çö
+	// ìì²´ì ì¸ ì´ë™ ì™¸ì— 'ë°€ë¦¼' ê°™ì€ ë‚´ìš©ì´ í•„ìš”í•˜ë‹¤ë©´ ì—¬ê¸°ì—ì„œ êµ¬í˜„
 }
 
 void NonPlayableMovement::_ProcessOnDirectional(_double _delta_time)
 {
-	// Á¤ÇØÁø ¹æÇâÀ¸·Î¸¸ Á÷¼± ÀÌµ¿
+	// ì •í•´ì§„ ë°©í–¥ìœ¼ë¡œë§Œ ì§ì„  ì´ë™
 	transform_->Translate(move_direction_ * move_spd_ * _delta_time);
 }
 
@@ -41,8 +41,8 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 
 	enum class MoveMethod
 	{
-		Steering,		// È¸Àü ¼Óµµ¿¡ ÀÇÇØ Á¦ÇÑµÈ È¸Àü
-		Immediate		// Á¦ÇÑÀÌ ¾ø´Â Áï½Ã È¸Àü
+		Steering,		// íšŒì „ ì†ë„ì— ì˜í•´ ì œí•œëœ íšŒì „
+		Immediate		// ì œí•œì´ ì—†ëŠ” ì¦‰ì‹œ íšŒì „
 	};
 
 	static MoveMethod move_method = MoveMethod::Immediate;
@@ -56,30 +56,29 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 		const auto position = transform_->Position();
 		auto direction_to_target = target_position - position;
 
-		// °Å¸®°¡ ¾ÆÁÖ °¡±î¿ì¸é Áøµ¿ ¹æÁö¸¦ À§ÇØ ¸®ÅÏ
+		// ê±°ë¦¬ê°€ ì•„ì£¼ ê°€ê¹Œìš°ë©´ ì§„ë™ ë°©ì§€ë¥¼ ìœ„í•´ ë¦¬í„´
 		const auto distance = direction_to_target.Length();
 		if (distance < 1.0f) return;
 
-		direction_to_target.Normalize();
+		direction_to_target = direction_to_target.Normalized();
 
 		const auto old_look = transform_->Forward2D();
 		_Vector3 new_look;
 
 		if (rotate_spd_ > 0.f)
 		{
-			// ÇöÀç ÀÌµ¿ ¹æÇâ(move_direction_)À» Å¸°Ù ¹æÇâÀ¸·Î ºÎµå·´°Ô È¸Àü
-			new_look = _Vector3::Lerp(old_look, direction_to_target, s_cast(_float, rotate_spd_ * _delta_time));
-			new_look.Normalize();
+			// í˜„ì¬ ì´ë™ ë°©í–¥(move_direction_)ì„ íƒ€ê²Ÿ ë°©í–¥ìœ¼ë¡œ ë¶€ë“œëŸ½ê²Œ íšŒì „
+			new_look = _MathFunc::Lerp(old_look, direction_to_target, s_cast(_float, rotate_spd_ * _delta_time)).Normalized();
 		}
 		else
 		{
-			// È¸Àü ¼Óµµ°¡ 0ÀÌ¸é Áï°¢ÀûÀ¸·Î Å¸°ÙÀ» ¹Ù¶óº½
+			// íšŒì „ ì†ë„ê°€ 0ì´ë©´ ì¦‰ê°ì ìœ¼ë¡œ íƒ€ê²Ÿì„ ë°”ë¼ë´„
 			new_look = direction_to_target;
 		}
 
-		const auto look_point = new_look * 5.f; // 5.f ¾ÕÀÇ ÀÓÀÇÀÇ ÁöÁ¡À» ¼±Á¤
+		const auto look_point = new_look * 5.f; // 5.f ì•ì˜ ì„ì˜ì˜ ì§€ì ì„ ì„ ì •
 		transform_->LookAt(position + look_point);
-		transform_->TranslateToForward(move_spd_* s_cast(_float, _delta_time));
+		transform_->TranslateToForward(move_spd_ * s_cast(_float, _delta_time));
 	}
 	break;
 

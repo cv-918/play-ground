@@ -58,8 +58,6 @@ _bool Player::Initialize()
 	input_manager_ = &_InputMgr.Get();
 	skill_manager_ = &_SkillMgr.Get();
 
-	skill_manager_->EqupSkills(1, 3);
-
 	Finalize();
 	return true;
 }
@@ -79,6 +77,17 @@ _int Player::Update(_double _delta_time)
 	{
 		skill_manager_->UseSkill(1, this, transform_->Forward2D());
 		_SYSTEM_LOG_INFO(L"Player used skill 0");
+	}
+
+	const auto move_vel = movement_->MoveVelocity();
+	if (0 < move_vel.Magnitude())
+	{
+		_Vector3 test;
+		test.operator _Vector2() = move_vel;
+
+		const auto pos = transform_->Position();
+		const auto vel = _Vector2{ _Random.Range(-10.f, 10.f), _Random.Range(-5.f, 5.f) };
+		_ParticleService.Emit(pos, vel, 0.25f, 1.2f);
 	}
 
 	return UPDATE_CONTINUE;
@@ -171,7 +180,11 @@ void Player::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
 	const auto target_enemy = _enemy_body_collider->GameObject();
 	target_enemy->SendMessageToHandlers(
 		HandlerSystemList::Damage,
-		[this](IHandler* _handler) { s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt()); }
+		[this](IHandler* _handler)
+		{
+			s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
+			_CameraMgr.Shake(2.f, 0.25f);
+		}
 	);
 
 	const auto status = s_cast(Status*, target_enemy->GetComponent(ComponentType::Status));

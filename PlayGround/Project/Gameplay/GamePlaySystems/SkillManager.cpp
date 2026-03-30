@@ -25,7 +25,7 @@ _int SkillManager::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void SkillManager::EqupSkills(_uint _slot1_id, _uint _slot2_id)
+void SkillManager::EquipSkills(_uint _slot1_id, _uint _slot2_id)
 {
 	// 기존에 장착된 스킬 인스턴스가 있다면 삭제
 	for (auto* skill : equipped_skills_)
@@ -33,6 +33,41 @@ void SkillManager::EqupSkills(_uint _slot1_id, _uint _slot2_id)
 
 	equipped_skills_[0] = _CreateSkillInstance(_slot1_id);
 	equipped_skills_[1] = _CreateSkillInstance(_slot2_id);
+}
+
+void SkillManager::EquipSkill(_uint _slot_idx, _uint _skill_id)
+{
+	if (_slot_idx >= 2)
+		return;
+
+	// 기존에 장착된 스킬 인스턴스가 있다면 삭제
+	SAFE_DELETE(equipped_skills_[_slot_idx]);
+	equipped_skills_[_slot_idx] = _CreateSkillInstance(_skill_id);
+}
+
+void SkillManager::UnequipSkill(_uint _slot_idx)
+{
+	if (_slot_idx >= 2)
+		return;
+
+	SAFE_DELETE(equipped_skills_[_slot_idx]);
+}
+
+void SkillManager::ToggleSkillEquipState(_uint _slot_idx, _uint _skill_id)
+{
+	if (_slot_idx >= 2)
+		return;
+
+	if (equipped_skills_[_slot_idx] && equipped_skills_[_slot_idx]->GetInfo()->id_ == _skill_id)
+	{
+		// 이미 장착된 스킬과 같은 ID라면 제거
+		UnequipSkill(_slot_idx);
+	}
+	else
+	{
+		// 그렇지 않다면 장착
+		EquipSkill(_slot_idx, _skill_id);
+	}
 }
 
 void SkillManager::UseSkill(_uint _slot_idx, GameObjectBase* _owner, const _Vector3& _dir)
@@ -54,6 +89,14 @@ _float SkillManager::GetSkillCooldownRatio(_uint _slot_idx) const
 		return 0.f;
 
 	return equipped_skills_[_slot_idx]->GetCooldownRatio();
+}
+
+SkillBase* SkillManager::GetEquippedSkill(_uint _slot_idx) const
+{
+	if (_slot_idx >= 2)
+		return nullptr;
+
+	return equipped_skills_[_slot_idx];
 }
 
 SkillBase* SkillManager::_CreateSkillInstance(_uint _id)

@@ -46,7 +46,7 @@ public:
 	void ClearCellFillColor(_int _row, _int _col);
 
 	// 특정 셀에 버튼 추가, 제거 및 접근
-	Button* AddCellButton(_int _row, _int _col, const std::wstring& _text = L"", const std::function<void()>& _on_click = nullptr);
+	Button* AddCellButton(_int _row, _int _col, const std::wstring& _text = L"", const std::function<void()>& _on_click = nullptr, const std::function<void()>& _on_right_click = nullptr);
 	void RemoveCellButton(_int _row, _int _col);
 	Button* GetCellButton(_int _row, _int _col);
 	const Button* GetCellButton(_int _row, _int _col) const;

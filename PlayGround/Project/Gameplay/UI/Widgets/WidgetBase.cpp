@@ -79,7 +79,7 @@ void WidgetBase::SetSize(const _Size& _size)
 	// 크기가 0이 되는 것을 방지하기 위해 최소 크기(1*1)를 설정
 	if (current_size == _Size::Zero())
 	{
-		current_size = _Size::One();
+		current_size = _Size(1, 1);
 	}
 	else
 	{

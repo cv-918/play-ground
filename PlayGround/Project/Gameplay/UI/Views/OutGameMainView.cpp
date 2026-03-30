@@ -14,7 +14,7 @@ OutGameMainView::OutGameMainView(const std::function<void()>& _start_btn_callbac
 	const auto start_btn = CreateElement<Button>();
 	start_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
 	start_btn->SetText(L"GAME START");
-	start_btn->SetOnClick(_start_btn_callback);
+	start_btn->SetOnLClick(_start_btn_callback);
 
 	y += COMMON_BUTTON_SIZE.y + gap;
 
@@ -22,9 +22,5 @@ OutGameMainView::OutGameMainView(const std::function<void()>& _start_btn_callbac
 	const auto attr_btn = CreateElement<Button>();
 	attr_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 	attr_btn->SetText(L"ATTRIBUTE");
-	attr_btn->SetOnClick(_attr_btn_callback);
-}
-
-OutGameMainView::~OutGameMainView()
-{
+	attr_btn->SetOnLClick(_attr_btn_callback);
 }

@@ -96,7 +96,7 @@ void PlayableMovement::_OnAxis(_double _delta_time)
 
 	const _bool has_input = (input_dir.LengthSq() > 0.f);
 	if (has_input)
-		input_dir.Normalize();
+		input_dir = input_dir.Normalized();
 
 	if (has_input)
 	{
@@ -108,7 +108,7 @@ void PlayableMovement::_OnAxis(_double _delta_time)
 		const float max_spd_sq = move_spd_max_ * move_spd_max_;
 		if (velocity_len_sq > max_spd_sq)
 		{
-			move_velocity_.Normalize();
+			move_velocity_ = move_velocity_.Normalized();
 			move_velocity_ *= move_spd_max_;
 		}
 	}

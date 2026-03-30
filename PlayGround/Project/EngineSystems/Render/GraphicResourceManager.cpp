@@ -54,23 +54,26 @@ Gdiplus::Pen* GraphicResourceManager::GetPen(_Color _color, _byte _alpha, _float
 	return GetPen(alphaColor, _thickness);
 }
 
-Gdiplus::Font* GraphicResourceManager::GetFont(const std::wstring& _family, _float _size, _int _style)
+Gdiplus::Font* GraphicResourceManager::GetFont(_float _size, _int _style)
 {
-	// 키 생성: 폰트 패밀리, 크기, 스타일을 조합하여 고유한 키 생성 (예. "FamilyHash_Size_Style" 형태)
-	// 1) 패밀리 이름을 해시값으로 변환 (std::hash 사용)
-	size_t family_hash = std::hash<std::wstring>{}(_family);
-
-	// 2) 크기와 스타일을 조합하여 키 생성 (크기는 소수점 둘째 자리까지 고려)
+	// 1. 크기를 소수점 둘째 자리까지 정수화 (예: 12.5f -> 1250)
+	// 24비트면 약 16만까지 표현 가능하므로 폰트 사이즈로는 충분합니다.
 	const auto size_key = s_cast(_ulonglong, _size * 100.0f);
 
-	// 3) 최종 키 생성: 패밀리 해시값과 크기, 스타일을 XOR 연산으로 조합하여 고유한 키 생성
-	const auto key = family_hash ^ (size_key << 8) ^ (s_cast(_ulonglong, _style) << 24);
-	if (fonts_.find(key) != fonts_.end()) return fonts_[key];
+	// 2. 키 조합: 상위 비트에 스타일, 하위 비트에 사이즈 배치
+	// [ Style (8bit) ][ Size*100 (24bit) ]
+	const auto key = (s_cast(_ulonglong, _style & 0xFF) << 24) | (size_key & 0xFFFFFF);
 
-	Gdiplus::FontFamily family(_family.c_str());
-	const auto new_font = new Gdiplus::Font(&family, _size, _style, Gdiplus::UnitPixel);
+	auto it = fonts_.find(key);
+	if (it != fonts_.end()) return it->second;
 
+	// 3. 고정된 폰트 패밀리 사용 (예: D2Coding)
+	static Gdiplus::FontFamily fixedFamily(L"D2Coding");
+
+	// 신규 생성
+	const auto new_font = new Gdiplus::Font(&fixedFamily, _size, _style, Gdiplus::UnitPixel);
 	fonts_[key] = new_font;
+
 	return new_font;
 }
 
@@ -93,17 +96,27 @@ Gdiplus::Image* GraphicResourceManager::GetTexture(const std::wstring& _path)
 	return new_img;
 }
 
-Gdiplus::TextureBrush* GraphicResourceManager::GetTextureBrush(const std::wstring& _path)
+Gdiplus::TextureBrush* GraphicResourceManager::GetTextureBrush(const std::wstring& _path, Gdiplus::WrapMode _wrap_mode)
 {
-	if (tex_brushes_.find(_path) != tex_brushes_.end()) return tex_brushes_[_path];
+	// 1. 경로 해시와 WrapMode 조합으로 고유 키 생성
+	size_t path_hash = std::hash<std::wstring>{}(_path);
+	_ulonglong key = (s_cast(_ulonglong, path_hash) << 8) | (s_cast(_ulonglong, _wrap_mode));
+
+	if (tex_brushes_.find(key) != tex_brushes_.end())
+		return tex_brushes_[key];
 
 	const auto img = GetTexture(_path);
-	if (!img) return
-		nullptr;
+	if (!img) return nullptr;
 
-	const auto new_tex_brush = new Gdiplus::TextureBrush(img);
-	tex_brushes_[_path] = new_tex_brush;
+	// 2. WrapMode를 적용하여 브러시 생성
+	const auto new_tex_brush = new Gdiplus::TextureBrush(img, _wrap_mode);
+	tex_brushes_[key] = new_tex_brush;
 	return new_tex_brush;
+}
+
+Gdiplus::TextureBrush* GraphicResourceManager::GetTextureBrush(_ulonglong _key)
+{
+	return tex_brushes_[_key];
 }
 
 Gdiplus::StringFormat* GraphicResourceManager::GetStringFormat(_bool _is_center)
@@ -118,16 +131,14 @@ Gdiplus::StringFormat* GraphicResourceManager::GetStringFormat(_bool _is_center)
 		}
 		return format_center_;
 	}
-	else
+
+	if (!format_left_)
 	{
-		if (!format_left_)
-		{
-			format_left_ = new Gdiplus::StringFormat();
-			format_left_->SetAlignment(Gdiplus::StringAlignmentNear);
-			format_left_->SetLineAlignment(Gdiplus::StringAlignmentNear);
-		}
-		return format_left_;
+		format_left_ = new Gdiplus::StringFormat();
+		format_left_->SetAlignment(Gdiplus::StringAlignmentNear);
+		format_left_->SetLineAlignment(Gdiplus::StringAlignmentNear);
 	}
+	return format_left_;
 }
 
 void GraphicResourceManager::Release()

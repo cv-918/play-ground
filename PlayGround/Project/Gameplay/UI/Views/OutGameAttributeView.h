@@ -10,6 +10,9 @@ public:
 	);
 
 private:
+	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
+
+	class Button* return_btn_ = nullptr;
 };
 
