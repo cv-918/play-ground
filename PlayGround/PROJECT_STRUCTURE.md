@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-30 17:00)
+﻿# Project Structure (Updated: 2026-03-31 11:49)
 
 ```text
 Root
@@ -6,6 +6,7 @@ Root
 |   +--- Resources
 |   |   +--- Textures
 |   |   |   +--- Chatacters
+|   |   |   +--- Particles
 |   |   |   +--- World
 +--- html
 |   +--- search
@@ -49,6 +50,7 @@ Root
 |   |   |   |   CameraManager.h
 |   |   |   |   GraphicResourceManager.cpp
 |   |   |   |   GraphicResourceManager.h
+|   |   |   |   ParticleData.h
 |   |   |   |   ParticleService.cpp
 |   |   |   |   ParticleService.h
 |   |   |   |   RenderChain.cpp
@@ -111,6 +113,8 @@ Root
 |   |   |   |   |   AttributeNodeDataManager.h
 |   |   |   |   |   EnemyDataManager.cpp
 |   |   |   |   |   EnemyDataManager.h
+|   |   |   |   |   ParticleDataManager.cpp
+|   |   |   |   |   ParticleDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
 |   |   |   |   |   SkillJsonDataManager.cpp

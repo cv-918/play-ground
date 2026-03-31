@@ -13,15 +13,12 @@ public:
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 
-	/**
-	* 이 함수는 파티클 시스템에서 새로운 파티클을 생성할 때 호출됩니다. 예를 들어, 폭발 효과, 마법 효과, 기타 시각적 효과를 구현할 때 이 함수를 사용하여 필요한 파티클을 생성할 수 있습니다.
-	* 파티클의 초기 위치, 속도, 수명, 크기를 매개변수로 받아서 새로운 파티클을 설정하고 활성화합니다.
-	* 만약 파티클 풀에 비활성화된 파티클이 있다면 해당 파티클을 재사용하여 새로운 파티클로 설정하고 활성화합니다. 그렇지 않으면 새로운 파티클을 풀에 추가합니다.
-	*/
-	void Emit(const _Vector2& _pos, const _Vector2& _vel, _float _life, _float _scale = 1.0f);
-
-	/** 고도화된 Emit: 세팅 정보를 받아 파티클을 생성합니다. */
-	void Emit(const ParticleSetting& _setting, const _Vector2& _pos);
+	/** * @brief 설정값(Recipe)을 받아 파티클을 생성합니다.
+	 * @param _setting 파티클의 모양, 색상, 물리 속성 등의 레시피
+	 * @param _pos 생성될 중심 위치
+	 * @param _count 한 번에 생성할 개수 (Burst 대응)
+	 */
+	void Emit(const ParticleSetting& _setting, const _Vector2& _pos, _uint _count = 1);
 
 private:
 	/**

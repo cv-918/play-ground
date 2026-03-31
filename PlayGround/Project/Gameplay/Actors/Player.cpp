@@ -4,6 +4,8 @@
 #include "Components/PlayableMovement.h"
 #include "GamePlaySystems/SkillManager.h"
 
+#include "GamePlaySystems/Json/ParticleDataManager.h"
+
 Player::~Player()
 {
 	bool debug = true;
@@ -87,7 +89,35 @@ _int Player::Update(_double _delta_time)
 
 		const auto pos = transform_->Position();
 		const auto vel = _Vector2{ _Random.Range(-10.f, 10.f), _Random.Range(-5.f, 5.f) };
-		_ParticleService.Emit(pos, vel, 0.25f, 1.2f);
+
+		ParticleSetting setting;
+		_ParticleService.Emit(setting, pos, 1);
+	}
+
+	if (input_manager_->Down(VK_LBUTTON))
+	{
+		const auto mouse_pt = input_manager_->MousePoint();
+		const auto data = _ParticleDataMgr.GetDataByIndex(2);
+		_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
+
+		//ParticleSetting testSetting;
+		//testSetting.shape = EmitterShape::Circle;
+		//testSetting.shapeRadius = 10.f;
+		//testSetting.minLife = 1.0f;
+		//testSetting.maxLife = 2.0f;
+		//testSetting.minSpeed = 100.f;
+		//testSetting.maxSpeed = 300.f;
+		//testSetting.startScale = 1.0f;
+		//testSetting.endScale = 0.0f; // 서서히 사라짐
+		//testSetting.sizeEase = _MathFunc::EaseType::OutQuad;
+		//testSetting.airResistance = 2.0f; // 빠르게 감속하며 멈춤
+
+		//testSetting.startColor = _Color::Red;
+		//testSetting.endColor = _Color::WhiteSmoke;
+
+		//testSetting.textureKey = Path::Particle + L"Flare_White.png"; // 텍스처 키 설정 (예시)
+
+		//_ParticleService.Emit(testSetting, mouse_pt, 10); // 한 번에 10개 생성
 	}
 
 	return UPDATE_CONTINUE;

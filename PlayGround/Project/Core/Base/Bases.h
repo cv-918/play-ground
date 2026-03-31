@@ -40,4 +40,5 @@ namespace Path
 	const std::wstring Texture = Root + L"Textures/";
 	const std::wstring Character = Texture + L"Characters/";
 	const std::wstring World = Texture + L"World/";
+	const std::wstring Particle = Texture + L"Particles/";
 }
