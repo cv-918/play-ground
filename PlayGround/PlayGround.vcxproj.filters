@@ -120,6 +120,7 @@
     <ClInclude Include="Project\EngineSystems\Render\ParticleService.h" />
     <ClInclude Include="Project\Core\Math\Vector2.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleData.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -219,5 +220,6 @@
     <ClCompile Include="Project\EngineSystems\Render\CameraManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
     <ClCompile Include="Project\Core\Math\Vector2.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
   </ItemGroup>
 </Project>

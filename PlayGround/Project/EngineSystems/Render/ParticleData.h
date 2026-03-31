@@ -12,6 +12,9 @@ enum class EmitterShape {
  * nlohmann/json으로 로드하여 재사용하기 좋은 구조입니다.
  */
 struct ParticleSetting {
+    // JSON에서 고유 식별자로 사용 (예: "explosion", "smoke" 등)
+	_uint id_ = 0;
+
     // [발생기 설정]
     EmitterShape shape = EmitterShape::Circle;
     _float shapeRadius = 5.0f;     // Circle일 때 반지름
@@ -35,8 +38,64 @@ struct ParticleSetting {
     _float gravityScale = 0.0f;    // 중력 영향도 (벨트스크롤 대비)
 
     // [시각 효과]
-    std::wstring textureKey = L""; // 비어있으면 단색 모드
+    std::wstring textureKey; // 비어있으면 단색 모드
 };
+
+// ParticleSetting의 JSON 변환 함수 구현
+inline void to_json(nlohmann::json& j, const ParticleSetting& s)
+{
+    j = nlohmann::json{
+        {"id_", s.id_},
+        {"shape", static_cast<int>(s.shape)},
+        {"shapeRadius", s.shapeRadius},
+        {"arcAngle", s.arcAngle},
+        {"minLife", s.minLife},
+        {"maxLife", s.maxLife},
+        {"minSpeed", s.minSpeed},
+        {"maxSpeed", s.maxSpeed},
+        {"startScale", s.startScale},
+        {"sizeEase", static_cast<int>(s.sizeEase)},
+        {"endScale", s.endScale},
+        {"colorEase", static_cast<int>(s.colorEase)},
+        {"startColor", s.startColor.GetValue()},
+        {"endColor", s.endColor.GetValue()},
+        {"airResistance", s.airResistance},
+        {"gravityScale", s.gravityScale},
+        {"textureKey", std::string(s.textureKey.begin(), s.textureKey.end())}
+    };
+}
+
+inline void from_json(const nlohmann::json& j, ParticleSetting& s)
+{
+    j.at("id_").get_to(s.id_);
+    int shapeInt;
+    j.at("shape").get_to(shapeInt);
+    s.shape = static_cast<EmitterShape>(shapeInt);
+    j.at("shapeRadius").get_to(s.shapeRadius);
+    j.at("arcAngle").get_to(s.arcAngle);
+    j.at("minLife").get_to(s.minLife);
+    j.at("maxLife").get_to(s.maxLife);
+    j.at("minSpeed").get_to(s.minSpeed);
+    j.at("maxSpeed").get_to(s.maxSpeed);
+    j.at("startScale").get_to(s.startScale);
+    int sizeEaseInt;
+    j.at("sizeEase").get_to(sizeEaseInt);
+    s.sizeEase = static_cast<_MathFunc::EaseType>(sizeEaseInt);
+    j.at("endScale").get_to(s.endScale);
+    int colorEaseInt;
+    j.at("colorEase").get_to(colorEaseInt);
+    s.colorEase = static_cast<_MathFunc::EaseType>(colorEaseInt);
+    UINT startColorValue, endColorValue;
+    j.at("startColor").get_to(startColorValue);
+    j.at("endColor").get_to(endColorValue);
+    s.startColor.SetValue(startColorValue);
+    s.endColor.SetValue(endColorValue);
+    j.at("airResistance").get_to(s.airResistance);
+    j.at("gravityScale").get_to(s.gravityScale);
+    std::string textureKeyStr;
+    j.at("textureKey").get_to(textureKeyStr);
+    s.textureKey = std::wstring(textureKeyStr.begin(), textureKeyStr.end());
+}
 
 /** * Particle: 개별 파티클의 실시간 상태
  * 기존 구조체에 '설정 정보'와 '실시간 계산값'이 추가되었습니다.

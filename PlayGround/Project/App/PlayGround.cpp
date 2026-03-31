@@ -11,6 +11,7 @@
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 #include "GamePlaySystems/Json/UserDataManager.h"
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
+#include "GamePlaySystems/Json/ParticleDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -36,6 +37,12 @@ _bool PlayGround::Initialize()
 	if (!_SkillDataMgr.Load("Data/Skill.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load skill data from JSON."));
+		return false;
+	}
+
+	if (!_ParticleDataMgr.Load("Data/Particle.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load particle data from JSON."));
 		return false;
 	}
 
