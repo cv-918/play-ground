@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define _InputMgr InputManager::Get()
 #define INPUT_KEY_MAX 256
@@ -12,13 +12,13 @@ enum class KeyBoardControlType
 class InputManager : public ISingleton<InputManager>
 {
 public:
-	/* ¸Å ÇÁ·¹ÀÓ ½ÃÀÛ ½Ã 1È¸ ¸Ş½ÃÁö Ã³¸® Àü¿¡ È£Ãâ */
+	/* ë§¤ í”„ë ˆì„ ì‹œì‘ ì‹œ 1íšŒ ë©”ì‹œì§€ ì²˜ë¦¬ ì „ì— í˜¸ì¶œ */
 	void BeginFrame();
 
-	// Æ÷Ä¿½º ÀÒ¾úÀ» ¶§(Alt+Tab µî) Å°°¡ ´­¸° Ã¤·Î °íÁ¤µÇ´Â Çö»ó ¹æÁö¿ë
+	// í¬ì»¤ìŠ¤ ìƒì—ˆì„ ë•Œ(Alt+Tab ë“±) í‚¤ê°€ ëˆŒë¦° ì±„ë¡œ ê³ ì •ë˜ëŠ” í˜„ìƒ ë°©ì§€ìš©
 	void ResetAll();
 
-	/* WndProc¿¡¼­ È£Ãâ */
+	/* WndProcì—ì„œ í˜¸ì¶œ */
 	void OnMouseMove(WPARAM _wparam, LPARAM _lparam);
 	void OnMouseWheel(WPARAM _wparam, LPARAM _lparam);
 
@@ -30,7 +30,7 @@ public:
 
 	void OnChar(_tchar _ch);
 
-	/* ÀÔ·Â »óÅÂ Á¶È¸ */
+	/* ì…ë ¥ ìƒíƒœ ì¡°íšŒ */
 	bool Down(_int _vk) const;
 	bool Pressed(_int _vk) const;
 	bool Up(_int _vk) const;
@@ -39,19 +39,19 @@ public:
 
 	_Point MousePoint() const { return mouse_; }
 	_Point MouseDelta() const { return mouse_delta_; }
-	_int WheelDelta() const { return wheel_delta_; } // ¡¾120 ´ÜÀ§°¡ ÀÏ¹İÀû
+	_int WheelDelta() const { return wheel_delta_; } // Â±120 ë‹¨ìœ„ê°€ ì¼ë°˜ì 
 
-	const std::vector<_tchar>& Chars() const { return chars_; } // ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ µé¾î¿Â WM_CHAR ¹®ÀÚ ¸ñ·Ï
+	const std::vector<_tchar>& Chars() const { return chars_; } // ì´ë²ˆ í”„ë ˆì„ì— ë“¤ì–´ì˜¨ WM_CHAR ë¬¸ì ëª©ë¡
 	
-	KeyBoardControlType ControllerType() const { return controller_type_; }
-	void ControllerType(const KeyBoardControlType _type) { controller_type_ = _type; }
+	KeyBoardControlType ControllerType() const { return keyboard_control_type_; }
+	void ControllerType(const KeyBoardControlType _type) { keyboard_control_type_ = _type; }
 
 private:
 	struct KeyState
 	{
-		_bool is_down = false;    // ÇöÀç ´­¸² »óÅÂ(¹°¸® »óÅÂ)
-		_bool went_down = false;  // ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ ´­¸²(¿¡Áö)
-		_bool went_up = false;    // ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ ¶À(¿¡Áö)
+		_bool is_down = false;    // í˜„ì¬ ëˆŒë¦¼ ìƒíƒœ(ë¬¼ë¦¬ ìƒíƒœ)
+		_bool went_down = false;  // ì´ë²ˆ í”„ë ˆì„ì— ëˆŒë¦¼(ì—ì§€)
+		_bool went_up = false;    // ì´ë²ˆ í”„ë ˆì„ì— ë—Œ(ì—ì§€)
 	};
 
 	std::array<KeyState, INPUT_KEY_MAX> keys_;
@@ -65,6 +65,5 @@ private:
 
 	_int wheel_delta_ = IV_ZERO;
 
-	KeyBoardControlType controller_type_ = KeyBoardControlType::Axis;
+	KeyBoardControlType keyboard_control_type_ = KeyBoardControlType::Axis;
 };
-

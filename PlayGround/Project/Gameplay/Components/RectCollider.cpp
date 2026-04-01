@@ -8,6 +8,9 @@ void RectCollider::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
+	if (!IsDrawAlways() && !_GameState.debug_mode_)
+		return;
+
 	_DrawFunc::DrawRectangle(rect_, Palette::Black);
 }
 
@@ -30,7 +33,7 @@ _bool RectCollider::CheckCollided(Collider* _other)
 			rect_.Top() < other_rect.Bottom() &&
 			rect_.Bottom() > other_rect.Top());
 	}
-	case ColliderType::Circle:
+	case ColliderType::Sphere:
 	{
 		// Rectangle Collider 와 Circle Collider 간의 충돌 처리
 		const auto sphere = s_cast(SphereCollider*, _other);

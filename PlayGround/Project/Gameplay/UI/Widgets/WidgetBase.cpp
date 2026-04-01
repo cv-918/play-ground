@@ -190,6 +190,7 @@ void WidgetBase::ScaleY(const _int _dHeight)
 
 void WidgetBase::OnDestroy()
 {
+	__super::OnDestroy();
 	for (UIBase* element : elements_)
 	{
 		if (element)

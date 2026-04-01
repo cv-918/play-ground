@@ -39,18 +39,28 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 
 			if (play_area_)
 			{
-				// 게임 오브젝트가 플레이 영역 밖으로 나갔는지 확인
-				const _Point obj_pos = game_object->GetTransform()->Position();
-				if (!play_area_->PtInRect(obj_pos))
+				static _uint frame_count = 0;
+				++frame_count;
+
+				// 매 10프레임마다 게임 오브젝트의 위치를 체크하여 플레이 영역 밖으로 나간 오브젝트를 파괴 처리
+				if (frame_count % 10 == 0)
 				{
-					_SYSTEM_LOG_INFO(L"ObjectManager: Game object out of play area - Name: %s, ID: %d, Position: (%.2f, %.2f)", game_object->Name().c_str(), game_object->ID(), obj_pos.x, obj_pos.y);
-					game_object->ReserveDestruction(); // 플레이 영역 밖으로 나간 오브젝트는 파괴 처리
+					frame_count = 0;
+					_SYSTEM_LOG_INFO(L"ObjectManager: Checking game object positions - Name: %s, ID: %d", game_object->Name().c_str(), game_object->ID());
+
+					// 게임 오브젝트가 플레이 영역 밖으로 나갔는지 확인
+					const _Point obj_pos = game_object->GetTransform()->Position();
+					if (!play_area_->PtInRect(obj_pos))
+					{
+						_SYSTEM_LOG_INFO(L"ObjectManager: Game object out of play area - Name: %s, ID: %d, Position: (%.2f, %.2f)", game_object->Name().c_str(), game_object->ID(), obj_pos.x, obj_pos.y);
+						game_object->ReserveDestruction(); // 플레이 영역 밖으로 나간 오브젝트는 파괴 처리
+					}
 				}
 			}
 		}
 	}
 
-	_RemoveDestroyedGameObjects();
+	CleanUp();
 
 	return UPDATE_CONTINUE;
 }
@@ -59,7 +69,7 @@ void ObjectManager::Render(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->IsActive())
+		if (game_object->IsActive() && !game_object->IsPendingDestruction())
 		{
 			game_object->Render(_delta_time);
 			game_object->DebugRender(_delta_time);
@@ -67,44 +77,48 @@ void ObjectManager::Render(_double _delta_time)
 	}
 }
 
-void ObjectManager::AddGameObject(GameObjectBase* _game_object)
+void ObjectManager::CleanUp()
 {
-	if (nullptr == _game_object)
-	{
-		_SYSTEM_LOG_ERROR(L"ObjectManager::AddGameObject - Attempted to add a null game object.");
+	if (game_objects_.empty()) return;
+
+	// 1. partition을 사용하면 조건을 만족하는(삭제할) 대상들을 뒤로 모아줍니다.
+	// remove_if와 달리 요소의 값을 덮어쓰지 않고 '교체(swap)'하므로 포인터가 안전합니다.
+	auto it = std::partition(game_objects_.begin(), game_objects_.end(),
+		[](GameObjectBase* obj) {
+			return !obj->IsPendingDestruction(); // 살아남을 대상을 앞쪽으로
+		});
+
+	if (game_objects_.end() == it)
 		return;
+
+	// 2. it부터 end()까지는 이제 확실하게 '삭제 대기 중인 객체들'만 모여있습니다.
+	for (auto temp_it = it; temp_it != game_objects_.end(); ++temp_it)
+	{
+		(*temp_it)->OnDestroy();
+		delete (*temp_it);
 	}
 
-	const auto it = std::find(game_objects_.begin(), game_objects_.end(), _game_object);
-
-	// 이미 존재하는 게임 오브젝트는 추가하지 않음
-	if (it != game_objects_.end())
-		return;
-
-	// 게임 오브젝트를 추가
-	if (false == _game_object->IsInitialized())
-		_game_object->Initialize();
-
-	_PushGameObject(_game_object);
+	// 3. 컨테이너에서 제거
+	game_objects_.erase(it, game_objects_.end());
 }
 
 GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
-                                                const _Point& _target, _float _damage, _float _speed)
+	const _Point& _target, _float _damage, _float _speed)
 {
 	GameObjectBase* bullet = new Bullet(_owner, _damage, _speed);
-    
-    if (bullet->Initialize())
-    {
-        bullet->GetTransform()->Position(_position);
-        bullet->GetTransform()->LookAt(_target);
-        
+
+	if (bullet->Initialize())
+	{
+		bullet->GetTransform()->Position(_position);
+		bullet->GetTransform()->LookAt(_target);
+
 		_PushGameObject(bullet);
 		_SYSTEM_LOG_INFO(L"Spawned projectile - Name: %s", bullet->Name().c_str());
-        return bullet;
-    }
-    
-    SAFE_DELETE(bullet);
-    return nullptr;
+		return bullet;
+	}
+
+	SAFE_DELETE(bullet);
+	return nullptr;
 }
 
 void ObjectManager::GeneratePlayArea(const _Rect& _nav_mesh_rect, const _int margin)
@@ -146,29 +160,4 @@ void ObjectManager::_MergeNewGameObjects()
 		//_SYSTEM_LOG_INFO(L"ObjectManager: Merged new game object - Name: %s, ID: %d", new_obj->Name().c_str(), new_obj->ID());
 	}
 	std::vector<GameObjectBase*>().swap(new_game_objects_);
-}
-
-void ObjectManager::_RemoveDestroyedGameObjects()
-{
-	if (game_objects_.empty())
-		return;
-
-	// 이터레이터를 이용해 IsDestroyed()가 true인 것들만 골라 지우기
-	auto it = std::remove_if(game_objects_.begin(), game_objects_.end(),
-		[](GameObjectBase* obj) {
-			if (obj->IsPendingDestruction())
-			{
-				// 파괴되는 오브젝트의 이름 로깅
-				//_SYSTEM_LOG_INFO(L"ObjectManager: Destroying game object - Name: %s, ID: %d", obj->Name().c_str(), obj->ID());
-
-				// 파괴 시 필요한 로직 수행 후 메모리 해제
-				obj->OnDestroy();
-				delete obj;
-
-				return true;
-			}
-			return false;
-		});
-
-	game_objects_.erase(it, game_objects_.end());
 }

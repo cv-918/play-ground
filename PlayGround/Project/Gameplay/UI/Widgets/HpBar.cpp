@@ -34,6 +34,29 @@ _int HpBar::Update(_double _delta_time)
 	_int ret = __super::Update(_delta_time);
 	if (UPDATE_CONTINUE != ret) return ret;
 
+	if (life_time_timer_ <= DEFAULT_DURATION_HP_BAR)
+	{
+		life_time_timer_ += _delta_time;
+
+		if (_IsFadingOut())
+		{
+			const auto progress = 1.0 - _GetFadeProgress();
+			hp_bar_->SetAlpha(s_float(progress));
+		}
+		else if (life_time_timer_ >= DEFAULT_DURATION_HP_BAR - DEFAULT_FADE_DURATION_HP_BAR)
+		{
+			_StartFadeOut(false);
+		}
+	}
+	
+	return UPDATE_CONTINUE;
+}
+
+_int HpBar::LateUpdate(_double _delta_time)
+{
+	_int ret = __super::LateUpdate(_delta_time);
+	if (UPDATE_CONTINUE != ret) return ret;
+
 	// 비율 갱신 및 체력바가 나타날 때마다 체력 변화가 있는지 체크하여 체력바의 값을 갱신
 	// 지금은 구조적으로 접근하지 않고 일단 이렇게 구현해둔다
 	const _float currentHP = tracking_status_->GetCurrentHp();
@@ -48,18 +71,6 @@ _int HpBar::Update(_double _delta_time)
 
 	if (life_time_timer_ <= DEFAULT_DURATION_HP_BAR)
 	{
-		life_time_timer_ += _delta_time;
-
-		if (_IsFadingOut())
-		{
-			const auto progress = 1.0 - _GetFadeProgress();
-			hp_bar_->SetAlpha(s_float(progress));
-		}
-		else if (life_time_timer_ >= DEFAULT_DURATION_HP_BAR - DEFAULT_FADE_DURATION_HP_BAR)
-		{
-			_StartFadeOut(false);
-		}
-
 		// 대상이 파괴되었는지 체크 (지난번에 만든 IsDestroyed 활용)
 		if (tracking_target_->IsPendingDestruction())
 		{
@@ -73,7 +84,7 @@ _int HpBar::Update(_double _delta_time)
 		// UI의 중심이 대상에 오도록 설정하거나, Lt를 설정
 		SetCenter(screenPos); // Geometry2D에 있는 함수 활용
 	}
-	
+
 	return UPDATE_CONTINUE;
 }
 

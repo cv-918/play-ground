@@ -44,6 +44,7 @@ enum class ComponentType
 	Movement,
 	SphereCollider,
 	RectCollider,
+	EllipseCollider,
 	Combat,
 };
 

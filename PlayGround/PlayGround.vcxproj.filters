@@ -111,7 +111,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\AtmosphericCorrosionObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.h" />
-    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DarkSight.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.h" />
@@ -121,6 +121,7 @@
     <ClInclude Include="Project\Core\Math\Vector2.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleData.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
+    <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -212,7 +213,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\AtmosphericCorrosionObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.cpp" />
-    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DarkSight.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.cpp" />
@@ -221,5 +222,6 @@
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
     <ClCompile Include="Project\Core\Math\Vector2.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
   </ItemGroup>
 </Project>

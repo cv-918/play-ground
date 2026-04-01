@@ -1,9 +1,9 @@
 ﻿#include "framework.h"
-#include "Dust_DrakSight.h"
+#include "Dust_DarkSight.h"
 
 #include "DarkSightObject.h"
 
-_bool Dust_DrakSight::Execute(GameObjectBase* _owner, const _Vector3& _direction)
+_bool Dust_DarkSight::Execute(GameObjectBase* _owner, const _Vector3& _direction)
 {
 	// 1) 생성 위치
 	_Vector3 spawn_pos = _owner->GetTransform()->Position();

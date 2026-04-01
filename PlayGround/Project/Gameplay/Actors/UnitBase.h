@@ -18,8 +18,7 @@ enum class UnitDefaultColliderId
 #include "Gameplay/Scenes/InGameScene.h"
 #include "GamePlaySystems/StageManager.h"
 
-#include "Components/SphereCollider.h"
-#include "Components/RectCollider.h"
+#include "Components/EllipseCollider.h"
 #include "Components/Status.h"
 #include "Components/Combat.h"
 
@@ -38,7 +37,7 @@ protected:
 public:
 	void SetPlayScene(InGameScene* _scene) { play_scene_ = _scene; }
 
-	SphereCollider* GetDefaultCollider(const UnitDefaultColliderId _id) const
+	EllipseCollider* GetDefaultCollider(const UnitDefaultColliderId _id) const
 	{
 		const auto idx = s_uint(_id);
 		if (idx < 0 || idx >= default_colliders_.size())
@@ -57,7 +56,7 @@ protected:
 	InGameScene* play_scene_ = nullptr;
 
 	// 유닛이 기본적으로 갖는 콜라이더들. Body, Attack 등으로 구분해서 저장. 필요에 따라 BoxCollider 등 다른 타입의 콜라이더도 추가 가능
-	std::vector<SphereCollider*> default_colliders_;
+	std::vector<EllipseCollider*> default_colliders_;
 
 	// 유닛의 이동을 담당하는 컴포넌트. 플레이어의 경우 PlayableMovement, 몬스터의 경우 NonPlayableMovement 등으로 구분해서 구현할 수 있습니다.
 	Movement* movement_ = nullptr;

@@ -66,11 +66,6 @@ void Bullet::DebugRender(_double _delta_time)
 	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
 }
 
-void Bullet::OnDestroy()
-{
-	//_ColMgr.DeregisterCollider(CollisionLayer::EnemyBullet, collider_);
-}
-
 void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this](IHandler* _handler) {

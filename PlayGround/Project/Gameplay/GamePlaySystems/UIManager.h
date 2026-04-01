@@ -2,26 +2,21 @@
 
 class UIBase;
 
-class UIManager
+class UIManager final
 	: public IInitializable
 	, public IUpdatable
 {
 public:
-	virtual ~UIManager();
+	~UIManager();
 
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 
 public:
-	// UI 요소 관리를 위한 메서드. 필요에 따라 UI 요소를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
-	void AddUI(UIBase* _ui);
-
 	template<typename T, typename... Args>
 	T* CreateUI(Args&&... _args);
-
-private:
-	void _CleanUp();
+	void CleanUp();
 
 private:
 	std::vector<UIBase*> ui_list_;

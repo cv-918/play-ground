@@ -90,6 +90,11 @@ public:
 	constexpr _Rect(_Point _lt, _Size _size) : points_{ _lt, {_lt.x + _size.x, _lt.y + _size.y} } {}
 	constexpr _Rect(_int _left, _int _top, _int _right, _int _bottom) : points_{ { _left, _top }, { _right, _bottom } } {}
 
+	// LT와 너비, 높이를 이용해 생성하는 편의 기능
+	static _Rect FromLtSize(_Point _lt, _Size _size) {
+		return { _lt, _Size{ _lt.x + _size.x, _lt.y + _size.y } };
+	}
+
 	// 중심점과 반지름(반너비/반높이)으로 생성하는 편의 기능
 	static _Rect FromCenter(_Point _center, _int _halfW, _int _halfH) {
 		return { _Point{_center.x - _halfW, _center.y - _halfH}, _Point{_center.x + _halfW, _center.y + _halfH} };

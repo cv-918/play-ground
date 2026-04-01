@@ -4,7 +4,6 @@ class GameObjectBase;
 class ComponentBase abstract
 	: public IInitializable
 	, public IUpdatable
-	, public IReleasable
 	, public IIdentifiable
 {
 public:

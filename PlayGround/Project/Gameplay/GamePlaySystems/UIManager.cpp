@@ -28,7 +28,7 @@ _int UIManager::LateUpdate(_double _delta_time)
 			ui->LateUpdate(_delta_time);
 	}
 
-	_CleanUp();
+	CleanUp();
 
 	return UPDATE_CONTINUE;
 }
@@ -42,41 +42,29 @@ void UIManager::Render(_double _delta_time)
 	}
 }
 
-void UIManager::AddUI(UIBase* _ui)
+void UIManager::CleanUp()
 {
-	if (nullptr == _ui)
-	{
-		_SYSTEM_LOG_ERROR(L"UIManager::AddUI - Attempted to add a null UI element.");
+	if (ui_list_.empty()) return;
+
+	// partition을 사용하면 조건을 만족하는(삭제할) 대상들을 뒤로 모아줌
+	// remove_if와 달리 요소의 값을 덮어쓰지 않고 '교체(swap)'하므로 포인터가 안전
+	auto it = std::partition(ui_list_.begin(), ui_list_.end(),
+		[](UIBase* _ui) {
+			return !_ui->IsPendingDestruction();
+		});
+
+	if (ui_list_.end() == it)
 		return;
+
+	// 2. it부터 end()까지는 이제 확실하게 '삭제 대기 중인 객체들'만 모여있습니다.
+	for (auto temp_it = it; temp_it != ui_list_.end(); ++temp_it)
+	{
+		_SYSTEM_LOG_INFO(L"UIManager: Destroying UI element - Name: %s, ID: %d", (*temp_it)->Name().c_str(), (*temp_it)->ID());
+
+		(*temp_it)->OnDestroy();
+		delete (*temp_it);
 	}
 
-	const auto it = std::find(ui_list_.begin(), ui_list_.end(), _ui);
-
-	// 이미 존재하는 UI 요소는 추가하지 않음
-	if (it != ui_list_.end())
-		return;
-
-	// UI 요소를 추가
-	if(false == _ui->IsInitialized())
-		_ui->Initialize();
-
-	ui_list_.push_back(_ui);
-}
-
-void UIManager::_CleanUp()
-{
-	// 파괴된 UI 요소를 제거
-	ui_list_.erase(std::remove_if(ui_list_.begin(), ui_list_.end(),
-		[](UIBase* ui) {
-			if (ui->IsPendingDestruction())
-			{
-				// 파괴되는 UI의 이름 로깅
-				_SYSTEM_LOG_INFO(L"UIManager: Destroying UI element - Name: %s, ID: %d", ui->Name().c_str(), ui->ID());
-
-				ui->OnDestroy(); // UI 요소가 파괴될 때 필요한 로직이 있다면 이 함수에서 처리
-				delete ui;
-				return true; // 제거 대상
-			}
-			return false; // 유지 대상
-		}), ui_list_.end());
+	// 3. 컨테이너에서 제거
+	ui_list_.erase(it, ui_list_.end());
 }

@@ -32,6 +32,7 @@ public:
 	virtual void OnExit() EMPTY_FUNC;
 
 public:
+	void CleanUp();
 	SceneType GetSceneType() const { return type_; }
 
 	ObjectManager* GetObjectManager() const { return object_manager_; }

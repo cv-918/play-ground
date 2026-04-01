@@ -1,6 +1,8 @@
 ﻿#include "framework.h"
 #include "PlayableMovement.h"
 
+#include "Actors/Player.h"
+
 PlayableMovement::PlayableMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
 {
@@ -10,8 +12,6 @@ PlayableMovement::PlayableMovement(const PlayableCharacterJsonInfo* _info)
 	input_manager_ = &_InputMgr.Get();
 	controller_type_ = input_manager_->ControllerType();
 
-	// 이동속도도 어트리뷰트 적용해야하는데 아직 이동 수식이 완전치 않아서 적용 보류
-	// 현재 공식대로 연산했을 때 최대 속도에 도달하지 못하는 문제가 있음. 공식 수정 후 적용 예정
 	move_spd_max_ = _info->move_speed_max_;
 	acceleration_ = _info->acceleration_;
 	friction_ = _info->friction_;
@@ -21,6 +21,8 @@ _bool PlayableMovement::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
+
+	player_ = d_cast(Player*, GameObject());
 
 	MAKE_INITIALIZED;
 	return true;
@@ -84,10 +86,10 @@ void PlayableMovement::_OnDirection(_double _delta_time)
 void PlayableMovement::_OnAxis(_double _delta_time)
 {
 	_Vector3 input_dir;
-	input_dir.y += input_manager_->Pressed(VK_DOWN) ? 1.f : 0.f;
-	input_dir.y -= input_manager_->Pressed(VK_UP) ? 1.f : 0.f;
-	input_dir.x += input_manager_->Pressed(VK_RIGHT) ? 1.f : 0.f;
-	input_dir.x -= input_manager_->Pressed(VK_LEFT) ? 1.f : 0.f;
+	//input_dir.y += input_manager_->Pressed(VK_DOWN) ? 1.f : 0.f;
+	//input_dir.y -= input_manager_->Pressed(VK_UP) ? 1.f : 0.f;
+	//input_dir.x += input_manager_->Pressed(VK_RIGHT) ? 1.f : 0.f;
+	//input_dir.x -= input_manager_->Pressed(VK_LEFT) ? 1.f : 0.f;
 
 	input_dir.y += input_manager_->Pressed('S') ? 1.f : 0.f;
 	input_dir.y -= input_manager_->Pressed('W') ? 1.f : 0.f;

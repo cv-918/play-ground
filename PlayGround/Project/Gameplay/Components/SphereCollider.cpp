@@ -14,7 +14,11 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 	if (!IsEnable())
 		return UPDATE_CONTINUE;
 
-	SetCenter(transform_->Position());
+	// 피봇을 하단(발밑)으로 설정: transform 위치가 원의 바닥이 되도록
+	// 원의 중심은 위치에서 반지름만큼 위로 올림
+	_Vector3 pos = transform_->Position();
+	pos.y -= radius_;
+	SetCenter(pos);
 	return UPDATE_CONTINUE;
 }
 
@@ -23,10 +27,10 @@ void SphereCollider::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	if (!draw_always_ && !_GameState.debug_mode_)
+	if (!IsDrawAlways() && !_GameState.debug_mode_)
 		return;
 
-	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, GetDebugColor(), 1.75f);
+	_DrawFunc::DrawCircle(_Point{ center_.x, center_.y }, radius_, _GetDebugColor(), 1.75f);
 }
 
 _bool SphereCollider::CheckCollided(Collider* _other)
@@ -60,7 +64,7 @@ _bool SphereCollider::CheckCollided(Collider* _other)
 		// 거리의 제곱이 반지름의 제곱보다 작으면 충돌
 		return distanceSquared <= radiusSquared;
 	}
-	case ColliderType::Circle:
+	case ColliderType::Sphere:
 	{
 		// Circle Collider 간의 충돌 처리
 		const auto sphere_collider = s_cast(SphereCollider*, _other);
@@ -74,6 +78,10 @@ _bool SphereCollider::CheckCollided(Collider* _other)
 		_float radiusSum = radius_ + other_radius;
 
 		return distanceSquared <= (radiusSum * radiusSum);
+	}
+	case ColliderType::Ellipse:
+	{
+		return _other->CheckCollided(this); // 타원 Collider의 CheckCollided에서 원과의 충돌 판정 처리
 	}
 	}
 

@@ -171,6 +171,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
+    <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
@@ -183,7 +184,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.h" />
-    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DarkSight.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.h" />
@@ -272,6 +273,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
@@ -308,7 +310,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.cpp" />
-    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DrakSight.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DarkSight.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.cpp" />

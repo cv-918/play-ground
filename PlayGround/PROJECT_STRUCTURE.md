@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-03-31 11:49)
+﻿# Project Structure (Updated: 2026-04-01 15:33)
 
 ```text
 Root
@@ -93,6 +93,8 @@ Root
 |   |   |   |   Combat.h
 |   |   |   |   ComponentBase.cpp
 |   |   |   |   ComponentBase.h
+|   |   |   |   EllipseCollider.cpp
+|   |   |   |   EllipseCollider.h
 |   |   |   |   Movement.cpp
 |   |   |   |   Movement.h
 |   |   |   |   NonPlayableMovement.cpp
@@ -126,8 +128,8 @@ Root
 |   |   |   +--- Skills
 |   |   |   |   |   Dust_AtmosphericCorrosion.cpp
 |   |   |   |   |   Dust_AtmosphericCorrosion.h
-|   |   |   |   |   Dust_DrakSight.cpp
-|   |   |   |   |   Dust_DrakSight.h
+|   |   |   |   |   Dust_DarkSight.cpp
+|   |   |   |   |   Dust_DarkSight.h
 |   |   |   |   |   Dust_DustGust.cpp
 |   |   |   |   |   Dust_DustGust.h
 |   |   |   |   |   Dust_LintSatellite.cpp

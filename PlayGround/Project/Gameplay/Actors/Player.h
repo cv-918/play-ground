@@ -30,7 +30,7 @@ private:
 	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 	class SkillManager* skill_manager_ = nullptr; // 매 프레임 Get 호출 방지용 SkillManager 캐싱
 
-	class SphereCollider* collector_col_ = nullptr; // 수집 콜라이더에 대한 포인터. 필요에 따라 수집 콜라이더 관련 로직에서 활용할 수 있습니다.
+	class EllipseCollider* collector_col_ = nullptr; // 수집 콜라이더에 대한 포인터. 필요에 따라 수집 콜라이더 관련 로직에서 활용할 수 있습니다.
 
 	_int debug_control_data_idx_ = IV_ZERO;
 	std::vector<std::wstring> debug_info_lines_;

@@ -67,6 +67,8 @@ void Dust::Render(_double _delta_time)
 
 void Dust::OnDestroy()
 {
+	__super::OnDestroy();
+
 	// 여기서 추가 자원 획득 어트리뷰트 적용
 	_RunState.IncreaseEarnedCoinCount(dust_amount_);
 }
