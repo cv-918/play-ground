@@ -56,6 +56,8 @@ _int AtmosphericCorrosionObject::Update(_double _delta_time)
 
 void AtmosphericCorrosionObject::OnDestroy()
 {
+	__super::OnDestroy();
+
 	if (affected_movements_.empty())
 		return;
 

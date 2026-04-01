@@ -23,8 +23,9 @@ _bool DarkSightObject::Initialize()
 	owner_status_->SetInvincible(true); // 무적 상태로 설정
 
 	owner_movement_ = s_cast(Movement*, owner_->GetComponent(ComponentType::Movement));
-	original_move_spd_max_ = owner_movement_->MoveSpdMax();
-	owner_movement_->MoveSpdMax(original_move_spd_max_ * 1.5f); // 이동 속도 50% 증가
+	original_move_spd_max_ = owner_movement_->GetMoveSpdMax();
+	owner_movement_->SetMoveSpdMax(original_move_spd_max_ * 1.5f); // 이동 속도 50% 증가
+	owner_movement_->SetAsMaxSpeed(); // 즉시 최대 이동 속도로 설정
 
 	Finalize();
 	return true;
@@ -52,12 +53,14 @@ _int DarkSightObject::LateUpdate(_double _delta_time)
 
 void DarkSightObject::OnDestroy()
 {
+	__super::OnDestroy();
+
 	// 1) 이동속도 원상 복구
-	owner_movement_->MoveSpdMax(original_move_spd_max_);
+	owner_movement_->SetMoveSpdMax(original_move_spd_max_);
 
 	// 2) 무적 상태 해제
 	owner_status_->SetInvincible(false);
 	
 	// 3) 투명도 원상 복구
-	owner_->SetAlpha(255); // 완전히 불투명하게 설정
+	owner_->SetAlpha(1.f); // 완전히 불투명하게 설정
 }

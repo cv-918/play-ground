@@ -23,40 +23,34 @@ public:
 	_int Update(_double _delta_time) override;
 
 public:
-	MovementPattern Pattern() const { return move_pattern_; }
-	void Pattern(MovementPattern _pattern) { move_pattern_ = _pattern; }
+	void SetAsMaxSpeed();
 
-	_Vector3 MoveDir() const { return move_direction_; }
-	void MoveDir(_Vector3 _dir) { move_direction_ = _dir; }
-	_Vector3& MoveDir() { return move_direction_; }
+	MovementPattern GetPattern() const { return move_pattern_; }
+	void SetPattern(MovementPattern _pattern) { move_pattern_ = _pattern; }
 
-	_Vector3 MoveVelocity() const { return move_velocity_; }
-	void MoveVelocity(_Vector3 _velocity) { move_velocity_ = _velocity; }
-	_Vector3& MoveVelocity() { return move_velocity_; }
+	_Vector3 GetMoveDir() const { return move_direction_; }
+	void SetMoveDir(_Vector3 _dir) { move_direction_ = _dir; }
 
-	_float Acceleration() const { return acceleration_; }
-	void Acceleration(_float _acc) { acceleration_ = _acc; }
-	_float& Acceleration() { return acceleration_; }
+	_Vector3 GetMoveVelocity() const { return move_velocity_; }
+	void SetMoveVelocity(_Vector3 _velocity) { move_velocity_ = _velocity; }
 
-	_float Friction() const { return friction_; }
-	void Friction(_float _fric) { friction_ = _fric; }
-	_float& Friction() { return friction_; }
+	_float GetAcceleration() const { return acceleration_; }
+	void SetAcceleration(_float _acc) { acceleration_ = _acc; }
 
-	_float MoveSpd() const { return move_spd_; }
-	void MoveSpd(const _float _spd) { move_spd_ = _spd; }
-	_float& MoveSpd() { return move_spd_; }
+	_float GetFriction() const { return friction_; }
+	void SetFriction(_float _fric) { friction_ = _fric; }
 
-	_float MoveSpdMax() const { return move_spd_max_; }
-	void MoveSpdMax(const _float _spd) { move_spd_max_ = _spd; }
-	_float& MoveSpdMax() { return move_spd_max_; }
+	_float GetMoveSpd() const { return move_spd_; }
+	void SetMoveSpd(const _float _spd) { move_spd_ = _spd; }
 
-	_float RotateSpd() const { return rotate_spd_; }
-	void RotateSpd(const _float _spd) { rotate_spd_ = _spd; }
-	_float& RotateSpd() { return rotate_spd_; }
+	_float GetMoveSpdMax() const { return move_spd_max_; }
+	void SetMoveSpdMax(const _float _spd) { move_spd_max_ = _spd; }
 
-	_float RotateSpdMax() const { return rotate_spd_max_; }
-	void RotateSpdMax(const _float _spd) { rotate_spd_max_ = _spd; }
-	_float& RotateSpdMax() { return rotate_spd_max_; }
+	_float GetRotateSpd() const { return rotate_spd_; }
+	void SetRotateSpd(const _float _spd) { rotate_spd_ = _spd; }
+
+	_float GetRotateSpdMax() const { return rotate_spd_max_; }
+	void SetRotateSpdMax(const _float _spd) { rotate_spd_max_ = _spd; }
 
 	void SetNavMesh(const _Rect& _rt) { nav_mesh_ = _rt; }
 
@@ -84,10 +78,5 @@ protected:
 	_bool use_nav_mesh_;
 
 	class Transform* transform_;
-
-	/*	추가 구현 아이디어 : 목적지 설정 이동방식(클릭한 위치까지 이동하는 것과 같은 로직)
-		- 컨트롤 타입을 추가해서 구현
-		- 목적지까지 남은 거리가 프레임당 이동거리보다 작을 경우 목적지로 포지션 고정
-	*/
 };
 

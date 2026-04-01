@@ -130,8 +130,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 		ui_manager_->LateUpdate(_delta_time);
 	}
 
-	// Update 루프의 마지막에 처리할 애들을 모아두는 클래스를 만들고
-	// 등록된 애들은 일괄 처리
+	CleanUp();
 
 	// 이거 Collider의 위치 갱신 로직이 LateUpdate에 있어서 일단 여기서 돌려야 한다
 	if (on_play_state)
@@ -160,7 +159,10 @@ void InGameScene::Render(_double _delta_time)
 	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
 	// e, [ 테스트용 배경 그리기 ]
 
+	stage_manager_->Render(_delta_time);
+
 	object_manager_->Render(_delta_time);
+
 	_ParticleService.Render(_delta_time);
 
 	// 4. 변환 초기화 (UI는 흔들리면 안 되므로!)

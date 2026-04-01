@@ -61,14 +61,25 @@ protected:
 	_bool is_visible_ = true;
 };
 
-class IReleasable abstract
+class IDestroyable abstract
 {
 public:
-	explicit IReleasable() DEFAULT;
-	virtual ~IReleasable() DEFAULT;
+	explicit IDestroyable() DEFAULT;
+	virtual ~IDestroyable() DEFAULT;
 
-	virtual _bool Release() { return true; }
-	// 기본 구현은 해제 성공으로 간주. 필요에 따라 오버라이드하여 해제 로직 구현.
+	virtual void OnDestroy() { for (const auto& callback : destruction_callbacks_) callback(); }
+
+	_bool IsPendingDestruction() const { return pending_destruction_; }
+	void ReserveDestruction() { pending_destruction_ = true; }
+
+	void AddDestructionCallback(const std::function<void()>& _callback) { destruction_callbacks_.push_back(_callback); }
+
+private:
+	// 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
+	_bool pending_destruction_ = false;
+
+	// 게임 오브젝트가 파괴될 때 호출될 콜백 함수들을 저장하는 컨테이너. 필요에 따라 다른 시스템과 연동하여 파괴 시 다양한 효과를 구현할 수 있습니다.
+	std::vector<std::function<void()>> destruction_callbacks_;
 };
 
 class IIdentifiable abstract

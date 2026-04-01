@@ -22,9 +22,9 @@ _bool DustGustObject::Initialize()
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, collider);
 
 	const auto movement = new NonPlayableMovement();
-	movement->Pattern(MovementPattern::Directional);
-	movement->MoveSpd(skill_info_->proj_speed_);
-	movement->MoveDir(transform_->Forward2D());
+	movement->SetPattern(MovementPattern::Directional);
+	movement->SetMoveSpd(skill_info_->proj_speed_);
+	movement->SetMoveDir(transform_->Forward2D());
 	RegisterComponent(movement);
 
 	life_timer_ = skill_info_->proj_lifetime_;

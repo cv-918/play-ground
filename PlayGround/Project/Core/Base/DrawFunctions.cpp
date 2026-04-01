@@ -84,6 +84,26 @@ void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const std:
 		(REAL)(_radius * 2.f), (REAL)(_radius * 2.f));
 }
 
+void DrawFunctions::DrawEllipse(const _Rect& _rect, const _Color& _color, _float _thickness)
+{
+	if (nullptr == g_graphics) return;
+
+	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+	g_graphics->DrawEllipse(pen,
+		(REAL)_rect.Left(), (REAL)_rect.Top(),
+		(REAL)_rect.Width(), (REAL)_rect.Height());
+}
+
+void DrawFunctions::FillEllipse(const _Rect& _rect, const _Color& _color)
+{
+	if (nullptr == g_graphics) return;
+
+	auto brush = _GraphicSourceMgr.GetBrush(_color);
+	g_graphics->FillEllipse(brush,
+		(REAL)_rect.Left(), (REAL)_rect.Top(),
+		(REAL)_rect.Width(), (REAL)_rect.Height());
+}
+
 void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _bool _is_center)
 {
 	if (nullptr == g_graphics) return;

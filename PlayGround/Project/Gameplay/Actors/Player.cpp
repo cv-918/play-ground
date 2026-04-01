@@ -45,13 +45,13 @@ _bool Player::Initialize()
 	const auto start_attack_radius = attribute_stat.GetStat(AttributeType::AttackRange).GetTotalIncrease(info_->attack_range_); // 공격 범위는 플레이어 크기에 비례해서 설정
 	attack_col->SetRadius(start_attack_radius);
 	attack_col->SetDebugColor(Palette::Gray, Palette::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
-	attack_col->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
+	attack_col->SetDrawAlways(false);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
 
 	const auto start_collector_size = attribute_stat.GetStat(AttributeType::CollectionRange).GetTotalIncrease(info_->collector_size_); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
-	collector_col_ = new SphereCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
+	collector_col_ = new EllipseCollider(start_collector_size); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
 	collector_col_->SetDebugColor(Palette::Gray, Palette::AshGray, Palette::Charcoal);
-	collector_col_->SetDrawAlways(true); // 공격 콜라이더는 항상 그리도록 설정 (디버그 모드가 아니더라도)
+	collector_col_->SetDrawAlways(false);
 	RegisterComponent(collector_col_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerCollector, collector_col_);
 
@@ -81,18 +81,18 @@ _int Player::Update(_double _delta_time)
 		_SYSTEM_LOG_INFO(L"Player used skill 0");
 	}
 
-	const auto move_vel = movement_->MoveVelocity();
-	if (0 < move_vel.Magnitude())
-	{
-		_Vector3 test;
-		test.operator _Vector2() = move_vel;
+	//const auto move_vel = movement_->MoveVelocity();
+	//if (0 < move_vel.Magnitude())
+	//{
+	//	_Vector3 test;
+	//	test.operator _Vector2() = move_vel;
 
-		const auto pos = transform_->Position();
-		const auto vel = _Vector2{ _Random.Range(-10.f, 10.f), _Random.Range(-5.f, 5.f) };
+	//	const auto pos = transform_->Position();
+	//	const auto vel = _Vector2{ _Random.Range(-10.f, 10.f), _Random.Range(-5.f, 5.f) };
 
-		ParticleSetting setting;
-		_ParticleService.Emit(setting, pos, 1);
-	}
+	//	ParticleSetting setting;
+	//	_ParticleService.Emit(setting, pos, 1);
+	//}
 
 	if (input_manager_->Down(VK_LBUTTON))
 	{
@@ -134,6 +134,8 @@ void Player::DebugRender(_double _delta_time)
 
 void Player::OnDestroy()
 {
+	__super::OnDestroy();
+
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	
@@ -239,7 +241,6 @@ void Player::_ShowDebugInfo()
 		Acceleration,
 		Friction,
 		MaxSpeed,
-		ContactDamage,
 		TypeCount,
 	};
 
@@ -248,7 +249,6 @@ void Player::_ShowDebugInfo()
 		L"[ 현재 컨트롤 정보 : 1. 가속도 ]",
 		L"[ 현재 컨트롤 정보 : 2. 마찰계수 ]",
 		L"[ 현재 컨트롤 정보 : 3. 최대속도 ]",
-		L"[ 현재 컨트롤 정보 : 4. 충돌 공격력 ]",
 	};
 
 	// 1) 디버그 정보 초기화
@@ -277,57 +277,56 @@ void Player::_ShowDebugInfo()
 	switch (debug_control_data_idx_)
 	{
 	case DebugControlDataType::Acceleration:
+	{
+		auto curr_acc = movement_->GetAcceleration();
 		if (input_manager_->Down(VK_DOWN))
 		{
-			auto acceleration = movement_->Acceleration();
-			if (100.f < acceleration)
-				movement_->Acceleration() -= 100.f;
-		}
-		else if (input_manager_->Down(VK_UP))
-		{
-			movement_->Acceleration() += 100.f;
-		}
-		break;
-	case DebugControlDataType::Friction:
-		if (input_manager_->Down(VK_DOWN))
-		{
-			auto friction = movement_->Friction();
-			if (1 < friction)
-				--movement_->Friction();
-		}
-		else if (input_manager_->Down(VK_UP))
-		{
-			++movement_->Friction();
-		}
-		break;
-	case DebugControlDataType::MaxSpeed:
-		if (input_manager_->Down(VK_DOWN))
-		{
-			auto move_spd_max = movement_->MoveSpdMax();
-			if (100.f < move_spd_max)
+			if (100.f < curr_acc)
 			{
-				move_spd_max -= 100.f;
-				movement_->MoveSpdMax(move_spd_max);
+				curr_acc -= 100.f;
 			}
 		}
 		else if (input_manager_->Down(VK_UP))
 		{
-			auto move_spd_max = movement_->MoveSpdMax();
-			movement_->MoveSpdMax(move_spd_max + 100.f);
+			curr_acc += 100.f;
 		}
-		break;
-	case DebugControlDataType::ContactDamage:
+		movement_->SetAcceleration(curr_acc);
+	}
+	break;
+		
+	case DebugControlDataType::Friction:
+	{
+		auto curr_fric = movement_->GetFriction();
 		if (input_manager_->Down(VK_DOWN))
 		{
-			auto damage = status_->GetAtt();
-			if (1.f < damage)
-				status_->SetAtt(damage - 1.f);
+			if (1 < curr_fric)
+				--curr_fric;
 		}
 		else if (input_manager_->Down(VK_UP))
 		{
-			status_->SetAtt(status_->GetAtt() + 1.f);
+			++curr_fric;
 		}
-		break;
+		movement_->SetFriction(curr_fric);
+	}
+	break;
+		
+	case DebugControlDataType::MaxSpeed:
+	{
+		auto max_spd = movement_->GetMoveSpdMax();
+		if (input_manager_->Down(VK_DOWN))
+		{
+			if (100.f < max_spd)
+			{
+				max_spd -= 100.f;
+			}
+		}
+		else if (input_manager_->Down(VK_UP))
+		{
+			max_spd += 100.f;
+		}
+		movement_->SetMoveSpdMax(max_spd);
+	}
+	break;
 	}
 
 	// 3) 디버그 정보 라인 추가
@@ -336,24 +335,21 @@ void Player::_ShowDebugInfo()
 	swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
 	debug_info_lines_.emplace_back(buffer);
 
-	swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f, %.2f", movement_->MoveVelocity().x, movement_->MoveVelocity().y);
+	swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f, %.2f", movement_->GetMoveVelocity().x, movement_->GetMoveVelocity().y);
 	debug_info_lines_.emplace_back(buffer);
 
 	swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());
 	debug_info_lines_.emplace_back(buffer);
 
-	swprintf_s(buffer, L"가속도(Acceleration) : %.f", movement_->Acceleration());
+	swprintf_s(buffer, L"가속도(Acceleration) : %.f", movement_->GetAcceleration());
 	debug_info_lines_.emplace_back(buffer);
 
 	debug_info_lines_.emplace_back(L"");
 
-	swprintf_s(buffer, L"마찰 계수(Friction) : %.f", movement_->Friction());
+	swprintf_s(buffer, L"마찰 계수(Friction) : %.f", movement_->GetFriction());
 	debug_info_lines_.emplace_back(buffer);
 
-	swprintf_s(buffer, L"최대 속도 : %.f", movement_->MoveSpdMax());
-	debug_info_lines_.emplace_back(buffer);
-
-	swprintf_s(buffer, L"접촉 공격력 : %d", status_->GetAtt());
+	swprintf_s(buffer, L"최대 속도 : %.f", movement_->GetMoveSpdMax());
 	debug_info_lines_.emplace_back(buffer);
 
 	debug_info_lines_.emplace_back(L"");

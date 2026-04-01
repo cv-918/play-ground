@@ -7,6 +7,7 @@ class GameObjectBase abstract
 	: public IInitializable
 	, public IUpdatable
 	, public IIdentifiable
+	, public IDestroyable
 {
 public:
 	virtual ~GameObjectBase();
@@ -37,17 +38,14 @@ public:
 
 	Transform* GetTransform() const { return transform_; }
 
-	_bool IsPendingDestruction() const { return pending_destruction_; }
-	void ReserveDestruction() { pending_destruction_ = true; }
 
-	// 오브젝트 파괴 시 필요한 로직이 있다면 이 함수를 오버라이드하여 구현
-	// 예를 들어, 파괴 이펙트 재생, 사운드 재생, 점수 증가 등 다양한 효과를 이 함수에서 처리
-	// 이벤트나 콜백을 추가해서 다른 시스템과 연동할 수 있도록 확장해도 좋음
-	virtual void OnDestroy() EMPTY_FUNC;
 
-	// 색상 및 알파 설정 함수
+	// --- 색상 및 알파 설정 함수 ---
 	void SetColor(const _Color& _color) { color_ = _color; }
 	void SetAlpha(_float _alpha) { color_ = _Color(s_ubyte(_alpha * UCHAR_MAX), color_.GetR(), color_.GetG(), color_.GetB()); }
+
+private:
+	void _DrawObjectShape();
 
 private:
 	// 게임 오브젝트가 갖는 컴포넌트들을 저장하는 컨테이너. 필요에 따라 다양한 타입의 컴포넌트를 추가하여 게임 오브젝트의 기능을 확장할 수 있습니다.
@@ -62,10 +60,6 @@ private:
 protected:
 	// 게임 오브젝트의 위치, 회전, 크기를 관리하는 Transform 컴포넌트. 모든 게임 오브젝트는 Transform을 기본적으로 갖도록 설계. 필요에 따라 Transform을 활용하여 게임 오브젝트의 공간적 특성을 제어할 수 있습니다.
 	Transform* transform_ = nullptr;
-
-private:
-	// 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
-	_bool pending_destruction_ = false;
 
 	// 개발 모드 전용 데이터
 protected:

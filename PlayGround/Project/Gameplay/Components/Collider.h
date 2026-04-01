@@ -3,8 +3,9 @@
 
 enum class ColliderType
 {
+	Sphere,
 	Rectangle,
-	Circle,
+	Ellipse,
 	None,
 };
 
@@ -42,11 +43,32 @@ public:
 	const std::map<Collider*, _double> GetCollisionTimers() const { return collision_timers_; }
 	_bool IsColliding() const { return is_colliding_; }
 
+	_bool IsDrawAlways() const { return draw_always_; }
+	void SetDrawAlways(const _bool _draw_always) { draw_always_ = _draw_always; }
+
+	void SetDebugColor(__DebugColliderRenderState _state, const _Color& _color) {
+		color_[s_int(_state)] = _color;
+	}
+
+	void SetDebugColor(const _Color& _disable, const _Color& _normal, const _Color& _collision) {
+		_int idx = s_int(__DebugColliderRenderState::OnDisabled) - 1;
+		color_[++idx] = _disable;
+		color_[++idx] = _normal;
+		color_[++idx] = _collision;
+	}
+
 protected:
 	// _other의 타이머를 체크해서 충돌 가능한 상태인지 반환하는 함수
 	_bool _IsCollidableWith(Collider* _other);
 
-	
+	const _Color& _GetDebugColor() const {
+		if (!IsEnable())
+			return color_[s_int(__DebugColliderRenderState::OnDisabled)];
+		if (IsColliding())
+			return color_[s_int(__DebugColliderRenderState::OnCollision)];
+
+		return color_[s_int(__DebugColliderRenderState::OnNormal)];
+	}
 
 private:
 	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }
@@ -60,8 +82,10 @@ private:
 	std::vector<Collider*> erase_waiting_list_;
 
 	_bool is_colliding_ = false;
+	_bool draw_always_ = false; // 디버그 모드가 아니더라도 항상 그릴지 여부. 필요에 따라 활성화할 수 있음
 
 protected:
 	Transform* transform_ = nullptr;
+	_Color color_[s_int(__DebugColliderRenderState::Count)] = { Palette::Gray, Palette::Green, Palette::Red }; // 디버그용 색상
 };
 

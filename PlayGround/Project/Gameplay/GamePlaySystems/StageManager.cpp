@@ -32,6 +32,22 @@ _int StageManager::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void StageManager::Render(_double _delta_time)
+{
+	// 디버그 모드일 경우, 생성 위치나 스폰 영역, 네비메시 정보 등을 시각적으로 표시하여 개발 편의성 향상
+	if (_GameState.debug_mode_ && stage_nav_mesh_)
+	{
+		_DrawFunc::FillRectangle(*stage_nav_mesh_, Palette::White);
+		_DrawFunc::DrawRectangle(*stage_nav_mesh_, Palette::Black, 1);
+
+		for(const auto & area : generation_area_)
+		{
+			_DrawFunc::FillRectangle(area, Palette::LightBlue);
+			_DrawFunc::DrawRectangle(area, Palette::Blue, 1);
+		}
+	}
+}
+
 void StageManager::ChangeState(StageState _new_state)
 {
 	prev_state_ = curr_state_;
@@ -135,7 +151,10 @@ void StageManager::_OnEnter()
 	player->SetPlayScene(play_scene_);
 	player->GetTransform()->Position(GAME_VIEW_CENTER);
 	_RunState.SetPlayer(player);
-	ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
+
+	const auto hp_bar = ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
+	//player->AddDestructionCallback([hp_bar]() { hp_bar->OnDestroy(); });
+	//hp_bar->AddDestructionCallback([this, hp_bar]() { ui_manager_->EraseUI(hp_bar); }); // 체력바가 파괴될 때 UI 매니저에서 제거하도록 콜백 등록
 
 	// 초기 에너미 스폰
 	const auto additional_spawn_count = _UserProfile.GetStageProgress() * 0.1f;
@@ -313,34 +332,39 @@ void StageManager::_UpdateGenerationAreas()
 	if (nullptr == stage_nav_mesh_)
 		return;
 
-	_int stage_width = stage_nav_mesh_->Width();
-	_int stage_height = stage_nav_mesh_->Height();
+	const auto width = stage_nav_mesh_->Width();
+	const auto height = stage_nav_mesh_->Height();
 
-	_int padding_x = s_int(stage_width * 0.25f);
-	_int padding_y = s_int(stage_height * 0.175f);
+	const auto padding_x = s_int(width * 0.25f);
+	const auto padding_y = s_int(height * 0.175f);
+
+	const auto left = stage_nav_mesh_->Left();
+	const auto top = stage_nav_mesh_->Top();
+	const auto right = stage_nav_mesh_->Right();
+	const auto bottom = stage_nav_mesh_->Bottom();
 
 	// left
 	generation_area_[0] = _Rect{
-		_Point{ -padding_x, -padding_y },
-		_Point{ 0, stage_height + padding_y }
+		_Point{ left - padding_x, top - padding_y },
+		_Point{ left, bottom + padding_y }
 	};
 
 	// top
 	generation_area_[1] = _Rect{
-		_Point{ -padding_x, -padding_y },
-		_Point{ stage_width + padding_x, 0}
+		_Point{ left - padding_x, top - padding_y },
+		_Point{ right + padding_x, top }
 	};
 
 	// right
 	generation_area_[2] = _Rect{
-		_Point{ stage_width, -padding_y },
-		_Point{ stage_width + padding_x, stage_height + padding_y }
+		_Point{ right, top - padding_y },
+		_Point{ right + padding_x, bottom + padding_y }
 	};
 
 	// bottom
 	generation_area_[3] = _Rect{
-		_Point{ -padding_x, stage_height },
-		_Point{ stage_width + padding_x, stage_height + padding_y }
+		_Point{ left - padding_x, bottom },
+		_Point{ right + padding_x, bottom + padding_y }
 	};
 }
 
@@ -444,7 +468,9 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 		spawned_enemy->SetPlayScene(play_scene_); // 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
 
 		// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-		ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+		const auto hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+		//spawned_enemy->AddDestructionCallback([hp_bar]() { hp_bar->OnDestroy(); });
+		//hp_bar->AddDestructionCallback([this, hp_bar]() { ui_manager_->EraseUI(hp_bar); }); // 체력바가 파괴될 때 UI 매니저에서 제거하도록 콜백 등록
 
 		// 어떤 몬스터가 스폰됐는지 로깅 (테스트용, 나중에 필요 없으면 제거)
 		_SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);

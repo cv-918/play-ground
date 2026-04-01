@@ -12,6 +12,7 @@ class StageManager final
 {
 public:
 	_int Update(_double _delta_time) override;
+	void Render(_double _delta_time) override;
 
 public:
 	void ChangeState(StageState _new_state);

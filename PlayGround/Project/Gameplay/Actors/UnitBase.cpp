@@ -14,7 +14,7 @@ _bool UnitBase::Initialize()
 		// 기본 콜라이더 생성 및 등록
 		for (int i = 0; i < s_int(UnitDefaultColliderId::ColCount); ++i)
 		{
-			auto* collider = new SphereCollider(0.f); // 초기 반지름은 0으로 설정, 필요에 따라 조정
+			auto* collider = new EllipseCollider(); // 초기 반지름은 0으로 설정, 필요에 따라 조정
 			RegisterComponent(collider);
 			default_colliders_.push_back(collider);
 		}

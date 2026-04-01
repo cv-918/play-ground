@@ -7,11 +7,6 @@ GameObjectBase::~GameObjectBase()
 {
 	for (auto& component : components_)
 		SAFE_DELETE(component);
-
-	//for (auto& handler_list : handlers_)
-	//	handler_list.clear();
-
-	//handler_mask_ = IV_ZERO;
 }
 
 // final 오브젝트의 Initialize 최상단에서 호출
@@ -48,6 +43,7 @@ _bool GameObjectBase::Finalize()
 			break;
 		case ComponentType::SphereCollider:
 		case ComponentType::RectCollider:
+		case ComponentType::EllipseCollider:
 			RegisterHandler<ICollidable>(component, HandlerSystemList::Collision);
 			break;
 		case ComponentType::Movement:
@@ -101,11 +97,6 @@ void GameObjectBase::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	// 오브젝트 그리기
-	const auto position = transform_->Position();
-	const auto radius = transform_->Scale().x * 0.5f;
-	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
-
 	for (const auto& component : components_)
 	{
 		if (!component->IsVisible())
@@ -113,6 +104,9 @@ void GameObjectBase::Render(_double _delta_time)
 
 		component->Render(_delta_time);
 	}
+
+	// --- 오브젝트 그리기 ---
+	_DrawObjectShape();
 }
 
 void GameObjectBase::DebugRender(_double _delta_time)
@@ -275,4 +269,15 @@ ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name, const _in
 	}
 
 	return nullptr;
+}
+
+void GameObjectBase::_DrawObjectShape()
+{
+	const auto position = transform_->Position();
+	const auto radius = transform_->Scale().x;
+	const auto radius_y = radius * 0.6f; // 타원 비율 조정 (예시로 y축을 x축의 60%로 설정)
+
+	const _Point left_top = { s_int(position.x - radius), s_int(position.y - radius_y) };
+	const _Size size = { s_int(radius * 2), s_int(radius_y * 2) };
+	_DrawFunc::FillEllipse({ left_top, size }, color_);
 }

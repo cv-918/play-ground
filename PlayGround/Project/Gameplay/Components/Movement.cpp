@@ -1,4 +1,4 @@
-#include "framework.h"
+﻿#include "framework.h"
 #include "Movement.h"
 
 _bool Movement::Initialize()
@@ -15,4 +15,9 @@ _int Movement::Update(_double _delta_time)
 {
 	move_func_(_delta_time);
 	return UPDATE_CONTINUE;
+}
+
+void Movement::SetAsMaxSpeed()
+{
+	SetMoveVelocity(GetMoveVelocity().Normalized() * move_spd_max_);
 }

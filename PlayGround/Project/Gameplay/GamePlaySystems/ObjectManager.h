@@ -20,11 +20,9 @@ public:
 	void Render(_double _delta_time) override;
 
 public:
-	// 게임 오브젝트 관리를 위한 메서드. 필요에 따라 게임 오브젝트를 추가, 제거, 검색하는 기능을 구현할 수 있습니다.
-	void AddGameObject(GameObjectBase* _game_object);
-
 	template<typename T, typename... Args>
 	T* CreateActor(Args&&... _args);
+	void CleanUp();
 
 	// 템플릿 메서드를 사용하여 다양한 타입의 게임 오브젝트를 생성할 수 있도록 지원
 	// 단, 몬스터 생성 메서드, 오브젝트 생성 메서드 등을 구분하고 인자로는 해당 타입의 정보를 받는다
@@ -40,7 +38,7 @@ private:
 
 	// Update 루프 안에서 생성, 파괴된 게임 오브젝트를 일괄 관리하는 메서드
 	void _MergeNewGameObjects();
-	void _RemoveDestroyedGameObjects();
+	
 
 private:
 	std::vector<GameObjectBase*> game_objects_;

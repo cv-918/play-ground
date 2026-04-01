@@ -26,9 +26,9 @@ _bool Enemy::Initialize()
 
 	// 무브먼트
 	movement_ = new NonPlayableMovement();
-	movement_->Pattern(info_->movement_pattern_);
-	movement_->MoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
-	movement_->MoveDir(transform_->Forward2D().Normalized());
+	movement_->SetPattern(info_->movement_pattern_);
+	movement_->SetMoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
+	movement_->SetMoveDir(transform_->Forward2D().Normalized());
 	RegisterComponent(movement_);
 
 	// 스테이터스
@@ -45,15 +45,15 @@ _bool Enemy::Initialize()
 	object_description_ = _T("Lv. ") + std::to_wstring(lv);
 
 	// 콜라이더
-	const auto radius = info_->body_size_ * 0.5f;
+	const auto radius = info_->body_size_;
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	body_collider->SetRadius(radius);
-	body_collider->SetVisible(true);
+	body_collider->SetVisible(false);
 
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	attack_collider->SetRadius(radius);
-	attack_collider->SetVisible(true);
+	attack_collider->SetVisible(false);
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
 	if (info_->contact_damage_ > 0.f)
@@ -82,6 +82,8 @@ _int Enemy::Update(_double _delta_time)
 
 void Enemy::OnDestroy()
 {
+	__super::OnDestroy();
+
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	
