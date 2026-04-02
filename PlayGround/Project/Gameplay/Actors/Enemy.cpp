@@ -143,6 +143,12 @@ void Enemy::GetDamage(_float _damage)
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
+
+	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
+	
+	// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
+	const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
+	movement_->ApplyKnockback(hit_dir, 800.f);
 }
 
 void Enemy::HandleProjectilePattern(_double _delta_time)

@@ -87,9 +87,10 @@ _int PlayGround::Update(_double _delta_time)
 	{
 		_GameState.debug_mode_ = !_GameState.debug_mode_;
 		_SYSTEM_LOG_INFO("Debug mode %s", _GameState.debug_mode_ ? "enabled" : "disabled");
-
-		return UPDATE_CONTINUE;
 	}
+
+	if (_GameState.debug_mode_)
+		_Assist.BeginFrame();
 
 	scene_manager_->Update(_delta_time);
 	scene_manager_->LateUpdate(_delta_time);
@@ -101,6 +102,13 @@ void PlayGround::Render(_double _delta_time)
 {
 	render_chain_->Clear();
 	scene_manager_->Render(_delta_time);
+
+	if (_GameState.debug_mode_)
+	{
+		_Assist.Update(_delta_time);
+		_Assist.Render(_delta_time);
+	}
+
 	render_chain_->Present();
 }
 

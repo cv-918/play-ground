@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define _Timer Timer::Get()
 
@@ -7,7 +7,7 @@ class Timer
 	, public IInitializable
 {
 public:
-	virtual _bool Initialize() override;
+	_bool Initialize() override;
 	void Update();
 
 public:
@@ -16,13 +16,13 @@ public:
 	_uint FPS() const { return fps_; }
 
 private:
-	LARGE_INTEGER frequency_;      // ÃÊ´ç Ä«¿îÆ® È½¼ö
-	LARGE_INTEGER prev_count_;     // ÀÌÀü ÇÁ·¹ÀÓ Ä«¿îÆ®
+	LARGE_INTEGER frequency_;      // ì´ˆë‹¹ ì¹´ìš´íŠ¸ íšŸìˆ˜
+	LARGE_INTEGER prev_count_;     // ì´ì „ í”„ë ˆì„ ì¹´ìš´íŠ¸
 
-	_double delta_time_ = 0.0;     // ÇÁ·¹ÀÓ °£ ½Ã°£
-	_double total_time_ = 0.0;     // °ÔÀÓ ½ÃÀÛ ÈÄ ÃÑ ½Ã°£
+	_double delta_time_ = 0.0;     // í”„ë ˆì„ ê°„ ì‹œê°„
+	_double total_time_ = 0.0;     // ê²Œì„ ì‹œì‘ í›„ ì´ ì‹œê°„
 
-	// FPS °è»ê¿ë
+	// FPS ê³„ì‚°ìš©
 	_double fps_timer_ = 0.0;
 	_uint   fps_count_ = 0;
 	_uint   fps_ = 0;
