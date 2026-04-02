@@ -41,6 +41,6 @@ private:
 	class Background* background_ = nullptr;
 
 	InGameViewState view_state_ = InGameViewState::Undefined;
-	std::map<InGameViewState, class WidgetBase*> view_map_;
+	std::map<InGameViewState, WidgetBase*> view_map_;
 	WidgetBase* current_view_ = nullptr;
 };

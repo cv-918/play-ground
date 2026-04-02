@@ -149,3 +149,38 @@ public:
 	_Rect& operator*=(const _int _s) { *this = *this * _s; return *this; }
 	_Rect& operator/=(const _int _s) { *this = *this / _s; return *this; }
 };
+
+struct _RectF
+{
+	_RectF() DEFAULT;
+	_RectF(_float _left, _float _top, _float _right, _float _bottom)
+		: left(_left), top(_top), right(_right), bottom(_bottom) {}
+	_RectF(const _Rect& _rect)
+		: left(_rect.Left_f()), top(_rect.Top_f()), right(_rect.Right_f()), bottom(_rect.Bottom_f()) {}
+
+	_Point Lt() const { return { left, top }; }
+	_Point Rb() const { return { right, bottom }; }
+
+	_float Left() const { return left; }
+	_float Top() const { return top; }
+	_float Right() const { return right; }
+	_float Bottom() const { return bottom; }
+
+	_float Width() const { return right - left; }
+	_float Height() const { return bottom - top; }
+	_Size Size() const { return _Size(Width(), Height()); }
+
+	_Rect ToRect() const
+	{
+		return {
+			s_int(std::round(left)),
+			s_int(std::round(top)),
+			s_int(std::round(right)),
+			s_int(std::round(bottom)) };
+	}
+
+	_float left = 0.f;
+	_float top = 0.f;
+	_float right = 0.f;
+	_float bottom = 0.f;
+};

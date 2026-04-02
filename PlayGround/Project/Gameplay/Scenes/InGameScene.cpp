@@ -11,7 +11,7 @@
 
 _bool InGameScene::Initialize()
 {
-	if (false == __super::Initialize())
+	if (!__super::Initialize())
 		return false;
 
 	// 스테이지 매니저 캐싱 및 씬과 연동

@@ -10,6 +10,8 @@ public:
 public:
 	_bool Initialize() override;
 
+	
+
 private:
 	void _ProcessOnPlayerControl(_double _delta_time);
 	void _OnDirection(_double _delta_time);

@@ -16,6 +16,8 @@ _bool Player::Initialize()
 	if (!__super::Initialize())
 		return false;
 
+	_Assist.PersistentText(L"플레이어 정보", L"정보", std::wstring(L"테스트"));
+
 	// 플레이어 identifier 설정
 	Name(_UtilFunc::ToWString(info_->name_));
 
@@ -123,13 +125,67 @@ _int Player::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void Player::DebugRender(_double _delta_time)
+_int Player::LateUpdate(_double _delta_time)
 {
-	__super::DebugRender(_delta_time);
+	__super::LateUpdate(_delta_time);
 
-	// s, 디버그 정보 찍기
 	if (_GameState.debug_mode_)
-		_ShowDebugInfo();
+	{
+		_tchar buffer[MAX_PATH] = {};
+
+		swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		const auto vel = movement_->GetMoveVelocity();
+		swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f, %.2f | %.2f", vel.x, vel.y, vel.Magnitude());
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		swprintf_s(buffer, L"가속도(Acceleration) : %.f", movement_->GetAcceleration());
+		DweTextData data;
+		data.text_ = buffer;
+		data.font_size_ = 16.f;
+		data.color_ = Palette::Blue;
+		_Assist.Text(L"플레이어 정보", data);
+
+		_Assist.Text(L"플레이어 정보", std::wstring(L""));
+
+		swprintf_s(buffer, L"마찰 계수(Friction) : %.f", movement_->GetFriction());
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		swprintf_s(buffer, L"최대 속도 : %.f", movement_->GetMoveSpdMax());
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		_Assist.Text(L"플레이어 정보", std::wstring(L""));
+		_Assist.Text(L"플레이어 정보", std::wstring(L"======================== 충돌 리스트 ========================"));
+		const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
+		const auto collideds = attack_col->CollidedColliders();
+		for (const auto& collider : collideds)
+		{
+			swprintf_s(buffer, L"충돌 대상 : %s", collider->GameObject()->Name().c_str());
+			_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+		}
+
+		//_Assist.Text(L"플레이어 정보", L"==== 충돌 타이머 리스트 ====");
+		//const auto timers = attack_col->GetCollisionTimers();
+		//for (const auto& pair : timers)
+		//{
+		//	const auto collider = pair.first;
+		//	const auto time = pair.second;
+		//	swprintf_s(buffer, L"충돌 대상 : %s | 남은 쿨타임 : %.2f", collider->GameObject()->Name().c_str(), time);
+		//	_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+		//}
+		//_Assist.Text(L"플레이어 정보", L"=====================");
+
+		//for (_uint i = 0; i < 150; ++i)
+		//{
+		//	_Assist.Text(L"플레이어 정보", std::wstring(L"테스트 밸류 : ") + std::to_wstring(i));
+		//}
+	}
+
+	return UPDATE_CONTINUE;
 }
 
 void Player::OnDestroy()
@@ -226,154 +282,4 @@ void Player::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
 	{
 		_attack_col->SetTimerForTarget(_enemy_body_collider, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
 	}
-}
-
-void Player::_ShowDebugInfo()
-{
-	_tchar buffer[MAX_PATH] = {};
-
-	const _int line_gap = 16;
-	const _int draw_pos_x = INGAME_FRAME_THICKNESS;
-	_int draw_pos_y = INGAME_FRAME_THICKNESS_HALF - line_gap + 5;
-
-	enum DebugControlDataType
-	{
-		Acceleration,
-		Friction,
-		MaxSpeed,
-		TypeCount,
-	};
-
-	std::vector<std::wstring> labels =
-	{
-		L"[ 현재 컨트롤 정보 : 1. 가속도 ]",
-		L"[ 현재 컨트롤 정보 : 2. 마찰계수 ]",
-		L"[ 현재 컨트롤 정보 : 3. 최대속도 ]",
-	};
-
-	// 1) 디버그 정보 초기화
-	debug_info_lines_.clear();
-
-	// 2) 컨트롤할 정보 선택 및 변경
-	if (input_manager_->Down(VK_RIGHT))
-	{
-		++debug_control_data_idx_;
-
-		if (debug_control_data_idx_ >= DebugControlDataType::TypeCount)
-		{
-			debug_control_data_idx_ = DebugControlDataType::Acceleration;
-		}
-	}
-	else if (input_manager_->Down(VK_LEFT))
-	{
-		--debug_control_data_idx_;
-
-		if (debug_control_data_idx_ < DebugControlDataType::Acceleration)
-		{
-			debug_control_data_idx_ = DebugControlDataType::TypeCount - 1;
-		}
-	}
-
-	switch (debug_control_data_idx_)
-	{
-	case DebugControlDataType::Acceleration:
-	{
-		auto curr_acc = movement_->GetAcceleration();
-		if (input_manager_->Down(VK_DOWN))
-		{
-			if (100.f < curr_acc)
-			{
-				curr_acc -= 100.f;
-			}
-		}
-		else if (input_manager_->Down(VK_UP))
-		{
-			curr_acc += 100.f;
-		}
-		movement_->SetAcceleration(curr_acc);
-	}
-	break;
-		
-	case DebugControlDataType::Friction:
-	{
-		auto curr_fric = movement_->GetFriction();
-		if (input_manager_->Down(VK_DOWN))
-		{
-			if (1 < curr_fric)
-				--curr_fric;
-		}
-		else if (input_manager_->Down(VK_UP))
-		{
-			++curr_fric;
-		}
-		movement_->SetFriction(curr_fric);
-	}
-	break;
-		
-	case DebugControlDataType::MaxSpeed:
-	{
-		auto max_spd = movement_->GetMoveSpdMax();
-		if (input_manager_->Down(VK_DOWN))
-		{
-			if (100.f < max_spd)
-			{
-				max_spd -= 100.f;
-			}
-		}
-		else if (input_manager_->Down(VK_UP))
-		{
-			max_spd += 100.f;
-		}
-		movement_->SetMoveSpdMax(max_spd);
-	}
-	break;
-	}
-
-	// 3) 디버그 정보 라인 추가
-	debug_info_lines_.emplace_back(labels[debug_control_data_idx_]);
-
-	swprintf_s(buffer, L"위치 정보 ( x : %.2f | y : %.2f )", transform_->Position().x, transform_->Position().y);
-	debug_info_lines_.emplace_back(buffer);
-
-	swprintf_s(buffer, L"이동량(MoveVelocity) : %.2f, %.2f", movement_->GetMoveVelocity().x, movement_->GetMoveVelocity().y);
-	debug_info_lines_.emplace_back(buffer);
-
-	swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());
-	debug_info_lines_.emplace_back(buffer);
-
-	swprintf_s(buffer, L"가속도(Acceleration) : %.f", movement_->GetAcceleration());
-	debug_info_lines_.emplace_back(buffer);
-
-	debug_info_lines_.emplace_back(L"");
-
-	swprintf_s(buffer, L"마찰 계수(Friction) : %.f", movement_->GetFriction());
-	debug_info_lines_.emplace_back(buffer);
-
-	swprintf_s(buffer, L"최대 속도 : %.f", movement_->GetMoveSpdMax());
-	debug_info_lines_.emplace_back(buffer);
-
-	debug_info_lines_.emplace_back(L"");
-	debug_info_lines_.emplace_back(L"==== 충돌 리스트 ====");
-	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	const auto collideds = attack_col->CollidedColliders();
-	for(const auto& collider : collideds)
-	{
-		swprintf_s(buffer, L"충돌 대상 : %s", collider->GameObject()->Name().c_str());
-		debug_info_lines_.emplace_back(buffer);
-	}
-
-	debug_info_lines_.emplace_back(L"==== 충돌 타이머 리스트 ====");
-	const auto timers = attack_col->GetCollisionTimers();
-	for (const auto& pair : timers)
-	{
-		const auto collider = pair.first;
-		const auto time = pair.second;
-		swprintf_s(buffer, L"충돌 대상 : %s | 남은 쿨타임 : %.2f", collider->GameObject()->Name().c_str(), time);
-		debug_info_lines_.emplace_back(buffer);
-	}
-	debug_info_lines_.emplace_back(L"=====================");
-
-	// 4) 디버그 정보 그리기
-	for (const auto& line : debug_info_lines_)
-		_DrawFunc::DrawString(_Point{ draw_pos_x, draw_pos_y += line_gap }, line, Palette::Black, 12.f, false);
 }

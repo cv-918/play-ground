@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "ComponentBase.h"
 
@@ -38,6 +38,8 @@ public:
 	void Position(const _Vector3 _pos);
 	void Position(const _int _x, const _int _y) { Position(_Vector3{ s_float(_x), s_float(_y), position_.z }); }
 	void Position(const _float _x, const _float _y) { Position(_Vector3{ _x, _y, position_.z }); }
+
+	_Vector3 GetToePosition() const { return position_ + _Vector3(0.f, scale_.y, 0.f); }
 
 	_Vector3 Rotation() const { return rotation_; }
 	void Rotation(const _Vector3 _pos) { rotation_ = _pos; }

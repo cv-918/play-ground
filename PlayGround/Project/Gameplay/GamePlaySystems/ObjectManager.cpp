@@ -7,10 +7,10 @@
 
 ObjectManager::~ObjectManager()
 {
-	for (auto* game_object : game_objects_)
+	for (auto& game_object : game_objects_)
 		SAFE_DELETE(game_object);
 
-	for (auto* new_obj : new_game_objects_)
+	for (auto& new_obj : new_game_objects_)
 		SAFE_DELETE(new_obj);
 
 	SAFE_DELETE(play_area_);
@@ -45,8 +45,8 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 				// 매 10프레임마다 게임 오브젝트의 위치를 체크하여 플레이 영역 밖으로 나간 오브젝트를 파괴 처리
 				if (frame_count % 10 == 0)
 				{
+					// 프레임 카운트가 너무 커지는 것을 방지하기 위해 일정 값 이상이 되면 초기화
 					frame_count = 0;
-					_SYSTEM_LOG_INFO(L"ObjectManager: Checking game object positions - Name: %s, ID: %d", game_object->Name().c_str(), game_object->ID());
 
 					// 게임 오브젝트가 플레이 영역 밖으로 나갔는지 확인
 					const _Point obj_pos = game_object->GetTransform()->Position();

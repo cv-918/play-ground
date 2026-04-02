@@ -5,7 +5,7 @@
 
 UIManager::~UIManager()
 {
-	for (const auto* ui : ui_list_)
+	for (auto& ui : ui_list_)
 		SAFE_DELETE(ui);
 }
 

@@ -49,9 +49,10 @@
 
 // 정의 자료형들도 Extern 변수로 사용할 수 있기 때문에 여기에서 포함
 #include "EngineSystems/Json/json.hpp"
+#include "EngineSystems/Render/GraphicResourceManager.h"
+#include "EngineSystems/Debug/RunTimeDebuggingAssistant.h"
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Timer/Timer.h"
-#include "EngineSystems/Render/GraphicResourceManager.h"
 #include "EngineSystems/Render/CameraManager.h"
 #include "EngineSystems/Render/ParticleService.h"
 
