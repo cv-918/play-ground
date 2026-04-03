@@ -2,11 +2,11 @@
 
 #include "UnitBase.h"
 
-class Player final : public UnitBase
+class StagePlayer final : public UnitBase
 {
 public:
-	explicit Player(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
-	~Player() override;
+	explicit StagePlayer(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
+	~StagePlayer() override;
 
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;

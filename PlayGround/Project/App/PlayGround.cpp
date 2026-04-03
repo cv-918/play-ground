@@ -86,7 +86,7 @@ _int PlayGround::Update(_double _delta_time)
 	if (input_manager_->Down(VK_F3))
 	{
 		_GameState.debug_mode_ = !_GameState.debug_mode_;
-		_SYSTEM_LOG_INFO("Debug mode %s", _GameState.debug_mode_ ? "enabled" : "disabled");
+		_SYSTEM_LOG_INFO("Debug mode %s", _TF(_GameState.debug_mode_));
 	}
 
 	if (_GameState.debug_mode_)

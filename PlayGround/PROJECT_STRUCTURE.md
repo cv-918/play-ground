@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-02 18:01)
+﻿# Project Structure (Updated: 2026-04-03 16:08)
 
 ```text
 Root
@@ -207,6 +207,7 @@ Root
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
++--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

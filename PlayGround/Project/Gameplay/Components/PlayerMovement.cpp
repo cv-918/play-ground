@@ -1,9 +1,9 @@
 ﻿#include "framework.h"
-#include "PlayableMovement.h"
+#include "PlayerMovement.h"
 
-#include "Actors/Player.h"
+#include "Actors/StagePlayer.h"
 
-PlayableMovement::PlayableMovement(const PlayableCharacterJsonInfo* _info)
+PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
 {
 	move_pattern_ = MovementPattern::Playable;
@@ -17,36 +17,36 @@ PlayableMovement::PlayableMovement(const PlayableCharacterJsonInfo* _info)
 	friction_ = _info->friction_;
 }
 
-_bool PlayableMovement::Initialize()
+_bool PlayerMovement::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
-	player_ = d_cast(Player*, GameObject());
+	player_ = d_cast(StagePlayer*, GameObject());
 
 	MAKE_INITIALIZED;
 	return true;
 }
 
-void PlayableMovement::_ProcessOnPlayerControl(_double _delta_time)
+void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 {
 	switch (controller_type_)
 	{
-	case KeyBoardControlType::Direction:
+	case PlayerMovementType::Direction:
 		_OnDirection(_delta_time);
 		break;
-	case KeyBoardControlType::Axis:
+	case PlayerMovementType::Axis:
 		_OnAxis(_delta_time);
 		break;
 	}
 }
 
-void PlayableMovement::_OnDirection(_double _delta_time)
+void PlayerMovement::_OnDirection(_double _delta_time)
 {
 	// 기존 Direction 방식은 필요 시 별도 유지
 }
 
-void PlayableMovement::_OnAxis(_double _delta_time)
+void PlayerMovement::_OnAxis(_double _delta_time)
 {
 	// 대시 중에는 입력 이동 로직 스킵
 	if (IsDashing())
