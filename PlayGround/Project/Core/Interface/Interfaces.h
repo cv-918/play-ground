@@ -98,7 +98,7 @@ public:
 protected:
 	void _SetNumberingName()
 	{
-		static std::unordered_map<std::wstring, _int> instance_counts; // 클래스별 인스턴스 생성 횟수 추적
+		static std::map<std::wstring, _int> instance_counts; // 클래스별 인스턴스 생성 횟수 추적
 
 		std::string type_name = typeid(*this).name();
 		const std::string base = "class ";
@@ -131,6 +131,7 @@ enum class HandlerSystemList
 {
 	Collision,
 	Damage,
+	Interaction,
 	SystemCount,
 };
 
@@ -163,3 +164,15 @@ protected:
 public:
 	virtual void GetDamage(_float _damage) PURE;
 };
+
+class GameObjectBase;
+class IInteractable : public IHandler
+{
+protected:
+	explicit IInteractable() DEFAULT;
+	virtual ~IInteractable() DEFAULT;
+
+public:
+	virtual _bool CanInteract(GameObjectBase* _actor) PURE;
+	virtual void Interact(GameObjectBase* _actor) PURE;
+}

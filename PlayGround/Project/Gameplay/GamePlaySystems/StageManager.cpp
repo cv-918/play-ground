@@ -8,7 +8,7 @@
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
 
 #include "GamePlay/World/Background.h"
-#include "Actors/Player.h"
+#include "Actors/StagePlayer.h"
 #include "Actors/ExpDust.h"
 
 #include "Actors/Props/Dust.h"
@@ -146,7 +146,7 @@ void StageManager::_OnEnter()
 	object_manager_->GeneratePlayArea(nav_mesh, DEFAULT_SPAWN_MARGIN);
 
 	// 플레이어 생성 및 UI 생성
-	const auto player = object_manager_->CreateActor<Player>(player_spawn_data);
+	const auto player = object_manager_->CreateActor<StagePlayer>(player_spawn_data);
 	player->SetNavMesh(nav_mesh);
 	player->SetPlayScene(play_scene_);
 	player->GetTransform()->Position(GAME_VIEW_CENTER);

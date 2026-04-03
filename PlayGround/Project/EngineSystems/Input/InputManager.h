@@ -3,11 +3,7 @@
 #define _InputMgr InputManager::Get()
 #define INPUT_KEY_MAX 256
 
-enum class KeyBoardControlType
-{
-	Direction,
-	Axis,
-};
+
 
 class InputManager : public ISingleton<InputManager>
 {
@@ -42,9 +38,6 @@ public:
 	_int WheelDelta() const { return wheel_delta_; } // ±120 단위가 일반적
 
 	const std::vector<_tchar>& Chars() const { return chars_; } // 이번 프레임에 들어온 WM_CHAR 문자 목록
-	
-	KeyBoardControlType ControllerType() const { return keyboard_control_type_; }
-	void ControllerType(const KeyBoardControlType _type) { keyboard_control_type_ = _type; }
 
 private:
 	struct KeyState
@@ -64,6 +57,4 @@ private:
 	_Point mouse_delta_ = _Point::Zero();
 
 	_int wheel_delta_ = IV_ZERO;
-
-	KeyBoardControlType keyboard_control_type_ = KeyBoardControlType::Axis;
 };

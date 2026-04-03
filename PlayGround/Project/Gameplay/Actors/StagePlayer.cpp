@@ -1,28 +1,26 @@
 ﻿#include "framework.h"
-#include "Player.h"
+#include "StagePlayer.h"
 
-#include "Components/PlayableMovement.h"
+#include "Components/PlayerMovement.h"
 #include "GamePlaySystems/SkillManager.h"
 
 #include "GamePlaySystems/Json/ParticleDataManager.h"
 
-Player::~Player()
+StagePlayer::~StagePlayer()
 {
 	bool debug = true;
 }
 
-_bool Player::Initialize()
+_bool StagePlayer::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
-
-	_Assist.PersistentText(L"플레이어 정보", L"정보", std::wstring(L"테스트"));
 
 	// 플레이어 identifier 설정
 	Name(_UtilFunc::ToWString(info_->name_));
 
 	// 플레이어 Movement 컴포넌트 생성 및 등록
-	movement_ = new PlayableMovement(info_);
+	movement_ = new PlayerMovement(info_);
 	RegisterComponent(movement_);
 
 	// 플레이어 컴포넌트 설정
@@ -66,7 +64,7 @@ _bool Player::Initialize()
 	return true;
 }
 
-_int Player::Update(_double _delta_time)
+_int StagePlayer::Update(_double _delta_time)
 {
 	auto ret = __super::Update(_delta_time);
 	if (ret != UPDATE_CONTINUE)
@@ -125,7 +123,7 @@ _int Player::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-_int Player::LateUpdate(_double _delta_time)
+_int StagePlayer::LateUpdate(_double _delta_time)
 {
 	__super::LateUpdate(_delta_time);
 
@@ -183,12 +181,21 @@ _int Player::LateUpdate(_double _delta_time)
 		//{
 		//	_Assist.Text(L"플레이어 정보", std::wstring(L"테스트 밸류 : ") + std::to_wstring(i));
 		//}
+
+		//_Assist.Button(
+		//	L"플레이어 정보",
+		//	L"KillPlayer",
+		//	L"▲",
+		//	[this]()
+		//	{
+		//		_SYSTEM_LOG_INFO(L"플레이어 즉사 버튼 클릭");
+		//	});
 	}
 
 	return UPDATE_CONTINUE;
 }
 
-void Player::OnDestroy()
+void StagePlayer::OnDestroy()
 {
 	__super::OnDestroy();
 
@@ -211,7 +218,7 @@ void Player::OnDestroy()
 	}
 }
 
-void Player::OnCollisionEnter(Collider* _this, Collider* _other)
+void StagePlayer::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	switch (_this->GetLayer())
 	{
@@ -230,7 +237,7 @@ void Player::OnCollisionEnter(Collider* _this, Collider* _other)
 	}
 }
 
-void Player::OnCollisionStay(Collider* _this, Collider* _other)
+void StagePlayer::OnCollisionStay(Collider* _this, Collider* _other)
 {
 	switch (_this->GetLayer())
 	{
@@ -249,7 +256,7 @@ void Player::OnCollisionStay(Collider* _this, Collider* _other)
 	}
 }
 
-void Player::GetDamage(_float _damage)
+void StagePlayer::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage);
 
@@ -263,7 +270,7 @@ void Player::GetDamage(_float _damage)
 	}
 }
 
-void Player::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
+void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
 {
 	const auto target_enemy = _enemy_body_collider->GameObject();
 	target_enemy->SendMessageToHandlers(
