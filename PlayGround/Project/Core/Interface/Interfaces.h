@@ -175,4 +175,4 @@ protected:
 public:
 	virtual _bool CanInteract(GameObjectBase* _actor) PURE;
 	virtual void Interact(GameObjectBase* _actor) PURE;
-}
+};

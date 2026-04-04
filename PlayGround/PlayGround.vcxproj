@@ -180,6 +180,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Actors\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
+    <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
@@ -289,6 +290,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />

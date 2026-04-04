@@ -130,6 +130,7 @@
     <ClInclude Include="Project\EngineSystems\Debug\DWE_CheckBox.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Button.h" />
     <ClInclude Include="Project\Gameplay\Actors\TownPlayer.h" />
+    <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -238,5 +239,6 @@
     <ClCompile Include="Project\EngineSystems\Debug\DWE_CheckBox.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Button.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\TownPlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
   </ItemGroup>
 </Project>
