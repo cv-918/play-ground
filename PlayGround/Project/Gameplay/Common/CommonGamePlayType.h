@@ -46,6 +46,7 @@ enum class ComponentType
 	RectCollider,
 	EllipseCollider,
 	Combat,
+	TownInteraction,
 };
 
 enum class MovementPattern
