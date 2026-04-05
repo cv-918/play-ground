@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-03 16:08)
+﻿# Project Structure (Updated: 2026-04-05 17:17)
 
 ```text
 Root
@@ -8,8 +8,6 @@ Root
 |   |   |   +--- Chatacters
 |   |   |   +--- Particles
 |   |   |   +--- World
-+--- html
-|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -74,14 +72,20 @@ Root
 |   |   |   |   |   Dust.h
 |   |   |   |   |   Props.cpp
 |   |   |   |   |   Props.h
-|   |   |   |   Enemy.cpp
-|   |   |   |   Enemy.h
-|   |   |   |   ExpDust.cpp
-|   |   |   |   ExpDust.h
-|   |   |   |   Player.cpp
-|   |   |   |   Player.h
-|   |   |   |   UnitBase.cpp
-|   |   |   |   UnitBase.h
+|   |   |   +--- Stage
+|   |   |   |   |   Enemy.cpp
+|   |   |   |   |   Enemy.h
+|   |   |   |   |   ExpDust.cpp
+|   |   |   |   |   ExpDust.h
+|   |   |   |   |   StagePlayer.cpp
+|   |   |   |   |   StagePlayer.h
+|   |   |   |   |   UnitBase.cpp
+|   |   |   |   |   UnitBase.h
+|   |   |   +--- Town
+|   |   |   |   |   TownNpc.cpp
+|   |   |   |   |   TownNpc.h
+|   |   |   |   |   TownPlayer.cpp
+|   |   |   |   |   TownPlayer.h
 |   |   +--- Common
 |   |   |   |   CommonGamePlayDefine.h
 |   |   |   |   CommonGamePlayFunctions.h
@@ -99,14 +103,16 @@ Root
 |   |   |   |   Movement.h
 |   |   |   |   NonPlayableMovement.cpp
 |   |   |   |   NonPlayableMovement.h
-|   |   |   |   PlayableMovement.cpp
-|   |   |   |   PlayableMovement.h
+|   |   |   |   PlayerMovement.cpp
+|   |   |   |   PlayerMovement.h
 |   |   |   |   RectCollider.cpp
 |   |   |   |   RectCollider.h
 |   |   |   |   SphereCollider.cpp
 |   |   |   |   SphereCollider.h
 |   |   |   |   Status.cpp
 |   |   |   |   Status.h
+|   |   |   |   TownInteraction.cpp
+|   |   |   |   TownInteraction.h
 |   |   |   |   Transform.cpp
 |   |   |   |   Transform.h
 |   |   +--- GamePlaySystems
@@ -207,7 +213,6 @@ Root
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
-+--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

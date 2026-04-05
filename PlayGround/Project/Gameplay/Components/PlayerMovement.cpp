@@ -1,7 +1,7 @@
 ﻿#include "framework.h"
 #include "PlayerMovement.h"
 
-#include "Actors/StagePlayer.h"
+#include "Actors/Stage/StagePlayer.h"
 
 PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
@@ -21,8 +21,6 @@ _bool PlayerMovement::Initialize()
 	if (!__super::Initialize())
 		return false;
 
-	player_ = d_cast(StagePlayer*, GameObject());
-
 	MAKE_INITIALIZED;
 	return true;
 }
@@ -31,6 +29,9 @@ void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 {
 	switch (controller_type_)
 	{
+	case PlayerMovementType::Town:
+		_OnImmediate(_delta_time);
+		break;
 	case PlayerMovementType::Direction:
 		_OnDirection(_delta_time);
 		break;
@@ -38,6 +39,31 @@ void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 		_OnAxis(_delta_time);
 		break;
 	}
+}
+
+void PlayerMovement::_OnImmediate(_double _delta_time)
+{
+	const _float dt = s_cast(_float, _delta_time);
+
+	_Vector3 input_dir = _Vector3::Zero();
+
+	if (input_manager_->Pressed('W'))
+		input_dir.y -= 1.f;
+
+	if (input_manager_->Pressed('S'))
+		input_dir.y += 1.f;
+
+	if (input_manager_->Pressed('A'))
+		input_dir.x -= 1.f;
+
+	if (input_manager_->Pressed('D'))
+		input_dir.x += 1.f;
+
+	if (input_dir.LengthSq() > 0.f)
+		input_dir = input_dir.Normalized();
+
+	move_direction_ = input_dir;
+	move_velocity_ = input_dir * move_spd_max_;
 }
 
 void PlayerMovement::_OnDirection(_double _delta_time)

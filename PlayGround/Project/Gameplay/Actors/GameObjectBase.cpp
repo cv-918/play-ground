@@ -127,10 +127,13 @@ void GameObjectBase::DebugRender(_double _delta_time)
 	}
 
 	// 2. 디스크립션 그리기
-	auto description_position = position;
-	description_position.y += 16.f; // 디버그용으로 위치 보정
+	if (!object_description_.empty())
+	{
+		auto description_position = position;
+		description_position.y += 16.f; // 디버그용으로 위치 보정
 
-	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
+		_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
+	}
 }
 
 void GameObjectBase::RegisterComponent(ComponentBase* _component)
@@ -273,7 +276,8 @@ ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name, const _in
 
 void GameObjectBase::_DrawObjectShape()
 {
-	const auto position = transform_->Position();
+	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
+	//const auto position = transform_->Position();
 	const auto radius = transform_->Scale().x;
 	const auto radius_y = radius * 0.6f; // 타원 비율 조정 (예시로 y축을 x축의 60%로 설정)
 

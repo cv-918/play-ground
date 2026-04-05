@@ -177,7 +177,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
-    <ClInclude Include="Project\Gameplay\Actors\TownPlayer.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
@@ -224,8 +225,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Framework\framework.h" />
     <ClInclude Include="Project\Framework\Resource.h" />
-    <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
-    <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\Enemy.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\ExpDust.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
     <ClInclude Include="Project\Gameplay\Components\Collider.h" />
     <ClInclude Include="Project\Gameplay\Components\Combat.h" />
@@ -262,8 +263,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Physics\CollisionManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\RenderChain.h" />
     <ClInclude Include="Project\App\PlayGround.h" />
-    <ClInclude Include="Project\Gameplay\Actors\StagePlayer.h" />
-    <ClInclude Include="Project\Gameplay\Actors\UnitBase.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\StagePlayer.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\UnitBase.h" />
     <ClInclude Include="Project\Framework\targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -288,7 +289,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\TownPlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
@@ -297,8 +299,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Core\Math\Random.cpp" />
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\Enemy.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\ExpDust.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Combat.cpp" />
     <ClCompile Include="Project\Gameplay\Components\ComponentBase.cpp" />
@@ -365,8 +367,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\EngineSystems\Physics\CollisionManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\RenderChain.cpp" />
     <ClCompile Include="Project\App\PlayGround.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\StagePlayer.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\UnitBase.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\StagePlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,6 +4,11 @@
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
 
+#include "GamePlay/Actors/Town/TownPlayer.h"
+#include "GamePlay/Actors/Town/TownNpc.h"
+#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "EngineSystems/Physics/CollisionManager.h"
+
 _bool OutGameScene::Initialize()
 {
 	if (!__super::Initialize())
@@ -19,6 +24,22 @@ _int OutGameScene::Update(_double _delta_time)
 	if (ret != UPDATE_CONTINUE)
 		return ret;
 
+#ifdef _DEBUG
+	if (_InputMgr.Down('Y'))
+	{
+		if (test_town_player_ == nullptr)
+		{
+			_SYSTEM_LOG_INFO(_T("[OutGameScene Test] TownPlayer is null"));
+		}
+		else
+		{
+			const auto curr = test_town_player_->GetCurrentInteractable();
+			_SYSTEM_LOG_INFO(_T("[OutGameScene Test] Current interactable : %s"),
+				curr ? L"Exists" : L"None");
+		}
+	}
+#endif
+
 	switch (view_state_)
 	{
 	case OutGameScene::OutGameViewState::Main:
@@ -32,6 +53,20 @@ _int OutGameScene::Update(_double _delta_time)
 	default:
 		break;
 	}
+
+	return UPDATE_CONTINUE;
+}
+
+_int OutGameScene::LateUpdate(_double _delta_time)
+{
+	__super::LateUpdate(_delta_time);
+
+	_ColMgr.Update();
+	_CameraMgr.Update(_delta_time);
+
+	const auto cam_pos = _CameraMgr.GetPosition();
+	std::wstring cam_pos_text = L"Camera Position: (" + std::to_wstring(cam_pos.x) + L", " + std::to_wstring(cam_pos.y) + L")";
+	_Assist.Text(L"OutGameScene", DweTextData(cam_pos_text));
 
 	return UPDATE_CONTINUE;
 }
@@ -88,6 +123,41 @@ void OutGameScene::Render(_double _delta_time)
 void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
+
+	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
+	if (player_spawn_data == nullptr)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	test_town_player_ = object_manager_->CreateActor<TownPlayer>(player_spawn_data);
+	if (test_town_player_ == nullptr)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	test_town_player_->GetTransform()->Position(_Vector3(300.f, 300.f, 0.f));
+
+	test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(500.f, 300.f, 0.f));
+	if (test_town_npc_ == nullptr)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
+
+	RECT world_bounds = { 0, 0, 3000, 2000 };
+	_CameraMgr.SetWorldBounds(world_bounds);
+	_CameraMgr.EnableClamp(true);
+}
+
+void OutGameScene::OnExit()
+{
+	_ColMgr.ClearAllColliders();
 }
 
 void OutGameScene::_ChangeView(OutGameViewState _new_view_state)

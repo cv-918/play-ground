@@ -76,6 +76,8 @@ _bool PlayGround::Initialize()
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerAttack, CollisionLayer::EnemyBody, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerCollector, CollisionLayer::PropsBody, true);
 
+	_ColMgr.SetCollisionLayer(CollisionLayer::TownPlayerInteraction, CollisionLayer::TownNpcInteraction, true);
+
 	_ParticleService.Initialize(1000); // 파티클 풀 초기화 (예: 최대 1000개의 파티클)
 
 	return true;

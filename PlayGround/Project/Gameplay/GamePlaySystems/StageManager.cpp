@@ -8,8 +8,8 @@
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
 
 #include "GamePlay/World/Background.h"
-#include "Actors/StagePlayer.h"
-#include "Actors/ExpDust.h"
+#include "Actors/Stage/StagePlayer.h"
+#include "Actors/Stage/ExpDust.h"
 
 #include "Actors/Props/Dust.h"
 
@@ -172,6 +172,14 @@ void StageManager::_OnEnter()
 
 	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
 	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
+
+	// 카메라 초기화
+	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+	_CameraMgr.SetFollowTarget(player->GetTransform());
+
+	RECT world_bounds = { 0, 0, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT };
+	_CameraMgr.SetWorldBounds(world_bounds);
+	_CameraMgr.EnableClamp(true);
 
 	// 게임 상태 초기화
 	_RunState.Ready();

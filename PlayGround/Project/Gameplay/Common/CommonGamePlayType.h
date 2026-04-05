@@ -10,6 +10,9 @@ enum class CollisionLayer
 	EnemyAttack,
 	EnemyBullet,
 	PropsBody,
+
+	TownPlayerInteraction,
+	TownNpcInteraction,
 	End
 };
 #pragma endregion
@@ -46,7 +49,6 @@ enum class ComponentType
 	RectCollider,
 	EllipseCollider,
 	Combat,
-	TownInteraction,
 };
 
 enum class MovementPattern
