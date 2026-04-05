@@ -112,6 +112,7 @@ enum class PropsState
 {
 	Undefined = 0,
 	Idle,
+	Bounce,
 	Tracking,
 };
 
