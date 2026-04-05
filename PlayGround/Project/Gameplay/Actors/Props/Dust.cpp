@@ -21,6 +21,7 @@ _bool Dust::Initialize()
 	_ColMgr.RegisterCollider(CollisionLayer::PropsBody, collider_);
 
 	color_ = Palette::LightGray;
+	state_ = PropsState::Idle;
 
 	Finalize();
 	return true;
@@ -28,27 +29,21 @@ _bool Dust::Initialize()
 
 _int Dust::Update(_double _delta_time)
 {
+	const _double delta_time = (_delta_time > 0.1) ? 0.1 : _delta_time;
+
 	switch (state_)
 	{
 	case PropsState::Idle:
-		transform_->TranslateToForward(move_spd_ * s_float(_delta_time));
+		transform_->TranslateToForward(move_spd_ * s_float(delta_time));
+		break;
+
+	case PropsState::Bounce:
+		UpdateBounce(delta_time);
 		break;
 
 	case PropsState::Tracking:
-	{
-		tracking_time_ += _delta_time;
-
-		const auto target_pos = tracking_transform_->Position();
-		const auto pos = transform_->Position();
-		const auto new_pos = _MathFunc::Lerp(pos, target_pos, s_float(tracking_time_));
-		transform_->Position(new_pos);
-
-		const auto dist = _Vector3::Distance(pos, target_pos);
-		const auto radius = tracking_transform_->Scale().x * 0.5f;
-		if (dist <= radius)
-			ReserveDestruction();
-	}
-	break;
+		UpdateTracking(delta_time);
+		break;
 	}
 
 	return UPDATE_CONTINUE;
@@ -59,7 +54,6 @@ void Dust::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	// 오브젝트 그리기
 	const auto position = transform_->Position();
 	const auto radius = transform_->Scale().x * 0.5f;
 	_DrawFunc::FillCircle(_Point{ position.x, position.y }, radius, color_);
@@ -75,6 +69,10 @@ void Dust::OnDestroy()
 
 void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 {
+	// Idle 상태에서만 수집 시작 가능
+	if (state_ != PropsState::Idle)
+		return;
+
 	const auto this_layer = _this->GetLayer();
 	const auto other_layer = _other->GetLayer();
 
@@ -85,14 +83,101 @@ void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 		{
 		case CollisionLayer::PlayerCollector:
 		{
-			tracking_transform_ = _other->GameObject()->GetTransform();
-			state_ = PropsState::Tracking;
+			BeginBounce(_other->GameObject()->GetTransform());
 
-			// 트래킹 대상 설정 후에는 충돌검사 하지 않도록 제거
+			// 수집 시작 후에는 더 이상 충돌 검사하지 않도록 제거
 			_ColMgr.DeregisterCollider(CollisionLayer::PropsBody, collider_);
 			DeregisterComponent(ComponentType::SphereCollider);
 		}
 		break;
 		}
+		break;
 	}
+}
+
+void Dust::BeginBounce(Transform* _tracking_transform)
+{
+	tracking_transform_ = _tracking_transform;
+
+	const auto player_pos = tracking_transform_->Position();
+	const auto dust_pos = transform_->Position();
+
+	auto bounce_dir = dust_pos - player_pos;
+
+	// 플레이어와 거의 겹친 경우 fallback 방향 사용
+	if (bounce_dir.LengthSq() <= 0.0001f)
+		bounce_dir = transform_->Forward2D() * -1.f;
+
+	bounce_dir = bounce_dir.Normalized();
+
+	bounce_start_pos_ = dust_pos;
+	bounce_end_pos_ = dust_pos + bounce_dir * bounce_distance_;
+	bounce_time_ = 0.0;
+	tracking_time_ = 0.0;
+
+	state_ = PropsState::Bounce;
+}
+
+void Dust::UpdateBounce(_double _delta_time)
+{
+	bounce_time_ += _delta_time;
+
+	const _float t = s_float(bounce_time_ / bounce_duration_);
+	const auto new_pos = _MathFunc::LerpWithEase(
+		bounce_start_pos_,
+		bounce_end_pos_,
+		t,
+		_MathFunc::EaseType::OutCubic);
+
+	transform_->Position(new_pos);
+
+	if (t >= 1.f)
+	{
+		tracking_time_ = 0.0;
+		state_ = PropsState::Tracking;
+	}
+}
+
+void Dust::UpdateTracking(_double _delta_time)
+{
+	if (tracking_transform_ == nullptr)
+	{
+		ReserveDestruction();
+		return;
+	}
+
+	tracking_time_ += _delta_time;
+
+	const auto pos = transform_->Position();
+	const auto target_pos = tracking_transform_->Position();
+
+	auto dir = target_pos - pos;
+	const auto dist_sq = dir.LengthSq();
+
+	// 플레이어와 거의 겹쳤으면 바로 획득 처리
+	if (dist_sq <= 0.0001f)
+	{
+		transform_->Position(target_pos);
+		ReserveDestruction();
+		return;
+	}
+
+	dir = dir.Normalized();
+
+	const _float t = s_float(tracking_time_ / tracking_duration_);
+	const _float eased_t = _MathFunc::GetEasing(t, _MathFunc::EaseType::InCubic);
+	const _float tracking_speed = _MathFunc::Lerp(min_tracking_speed_, max_tracking_speed_, eased_t);
+	const _float move_dist = tracking_speed * s_float(_delta_time);
+
+	const auto dist = sqrtf(dist_sq);
+
+	// 이번 프레임 이동량이 남은 거리보다 크면 지나치지 말고 바로 획득
+	if (dist <= move_dist)
+	{
+		transform_->Position(target_pos);
+		ReserveDestruction();
+		return;
+	}
+
+	transform_->Position(pos + dir * move_dist);
 }
