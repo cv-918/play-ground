@@ -2,7 +2,6 @@
 #include "ObjectManager.h"
 
 #include "Actors/GameObjectBase.h"
-#include "Actors/ExpDust.h"
 #include "Actors/Projectile/Bullet.h"
 
 ObjectManager::~ObjectManager()

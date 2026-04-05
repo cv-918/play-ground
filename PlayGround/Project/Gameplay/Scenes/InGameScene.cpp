@@ -146,7 +146,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 void InGameScene::Render(_double _delta_time)
 {
 	// 1. 카메라 오프셋 가져오기
-	_Point offset = _CameraMgr.GetOffset();
+	_Point offset = _CameraMgr.GetShakeOffset();
 
 	// 2. 그래픽스 변환 적용 (전체 월드 흔들기)
 	g_graphics->TranslateTransform((Gdiplus::REAL)offset.x, (Gdiplus::REAL)offset.y);

@@ -1,123 +1,167 @@
 ﻿#include "framework.h"
 #include "TownInteraction.h"
 
+#include "GamePlay/Actors/GameObjectBase.h"
 #include "Transform.h"
-#include "../Actors/GameObjectBase.h"
 
 TownInteraction::TownInteraction(GameObjectBase* _owner)
-	: ComponentBase(ComponentType::TownInteraction), owner_(_owner)
-{
-}
+	: owner_(_owner)
+{}
 
 TownInteraction::~TownInteraction()
 {
+	current_interactable_ = nullptr;
+	interactable_candidates_.clear();
 	owner_ = nullptr;
-	current_target_ = nullptr;
-	candidates_.clear();
 }
 
-_bool TownInteraction::Initialize()
+void TownInteraction::Initialize()
 {
-	current_target_ = nullptr;
-	candidates_.clear();
-
-    return true;
+	current_interactable_ = nullptr;
+	interactable_candidates_.clear();
 }
 
-_int TownInteraction::Update(_double _delta_time)
+void TownInteraction::Update(_double _delta_time)
 {
 	UNREFERENCED_PARAMETER(_delta_time);
 
-	SelectBestTarget();
-	return UPDATE_CONTINUE;
+	_RemoveInvalidCandidates();
+	_UpdateCurrentInteractable();
 }
 
-_int TownInteraction::LateUpdate(_double _delta_time)
-{
-	return UPDATE_CONTINUE;
-}
-
-void TownInteraction::TryInteraction()
+void TownInteraction::TryInteract()
 {
 	if (owner_ == nullptr)
 		return;
 
-	if (current_target_ == nullptr)
+	if (current_interactable_ == nullptr)
 		return;
 
-	if (current_target_->CanInteract(owner_) == false)
+	if (!CanInteractCurrent())
 		return;
 
-	current_target_->Interact(owner_);
+	current_interactable_->Interact(owner_);
 }
 
-void TownInteraction::AddCandidate(IInteractable* _target)
+void TownInteraction::OnEnterInteractable(IInteractable* _target)
 {
 	if (_target == nullptr)
 		return;
 
-	if (IsTargetRegistered(_target))
+	auto iter = std::find(interactable_candidates_.begin(), interactable_candidates_.end(), _target);
+	if (iter != interactable_candidates_.end())
 		return;
 
-	candidates_.push_back(_target);
+	interactable_candidates_.push_back(_target);
 }
 
-void TownInteraction::RemoveCandidate(IInteractable* _target)
+void TownInteraction::OnExitInteractable(IInteractable* _target)
 {
 	if (_target == nullptr)
 		return;
 
-	auto iter = std::remove(candidates_.begin(), candidates_.end(), _target);
-	candidates_.erase(iter, candidates_.end());
+	auto iter = std::remove(interactable_candidates_.begin(), interactable_candidates_.end(), _target);
+	interactable_candidates_.erase(iter, interactable_candidates_.end());
 
-	if (current_target_ == _target)
-		current_target_ = nullptr;
+	if (current_interactable_ == _target)
+		current_interactable_ = nullptr;
 }
 
-void TownInteraction::ClearCandidates()
+_bool TownInteraction::CanInteractCurrent() const
 {
-	candidates_.clear();
-	current_target_ = nullptr;
+	if (owner_ == nullptr)
+		return false;
+
+	if (current_interactable_ == nullptr)
+		return false;
+
+	if (!_IsTargetValid(current_interactable_))
+		return false;
+
+	return current_interactable_->CanInteract(owner_);
 }
 
-void TownInteraction::SelectBestTarget()
+void TownInteraction::_UpdateCurrentInteractable()
 {
-	current_target_ = nullptr;
+	current_interactable_ = nullptr;
 
 	if (owner_ == nullptr)
 		return;
 
-	const Transform* owner_transform = owner_->GetTransform();
-	if (owner_transform == nullptr)
+	const auto my_transform = owner_->GetTransform();
+	if (my_transform == nullptr)
 		return;
 
 	_float best_dist_sq = std::numeric_limits<_float>::max();
 
-	for (IInteractable* target : candidates_)
+	for (auto* target : interactable_candidates_)
 	{
-		if (target == nullptr)
+		if (!_IsTargetValid(target))
 			continue;
 
-		if (target->CanInteract(owner_) == false)
+		auto* target_object = _GetTargetObject(target);
+		if (target_object == nullptr)
 			continue;
 
-		const Transform* target_transform = target->GetTransform();
+		const auto target_transform = target_object->GetTransform();
 		if (target_transform == nullptr)
 			continue;
 
-		const _float dx = owner_transform->position_.x - target_transform->position_.x;
-		const _float dy = owner_transform->position_.y - target_transform->position_.y;
-		const _float dist_sq = dx * dx + dy * dy;
+		if (!target->CanInteract(owner_))
+			continue;
+
+		const auto delta = my_transform->Position() - target_transform->Position();
+		const _float dist_sq = delta.LengthSq();
 
 		if (dist_sq < best_dist_sq)
 		{
 			best_dist_sq = dist_sq;
-			current_target_ = target;
+			current_interactable_ = target;
 		}
 	}
 }
 
-bool TownInteraction::IsTargetRegistered(IInteractable* _target) const
+void TownInteraction::_RemoveInvalidCandidates()
 {
-    return false;
+	auto is_invalid_target = [this](IInteractable* _target)
+	{
+		return !_IsTargetValid(_target);
+	};
+
+	auto iter = std::remove_if(
+		interactable_candidates_.begin(),
+		interactable_candidates_.end(),
+		is_invalid_target
+	);
+
+	interactable_candidates_.erase(iter, interactable_candidates_.end());
+
+	if (!_IsTargetValid(current_interactable_))
+		current_interactable_ = nullptr;
+}
+
+GameObjectBase* TownInteraction::_GetTargetObject(IInteractable* _target) const
+{
+	if (_target == nullptr)
+		return nullptr;
+
+	return d_cast(GameObjectBase*, _target);
+}
+
+_bool TownInteraction::_IsTargetValid(IInteractable* _target) const
+{
+	if (_target == nullptr)
+		return false;
+
+	auto* target_object = _GetTargetObject(_target);
+	if (target_object == nullptr)
+		return false;
+
+	if (target_object->IsPendingDestruction())
+		return false;
+
+	if (target_object->GetTransform() == nullptr)
+		return false;
+
+	return true;
 }

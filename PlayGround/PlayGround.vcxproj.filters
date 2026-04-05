@@ -33,10 +33,10 @@
     </ClInclude>
     <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
-    <ClInclude Include="Project\Gameplay\Actors\UnitBase.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\UnitBase.h" />
     <ClInclude Include="Project\Gameplay\Components\ComponentBase.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
-    <ClInclude Include="Project\Gameplay\Actors\StagePlayer.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\StagePlayer.h" />
     <ClInclude Include="Project\EngineSystems\Render\RenderChain.h" />
     <ClInclude Include="Project\Core\Base\Bases.h" />
     <ClInclude Include="Project\Core\Interface\Interfaces.h" />
@@ -47,7 +47,7 @@
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
     <ClInclude Include="Project\Core\Math\MathFunctions.h" />
-    <ClInclude Include="Project\Gameplay\Actors\ExpDust.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\ExpDust.h" />
     <ClInclude Include="Project\Gameplay\Components\Collider.h" />
     <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\RectCollider.h" />
@@ -73,7 +73,7 @@
     <ClInclude Include="Project\EngineSystems\Timer\Timer.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\ObjectManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
-    <ClInclude Include="Project\Gameplay\Actors\Enemy.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\Enemy.h" />
     <ClInclude Include="Project\EngineSystems\Json\JsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayType.h" />
@@ -129,8 +129,9 @@
     <ClInclude Include="Project\EngineSystems\Debug\DebugAssistantHeader.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_CheckBox.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Button.h" />
-    <ClInclude Include="Project\Gameplay\Actors\TownPlayer.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -154,15 +155,15 @@
     </ClCompile>
     <ClCompile Include="Project\Gameplay\Actors\GameObjectBase.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\UnitBase.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\ComponentBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\StagePlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\StagePlayer.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\RenderChain.cpp" />
     <ClCompile Include="Project\Framework\pch.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\ExpDust.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\ExpDust.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Collider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\RectCollider.cpp" />
@@ -188,7 +189,7 @@
     <ClCompile Include="Project\EngineSystems\Timer\Timer.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\Enemy.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\Enemy.cpp" />
     <ClCompile Include="Project\EngineSystems\Json\JsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\EnemyDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
@@ -238,7 +239,8 @@
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Text.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_CheckBox.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Button.cpp" />
-    <ClCompile Include="Project\Gameplay\Actors\TownPlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
   </ItemGroup>
 </Project>

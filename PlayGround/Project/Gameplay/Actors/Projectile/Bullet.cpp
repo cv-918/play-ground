@@ -1,6 +1,6 @@
 ﻿#include "framework.h"
 #include "Bullet.h"
-#include "Actors/UnitBase.h"
+#include "Actors/Stage/UnitBase.h"
 #include "Components/SphereCollider.h"
 
 Bullet::Bullet(GameObjectBase* _owner, _float _damage, _float _speed)
