@@ -38,14 +38,12 @@ public:
 
 	Transform* GetTransform() const { return transform_; }
 
-
-
 	// --- 색상 및 알파 설정 함수 ---
 	void SetColor(const _Color& _color) { color_ = _color; }
 	void SetAlpha(_float _alpha) { color_ = _Color(s_ubyte(_alpha * UCHAR_MAX), color_.GetR(), color_.GetG(), color_.GetB()); }
 
-private:
-	void _DrawObjectShape();
+protected:
+	virtual void _DrawObjectShape();
 
 private:
 	// 게임 오브젝트가 갖는 컴포넌트들을 저장하는 컨테이너. 필요에 따라 다양한 타입의 컴포넌트를 추가하여 게임 오브젝트의 기능을 확장할 수 있습니다.

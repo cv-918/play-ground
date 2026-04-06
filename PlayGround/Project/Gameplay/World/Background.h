@@ -13,4 +13,5 @@ public:
 
 private:
 	_Rect nav_mesh_;
+	const SpriteResource* background_sprite_ = nullptr;
 };

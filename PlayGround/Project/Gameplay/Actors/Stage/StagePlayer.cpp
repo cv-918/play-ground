@@ -6,11 +6,6 @@
 
 #include "GamePlaySystems/Json/ParticleDataManager.h"
 
-StagePlayer::~StagePlayer()
-{
-	bool debug = true;
-}
-
 _bool StagePlayer::Initialize()
 {
 	if (!__super::Initialize())

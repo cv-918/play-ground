@@ -40,6 +40,7 @@ public:
 	void Position(const _float _x, const _float _y) { Position(_Vector3{ _x, _y, position_.z }); }
 
 	_Vector3 GetToePosition() const { return position_ + _Vector3(0.f, scale_.y, 0.f); }
+	_Vector2 GetLeftTopPosition() const { return _Vector2(position_.x - scale_.x * 0.5f, position_.y - scale_.x * 0.6f * 0.5f); }
 
 	_Vector3 Rotation() const { return rotation_; }
 	void Rotation(const _Vector3 _pos) { rotation_ = _pos; }
@@ -57,9 +58,4 @@ protected:
 	_Vector3 position_;
 	_Vector3 rotation_;
 	_Vector3 scale_;
-
-	//_bool update_required_;
-	//Vector3 update_position_;
-	//Vector3 update_rotation_;
-	//Vector3 update_scale_;
 };

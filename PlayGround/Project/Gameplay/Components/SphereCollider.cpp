@@ -17,8 +17,9 @@ _int SphereCollider::LateUpdate(_double _delta_time)
 	// 피봇을 하단(발밑)으로 설정: transform 위치가 원의 바닥이 되도록
 	// 원의 중심은 위치에서 반지름만큼 위로 올림
 	_Vector3 pos = transform_->Position();
-	pos.y -= radius_;
-	SetCenter(pos);
+	//pos.y -= radius_;
+	//SetCenter(pos);
+	center_ = _CameraMgr.WorldToScreen(pos);
 	return UPDATE_CONTINUE;
 }
 

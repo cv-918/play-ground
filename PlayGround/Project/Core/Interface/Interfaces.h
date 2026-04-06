@@ -5,7 +5,16 @@
 template <typename T>
 class ISingleton abstract
 {
+protected:
+	ISingleton() = default;
+	virtual ~ISingleton() = default;
+
 public:
+	ISingleton(const ISingleton&) = delete;
+	ISingleton& operator=(const ISingleton&) = delete;
+	ISingleton(ISingleton&&) = delete;
+	ISingleton& operator=(ISingleton&&) = delete;
+
 	static T& Get()
 	{
 		static T instance;
