@@ -39,23 +39,12 @@ void Background::Render(_double _delta_time)
 	if (!background_sprite_ || !background_sprite_->image)
 		return;
 
-	const auto& sprite = *background_sprite_;
-	const auto& visible_bounds = sprite.visible_bounds;
-	const auto dest_rect = Gdiplus::RectF(
-		0,
-		0,
-		GAME_VIEW_WIDTH,
-		GAME_VIEW_HEIGHT
-	);
-
-	g_graphics->DrawImage(
-		background_sprite_->image,
-		dest_rect,
-		0.0f,
-		0.0f,
-		background_sprite_->image_rect.Width,
-		background_sprite_->image_rect.Height,
-		Gdiplus::UnitPixel,
-		nullptr
-	);
+   const auto& sprite = *background_sprite_;
+	const _RectF dest_rect(0.f, 0.f, s_float(GAME_VIEW_WIDTH), s_float(GAME_VIEW_HEIGHT));
+	const _RectF src_rect(
+		sprite.image_rect.X,
+		sprite.image_rect.Y,
+		sprite.image_rect.X + sprite.image_rect.Width,
+		sprite.image_rect.Y + sprite.image_rect.Height);
+	_DrawFunc::DrawTexture(sprite.image, dest_rect, src_rect);
 }

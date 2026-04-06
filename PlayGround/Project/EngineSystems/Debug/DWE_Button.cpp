@@ -40,7 +40,7 @@ _Vector2 DWE_Button::Measure() const
 	const _Vector2 text_size = _DrawFunc::MeasureString(
 		label_,
 		font_size_,
-		Gdiplus::FontStyleRegular);
+     _DrawFunc::FONT_STYLE_REGULAR);
 
 	return _Vector2(
 		text_size.x + horizontal_padding_ * 2.f,
@@ -66,8 +66,8 @@ void DWE_Button::Render(_double _delta_time)
 		label_,
 		text_color_,
 		font_size_,
-		Gdiplus::FontStyleRegular,
-		Gdiplus::StringAlignmentCenter,
-		Gdiplus::StringAlignmentCenter,
+      _DrawFunc::FONT_STYLE_REGULAR,
+		_DrawFunc::STRING_ALIGN_CENTER,
+		_DrawFunc::STRING_ALIGN_CENTER,
 		true);
 }

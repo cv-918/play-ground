@@ -12,8 +12,8 @@ public:
 	void Render(_double _delta_time) override;
 
 private:
-	Gdiplus::Image* scene_image_ = nullptr;
-	Gdiplus::RectF scene_image_rect_;
+ TextureResource* scene_image_ = nullptr;
+	RenderRectF scene_image_rect_;
 
 	_double elapsed_time_ = 0.0; // 씬에 머문 시간 추적
 };

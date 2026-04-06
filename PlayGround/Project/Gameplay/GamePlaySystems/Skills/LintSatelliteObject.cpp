@@ -94,28 +94,26 @@ void LintSatelliteObject::Render(_double _delta_time)
 	// 잔상 먼저 그리기 (선형 보간으로 점점 투명하게)
 	for (const auto& shadow : afterimages_)
 	{
-		const auto shadow_brush = _GraphicSourceMgr.GetBrush(_Color(255 * shadow.alpha, 200, 200, 200));
-		g_graphics->FillEllipse(shadow_brush, shadow.position.x - 10.f, shadow.position.y - 10.f, 20.f, 20.f);
+        const auto color = _Color(s_int(255.f * shadow.alpha), 200, 200, 200);
+		_DrawFunc::FillCircle(_Point(shadow.position.x, shadow.position.y), 10.f, color);
 	}
-
-	// 본체 그리기 (보풀 질감을 위해 외곽선에 변화를 준 Path 추천)
-	auto main_brush = _GraphicSourceMgr.GetBrush(_Color(255, 220, 220, 220));
-	auto fluff_pen = _GraphicSourceMgr.GetPen(_Color(255, 180, 180, 180), 2.f);
 
 	_float radius = transform_->Scale().x * 0.5f;
 	_Vector3 pos = transform_->Position();
 
-	// 단순 원형 본체
-	g_graphics->FillEllipse(main_brush, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+ // 단순 원형 본체
+	_DrawFunc::FillCircle(_Point(pos.x, pos.y), radius, _Color(255, 220, 220, 220));
 
 	// 보풀 느낌을 위한 무작위 외곽선 (간단한 예시)
 	for (int i = 0; i < 8; ++i)
 	{
 		_float angle = _MathFunc::ToRadian(i * 45.f + s_float(current_angle_));
 		_float s_dist = radius * 1.2f;
-		g_graphics->DrawLine(fluff_pen,
-			pos.x + cosf(angle) * (radius * 0.8f), pos.y + sinf(angle) * (radius * 0.8f),
-			pos.x + cosf(angle) * s_dist, pos.y + sinf(angle) * s_dist);
+     _DrawFunc::DrawLine(
+			_Point(pos.x + cosf(angle) * (radius * 0.8f), pos.y + sinf(angle) * (radius * 0.8f)),
+			_Point(pos.x + cosf(angle) * s_dist, pos.y + sinf(angle) * s_dist),
+			_Color(255, 180, 180, 180),
+			2.f);
 	}
 
 	__super::Render(_delta_time);

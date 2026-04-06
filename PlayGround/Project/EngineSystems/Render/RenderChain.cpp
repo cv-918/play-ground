@@ -1,23 +1,16 @@
 ﻿#include "framework.h"
 #include "RenderChain.h"
 
-// GDI+ 관련 생성 오류가 발생하는 파일에서만 매크로를 잠시 끕니다.
-#ifdef _DEBUG
-#undef new
-#endif
-
 HWND g_hwnd		= nullptr;
 HDC g_dc		= nullptr;
 HDC g_back_dc	= nullptr;
-
-Gdiplus::Graphics* g_graphics = nullptr;
 
 _Size g_screen_size = {};
 
 RenderChain::~RenderChain()
 {
-	// GDI+ 종료 (반드시 리소스 해제 전에 호출)
-	Gdiplus::GdiplusShutdown(m_gdiplusToken);
+   CoUninitialize();
+
 	if (g_dc)
 	{
 		ReleaseDC(g_hwnd, g_dc);
@@ -29,9 +22,7 @@ RenderChain::~RenderChain()
 
 _bool RenderChain::Initialize()
 {
-	// GDI+ 초기화
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, nullptr);
+ CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
 	g_dc = GetDC(g_hwnd);
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
@@ -41,25 +32,11 @@ _bool RenderChain::Initialize()
 
 void RenderChain::Clear()
 {
-	// 1) 화면 클리어(단색)
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
-
-	// 2) 이번 프레임에서 공용으로 쓸 Graphics 객체 생성
-	if (!g_graphics)
-	{
-		g_graphics = new Gdiplus::Graphics(g_back_dc);
-
-		// 안티앨리어싱 같은 전역 설정은 여기서 한 번
-		g_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-	}
 }
 
 void RenderChain::Present()
 {
-	// 3) 그리기가 다 끝났으므로 Graphics 객체 삭제 (중요: BitBlt 이전에 삭제 권장)
-	SAFE_DELETE(g_graphics);
-
-	// 4) 최종 화면 출력
 	BitBlt(g_dc, 0, 0, g_screen_size.x, g_screen_size.y, g_back_dc, 0, 0, SRCCOPY);
 }
 

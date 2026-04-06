@@ -51,7 +51,7 @@ _int ParticleService::Update(_double _delta_time)
 		_byte g = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetG(), (_float)p.setting_.endColor.GetG(), ratio, p.setting_.colorEase);
 		_byte b = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetB(), (_float)p.setting_.endColor.GetB(), ratio, p.setting_.colorEase);
 
-		p.currentColor = Gdiplus::Color(a, r, g, b);
+        p.currentColor = _Color(a, r, g, b);
 
 		++it;
 	}
@@ -65,42 +65,22 @@ void ParticleService::Render(_double _delta_time)
 	{
 		auto& p = particle_pool_[idx];
 
-		// 텍스처가 없는 경우: GDI+ 기본 도형으로 최적화 렌더링
+     // 텍스처가 없는 경우: 기본 도형 렌더링
 		if (p.setting_.textureKey.empty())
 		{
-			Gdiplus::SolidBrush brush(p.currentColor);
 			_float r = p.currentScale * 5.0f; // 기본 반지름 기준
-			g_graphics->FillEllipse(&brush,
-				p.position_.x - r, p.position_.y - r, r * 2, r * 2);
+         _DrawFunc::FillCircle(_Point(p.position_.x, p.position_.y), r, p.currentColor);
 		}
 		// 텍스처가 있는 경우: 텍스처 파티클 렌더링
 		else
 		{
-			// GDI+의 ImageAttributes를 사용하여 실시간 색상/알파 변환 적용
-			Gdiplus::ImageAttributes attr;
-			_float a = p.currentColor.GetAlpha() / 255.0f;
-			_float r = p.currentColor.GetR() / 255.0f;
-			_float g = p.currentColor.GetG() / 255.0f;
-			_float b = p.currentColor.GetB() / 255.0f;
-
-			Gdiplus::ColorMatrix matrix = {
-				r,    0.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, g,    0.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, b,    0.0f, 0.0f,
-				0.0f, 0.0f, 0.0f, a,    0.0f,
-				0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-			};
-			attr.SetColorMatrix(&matrix);
-
 			auto tex = _GraphicSourceMgr.GetTexture(p.setting_.textureKey);
 			if (tex)
 			{
-				_float w = tex->GetWidth() * p.currentScale;
-				_float h = tex->GetHeight() * p.currentScale;
-				g_graphics->DrawImage(tex,
-					Gdiplus::RectF(p.position_.x - w / 2, p.position_.y - h / 2, w, h),
-					0, 0, (Gdiplus::REAL)tex->GetWidth(), (Gdiplus::REAL)tex->GetHeight(),
-					Gdiplus::UnitPixel, &attr);
+                _float w = tex->Width() * p.currentScale;
+				_float h = tex->Height() * p.currentScale;
+				const _RectF dest_rect(p.position_.x - w * 0.5f, p.position_.y - h * 0.5f, p.position_.x + w * 0.5f, p.position_.y + h * 0.5f);
+				_DrawFunc::DrawTexture(tex, dest_rect, p.currentColor.GetAlpha());
 			}
 		}
 	}

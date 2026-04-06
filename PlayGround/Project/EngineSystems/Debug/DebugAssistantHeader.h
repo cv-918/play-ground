@@ -17,8 +17,8 @@ struct DweTextData
 	std::wstring text_;
 	_Color color_ = Palette::Black;
 	_float font_size_ = 12.f;
-	_int style_bitmask_ = Gdiplus::FontStyle::FontStyleRegular; // Gdiplus::FontStyle
+	_int style_bitmask_ = 0;
 
-	_int alignment_horizontal_ = Gdiplus::StringAlignment::StringAlignmentNear; // Gdiplus::StringAlignment
-	_int alignment_vertical_ = Gdiplus::StringAlignment::StringAlignmentNear; // Gdiplus::StringAlignment
+	_int alignment_horizontal_ = 0;
+	_int alignment_vertical_ = 0;
 };

@@ -4,7 +4,7 @@
 
 /**
  * 시스템/하드웨어 인터페이스 (렌더링 흐름 제어)
- * GDI+ 초기화/종료, BackBuffer DC 생성, 화면 지우기(Clear) 및 출력(Present), 전역 Graphics 객체 제공
+ * BackBuffer DC 생성, 화면 지우기(Clear) 및 출력(Present) 관리
  */
 class RenderChain
 	: public ISingleton<RenderChain>
@@ -27,7 +27,5 @@ private:
 private:
 	HBITMAP	back_bmp_		= nullptr;
 	HBITMAP	old_back_bmp_	= nullptr;
-
-	ULONG_PTR m_gdiplusToken = 0; // GDI+ 사용권을 증명하는 토큰
 };
 

@@ -148,8 +148,8 @@ void InGameScene::Render(_double _delta_time)
 	// 1. 카메라 오프셋 가져오기
 	_Point offset = _CameraMgr.GetShakeOffset();
 
-	// 2. 그래픽스 변환 적용 (전체 월드 흔들기)
-	g_graphics->TranslateTransform((Gdiplus::REAL)offset.x, (Gdiplus::REAL)offset.y);
+    // 2. 월드 렌더링 오프셋 적용
+	_DrawFunc::SetGlobalOffset(offset);
 
 	// 3. 월드 요소들 렌더링 (배경, 캐릭터, 몬스터 등)
 	// 이 안에서 호출되는 모든 DrawFunctions가 흔들린 좌표에 그려집니다.
@@ -165,8 +165,8 @@ void InGameScene::Render(_double _delta_time)
 
 	_ParticleService.Render(_delta_time);
 
-	// 4. 변환 초기화 (UI는 흔들리면 안 되므로!)
-	g_graphics->ResetTransform();
+  // 4. 오프셋 초기화 (UI는 흔들리면 안 되므로!)
+	_DrawFunc::SetGlobalOffset(_Point::Zero());
 
 	// 5. UI 렌더링 (고정된 위치)
 	ui_manager_->Render(_delta_time);

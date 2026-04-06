@@ -240,23 +240,19 @@ void Enemy::_DrawObjectShape()
 	const auto pivot_x = enemy_sprite_->pivot.X * scale_x;
 	const auto pivot_y = enemy_sprite_->pivot.Y * scale_y;
 
-	const Gdiplus::RectF dest_rect(
+ const _RectF dest_rect(
 		screen_pos.x - pivot_x,
 		screen_pos.y - pivot_y,
-		draw_width,
-		draw_height
-	);
+		screen_pos.x - pivot_x + draw_width,
+		screen_pos.y - pivot_y + draw_height);
 
-	g_graphics->DrawImage(
-		enemy_sprite_->image,
-		dest_rect,
-		0.0f,
-		0.0f,
-		enemy_sprite_->image_rect.Width,
-		enemy_sprite_->image_rect.Height,
-		Gdiplus::UnitPixel,
-		nullptr
-	);
+	const _RectF src_rect(
+		enemy_sprite_->image_rect.X,
+		enemy_sprite_->image_rect.Y,
+		enemy_sprite_->image_rect.X + enemy_sprite_->image_rect.Width,
+		enemy_sprite_->image_rect.Y + enemy_sprite_->image_rect.Height);
+
+	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect);
 }
 
 void Enemy::_AttackPlayer(Collider* _attack_col, Collider* _player_body_collider)
