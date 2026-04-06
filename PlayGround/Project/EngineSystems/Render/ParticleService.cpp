@@ -46,12 +46,12 @@ _int ParticleService::Update(_double _delta_time)
 
 		// 5. 시각적 변화: 색상 및 알파 보간
 		// (실제 구현 시에는 Gdiplus::Color의 ARGB를 각각 Lerp합니다)
-		_byte a = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetAlpha(), (_float)p.setting_.endColor.GetAlpha(), ratio, p.setting_.colorEase);
-		_byte r = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetR(), (_float)p.setting_.endColor.GetR(), ratio, p.setting_.colorEase);
-		_byte g = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetG(), (_float)p.setting_.endColor.GetG(), ratio, p.setting_.colorEase);
-		_byte b = (_byte)_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetB(), (_float)p.setting_.endColor.GetB(), ratio, p.setting_.colorEase);
+        _int a = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetAlpha(), (_float)p.setting_.endColor.GetAlpha(), ratio, p.setting_.colorEase)));
+		_int r = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetR(), (_float)p.setting_.endColor.GetR(), ratio, p.setting_.colorEase)));
+		_int g = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetG(), (_float)p.setting_.endColor.GetG(), ratio, p.setting_.colorEase)));
+		_int b = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetB(), (_float)p.setting_.endColor.GetB(), ratio, p.setting_.colorEase)));
 
-        p.currentColor = _Color(a, r, g, b);
+		p.currentColor = _Color(a, r, g, b);
 
 		++it;
 	}
@@ -65,11 +65,11 @@ void ParticleService::Render(_double _delta_time)
 	{
 		auto& p = particle_pool_[idx];
 
-     // 텍스처가 없는 경우: 기본 도형 렌더링
+		// 텍스처가 없는 경우: 기본 도형 렌더링
 		if (p.setting_.textureKey.empty())
 		{
 			_float r = p.currentScale * 5.0f; // 기본 반지름 기준
-         _DrawFunc::FillCircle(_Point(p.position_.x, p.position_.y), r, p.currentColor);
+			_DrawFunc::FillCircle(_Point(p.position_.x, p.position_.y), r, p.currentColor);
 		}
 		// 텍스처가 있는 경우: 텍스처 파티클 렌더링
 		else
@@ -77,10 +77,10 @@ void ParticleService::Render(_double _delta_time)
 			auto tex = _GraphicSourceMgr.GetTexture(p.setting_.textureKey);
 			if (tex)
 			{
-                _float w = tex->Width() * p.currentScale;
+				_float w = tex->Width() * p.currentScale;
 				_float h = tex->Height() * p.currentScale;
 				const _RectF dest_rect(p.position_.x - w * 0.5f, p.position_.y - h * 0.5f, p.position_.x + w * 0.5f, p.position_.y + h * 0.5f);
-				_DrawFunc::DrawTexture(tex, dest_rect, p.currentColor.GetAlpha());
+				_DrawFunc::DrawTexture(tex, dest_rect, p.currentColor, p.currentColor.GetAlpha());
 			}
 		}
 	}
@@ -99,6 +99,8 @@ void ParticleService::Emit(const ParticleSetting& _setting, const _Vector2& _pos
 		auto& p = particle_pool_[idx];
 		p.setting_ = _setting; // 레시피 복사
 		p.is_active_ = true;
+		p.currentScale = _setting.startScale;
+		p.currentColor = _setting.startColor;
 
 		// 1. 초기 위치 결정 (Shape)
 		p.position_ = _pos;

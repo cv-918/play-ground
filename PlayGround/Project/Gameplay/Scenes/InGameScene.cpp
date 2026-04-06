@@ -137,7 +137,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 	{
 		_ColMgr.Update();
 		_CameraMgr.Update(_delta_time);
-		_ParticleService.LateUpdate(_delta_time);
+       _ParticleService.Update(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;

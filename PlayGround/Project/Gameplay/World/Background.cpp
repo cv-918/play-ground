@@ -1,8 +1,6 @@
 ﻿#include "framework.h"
 #include "Background.h"
 
-_bool render_test = false;
-
 _bool Background::Initialize()
 {
 	if (!__super::Initialize())
@@ -25,17 +23,12 @@ _bool Background::Initialize()
 		return false;
 	}
 
-	_Assist.CheckBox(L"백그라운드", L"렌더 테스트", L"테스트", &render_test);
-
 	Finalize();
     return true;
 }
 
 void Background::Render(_double _delta_time)
 {
-	if (!render_test)
-		return;
-
 	if (!background_sprite_ || !background_sprite_->image)
 		return;
 

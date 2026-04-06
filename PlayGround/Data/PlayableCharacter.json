@@ -2,7 +2,7 @@
 	{
 		"id_": 1,
 		"name_": "더스티",
-		"body_size_": 20.0,
+		"body_size_": 40.0,
 		"attack_speed_": 1.0,
 		"hp_": 10.0,
 		"contact_damage_": 6.0,
