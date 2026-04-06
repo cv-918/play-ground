@@ -9,6 +9,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	attack_speed_,
 	hp_,
 	contact_damage_,
+	image_path_,
 	tier_,
 	role_,
 	exp_reward_,

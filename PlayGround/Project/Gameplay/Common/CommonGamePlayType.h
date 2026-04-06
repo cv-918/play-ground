@@ -126,6 +126,8 @@ struct UnitJsonInfo
 
 	_float hp_ = 0.f;
 	_float contact_damage_ = 0.f;
+
+	std::string image_path_; // 플레이어 캐릭터의 이미지 경로. 필요에 따라 UI에서 캐릭터 이미지를 표시하거나, 게임 오브젝트의 스프라이트 렌더링에 활용할 수 있습니다.
 };
 
 struct EnemyJsonInfo : public UnitJsonInfo

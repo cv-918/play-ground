@@ -83,17 +83,192 @@ Gdiplus::Image* GraphicResourceManager::GetTexture(const std::wstring& _path)
 	if (it != textures_.end())
 		return it->second;
 
-	// 경로에 파일이 있는지 확인 후 로드
-	auto new_img = Gdiplus::Image::FromFile(_path.c_str());
-	if (new_img->GetLastStatus() != Gdiplus::Ok)
+	// Bitmap으로 로드해야 LockBits 기반 픽셀 분석이 가능합니다.
+	auto new_img = Gdiplus::Bitmap::FromFile(_path.c_str(), FALSE);
+	if (!new_img || new_img->GetLastStatus() != Gdiplus::Ok)
 	{
-		// 로드 실패 시 처리 (DebugLog 등)
 		SAFE_DELETE(new_img);
 		return nullptr;
 	}
 
 	textures_[_path] = new_img;
 	return new_img;
+}
+
+const SpriteResource* GraphicResourceManager::GetSprite(
+	const std::wstring& _path,
+	SpritePivotMode _pivot_mode,
+	_byte _alpha_threshold)
+{
+	const auto sprite_key = _BuildSpriteKey(_path, _pivot_mode, _alpha_threshold);
+
+	auto it = sprites_.find(sprite_key);
+	if (it != sprites_.end())
+		return &it->second;
+
+	auto* image = GetTexture(_path);
+	if (!image)
+		return nullptr;
+
+	Gdiplus::Unit unit = Gdiplus::UnitPixel;
+	Gdiplus::RectF rect{};
+	if (image->GetBounds(&rect, &unit) != Gdiplus::Ok)
+		return nullptr;
+
+	auto* bitmap = dynamic_cast<Gdiplus::Bitmap*>(image);
+	if (!bitmap)
+		return nullptr;
+
+	SpriteResource sprite;
+	sprite.image = image;
+	sprite.image_rect = rect;
+	sprite.visible_bounds = _CalculateVisibleBounds(bitmap, _alpha_threshold);
+	sprite.pivot_mode = _pivot_mode;
+	sprite.pivot = _CalculatePivot(sprite.visible_bounds, _pivot_mode);
+
+	const auto result = sprites_.insert({ sprite_key, sprite });
+	return &result.first->second;
+}
+
+void GraphicResourceManager::SetSpriteCustomPivot(const std::wstring& _path, const Gdiplus::PointF& _pivot)
+{
+	const auto sprite_key = _BuildSpriteKey(_path, SpritePivotMode::Custom, 8);
+
+	auto it = sprites_.find(sprite_key);
+	if (it == sprites_.end())
+	{
+		auto* image = GetTexture(_path);
+		if (!image)
+			return;
+
+		Gdiplus::Unit unit = Gdiplus::UnitPixel;
+		Gdiplus::RectF rect{};
+		if (image->GetBounds(&rect, &unit) != Gdiplus::Ok)
+			return;
+
+		auto* bitmap = dynamic_cast<Gdiplus::Bitmap*>(image);
+		if (!bitmap)
+			return;
+
+		SpriteResource sprite;
+		sprite.image = image;
+		sprite.image_rect = rect;
+		sprite.visible_bounds = _CalculateVisibleBounds(bitmap, 8);
+		sprite.pivot_mode = SpritePivotMode::Custom;
+		sprite.pivot = _pivot;
+
+		sprites_.insert({ sprite_key, sprite });
+		return;
+	}
+
+	it->second.pivot_mode = SpritePivotMode::Custom;
+	it->second.pivot = _pivot;
+}
+
+VisibleBounds GraphicResourceManager::_CalculateVisibleBounds(Gdiplus::Bitmap* _bitmap, _byte _alpha_threshold)
+{
+	VisibleBounds bounds{};
+
+	if (!_bitmap)
+		return bounds;
+
+	const auto width = _bitmap->GetWidth();
+	const auto height = _bitmap->GetHeight();
+
+	if (0 == width || 0 == height)
+		return bounds;
+
+	Gdiplus::Rect lock_rect(0, 0, width, height);
+	Gdiplus::BitmapData bitmap_data{};
+
+	const auto lock_result = _bitmap->LockBits(
+		&lock_rect,
+		Gdiplus::ImageLockModeRead,
+		PixelFormat32bppARGB,
+		&bitmap_data
+	);
+
+	if (lock_result != Gdiplus::Ok)
+	{
+		bounds.min_x = 0;
+		bounds.min_y = 0;
+		bounds.max_x = s_int(width) - 1;
+		bounds.max_y = s_int(height) - 1;
+		return bounds;
+	}
+
+	_bool found = false;
+	_int min_x = s_int(width);
+	_int min_y = s_int(height);
+	_int max_x = -1;
+	_int max_y = -1;
+
+	const auto stride = bitmap_data.Stride;
+	auto* scan0 = s_cast(_byte*, bitmap_data.Scan0);
+
+	for (_int y = 0; y < s_int(height); ++y)
+	{
+		auto* row = scan0 + y * stride;
+		for (_int x = 0; x < s_int(width); ++x)
+		{
+			// PixelFormat32bppARGB의 메모리 배치는 일반적으로 BGRA입니다.
+			const auto alpha = row[x * 4 + 3];
+			if (alpha <= _alpha_threshold)
+				continue;
+
+			found = true;
+
+			if (x < min_x) min_x = x;
+			if (y < min_y) min_y = y;
+			if (x > max_x) max_x = x;
+			if (y > max_y) max_y = y;
+		}
+	}
+
+	_bitmap->UnlockBits(&bitmap_data);
+
+	if (!found)
+	{
+		bounds.min_x = 0;
+		bounds.min_y = 0;
+		bounds.max_x = s_int(width) - 1;
+		bounds.max_y = s_int(height) - 1;
+		return bounds;
+	}
+
+	bounds.min_x = min_x;
+	bounds.min_y = min_y;
+	bounds.max_x = max_x;
+	bounds.max_y = max_y;
+
+	return bounds;
+}
+
+Gdiplus::PointF GraphicResourceManager::_CalculatePivot(const VisibleBounds& _visible_bounds, SpritePivotMode _pivot_mode)
+{
+	switch (_pivot_mode)
+	{
+	case SpritePivotMode::Center:
+		return Gdiplus::PointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
+
+	case SpritePivotMode::BottomCenter:
+		return Gdiplus::PointF(_visible_bounds.CenterX(), s_cast(_float, _visible_bounds.max_y));
+
+	case SpritePivotMode::Custom:
+		break;
+	}
+
+	return Gdiplus::PointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
+}
+
+std::wstring GraphicResourceManager::_BuildSpriteKey(
+	const std::wstring& _path,
+	SpritePivotMode _pivot_mode,
+	_byte _alpha_threshold) const
+{
+	return _path +
+		L"#pm=" + std::to_wstring(s_int(_pivot_mode)) +
+		L"#at=" + std::to_wstring(_alpha_threshold);
 }
 
 Gdiplus::TextureBrush* GraphicResourceManager::GetTextureBrush(const std::wstring& _path, Gdiplus::WrapMode _wrap_mode)
@@ -148,10 +323,12 @@ void GraphicResourceManager::Release()
 	for (auto& pair : fonts_) SAFE_DELETE(pair.second);
 	for (auto& pair : textures_) SAFE_DELETE(pair.second);
 	for (auto& pair : tex_brushes_) SAFE_DELETE(pair.second);
+
 	brushes_.clear();
 	pens_.clear();
 	fonts_.clear();
 	textures_.clear();
+	sprites_.clear();
 	tex_brushes_.clear();
 
 	SAFE_DELETE(format_center_);

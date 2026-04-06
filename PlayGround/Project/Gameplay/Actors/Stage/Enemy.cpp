@@ -1,6 +1,35 @@
 ﻿#include "framework.h"
 #include "Enemy.h"
 
+Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
+	: info_(_info), creation_info_(_creation_info)
+{
+	if (!info_->image_path_.empty())
+	{
+		const auto image_path = _UtilFunc::ToWString(info_->image_path_);
+		enemy_sprite_ = _GraphicSourceMgr.GetSprite(
+			image_path,
+			SpritePivotMode::BottomCenter,
+			8);
+
+		if (!enemy_sprite_ || !enemy_sprite_->image)
+		{
+			_NULL_DETECTION_MSGBOX_EX(
+				_T("Failed to load enemy image!(Path : %s)"),
+				image_path.c_str());
+			return;
+		}
+
+		// 필요 시 특정 리소스만 수동 피벗 보정 가능
+		// 예시:
+		// _GraphicSourceMgr.SetSpritePivot(image_path, Gdiplus::PointF(
+		// 	enemy_sprite_->visible_bounds.CenterX(),
+		// 	s_cast(_float, enemy_sprite_->visible_bounds.max_y)
+		// ));
+		// enemy_sprite_ = _GraphicSourceMgr.GetSprite(image_path);
+	}
+}
+
 _bool Enemy::Initialize()
 {
 	if (!__super::Initialize())
@@ -9,7 +38,7 @@ _bool Enemy::Initialize()
 	// 이름 설정
 	static std::map<std::wstring, _uint> enemy_instance_count_map;
 	const auto name_w = _UtilFunc::ToWString(info_->name_);
-	if(enemy_instance_count_map.end() == enemy_instance_count_map.find(name_w))
+	if (enemy_instance_count_map.end() == enemy_instance_count_map.find(name_w))
 	{
 		enemy_instance_count_map.insert({ name_w, 1 });
 	}
@@ -46,14 +75,15 @@ _bool Enemy::Initialize()
 
 	// 콜라이더
 	const auto radius = info_->body_size_;
+	const bool turn_on = true;
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	body_collider->SetRadius(radius);
-	body_collider->SetVisible(false);
+	body_collider->SetVisible(turn_on);
 
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	attack_collider->SetRadius(radius);
-	attack_collider->SetVisible(false);
+	attack_collider->SetVisible(turn_on);
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
 	if (info_->contact_damage_ > 0.f)
@@ -86,7 +116,7 @@ void Enemy::OnDestroy()
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	
+
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
 
@@ -103,7 +133,7 @@ void Enemy::OnDestroy()
 			const auto pos = transform_->Position();
 
 			// 먼지 드랍량 증가는 여기서 추가적으로 구현 가능. 예를 들어, 몬스터의 체력이나 난이도에 비례해서 드랍량을 증가시키는 로직을 추가할 수 있습니다.
-			for(_uint i = 0; i < info_->dust_resource_count_; ++i)
+			for (_uint i = 0; i < info_->dust_resource_count_; ++i)
 			{
 				const auto x = _Random.Range(-1, 1);
 				const auto y = _Random.Range(-1, 1);
@@ -145,7 +175,7 @@ void Enemy::GetDamage(_float _damage)
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 
 	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
-	
+
 	// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
 	const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
 	movement_->ApplyKnockback(hit_dir, 800.f);
@@ -190,11 +220,50 @@ void Enemy::HandleProjectilePattern(_double _delta_time)
 	}
 }
 
+void Enemy::_DrawObjectShape()
+{
+	if (!enemy_sprite_ || !enemy_sprite_->image)
+	{
+		__super::_DrawObjectShape();
+		return;
+	}
+
+	const auto world_pos = transform_->Position();
+	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
+
+	const auto scale_x = transform_->Scale().x / 95.f;
+	const auto scale_y = transform_->Scale().x * 0.6f / 58.f;
+
+	const auto draw_width = enemy_sprite_->image_rect.Width * scale_x;
+	const auto draw_height = enemy_sprite_->image_rect.Height * scale_y;
+
+	const auto pivot_x = enemy_sprite_->pivot.X * scale_x;
+	const auto pivot_y = enemy_sprite_->pivot.Y * scale_y;
+
+	const Gdiplus::RectF dest_rect(
+		screen_pos.x - pivot_x,
+		screen_pos.y - pivot_y,
+		draw_width,
+		draw_height
+	);
+
+	g_graphics->DrawImage(
+		enemy_sprite_->image,
+		dest_rect,
+		0.0f,
+		0.0f,
+		enemy_sprite_->image_rect.Width,
+		enemy_sprite_->image_rect.Height,
+		Gdiplus::UnitPixel,
+		nullptr
+	);
+}
+
 void Enemy::_AttackPlayer(Collider* _attack_col, Collider* _player_body_collider)
 {
 	if (info_->contact_damage_ <= 0.f)
 		return;
-	
+
 	const auto target_player = _player_body_collider->GameObject();
 	target_player->SendMessageToHandlers(
 		HandlerSystemList::Damage,

@@ -15,7 +15,7 @@ _int EllipseCollider::LateUpdate(_double _delta_time)
 	_Vector3 pos = transform_->Position();
 	// 타원의 높이 절반만큼 위로 올려서 중심 잡기 (시각적 일치감)
 	//pos.y -= (radius_x_ * y_ratio_);
-	center_ = pos;
+	center_ = _CameraMgr.WorldToScreen(pos);
 
 	return UPDATE_CONTINUE;
 }

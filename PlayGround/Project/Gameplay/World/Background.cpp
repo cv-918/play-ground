@@ -1,6 +1,8 @@
 ﻿#include "framework.h"
 #include "Background.h"
 
+_bool render_test = false;
+
 _bool Background::Initialize()
 {
 	if (!__super::Initialize())
@@ -15,23 +17,45 @@ _bool Background::Initialize()
 	const auto new_lt = GAME_VIEW_CENTER - _Point(new_size.x >> 1, new_size.y >> 1);
 	nav_mesh_ = _Rect{ new_lt, new_size };
 
+	const std::wstring background_path = Path::World + L"Field-2560x1600.bmp";
+	background_sprite_ = _GraphicSourceMgr.GetSprite(background_path, SpritePivotMode::Center);
+	if (!background_sprite_ || !background_sprite_->image)
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Failed to load background image!(Path : %s)"), background_path.c_str());
+		return false;
+	}
+
+	_Assist.CheckBox(L"백그라운드", L"렌더 테스트", L"테스트", &render_test);
+
 	Finalize();
     return true;
 }
 
 void Background::Render(_double _delta_time)
 {
+	if (!render_test)
+		return;
 
-	/*_DrawFunc::FillRectangle(nav_mesh_, Palette::White);
-	_DrawFunc::DrawRectangle(nav_mesh_, Palette::Black, 2);*/
+	if (!background_sprite_ || !background_sprite_->image)
+		return;
 
-	//// 1. 바닥 텍스처 경로 (예: 64x64 크기의 작은 먼지 이미지)
-	//std::wstring floorTex = Path::World + L"sand.png";
+	const auto& sprite = *background_sprite_;
+	const auto& visible_bounds = sprite.visible_bounds;
+	const auto dest_rect = Gdiplus::RectF(
+		0,
+		0,
+		GAME_VIEW_WIDTH,
+		GAME_VIEW_HEIGHT
+	);
 
-	//// 2. 화면 전체를 타일 모드로 채우기
-	//_DrawFunc::FillRectangle(
-	//	_Rect(0, 0, g_screen_size.x, g_screen_size.y),
-	//	floorTex,
-	//	Gdiplus::WrapModeClamp
-	//);
+	g_graphics->DrawImage(
+		background_sprite_->image,
+		dest_rect,
+		0.0f,
+		0.0f,
+		background_sprite_->image_rect.Width,
+		background_sprite_->image_rect.Height,
+		Gdiplus::UnitPixel,
+		nullptr
+	);
 }

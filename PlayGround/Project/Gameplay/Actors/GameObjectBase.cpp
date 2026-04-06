@@ -97,6 +97,9 @@ void GameObjectBase::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
+	// --- 오브젝트 그리기 ---
+	_DrawObjectShape();
+
 	for (const auto& component : components_)
 	{
 		if (!component->IsVisible())
@@ -104,9 +107,6 @@ void GameObjectBase::Render(_double _delta_time)
 
 		component->Render(_delta_time);
 	}
-
-	// --- 오브젝트 그리기 ---
-	_DrawObjectShape();
 }
 
 void GameObjectBase::DebugRender(_double _delta_time)

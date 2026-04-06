@@ -6,7 +6,6 @@ class StagePlayer final : public UnitBase
 {
 public:
 	explicit StagePlayer(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
-	~StagePlayer() override;
 
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
