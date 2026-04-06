@@ -76,8 +76,8 @@ void CameraManager::Shake(_float _intensity, _float _duration)
 
 _Point CameraManager::WorldToScreen(const _Vector2& _world_position) const
 {
-	const _float screen_x = _world_position.x - camera_position_.x + (_float)camera_offset_.x;
-	const _float screen_y = _world_position.y - camera_position_.y + (_float)camera_offset_.y;
+  const _float screen_x = _world_position.x - camera_position_.x;
+	const _float screen_y = _world_position.y - camera_position_.y;
 
 	return { (_int)screen_x, (_int)screen_y };
 }
@@ -86,8 +86,8 @@ _Vector2 CameraManager::ScreenToWorld(const _Point& _screen_position) const
 {
 	return
 	{
-		(_float)_screen_position.x + camera_position_.x - (_float)camera_offset_.x,
-		(_float)_screen_position.y + camera_position_.y - (_float)camera_offset_.y
+     (_float)_screen_position.x + camera_position_.x,
+		(_float)_screen_position.y + camera_position_.y
 	};
 }
 

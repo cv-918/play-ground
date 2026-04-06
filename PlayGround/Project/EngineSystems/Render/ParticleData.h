@@ -30,8 +30,8 @@ struct ParticleSetting {
     _float endScale = 0.0f;        // 1.0이면 유지, 0.0이면 소멸 시 사라짐
 
     _MathFunc::EaseType colorEase = _MathFunc::EaseType::Linear;
-    Gdiplus::Color startColor = Gdiplus::Color::White;
-    Gdiplus::Color endColor = Gdiplus::Color(0, 255, 255, 255); // 소멸 시 투명(Alpha 0)
+    _Color startColor = _Color(255, 255, 255, 255);
+    _Color endColor = _Color(0, 255, 255, 255); // 소멸 시 투명(Alpha 0)
 
     // [물리 효과]
     _float airResistance = 0.5f;   // 공기 저항 (클수록 빨리 멈춤)
@@ -61,7 +61,7 @@ inline void to_json(nlohmann::json& j, const ParticleSetting& s)
         {"endColor", s.endColor.GetValue()},
         {"airResistance", s.airResistance},
         {"gravityScale", s.gravityScale},
-        {"textureKey", std::string(s.textureKey.begin(), s.textureKey.end())}
+        {"textureKey", _UtilFunc::ToString(s.textureKey)}
     };
 }
 
@@ -94,7 +94,7 @@ inline void from_json(const nlohmann::json& j, ParticleSetting& s)
     j.at("gravityScale").get_to(s.gravityScale);
     std::string textureKeyStr;
     j.at("textureKey").get_to(textureKeyStr);
-    s.textureKey = std::wstring(textureKeyStr.begin(), textureKeyStr.end());
+    s.textureKey = _UtilFunc::ToWString(textureKeyStr);
 }
 
 /** * Particle: 개별 파티클의 실시간 상태
@@ -111,7 +111,7 @@ struct Particle
 
     // --- 고도화를 위해 추가된 멤버 ---
     _float   currentScale = 1.f;     // Easing이 적용된 실시간 크기
-    Gdiplus::Color currentColor;     // Easing이 적용된 실시간 색상
+    _Color currentColor;     // Easing이 적용된 실시간 색상
 
     /** * 이 파티클이 생성될 때 사용한 세팅 정보입니다.
      * Update 시 이 세팅의 Easing 타입과 Resistance 값을 참조합니다.

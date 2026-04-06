@@ -1,6 +1,63 @@
 ﻿#pragma once
+#pragma once
 
 #define _GraphicSourceMgr GraphicResourceManager::Get()
+
+namespace RenderStyle
+{
+	enum FontStyle : _int
+	{
+		Regular = 0,
+		Bold = 1,
+		Italic = 2,
+		Underline = 4,
+		Strikeout = 8,
+	};
+
+	enum StringAlignment : _int
+	{
+		Near = 0,
+		Center = 1,
+		Far = 2,
+	};
+
+	enum WrapMode : _int
+	{
+		Tile = 0,
+	};
+}
+
+struct TextureResource
+{
+	HBITMAP bitmap = nullptr;
+	_int width = 0;
+	_int height = 0;
+	std::vector<_uint> pixels;
+
+	_int Width() const { return width; }
+	_int Height() const { return height; }
+};
+
+struct RenderPointF
+{
+	_float X = 0.f;
+	_float Y = 0.f;
+
+	RenderPointF() = default;
+	RenderPointF(_float _x, _float _y) : X(_x), Y(_y) {}
+};
+
+struct RenderRectF
+{
+	_float X = 0.f;
+	_float Y = 0.f;
+	_float Width = 0.f;
+	_float Height = 0.f;
+
+	RenderRectF() = default;
+	RenderRectF(_float _x, _float _y, _float _w, _float _h)
+		: X(_x), Y(_y), Width(_w), Height(_h) {}
+};
 
 enum class SpritePivotMode
 {
@@ -25,12 +82,26 @@ struct VisibleBounds
 
 struct SpriteResource
 {
-	Gdiplus::Image* image = nullptr;
-	Gdiplus::RectF image_rect{};
+    TextureResource* image = nullptr;
+	RenderRectF image_rect{};
 	VisibleBounds visible_bounds{};
 
 	SpritePivotMode pivot_mode = SpritePivotMode::Center;
-	Gdiplus::PointF pivot = Gdiplus::PointF(0.f, 0.f);
+  RenderPointF pivot = RenderPointF(0.f, 0.f);
+};
+
+struct TextureBrushResource
+{
+	HBRUSH brush = nullptr;
+	RenderStyle::WrapMode wrap_mode = RenderStyle::Tile;
+	std::wstring path;
+};
+
+struct StringFormatResource
+{
+	_int alignment_horizontal = RenderStyle::Near;
+	_int alignment_vertical = RenderStyle::Near;
+	_bool is_no_wrap = true;
 };
 
 class GraphicResourceManager final
@@ -45,45 +116,46 @@ public:
 	virtual ~GraphicResourceManager();
 
 public:
-	// --- GDI+ 기본 리소스 ---
-	Gdiplus::SolidBrush* GetBrush(const _Color _color);
-	Gdiplus::SolidBrush* GetBrush(const _Color _color, _byte _alpha);
-	Gdiplus::Pen* GetPen(const _Color _color, _float _thickness = 1.f);
-	Gdiplus::Pen* GetPen(const _Color _color, _byte _alpha, _float _thickness = 1.f);
+  // --- 기본 도형 리소스 ---
+	HBRUSH GetBrush(const _Color _color);
+	HBRUSH GetBrush(const _Color _color, _byte _alpha);
+	HPEN GetPen(const _Color _color, _float _thickness = 1.f);
+	HPEN GetPen(const _Color _color, _byte _alpha, _float _thickness = 1.f);
 
 	// --- 폰트(Font) 리소스 ---
-	Gdiplus::Font* GetFont(_float _size, _int _style = Gdiplus::FontStyleRegular);
+  HFONT GetFont(_float _size, _int _style = RenderStyle::Regular);
 
 	// --- 텍스처(Image) 리소스 ---
-	Gdiplus::Image* GetTexture(const std::wstring& _path);
+  TextureResource* GetTexture(const std::wstring& _path);
 
 	// --- 스프라이트 리소스 ---
 	const SpriteResource* GetSprite(const std::wstring& _path, SpritePivotMode _pivot_mode = SpritePivotMode::Center, _byte _alpha_threshold = 8);
-	void SetSpriteCustomPivot(const std::wstring& _path, const Gdiplus::PointF& _pivot);
+    void SetSpriteCustomPivot(const std::wstring& _path, const RenderPointF& _pivot);
 
 	// --- 텍스처 브러시 (TextureBrush) ---
-	Gdiplus::TextureBrush* GetTextureBrush(const std::wstring& _path, Gdiplus::WrapMode _wrap_mode = Gdiplus::WrapMode::WrapModeTile);
-	Gdiplus::TextureBrush* GetTextureBrush(_ulonglong _key);
+  TextureBrushResource* GetTextureBrush(const std::wstring& _path, RenderStyle::WrapMode _wrap_mode = RenderStyle::Tile);
+	TextureBrushResource* GetTextureBrush(_ulonglong _key);
 
-	Gdiplus::StringFormat* GetStringFormat(_bool _is_center);
+   const StringFormatResource* GetStringFormat(_bool _is_center);
 
 	void Release();
 
 private:
-	VisibleBounds _CalculateVisibleBounds(Gdiplus::Bitmap* _bitmap, _byte _alpha_threshold);
-	Gdiplus::PointF _CalculatePivot(const VisibleBounds& _visible_bounds, SpritePivotMode _pivot_mode);
+    TextureResource* _LoadTextureFromFile(const std::wstring& _path);
+	VisibleBounds _CalculateVisibleBounds(const TextureResource* _texture, _byte _alpha_threshold);
+	RenderPointF _CalculatePivot(const VisibleBounds& _visible_bounds, SpritePivotMode _pivot_mode);
 	std::wstring _BuildSpriteKey(const std::wstring& _path, SpritePivotMode _pivot_mode, _byte _alpha_threshold) const;
 
 private:
-	std::unordered_map<_uint, Gdiplus::SolidBrush*> brushes_;
-	std::unordered_map<_ulonglong, Gdiplus::Pen*> pens_;
-	std::unordered_map<_ulonglong, Gdiplus::Font*> fonts_;
-	std::unordered_map<std::wstring, Gdiplus::Image*> textures_;
+   std::unordered_map<_uint, HBRUSH> brushes_;
+	std::unordered_map<_ulonglong, HPEN> pens_;
+	std::unordered_map<_ulonglong, HFONT> fonts_;
+	std::unordered_map<std::wstring, TextureResource*> textures_;
 	std::unordered_map<std::wstring, SpriteResource> sprites_;
-	std::unordered_map<_ulonglong, Gdiplus::TextureBrush*> tex_brushes_;
+    std::unordered_map<_ulonglong, TextureBrushResource*> tex_brushes_;
 
-	Gdiplus::StringFormat* format_center_ = nullptr;
-	Gdiplus::StringFormat* format_left_ = nullptr;
+    StringFormatResource format_center_{};
+	StringFormatResource format_left_{};
 };
 
 namespace Palette

@@ -266,23 +266,21 @@ void RunTimeDebugWindow::Render(_double _delta_time)
 		title_,
 		title_color_,
 		12.f,
-		Gdiplus::FontStyleBold,
-		Gdiplus::StringAlignmentNear,
-		Gdiplus::StringAlignmentCenter,
+     _DrawFunc::FONT_STYLE_BOLD,
+		_DrawFunc::STRING_ALIGN_NEAR,
+		_DrawFunc::STRING_ALIGN_CENTER,
 		true);
 
-	// content clip region 적용
-	if (g_graphics != nullptr)
+   // content clip region 적용
+	if (g_back_dc != nullptr)
 	{
-		Gdiplus::GraphicsState graphics_state = g_graphics->Save();
-
-		Gdiplus::RectF clip_rect(
-			static_cast<Gdiplus::REAL>(content_rect.left),
-			static_cast<Gdiplus::REAL>(content_rect.top),
-			static_cast<Gdiplus::REAL>(content_rect.Width()),
-			static_cast<Gdiplus::REAL>(content_rect.Height()));
-
-		g_graphics->SetClip(clip_rect);
+     const auto saved_dc = SaveDC(g_back_dc);
+		IntersectClipRect(
+			g_back_dc,
+			s_int(std::round(content_rect.left)),
+			s_int(std::round(content_rect.top)),
+			s_int(std::round(content_rect.right)),
+			s_int(std::round(content_rect.bottom)));
 
 		for (auto& pair : persistent_elements_)
 		{
@@ -309,7 +307,7 @@ void RunTimeDebugWindow::Render(_double _delta_time)
 			element->Render(_delta_time);
 		}
 
-		g_graphics->Restore(graphics_state);
+        RestoreDC(g_back_dc, saved_dc);
 	}
 	else
 	{

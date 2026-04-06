@@ -1,283 +1,362 @@
 ﻿#include "framework.h"
+#include "framework.h"
 #include "DrawFunctions.h"
-
-// GDI+ 네임스페이스 명시적 사용
-using namespace Gdiplus;
 
 namespace
 {
-	// _RectF를 GDI+ RectF로 변환
-	RectF ToGdiRectF(const _RectF& _rect)
+  _Point g_draw_offset = _Point::Zero();
+
+	_int Ox(_int _x) { return _x + g_draw_offset.x; }
+	_int Oy(_int _y) { return _y + g_draw_offset.y; }
+
+   RECT ToRect(const _Rect& _rect)
 	{
-		return RectF(
-			static_cast<REAL>(_rect.left),
-			static_cast<REAL>(_rect.top),
-			static_cast<REAL>(_rect.Width()),
-			static_cast<REAL>(_rect.Height()));
+       RECT rc{};
+     rc.left = Ox(_rect.Left());
+		rc.top = Oy(_rect.Top());
+		rc.right = Ox(_rect.Right());
+		rc.bottom = Oy(_rect.Bottom());
+		return rc;
 	}
 
-	// 텍스트 정렬/스타일 옵션 생성
-	void SetupStringFormat(
-		StringFormat& _string_format,
+ RECT ToRect(const _RectF& _rect)
+	{
+		RECT rc{};
+      rc.left = Ox(s_int(std::round(_rect.Left())));
+		rc.top = Oy(s_int(std::round(_rect.Top())));
+		rc.right = Ox(s_int(std::round(_rect.Right())));
+		rc.bottom = Oy(s_int(std::round(_rect.Bottom())));
+		return rc;
+	}
+
+	COLORREF ToColorRef(const _Color& _color)
+	{
+		return RGB(_color.GetR(), _color.GetG(), _color.GetB());
+	}
+
+	UINT SetupTextFormat(
 		_int _alignment_horizontal,
 		_int _alignment_vertical,
 		_bool _is_no_wrap)
 	{
-		_string_format.SetAlignment(static_cast<StringAlignment>(_alignment_horizontal));
-		_string_format.SetLineAlignment(static_cast<StringAlignment>(_alignment_vertical));
+       UINT format = 0;
+
+		switch (_alignment_horizontal)
+		{
+		case DrawFunctions::STRING_ALIGN_CENTER:
+			format |= DT_CENTER;
+			break;
+		case DrawFunctions::STRING_ALIGN_FAR:
+			format |= DT_RIGHT;
+			break;
+		case DrawFunctions::STRING_ALIGN_NEAR:
+		default:
+			format |= DT_LEFT;
+			break;
+		}
+
+		switch (_alignment_vertical)
+		{
+		case DrawFunctions::STRING_ALIGN_CENTER:
+			format |= DT_VCENTER;
+			break;
+		case DrawFunctions::STRING_ALIGN_FAR:
+			format |= DT_BOTTOM;
+			break;
+		case DrawFunctions::STRING_ALIGN_NEAR:
+		default:
+			format |= DT_TOP;
+			break;
+		}
 
 		if (_is_no_wrap)
-		{
-			_string_format.SetFormatFlags(StringFormatFlagsNoWrap);
-			_string_format.SetTrimming(StringTrimmingEllipsisCharacter);
-		}
+           format |= DT_SINGLELINE | DT_END_ELLIPSIS;
 		else
-		{
-			_string_format.SetFormatFlags(StringFormatFlagsLineLimit);
-			_string_format.SetTrimming(StringTrimmingWord);
-		}
+           format |= DT_WORDBREAK;
+
+		return format;
 	}
+
+   void DrawTextureInternal(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF* _source_rect, _ubyte _alpha)
+	{
+		if (!g_back_dc || !_texture || !_texture->bitmap)
+			return;
+
+		HDC src_dc = CreateCompatibleDC(g_back_dc);
+		if (!src_dc)
+			return;
+
+		auto old_bitmap = SelectObject(src_dc, _texture->bitmap);
+
+		const auto src_left = _source_rect ? s_int(std::round(_source_rect->Left())) : 0;
+		const auto src_top = _source_rect ? s_int(std::round(_source_rect->Top())) : 0;
+		const auto src_width = _source_rect ? s_int(std::round(_source_rect->Width())) : _texture->Width();
+		const auto src_height = _source_rect ? s_int(std::round(_source_rect->Height())) : _texture->Height();
+
+        const auto dest_left = Ox(s_int(std::round(_dest_rect.Left())));
+		const auto dest_top = Oy(s_int(std::round(_dest_rect.Top())));
+		const auto dest_width = std::max(0, s_int(std::round(_dest_rect.Width())));
+		const auto dest_height = std::max(0, s_int(std::round(_dest_rect.Height())));
+
+		if (0 < dest_width && 0 < dest_height)
+		{
+			BLENDFUNCTION blend{};
+			blend.BlendOp = AC_SRC_OVER;
+			blend.BlendFlags = 0;
+			blend.SourceConstantAlpha = _alpha;
+			blend.AlphaFormat = AC_SRC_ALPHA;
+
+			AlphaBlend(
+				g_back_dc,
+				dest_left,
+				dest_top,
+				dest_width,
+				dest_height,
+				src_dc,
+				src_left,
+				src_top,
+				src_width,
+				src_height,
+				blend);
+		}
+
+		SelectObject(src_dc, old_bitmap);
+		DeleteDC(src_dc);
+	}
+}
+
+void DrawFunctions::SetGlobalOffset(const _Point& _offset)
+{
+	g_draw_offset = _offset;
+}
+
+_Point DrawFunctions::GetGlobalOffset()
+{
+	return g_draw_offset;
 }
 
 void DrawFunctions::DrawLine(const _Point& _start, const _Point& _end, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawLine(pen, static_cast<REAL>(_start.x), static_cast<REAL>(_start.y), static_cast<REAL>(_end.x), static_cast<REAL>(_end.y));
+    auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+	auto old_pen = SelectObject(g_back_dc, pen);
+   MoveToEx(g_back_dc, Ox(_start.x), Oy(_start.y), nullptr);
+	LineTo(g_back_dc, Ox(_end.x), Oy(_end.y));
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::DrawRectangle(const _Rect& _rect, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawRectangle(
-		pen,
-		static_cast<REAL>(_rect.Left()),
-		static_cast<REAL>(_rect.Top()),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+  auto old_pen = SelectObject(g_back_dc, pen);
+	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
+ Rectangle(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::DrawRectangle(const _RectF& _rect, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
+    const auto rect = _rect.ToRect();
 	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawRectangle(
-		pen,
-		static_cast<REAL>(_rect.left),
-		static_cast<REAL>(_rect.top),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+  auto old_pen = SelectObject(g_back_dc, pen);
+	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
+ Rectangle(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	g_graphics->FillRectangle(
-		brush,
-		static_cast<REAL>(_rect.Left()),
-		static_cast<REAL>(_rect.Top()),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+  const auto rc = ToRect(_rect);
+	FillRect(g_back_dc, &rc, brush);
 }
 
 void DrawFunctions::FillRectangle(const _RectF& _rect, const _Color& _color)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	g_graphics->FillRectangle(
-		brush,
-		static_cast<REAL>(_rect.left),
-		static_cast<REAL>(_rect.top),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+  const auto rc = ToRect(_rect);
+	FillRect(g_back_dc, &rc, brush);
 }
 
-void DrawFunctions::FillRectangle(const _Rect& _rect, const std::wstring& _tex_path, Gdiplus::WrapMode _mode)
+void DrawFunctions::FillRectangle(const _Rect& _rect, const std::wstring& _tex_path, RenderStyle::WrapMode _mode)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto tex_brush = _GraphicSourceMgr.GetTextureBrush(_tex_path, _mode);
-	if (nullptr == tex_brush)
+   if (!tex_brush || !tex_brush->brush)
 		return;
 
-	// 브러시의 원점을 사각형 시작점에 맞춰 텍스처가 어긋나지 않도록 처리
-	Gdiplus::Matrix identity_matrix;
-	tex_brush->SetTransform(&identity_matrix);
-	tex_brush->TranslateTransform(static_cast<REAL>(_rect.Left()), static_cast<REAL>(_rect.Top()));
-
-	g_graphics->FillRectangle(
-		tex_brush,
-		static_cast<REAL>(_rect.Left()),
-		static_cast<REAL>(_rect.Top()),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+    const auto rc = ToRect(_rect);
+	FillRect(g_back_dc, &rc, tex_brush->brush);
 }
 
 void DrawFunctions::DrawCircle(const _Point& _center, _float _radius, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
+    const auto radius = std::max(0, s_int(std::round(_radius)));
 	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawEllipse(
-		pen,
-		static_cast<REAL>(_center.x - _radius),
-		static_cast<REAL>(_center.y - _radius),
-		static_cast<REAL>(_radius * 2.f),
-		static_cast<REAL>(_radius * 2.f));
+    auto old_pen = SelectObject(g_back_dc, pen);
+	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
+ Ellipse(g_back_dc, Ox(_center.x - radius), Oy(_center.y - radius), Ox(_center.x + radius), Oy(_center.y + radius));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const _Color& _color)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
+    const auto radius = std::max(0, s_int(std::round(_radius)));
 	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	g_graphics->FillEllipse(
-		brush,
-		static_cast<REAL>(_center.x - _radius),
-		static_cast<REAL>(_center.y - _radius),
-		static_cast<REAL>(_radius * 2.f),
-		static_cast<REAL>(_radius * 2.f));
+    auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
+	auto old_brush = SelectObject(g_back_dc, brush);
+ Ellipse(g_back_dc, Ox(_center.x - radius), Oy(_center.y - radius), Ox(_center.x + radius), Oy(_center.y + radius));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
-void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const std::wstring& _tex_path, Gdiplus::WrapMode _mode)
+void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const std::wstring& _tex_path, RenderStyle::WrapMode _mode)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto tex_brush = _GraphicSourceMgr.GetTextureBrush(_tex_path, _mode);
-	if (nullptr == tex_brush)
+   if (!tex_brush || !tex_brush->brush)
 		return;
 
-	// 원의 시작점에 맞춰 텍스처 좌표 변환
-	Gdiplus::Matrix identity_matrix;
-	tex_brush->SetTransform(&identity_matrix);
-	tex_brush->TranslateTransform(static_cast<REAL>(_center.x - _radius), static_cast<REAL>(_center.y - _radius));
-
-	g_graphics->FillEllipse(
-		tex_brush,
-		static_cast<REAL>(_center.x - _radius),
-		static_cast<REAL>(_center.y - _radius),
-		static_cast<REAL>(_radius * 2.f),
-		static_cast<REAL>(_radius * 2.f));
+ const auto radius = std::max(0, s_int(std::round(_radius)));
+	auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
+	auto old_brush = SelectObject(g_back_dc, tex_brush->brush);
+ Ellipse(g_back_dc, Ox(_center.x - radius), Oy(_center.y - radius), Ox(_center.x + radius), Oy(_center.y + radius));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::DrawEllipse(const _Rect& _rect, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawEllipse(
-		pen,
-		static_cast<REAL>(_rect.Left()),
-		static_cast<REAL>(_rect.Top()),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+    auto old_pen = SelectObject(g_back_dc, pen);
+	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
+   Ellipse(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::DrawEllipse(const _RectF& _rect, const _Color& _color, _float _thickness)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
+    const auto rect = _rect.ToRect();
 	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	g_graphics->DrawEllipse(
-		pen,
-		static_cast<REAL>(_rect.left),
-		static_cast<REAL>(_rect.top),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+    auto old_pen = SelectObject(g_back_dc, pen);
+	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
+   Ellipse(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::FillEllipse(const _Rect& _rect, const _Color& _color)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	g_graphics->FillEllipse(
-		brush,
-		static_cast<REAL>(_rect.Left()),
-		static_cast<REAL>(_rect.Top()),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+    auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
+	auto old_brush = SelectObject(g_back_dc, brush);
+   Ellipse(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::FillEllipse(const _RectF& _rect, const _Color& _color)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
+    const auto rect = _rect.ToRect();
 	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	g_graphics->FillEllipse(
-		brush,
-		static_cast<REAL>(_rect.left),
-		static_cast<REAL>(_rect.top),
-		static_cast<REAL>(_rect.Width()),
-		static_cast<REAL>(_rect.Height()));
+    auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
+	auto old_brush = SelectObject(g_back_dc, brush);
+   Ellipse(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
+	SelectObject(g_back_dc, old_brush);
+	SelectObject(g_back_dc, old_pen);
 }
 
 void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _bool _is_center)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	if (_text.empty())
 		return;
 
-	auto font = _GraphicSourceMgr.GetFont(_font_size, FontStyleBold);
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
+   auto font = _GraphicSourceMgr.GetFont(_font_size, FONT_STYLE_BOLD);
+	auto old_font = SelectObject(g_back_dc, font);
+	SetBkMode(g_back_dc, TRANSPARENT);
+	SetTextColor(g_back_dc, ToColorRef(_color));
 
-	const auto string_format = _GraphicSourceMgr.GetStringFormat(_is_center);
-	g_graphics->DrawString(
-		_text.c_str(),
-		-1,
-		font,
-		PointF(static_cast<REAL>(_pos.x), static_cast<REAL>(_pos.y)),
-		string_format,
-		brush);
+	if (_is_center)
+	{
+		RECT calc_rect{ 0, 0, 0, 0 };
+		DrawTextW(g_back_dc, _text.c_str(), -1, &calc_rect, DT_CALCRECT | DT_SINGLELINE);
+
+		const auto text_width = calc_rect.right - calc_rect.left;
+		const auto text_height = calc_rect.bottom - calc_rect.top;
+		const auto draw_x = Ox(_pos.x) - (text_width / 2);
+		const auto draw_y = Oy(_pos.y) - (text_height / 2);
+
+		TextOutW(g_back_dc, draw_x, draw_y, _text.c_str(), s_int(_text.length()));
+	}
+	else
+	{
+		TextOutW(g_back_dc, Ox(_pos.x), Oy(_pos.y), _text.c_str(), s_int(_text.length()));
+	}
+
+	SelectObject(g_back_dc, old_font);
 }
 
 void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _float _max_width, _bool _is_center)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	if (_text.empty())
 		return;
 
-	auto font = _GraphicSourceMgr.GetFont(_font_size, FontStyleBold);
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
+   auto font = _GraphicSourceMgr.GetFont(_font_size, FONT_STYLE_BOLD);
+	auto old_font = SelectObject(g_back_dc, font);
+	SetBkMode(g_back_dc, TRANSPARENT);
+	SetTextColor(g_back_dc, ToColorRef(_color));
 
-	RectF layout_rect(
-		static_cast<REAL>(_pos.x),
-		static_cast<REAL>(_pos.y),
-		static_cast<REAL>(_max_width),
-		10000.0f);
+ RECT layout_rect{ Ox(_pos.x), Oy(_pos.y), Ox(_pos.x + s_int(_max_width)), Oy(_pos.y + 10000) };
+	UINT format = DT_WORDBREAK | (_is_center ? DT_CENTER : DT_LEFT);
+	DrawTextW(g_back_dc, _text.c_str(), -1, &layout_rect, format);
 
-	StringFormat string_format;
-	string_format.SetFormatFlags(StringFormatFlagsLineLimit);
-	string_format.SetTrimming(StringTrimmingWord);
-
-	if (_is_center)
-		string_format.SetAlignment(StringAlignmentCenter);
-
-	g_graphics->DrawString(_text.c_str(), -1, font, layout_rect, &string_format, brush);
+	SelectObject(g_back_dc, old_font);
 }
 
 void DrawFunctions::DrawString(
@@ -290,44 +369,50 @@ void DrawFunctions::DrawString(
 	_int _alignment_vertical,
 	_bool _is_no_wrap)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return;
 
 	if (_text.empty())
 		return;
 
-	auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
+  auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
+	auto old_font = SelectObject(g_back_dc, font);
+	SetBkMode(g_back_dc, TRANSPARENT);
+	SetTextColor(g_back_dc, ToColorRef(_color));
 
-	StringFormat string_format;
-	SetupStringFormat(string_format, _alignment_horizontal, _alignment_vertical, _is_no_wrap);
+	auto layout_rect = ToRect(_rect);
+	const auto format = SetupTextFormat(_alignment_horizontal, _alignment_vertical, _is_no_wrap);
+	DrawTextW(g_back_dc, _text.c_str(), -1, &layout_rect, format);
 
-	RectF layout_rect = ToGdiRectF(_rect);
-
-	g_graphics->DrawString(_text.c_str(), -1, font, layout_rect, &string_format, brush);
+	SelectObject(g_back_dc, old_font);
 }
 
 _Vector2 DrawFunctions::MeasureString(const std::wstring& _text, _float _font_size, _int _style_bitmask)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return _Vector2(0.f, 0.f);
 
 	if (_text.empty())
 		return _Vector2(0.f, 0.f);
 
-	auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
+  auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
+	auto old_font = SelectObject(g_back_dc, font);
 
-	RectF bound_rect;
-	PointF origin(0.f, 0.f);
+	RECT rc{ 0, 0, 0, 0 };
+	DrawTextW(g_back_dc, _text.c_str(), -1, &rc, DT_CALCRECT | DT_SINGLELINE);
 
-	g_graphics->MeasureString(
-		_text.c_str(),
-		-1,
-		font,
-		origin,
-		&bound_rect);
+	SelectObject(g_back_dc, old_font);
+	return _Vector2(s_float(rc.right - rc.left), s_float(rc.bottom - rc.top));
+}
 
-	return _Vector2(static_cast<_float>(bound_rect.Width), static_cast<_float>(bound_rect.Height));
+void DrawFunctions::DrawTexture(const TextureResource* _texture, const _RectF& _dest_rect, _ubyte _alpha)
+{
+	DrawTextureInternal(_texture, _dest_rect, nullptr, _alpha);
+}
+
+void DrawFunctions::DrawTexture(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, _ubyte _alpha)
+{
+	DrawTextureInternal(_texture, _dest_rect, &_source_rect, _alpha);
 }
 
 _Vector2 DrawFunctions::MeasureString(
@@ -337,31 +422,19 @@ _Vector2 DrawFunctions::MeasureString(
 	_float _max_width,
 	_bool _is_no_wrap)
 {
-	if (nullptr == g_graphics)
+  if (!g_back_dc)
 		return _Vector2(0.f, 0.f);
 
 	if (_text.empty())
 		return _Vector2(0.f, 0.f);
 
-	auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
+  auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
+	auto old_font = SelectObject(g_back_dc, font);
 
-	StringFormat string_format;
-	SetupStringFormat(
-		string_format,
-		Gdiplus::StringAlignmentNear,
-		Gdiplus::StringAlignmentNear,
-		_is_no_wrap);
+	RECT rc{ 0, 0, s_int(_max_width), 10000 };
+	auto format = SetupTextFormat(STRING_ALIGN_NEAR, STRING_ALIGN_NEAR, _is_no_wrap);
+	DrawTextW(g_back_dc, _text.c_str(), -1, &rc, DT_CALCRECT | format);
 
-	RectF layout_rect(0.f, 0.f, static_cast<REAL>(_max_width), 10000.f);
-	RectF bound_rect;
-
-	g_graphics->MeasureString(
-		_text.c_str(),
-		-1,
-		font,
-		layout_rect,
-		&string_format,
-		&bound_rect);
-
-	return _Vector2(static_cast<_float>(bound_rect.Width), static_cast<_float>(bound_rect.Height));
+	SelectObject(g_back_dc, old_font);
+	return _Vector2(s_float(rc.right - rc.left), s_float(rc.bottom - rc.top));
 }

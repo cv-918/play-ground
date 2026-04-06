@@ -11,10 +11,13 @@
 // Windows 헤더 파일
 #include <windows.h>
 
-// GDI+ 헤더 파일
+// Windows Imaging Component / GDI 헤더 파일
 #include <objidl.h>
-#include <gdiplus.h>
-#pragma comment(lib, "Gdiplus.lib")
+#include <wincodec.h>
+#include <wingdi.h>
+#pragma comment(lib, "Ole32.lib")
+#pragma comment(lib, "Windowscodecs.lib")
+#pragma comment(lib, "Msimg32.lib")
 
 // C 런타임 헤더 파일입니다.
 #include <malloc.h>

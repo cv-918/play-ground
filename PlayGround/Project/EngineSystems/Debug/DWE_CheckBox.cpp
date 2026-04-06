@@ -63,7 +63,7 @@ _Vector2 DWE_CheckBox::Measure() const
 	const _Vector2 text_size = _DrawFunc::MeasureString(
 		label_,
 		font_size_,
-		Gdiplus::FontStyleRegular);
+     _DrawFunc::FONT_STYLE_REGULAR);
 
 	const _float width = box_size_ + box_text_spacing_ + text_size.x;
 	const _float height = std::max(box_size_, text_size.y);
@@ -99,8 +99,8 @@ void DWE_CheckBox::Render(_double _delta_time)
 		label_,
 		text_color_,
 		font_size_,
-		Gdiplus::FontStyleRegular,
-		Gdiplus::StringAlignmentNear,
-		Gdiplus::StringAlignmentCenter,
+      _DrawFunc::FONT_STYLE_REGULAR,
+		_DrawFunc::STRING_ALIGN_NEAR,
+		_DrawFunc::STRING_ALIGN_CENTER,
 		true);
 }
