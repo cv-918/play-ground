@@ -1,6 +1,12 @@
 ﻿#include "framework.h"
 #include "Enemy.h"
 
+namespace
+{
+	constexpr _double ENEMY_HIT_FLASH_DURATION = 0.18;
+	constexpr _double ENEMY_HIT_FLASH_BLINK_INTERVAL = 0.045;
+}
+
 Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
 	: info_(_info), creation_info_(_creation_info)
 {
@@ -103,6 +109,9 @@ _int Enemy::Update(_double _delta_time)
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret) return ret;
 
+	if (0.0 < hit_flash_timer_)
+		hit_flash_timer_ = std::max(0.0, hit_flash_timer_ - _delta_time);
+
 	// 투사체 발사 로직
 	if (ProjectilePattern::Undefined != info_->projectile_pattern_)
 		HandleProjectilePattern(_delta_time);
@@ -169,6 +178,7 @@ void Enemy::OnCollisionStay(Collider* _this, Collider* _other)
 void Enemy::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage);
+	hit_flash_timer_ = ENEMY_HIT_FLASH_DURATION;
 
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
@@ -231,8 +241,11 @@ void Enemy::_DrawObjectShape()
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
 
-	const auto scale_x = transform_->Scale().x / 95.f;
-	const auto scale_y = transform_->Scale().x * 0.6f / 58.f;
+	const auto visible_width = enemy_sprite_->visible_bounds.Width() > 0 ? s_float(enemy_sprite_->visible_bounds.Width()) : 1.f;
+	const auto visible_height = enemy_sprite_->visible_bounds.Height() > 0 ? s_float(enemy_sprite_->visible_bounds.Height()) : 1.f;
+
+	const auto scale_x = transform_->Scale().x / visible_width;
+	const auto scale_y = (transform_->Scale().x * 0.6f) / visible_height;
 
 	const auto draw_width = enemy_sprite_->image_rect.Width * scale_x;
 	const auto draw_height = enemy_sprite_->image_rect.Height * scale_y;
@@ -240,7 +253,7 @@ void Enemy::_DrawObjectShape()
 	const auto pivot_x = enemy_sprite_->pivot.X * scale_x;
 	const auto pivot_y = enemy_sprite_->pivot.Y * scale_y;
 
- const _RectF dest_rect(
+	const _RectF dest_rect(
 		screen_pos.x - pivot_x,
 		screen_pos.y - pivot_y,
 		screen_pos.x - pivot_x + draw_width,
@@ -251,6 +264,18 @@ void Enemy::_DrawObjectShape()
 		enemy_sprite_->image_rect.Y,
 		enemy_sprite_->image_rect.X + enemy_sprite_->image_rect.Width,
 		enemy_sprite_->image_rect.Y + enemy_sprite_->image_rect.Height);
+
+	if (0.0 < hit_flash_timer_)
+	{
+		const auto elapsed = ENEMY_HIT_FLASH_DURATION - hit_flash_timer_;
+		const auto blink_index = s_int(elapsed / ENEMY_HIT_FLASH_BLINK_INTERVAL);
+		const auto blink_strength = (0 == (blink_index % 2)) ? 1.0f : 0.35f;
+		const auto fade_out = s_float(hit_flash_timer_ / ENEMY_HIT_FLASH_DURATION);
+		const auto flash = std::clamp(blink_strength * fade_out, 0.0f, 1.0f);
+
+		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, flash);
+		return;
+	}
 
 	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect);
 }
