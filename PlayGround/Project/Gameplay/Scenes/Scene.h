@@ -6,7 +6,7 @@
 #include "GamePlaySystems/UIManager.h"
 
 #include "UI/Widgets/HpBar.h"
-#include "UI/Widgets/DamageFont.h"
+#include "UI/Widgets/FloatingText.h"
 
 // 위젯들이 전부 만들어지면 제거할 포함
 #include "UI/Elements/Button.h"

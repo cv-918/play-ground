@@ -34,6 +34,80 @@ namespace
 		return RGB(_color.GetR(), _color.GetG(), _color.GetB());
 	}
 
+	void FillRectWithColorAlpha(HDC _dest_dc, const RECT& _rc, const _Color& _color)
+	{
+		if (!_dest_dc)
+			return;
+
+		const auto width = _rc.right - _rc.left;
+		const auto height = _rc.bottom - _rc.top;
+		if (width <= 0 || height <= 0)
+			return;
+
+		const auto alpha = _color.GetAlpha();
+		if (alpha == 0)
+			return;
+
+		if (alpha == 255)
+		{
+			const auto brush = _GraphicSourceMgr.GetBrush(_color);
+			FillRect(_dest_dc, &_rc, brush);
+			return;
+		}
+
+		HDC src_dc = CreateCompatibleDC(_dest_dc);
+		if (!src_dc)
+			return;
+
+		BITMAPINFO bmi{};
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmi.bmiHeader.biWidth = 1;
+		bmi.bmiHeader.biHeight = -1;
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		bmi.bmiHeader.biCompression = BI_RGB;
+
+		void* bits = nullptr;
+		HBITMAP src_bitmap = CreateDIBSection(_dest_dc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+		if (!src_bitmap || !bits)
+		{
+			if (src_bitmap)
+				DeleteObject(src_bitmap);
+			DeleteDC(src_dc);
+			return;
+		}
+
+		*reinterpret_cast<_uint*>(bits) =
+			(static_cast<_uint>(_color.GetR()) << 16) |
+			(static_cast<_uint>(_color.GetG()) << 8) |
+			static_cast<_uint>(_color.GetB());
+
+		auto old_bitmap = SelectObject(src_dc, src_bitmap);
+
+		BLENDFUNCTION blend{};
+		blend.BlendOp = AC_SRC_OVER;
+		blend.BlendFlags = 0;
+		blend.SourceConstantAlpha = alpha;
+		blend.AlphaFormat = 0;
+
+		AlphaBlend(
+			_dest_dc,
+			_rc.left,
+			_rc.top,
+			width,
+			height,
+			src_dc,
+			0,
+			0,
+			1,
+			1,
+			blend);
+
+		SelectObject(src_dc, old_bitmap);
+		DeleteObject(src_bitmap);
+		DeleteDC(src_dc);
+	}
+
 	UINT SetupTextFormat(
 		_int _alignment_horizontal,
 		_int _alignment_vertical,
@@ -290,9 +364,8 @@ void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
 	if (!g_back_dc)
 		return;
 
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
 	const auto rc = ToRect(_rect);
-	FillRect(g_back_dc, &rc, brush);
+    FillRectWithColorAlpha(g_back_dc, rc, _color);
 }
 
 void DrawFunctions::FillRectangle(const _RectF& _rect, const _Color& _color)
@@ -300,9 +373,8 @@ void DrawFunctions::FillRectangle(const _RectF& _rect, const _Color& _color)
 	if (!g_back_dc)
 		return;
 
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
 	const auto rc = ToRect(_rect);
-	FillRect(g_back_dc, &rc, brush);
+    FillRectWithColorAlpha(g_back_dc, rc, _color);
 }
 
 void DrawFunctions::FillRectangle(const _Rect& _rect, const std::wstring& _tex_path, RenderStyle::WrapMode _mode)

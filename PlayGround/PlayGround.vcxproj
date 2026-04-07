@@ -206,10 +206,11 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\InGameViewRenderUtils.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
-    <ClInclude Include="Project\Gameplay\UI\Widgets\DamageFont.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\FloatingText.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Core\Base\Bases.h" />
     <ClInclude Include="Project\Core\Base\Defines.h" />
@@ -359,7 +360,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Widgets\DamageFont.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\FloatingText.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />

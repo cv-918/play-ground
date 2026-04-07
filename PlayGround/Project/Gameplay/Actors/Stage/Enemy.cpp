@@ -182,7 +182,7 @@ void Enemy::GetDamage(_float _damage)
 
 	// 데미지 폰트 출력
 	const auto position = transform_->Position();
-	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
+	play_scene_->ShowDamageUI(final_damage, _Vector2{ position.x, position.y });
 
 	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
 

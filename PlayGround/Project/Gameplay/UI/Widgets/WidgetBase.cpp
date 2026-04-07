@@ -81,13 +81,12 @@ void WidgetBase::SetSize(const _Size& _size)
 	{
 		current_size = _Size(1, 1);
 	}
-	else
-	{
-		width_ratio = s_float(_size.x) / current_size.x;
-		height_ratio = s_float(_size.y) / current_size.y;
-	}
+	
+	width_ratio = s_float(_size.x) / current_size.x;
+	height_ratio = s_float(_size.y) / current_size.y;
 
 	// 자신의 크기를 새 크기로 설정
+    const _Point widget_position = GetPosition();
 	__super::SetSize(_size);
 
 	// 포함된 요소들의 위치와 크기를 비율에 맞게 조정
@@ -98,9 +97,15 @@ void WidgetBase::SetSize(const _Size& _size)
 			// 요소의 현재 위치와 크기 가져오기
 			_Point element_pos = element->GetPosition();
 			_Size element_size = element->GetSize();
+			if (element_size == _Size::Zero())
+				element_size = _Size(1, 1); // 크기가 0이 되는 것을 방지하기 위해 최소 크기(1*1)를 설정
 
 			// 요소의 위치와 크기를 비율에 맞게 조정
-			_Point new_pos = { s_int(element_pos.x * width_ratio), s_int(element_pos.y * height_ratio) };
+           const _Point local_pos = element_pos - widget_position;
+			_Point new_pos = {
+				widget_position.x + s_int(local_pos.x * width_ratio),
+				widget_position.y + s_int(local_pos.y * height_ratio)
+			};
 			_Size new_size = { s_int(element_size.x * width_ratio), s_int(element_size.y * height_ratio) };
 			element->SetPosition(new_pos);
 			element->SetSize(new_size);

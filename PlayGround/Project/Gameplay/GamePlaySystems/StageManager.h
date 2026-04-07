@@ -39,7 +39,7 @@ public:
 private:
 	// 각 상태별 로직 처리 메서드 (지금은 그냥 이대로 쓰고 나중에 함수포인터를 두고 상태 전환될 때 함수포인터를 바인딩하는 방식으로 리팩토링)
 	void _OnEnter();
-	void _OnReady();
+	void _OnReady(_double _delta_time);
 	void _OnPlay(_double _delta_time);
 	void _OnPause();
 	void _OnClear();
