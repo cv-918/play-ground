@@ -248,4 +248,7 @@
     <ClCompile Include="Project\Gameplay\UI\Elements\Image.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+  </ItemGroup>
 </Project>

@@ -89,55 +89,25 @@ _int StagePlayer::Update(_double _delta_time)
 	if (ret != UPDATE_CONTINUE)
 		return ret;
 
-	if (input_manager_->Down(VK_CONTROL))
+   // 입력 스펙 기준으로 Skill1/Skill2 액션을 스킬 사용에 연결한다.
+	if (input_manager_->ActionPressed(InputAction::Skill1))
 	{
 		skill_manager_->UseSkill(0, this, transform_->Forward2D());
 		_SYSTEM_LOG_INFO(L"Player used skill 0");
 	}
-	if (input_manager_->Down(VK_MENU))
+  if (input_manager_->ActionPressed(InputAction::Skill2))
 	{
 		skill_manager_->UseSkill(1, this, transform_->Forward2D());
-		_SYSTEM_LOG_INFO(L"Player used skill 0");
+        _SYSTEM_LOG_INFO(L"Player used skill 1");
 	}
 
-	//const auto move_vel = movement_->MoveVelocity();
-	//if (0 < move_vel.Magnitude())
+ // // 공격 액션은 제거되었으므로 디버그 파티클은 Skill1 입력에 맞춰 표시한다.
+	//if (input_manager_->ActionPressed(InputAction::Skill1))
 	//{
-	//	_Vector3 test;
-	//	test.operator _Vector2() = move_vel;
-
-	//	const auto pos = transform_->Position();
-	//	const auto vel = _Vector2{ _Random.Range(-10.f, 10.f), _Random.Range(-5.f, 5.f) };
-
-	//	ParticleSetting setting;
-	//	_ParticleService.Emit(setting, pos, 1);
+	//	const auto mouse_pt = input_manager_->MousePoint();
+	//	const auto data = _ParticleDataMgr.GetDataByIndex(2);
+	//	_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
 	//}
-
-	if (input_manager_->Down(VK_LBUTTON))
-	{
-		const auto mouse_pt = input_manager_->MousePoint();
-		const auto data = _ParticleDataMgr.GetDataByIndex(2);
-		_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
-
-		//ParticleSetting testSetting;
-		//testSetting.shape = EmitterShape::Circle;
-		//testSetting.shapeRadius = 10.f;
-		//testSetting.minLife = 1.0f;
-		//testSetting.maxLife = 2.0f;
-		//testSetting.minSpeed = 100.f;
-		//testSetting.maxSpeed = 300.f;
-		//testSetting.startScale = 1.0f;
-		//testSetting.endScale = 0.0f; // 서서히 사라짐
-		//testSetting.sizeEase = _MathFunc::EaseType::OutQuad;
-		//testSetting.airResistance = 2.0f; // 빠르게 감속하며 멈춤
-
-		//testSetting.startColor = _Color::Red;
-		//testSetting.endColor = _Color::WhiteSmoke;
-
-		//testSetting.textureKey = Path::Particle + L"Flare_White.png"; // 텍스처 키 설정 (예시)
-
-		//_ParticleService.Emit(testSetting, mouse_pt, 10); // 한 번에 10개 생성
-	}
 
 	return UPDATE_CONTINUE;
 }

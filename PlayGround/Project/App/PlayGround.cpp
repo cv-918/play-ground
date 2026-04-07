@@ -27,6 +27,11 @@ _bool PlayGround::Initialize()
 
 	input_manager_ = &_InputMgr;
 
+#ifdef _DEBUG
+	// 개발 빌드에서는 입력 시스템 스모크 테스트를 시작 시점에 1회 수행한다.
+    input_manager_->RunSelfTest();
+#endif
+
 	// --- 게임 데이터 로드 ---
 	if (!_CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
 	{

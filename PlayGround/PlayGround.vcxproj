@@ -375,6 +375,9 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Stage\StagePlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

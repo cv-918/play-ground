@@ -108,6 +108,114 @@ namespace
 		DeleteDC(src_dc);
 	}
 
+	void DrawTextOutWithAlpha(HDC _dest_dc, _int _x, _int _y, const std::wstring& _text, HFONT _font, const _Color& _color)
+	{
+		if (!_dest_dc || _text.empty())
+			return;
+
+		const auto alpha = _color.GetAlpha();
+		if (alpha == 0)
+			return;
+
+		RECT calc_rect{ 0, 0, 0, 0 };
+		DrawTextW(_dest_dc, _text.c_str(), -1, &calc_rect, DT_CALCRECT | DT_SINGLELINE);
+
+		const auto width = calc_rect.right - calc_rect.left;
+		const auto height = calc_rect.bottom - calc_rect.top;
+		if (width <= 0 || height <= 0)
+			return;
+
+		if (alpha == 255)
+		{
+			SetBkMode(_dest_dc, TRANSPARENT);
+			SetTextColor(_dest_dc, ToColorRef(_color));
+			TextOutW(_dest_dc, _x, _y, _text.c_str(), s_int(_text.length()));
+			return;
+		}
+
+		BITMAPINFO bmi{};
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmi.bmiHeader.biWidth = width;
+		bmi.bmiHeader.biHeight = -height;
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		bmi.bmiHeader.biCompression = BI_RGB;
+
+		void* mask_bits_ptr = nullptr;
+		void* dst_bits_ptr = nullptr;
+
+		HDC mask_dc = CreateCompatibleDC(_dest_dc);
+		HDC dst_dc = CreateCompatibleDC(_dest_dc);
+		if (!mask_dc || !dst_dc)
+		{
+			if (mask_dc) DeleteDC(mask_dc);
+			if (dst_dc) DeleteDC(dst_dc);
+			return;
+		}
+
+		HBITMAP mask_bitmap = CreateDIBSection(_dest_dc, &bmi, DIB_RGB_COLORS, &mask_bits_ptr, nullptr, 0);
+		HBITMAP dst_bitmap = CreateDIBSection(_dest_dc, &bmi, DIB_RGB_COLORS, &dst_bits_ptr, nullptr, 0);
+		if (!mask_bitmap || !dst_bitmap || !mask_bits_ptr || !dst_bits_ptr)
+		{
+			if (mask_bitmap) DeleteObject(mask_bitmap);
+			if (dst_bitmap) DeleteObject(dst_bitmap);
+			DeleteDC(mask_dc);
+			DeleteDC(dst_dc);
+			return;
+		}
+
+		auto old_mask_bitmap = SelectObject(mask_dc, mask_bitmap);
+		auto old_dst_bitmap = SelectObject(dst_dc, dst_bitmap);
+		auto old_mask_font = SelectObject(mask_dc, _font);
+
+		PatBlt(mask_dc, 0, 0, width, height, BLACKNESS);
+		BitBlt(dst_dc, 0, 0, width, height, _dest_dc, _x, _y, SRCCOPY);
+
+		SetBkMode(mask_dc, TRANSPARENT);
+		SetTextColor(mask_dc, RGB(255, 255, 255));
+		TextOutW(mask_dc, 0, 0, _text.c_str(), s_int(_text.length()));
+
+		auto* mask_pixels = reinterpret_cast<_uint*>(mask_bits_ptr);
+		auto* dst_pixels = reinterpret_cast<_uint*>(dst_bits_ptr);
+		const auto src_r = static_cast<_uint>(_color.GetR());
+		const auto src_g = static_cast<_uint>(_color.GetG());
+		const auto src_b = static_cast<_uint>(_color.GetB());
+
+		const auto pixel_count = static_cast<size_t>(width) * static_cast<size_t>(height);
+		for (size_t i = 0; i < pixel_count; ++i)
+		{
+			const auto mask = (mask_pixels[i] >> 16) & 0xFFu;
+			if (mask == 0)
+				continue;
+
+			const auto coverage = (mask * static_cast<_uint>(alpha)) / 255u;
+			if (coverage == 0)
+				continue;
+
+			const auto inv = 255u - coverage;
+
+			const auto dst_b = dst_pixels[i] & 0xFFu;
+			const auto dst_g = (dst_pixels[i] >> 8) & 0xFFu;
+			const auto dst_r = (dst_pixels[i] >> 16) & 0xFFu;
+
+			const auto out_b = (dst_b * inv + src_b * coverage) / 255u;
+			const auto out_g = (dst_g * inv + src_g * coverage) / 255u;
+			const auto out_r = (dst_r * inv + src_r * coverage) / 255u;
+
+			dst_pixels[i] = (out_r << 16) | (out_g << 8) | out_b;
+		}
+
+		BitBlt(_dest_dc, _x, _y, width, height, dst_dc, 0, 0, SRCCOPY);
+
+		SelectObject(mask_dc, old_mask_font);
+		SelectObject(mask_dc, old_mask_bitmap);
+		SelectObject(dst_dc, old_dst_bitmap);
+		DeleteObject(mask_bitmap);
+		DeleteObject(dst_bitmap);
+		DeleteDC(mask_dc);
+		DeleteDC(dst_dc);
+	}
+
 	UINT SetupTextFormat(
 		_int _alignment_horizontal,
 		_int _alignment_vertical,
@@ -365,7 +473,7 @@ void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
 		return;
 
 	const auto rc = ToRect(_rect);
-    FillRectWithColorAlpha(g_back_dc, rc, _color);
+	FillRectWithColorAlpha(g_back_dc, rc, _color);
 }
 
 void DrawFunctions::FillRectangle(const _RectF& _rect, const _Color& _color)
@@ -374,7 +482,7 @@ void DrawFunctions::FillRectangle(const _RectF& _rect, const _Color& _color)
 		return;
 
 	const auto rc = ToRect(_rect);
-    FillRectWithColorAlpha(g_back_dc, rc, _color);
+	FillRectWithColorAlpha(g_back_dc, rc, _color);
 }
 
 void DrawFunctions::FillRectangle(const _Rect& _rect, const std::wstring& _tex_path, RenderStyle::WrapMode _mode)
@@ -499,25 +607,16 @@ void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, co
 
 	auto font = _GraphicSourceMgr.GetFont(_font_size, FONT_STYLE_BOLD);
 	auto old_font = SelectObject(g_back_dc, font);
-	SetBkMode(g_back_dc, TRANSPARENT);
-	SetTextColor(g_back_dc, ToColorRef(_color));
 
-	if (_is_center)
-	{
-		RECT calc_rect{ 0, 0, 0, 0 };
-		DrawTextW(g_back_dc, _text.c_str(), -1, &calc_rect, DT_CALCRECT | DT_SINGLELINE);
+	RECT calc_rect{ 0, 0, 0, 0 };
+	DrawTextW(g_back_dc, _text.c_str(), -1, &calc_rect, DT_CALCRECT | DT_SINGLELINE);
 
-		const auto text_width = calc_rect.right - calc_rect.left;
-		const auto text_height = calc_rect.bottom - calc_rect.top;
-		const auto draw_x = Ox(_pos.x) - (text_width / 2);
-		const auto draw_y = Oy(_pos.y) - (text_height / 2);
+	const auto text_width = calc_rect.right - calc_rect.left;
+	const auto text_height = calc_rect.bottom - calc_rect.top;
+	const auto draw_x = _is_center ? (Ox(_pos.x) - (text_width / 2)) : Ox(_pos.x);
+	const auto draw_y = _is_center ? (Oy(_pos.y) - (text_height / 2)) : Oy(_pos.y);
 
-		TextOutW(g_back_dc, draw_x, draw_y, _text.c_str(), s_int(_text.length()));
-	}
-	else
-	{
-		TextOutW(g_back_dc, Ox(_pos.x), Oy(_pos.y), _text.c_str(), s_int(_text.length()));
-	}
+	DrawTextOutWithAlpha(g_back_dc, draw_x, draw_y, _text, font, _color);
 
 	SelectObject(g_back_dc, old_font);
 }
