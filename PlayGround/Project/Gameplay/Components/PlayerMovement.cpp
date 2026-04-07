@@ -133,4 +133,7 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 		// 입력이 없으면 마찰로 감쇠
 		_ApplyFrictionToMoveVelocity(_delta_time);
 	}
+
+	// 마우스 바라보기
+	transform_->LookAt(input_manager_->MousePoint());
 }

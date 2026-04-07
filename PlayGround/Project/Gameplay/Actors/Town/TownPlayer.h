@@ -12,6 +12,7 @@ public:
 public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
+    void SetNavMesh(const _Rect& _rt);
 
 public:
 	void OnEnterInteractable(IInteractable* _target);

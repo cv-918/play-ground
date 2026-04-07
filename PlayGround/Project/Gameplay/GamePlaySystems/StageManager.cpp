@@ -40,7 +40,7 @@ void StageManager::Render(_double _delta_time)
 		_DrawFunc::FillRectangle(*stage_nav_mesh_, Palette::White);
 		_DrawFunc::DrawRectangle(*stage_nav_mesh_, Palette::Black, 1);
 
-		for(const auto & area : generation_area_)
+		for (const auto& area : generation_area_)
 		{
 			_DrawFunc::FillRectangle(area, Palette::LightBlue);
 			_DrawFunc::DrawRectangle(area, Palette::Blue, 1);
@@ -140,7 +140,17 @@ void StageManager::_OnEnter()
 	// 연출 처리 후 Ready 상태로 전환
 
 	// 배경 생성. 배경은 네비메시 정보를 가지고 있기 때문에 가장 먼저 생성
-	const auto background = object_manager_->CreateActor<Background>();
+	Background::CreateInfo background_info;
+	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
+ background_info.nav_mesh_size_ = _Size(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
+	background_info.render_dest_rect_ = _RectF(
+		0.f,
+		0.f,
+		s_float(background_info.nav_mesh_size_.x),
+		s_float(background_info.nav_mesh_size_.y));
+
+	const auto background = object_manager_->CreateActor<Background>(background_info);
 	if (nullptr == background)
 	{
 		_NULL_DETECTION_MSGBOX;
@@ -193,7 +203,7 @@ void StageManager::_OnEnter()
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(player->GetTransform());
 
-	RECT world_bounds = { 0, 0, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT };
+    RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
 	_CameraMgr.SetWorldBounds(world_bounds);
 	_CameraMgr.EnableClamp(true);
 
