@@ -29,6 +29,9 @@ private:
 	void _ApplyEmptyState();
 	void _ApplySkillState(SkillBase* _skill);
 
+	void _TriggerUseFlash();
+	void _UpdateFlash(_double _delta_time);
+
 	std::wstring _FormatCooldownText(_double _cooldown) const;
 
 private:
@@ -39,6 +42,17 @@ private:
 	_bool has_skill_ = false;
 	_bool is_ready_ = false;
 	_float cooldown_overlay_alpha_ = 0.f;
+
+	// 발동 감지용
+	_bool prev_ready_ = false;
+
+	// 아이콘 플래시
+	_float use_flash_strength_ = 0.f;
+	_float use_flash_fade_speed_ = 4.5f;
+
+	// 프레임 플래시
+	_float frame_flash_strength_ = 0.f;
+	_float frame_flash_fade_speed_ = 6.f;
 
 private:
 	Image* icon_ = nullptr;

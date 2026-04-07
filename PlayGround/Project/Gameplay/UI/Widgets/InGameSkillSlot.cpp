@@ -39,6 +39,8 @@ _int InGameSkillSlot::Update(_double _delta_time)
 {
 	__super::Update(_delta_time);
 
+	_UpdateFlash(_delta_time);
+
 	SkillBase* skill = _SkillMgr.GetEquippedSkill(slot_index_);
 	if (nullptr == skill)
 	{
@@ -49,36 +51,6 @@ _int InGameSkillSlot::Update(_double _delta_time)
 	_ApplySkillState(skill);
 	return UPDATE_CONTINUE;
 }
-
-//void InGameSkillSlot::Render(_double _delta_time)
-//{
-//	const _Rect slot_rect = GetRect();
-//
-//	// 배경
-//	_Color bg_color = has_skill_
-//		? _Color(180, 40, 40, 40)
-//		: _Color(180, 25, 25, 25);
-//
-//	_DrawFunc::FillRectangle(slot_rect, bg_color);
-//
-//	// 프레임
-//	_Color frame_color = has_skill_
-//		? Palette::White
-//		: _Color(255, 110, 110, 110);
-//
-//	_DrawFunc::DrawRectangle(slot_rect, frame_color, 2.f);
-//
-//	// 자식 요소 렌더
-//	__super::Render(_delta_time);
-//
-//	// 쿨다운 오버레이
-//	if (cooldown_overlay_alpha_ > 0.f)
-//	{
-//		_Color overlay(255, 0, 0, 0);
-//		overlay.SetAlpha(cooldown_overlay_alpha_);
-//		_DrawFunc::FillRectangle(slot_rect, overlay);
-//	}
-//}
 
 void InGameSkillSlot::Render(_double _delta_time)
 {
@@ -97,6 +69,13 @@ void InGameSkillSlot::Render(_double _delta_time)
 		: _Color(255, 110, 110, 110);
 
 	_DrawFunc::DrawRectangle(slot_rect, frame_color, 2.f);
+
+	if (frame_flash_strength_ > 0.f)
+	{
+		_Color flash_color = Palette::White;
+		flash_color.SetAlpha(frame_flash_strength_);
+		_DrawFunc::DrawRectangle(slot_rect, flash_color, 4.f);
+	}
 
 	// 3. 아이콘
 	if (icon_)
@@ -162,10 +141,14 @@ void InGameSkillSlot::_ApplyEmptyState()
 {
 	has_skill_ = false;
 	is_ready_ = false;
+	prev_ready_ = false;
 	cooldown_overlay_alpha_ = 0.f;
+	use_flash_strength_ = 0.f;
+	frame_flash_strength_ = 0.f;
 
 	icon_->SetTexture(nullptr);
 	icon_->SetAlpha(0.f);
+	icon_->SetWhiteFlash(0.f);
 	icon_->SetTintColor(_Color(255, 120, 120, 120));
 
 	if (show_skill_name_)
@@ -188,6 +171,14 @@ void InGameSkillSlot::_ApplySkillState(SkillBase* _skill)
 
 	has_skill_ = true;
 	is_ready_ = _skill->IsReady();
+
+	// ready -> not ready 전환 시점 = 방금 사용됨
+	if (prev_ready_ && !is_ready_)
+	{
+		_TriggerUseFlash();
+	}
+
+	prev_ready_ = is_ready_;
 
 	if (!info->icon_path_.empty())
 	{
@@ -224,12 +215,55 @@ void InGameSkillSlot::_ApplySkillState(SkillBase* _skill)
 	}
 }
 
+void InGameSkillSlot::_TriggerUseFlash()
+{
+	use_flash_strength_ = 1.f;
+	frame_flash_strength_ = 1.f;
+
+	if (icon_)
+		icon_->SetWhiteFlash(use_flash_strength_);
+}
+
+void InGameSkillSlot::_UpdateFlash(_double _delta_time)
+{
+	if (use_flash_strength_ > 0.f)
+	{
+		use_flash_strength_ -= s_float(_delta_time) * use_flash_fade_speed_;
+		use_flash_strength_ = MathFunctions::Clamp(use_flash_strength_, 0.f, 1.f);
+
+		if (icon_)
+			icon_->SetWhiteFlash(use_flash_strength_);
+	}
+	else
+	{
+		use_flash_strength_ = 0.f;
+
+		if (icon_)
+			icon_->SetWhiteFlash(0.f);
+	}
+
+	if (frame_flash_strength_ > 0.f)
+	{
+		frame_flash_strength_ -= s_float(_delta_time) * frame_flash_fade_speed_;
+		frame_flash_strength_ = MathFunctions::Clamp(frame_flash_strength_, 0.f, 1.f);
+	}
+	else
+	{
+		frame_flash_strength_ = 0.f;
+	}
+}
+
 std::wstring InGameSkillSlot::_FormatCooldownText(_double _cooldown) const
 {
 	if (_cooldown <= 0.0)
 		return L"";
 
 	_tchar buffer[32] = {};
-	swprintf_s(buffer, L"%.1f", s_float(_cooldown));
+
+	if (_cooldown >= 10.0)
+		swprintf_s(buffer, L"%.0f", s_float(_cooldown));
+	else
+		swprintf_s(buffer, L"%.1f", s_float(_cooldown));
+
 	return buffer;
 }
