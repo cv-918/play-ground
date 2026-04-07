@@ -6,7 +6,6 @@ class Text final : public UIBase
 public:
 	explicit Text() : color_(Palette::Black), font_size_(12.f), is_center_(true) {}
 
-private:
 	void Render(_double _delta_time) override;
 
 public:
@@ -16,10 +15,12 @@ public:
 
 	void SetAlpha(_float _alpha) { color_.SetAlpha(_alpha); }
 
+	void SetCenterAligned(_bool _is_center) { is_center_ = _is_center; }
+	_bool IsCenterAligned() const { return is_center_; }
+
 private:
 	std::wstring text_;
 	_Color color_ = Palette::Black;
 	_float font_size_ = 12.f;
-	_bool is_center_ = true; // 텍스트가 중앙 정렬되어 있는지 여부를 나타내는 플래그. 필요에 따라 텍스트의 정렬 방식을 결정할 때 활용할 수 있습니다.
+	_bool is_center_ = true;
 };
-

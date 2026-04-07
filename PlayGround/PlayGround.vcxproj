@@ -202,6 +202,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillObjectBase.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\Image.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
@@ -256,6 +257,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\UI\Elements\Text.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameAttributeView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameMainView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\WidgetBase.h" />
     <ClInclude Include="Project\Gameplay\World\Background.h" />
     <ClInclude Include="Project\Gameplay\World\NavMesh.h" />
@@ -346,6 +348,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Scenes\Scene.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\Image.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
@@ -360,6 +363,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />
     <ClCompile Include="Project\Gameplay\World\NavMesh.cpp" />

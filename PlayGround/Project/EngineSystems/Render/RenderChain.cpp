@@ -1,15 +1,15 @@
 ﻿#include "framework.h"
 #include "RenderChain.h"
 
-HWND g_hwnd		= nullptr;
-HDC g_dc		= nullptr;
-HDC g_back_dc	= nullptr;
+HWND g_hwnd = nullptr;
+HDC g_dc = nullptr;
+HDC g_back_dc = nullptr;
 
 _Size g_screen_size = {};
 
 RenderChain::~RenderChain()
 {
-   CoUninitialize();
+	CoUninitialize();
 
 	if (g_dc)
 	{
@@ -22,12 +22,12 @@ RenderChain::~RenderChain()
 
 _bool RenderChain::Initialize()
 {
- CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
 	g_dc = GetDC(g_hwnd);
 	_CreateBackBuffer(WINCX, WINCY); // 이미지 IO 없이 백버퍼 생성
 
-    return true;
+	return true;
 }
 
 void RenderChain::Clear()
@@ -55,7 +55,7 @@ _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 	// (선택) 초기 클리어
 	PatBlt(g_back_dc, 0, 0, g_screen_size.x, g_screen_size.y, BLACKNESS);
 
-    return true;
+	return true;
 }
 
 _bool RenderChain::_DestroyBackBuffer()

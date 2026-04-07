@@ -19,6 +19,9 @@ public:
 	_bool IsReady() const { return curr_cool_timer_ <= 0.0; }
 	_float GetCooldownRatio() const { return info_->cooldown_ > 0.0 ? s_float(curr_cool_timer_ / info_->cooldown_) : 0.f; }
 
+	_double GetCurrentCooldown() const { return curr_cool_timer_; }
+	_double GetMaxCooldown() const { return info_ ? info_->cooldown_ : 0.0; }
+
 	// 실행 성공 시 true 반환 (쿨타임 리셋용)
 	virtual _bool Execute(GameObjectBase* _owner, const _Vector3& _direction) PURE;
 

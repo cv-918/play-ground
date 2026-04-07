@@ -32,6 +32,7 @@ private:
 	SkillBase* _CreateSkillInstance(_uint _id); // 여기서 ID에 따라 new Skill_A() 등을 반환
 
 private:
-	SkillBase* equipped_skills_[2] = { nullptr, nullptr };
+	static constexpr _uint kMaxEquippedSkillCount = 2;
+	SkillBase* equipped_skills_[kMaxEquippedSkillCount] = { nullptr, nullptr };
 };
 

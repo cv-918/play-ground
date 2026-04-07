@@ -132,6 +132,8 @@
     <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
+    <ClInclude Include="Project\Gameplay\UI\Elements\Image.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -242,5 +244,7 @@
     <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Elements\Image.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.cpp" />
   </ItemGroup>
 </Project>
