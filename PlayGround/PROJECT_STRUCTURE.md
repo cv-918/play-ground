@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-07 14:26)
+﻿# Project Structure (Updated: 2026-04-07 16:57)
 
 ```text
 Root
@@ -190,6 +190,7 @@ Root
 |   |   |   |   |   InGamePlayView.h
 |   |   |   |   |   InGameResultView.cpp
 |   |   |   |   |   InGameResultView.h
+|   |   |   |   |   InGameViewRenderUtils.h
 |   |   |   |   |   OutGameAttributeView.cpp
 |   |   |   |   |   OutGameAttributeView.h
 |   |   |   |   |   OutGameMainView.cpp
@@ -201,8 +202,8 @@ Root
 |   |   |   |   |   AttributeNodeToolTip.h
 |   |   |   |   |   AttributeNodeTree.cpp
 |   |   |   |   |   AttributeNodeTree.h
-|   |   |   |   |   DamageFont.cpp
-|   |   |   |   |   DamageFont.h
+|   |   |   |   |   FloatingText.cpp
+|   |   |   |   |   FloatingText.h
 |   |   |   |   |   HpBar.cpp
 |   |   |   |   |   HpBar.h
 |   |   |   |   |   InGameSkillSlot.cpp

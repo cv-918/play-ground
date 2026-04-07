@@ -46,45 +46,19 @@ _int InGameScene::Update(_double _delta_time)
 		return UPDATE_CONTINUE;
 	}
 
-	// 스테이지 매니저 업데이트
 	stage_manager_->Update(_delta_time);
 
-	// 스테이지 상태에 따라 업데이트 여부 결정. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트.
-	// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
-	_bool on_pause_state = false;
-	_bool on_play_state = false;
-	switch (stage_manager_->GetCurrState())
-	{
-	case StageState::Play:
-		on_play_state = true;
-		break;
-
-	case StageState::Pause:
-	case StageState::Clear:
-	case StageState::Result:
-		on_pause_state = true;
-		break;
-	}
-
-	// 일시정지나 결과 화면, 또는 시스템 퍼즈 상태일 때에는 돌아가기 버튼만 업데이트
-	// 추후에 PauseView, ResultView로 편입시켜서 해당 뷰의 업데이트 메서드를 호출하는 방식으로 변경
-	if (on_pause_state || _GameState.GetPause())
-	{
-		// 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트
-		if (current_view_)
-			current_view_->Update(_delta_time);
-	}
-	// 그 외의 상태에서는 게임 오브젝트와 UI를 모두 업데이트
-	else
+	if (/*update_objects_ && */!_GameState.GetPause())
 	{
 		object_manager_->Update(_delta_time);
 		ui_manager_->Update(_delta_time);
-	}
 
-	if (on_play_state)
-	{
 		_SkillMgr.Update(_delta_time);
 		_ParticleService.Update(_delta_time);
+	}
+	else if (current_view_)
+	{
+		current_view_->Update(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;
@@ -92,52 +66,22 @@ _int InGameScene::Update(_double _delta_time)
 
 _int InGameScene::LateUpdate(_double _delta_time)
 {
-	// 스테이지 상태에 따라 업데이트 여부 결정. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트.
-	// 오브젝트 업데이트와 UI 업데이트를 분리하기 위해서 __super::Update() 를 호출하지 않고, 각각의 매니저 업데이트를 직접 호출
-	_bool on_pause_state = false;
-	_bool on_play_state = false;
-	switch (stage_manager_->GetCurrState())
+	stage_manager_->LateUpdate(_delta_time);
+
+	if (/*update_objects_ && */!_GameState.GetPause())
 	{
-	case StageState::Play:
-		on_play_state = true;
-		break;
-
-	case StageState::Pause:
-	case StageState::Clear:
-	case StageState::Result:
-		on_pause_state = true;
-		break;
-	}
-
-	// 일시정지나 결과 화면, 또는 시스템 퍼즈 상태일 때에는 돌아가기 버튼만 업데이트
-	// 추후에 PauseView, ResultView로 편입시켜서 해당 뷰의 업데이트 메서드를 호출하는 방식으로 변경
-	if (on_pause_state || _GameState.GetPause())
-	{
-		// 스테이지 매니저 업데이트
-		stage_manager_->LateUpdate(_delta_time);
-
-		// 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트
-		if (current_view_)
-			current_view_->LateUpdate(_delta_time);
-	}
-	// 그 외의 상태에서는 게임 오브젝트와 UI를 모두 업데이트
-	else
-	{
-		// 스테이지 매니저 업데이트
-		stage_manager_->LateUpdate(_delta_time);
-
 		object_manager_->LateUpdate(_delta_time);
 		ui_manager_->LateUpdate(_delta_time);
-	}
 
-	CleanUp();
+		CleanUp();
 
-	// 이거 Collider의 위치 갱신 로직이 LateUpdate에 있어서 일단 여기서 돌려야 한다
-	if (on_play_state)
-	{
 		_ColMgr.Update();
 		_CameraMgr.Update(_delta_time);
-       _ParticleService.Update(_delta_time);
+		_ParticleService.Update(_delta_time);
+	}
+	else if (current_view_)
+	{
+		current_view_->LateUpdate(_delta_time);
 	}
 
 	return UPDATE_CONTINUE;
@@ -190,7 +134,8 @@ void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _positio
 
 void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
-	const auto damage_font = ui_manager_->CreateUI<DamageFont>(_damage, _position);
+	FloatingTextCreationData data(_damage, _position);
+	const auto damage_font = ui_manager_->CreateUI<FloatingText>(data);
 }
 
 void InGameScene::ChangeView(InGameViewState _new_view_state)

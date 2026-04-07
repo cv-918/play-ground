@@ -33,6 +33,8 @@ public:
 	// 뷰 전환 메소드
 	void ChangeView(InGameViewState _new_view_state);
 
+	void SetUpdateObjects(_bool _update) { update_objects_ = _update; }
+
 private:
 	WidgetBase* _CreateView();
 
@@ -43,4 +45,6 @@ private:
 	InGameViewState view_state_ = InGameViewState::Undefined;
 	std::map<InGameViewState, WidgetBase*> view_map_;
 	WidgetBase* current_view_ = nullptr;
+
+	_bool update_objects_ = false; // 스테이지 상태에 따라 게임 오브젝트 업데이트 여부를 결정하는 플래그. 예를 들어, 일시정지나 결과 화면에서는 게임 오브젝트 업데이트를 멈추고 UI만 업데이트하도록 활용할 수 있습니다.
 };

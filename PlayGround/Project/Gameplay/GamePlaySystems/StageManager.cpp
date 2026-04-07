@@ -21,7 +21,7 @@ _int StageManager::Update(_double _delta_time)
 	switch (curr_state_)
 	{
 	case StageState::Enter:		_OnEnter();					break;
-	case StageState::Ready:		_OnReady();					break;
+	case StageState::Ready:		_OnReady(_delta_time);		break;
 	case StageState::Play:		_OnPlay(_delta_time);		break;
 	case StageState::Pause:		_OnPause();					break;
 	case StageState::Clear:		_OnClear();					break;
@@ -56,6 +56,19 @@ void StageManager::ChangeState(StageState _new_state)
 
 	switch (curr_state_)
 	{
+	case StageState::Ready:
+	{
+		FloatingTextCreationData data;
+		data.text_ = std::wstring(_T("= Stage ")) + std::to_wstring(_UserProfile.GetStageProgress() + 1) + _T(" =");
+		data.pos_ = GAME_VIEW_CENTER;
+		data.life_time_ = 3.0;
+		data.font_size_ = 80.f;
+		data.color_ = Palette::White;
+
+		ui_manager_->CreateUI<FloatingText>(data);
+	}
+	break;
+
 	case StageState::Pause:
 		play_scene_->ChangeView(InGameViewState::Pause);
 		break;
@@ -68,6 +81,9 @@ void StageManager::ChangeState(StageState _new_state)
 		play_scene_->ChangeView(InGameViewState::InGame);
 		break;
 	}
+
+	const auto is_play_state = (curr_state_ == StageState::Play);
+	_GameState.SetPause(!is_play_state);
 }
 
 void StageManager::ProgressRunSessionResult()
@@ -183,16 +199,24 @@ void StageManager::_OnEnter()
 
 	// 게임 상태 초기화
 	_RunState.Ready();
-	_GameState.SetPause(false);
 	ChangeState(StageState::Ready);
 }
 
-void StageManager::_OnReady()
+void StageManager::_OnReady(_double _delta_time)
 {
 	// 준비 로직 처리
 	// Enter 상태에서 처리하지 못한	연출이 있다면 여기서 처리
 	// 준비가 완료되면 Play 상태로 전환
-	ChangeState(StageState::Play);
+
+	if (stage_elapsed_time_ >= 0.0)
+	{
+		stage_elapsed_time_ = 0.0;
+		//play_scene_->SetUpdateObjects(true);
+		ChangeState(StageState::Play);
+		return;
+	}
+
+	stage_elapsed_time_ += _delta_time;
 }
 
 void StageManager::_OnPlay(_double _delta_time)

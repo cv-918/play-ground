@@ -11,7 +11,7 @@ namespace
 
 	COLORREF ToColorRef(const _Color& _color)
 	{
-		return RGB(_color.GetR(), _color.GetG(), _color.GetB());
+       return RGB(_color.GetR(), _color.GetG(), _color.GetB());
 	}
 
 	_int ToFontWeight(_int _style)

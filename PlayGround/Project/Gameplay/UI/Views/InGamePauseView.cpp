@@ -1,5 +1,6 @@
 ﻿#include "framework.h"
 #include "InGamePauseView.h"
+#include "InGameViewRenderUtils.h"
 
 #include "../Elements/Button.h"
 
@@ -26,9 +27,7 @@ InGamePauseView::InGamePauseView(const std::function<void()>& _resume_btn_callba
 
 void InGamePauseView::Render(_double _delta_time)
 {
-	// 반투명한 검은색 배경으로 일시정지 화면을 덮음
-	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
-	_DrawFunc::FillRectangle(rt, _Color(128, 0, 0, 0)); // RGBA(0, 0, 0, 128) = 반투명한 검은색
+    InGameViewRenderUtils::DrawDimmedBackground();
 	
 	__super::Render(_delta_time);
 

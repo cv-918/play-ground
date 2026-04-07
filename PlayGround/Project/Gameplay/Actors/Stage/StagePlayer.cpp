@@ -225,14 +225,9 @@ void StagePlayer::OnDestroy()
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
 	_ColMgr.DeregisterCollider(CollisionLayer::PlayerCollector, collector_col_);
 
-	// 스테이지	매니저에 플레이어가 죽었다는 메시지 보내기
 	if (status_->IsDead())
 	{
-		// 플레이어가 죽으면 게임 전체 일시정지
-		_GameState.SetPause(true);
 		_RunState.MarkAsPlayerDied();
-
-		// 결과 화면으로 전환
 		_StageMgr.ChangeState(StageState::Result);
 	}
 }
