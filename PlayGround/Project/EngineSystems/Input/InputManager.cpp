@@ -1,35 +1,64 @@
+ï»¿#include "framework.h"
 #include "framework.h"
 #include "InputManager.h"
 
 #include <windowsx.h>
 
+namespace
+{
+	inline _uint ToActionIndex(InputAction _action)
+	{
+		return s_cast(_uint, _action);
+	}
+
+	// MouseOnly ì´ë™ ê³„ì‚° íŒŒë¼ë¯¸í„°(í”½ì…€ ë‹¨ìœ„)
+	constexpr _float MOUSE_MOVE_DEAD_ZONE = 6.f;
+	constexpr _float MOUSE_MOVE_MAX_DISTANCE = 180.f;
+
+	void ReportInputSelfTest(_bool _passed, const char* _name)
+	{
+		char buffer[256] = {};
+		sprintf_s(buffer, "[InputSelfTest] %s : %s\n", _name, _passed ? "PASS" : "FAIL");
+		OutputDebugStringA(buffer);
+	}
+
+	_bool ExpectInputSelfTest(_bool _condition, const char* _name)
+	{
+		ReportInputSelfTest(_condition, _name);
+		return _condition;
+	}
+}
+
 void InputManager::BeginFrame()
 {
-	// ÇÁ·¹ÀÓ Æ®¸®°Å(´­¸²/¶À) ÃÊ±âÈ­
+	// í”„ë ˆì„ íŠ¸ë¦¬ê±°(ëˆŒë¦¼/ë—Œ) ì´ˆê¸°í™”
 	for (auto& k : keys_)
 	{
 		k.went_down = false;
 		k.went_up = false;
 	}
 
-	// ÀÌ¹ø ÇÁ·¹ÀÓ ¹®ÀÚ ÀÔ·Â ¹öÆÛ ÃÊ±âÈ­
+	// ì´ë²ˆ í”„ë ˆì„ ë¬¸ì ì…ë ¥ ë²„í¼ ì´ˆê¸°í™”
 	chars_.clear();
 
 	wheel_delta_ = 0;
 	mouse_delta_.x = 0;
 	mouse_delta_.y = 0;
 	prev_mouse_ = mouse_;
+
+	// í”„ë ˆì„ ì‹œì‘ ì‹œì  ê¸°ì¤€ ì•¡ì…˜ ìƒíƒœë¥¼ ë¨¼ì € ë™ê¸°í™”í•œë‹¤.
+	RebuildActionStates();
 }
 
 void InputManager::ResetAll()
 {
-	// ¸ğµç Å° »óÅÂ ÃÊ±âÈ­(´­¸² °íÁ¤ ¹æÁö)
+	// ëª¨ë“  í‚¤ ìƒíƒœ ì´ˆê¸°í™”(ëˆŒë¦¼ ê³ ì • ë°©ì§€)
 	std::fill(keys_.begin(), keys_.end(), KeyState{});
 
-	// ´­¸° Å° Ä«¿îÆ®µµ ÃÊ±âÈ­
+	// ëˆŒë¦° í‚¤ ì¹´ìš´íŠ¸ë„ ì´ˆê¸°í™”
 	pressed_key_count_ = IV_ZERO;
 
-	// ¹®ÀÚ ÀÔ·Â ¹öÆÛµµ ÃÊ±âÈ­
+	// ë¬¸ì ì…ë ¥ ë²„í¼ë„ ì´ˆê¸°í™”
 	chars_.clear();
 }
 
@@ -38,16 +67,19 @@ void InputManager::OnMouseMove(WPARAM _wparam, LPARAM _lparam)
 	mouse_.x = GET_X_LPARAM(_lparam);
 	mouse_.y = GET_Y_LPARAM(_lparam);
 
-	// ÇÁ·¹ÀÓ ³» ´©Àû µ¨Å¸(¿òÁ÷ÀÓÀÌ ¿©·¯ ¹ø ¿À¸é ´©ÀûµÊ)
+	// í”„ë ˆì„ ë‚´ ëˆ„ì  ë¸íƒ€(ì›€ì§ì„ì´ ì—¬ëŸ¬ ë²ˆ ì˜¤ë©´ ëˆ„ì ë¨)
 	mouse_delta_.x += (mouse_.x - prev_mouse_.x);
 	mouse_delta_.y += (mouse_.y - prev_mouse_.y);
+
+	// ë§ˆìš°ìŠ¤ ì´ë™ì´ ë“¤ì–´ì˜¤ë©´ ì¦‰ì‹œ ì•¡ì…˜ ìƒíƒœë¥¼ ì¬ê³„ì‚°í•œë‹¤.
+	RebuildActionStates();
 
 	(void)_wparam;
 }
 
 void InputManager::OnMouseWheel(WPARAM _wparam, LPARAM _lparam)
 {
-	// º¸Åë ¡¾120 ´ÜÀ§·Î µé¾î¿È(ÈÙ ÇÑ Ä­)
+	// ë³´í†µ Â±120 ë‹¨ìœ„ë¡œ ë“¤ì–´ì˜´(íœ  í•œ ì¹¸)
 	wheel_delta_ += GET_WHEEL_DELTA_WPARAM(_wparam);
 
 	(void)_lparam;
@@ -67,23 +99,24 @@ void InputManager::OnKeyDown(WPARAM _vk, LPARAM _lparam)
 {
 	if (_vk > UCHAR_MAX) return;
 
-	// lParam bit 30: ÀÌÀü Å° »óÅÂ(1ÀÌ¸é ÀÌÀü¿¡µµ ´­·ÁÀÖ´ø »óÅÂ -> ÀÚµ¿ ¹İº¹ Æ÷ÇÔ)
+	// lParam bit 30: ì´ì „ í‚¤ ìƒíƒœ(1ì´ë©´ ì´ì „ì—ë„ ëˆŒë ¤ìˆë˜ ìƒíƒœ -> ìë™ ë°˜ë³µ í¬í•¨)
 	const bool was_down = (_lparam & (1LL << 30)) != 0;
 
 	auto& k = keys_[s_cast(uint8_t, _vk)];
 
-	// ¹°¸®ÀûÀ¸·Î "Ã³À½ ´­¸²"¸¸ Down Æ®¸®°Å·Î Ã³¸®
+	// ë¬¼ë¦¬ì ìœ¼ë¡œ "ì²˜ìŒ ëˆŒë¦¼"ë§Œ Down íŠ¸ë¦¬ê±°ë¡œ ì²˜ë¦¬
 	if (!k.is_down)
 	{
 		k.is_down = true;
 		k.went_down = true;
 
 		++pressed_key_count_;
+     RebuildActionStates();
 		return;
 	}
 
-	// ÀÌ¹Ì ´­¸° »óÅÂ¿¡¼­ µé¾î¿À´Â ¹İº¹ ÀÔ·ÂÀº º¸Åë ¹«½ÃÇÑ´Ù.
-	// ÅØ½ºÆ® ÀÔ·ÂÀº WM_CHAR°¡ ´ã´çÇÏ¹Ç·Î, ÇÊ¿äÇÏ¸é was_down °ªÀ» ÀÌ¿ëÇØ º°µµ Ã³¸® °¡´É.
+	// ì´ë¯¸ ëˆŒë¦° ìƒíƒœì—ì„œ ë“¤ì–´ì˜¤ëŠ” ë°˜ë³µ ì…ë ¥ì€ ë³´í†µ ë¬´ì‹œí•œë‹¤.
+	// í…ìŠ¤íŠ¸ ì…ë ¥ì€ WM_CHARê°€ ë‹´ë‹¹í•˜ë¯€ë¡œ, í•„ìš”í•˜ë©´ was_down ê°’ì„ ì´ìš©í•´ ë³„ë„ ì²˜ë¦¬ ê°€ëŠ¥.
 	(void)was_down;
 }
 
@@ -99,12 +132,14 @@ void InputManager::OnKeyUp(WPARAM _vk, LPARAM _lparam)
 
 		if (pressed_key_count_ > 0)
 			--pressed_key_count_;
+
+		RebuildActionStates();
 	}
 }
 
 void InputManager::OnChar(_tchar _ch)
 {
-	// WM_CHAR·Î µé¾î¿Â ¹®ÀÚ¸¦ ÇÁ·¹ÀÓ ´ÜÀ§·Î ´©Àû
+	// WM_CHARë¡œ ë“¤ì–´ì˜¨ ë¬¸ìë¥¼ í”„ë ˆì„ ë‹¨ìœ„ë¡œ ëˆ„ì 
 	chars_.push_back(_ch);
 }
 
@@ -124,4 +159,333 @@ bool InputManager::Up(_int _vk) const
 {
 	if (_vk < 0 || _vk > UCHAR_MAX) return false;
 	return keys_[s_cast(uint8_t, _vk)].went_up;
+}
+
+void InputManager::SetCurrentPreset(ControllerPreset _preset)
+{
+	if (current_preset_ == _preset)
+		return;
+
+	current_preset_ = _preset;
+	RebuildActionStates();
+}
+
+bool InputManager::ActionPressed(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	return action_states_[ToActionIndex(_action)].went_down;
+}
+
+bool InputManager::ActionDown(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	return action_states_[ToActionIndex(_action)].is_down;
+}
+
+bool InputManager::ActionReleased(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	return action_states_[ToActionIndex(_action)].went_up;
+}
+
+_float InputManager::ActionValue(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return 0.f;
+
+	return action_states_[ToActionIndex(_action)].value;
+}
+
+bool InputManager::IsActionRemappable(ControllerPreset _preset, InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	// MouseOnlyëŠ” ë¬¸ì„œ ì •ì±…ìƒ remap ìì²´ê°€ ë¶ˆê°€í•˜ë‹¤.
+	if (_preset == ControllerPreset::MouseOnly)
+		return false;
+
+	// KeyboardMouseëŠ” ì´ë™/ëŒ€ì‹œë§Œ remap í—ˆìš©í•œë‹¤.
+	if (_preset == ControllerPreset::KeyboardMouse)
+	{
+		return (_action == InputAction::MoveX)
+			|| (_action == InputAction::MoveY)
+			|| (_action == InputAction::Dash);
+	}
+
+	// ê·¸ ì™¸ í”„ë¦¬ì…‹ì€ í˜„ì¬ ì •ì±…ì—ì„œ í—ˆìš©í•œë‹¤.
+	return true;
+}
+
+InputRemapResult InputManager::TryRemapAction(ControllerPreset _preset, InputAction _action, const InputBinding& _new_binding)
+{
+	if (_action >= InputAction::Count)
+		return InputRemapResult::InvalidAction;
+
+	if (!IsActionRemappable(_preset, _action))
+		return InputRemapResult::RejectedByPolicy;
+
+	PresetBindingSet* preset_set = FindPresetBindingSet(_preset);
+	if (nullptr == preset_set)
+		return InputRemapResult::PresetNotFound;
+
+	// ëŒ€ìƒ ì•¡ì…˜ì˜ ê¸°ì¡´ ë°”ì¸ë”©ì„ ì œê±°í•˜ê³  ìƒˆ ë°”ì¸ë”© 1ê°œë¡œ êµì²´í•œë‹¤.
+	preset_set->bindings.erase(
+		std::remove_if(
+			preset_set->bindings.begin(),
+			preset_set->bindings.end(),
+			[_action](const InputBinding& _binding)
+			{
+				return _binding.action == _action;
+			}),
+		preset_set->bindings.end());
+
+	InputBinding new_binding = _new_binding;
+	new_binding.action = _action;
+	preset_set->bindings.push_back(new_binding);
+
+	if (current_preset_ == _preset)
+		RebuildActionStates();
+
+	return InputRemapResult::Success;
+}
+
+void InputManager::RebuildActionStates()
+{
+	std::fill(action_states_.begin(), action_states_.end(), ActionState{});
+
+	const PresetBindingSet* preset_set = FindPresetBindingSet(current_preset_);
+	if (nullptr == preset_set)
+		return;
+
+	for (const InputBinding& binding : preset_set->bindings)
+	{
+		if (binding.action >= InputAction::Count)
+			continue;
+
+		ActionState& state = action_states_[ToActionIndex(binding.action)];
+
+		switch (binding.source_type)
+		{
+		case InputSourceType::KeyboardKey:
+		case InputSourceType::MouseButton:
+		{
+			if (binding.source_code < 0 || binding.source_code > UCHAR_MAX)
+				continue;
+
+			const KeyState& key = keys_[s_cast(_uint, binding.source_code)];
+			state.is_down = state.is_down || key.is_down;
+			state.went_down = state.went_down || key.went_down;
+			state.went_up = state.went_up || key.went_up;
+
+			if (key.is_down)
+				state.value += binding.scale;
+			break;
+		}
+		case InputSourceType::MouseAxis:
+			// MouseOnly ì´ë™ ì¶•ì€ ì•„ë˜ ì „ìš© ë¸”ë¡ì—ì„œ ì¼ê´„ ê³„ì‚°í•œë‹¤.
+			break;
+		}
+	}
+
+	// 5ë‹¨ê³„: MouseOnly í”„ë¦¬ì…‹ ì´ë™ì„ "ë§ˆìš°ìŠ¤ ë°©í–¥ + ê±°ë¦¬"ë¡œ ê³„ì‚°í•œë‹¤.
+	if (current_preset_ == ControllerPreset::MouseOnly)
+	{
+		const _float dx = s_cast(_float, mouse_delta_.x);
+		const _float dy = s_cast(_float, mouse_delta_.y);
+		const _float distance = std::sqrt(dx * dx + dy * dy);
+
+		ActionState& move_x = action_states_[ToActionIndex(InputAction::MoveX)];
+		ActionState& move_y = action_states_[ToActionIndex(InputAction::MoveY)];
+
+		// dead zone ì´ë‚´ëŠ” ì´ë™ 0ìœ¼ë¡œ ì²˜ë¦¬í•œë‹¤.
+		if (distance <= MOUSE_MOVE_DEAD_ZONE)
+		{
+			move_x.value = 0.f;
+			move_y.value = 0.f;
+			move_x.is_down = false;
+			move_y.is_down = false;
+			return;
+		}
+
+		const _float safe_distance = (distance > 0.f) ? distance : 1.f;
+		const _float dir_x = dx / safe_distance;
+		const _float dir_y = dy / safe_distance;
+
+		// dead zone ì´í›„ ê±°ë¦¬ë¥¼ 0~1 ë²”ìœ„ë¡œ ì •ê·œí™” í›„ clamp í•œë‹¤.
+		const _float range = MOUSE_MOVE_MAX_DISTANCE - MOUSE_MOVE_DEAD_ZONE;
+		const _float normalized = (distance - MOUSE_MOVE_DEAD_ZONE) / range;
+		const _float magnitude = std::clamp(normalized, 0.f, 1.f);
+
+		move_x.value = dir_x * magnitude;
+		move_y.value = dir_y * magnitude;
+		move_x.is_down = magnitude > 0.f;
+		move_y.is_down = magnitude > 0.f;
+	}
+}
+
+const PresetBindingSet* InputManager::FindPresetBindingSet(ControllerPreset _preset) const
+{
+	for (const PresetBindingSet& set : default_binding_table_)
+	{
+		if (set.preset == _preset)
+			return &set;
+	}
+
+	return nullptr;
+}
+
+PresetBindingSet* InputManager::FindPresetBindingSet(ControllerPreset _preset)
+{
+	for (PresetBindingSet& set : default_binding_table_)
+	{
+		if (set.preset == _preset)
+			return &set;
+	}
+
+	return nullptr;
+}
+
+PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
+{
+	PresetDefaultBindingTable table{};
+
+  // KeyboardA: WASD ì´ë™ + Space ëŒ€ì‹œ + Q/E ìŠ¤í‚¬
+	{
+		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardA)];
+		set.preset = ControllerPreset::KeyboardA;
+		set.bindings = {
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, 'W', -1.f },
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, 'S',  1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'A', -1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'D',  1.f },
+			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
+            { InputAction::Skill1, InputSourceType::KeyboardKey, 'Q', 1.f },
+			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'E', 1.f },
+			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+		};
+	}
+
+  // KeyboardB: ë°©í–¥í‚¤ ì´ë™ + Space ëŒ€ì‹œ + A/S ìŠ¤í‚¬
+	{
+		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardB)];
+		set.preset = ControllerPreset::KeyboardB;
+		set.bindings = {
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, VK_UP, -1.f },
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, VK_DOWN,  1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, VK_LEFT, -1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, VK_RIGHT,  1.f },
+            { InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
+			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'A', 1.f },
+			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'S', 1.f },
+			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+		};
+	}
+
+   // MouseOnly: ë§ˆìš°ìŠ¤ ì´ë™ + Mouse4 ëŒ€ì‹œ + Mouse1/Mouse2 ìŠ¤í‚¬
+	{
+		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::MouseOnly)];
+		set.preset = ControllerPreset::MouseOnly;
+		set.bindings = {
+			{ InputAction::MoveX, InputSourceType::MouseAxis, 0, 1.f },
+			{ InputAction::MoveY, InputSourceType::MouseAxis, 1, 1.f },
+           { InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
+			{ InputAction::Dash, InputSourceType::MouseButton, VK_MBUTTON, 1.f },
+			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
+			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
+			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+		};
+	}
+
+    // KeyboardMouse: ì´ë™/ëŒ€ì‹œëŠ” í‚¤ë³´ë“œ, ìŠ¤í‚¬ì€ ë§ˆìš°ìŠ¤ ë²„íŠ¼
+	{
+		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardMouse)];
+		set.preset = ControllerPreset::KeyboardMouse;
+		set.bindings = {
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, 'W', -1.f },
+			{ InputAction::MoveY, InputSourceType::KeyboardKey, 'S',  1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'A', -1.f },
+			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'D',  1.f },
+			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
+         { InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
+			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
+			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+		};
+	}
+
+	return table;
+}
+
+_bool InputManager::RunSelfTest()
+{
+	// í…ŒìŠ¤íŠ¸ ì „ ê¸°ì¡´ ìƒíƒœë¥¼ ë³´ì¡´í•˜ê³  ì¢…ë£Œ ì‹œ ë³µì›í•œë‹¤.
+	const ControllerPreset prev_preset = current_preset_;
+	ResetAll();
+
+	_bool ok = true;
+
+	// [ì¼€ì´ìŠ¤ 1] KeyboardAì—ì„œ W ì…ë ¥ì´ MoveY ìŒìˆ˜ ì¶•ìœ¼ë¡œ ë°˜ì˜ë˜ëŠ”ì§€ í™•ì¸
+	SetCurrentPreset(ControllerPreset::KeyboardA);
+	BeginFrame();
+	OnKeyDown('W', 0);
+	ok = ExpectInputSelfTest(ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.Pressed") && ok;
+	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.Down") && ok;
+	ok = ExpectInputSelfTest(ActionValue(InputAction::MoveY) < -0.5f, "KeyboardA.MoveY.ValueNegative") && ok;
+
+	BeginFrame();
+	ok = ExpectInputSelfTest(!ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.PressedReset") && ok;
+	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.DownKeep") && ok;
+
+	OnKeyUp('W', 0);
+	ok = ExpectInputSelfTest(ActionReleased(InputAction::MoveY), "KeyboardA.MoveY.Released") && ok;
+	ok = ExpectInputSelfTest(!ActionDown(InputAction::MoveY), "KeyboardA.MoveY.UpAfterRelease") && ok;
+
+	// [ì¼€ì´ìŠ¤ 2] MouseOnly dead zone / clamp ë™ì‘ í™•ì¸
+	ResetAll();
+	SetCurrentPreset(ControllerPreset::MouseOnly);
+	BeginFrame();
+	OnMouseMove(0, MAKELPARAM(3, 4));
+	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveX)) < 0.001f, "MouseOnly.DeadZone.MoveX") && ok;
+	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveY)) < 0.001f, "MouseOnly.DeadZone.MoveY") && ok;
+
+	BeginFrame();
+	OnMouseMove(0, MAKELPARAM(303, 4));
+	const _float move_x = ActionValue(InputAction::MoveX);
+	const _float move_y = ActionValue(InputAction::MoveY);
+	ok = ExpectInputSelfTest(std::abs(move_x) <= 1.0001f, "MouseOnly.Clamp.MoveX") && ok;
+	ok = ExpectInputSelfTest(std::abs(move_y) <= 1.0001f, "MouseOnly.Clamp.MoveY") && ok;
+	ok = ExpectInputSelfTest(move_x > 0.5f, "MouseOnly.Clamp.DirectionX") && ok;
+
+	// [ì¼€ì´ìŠ¤ 3] remap ì •ì±… ë° ê±°ë¶€ ì²˜ë¦¬ í™•ì¸
+	ResetAll();
+	ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::MouseOnly, InputAction::MoveX), "Policy.MouseOnly.Deny") && ok;
+   ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Skill1), "Policy.KeyboardMouse.Skill1Deny") && ok;
+	ok = ExpectInputSelfTest(IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Dash), "Policy.KeyboardMouse.DashAllow") && ok;
+
+	InputBinding remap_binding;
+	remap_binding.action = InputAction::MoveX;
+	remap_binding.source_type = InputSourceType::KeyboardKey;
+	remap_binding.source_code = 'I';
+	remap_binding.scale = 1.f;
+
+	ok = ExpectInputSelfTest(TryRemapAction(ControllerPreset::MouseOnly, InputAction::MoveX, remap_binding) == InputRemapResult::RejectedByPolicy,
+		"TryRemap.MouseOnly.Rejected") && ok;
+	ok = ExpectInputSelfTest(TryRemapAction(ControllerPreset::KeyboardMouse, InputAction::MoveX, remap_binding) == InputRemapResult::Success,
+		"TryRemap.KeyboardMouse.MoveX.Success") && ok;
+
+	SetCurrentPreset(ControllerPreset::KeyboardMouse);
+	BeginFrame();
+	OnKeyDown('I', 0);
+	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveX), "TryRemap.KeyboardMouse.MoveX.Applied") && ok;
+
+	ResetAll();
+	SetCurrentPreset(prev_preset);
+	ReportInputSelfTest(ok, "InputManager.RunSelfTest");
+	return ok;
 }

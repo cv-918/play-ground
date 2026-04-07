@@ -44,26 +44,23 @@ void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 void PlayerMovement::_OnImmediate(_double _delta_time)
 {
 	const _float dt = s_cast(_float, _delta_time);
+	(void)dt;
 
 	_Vector3 input_dir = _Vector3::Zero();
 
-	if (input_manager_->Pressed('W'))
-		input_dir.y -= 1.f;
-
-	if (input_manager_->Pressed('S'))
-		input_dir.y += 1.f;
-
-	if (input_manager_->Pressed('A'))
-		input_dir.x -= 1.f;
-
-	if (input_manager_->Pressed('D'))
-		input_dir.x += 1.f;
+   // raw 키 대신 액션 축값으로 이동 입력을 계산한다.
+	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
+	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
 	if (input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
 	move_velocity_ = input_dir * move_spd_max_;
+
+	// 진행 방향을 바라보도록 회전
+	if (input_dir.LengthSq() > 0.f)
+		transform_->LookAt(transform_->Position() + input_dir);
 }
 
 void PlayerMovement::_OnDirection(_double _delta_time)
@@ -81,24 +78,17 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 
 	_Vector3 input_dir = _Vector3::Zero();
 
-	if (input_manager_->Pressed('W'))
-		input_dir += transform_->Forward2D();
-
-	if (input_manager_->Pressed('S'))
-		input_dir += transform_->Back2D();
-
-	if (input_manager_->Pressed('A'))
-		input_dir += transform_->Left2D();
-
-	if (input_manager_->Pressed('D'))
-		input_dir += transform_->Right2D();
+   // preset/리맵 결과가 반영된 액션 축값을 사용한다.
+	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
+	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
 	if (input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
 
-	if (input_manager_->Down(VK_SPACE))
+ // 대시는 액션 에지 입력으로 시작한다.
+	if (input_manager_->ActionPressed(InputAction::Dash))
 		StartDashByInputDir(1200.f, 0.075);
 
 	// 입력이 있으면 목표 속도까지 가속
