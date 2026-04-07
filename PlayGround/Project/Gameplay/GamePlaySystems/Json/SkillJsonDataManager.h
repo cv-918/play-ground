@@ -6,6 +6,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	id_,
 	name_,
 	desc_,
+	icon_path_,
 	type_,
 	max_lv_,
 	unlock_type_,

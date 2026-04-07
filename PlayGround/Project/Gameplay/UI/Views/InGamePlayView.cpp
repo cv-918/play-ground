@@ -2,6 +2,8 @@
 #include "InGamePlayView.h"
 
 #include "../Elements/ProgressBar.h"
+#include "../Widgets/InGameSkillSlot.h"
+
 #include "GamePlaySystems/StageManager.h"
 #include "GamePlaySystems/SkillManager.h"
 
@@ -28,10 +30,25 @@ InGamePlayView::InGamePlayView()
 	next_stage_progress_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 40 });
 	next_stage_progress_->SetFillColor(Palette::Teal);
 	next_stage_progress_->SetBorderEnabled(false);
+
+	// -------------------------
+	// 스킬 슬롯 2개
+	// -------------------------
+	skill_slot_0_ = CreateElement<InGameSkillSlot>(0, L"CTRL");
+	skill_slot_0_->SetSlotSize({ 72, 72 });
+	skill_slot_0_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H - 46, GAME_VIEW_HEIGHT - 110 });
+	skill_slot_0_->SetShowSkillName(true);
+
+	skill_slot_1_ = CreateElement<InGameSkillSlot>(1, L"ALT");
+	skill_slot_1_->SetSlotSize({ 72, 72 });
+	skill_slot_1_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H + 46, GAME_VIEW_HEIGHT - 110 });
+	skill_slot_1_->SetShowSkillName(true);
 }
 
 _int InGamePlayView::Update(_double _delta_time)
 {
+	__super::Update(_delta_time);
+
 	// 비율 업데이트
 	stage_duration_gauge_->SetRatio(_StageMgr.GetStageProgress());
 	stage_clear_progress_->SetRatio(_RunState.GetKillCountRatio());

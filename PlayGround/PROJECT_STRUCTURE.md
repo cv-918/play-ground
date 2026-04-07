@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-06 17:55)
+﻿# Project Structure (Updated: 2026-04-07 13:06)
 
 ```text
 Root
@@ -7,6 +7,8 @@ Root
 |   |   +--- Textures
 |   |   |   +--- Characters
 |   |   |   +--- Particles
+|   |   |   +--- Skills
+|   |   |   |   +--- Icons
 |   |   |   +--- World
 +--- html
 |   +--- search
@@ -175,6 +177,8 @@ Root
 |   |   |   |   |   Button.h
 |   |   |   |   |   Grid.cpp
 |   |   |   |   |   Grid.h
+|   |   |   |   |   Image.cpp
+|   |   |   |   |   Image.h
 |   |   |   |   |   ProgressBar.cpp
 |   |   |   |   |   ProgressBar.h
 |   |   |   |   |   Text.cpp
@@ -201,6 +205,8 @@ Root
 |   |   |   |   |   DamageFont.h
 |   |   |   |   |   HpBar.cpp
 |   |   |   |   |   HpBar.h
+|   |   |   |   |   InGameSkillSlot.cpp
+|   |   |   |   |   InGameSkillSlot.h
 |   |   |   |   |   WidgetBase.cpp
 |   |   |   |   |   WidgetBase.h
 |   |   |   |   UIBase.cpp

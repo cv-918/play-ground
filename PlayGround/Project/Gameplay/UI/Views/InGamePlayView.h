@@ -15,5 +15,8 @@ private:
 	ProgressBar* stage_duration_gauge_ = nullptr;
 	ProgressBar* stage_clear_progress_ = nullptr;
 	ProgressBar* next_stage_progress_ = nullptr;
+
+	class InGameSkillSlot* skill_slot_0_ = nullptr;
+	class InGameSkillSlot* skill_slot_1_ = nullptr;
 };
 
