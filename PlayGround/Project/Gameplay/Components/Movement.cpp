@@ -181,5 +181,32 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 		return;
 
 	const _Vector3 delta = final_velocity * s_cast(_float, _delta_time);
-	transform_->Translate(delta);
+   transform_->Translate(delta);
+
+	if (!use_nav_mesh_)
+		return;
+
+	if (nav_mesh_.Width() <= 0 || nav_mesh_.Height() <= 0)
+		return;
+
+	auto position = transform_->Position();
+	const auto radius_x = transform_->Scale().x;
+	const auto radius_y = radius_x * 0.6f;
+
+	const auto min_x = nav_mesh_.Left_f() + radius_x;
+	const auto max_x = nav_mesh_.Right_f() - radius_x;
+	const auto min_y = nav_mesh_.Top_f() + radius_y;
+	const auto max_y = nav_mesh_.Bottom_f() - radius_y;
+
+	if (min_x <= max_x)
+		position.x = std::clamp(position.x, min_x, max_x);
+	else
+		position.x = (min_x + max_x) * 0.5f;
+
+	if (min_y <= max_y)
+		position.y = std::clamp(position.y, min_y, max_y);
+	else
+		position.y = (min_y + max_y) * 0.5f;
+
+	transform_->Position(position);
 }

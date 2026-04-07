@@ -50,6 +50,12 @@ _int TownPlayer::Update(_double _delta_time)
 	return 0;
 }
 
+void TownPlayer::SetNavMesh(const _Rect& _rt)
+{
+	if (movement_)
+		movement_->SetNavMesh(_rt);
+}
+
 void TownPlayer::OnEnterInteractable(IInteractable* _target)
 {
 	if (interaction_ == nullptr)

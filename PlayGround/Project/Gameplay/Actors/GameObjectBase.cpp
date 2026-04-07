@@ -114,22 +114,27 @@ void GameObjectBase::DebugRender(_double _delta_time)
 	if (!IsVisible())
 		return;
 
-	const auto position = transform_->Position();
-	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Palette::DarkGray);
+   const auto world_position = transform_->Position();
+	const auto screen_position = _CameraMgr.WorldToScreen(world_position);
+	_DrawFunc::DrawString(_Point{ screen_position.x, screen_position.y }, Name(), Palette::DarkGray);
 
 	// 1. 방향 그리기
 	if (_GameState.debug_mode_)
 	{
 		const float line_length = 75.f;
-		const auto line_to = position + transform_->Forward2D() * line_length;
+      const auto world_line_to = world_position + transform_->Forward2D() * line_length;
+		const auto screen_line_to = _CameraMgr.WorldToScreen(world_line_to);
 
-		_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Palette::DarkGray);
+       _DrawFunc::DrawLine(
+			_Point{ screen_position.x, screen_position.y },
+			_Point{ screen_line_to.x, screen_line_to.y },
+			Palette::DarkGray);
 	}
 
 	// 2. 디스크립션 그리기
 	if (!object_description_.empty())
 	{
-		auto description_position = position;
+       auto description_position = screen_position;
 		description_position.y += 16.f; // 디버그용으로 위치 보정
 
 		_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);

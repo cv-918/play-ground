@@ -4,6 +4,8 @@
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
 
+#include "GamePlay/World/Background.h"
+
 #include "GamePlay/Actors/Town/TownPlayer.h"
 #include "GamePlay/Actors/Town/TownNpc.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
@@ -124,6 +126,25 @@ void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
 
+	Background::CreateInfo background_info;
+	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
+	background_info.nav_mesh_size_ = _Size(2560, 1600);
+ background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
+	background_info.render_dest_rect_ = _RectF(
+		0.f,
+		0.f,
+		s_float(background_info.nav_mesh_size_.x),
+		s_float(background_info.nav_mesh_size_.y));
+
+	const auto background = object_manager_->CreateActor<Background>(background_info);
+	if (nullptr == background)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	const auto& nav_mesh = background->NavMesh();
+
 	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
 	if (player_spawn_data == nullptr)
 	{
@@ -137,6 +158,7 @@ void OutGameScene::OnEnter()
 		_NULL_DETECTION_MSGBOX;
 		return;
 	}
+	test_town_player_->SetNavMesh(nav_mesh);
 
 	test_town_player_->GetTransform()->Position(_Vector3(300.f, 300.f, 0.f));
 
@@ -150,7 +172,7 @@ void OutGameScene::OnEnter()
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
 
-	RECT world_bounds = { 0, 0, 3000, 2000 };
+   RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
 	_CameraMgr.SetWorldBounds(world_bounds);
 	_CameraMgr.EnableClamp(true);
 }

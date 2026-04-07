@@ -1,21 +1,26 @@
 ﻿#include "framework.h"
 #include "Background.h"
 
+Background::Background(const CreateInfo& _create_info)
+	: create_info_(_create_info)
+{
+}
+
 _bool Background::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
-	/*const auto lt = _Point{ INGAME_FRAME_THICKNESS_HALF, INGAME_FRAME_THICKNESS_HALF };
-	const auto size = _Size{ GAME_SCREEN_CX, GAME_SCREEN_CY };
+	const auto lt = create_info_.nav_mesh_center_ - _Point(create_info_.nav_mesh_size_.x >> 1, create_info_.nav_mesh_size_.y >> 1);
+	nav_mesh_ = _Rect{ lt, create_info_.nav_mesh_size_ };
 
-	nav_mesh_ = _Rect{ lt, size };*/
+	if (create_info_.background_path_.empty())
+	{
+		_NULL_DETECTION_MSGBOX_EX(_T("Background image path is empty!"));
+		return false;
+	}
 
-	const auto new_size = _Size(800, 600);
-	const auto new_lt = GAME_VIEW_CENTER - _Point(new_size.x >> 1, new_size.y >> 1);
-	nav_mesh_ = _Rect{ new_lt, new_size };
-
-	const std::wstring background_path = Path::World + L"Field-2560x1600.bmp";
+	const std::wstring& background_path = create_info_.background_path_;
 	background_sprite_ = _GraphicSourceMgr.GetSprite(background_path, SpritePivotMode::Center);
 	if (!background_sprite_ || !background_sprite_->image)
 	{
@@ -24,7 +29,7 @@ _bool Background::Initialize()
 	}
 
 	Finalize();
-    return true;
+	return true;
 }
 
 void Background::Render(_double _delta_time)
@@ -32,12 +37,18 @@ void Background::Render(_double _delta_time)
 	if (!background_sprite_ || !background_sprite_->image)
 		return;
 
-   const auto& sprite = *background_sprite_;
-	const _RectF dest_rect(0.f, 0.f, s_float(GAME_VIEW_WIDTH), s_float(GAME_VIEW_HEIGHT));
+	const auto& sprite = *background_sprite_;
+  const auto world_lt = _Vector2(create_info_.render_dest_rect_.Left(), create_info_.render_dest_rect_.Top());
+	const auto screen_lt = _CameraMgr.WorldToScreen(world_lt);
+	const _RectF dest_rect(
+		s_float(screen_lt.x),
+		s_float(screen_lt.y),
+		s_float(screen_lt.x) + create_info_.render_dest_rect_.Width(),
+		s_float(screen_lt.y) + create_info_.render_dest_rect_.Height());
 	const _RectF src_rect(
 		sprite.image_rect.X,
 		sprite.image_rect.Y,
 		sprite.image_rect.X + sprite.image_rect.Width,
 		sprite.image_rect.Y + sprite.image_rect.Height);
-	_DrawFunc::DrawTexture(sprite.image, dest_rect, src_rect);
+ _DrawFunc::DrawTexture(sprite.image, dest_rect, src_rect);
 }
