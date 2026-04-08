@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#pragma once
+
 #include "UnitBase.h"
 
 class StagePlayer final : public UnitBase
@@ -33,4 +35,5 @@ private:
 
 	const class InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 	class SkillManager* skill_manager_ = nullptr; // 매 프레임 Get 호출 방지용 SkillManager 캐싱
+  _bool flip_sprite_x_ = false;
 };

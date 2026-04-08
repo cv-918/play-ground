@@ -55,7 +55,6 @@ _int InGameScene::Update(_double _delta_time)
 		ui_manager_->Update(_delta_time);
 
 		_SkillMgr.Update(_delta_time);
-		_ParticleService.Update(_delta_time);
 	}
 	else if (current_view_)
 	{
@@ -67,14 +66,10 @@ _int InGameScene::Update(_double _delta_time)
 
 _int InGameScene::LateUpdate(_double _delta_time)
 {
-	stage_manager_->LateUpdate(_delta_time);
-
 	if (/*update_objects_ && */!_GameState.GetPause())
 	{
 		object_manager_->LateUpdate(_delta_time);
 		ui_manager_->LateUpdate(_delta_time);
-
-		CleanUp();
 
 		_ColMgr.Update();
 		_CameraMgr.Update(_delta_time);

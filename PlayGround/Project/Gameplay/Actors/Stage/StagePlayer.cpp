@@ -101,6 +101,15 @@ _int StagePlayer::Update(_double _delta_time)
         _SYSTEM_LOG_INFO(L"Player used skill 1");
 	}
 
+	if (movement_)
+	{
+		const auto vel = transform_->Forward2D();
+		if (vel.x < -0.01f)
+          flip_sprite_x_ = false;
+		else if (vel.x > 0.01f)
+         flip_sprite_x_ = true;
+	}
+
  // // 공격 액션은 제거되었으므로 디버그 파티클은 Skill1 입력에 맞춰 표시한다.
 	//if (input_manager_->ActionPressed(InputAction::Skill1))
 	//{
@@ -289,7 +298,7 @@ void StagePlayer::_DrawObjectShape()
 		player_sprite_->image_rect.X + player_sprite_->image_rect.Width,
 		player_sprite_->image_rect.Y + player_sprite_->image_rect.Height);
 
-	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect);
+ _DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }
 
 void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)

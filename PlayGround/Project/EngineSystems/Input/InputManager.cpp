@@ -45,8 +45,17 @@ void InputManager::BeginFrame()
 	mouse_delta_.y = 0;
 	prev_mouse_ = mouse_;
 
-	// 프레임 시작 시점 기준 액션 상태를 먼저 동기화한다.
+    // 이번 프레임 액션 상태는 메시지 처리 후 1회만 동기화한다.
+	action_states_dirty_ = true;
+}
+
+void InputManager::SyncActionStates()
+{
+	if (!action_states_dirty_)
+		return;
+
 	RebuildActionStates();
+	action_states_dirty_ = false;
 }
 
 void InputManager::ResetAll()
@@ -59,6 +68,7 @@ void InputManager::ResetAll()
 
 	// 문자 입력 버퍼도 초기화
 	chars_.clear();
+   action_states_dirty_ = true;
 }
 
 void InputManager::OnMouseMove(WPARAM _wparam, LPARAM _lparam)
@@ -71,7 +81,7 @@ void InputManager::OnMouseMove(WPARAM _wparam, LPARAM _lparam)
 	mouse_delta_.y += (mouse_.y - prev_mouse_.y);
 
 	// 마우스 이동이 들어오면 즉시 액션 상태를 재계산한다.
-	RebuildActionStates();
+  action_states_dirty_ = true;
 
 	(void)_wparam;
 }
@@ -110,7 +120,7 @@ void InputManager::OnKeyDown(WPARAM _vk, LPARAM _lparam)
 		k.went_down = true;
 
 		++pressed_key_count_;
-     RebuildActionStates();
+     action_states_dirty_ = true;
 		return;
 	}
 
@@ -132,7 +142,7 @@ void InputManager::OnKeyUp(WPARAM _vk, LPARAM _lparam)
 		if (pressed_key_count_ > 0)
 			--pressed_key_count_;
 
-		RebuildActionStates();
+      action_states_dirty_ = true;
 	}
 }
 
@@ -194,7 +204,7 @@ void InputManager::SetCurrentPreset(ControllerPreset _preset)
 		return;
 
 	current_preset_ = _preset;
-	RebuildActionStates();
+  action_states_dirty_ = true;
 }
 
 bool InputManager::ActionPressed(InputAction _action) const
@@ -278,7 +288,7 @@ InputRemapResult InputManager::TryRemapAction(ControllerPreset _preset, InputAct
 	preset_set->bindings.push_back(new_binding);
 
 	if (current_preset_ == _preset)
-		RebuildActionStates();
+      action_states_dirty_ = true;
 
 	return InputRemapResult::Success;
 }
@@ -471,15 +481,18 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::KeyboardA);
 	BeginFrame();
 	OnKeyDown('W', 0);
+   SyncActionStates();
 	ok = ExpectInputSelfTest(ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.Pressed") && ok;
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.Down") && ok;
 	ok = ExpectInputSelfTest(ActionValue(InputAction::MoveY) < -0.5f, "KeyboardA.MoveY.ValueNegative") && ok;
 
 	BeginFrame();
+ SyncActionStates();
 	ok = ExpectInputSelfTest(!ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.PressedReset") && ok;
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.DownKeep") && ok;
 
 	OnKeyUp('W', 0);
+ SyncActionStates();
 	ok = ExpectInputSelfTest(ActionReleased(InputAction::MoveY), "KeyboardA.MoveY.Released") && ok;
 	ok = ExpectInputSelfTest(!ActionDown(InputAction::MoveY), "KeyboardA.MoveY.UpAfterRelease") && ok;
 
@@ -488,11 +501,13 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::MouseOnly);
 	BeginFrame();
 	OnMouseMove(0, MAKELPARAM(3, 4));
+ SyncActionStates();
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveX)) < 0.001f, "MouseOnly.DeadZone.MoveX") && ok;
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveY)) < 0.001f, "MouseOnly.DeadZone.MoveY") && ok;
 
 	BeginFrame();
 	OnMouseMove(0, MAKELPARAM(303, 4));
+  SyncActionStates();
 	const _float move_x = ActionValue(InputAction::MoveX);
 	const _float move_y = ActionValue(InputAction::MoveY);
 	ok = ExpectInputSelfTest(std::abs(move_x) <= 1.0001f, "MouseOnly.Clamp.MoveX") && ok;
@@ -519,6 +534,7 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::KeyboardMouse);
 	BeginFrame();
 	OnKeyDown('I', 0);
+ SyncActionStates();
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveX), "TryRemap.KeyboardMouse.MoveX.Applied") && ok;
 
 	ResetAll();

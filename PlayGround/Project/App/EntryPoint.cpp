@@ -60,20 +60,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         _InputMgr.BeginFrame();
         _Timer.Update();
 
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-		{
-			if (msg.message == WM_QUIT)
-				break;
+        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+                break;
 
-			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
+            if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
 
 		if (msg.message == WM_QUIT)
 			break;
+
+        _InputMgr.SyncActionStates();
 
         const auto dt = _Timer.DeltaTime();
 
