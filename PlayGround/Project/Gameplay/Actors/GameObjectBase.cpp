@@ -109,7 +109,7 @@ void GameObjectBase::Render(_double _delta_time)
 	}
 }
 
-void GameObjectBase::DebugRender(_double _delta_time)
+void GameObjectBase::DebugRender()
 {
 	if (!IsVisible())
 		return;

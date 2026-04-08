@@ -1,4 +1,6 @@
 ﻿#pragma once
+#pragma once
+
 #include "Scene.h"
 
 class OutGameScene final : public Scene
@@ -9,6 +11,7 @@ class OutGameScene final : public Scene
 		Main,
 		Attribute,
       VideoOption,
+		Exit,
 	};
 
 public:

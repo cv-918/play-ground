@@ -52,6 +52,7 @@ public:
 	virtual _int Update(_double _delta_time) { return 0; }
 	virtual _int LateUpdate(_double _delta_time) { return 0; }
 	virtual void Render(_double _delta_time) EMPTY_FUNC;
+	virtual void DebugRender() EMPTY_FUNC;
 
 public:
 	void Activate() { is_enable_ = true; is_visible_ = true; }

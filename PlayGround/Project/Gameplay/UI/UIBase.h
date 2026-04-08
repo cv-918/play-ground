@@ -10,6 +10,7 @@ class UIBase abstract
 {
 public:
 	_bool Initialize() override;
+	void DebugRender() override;
 
 public:
 	// 위치와 크기 설정

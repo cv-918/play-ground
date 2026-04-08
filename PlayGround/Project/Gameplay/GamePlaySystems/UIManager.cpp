@@ -7,10 +7,15 @@ UIManager::~UIManager()
 {
 	for (auto& ui : ui_list_)
 		SAFE_DELETE(ui);
+
+	for (auto& new_ui : new_ui_list_)
+		SAFE_DELETE(new_ui);
 }
 
 _int UIManager::Update(_double _delta_time)
 {
+	_MergeNewUIs();
+
 	for (auto* ui : ui_list_)
 	{
 		if (ui->IsActive())
@@ -22,6 +27,8 @@ _int UIManager::Update(_double _delta_time)
 
 _int UIManager::LateUpdate(_double _delta_time)
 {
+	_MergeNewUIs();
+
 	for (auto* ui : ui_list_)
 	{
 		if (ui->IsActive())
@@ -35,11 +42,38 @@ _int UIManager::LateUpdate(_double _delta_time)
 
 void UIManager::Render(_double _delta_time)
 {
+	_MergeNewUIs();
+
 	for (auto* ui : ui_list_)
 	{
 		if (ui->IsActive())
+		{
 			ui->Render(_delta_time);
+			ui->DebugRender();
+		}
 	}
+}
+
+void UIManager::_PushUI(UIBase* _ui)
+{
+	if (_ui == nullptr)
+	{
+		_SYSTEM_LOG_ERROR(L"UIManager::_PushUI - Attempted to push a null UI.");
+		return;
+	}
+
+	new_ui_list_.push_back(_ui);
+}
+
+void UIManager::_MergeNewUIs()
+{
+	if (new_ui_list_.empty())
+		return;
+
+	for (auto* new_ui : new_ui_list_)
+		ui_list_.push_back(new_ui);
+
+	std::vector<UIBase*>().swap(new_ui_list_);
 }
 
 void UIManager::CleanUp()

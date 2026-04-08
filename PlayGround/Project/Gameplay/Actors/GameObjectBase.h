@@ -20,7 +20,7 @@ public:
 	_int LateUpdate(_double _delta_time) override;
 
 	void Render(_double _delta_time) override;
-	virtual void DebugRender(_double _delta_time);
+	void DebugRender() override;
 
 public:
 	void RegisterComponent(ComponentBase* _component);

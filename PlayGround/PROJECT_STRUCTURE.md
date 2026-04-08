@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-08 15:54)
+﻿# Project Structure (Updated: 2026-04-08 20:24)
 
 ```text
 Root
@@ -189,8 +189,6 @@ Root
 |   |   |   |   |   Text.cpp
 |   |   |   |   |   Text.h
 |   |   |   +--- Views
-|   |   |   |   |   DlgOptionVideo.cpp
-|   |   |   |   |   DlgOptionVideo.h
 |   |   |   |   |   InGamePauseView.cpp
 |   |   |   |   |   InGamePauseView.h
 |   |   |   |   |   InGamePlayView.cpp
@@ -200,8 +198,11 @@ Root
 |   |   |   |   |   InGameViewRenderUtils.h
 |   |   |   |   |   OutGameAttributeView.cpp
 |   |   |   |   |   OutGameAttributeView.h
+|   |   |   |   |   OutGameExitView.h
 |   |   |   |   |   OutGameMainView.cpp
 |   |   |   |   |   OutGameMainView.h
+|   |   |   |   |   OutGameVideoOptionView.cpp
+|   |   |   |   |   OutGameVideoOptionView.h
 |   |   |   +--- Widgets
 |   |   |   |   |   AttributeNode.cpp
 |   |   |   |   |   AttributeNode.h

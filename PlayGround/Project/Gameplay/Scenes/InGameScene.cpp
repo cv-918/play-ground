@@ -137,7 +137,7 @@ void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _positio
 void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
 	FloatingTextCreationData data(_damage, _position);
-	const auto damage_font = ui_manager_->CreateUI<FloatingText>(data);
+ const auto damage_font = ui_manager_->CreateUI<FloatingText>(data);
 }
 
 void InGameScene::ChangeView(InGameViewState _new_view_state)
@@ -187,15 +187,15 @@ WidgetBase* InGameScene::_CreateView()
 	switch (view_state_)
 	{
 	case InGameViewState::InGame:
-		return ui_manager_->CreateUI<InGamePlayView>();
+     return ui_manager_->CreateUI<InGamePlayView>();
 	case InGameViewState::Pause:
-		return ui_manager_->CreateUI<InGamePauseView>(
+      return ui_manager_->CreateUI<InGamePauseView>(
 			// 1) resume, 2) exit
 			[this]() { stage_manager_->ChangeState(StageState::Play); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }
 		);
 	case InGameViewState::Result:
-		return ui_manager_->CreateUI<InGameResultView>(
+     return ui_manager_->CreateUI<InGameResultView>(
 			// 1) restart, 2) go to lobby
 			[this]() { stage_manager_->ProgressRunSessionResult(); _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }

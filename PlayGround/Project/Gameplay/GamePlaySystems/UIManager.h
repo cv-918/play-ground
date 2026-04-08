@@ -19,7 +19,12 @@ public:
 	void CleanUp();
 
 private:
+	void _PushUI(UIBase* _ui);
+	void _MergeNewUIs();
+
+private:
 	std::vector<UIBase*> ui_list_;
+	std::vector<UIBase*> new_ui_list_;
 };
 
 template<typename T, typename... Args>
@@ -28,7 +33,7 @@ inline T* UIManager::CreateUI(Args&&... _args)
 	T* ui = new T(std::forward<Args>(_args)...);
 	if (ui->Initialize())
 	{
-		ui_list_.push_back(ui);
+		_PushUI(ui);
 		return ui;
 	}
 

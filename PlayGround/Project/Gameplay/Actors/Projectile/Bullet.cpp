@@ -52,7 +52,7 @@ void Bullet::Render(_double _delta_time)
 	_DrawFunc::FillCircle(pos, collider_->GetRadius(), Palette::DeepGray);
 }
 
-void Bullet::DebugRender(_double _delta_time)
+void Bullet::DebugRender()
 {
 	if (!IsVisible())
 		return;
