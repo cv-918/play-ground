@@ -92,6 +92,8 @@ class InputManager : public ISingleton<InputManager>
 public:
 	/* 매 프레임 시작 시 1회 메시지 처리 전에 호출 */
 	void BeginFrame();
+	/* 이번 프레임에 누적된 raw 입력을 액션 상태로 1회 반영 */
+	void SyncActionStates();
 
 	// 포커스 잃었을 때(Alt+Tab 등) 키가 눌린 채로 고정되는 현상 방지용
 	void ResetAll();
@@ -162,6 +164,7 @@ private:
 	_Point mouse_delta_ = _Point::Zero();
 
 	_int wheel_delta_ = IV_ZERO;
+	_bool action_states_dirty_ = true;
 
 	// raw 상태를 현재 프리셋 기준 액션 상태로 변환한다.
 	void RebuildActionStates();

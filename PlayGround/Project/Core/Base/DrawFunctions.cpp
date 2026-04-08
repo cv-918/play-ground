@@ -697,6 +697,112 @@ void DrawFunctions::DrawTexture(const TextureResource* _texture, const _RectF& _
 	DrawTextureInternal(_texture, _dest_rect, &_source_rect, _alpha, nullptr);
 }
 
+void DrawFunctions::DrawTexture(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, _bool _flip_x, _bool _flip_y, _ubyte _alpha)
+{
+	if (!_flip_x && !_flip_y)
+	{
+		DrawTextureInternal(_texture, _dest_rect, &_source_rect, _alpha, nullptr);
+		return;
+	}
+
+	if (!g_back_dc || !_texture || !_texture->bitmap)
+		return;
+
+	const auto src_left = s_int(std::round(_source_rect.Left()));
+	const auto src_top = s_int(std::round(_source_rect.Top()));
+	const auto src_width = s_int(std::round(_source_rect.Width()));
+	const auto src_height = s_int(std::round(_source_rect.Height()));
+
+	if (src_width <= 0 || src_height <= 0)
+		return;
+
+	HDC src_dc = CreateCompatibleDC(g_back_dc);
+	if (!src_dc)
+		return;
+
+	auto old_src_bitmap = SelectObject(src_dc, _texture->bitmap);
+
+	HDC flip_dc = CreateCompatibleDC(g_back_dc);
+	if (!flip_dc)
+	{
+		SelectObject(src_dc, old_src_bitmap);
+		DeleteDC(src_dc);
+		return;
+	}
+
+	BITMAPINFO bmi{};
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = src_width;
+	bmi.bmiHeader.biHeight = -src_height;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	void* bits = nullptr;
+	HBITMAP flip_bitmap = CreateDIBSection(g_back_dc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+	if (!flip_bitmap)
+	{
+		DeleteDC(flip_dc);
+		SelectObject(src_dc, old_src_bitmap);
+		DeleteDC(src_dc);
+		return;
+	}
+
+	auto old_flip_bitmap = SelectObject(flip_dc, flip_bitmap);
+
+	const auto blt_src_x = _flip_x ? (src_left + src_width - 1) : src_left;
+	const auto blt_src_y = _flip_y ? (src_top + src_height - 1) : src_top;
+	const auto blt_src_w = _flip_x ? -src_width : src_width;
+	const auto blt_src_h = _flip_y ? -src_height : src_height;
+
+	StretchBlt(
+		flip_dc,
+		0,
+		0,
+		src_width,
+		src_height,
+		src_dc,
+		blt_src_x,
+		blt_src_y,
+		blt_src_w,
+		blt_src_h,
+		SRCCOPY);
+
+	const auto dest_left = Ox(s_int(std::round(_dest_rect.Left())));
+	const auto dest_top = Oy(s_int(std::round(_dest_rect.Top())));
+	const auto dest_width = std::max(0, s_int(std::round(_dest_rect.Width())));
+	const auto dest_height = std::max(0, s_int(std::round(_dest_rect.Height())));
+
+	if (0 < dest_width && 0 < dest_height)
+	{
+		BLENDFUNCTION blend{};
+		blend.BlendOp = AC_SRC_OVER;
+		blend.BlendFlags = 0;
+		blend.SourceConstantAlpha = _alpha;
+		blend.AlphaFormat = AC_SRC_ALPHA;
+
+		AlphaBlend(
+			g_back_dc,
+			dest_left,
+			dest_top,
+			dest_width,
+			dest_height,
+			flip_dc,
+			0,
+			0,
+			src_width,
+			src_height,
+			blend);
+	}
+
+	SelectObject(flip_dc, old_flip_bitmap);
+	DeleteObject(flip_bitmap);
+	DeleteDC(flip_dc);
+
+	SelectObject(src_dc, old_src_bitmap);
+	DeleteDC(src_dc);
+}
+
 void DrawFunctions::DrawTexture(const TextureResource* _texture, const _RectF& _dest_rect, const _Color& _color, _ubyte _alpha)
 {
 	DrawTextureInternal(_texture, _dest_rect, nullptr, _alpha, &_color);

@@ -51,7 +51,6 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 					const _Point obj_pos = game_object->GetTransform()->Position();
 					if (!play_area_->PtInRect(obj_pos))
 					{
-						_SYSTEM_LOG_INFO(L"ObjectManager: Game object out of play area - Name: %s, ID: %d, Position: (%.2f, %.2f)", game_object->Name().c_str(), game_object->ID(), obj_pos.x, obj_pos.y);
 						game_object->ReserveDestruction(); // 플레이 영역 밖으로 나간 오브젝트는 파괴 처리
 					}
 				}
@@ -112,7 +111,6 @@ GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Po
 		bullet->GetTransform()->LookAt(_target);
 
 		_PushGameObject(bullet);
-		_SYSTEM_LOG_INFO(L"Spawned projectile - Name: %s", bullet->Name().c_str());
 		return bullet;
 	}
 

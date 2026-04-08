@@ -30,6 +30,7 @@ private:
 	class PlayerMovement* movement_ = nullptr;
 	Collider* interaction_collider_ = nullptr;
 	class TownInteraction* interaction_ = nullptr;
+	_bool flip_sprite_x_ = false;
 
 	_int interact_key_ = 'E';
 };

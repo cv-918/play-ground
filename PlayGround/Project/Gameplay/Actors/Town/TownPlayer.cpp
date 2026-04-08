@@ -71,6 +71,15 @@ _int TownPlayer::Update(_double _delta_time)
 	if (_InputMgr.Down(interact_key_) && interaction_ != nullptr)
 		interaction_->TryInteract();
 
+	if (movement_)
+	{
+		const auto vel = movement_->GetMoveVelocity();
+		if (vel.x < -0.01f)
+			flip_sprite_x_ = false;
+		else if (vel.x > 0.01f)
+			flip_sprite_x_ = true;
+	}
+
 	return 0;
 }
 
@@ -139,5 +148,5 @@ void TownPlayer::_DrawObjectShape()
 		player_sprite_->image_rect.X + player_sprite_->image_rect.Width,
 		player_sprite_->image_rect.Y + player_sprite_->image_rect.Height);
 
-	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect);
+ _DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }

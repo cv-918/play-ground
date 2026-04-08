@@ -511,7 +511,7 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
      const auto hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 
 		// 어떤 몬스터가 스폰됐는지 로깅 (테스트용, 나중에 필요 없으면 제거)
-		_SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);
+		// _SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);
 	}
 
 	return true;

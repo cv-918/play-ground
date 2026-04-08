@@ -95,7 +95,7 @@ void Collider::RegisterOnCollidedList(Collider* _other)
 		_UpdateIsCollidingState();
 
 		// 누구의 목록에 어떤 오브젝트가 들어갔는지 로깅
-		_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
+		//_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
 
 		if (!_IsCollidableWith(_other))
 			return;
@@ -120,7 +120,7 @@ void Collider::DeregisterFromCollidedList(Collider* _other)
 	_UpdateIsCollidingState();
 
 	// 누구의 목록에서 어떤 오브젝트가 빠졌는지 로깅
-	_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
+	//_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
 
 	// Exit 신호 전파
 	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {

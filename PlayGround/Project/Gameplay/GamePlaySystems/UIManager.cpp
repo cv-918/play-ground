@@ -93,8 +93,6 @@ void UIManager::CleanUp()
 	// 2. it부터 end()까지는 이제 확실하게 '삭제 대기 중인 객체들'만 모여있습니다.
 	for (auto temp_it = it; temp_it != ui_list_.end(); ++temp_it)
 	{
-		_SYSTEM_LOG_INFO(L"UIManager: Destroying UI element - Name: %s, ID: %d", (*temp_it)->Name().c_str(), (*temp_it)->ID());
-
 		(*temp_it)->OnDestroy();
 		delete (*temp_it);
 	}

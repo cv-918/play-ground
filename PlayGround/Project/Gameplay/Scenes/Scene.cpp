@@ -39,8 +39,6 @@ _int Scene::LateUpdate(_double _delta_time)
 	object_manager_->LateUpdate(_delta_time);
 	ui_manager_->LateUpdate(_delta_time);
 
-	CleanUp();
-
 	return UPDATE_CONTINUE;
 }
 
