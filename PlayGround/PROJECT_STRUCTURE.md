@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-08 01:13)
+﻿# Project Structure (Updated: 2026-04-08 15:54)
 
 ```text
 Root
@@ -10,6 +10,8 @@ Root
 |   |   |   +--- Skills
 |   |   |   |   +--- Icons
 |   |   |   +--- World
++--- html
+|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -55,6 +57,9 @@ Root
 |   |   |   |   ParticleService.h
 |   |   |   |   RenderChain.cpp
 |   |   |   |   RenderChain.h
+|   |   |   |   ScreenSystem.cpp
+|   |   |   |   ScreenSystem.h
+|   |   |   |   VideoSettings.h
 |   |   +--- Timer
 |   |   |   |   Timer.cpp
 |   |   |   |   Timer.h
@@ -158,6 +163,8 @@ Root
 |   |   |   |   UIManager.h
 |   |   |   |   UserProfile.cpp
 |   |   |   |   UserProfile.h
+|   |   |   |   VideoSettingsManager.cpp
+|   |   |   |   VideoSettingsManager.h
 |   |   +--- Scenes
 |   |   |   |   InGameScene.cpp
 |   |   |   |   InGameScene.h
@@ -182,6 +189,8 @@ Root
 |   |   |   |   |   Text.cpp
 |   |   |   |   |   Text.h
 |   |   |   +--- Views
+|   |   |   |   |   DlgOptionVideo.cpp
+|   |   |   |   |   DlgOptionVideo.h
 |   |   |   |   |   InGamePauseView.cpp
 |   |   |   |   |   InGamePauseView.h
 |   |   |   |   |   InGamePlayView.cpp
@@ -215,15 +224,20 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
++--- xml
 +--- _DevLog
 |   +--- Documents
 |   |   +--- Copilot
 |   |   +--- Design
 |   |   |   +--- Input
+|   |   |   +--- Option
+|   |   |   |   +--- Video
 |   |   +--- Memo
+|   |   +--- Scope
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
++--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

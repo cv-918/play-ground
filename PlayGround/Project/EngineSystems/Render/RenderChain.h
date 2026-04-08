@@ -19,6 +19,7 @@ public:
 public:
 	void Clear();
 	void Present();
+	_bool ResizeBackBuffer(const _int _width, const _int _height);
 
 private:
 	_bool _CreateBackBuffer(const _int _width, const _int _height);

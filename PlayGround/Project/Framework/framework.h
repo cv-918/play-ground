@@ -53,6 +53,8 @@
 // 정의 자료형들도 Extern 변수로 사용할 수 있기 때문에 여기에서 포함
 #include "EngineSystems/Json/json.hpp"
 #include "EngineSystems/Render/GraphicResourceManager.h"
+#include "EngineSystems/Render/VideoSettings.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 #include "EngineSystems/Debug/RunTimeDebuggingAssistant.h"
 #include "EngineSystems/Input/InputManager.h"
 #include "EngineSystems/Timer/Timer.h"
@@ -67,6 +69,7 @@
 #include "Common/CommonGamePlayFunctions.h"
 
 #include "GamePlaySystems/UserProfile.h"
+#include "GamePlaySystems/VideoSettingsManager.h"
 #include "GamePlaySystems/GameState.h"
 #include "GamePlaySystems/RunState.h"
 

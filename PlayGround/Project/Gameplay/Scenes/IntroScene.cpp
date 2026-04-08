@@ -1,6 +1,8 @@
 ﻿#include "framework.h"
 #include "IntroScene.h"
 
+#include "EngineSystems/Render/ScreenSystem.h"
+
 _bool IntroScene::Initialize()
 {
 	if (!__super::Initialize())
@@ -85,7 +87,8 @@ void IntroScene::Render(_double _delta_time)
 		alpha = 0.0f;
 	}
 
-  const _RectF dest_rect(0.f, 0.f, s_float(WINCX), s_float(WINCY));
+ const Resolution resolution = _ScreenSystem.WindowResolution();
+	const _RectF dest_rect(0.f, 0.f, s_float(resolution.width), s_float(resolution.height));
 	const _RectF src_rect(
 		scene_image_rect_.X,
 		scene_image_rect_.Y,

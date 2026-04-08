@@ -1,6 +1,8 @@
 ﻿#include "framework.h"
 #include "Scene.h"
 
+#include "EngineSystems/Render/ScreenSystem.h"
+
 #include "Actors/GameObjectBase.h"
 #include "UI/UIBase.h"
 
@@ -45,7 +47,8 @@ _int Scene::LateUpdate(_double _delta_time)
 void Scene::Render(_double _delta_time)
 {
 	// s, [ 테스트용 배경 그리기 ]
-	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
+	const Resolution resolution = _ScreenSystem.WindowResolution();
+	const _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ resolution.width, resolution.height } };
 	_DrawFunc::FillRectangle(rt, Palette::Pearl);
 	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
 	// e, [ 테스트용 배경 그리기 ]

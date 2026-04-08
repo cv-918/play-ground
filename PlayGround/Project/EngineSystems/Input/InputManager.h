@@ -1,8 +1,4 @@
 ﻿#pragma once
-#pragma once
-
-#include <array>
-#include <vector>
 
 #define _InputMgr InputManager::Get()
 #define INPUT_KEY_MAX 256
@@ -137,6 +133,7 @@ public:
 	InputRemapResult TryRemapAction(ControllerPreset _preset, InputAction _action, const InputBinding& _new_binding);
 
 	_Point MousePoint() const { return mouse_; }
+  _Point MousePointDesign() const;
 	_Point MouseDelta() const { return mouse_delta_; }
 	_int WheelDelta() const { return wheel_delta_; } // ±120 단위가 일반적
 
