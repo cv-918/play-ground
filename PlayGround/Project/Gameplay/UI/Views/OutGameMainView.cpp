@@ -3,7 +3,10 @@
 
 #include "../Elements/Button.h"
 
-OutGameMainView::OutGameMainView(const std::function<void()>& _start_btn_callback, const std::function<void()>& _attr_btn_callback)
+OutGameMainView::OutGameMainView(
+	const std::function<void()>& _start_btn_callback,
+	const std::function<void()>& _attr_btn_callback,
+	const std::function<void()>& _video_option_btn_callback)
 {
 	// 좌표 (중앙)
 	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
@@ -23,4 +26,11 @@ OutGameMainView::OutGameMainView(const std::function<void()>& _start_btn_callbac
 	attr_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 	attr_btn->SetText(L"ATTRIBUTE");
 	attr_btn->SetOnLClick(_attr_btn_callback);
+
+	y += COMMON_BUTTON_SIZE.y + gap;
+
+	const auto option_btn = CreateElement<Button>();
+	option_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
+	option_btn->SetText(L"VIDEO OPTION");
+	option_btn->SetOnLClick(_video_option_btn_callback);
 }

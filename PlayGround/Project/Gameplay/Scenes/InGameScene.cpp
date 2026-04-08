@@ -8,6 +8,7 @@
 #include "GamePlaySystems/StageManager.h"
 #include "GamePlaySystems/SkillManager.h"
 #include "EngineSystems/Physics/CollisionManager.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 
 _bool InGameScene::Initialize()
 {
@@ -98,7 +99,8 @@ void InGameScene::Render(_double _delta_time)
 	// 3. 월드 요소들 렌더링 (배경, 캐릭터, 몬스터 등)
 	// 이 안에서 호출되는 모든 DrawFunctions가 흔들린 좌표에 그려집니다.
 	// s, [ 테스트용 배경 그리기 ]
-	static _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ WINCX, WINCY } };
+   const Resolution resolution = _ScreenSystem.WindowResolution();
+	const _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ resolution.width, resolution.height } };
 	_DrawFunc::FillRectangle(rt, Palette::Pearl);
 	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
 	// e, [ 테스트용 배경 그리기 ]

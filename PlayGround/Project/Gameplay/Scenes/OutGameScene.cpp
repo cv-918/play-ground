@@ -3,6 +3,7 @@
 
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
+#include "UI/Views/DlgOptionVideo.h"
 
 #include "GamePlay/World/Background.h"
 
@@ -204,6 +205,11 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 		current_view_ = find->second;
 		current_view_->Activate();
 	}
+
+	if (view_state_ == OutGameViewState::VideoOption)
+	{
+		_VideoSettingsMgr.BeginEdit();
+	}
 }
 
 WidgetBase* OutGameScene::_CreateView()
@@ -215,10 +221,15 @@ WidgetBase* OutGameScene::_CreateView()
 	case OutGameScene::OutGameViewState::Main:
 		return ui_manager_->CreateUI<OutGameMainView>(
 			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
-			[this]() { _ChangeView(OutGameViewState::Attribute); }
+          [this]() { _ChangeView(OutGameViewState::Attribute); },
+			[this]() { _ChangeView(OutGameViewState::VideoOption); }
 		);
 	case OutGameScene::OutGameViewState::Attribute:
 		return ui_manager_->CreateUI<OutGameAttributeView>(
+			[this]() { _ChangeView(OutGameViewState::Main); }
+		);
+  case OutGameScene::OutGameViewState::VideoOption:
+		return ui_manager_->CreateUI<DlgOptionVideo>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
 		break;
@@ -235,6 +246,8 @@ std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 		return L"Main View";
 	case OutGameScene::OutGameViewState::Attribute:
 		return L"Attribute View";
+    case OutGameScene::OutGameViewState::VideoOption:
+		return L"Video Option View";
 	default:
 		return L"Unknown View";
 	}

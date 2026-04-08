@@ -1,5 +1,4 @@
 ﻿#include "framework.h"
-#include "framework.h"
 #include "InputManager.h"
 
 #include <windowsx.h>
@@ -161,6 +160,34 @@ bool InputManager::Up(_int _vk) const
 	return keys_[s_cast(uint8_t, _vk)].went_up;
 }
 
+_Point InputManager::MousePointDesign() const
+{
+	const Resolution design = _ScreenSystem.DesignResolution();
+	const Resolution window = _ScreenSystem.WindowResolution();
+
+    if (design.width <= 0 || design.height <= 0)
+		return mouse_;
+
+	if (window.width <= 0 || window.height <= 0)
+		return mouse_;
+
+	const _float sx = s_cast(_float, design.width) / s_cast(_float, window.width);
+	const _float sy = s_cast(_float, design.height) / s_cast(_float, window.height);
+
+	_Point converted;
+	converted.x = s_int(std::round(s_cast(_float, mouse_.x) * sx));
+	converted.y = s_int(std::round(s_cast(_float, mouse_.y) * sy));
+
+ // 가정: 프로젝트의 _Rect::PtInRect는 Right/Bottom 배타(<) 정책이다.
+	// 따라서 입력 좌표는 [0, width-1], [0, height-1]로 보수적으로 clamp 한다.
+	const _int max_x = std::max(0, design.width - 1);
+	const _int max_y = std::max(0, design.height - 1);
+	converted.x = std::clamp(converted.x, 0, max_x);
+	converted.y = std::clamp(converted.y, 0, max_y);
+
+	return converted;
+}
+
 void InputManager::SetCurrentPreset(ControllerPreset _preset)
 {
 	if (current_preset_ == _preset)
@@ -297,8 +324,18 @@ void InputManager::RebuildActionStates()
 	// 5단계: MouseOnly 프리셋 이동을 "마우스 방향 + 거리"로 계산한다.
 	if (current_preset_ == ControllerPreset::MouseOnly)
 	{
-		const _float dx = s_cast(_float, mouse_delta_.x);
-		const _float dy = s_cast(_float, mouse_delta_.y);
+       const Resolution design = _ScreenSystem.DesignResolution();
+		const Resolution window = _ScreenSystem.WindowResolution();
+
+		_float dx = s_cast(_float, mouse_delta_.x);
+		_float dy = s_cast(_float, mouse_delta_.y);
+
+		if (window.width > 0 && window.height > 0)
+		{
+			dx *= s_cast(_float, design.width) / s_cast(_float, window.width);
+			dy *= s_cast(_float, design.height) / s_cast(_float, window.height);
+		}
+
 		const _float distance = std::sqrt(dx * dx + dy * dy);
 
 		ActionState& move_x = action_states_[ToActionIndex(InputAction::MoveX)];

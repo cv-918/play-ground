@@ -8,6 +8,7 @@ class OutGameScene final : public Scene
 		Undefined = 0,
 		Main,
 		Attribute,
+      VideoOption,
 	};
 
 public:

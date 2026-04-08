@@ -40,6 +40,14 @@ void RenderChain::Present()
 	BitBlt(g_dc, 0, 0, g_screen_size.x, g_screen_size.y, g_back_dc, 0, 0, SRCCOPY);
 }
 
+_bool RenderChain::ResizeBackBuffer(const _int _width, const _int _height)
+{
+	if (_width <= 0 || _height <= 0)
+		return false;
+
+	return _CreateBackBuffer(_width, _height);
+}
+
 _bool RenderChain::_CreateBackBuffer(const _int _width, const _int _height)
 {
 	// 기존 리소스 정리
