@@ -1,5 +1,5 @@
 ﻿#include "framework.h"
-#include "DlgOptionVideo.h"
+#include "OutGameVideoOptionView.h"
 
 #include "../Elements/Button.h"
 #include "../Elements/Text.h"
@@ -24,7 +24,7 @@ namespace
     }
 }
 
-DlgOptionVideo::DlgOptionVideo(const std::function<void()>& _close_callback)
+OutGameVideoOptionView::OutGameVideoOptionView(const std::function<void()>& _close_callback)
     : close_callback_(_close_callback)
 {
     _VideoSettingsMgr.BeginEdit();
@@ -82,7 +82,7 @@ DlgOptionVideo::DlgOptionVideo(const std::function<void()>& _close_callback)
     RefreshTexts();
 }
 
-_int DlgOptionVideo::Update(_double _delta_time)
+_int OutGameVideoOptionView::Update(_double _delta_time)
 {
     if (_InputMgr.Down(VK_UP))
         MoveFocus(-1);
@@ -113,12 +113,12 @@ _int DlgOptionVideo::Update(_double _delta_time)
     return __super::Update(_delta_time);
 }
 
-void DlgOptionVideo::Render(_double _delta_time)
+void OutGameVideoOptionView::Render(_double _delta_time)
 {
     __super::Render(_delta_time);
 }
 
-void DlgOptionVideo::RefreshTexts()
+void OutGameVideoOptionView::RefreshTexts()
 {
     resolution_text_->SetText(WrapFocusableLabel(
         focus_item_ == FocusItem::Resolution,
@@ -138,7 +138,7 @@ void DlgOptionVideo::RefreshTexts()
     back_btn_->SetText(WrapFocusableLabel(focus_item_ == FocusItem::Back, L"BACK"));
 }
 
-void DlgOptionVideo::UpdateLayout()
+void OutGameVideoOptionView::UpdateLayout()
 {
     // UI 스케일 반영 정책:
     // 레이아웃/프리뷰는 Pending이 아닌 Applied 기준으로만 갱신된다.
@@ -166,7 +166,7 @@ void DlgOptionVideo::UpdateLayout()
     hint_text_->SetPosition(_Point{ x, btn_y + COMMON_BUTTON_CY + hint_offset_y });
 }
 
-void DlgOptionVideo::MoveFocus(_int _direction)
+void OutGameVideoOptionView::MoveFocus(_int _direction)
 {
     _int index = s_cast(_int, focus_item_);
     const _int count = s_cast(_int, FocusItem::Count);
@@ -180,7 +180,7 @@ void DlgOptionVideo::MoveFocus(_int _direction)
     focus_item_ = s_cast(FocusItem, index);
 }
 
-void DlgOptionVideo::HandleHorizontalInput(_int _direction)
+void OutGameVideoOptionView::HandleHorizontalInput(_int _direction)
 {
     switch (focus_item_)
     {
@@ -198,7 +198,7 @@ void DlgOptionVideo::HandleHorizontalInput(_int _direction)
     }
 }
 
-void DlgOptionVideo::InvokeFocusedAction()
+void OutGameVideoOptionView::InvokeFocusedAction()
 {
     switch (focus_item_)
     {
@@ -221,13 +221,13 @@ void DlgOptionVideo::InvokeFocusedAction()
     }
 }
 
-std::wstring DlgOptionVideo::ToResolutionText() const
+std::wstring OutGameVideoOptionView::ToResolutionText() const
 {
     const Resolution& resolution = _VideoSettingsMgr.Pending().resolution;
     return std::to_wstring(resolution.width) + L" x " + std::to_wstring(resolution.height);
 }
 
-std::wstring DlgOptionVideo::ToWindowModeText() const
+std::wstring OutGameVideoOptionView::ToWindowModeText() const
 {
     switch (_VideoSettingsMgr.Pending().window_mode)
     {
@@ -241,7 +241,7 @@ std::wstring DlgOptionVideo::ToWindowModeText() const
     }
 }
 
-std::wstring DlgOptionVideo::ToUiScaleText() const
+std::wstring OutGameVideoOptionView::ToUiScaleText() const
 {
     // 표시 텍스트는 Pending 값을 보여주되, 실제 레이아웃 스케일 반영은 Applied 정책을 따른다.
     wchar_t buffer[32] = {};

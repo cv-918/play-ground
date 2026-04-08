@@ -87,7 +87,7 @@
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameMainView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameAttributeView.h" />
-    <ClInclude Include="Project\Gameplay\UI\Views\DlgOptionVideo.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
@@ -105,8 +105,6 @@
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.h" />
-    <ClInclude Include="Project\\Gameplay\\GamePlaySystems\\SkillManager.h" />
-    <ClInclude Include="Project\\Gameplay\\GamePlaySystems\\VideoSettingsManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.h" />
@@ -117,9 +115,6 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.h" />
-    <ClInclude Include="Project\\EngineSystems\\Render\\GraphicResourceManager.h" />
-    <ClInclude Include="Project\\EngineSystems\\Render\\ScreenSystem.h" />
-    <ClInclude Include="Project\\EngineSystems\\Render\\VideoSettings.h" />
     <ClInclude Include="Project\EngineSystems\Render\CameraManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleService.h" />
     <ClInclude Include="Project\Core\Math\Vector2.h" />
@@ -139,6 +134,12 @@
     <ClInclude Include="Project\Gameplay\UI\Elements\Image.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameViewRenderUtils.h" />
+    <ClInclude Include="Project\EngineSystems\Render\GraphicResourceManager.h" />
+    <ClInclude Include="Project\EngineSystems\Render\ScreenSystem.h" />
+    <ClInclude Include="Project\EngineSystems\Render\VideoSettings.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameExitView.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -208,7 +209,7 @@
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Views\DlgOptionVideo.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
@@ -224,8 +225,6 @@
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
-    <ClCompile Include="Project\\Gameplay\\GamePlaySystems\\SkillManager.cpp" />
-    <ClCompile Include="Project\\Gameplay\\GamePlaySystems\\VideoSettingsManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_AtmosphericCorrosion.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_DustGust.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DustGustObject.cpp" />
@@ -236,8 +235,6 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\DarkSightObject.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\Dust_LintSatellite.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\LintSatelliteObject.cpp" />
-    <ClCompile Include="Project\\EngineSystems\\Render\\GraphicResourceManager.cpp" />
-    <ClCompile Include="Project\\EngineSystems\\Render\\ScreenSystem.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\CameraManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
     <ClCompile Include="Project\Core\Math\Vector2.cpp" />
@@ -254,10 +251,13 @@
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Image.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\GraphicResourceManager.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\ScreenSystem.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+    <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
   </ItemGroup>
 </Project>
-
-

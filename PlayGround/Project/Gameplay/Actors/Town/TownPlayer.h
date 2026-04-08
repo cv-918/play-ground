@@ -6,7 +6,7 @@ class TownPlayer final
 	: public GameObjectBase
 {
 public:
-	explicit TownPlayer(const PlayableCharacterJsonInfo* _info) : info_(_info) {}
+	explicit TownPlayer(const PlayableCharacterJsonInfo* _info);
 	virtual ~TownPlayer();
 
 public:
@@ -21,7 +21,11 @@ public:
 	IInteractable* GetCurrentInteractable() const;
 
 private:
+	void _DrawObjectShape() override;
+
+private:
 	const PlayableCharacterJsonInfo* info_ = nullptr;
+	const SpriteResource* player_sprite_ = nullptr;
 
 	class PlayerMovement* movement_ = nullptr;
 	Collider* interaction_collider_ = nullptr;

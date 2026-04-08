@@ -1,4 +1,5 @@
 ﻿#include "framework.h"
+#include "framework.h"
 #include "OutGameMainView.h"
 
 #include "../Elements/Button.h"
@@ -6,7 +7,9 @@
 OutGameMainView::OutGameMainView(
 	const std::function<void()>& _start_btn_callback,
 	const std::function<void()>& _attr_btn_callback,
-	const std::function<void()>& _video_option_btn_callback)
+    const std::function<void()>& _video_option_btn_callback,
+	const std::function<void()>& _exit_view_btn_callback)
+	: exit_view_btn_callback_(_exit_view_btn_callback)
 {
 	// 좌표 (중앙)
 	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
@@ -33,4 +36,18 @@ OutGameMainView::OutGameMainView(
 	option_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 	option_btn->SetText(L"VIDEO OPTION");
 	option_btn->SetOnLClick(_video_option_btn_callback);
+}
+
+_int OutGameMainView::Update(_double _delta_time)
+{
+	const auto ret = __super::Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	if (_InputMgr.Down(VK_ESCAPE) && exit_view_btn_callback_)
+	{
+		exit_view_btn_callback_();
+	}
+
+	return UPDATE_CONTINUE;
 }

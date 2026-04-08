@@ -3,7 +3,8 @@
 
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
-#include "UI/Views/DlgOptionVideo.h"
+#include "UI/Views/OutGameVideoOptionView.h"
+#include "UI/Views/OutGameExitView.h"
 
 #include "GamePlay/World/Background.h"
 
@@ -46,6 +47,12 @@ _int OutGameScene::Update(_double _delta_time)
 	switch (view_state_)
 	{
 	case OutGameScene::OutGameViewState::Main:
+        if (_InputMgr.Down(VK_ESCAPE))
+		{
+			_ChangeView(OutGameViewState::Exit);
+			break;
+		}
+
 		if (_InputMgr.Down('T'))
 		{
 			_ChangeView(OutGameViewState::Attribute);
@@ -77,50 +84,6 @@ _int OutGameScene::LateUpdate(_double _delta_time)
 void OutGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
-
-	//Gdiplus::Rect gaugeRect(50, 50, 200, 200); // 게이지 크기 및 위치
-	//float progress = 75.0f;           // 75% 진행 상태
-
-	//// 1. PathGradientBrush로 입체적인 배경 그리기
-	//Gdiplus::GraphicsPath path;
-	//path.AddEllipse(gaugeRect);
-
-	//Gdiplus::PathGradientBrush pgb(&path);
-	//_Color centerColor(255, 60, 60, 60);    // 중심: 진한 회색
-	//int count = 1;
-	//_Color edgeColor(255, 20, 20, 20);      // 외곽: 더 어두운 색
-
-	//pgb.SetCenterColor(centerColor);
-	//pgb.SetSurroundColors(&edgeColor, &count);
-
-	//g_graphics->FillEllipse((Gdiplus::Brush*)&pgb, gaugeRect);
-
-	//// 2. 게이지 테두리 (비어있는 부분)
-	//Gdiplus::Pen basePen(_Color(100, 80, 80, 80), 15); // 반투명 회색, 두께 15
-	//g_graphics->DrawEllipse(&basePen, gaugeRect);
-
-	//// 3. 실제 진행률 표시 (Arc)
-	//// 시작 각도: 270도 (12시 방향), 스윕 각도: 360도 * (진행률/100)
-	//Gdiplus::Pen progressPen(_Color(255, 0, 200, 255), 15); // 형광 파란색
-	//progressPen.SetStartCap(Gdiplus::LineCapRound);        // 시작점 둥글게
-	//progressPen.SetEndCap(Gdiplus::LineCapRound);          // 끝점 둥글게
-
-	//g_graphics->DrawArc(&progressPen, gaugeRect, 270.0f, (3.6f * progress));
-
-	//// 4. 중앙에 텍스트 표시
-	//Gdiplus::FontFamily fontFamily(L"Arial");
-	//Gdiplus::Font font(&fontFamily, 24, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-	//Gdiplus::SolidBrush textBrush(_Color::White);
-	//
-	//Gdiplus::StringFormat format;
-	//format.SetAlignment(Gdiplus::StringAlignmentCenter);
-	//format.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-
-	//WCHAR szProgress[10];
-	//swprintf_s(szProgress, L"%.0f%%", progress);
-
-	//Gdiplus::RectF textRect(50, 50, 200, 200);
-	//g_graphics->DrawString(szProgress, -1, &font, textRect, &format, &textBrush);
 }
 
 void OutGameScene::OnEnter()
@@ -130,7 +93,7 @@ void OutGameScene::OnEnter()
 	Background::CreateInfo background_info;
 	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
 	background_info.nav_mesh_size_ = _Size(2560, 1600);
- background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
+	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(
 		0.f,
 		0.f,
@@ -173,7 +136,7 @@ void OutGameScene::OnEnter()
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
 
-   RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
+	RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
 	_CameraMgr.SetWorldBounds(world_bounds);
 	_CameraMgr.EnableClamp(true);
 }
@@ -221,18 +184,23 @@ WidgetBase* OutGameScene::_CreateView()
 	case OutGameScene::OutGameViewState::Main:
 		return ui_manager_->CreateUI<OutGameMainView>(
 			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
-          [this]() { _ChangeView(OutGameViewState::Attribute); },
-			[this]() { _ChangeView(OutGameViewState::VideoOption); }
+			[this]() { _ChangeView(OutGameViewState::Attribute); },
+            [this]() { _ChangeView(OutGameViewState::VideoOption); },
+			[this]() { _ChangeView(OutGameViewState::Exit); }
 		);
 	case OutGameScene::OutGameViewState::Attribute:
 		return ui_manager_->CreateUI<OutGameAttributeView>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
-  case OutGameScene::OutGameViewState::VideoOption:
-		return ui_manager_->CreateUI<DlgOptionVideo>(
+	case OutGameScene::OutGameViewState::VideoOption:
+		return ui_manager_->CreateUI<OutGameVideoOptionView>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
-		break;
+  case OutGameScene::OutGameViewState::Exit:
+		return ui_manager_->CreateUI<OutGameExitView>(
+			[]() { PostQuitMessage(0); },
+			[this]() { _ChangeView(OutGameViewState::Main); }
+		);
 	}
 
 	return nullptr;
@@ -246,8 +214,10 @@ std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 		return L"Main View";
 	case OutGameScene::OutGameViewState::Attribute:
 		return L"Attribute View";
-    case OutGameScene::OutGameViewState::VideoOption:
+	case OutGameScene::OutGameViewState::VideoOption:
 		return L"Video Option View";
+    case OutGameScene::OutGameViewState::Exit:
+		return L"Exit View";
 	default:
 		return L"Unknown View";
 	}

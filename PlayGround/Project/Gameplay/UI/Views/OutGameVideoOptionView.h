@@ -5,10 +5,10 @@
 class Button;
 class Text;
 
-class DlgOptionVideo final : public WidgetBase
+class OutGameVideoOptionView final : public WidgetBase
 {
 public:
-    explicit DlgOptionVideo(const std::function<void()>& _close_callback);
+    explicit OutGameVideoOptionView(const std::function<void()>& _close_callback);
 
 private:
     enum class FocusItem
