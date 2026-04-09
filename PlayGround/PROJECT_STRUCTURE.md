@@ -1,9 +1,10 @@
-﻿# Project Structure (Updated: 2026-04-09 15:45)
+﻿# Project Structure (Updated: 2026-04-09 18:05)
 
 ```text
 Root
 +--- Data
 |   +--- Resources
+|   |   +--- Fonts
 |   |   +--- Textures
 |   |   |   +--- Characters
 |   |   |   +--- Particles

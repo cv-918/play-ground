@@ -11,7 +11,7 @@ namespace
 
 	COLORREF ToColorRef(const _Color& _color)
 	{
-       return RGB(_color.GetR(), _color.GetG(), _color.GetB());
+		return RGB(_color.GetR(), _color.GetG(), _color.GetB());
 	}
 
 	_int ToFontWeight(_int _style)
@@ -20,18 +20,33 @@ namespace
 	}
 }
 
+GraphicResourceManager::GraphicResourceManager()
+{
+	std::wstring font_path = Path::Font + L"D2Coding.ttc";
+	if (AddFontResourceEx(font_path.c_str(), FR_PRIVATE, nullptr) > 0) {
+		// 성공 시 로그 출력
+		_SYSTEM_LOG_INFO(_T("Font loaded successfully: %s"), font_path.c_str());
+	}
+	else {
+		// 실패 시 로그 출력
+		_SYSTEM_LOG_ERROR(_T("Failed to load font: %s"), font_path.c_str());
+	}
+}
+
 GraphicResourceManager::~GraphicResourceManager()
 {
+	std::wstring font_path = Path::Font + L"D2Coding.ttc";
+	RemoveFontResourceEx(font_path.c_str(), FR_PRIVATE, nullptr);
 	Release();
 }
 
 HBRUSH GraphicResourceManager::GetBrush(_Color _color)
 {
 	const auto key = GetColorKey(_color);
-   auto it = brushes_.find(key);
+	auto it = brushes_.find(key);
 	if (it == brushes_.end())
 	{
-        const auto brush = CreateSolidBrush(ToColorRef(_color));
+		const auto brush = CreateSolidBrush(ToColorRef(_color));
 		brushes_[key] = brush;
 		return brush;
 	}
@@ -53,7 +68,7 @@ HPEN GraphicResourceManager::GetPen(_Color _color, _float _thickness)
 	auto it = pens_.find(key);
 	if (it == pens_.end())
 	{
-      const auto pen = CreatePen(PS_SOLID, std::max(1, s_int(std::round(_thickness))), ToColorRef(_color));
+		const auto pen = CreatePen(PS_SOLID, std::max(1, s_int(std::round(_thickness))), ToColorRef(_color));
 		pens_[key] = pen;
 		return pen;
 	}
@@ -75,7 +90,7 @@ HFONT GraphicResourceManager::GetFont(_float _size, _int _style)
 	auto it = fonts_.find(key);
 	if (it != fonts_.end()) return it->second;
 
-   const auto weight = ToFontWeight(_style);
+	const auto weight = ToFontWeight(_style);
 	const auto italic = (_style & RenderStyle::Italic) ? TRUE : FALSE;
 	const auto underline = (_style & RenderStyle::Underline) ? TRUE : FALSE;
 	const auto strikeout = (_style & RenderStyle::Strikeout) ? TRUE : FALSE;
@@ -104,7 +119,7 @@ HFONT GraphicResourceManager::GetFont(_float _size, _int _style)
 
 TextureResource* GraphicResourceManager::_LoadTextureFromFile(const std::wstring& _path)
 {
-    ComPtr<IWICImagingFactory> factory;
+	ComPtr<IWICImagingFactory> factory;
 	if (FAILED(CoCreateInstance(
 		CLSID_WICImagingFactory,
 		nullptr,
@@ -152,7 +167,7 @@ TextureResource* GraphicResourceManager::_LoadTextureFromFile(const std::wstring
 	auto* texture = new TextureResource();
 	texture->width = s_int(width);
 	texture->height = s_int(height);
-    texture->pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height));
+	texture->pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height));
 
 	const UINT stride = width * 4;
 	const UINT buffer_size = stride * height;
@@ -170,7 +185,7 @@ TextureResource* GraphicResourceManager::_LoadTextureFromFile(const std::wstring
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-   void* bits = nullptr;
+	void* bits = nullptr;
 	HDC temp_dc = g_back_dc;
 	if (!temp_dc)
 		temp_dc = GetDC(nullptr);
@@ -196,13 +211,13 @@ TextureResource* GraphicResourceManager::GetTexture(const std::wstring& _path)
 	if (it != textures_.end())
 		return it->second;
 
-  auto* texture = _LoadTextureFromFile(_path);
+	auto* texture = _LoadTextureFromFile(_path);
 	if (!texture)
 	{
 		return nullptr;
 	}
 
- textures_[_path] = texture;
+	textures_[_path] = texture;
 	return texture;
 }
 
@@ -217,13 +232,13 @@ const SpriteResource* GraphicResourceManager::GetSprite(
 	if (it != sprites_.end())
 		return &it->second;
 
-    auto* image = GetTexture(_path);
+	auto* image = GetTexture(_path);
 	if (!image)
 		return nullptr;
 
 	SpriteResource sprite;
 	sprite.image = image;
-   sprite.image_rect = RenderRectF(0.f, 0.f, s_float(image->Width()), s_float(image->Height()));
+	sprite.image_rect = RenderRectF(0.f, 0.f, s_float(image->Width()), s_float(image->Height()));
 	sprite.visible_bounds = _CalculateVisibleBounds(image, _alpha_threshold);
 	sprite.pivot_mode = _pivot_mode;
 	sprite.pivot = _CalculatePivot(sprite.visible_bounds, _pivot_mode);
@@ -239,13 +254,13 @@ void GraphicResourceManager::SetSpriteCustomPivot(const std::wstring& _path, con
 	auto it = sprites_.find(sprite_key);
 	if (it == sprites_.end())
 	{
-        auto* image = GetTexture(_path);
+		auto* image = GetTexture(_path);
 		if (!image)
 			return;
 
 		SpriteResource sprite;
 		sprite.image = image;
-       sprite.image_rect = RenderRectF(0.f, 0.f, s_float(image->Width()), s_float(image->Height()));
+		sprite.image_rect = RenderRectF(0.f, 0.f, s_float(image->Width()), s_float(image->Height()));
 		sprite.visible_bounds = _CalculateVisibleBounds(image, 8);
 		sprite.pivot_mode = SpritePivotMode::Custom;
 		sprite.pivot = _pivot;
@@ -262,28 +277,28 @@ VisibleBounds GraphicResourceManager::_CalculateVisibleBounds(const TextureResou
 {
 	VisibleBounds bounds{};
 
-   if (!_texture)
+	if (!_texture)
 		return bounds;
 
- const auto width = _texture->Width();
+	const auto width = _texture->Width();
 	const auto height = _texture->Height();
 
 	if (0 == width || 0 == height)
 		return bounds;
 
 	_bool found = false;
-  _int min_x = width;
+	_int min_x = width;
 	_int min_y = height;
 	_int max_x = -1;
 	_int max_y = -1;
 
- const auto* pixels = _texture->pixels.data();
+	const auto* pixels = _texture->pixels.data();
 
-    for (_int y = 0; y < height; ++y)
+	for (_int y = 0; y < height; ++y)
 	{
-     for (_int x = 0; x < width; ++x)
+		for (_int x = 0; x < width; ++x)
 		{
-         const auto argb = pixels[static_cast<size_t>(y) * width + x];
+			const auto argb = pixels[static_cast<size_t>(y) * width + x];
 			const auto alpha = s_ubyte((argb >> 24) & 0xFFu);
 			if (alpha <= _alpha_threshold)
 				continue;
@@ -301,7 +316,7 @@ VisibleBounds GraphicResourceManager::_CalculateVisibleBounds(const TextureResou
 	{
 		bounds.min_x = 0;
 		bounds.min_y = 0;
-        bounds.max_x = width - 1;
+		bounds.max_x = width - 1;
 		bounds.max_y = height - 1;
 		return bounds;
 	}
@@ -319,16 +334,16 @@ RenderPointF GraphicResourceManager::_CalculatePivot(const VisibleBounds& _visib
 	switch (_pivot_mode)
 	{
 	case SpritePivotMode::Center:
-       return RenderPointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
+		return RenderPointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
 
 	case SpritePivotMode::BottomCenter:
-       return RenderPointF(_visible_bounds.CenterX(), s_cast(_float, _visible_bounds.max_y));
+		return RenderPointF(_visible_bounds.CenterX(), s_cast(_float, _visible_bounds.max_y));
 
 	case SpritePivotMode::Custom:
 		break;
 	}
 
-   return RenderPointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
+	return RenderPointF(_visible_bounds.CenterX(), _visible_bounds.CenterY());
 }
 
 std::wstring GraphicResourceManager::_BuildSpriteKey(
@@ -346,15 +361,15 @@ TextureBrushResource* GraphicResourceManager::GetTextureBrush(const std::wstring
 	size_t path_hash = std::hash<std::wstring>{}(_path);
 	_ulonglong key = (s_cast(_ulonglong, path_hash) << 8) | (s_cast(_ulonglong, _wrap_mode));
 
-   auto it = tex_brushes_.find(key);
+	auto it = tex_brushes_.find(key);
 	if (it != tex_brushes_.end())
 		return it->second;
 
- const auto texture = GetTexture(_path);
+	const auto texture = GetTexture(_path);
 	if (!texture || !texture->bitmap)
 		return nullptr;
 
- auto* tex_brush = new TextureBrushResource();
+	auto* tex_brush = new TextureBrushResource();
 	tex_brush->brush = CreatePatternBrush(texture->bitmap);
 	tex_brush->wrap_mode = _wrap_mode;
 	tex_brush->path = _path;
@@ -364,13 +379,13 @@ TextureBrushResource* GraphicResourceManager::GetTextureBrush(const std::wstring
 
 TextureBrushResource* GraphicResourceManager::GetTextureBrush(_ulonglong _key)
 {
-  auto it = tex_brushes_.find(_key);
+	auto it = tex_brushes_.find(_key);
 	return (it != tex_brushes_.end()) ? it->second : nullptr;
 }
 
 const StringFormatResource* GraphicResourceManager::GetStringFormat(_bool _is_center)
 {
- if (_is_center)
+	if (_is_center)
 	{
 		format_center_.alignment_horizontal = RenderStyle::Center;
 		format_center_.alignment_vertical = RenderStyle::Center;
@@ -386,7 +401,7 @@ const StringFormatResource* GraphicResourceManager::GetStringFormat(_bool _is_ce
 
 void GraphicResourceManager::Release()
 {
-   for (auto& pair : brushes_) DeleteObject(pair.second);
+	for (auto& pair : brushes_) DeleteObject(pair.second);
 	for (auto& pair : pens_) DeleteObject(pair.second);
 	for (auto& pair : fonts_) DeleteObject(pair.second);
 

@@ -111,7 +111,7 @@ class GraphicResourceManager final
 	friend class ISingleton<GraphicResourceManager>;
 
 private:
-	explicit GraphicResourceManager() DEFAULT;
+	explicit GraphicResourceManager();
 
 public:
 	virtual ~GraphicResourceManager();
