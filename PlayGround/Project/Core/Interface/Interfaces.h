@@ -49,8 +49,8 @@ public:
 	explicit IUpdatable() DEFAULT;
 	virtual ~IUpdatable() DEFAULT;
 
-	virtual _int Update(_double _delta_time) { return 0; }
-	virtual _int LateUpdate(_double _delta_time) { return 0; }
+	virtual _int Update(_double _delta_time) { return IsActive() ? UPDATE_CONTINUE : UPDATE_BREAK; }
+	virtual _int LateUpdate(_double _delta_time) { return IsActive() ? UPDATE_CONTINUE : UPDATE_BREAK; }
 	virtual void Render(_double _delta_time) EMPTY_FUNC;
 	virtual void DebugRender() EMPTY_FUNC;
 

@@ -28,18 +28,32 @@ _bool Scene::Initialize()
 
 _int Scene::Update(_double _delta_time)
 {
-	object_manager_->Update(_delta_time);
-	ui_manager_->Update(_delta_time);
+	_int ret = UPDATE_CONTINUE;
 
-	return UPDATE_CONTINUE;
+	ret = object_manager_->Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	ret = ui_manager_->Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	return ret;
 }
 
 _int Scene::LateUpdate(_double _delta_time)
 {
-	object_manager_->LateUpdate(_delta_time);
-	ui_manager_->LateUpdate(_delta_time);
+	_int ret = UPDATE_CONTINUE;
 
-	return UPDATE_CONTINUE;
+	ret = object_manager_->LateUpdate(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	ret = ui_manager_->LateUpdate(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
+	return ret;
 }
 
 void Scene::Render(_double _delta_time)

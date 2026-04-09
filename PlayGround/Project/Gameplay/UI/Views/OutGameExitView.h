@@ -46,6 +46,7 @@ public:
         if (_InputMgr.Down(VK_ESCAPE) && no_btn_)
         {
             no_btn_->LClick();
+            return UPDATE_BREAK;
         }
 
         return UPDATE_CONTINUE;
