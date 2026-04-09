@@ -18,10 +18,11 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	const _int gap = 10;
 
 	// 돌아가기 버튼
-	return_btn_ = CreateElement<Button>();
-	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
-	return_btn_->SetText(L"RETURN");
-	return_btn_->SetOnLClick(_return_btn_callback);
+	Button::CreateInfo return_btn_info;
+	return_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE };
+	return_btn_info.text = L"RETURN";
+	return_btn_info.on_lclick = _return_btn_callback;
+	return_btn_ = CreateElement<Button>(return_btn_info);
 
 	// 스킬 목록 그리드
 	const auto table = _SkillDataMgr.GetTable(); // 스킬 데이터 로드 (디버그용))

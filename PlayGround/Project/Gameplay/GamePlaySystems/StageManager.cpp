@@ -65,7 +65,7 @@ void StageManager::ChangeState(StageState _new_state)
 		data.font_size_ = 80.f;
 		data.color_ = Palette::White;
 
-      ui_manager_->CreateUI<FloatingText>(data);
+		ui_manager_->CreateUI<FloatingText>(data);
 	}
 	break;
 
@@ -142,7 +142,7 @@ void StageManager::_OnEnter()
 	// 배경 생성. 배경은 네비메시 정보를 가지고 있기 때문에 가장 먼저 생성
 	Background::CreateInfo background_info;
 	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
- background_info.nav_mesh_size_ = _Size(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+	background_info.nav_mesh_size_ = _Size(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(
 		0.f,
@@ -178,7 +178,7 @@ void StageManager::_OnEnter()
 	player->GetTransform()->Position(GAME_VIEW_CENTER);
 	_RunState.SetPlayer(player);
 
-    const auto hp_bar = ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
+	const auto hp_bar = ui_manager_->CreateUI<HpBar>(player, DEFAULT_OFFSET_HP_BAR);
 
 	// 초기 에너미 스폰
 	const auto additional_spawn_count = _UserProfile.GetStageProgress() * 0.1f;
@@ -203,7 +203,7 @@ void StageManager::_OnEnter()
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(player->GetTransform());
 
-    RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
+	RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
 	_CameraMgr.SetWorldBounds(world_bounds);
 	_CameraMgr.EnableClamp(true);
 
@@ -508,7 +508,7 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 		spawned_enemy->SetPlayScene(play_scene_); // 적이 플레이씬에게 UI 생성 요청을 할 수 있도록 플레이씬 연결
 
 		// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
-     const auto hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
+		const auto hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
 
 		// 어떤 몬스터가 스폰됐는지 로깅 (테스트용, 나중에 필요 없으면 제거)
 		// _SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);

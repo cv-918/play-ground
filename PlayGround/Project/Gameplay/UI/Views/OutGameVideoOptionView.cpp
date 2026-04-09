@@ -48,30 +48,35 @@ OutGameVideoOptionView::OutGameVideoOptionView(const std::function<void()>& _clo
     ui_scale_text_->SetPosition(_Point{ START_X, START_Y + LINE_GAP * 2 });
 
     const _int btn_y = START_Y + LINE_GAP * 4;
-    apply_btn_ = CreateElement<Button>();
-    apply_btn_->SetRect(_Rect{ _Point{ START_X, btn_y }, COMMON_BUTTON_SIZE });
-    apply_btn_->SetText(L"APPLY");
-    apply_btn_->SetOnLClick([this]() { _VideoSettingsMgr.Apply(); });
 
-    cancel_btn_ = CreateElement<Button>();
-    cancel_btn_->SetRect(_Rect{ _Point{ START_X + COMMON_BUTTON_CX + 20, btn_y }, COMMON_BUTTON_SIZE });
-    cancel_btn_->SetText(L"CANCEL");
-    cancel_btn_->SetOnLClick([this]() { _VideoSettingsMgr.Cancel(); });
+	Button::CreateInfo apply_btn_info;
+	apply_btn_info.rect = _Rect{ _Point{ START_X, btn_y }, COMMON_BUTTON_SIZE };
+	apply_btn_info.text = L"APPLY";
+	apply_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Apply(); };
+    apply_btn_ = CreateElement<Button>(apply_btn_info);
 
-    reset_btn_ = CreateElement<Button>();
-    reset_btn_->SetRect(_Rect{ _Point{ START_X + (COMMON_BUTTON_CX + 20) * 2, btn_y }, COMMON_BUTTON_SIZE });
-    reset_btn_->SetText(L"RESET");
-    reset_btn_->SetOnLClick([this]() { _VideoSettingsMgr.Reset(); });
+	Button::CreateInfo cancel_btn_info;
+    cancel_btn_info.rect = _Rect{ _Point{ START_X + COMMON_BUTTON_CX + 20, btn_y }, COMMON_BUTTON_SIZE };
+	cancel_btn_info.text = L"CANCEL";
+	cancel_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Cancel(); };
+    cancel_btn_ = CreateElement<Button>(cancel_btn_info);
 
-    back_btn_ = CreateElement<Button>();
-    back_btn_->SetRect(_Rect{ _Point{ START_X, btn_y + COMMON_BUTTON_CY + 20 }, COMMON_BUTTON_SIZE });
-    back_btn_->SetText(L"BACK");
-    back_btn_->SetOnLClick([this]()
-        {
-            _VideoSettingsMgr.Cancel();
-            if (close_callback_)
-                close_callback_();
-        });
+	Button::CreateInfo reset_btn_info;
+	reset_btn_info.rect = _Rect{ _Point{ START_X + (COMMON_BUTTON_CX + 20) * 2, btn_y }, COMMON_BUTTON_SIZE };
+	reset_btn_info.text = L"RESET";
+	reset_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Reset(); };
+    reset_btn_ = CreateElement<Button>(reset_btn_info);
+
+	Button::CreateInfo back_btn_info;
+	back_btn_info.rect = _Rect{ _Point{ START_X, btn_y + COMMON_BUTTON_CY + 20 }, COMMON_BUTTON_SIZE };
+	back_btn_info.text = L"BACK";
+	back_btn_info.on_lclick = [this]()
+		{
+			_VideoSettingsMgr.Cancel();
+			if (close_callback_)
+				close_callback_();
+		};
+    back_btn_ = CreateElement<Button>(back_btn_info);
 
     hint_text_ = CreateElement<Text>();
     hint_text_->SetCenterAligned(false);

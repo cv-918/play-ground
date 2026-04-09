@@ -178,18 +178,19 @@ Button* Grid::AddCellButton(_int _row, _int _col, const std::wstring& _text, con
 
 	if (nullptr == cell.button)
 	{
-		cell.button = new Button();
+		Button::CreateInfo button_info;
+		button_info.rect = GetCellRect(_row, _col);
+		button_info.text = _text;
+		button_info.on_lclick = _on_click;
+		button_info.on_rclick = _on_right_click;
+
+		cell.button = new Button(button_info);
 		if (!cell.button->Initialize())
 		{
 			SAFE_DELETE(cell.button);
 			return nullptr;
 		}
 	}
-
-	cell.button->SetText(_text);
-	cell.button->SetOnLClick(_on_click);
-	cell.button->SetOnRClick(_on_right_click);
-	cell.button->SetRect(GetCellRect(_row, _col));
 
 	return cell.button;
 }

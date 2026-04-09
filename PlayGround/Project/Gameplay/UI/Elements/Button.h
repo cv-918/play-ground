@@ -13,6 +13,18 @@ enum class ButtonState
 class Button final : public UIBase
 {
 public:
+	struct CreateInfo : public UIBase::UICreateInfo
+	{
+		std::wstring text;
+		std::wstring image_path;
+		std::function<void()> on_lclick;
+		std::function<void()> on_rclick;
+	};
+
+public:
+	explicit Button(const CreateInfo& _info);
+
+public:
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
 
@@ -28,6 +40,7 @@ public:
 	void RClick() { if (on_rclick_) on_rclick_(); }
 
 private:
+	const SpriteResource* sprite_ = nullptr;
 	std::wstring text_; // 버튼에 표시될 텍스트
 	std::function<void()> on_lclick_; // 버튼 좌클릭 시 호출될 콜백 함수
 	std::function<void()> on_rclick_; // 버튼 우클릭 시 호출될 콜백 함수

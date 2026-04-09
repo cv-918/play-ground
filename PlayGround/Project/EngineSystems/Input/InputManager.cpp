@@ -45,7 +45,7 @@ void InputManager::BeginFrame()
 	mouse_delta_.y = 0;
 	prev_mouse_ = mouse_;
 
-    // 이번 프레임 액션 상태는 메시지 처리 후 1회만 동기화한다.
+	// 이번 프레임 액션 상태는 메시지 처리 후 1회만 동기화한다.
 	action_states_dirty_ = true;
 }
 
@@ -68,7 +68,7 @@ void InputManager::ResetAll()
 
 	// 문자 입력 버퍼도 초기화
 	chars_.clear();
-   action_states_dirty_ = true;
+	action_states_dirty_ = true;
 }
 
 void InputManager::OnMouseMove(WPARAM _wparam, LPARAM _lparam)
@@ -81,7 +81,7 @@ void InputManager::OnMouseMove(WPARAM _wparam, LPARAM _lparam)
 	mouse_delta_.y += (mouse_.y - prev_mouse_.y);
 
 	// 마우스 이동이 들어오면 즉시 액션 상태를 재계산한다.
-  action_states_dirty_ = true;
+	action_states_dirty_ = true;
 
 	(void)_wparam;
 }
@@ -120,7 +120,7 @@ void InputManager::OnKeyDown(WPARAM _vk, LPARAM _lparam)
 		k.went_down = true;
 
 		++pressed_key_count_;
-     action_states_dirty_ = true;
+		action_states_dirty_ = true;
 		return;
 	}
 
@@ -142,7 +142,7 @@ void InputManager::OnKeyUp(WPARAM _vk, LPARAM _lparam)
 		if (pressed_key_count_ > 0)
 			--pressed_key_count_;
 
-      action_states_dirty_ = true;
+		action_states_dirty_ = true;
 	}
 }
 
@@ -175,7 +175,7 @@ _Point InputManager::MousePointDesign() const
 	const Resolution design = _ScreenSystem.DesignResolution();
 	const Resolution window = _ScreenSystem.WindowResolution();
 
-    if (design.width <= 0 || design.height <= 0)
+	if (design.width <= 0 || design.height <= 0)
 		return mouse_;
 
 	if (window.width <= 0 || window.height <= 0)
@@ -188,8 +188,8 @@ _Point InputManager::MousePointDesign() const
 	converted.x = s_int(std::round(s_cast(_float, mouse_.x) * sx));
 	converted.y = s_int(std::round(s_cast(_float, mouse_.y) * sy));
 
- // 가정: 프로젝트의 _Rect::PtInRect는 Right/Bottom 배타(<) 정책이다.
-	// 따라서 입력 좌표는 [0, width-1], [0, height-1]로 보수적으로 clamp 한다.
+	// 가정: 프로젝트의 _Rect::PtInRect는 Right/Bottom 배타(<) 정책이다.
+	   // 따라서 입력 좌표는 [0, width-1], [0, height-1]로 보수적으로 clamp 한다.
 	const _int max_x = std::max(0, design.width - 1);
 	const _int max_y = std::max(0, design.height - 1);
 	converted.x = std::clamp(converted.x, 0, max_x);
@@ -204,7 +204,7 @@ void InputManager::SetCurrentPreset(ControllerPreset _preset)
 		return;
 
 	current_preset_ = _preset;
-  action_states_dirty_ = true;
+	action_states_dirty_ = true;
 }
 
 bool InputManager::ActionPressed(InputAction _action) const
@@ -288,7 +288,7 @@ InputRemapResult InputManager::TryRemapAction(ControllerPreset _preset, InputAct
 	preset_set->bindings.push_back(new_binding);
 
 	if (current_preset_ == _preset)
-      action_states_dirty_ = true;
+		action_states_dirty_ = true;
 
 	return InputRemapResult::Success;
 }
@@ -334,7 +334,7 @@ void InputManager::RebuildActionStates()
 	// 5단계: MouseOnly 프리셋 이동을 "마우스 방향 + 거리"로 계산한다.
 	if (current_preset_ == ControllerPreset::MouseOnly)
 	{
-       const Resolution design = _ScreenSystem.DesignResolution();
+		const Resolution design = _ScreenSystem.DesignResolution();
 		const Resolution window = _ScreenSystem.WindowResolution();
 
 		_float dx = s_cast(_float, mouse_delta_.x);
@@ -403,7 +403,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 {
 	PresetDefaultBindingTable table{};
 
-  // KeyboardA: WASD 이동 + Space 대시 + Q/E 스킬
+	// KeyboardA: WASD 이동 + Space 대시 + Q/E 스킬
 	{
 		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardA)];
 		set.preset = ControllerPreset::KeyboardA;
@@ -413,13 +413,13 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'A', -1.f },
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'D',  1.f },
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
-            { InputAction::Skill1, InputSourceType::KeyboardKey, 'Q', 1.f },
+			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'Q', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'E', 1.f },
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
 		};
 	}
 
-  // KeyboardB: 방향키 이동 + Space 대시 + A/S 스킬
+	// KeyboardB: 방향키 이동 + Space 대시 + A/S 스킬
 	{
 		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardB)];
 		set.preset = ControllerPreset::KeyboardB;
@@ -428,21 +428,21 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::MoveY, InputSourceType::KeyboardKey, VK_DOWN,  1.f },
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, VK_LEFT, -1.f },
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, VK_RIGHT,  1.f },
-            { InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
+			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'A', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'S', 1.f },
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
 		};
 	}
 
-   // MouseOnly: 마우스 이동 + Mouse4 대시 + Mouse1/Mouse2 스킬
+	// MouseOnly: 마우스 이동 + Mouse4 대시 + Mouse1/Mouse2 스킬
 	{
 		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::MouseOnly)];
 		set.preset = ControllerPreset::MouseOnly;
 		set.bindings = {
 			{ InputAction::MoveX, InputSourceType::MouseAxis, 0, 1.f },
 			{ InputAction::MoveY, InputSourceType::MouseAxis, 1, 1.f },
-           { InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
+		   { InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
 			{ InputAction::Dash, InputSourceType::MouseButton, VK_MBUTTON, 1.f },
 			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
@@ -450,7 +450,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 		};
 	}
 
-    // KeyboardMouse: 이동/대시는 키보드, 스킬은 마우스 버튼
+	// KeyboardMouse: 이동/대시는 키보드, 스킬은 마우스 버튼
 	{
 		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::KeyboardMouse)];
 		set.preset = ControllerPreset::KeyboardMouse;
@@ -460,7 +460,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'A', -1.f },
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'D',  1.f },
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
-         { InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
+		 { InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
 		};
@@ -481,18 +481,18 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::KeyboardA);
 	BeginFrame();
 	OnKeyDown('W', 0);
-   SyncActionStates();
+	SyncActionStates();
 	ok = ExpectInputSelfTest(ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.Pressed") && ok;
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.Down") && ok;
 	ok = ExpectInputSelfTest(ActionValue(InputAction::MoveY) < -0.5f, "KeyboardA.MoveY.ValueNegative") && ok;
 
 	BeginFrame();
- SyncActionStates();
+	SyncActionStates();
 	ok = ExpectInputSelfTest(!ActionPressed(InputAction::MoveY), "KeyboardA.MoveY.PressedReset") && ok;
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveY), "KeyboardA.MoveY.DownKeep") && ok;
 
 	OnKeyUp('W', 0);
- SyncActionStates();
+	SyncActionStates();
 	ok = ExpectInputSelfTest(ActionReleased(InputAction::MoveY), "KeyboardA.MoveY.Released") && ok;
 	ok = ExpectInputSelfTest(!ActionDown(InputAction::MoveY), "KeyboardA.MoveY.UpAfterRelease") && ok;
 
@@ -501,13 +501,13 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::MouseOnly);
 	BeginFrame();
 	OnMouseMove(0, MAKELPARAM(3, 4));
- SyncActionStates();
+	SyncActionStates();
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveX)) < 0.001f, "MouseOnly.DeadZone.MoveX") && ok;
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveY)) < 0.001f, "MouseOnly.DeadZone.MoveY") && ok;
 
 	BeginFrame();
 	OnMouseMove(0, MAKELPARAM(303, 4));
-  SyncActionStates();
+	SyncActionStates();
 	const _float move_x = ActionValue(InputAction::MoveX);
 	const _float move_y = ActionValue(InputAction::MoveY);
 	ok = ExpectInputSelfTest(std::abs(move_x) <= 1.0001f, "MouseOnly.Clamp.MoveX") && ok;
@@ -517,7 +517,7 @@ _bool InputManager::RunSelfTest()
 	// [케이스 3] remap 정책 및 거부 처리 확인
 	ResetAll();
 	ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::MouseOnly, InputAction::MoveX), "Policy.MouseOnly.Deny") && ok;
-   ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Skill1), "Policy.KeyboardMouse.Skill1Deny") && ok;
+	ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Skill1), "Policy.KeyboardMouse.Skill1Deny") && ok;
 	ok = ExpectInputSelfTest(IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Dash), "Policy.KeyboardMouse.DashAllow") && ok;
 
 	InputBinding remap_binding;
@@ -534,7 +534,7 @@ _bool InputManager::RunSelfTest()
 	SetCurrentPreset(ControllerPreset::KeyboardMouse);
 	BeginFrame();
 	OnKeyDown('I', 0);
- SyncActionStates();
+	SyncActionStates();
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveX), "TryRemap.KeyboardMouse.MoveX.Applied") && ok;
 
 	ResetAll();

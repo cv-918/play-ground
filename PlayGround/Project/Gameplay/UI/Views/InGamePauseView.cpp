@@ -12,17 +12,19 @@ InGamePauseView::InGamePauseView(const std::function<void()>& _resume_btn_callba
 	const _int gap = 10;
 
 	// 이어하기 버튼
-	const auto resume_btn = CreateElement<Button>();
-	resume_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙
-	resume_btn->SetText(L"RESUME");
-	resume_btn->SetOnLClick(_resume_btn_callback);
+	Button::CreateInfo resume_btn_info;
+	resume_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 화면 중앙
+	resume_btn_info.text = L"RESUME";
+	resume_btn_info.on_lclick = _resume_btn_callback;
+	const auto resume_btn = CreateElement<Button>(resume_btn_info);
 
 	// 나가기 버튼
 	y += COMMON_BUTTON_CY + gap; // 이어하기 버튼 아래에 위치하도록 y 좌표 조정
-	const auto exit_btn = CreateElement<Button>();
-	exit_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 이어하기 버튼 아래
-	exit_btn->SetText(L"EXIT");
-	exit_btn->SetOnLClick(_exit_btn_callback);
+	Button::CreateInfo exit_btn_info;
+	exit_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 이어하기 버튼 아래
+	exit_btn_info.text = L"EXIT";
+	exit_btn_info.on_lclick = _exit_btn_callback;
+	const auto exit_btn = CreateElement<Button>(exit_btn_info);
 }
 
 void InGamePauseView::Render(_double _delta_time)

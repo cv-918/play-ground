@@ -89,34 +89,34 @@ _int StagePlayer::Update(_double _delta_time)
 	if (ret != UPDATE_CONTINUE)
 		return ret;
 
-   // 입력 스펙 기준으로 Skill1/Skill2 액션을 스킬 사용에 연결한다.
+	// 입력 스펙 기준으로 Skill1/Skill2 액션을 스킬 사용에 연결한다.
 	if (input_manager_->ActionPressed(InputAction::Skill1))
 	{
 		skill_manager_->UseSkill(0, this, transform_->Forward2D());
 		_SYSTEM_LOG_INFO(L"Player used skill 0");
 	}
-  if (input_manager_->ActionPressed(InputAction::Skill2))
+	if (input_manager_->ActionPressed(InputAction::Skill2))
 	{
 		skill_manager_->UseSkill(1, this, transform_->Forward2D());
-        _SYSTEM_LOG_INFO(L"Player used skill 1");
+		_SYSTEM_LOG_INFO(L"Player used skill 1");
 	}
 
 	if (movement_)
 	{
 		const auto vel = transform_->Forward2D();
 		if (vel.x < -0.01f)
-          flip_sprite_x_ = false;
+			flip_sprite_x_ = false;
 		else if (vel.x > 0.01f)
-         flip_sprite_x_ = true;
+			flip_sprite_x_ = true;
 	}
 
- // // 공격 액션은 제거되었으므로 디버그 파티클은 Skill1 입력에 맞춰 표시한다.
-	//if (input_manager_->ActionPressed(InputAction::Skill1))
-	//{
-	//	const auto mouse_pt = input_manager_->MousePoint();
-	//	const auto data = _ParticleDataMgr.GetDataByIndex(2);
-	//	_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
-	//}
+	// // 공격 액션은 제거되었으므로 디버그 파티클은 Skill1 입력에 맞춰 표시한다.
+	   //if (input_manager_->ActionPressed(InputAction::Skill1))
+	   //{
+	   //	const auto mouse_pt = input_manager_->MousePoint();
+	   //	const auto data = _ParticleDataMgr.GetDataByIndex(2);
+	   //	_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
+	   //}
 
 	return UPDATE_CONTINUE;
 }
@@ -298,7 +298,7 @@ void StagePlayer::_DrawObjectShape()
 		player_sprite_->image_rect.X + player_sprite_->image_rect.Width,
 		player_sprite_->image_rect.Y + player_sprite_->image_rect.Height);
 
- _DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
+	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }
 
 void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)

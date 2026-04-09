@@ -24,15 +24,17 @@ public:
         const _int start_x = GAME_VIEW_CENTER.x - total_button_width / 2;
         const _int button_y = popup_rect_.Bottom() - COMMON_BUTTON_CY - 34;
 
-        yes_btn_ = CreateElement<Button>();
-        yes_btn_->SetRect(_Rect{ _Point{ start_x, button_y }, COMMON_BUTTON_SIZE });
-        yes_btn_->SetText(L"예");
-        yes_btn_->SetOnLClick(_yes_btn_callback);
+		Button::CreateInfo yes_btn_info;
+		yes_btn_info.rect = _Rect{ _Point{ start_x, button_y }, COMMON_BUTTON_SIZE };
+		yes_btn_info.text = L"예";
+		yes_btn_info.on_lclick = _yes_btn_callback;
+        yes_btn_ = CreateElement<Button>(yes_btn_info);
 
-        no_btn_ = CreateElement<Button>();
-        no_btn_->SetRect(_Rect{ _Point{ start_x + COMMON_BUTTON_CX + button_gap, button_y }, COMMON_BUTTON_SIZE });
-        no_btn_->SetText(L"아니요");
-        no_btn_->SetOnLClick(_no_btn_callback);
+		Button::CreateInfo no_btn_info;
+		no_btn_info.rect = _Rect{ _Point{ start_x + COMMON_BUTTON_CX + button_gap, button_y }, COMMON_BUTTON_SIZE };
+		no_btn_info.text = L"아니요";
+		no_btn_info.on_lclick = _no_btn_callback;
+        no_btn_ = CreateElement<Button>(no_btn_info);
     }
 
     _int Update(_double _delta_time) override

@@ -63,7 +63,7 @@ void IntroScene::Render(_double _delta_time)
 	constexpr _double kHoldDuration = 3.0;
 	constexpr _double kFadeOutDuration = 3.0;
 
- _float alpha = 0.0f;
+	_float alpha = 0.0f;
 	if (elapsed_time_ < kFadeInStart)
 	{
 		alpha = 0.0f;
@@ -71,7 +71,7 @@ void IntroScene::Render(_double _delta_time)
 	else if (elapsed_time_ < kFadeInStart + kFadeInDuration)
 	{
 		const _double t = (elapsed_time_ - kFadeInStart) / kFadeInDuration;
-        alpha = s_float(std::clamp(t, 0.0, 1.0));
+		alpha = s_float(std::clamp(t, 0.0, 1.0));
 	}
 	else if (elapsed_time_ < kFadeInStart + kFadeInDuration + kHoldDuration)
 	{
@@ -80,14 +80,14 @@ void IntroScene::Render(_double _delta_time)
 	else if (elapsed_time_ < kFadeInStart + kFadeInDuration + kHoldDuration + kFadeOutDuration)
 	{
 		const _double t = (elapsed_time_ - (kFadeInStart + kFadeInDuration + kHoldDuration)) / kFadeOutDuration;
-      alpha = s_float(std::clamp(1.0 - t, 0.0, 1.0));
+		alpha = s_float(std::clamp(1.0 - t, 0.0, 1.0));
 	}
 	else
 	{
 		alpha = 0.0f;
 	}
 
- const Resolution resolution = _ScreenSystem.WindowResolution();
+	const Resolution resolution = _ScreenSystem.WindowResolution();
 	const _RectF dest_rect(0.f, 0.f, s_float(resolution.width), s_float(resolution.height));
 	const _RectF src_rect(
 		scene_image_rect_.X,

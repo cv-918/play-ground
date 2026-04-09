@@ -12,17 +12,20 @@ InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_cal
 	const _int gap = 10;
 
 	// 다시 시작 버튼
-	const auto restart_btn = CreateElement<Button>();
-	restart_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙
-	restart_btn->SetText(L"RESTART");
-	restart_btn->SetOnLClick(_restart_btn_callback);
+	Button::CreateInfo restart_btn_info;
+	restart_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 화면 중앙
+	restart_btn_info.text = L"RESTART";
+	restart_btn_info.on_lclick = _restart_btn_callback;
+	const auto restart_btn = CreateElement<Button>(restart_btn_info);
+	y += COMMON_BUTTON_CY + gap; // 다시 시작 버튼 아래에 위치하도록 y 좌표 조정
 
 	// 나가기 버튼
+	Button::CreateInfo exit_btn_info;
+	exit_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 다시 시작 버튼 아래
+	exit_btn_info.text = L"EXIT";
+	exit_btn_info.on_lclick = _exit_btn_callback;
+	const auto exit_btn = CreateElement<Button>(exit_btn_info);
 	y += COMMON_BUTTON_CY + gap; // 다시 시작 버튼 아래에 위치하도록 y 좌표 조정
-	const auto exit_btn = CreateElement<Button>();
-	exit_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 다시 시작 버튼 아래
-	exit_btn->SetText(L"EXIT");
-	exit_btn->SetOnLClick(_exit_btn_callback);
 }
 
 void InGameResultView::Render(_double _delta_time)

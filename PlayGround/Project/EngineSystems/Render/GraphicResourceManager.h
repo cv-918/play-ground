@@ -56,7 +56,8 @@ struct RenderRectF
 
 	RenderRectF() = default;
 	RenderRectF(_float _x, _float _y, _float _w, _float _h)
-		: X(_x), Y(_y), Width(_w), Height(_h) {}
+		: X(_x), Y(_y), Width(_w), Height(_h) {
+	}
 };
 
 enum class SpritePivotMode
@@ -82,12 +83,12 @@ struct VisibleBounds
 
 struct SpriteResource
 {
-    TextureResource* image = nullptr;
+	TextureResource* image = nullptr;
 	RenderRectF image_rect{};
 	VisibleBounds visible_bounds{};
 
 	SpritePivotMode pivot_mode = SpritePivotMode::Center;
-  RenderPointF pivot = RenderPointF(0.f, 0.f);
+	RenderPointF pivot = RenderPointF(0.f, 0.f);
 };
 
 struct TextureBrushResource
@@ -116,45 +117,45 @@ public:
 	virtual ~GraphicResourceManager();
 
 public:
-  // --- 기본 도형 리소스 ---
+	// --- 기본 도형 리소스 ---
 	HBRUSH GetBrush(const _Color _color);
 	HBRUSH GetBrush(const _Color _color, _byte _alpha);
 	HPEN GetPen(const _Color _color, _float _thickness = 1.f);
 	HPEN GetPen(const _Color _color, _byte _alpha, _float _thickness = 1.f);
 
 	// --- 폰트(Font) 리소스 ---
-  HFONT GetFont(_float _size, _int _style = RenderStyle::Regular);
+	HFONT GetFont(_float _size, _int _style = RenderStyle::Regular);
 
 	// --- 텍스처(Image) 리소스 ---
-  TextureResource* GetTexture(const std::wstring& _path);
+	TextureResource* GetTexture(const std::wstring& _path);
 
 	// --- 스프라이트 리소스 ---
 	const SpriteResource* GetSprite(const std::wstring& _path, SpritePivotMode _pivot_mode = SpritePivotMode::Center, _byte _alpha_threshold = 8);
-    void SetSpriteCustomPivot(const std::wstring& _path, const RenderPointF& _pivot);
+	void SetSpriteCustomPivot(const std::wstring& _path, const RenderPointF& _pivot);
 
 	// --- 텍스처 브러시 (TextureBrush) ---
-  TextureBrushResource* GetTextureBrush(const std::wstring& _path, RenderStyle::WrapMode _wrap_mode = RenderStyle::Tile);
+	TextureBrushResource* GetTextureBrush(const std::wstring& _path, RenderStyle::WrapMode _wrap_mode = RenderStyle::Tile);
 	TextureBrushResource* GetTextureBrush(_ulonglong _key);
 
-   const StringFormatResource* GetStringFormat(_bool _is_center);
+	const StringFormatResource* GetStringFormat(_bool _is_center);
 
 	void Release();
 
 private:
-    TextureResource* _LoadTextureFromFile(const std::wstring& _path);
+	TextureResource* _LoadTextureFromFile(const std::wstring& _path);
 	VisibleBounds _CalculateVisibleBounds(const TextureResource* _texture, _byte _alpha_threshold);
 	RenderPointF _CalculatePivot(const VisibleBounds& _visible_bounds, SpritePivotMode _pivot_mode);
 	std::wstring _BuildSpriteKey(const std::wstring& _path, SpritePivotMode _pivot_mode, _byte _alpha_threshold) const;
 
 private:
-   std::unordered_map<_uint, HBRUSH> brushes_;
+	std::unordered_map<_uint, HBRUSH> brushes_;
 	std::unordered_map<_ulonglong, HPEN> pens_;
 	std::unordered_map<_ulonglong, HFONT> fonts_;
 	std::unordered_map<std::wstring, TextureResource*> textures_;
 	std::unordered_map<std::wstring, SpriteResource> sprites_;
-    std::unordered_map<_ulonglong, TextureBrushResource*> tex_brushes_;
+	std::unordered_map<_ulonglong, TextureBrushResource*> tex_brushes_;
 
-    StringFormatResource format_center_{};
+	StringFormatResource format_center_{};
 	StringFormatResource format_left_{};
 };
 
