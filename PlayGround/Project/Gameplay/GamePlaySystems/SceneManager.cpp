@@ -23,15 +23,15 @@ _bool SceneManager::Initialize()
 
 _int SceneManager::Update(_double _delta_time)
 {
-    if (next_scene_type_ != SceneType::Count)
-    {
+	if (next_scene_type_ != SceneType::Count)
+	{
 		_CleanupCurrentScene();
 		_CreateNextScene();
 		return UPDATE_BREAK;
-    }
+	}
 
-    if (curr_scene_ && curr_scene_->IsActive())
-        curr_scene_->Update(_delta_time);
+	if (curr_scene_ && curr_scene_->IsActive())
+		curr_scene_->Update(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
@@ -46,13 +46,13 @@ _int SceneManager::LateUpdate(_double _delta_time)
 
 void SceneManager::Render(_double _delta_time)
 {
-    if (curr_scene_ && curr_scene_->IsActive())
-        curr_scene_->Render(_delta_time);
+	if (curr_scene_ && curr_scene_->IsActive())
+		curr_scene_->Render(_delta_time);
 }
 
 void SceneManager::ChangeScene(const SceneType _type)
 {
-    next_scene_type_ = _type;
+	next_scene_type_ = _type;
 	_SYSTEM_LOG_INFO(_T("Scene change requested to [%s]"), _GetSceneName(_type).c_str());
 }
 

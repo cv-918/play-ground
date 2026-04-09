@@ -59,6 +59,7 @@ _int OutGameMainView::Update(_double _delta_time)
 	if (_InputMgr.Down(VK_ESCAPE) && exit_view_btn_callback_)
 	{
 		exit_view_btn_callback_();
+		return UPDATE_BREAK;
 	}
 
 	return UPDATE_CONTINUE;

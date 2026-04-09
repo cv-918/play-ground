@@ -19,7 +19,11 @@ _int UIManager::Update(_double _delta_time)
 	for (auto* ui : ui_list_)
 	{
 		if (ui->IsActive())
-			ui->Update(_delta_time);
+		{
+			const auto ret = ui->Update(_delta_time);
+			if (ret != UPDATE_CONTINUE)
+				return ret;
+		}
 	}
 
 	return UPDATE_CONTINUE;
@@ -32,7 +36,11 @@ _int UIManager::LateUpdate(_double _delta_time)
 	for (auto* ui : ui_list_)
 	{
 		if (ui->IsActive())
-			ui->LateUpdate(_delta_time);
+		{
+			const auto ret = ui->LateUpdate(_delta_time);
+			if (ret != UPDATE_CONTINUE)
+				return ret;
+		}
 	}
 
 	CleanUp();
