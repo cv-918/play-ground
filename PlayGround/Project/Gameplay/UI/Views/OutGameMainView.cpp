@@ -7,35 +7,47 @@
 OutGameMainView::OutGameMainView(
 	const std::function<void()>& _start_btn_callback,
 	const std::function<void()>& _attr_btn_callback,
-    const std::function<void()>& _video_option_btn_callback,
+	const std::function<void()>& _video_option_btn_callback,
 	const std::function<void()>& _exit_view_btn_callback)
 	: exit_view_btn_callback_(_exit_view_btn_callback)
 {
-	// 좌표 (중앙)
-	const auto x = GAME_VIEW_WIDTH_H - (COMMON_BUTTON_CX >> 1);
-	_int y = 400;
-	const _int gap = 10;
+	// 우측 상단에 버튼 배치. 화면 해상도에 따라 위치가 달라질 수 있으므로, 화면 해상도를 고려하여 위치 계산
+	const auto screen_resolution = _ScreenSystem.WindowResolution();
+	const auto one_percent_x = screen_resolution.width / 100;
+	const auto one_percent_y = screen_resolution.height / 100;
+
+	// 화면 오른쪽에서 5% 지점, 위에서 5% 지점에서 시작
+	_Point draw_pt = { screen_resolution.width - one_percent_x * 5, one_percent_y * 5 };
+
+	// 버튼 간 간격
+	constexpr _int button_gap_x = 10;
+
+	// 우측 상단 버튼들 크기
+	constexpr _Size rt_buttons_size = { 50, 50 };
 
 	// 시작 버튼
-	const auto start_btn = CreateElement<Button>();
-	start_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE }); // 화면 중앙 하단쯤
-	start_btn->SetText(L"GAME START");
-	start_btn->SetOnLClick(_start_btn_callback);
-
-	y += COMMON_BUTTON_SIZE.y + gap;
+	Button::CreateInfo start_btn_info;
+	start_btn_info.rect = _Rect{ { draw_pt.x, draw_pt.y }, rt_buttons_size }; // 화면 중앙 하단쯤
+	start_btn_info.text = L"GAME START";
+	start_btn_info.on_lclick = _start_btn_callback;
+	const auto start_btn = CreateElement<Button>(start_btn_info);
+	draw_pt.x -= rt_buttons_size.x + button_gap_x;
 
 	// 어트리뷰트 버튼
-	const auto attr_btn = CreateElement<Button>();
-	attr_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
-	attr_btn->SetText(L"ATTRIBUTE");
-	attr_btn->SetOnLClick(_attr_btn_callback);
+	Button::CreateInfo attr_btn_info;
+	attr_btn_info.rect = _Rect{ { draw_pt.x, draw_pt.y }, rt_buttons_size }; // 시작 버튼 아래
+	attr_btn_info.text = L"ATTRIBUTE";
+	attr_btn_info.on_lclick = _attr_btn_callback;
+	const auto attr_btn = CreateElement<Button>(attr_btn_info);
+	draw_pt.x -= rt_buttons_size.x + button_gap_x;
 
-	y += COMMON_BUTTON_SIZE.y + gap;
-
-	const auto option_btn = CreateElement<Button>();
-	option_btn->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
-	option_btn->SetText(L"VIDEO OPTION");
-	option_btn->SetOnLClick(_video_option_btn_callback);
+	// 비디오 옵션 버튼
+	Button::CreateInfo video_option_btn_info;
+	video_option_btn_info.rect = _Rect{ { draw_pt.x, draw_pt.y }, rt_buttons_size }; // 어트리뷰트 버튼 아래
+	video_option_btn_info.text = L"VIDEO OPTION";
+	video_option_btn_info.on_lclick = _video_option_btn_callback;
+	const auto option_btn = CreateElement<Button>(video_option_btn_info);
+	draw_pt.x -= rt_buttons_size.x + button_gap_x;
 }
 
 _int OutGameMainView::Update(_double _delta_time)

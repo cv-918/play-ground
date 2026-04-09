@@ -8,6 +8,12 @@ class UIBase abstract
 	, public IIdentifiable
 	, public IDestroyable
 {
+protected:
+	struct UICreateInfo
+	{
+		_Rect rect;
+	};
+
 public:
 	_bool Initialize() override;
 	void DebugRender() override;
@@ -38,19 +44,7 @@ public:
 	// 마우스 오버 여부 확인
 	_bool IsMouseOver(const _Point& _mouse_pos) const { return rect_.PtInRect(_mouse_pos); }
 
-	// 객체 생명 주기 관리
-	_bool IsPendingDestruction() const { return pending_destruction_; }
-	void ReserveDestruction() { pending_destruction_ = true; }
-	void AddDestructionCallback(const std::function<void()>& _callback) { destruction_callbacks_.push_back(_callback); }
-	virtual void OnDestroy();
-
 private:
 	// UI의 위치와 크기를 나타내는 사각형
 	_Rect rect_;
-
-	// UI 요소가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 UI 요소의 생명 주기를 관리하는 데 활용할 수 있습니다.
-	_bool pending_destruction_ = false;
-
-	// 게임 오브젝트가 파괴될 때 호출될 콜백 함수들을 저장하는 컨테이너. 필요에 따라 다른 시스템과 연동하여 파괴 시 다양한 효과를 구현할 수 있습니다.
-	std::vector<std::function<void()>> destruction_callbacks_;
 };

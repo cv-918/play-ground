@@ -5,32 +5,32 @@
 
 enum class ControllerPreset
 {
-  // 키보드 기본 프리셋 A
+	// 키보드 기본 프리셋 A
 	KeyboardA,
-  // 키보드 기본 프리셋 B
+	// 키보드 기본 프리셋 B
 	KeyboardB,
-  // 마우스만 사용하는 프리셋
+	// 마우스만 사용하는 프리셋
 	MouseOnly,
-  // 키보드 + 마우스 혼합 프리셋
+	// 키보드 + 마우스 혼합 프리셋
 	KeyboardMouse,
 	Count,
 };
 
 enum class InputAction
 {
-  // 수평 이동 축
+	// 수평 이동 축
 	MoveX,
-  // 수직 이동 축
+	// 수직 이동 축
 	MoveY,
-   // 대시
+	// 대시
 	Dash,
-  // 스킬 1
+	// 스킬 1
 	Skill1,
 	// 스킬 2
 	Skill2,
-   // 상호작용
+	// 상호작용
 	Interact,
-  // 일시정지
+	// 일시정지
 	Pause,
 	Count,
 };
@@ -52,21 +52,21 @@ enum class InputRemapResult
 
 struct InputBinding
 {
-    // 어떤 액션에 연결되는지
+	// 어떤 액션에 연결되는지
 	InputAction action = InputAction::MoveX;
- // 어떤 입력 소스를 쓰는지
+	// 어떤 입력 소스를 쓰는지
 	InputSourceType source_type = InputSourceType::KeyboardKey;
- // VK 코드/마우스 버튼/마우스 축 인덱스
+	// VK 코드/마우스 버튼/마우스 축 인덱스
 	_int source_code = IV_ZERO;
- // 축 반전/가중치용 스케일
+	// 축 반전/가중치용 스케일
 	_float scale = 1.f;
 };
 
 struct PresetBindingSet
 {
-  // 프리셋 식별자
+	// 프리셋 식별자
 	ControllerPreset preset = ControllerPreset::KeyboardA;
- // 프리셋에 속한 바인딩 목록
+	// 프리셋에 속한 바인딩 목록
 	std::vector<InputBinding> bindings;
 };
 
@@ -135,7 +135,7 @@ public:
 	InputRemapResult TryRemapAction(ControllerPreset _preset, InputAction _action, const InputBinding& _new_binding);
 
 	_Point MousePoint() const { return mouse_; }
-  _Point MousePointDesign() const;
+	_Point MousePointDesign() const;
 	_Point MouseDelta() const { return mouse_delta_; }
 	_int WheelDelta() const { return wheel_delta_; } // ±120 단위가 일반적
 
