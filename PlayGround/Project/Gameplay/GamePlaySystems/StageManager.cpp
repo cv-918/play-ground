@@ -141,7 +141,7 @@ void StageManager::_OnEnter()
 
 	// 배경 생성. 배경은 네비메시 정보를 가지고 있기 때문에 가장 먼저 생성
 	Background::CreateInfo background_info;
-	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
+	background_info.background_path_ = Path::World + L"Field-2560x1600.png";
 	background_info.nav_mesh_size_ = _Size(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(

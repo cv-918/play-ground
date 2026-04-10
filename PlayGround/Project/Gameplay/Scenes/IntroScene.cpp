@@ -10,7 +10,7 @@ _bool IntroScene::Initialize()
 
 	elapsed_time_ = 0.0;
 
-	scene_image_ = _GraphicSourceMgr.GetTexture(Path::Texture + std::wstring(L"Title-Screen-2560x1600.png"));
+	scene_image_ = _GraphicSourceMgr.GetTexture(Path::SceneImages + std::wstring(L"Title-Screen-2560x1600.png"));
 	if (nullptr == scene_image_)
 	{
 		_NULL_DETECTION_MSGBOX;
@@ -29,7 +29,10 @@ _int IntroScene::Update(_double _delta_time)
 	elapsed_time_ += _delta_time;
 
 	if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
-		_SceneMgr.ChangeScene(SceneType::Loading);
+	{
+		_SceneMgr.ChangeScene(SceneType::OutGame);
+		return UPDATE_BREAK;
+	}
 
 	constexpr _double kFadeInStart = 1.0;
 	constexpr _double kFadeInDuration = 2.0;
@@ -42,8 +45,8 @@ _int IntroScene::Update(_double _delta_time)
 
 	if (elapsed_time_ >= auto_change_time)
 	{
-		if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
-			_SceneMgr.ChangeScene(SceneType::Loading);
+		_SceneMgr.ChangeScene(SceneType::OutGame);
+		return UPDATE_BREAK;
 	}
 
 	return UPDATE_CONTINUE;

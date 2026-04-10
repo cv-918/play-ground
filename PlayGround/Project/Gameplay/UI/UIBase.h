@@ -19,13 +19,18 @@ public:
 	void DebugRender() override;
 
 public:
-	// 위치와 크기 설정
+    // 위치와 크기 설정 (Position == Left-Top)
 	_Rect GetRect() const { return rect_; }
 	void SetRect(const _Rect& _rect) { rect_ = _rect; }
-	void SetRect(const _Point _position, const _Size& _size) { rect_ = _Rect{ _position, _size }; }
+ void SetRect(const _Point _left_top, const _Size& _size) { rect_ = _Rect{ _left_top, _size }; }
+	void SetRectFromCenter(const _Point& _center, const _Size& _size) { rect_ = _Rect::FromCenter(_center, _size.x / 2, _size.y / 2); }
 
-	_Point GetPosition() const { return rect_.Lt(); }
-	virtual void SetPosition(const _Point& _position) { rect_.MoveLtTo(_position); }
+   _Point GetLeftTop() const { return rect_.Lt(); }
+	virtual void SetLeftTop(const _Point& _left_top) { rect_.MoveLtTo(_left_top); }
+
+	// 기존 인터페이스 호환: Position은 Left-Top 의미를 사용한다.
+	_Point GetPosition() const { return GetLeftTop(); }
+	virtual void SetPosition(const _Point& _position) { SetLeftTop(_position); }
 
 	_Point GetCenter() const { return rect_.Center(); }
 	virtual void SetCenter(const _Point& _center) { rect_.MoveCenterTo(_center); }

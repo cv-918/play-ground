@@ -17,8 +17,10 @@
 _bool PlayGround::Initialize()
 {
 	// --- 시스템 초기화 ---
+
 	_Timer.Initialize();
 	_Random.Initialize();
+	_Assist.Initialize();
 
 	render_chain_ = &_RenderChain;
 	render_chain_->Initialize();

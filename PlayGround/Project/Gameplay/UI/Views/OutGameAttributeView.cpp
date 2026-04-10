@@ -61,6 +61,7 @@ _int OutGameAttributeView::Update(_double _delta_time)
 	if (_InputMgr.Down(VK_ESCAPE))
 	{
 		return_btn_->LClick();
+		return UPDATE_BREAK;
 	}
 
 	return UPDATE_CONTINUE;

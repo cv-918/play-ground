@@ -14,8 +14,21 @@ RunTimeDebuggingAssistant::~RunTimeDebuggingAssistant()
 	debug_window_map_.clear();
 }
 
+_bool RunTimeDebuggingAssistant::Initialize()
+{
+	_Assist.CheckBox(__CLASS_NAME, L"AssistGlobal", L"IsDrawingWindows", &is_drawing_windows_);
+	front_window_iter_ = debug_window_map_.begin();
+	return true;
+}
+
 void RunTimeDebuggingAssistant::BeginFrame()
 {
+	if (!is_drawing_windows_)
+	{
+		front_window_iter_->second->BeginFrame(); // 최소한 하나의 창은 BeginFrame을 호출하여 프레임 요소를 초기화하도록 한다.
+		return;
+	}
+
 	for (auto& pair : debug_window_map_)
 	{
 		if (pair.second)
@@ -25,6 +38,12 @@ void RunTimeDebuggingAssistant::BeginFrame()
 
 _int RunTimeDebuggingAssistant::Update(_double _delta_time)
 {
+	if (!is_drawing_windows_)
+	{
+		front_window_iter_->second->Update(_delta_time); // 최소한 하나의 창은 Update를 호출하여 프레임 요소를 업데이트하도록 한다.
+		return UPDATE_CONTINUE;
+	}
+
 	for (const auto& debug_window : debug_window_map_)
 	{
 		if (debug_window.second)
@@ -36,6 +55,12 @@ _int RunTimeDebuggingAssistant::Update(_double _delta_time)
 
 void RunTimeDebuggingAssistant::Render(_double _delta_time)
 {
+	if (!is_drawing_windows_)
+	{
+		front_window_iter_->second->Render(_delta_time); // 최소한 하나의 창은 Render를 호출하여 프레임 요소를 렌더링하도록 한다.
+		return;
+	}
+
 	for (const auto& debug_window : debug_window_map_)
 	{
 		if (debug_window.second)

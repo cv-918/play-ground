@@ -26,7 +26,12 @@ enum class WindowMode
 struct VideoSettings
 {
     Resolution resolution = { 1280, 720 };
+#ifdef _DEBUG
+    WindowMode window_mode = WindowMode::Windowed;
+#else
     WindowMode window_mode = WindowMode::BorderlessFullscreen;
+#endif // _DEBUG
+    
     _float ui_scale = 1.0f;
 
     bool operator==(const VideoSettings& _rhs) const

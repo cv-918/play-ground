@@ -2,6 +2,9 @@
 #include "PlayerMovement.h"
 
 #include "Actors/Stage/StagePlayer.h"
+#include "EngineSystems/Render/CameraManager.h"
+
+#include <cmath>
 
 PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
@@ -27,6 +30,14 @@ _bool PlayerMovement::Initialize()
 
 void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 {
+   if (input_manager_ && transform_ && input_manager_->GetCurrentPreset() == ControllerPreset::MouseOnly)
+	{
+		const _Vector3 player_pos = transform_->Position();
+     const _Point player_screen = _CameraMgr.WorldToScreen(_Vector2{ player_pos.x, player_pos.y });
+		input_manager_->SetMouseMoveReferencePoint(player_screen);
+		input_manager_->SyncActionStates();
+	}
+
 	switch (controller_type_)
 	{
 	case PlayerMovementType::Town:
@@ -52,7 +63,7 @@ void PlayerMovement::_OnImmediate(_double _delta_time)
 	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
 	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
-	if (input_dir.LengthSq() > 0.f)
+ if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
@@ -82,7 +93,7 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
 	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
-	if (input_dir.LengthSq() > 0.f)
+ if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;

@@ -5,9 +5,14 @@
 
 class RunTimeDebuggingAssistant final
 	: public ISingleton<RunTimeDebuggingAssistant>
+	, public IInitializable
 {
+	friend class ISingleton<RunTimeDebuggingAssistant>;
+
 public:
 	~RunTimeDebuggingAssistant();
+
+	_bool Initialize() override;
 
 	void BeginFrame();
 	_int Update(_double _delta_time);
@@ -23,4 +28,7 @@ private:
 
 private:
 	std::unordered_map<std::wstring, class RunTimeDebugWindow*> debug_window_map_;
+
+	_bool is_drawing_windows_ = true;
+	std::unordered_map<std::wstring, class RunTimeDebugWindow*>::iterator front_window_iter_;
 };

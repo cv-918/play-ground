@@ -3,7 +3,7 @@
 
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
-#include "UI/Views/OutGameVideoOptionView.h"
+#include "UI/Views/OutGameOptionView.h"
 #include "UI/Views/OutGameExitView.h"
 
 #include "GamePlay/World/Background.h"
@@ -47,7 +47,7 @@ _int OutGameScene::Update(_double _delta_time)
 	switch (view_state_)
 	{
 	case OutGameScene::OutGameViewState::Main:
-        if (_InputMgr.Down(VK_ESCAPE))
+		if (_InputMgr.Down(VK_ESCAPE))
 		{
 			_ChangeView(OutGameViewState::Exit);
 			break;
@@ -91,7 +91,7 @@ void OutGameScene::OnEnter()
 	_ChangeView(OutGameViewState::Main);
 
 	Background::CreateInfo background_info;
-	background_info.background_path_ = Path::World + L"Field-2560x1600.bmp";
+	background_info.background_path_ = Path::World + L"Field-2560x1600.png";
 	background_info.nav_mesh_size_ = _Size(2560, 1600);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(
@@ -123,7 +123,6 @@ void OutGameScene::OnEnter()
 		return;
 	}
 	test_town_player_->SetNavMesh(nav_mesh);
-
 	test_town_player_->GetTransform()->Position(_Vector3(300.f, 300.f, 0.f));
 
 	test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(500.f, 300.f, 0.f));
@@ -169,7 +168,7 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 		current_view_->Activate();
 	}
 
-	if (view_state_ == OutGameViewState::VideoOption)
+	if (view_state_ == OutGameViewState::Option)
 	{
 		_VideoSettingsMgr.BeginEdit();
 	}
@@ -185,18 +184,18 @@ WidgetBase* OutGameScene::_CreateView()
 		return ui_manager_->CreateUI<OutGameMainView>(
 			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { _ChangeView(OutGameViewState::Attribute); },
-            [this]() { _ChangeView(OutGameViewState::VideoOption); },
+			[this]() { _ChangeView(OutGameViewState::Option); },
 			[this]() { _ChangeView(OutGameViewState::Exit); }
 		);
 	case OutGameScene::OutGameViewState::Attribute:
 		return ui_manager_->CreateUI<OutGameAttributeView>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
-	case OutGameScene::OutGameViewState::VideoOption:
-		return ui_manager_->CreateUI<OutGameVideoOptionView>(
+	case OutGameScene::OutGameViewState::Option:
+		return ui_manager_->CreateUI<OutGameOptionView>(
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
-  case OutGameScene::OutGameViewState::Exit:
+	case OutGameScene::OutGameViewState::Exit:
 		return ui_manager_->CreateUI<OutGameExitView>(
 			[]() { PostQuitMessage(0); },
 			[this]() { _ChangeView(OutGameViewState::Main); }
@@ -214,9 +213,9 @@ std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 		return L"Main View";
 	case OutGameScene::OutGameViewState::Attribute:
 		return L"Attribute View";
-	case OutGameScene::OutGameViewState::VideoOption:
-		return L"Video Option View";
-    case OutGameScene::OutGameViewState::Exit:
+	case OutGameScene::OutGameViewState::Option:
+		return L"Option View";
+	case OutGameScene::OutGameViewState::Exit:
 		return L"Exit View";
 	default:
 		return L"Unknown View";

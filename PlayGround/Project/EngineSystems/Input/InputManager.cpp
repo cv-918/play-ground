@@ -11,8 +11,8 @@ namespace
 	}
 
 	// MouseOnly 이동 계산 파라미터(픽셀 단위)
-	constexpr _float MOUSE_MOVE_DEAD_ZONE = 6.f;
-	constexpr _float MOUSE_MOVE_MAX_DISTANCE = 180.f;
+	constexpr _float MOUSE_MOVE_DEAD_ZONE = 5.f;
+	constexpr _float MOUSE_MOVE_MAX_DISTANCE = 50.f;
 
 	void ReportInputSelfTest(_bool _passed, const char* _name)
 	{
@@ -92,6 +92,19 @@ void InputManager::OnMouseWheel(WPARAM _wparam, LPARAM _lparam)
 	wheel_delta_ += GET_WHEEL_DELTA_WPARAM(_wparam);
 
 	(void)_lparam;
+}
+
+void InputManager::SetMouseMoveReferencePoint(const _Point& _point)
+{
+	const _bool changed = (!has_mouse_move_reference_point_)
+		|| (mouse_move_reference_point_.x != _point.x)
+		|| (mouse_move_reference_point_.y != _point.y);
+
+	mouse_move_reference_point_ = _point;
+	has_mouse_move_reference_point_ = true;
+
+	if (changed)
+		action_states_dirty_ = true;
 }
 
 void InputManager::OnMouseButtonDown(WPARAM _vk, LPARAM _lparam)
@@ -293,6 +306,121 @@ InputRemapResult InputManager::TryRemapAction(ControllerPreset _preset, InputAct
 	return InputRemapResult::Success;
 }
 
+InputRemapResult InputManager::TryRemapBinding(ControllerPreset _preset, const InputBinding& _target_binding, const InputBinding& _new_binding)
+{
+	if (_target_binding.action >= InputAction::Count)
+		return InputRemapResult::InvalidAction;
+
+	if (!IsActionRemappable(_preset, _target_binding.action))
+		return InputRemapResult::RejectedByPolicy;
+
+	PresetBindingSet* preset_set = FindPresetBindingSet(_preset);
+	if (nullptr == preset_set)
+		return InputRemapResult::PresetNotFound;
+
+	for (InputBinding& binding : preset_set->bindings)
+	{
+		if (binding.action != _target_binding.action)
+			continue;
+
+		if (binding.source_type != _target_binding.source_type)
+			continue;
+
+		if (binding.source_code != _target_binding.source_code)
+			continue;
+
+		if (std::abs(binding.scale - _target_binding.scale) > 0.0001f)
+			continue;
+
+		binding.source_type = _new_binding.source_type;
+		binding.source_code = _new_binding.source_code;
+		binding.scale = _new_binding.scale;
+		binding.action = _target_binding.action;
+
+		if (current_preset_ == _preset)
+			action_states_dirty_ = true;
+
+		return InputRemapResult::Success;
+	}
+
+	return TryRemapAction(_preset, _target_binding.action, _new_binding);
+}
+
+bool InputManager::TryGetPrimaryBinding(ControllerPreset _preset, InputAction _action, InputBinding* _out_binding) const
+{
+	if (nullptr == _out_binding)
+		return false;
+
+	if (_action >= InputAction::Count)
+		return false;
+
+	const PresetBindingSet* preset_set = FindPresetBindingSet(_preset);
+	if (nullptr == preset_set)
+		return false;
+
+	for (const InputBinding& binding : preset_set->bindings)
+	{
+		if (binding.action != _action)
+			continue;
+
+		*_out_binding = binding;
+		return true;
+	}
+
+	return false;
+}
+
+bool InputManager::HasBindingConflictExcept(ControllerPreset _preset, const InputBinding& _candidate, const InputBinding& _ignore_binding) const
+{
+	const PresetBindingSet* preset_set = FindPresetBindingSet(_preset);
+	if (nullptr == preset_set)
+		return false;
+
+	for (const InputBinding& binding : preset_set->bindings)
+	{
+		const _bool is_ignore_binding = (binding.action == _ignore_binding.action)
+			&& (binding.source_type == _ignore_binding.source_type)
+			&& (binding.source_code == _ignore_binding.source_code)
+			&& (std::abs(binding.scale - _ignore_binding.scale) <= 0.0001f);
+
+		if (is_ignore_binding)
+			continue;
+
+		if (binding.source_type != _candidate.source_type)
+			continue;
+
+		if (binding.source_code != _candidate.source_code)
+			continue;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool InputManager::HasBindingConflict(ControllerPreset _preset, const InputBinding& _candidate, InputAction _ignore_action) const
+{
+	const PresetBindingSet* preset_set = FindPresetBindingSet(_preset);
+	if (nullptr == preset_set)
+		return false;
+
+	for (const InputBinding& binding : preset_set->bindings)
+	{
+		if (binding.action == _ignore_action)
+			continue;
+
+		if (binding.source_type != _candidate.source_type)
+			continue;
+
+		if (binding.source_code != _candidate.source_code)
+			continue;
+
+		return true;
+	}
+
+	return false;
+}
+
 void InputManager::RebuildActionStates()
 {
 	std::fill(action_states_.begin(), action_states_.end(), ActionState{});
@@ -331,25 +459,36 @@ void InputManager::RebuildActionStates()
 		}
 	}
 
-	// 5단계: MouseOnly 프리셋 이동을 "마우스 방향 + 거리"로 계산한다.
+	// 5단계: MouseOnly 프리셋 이동을 "플레이어-커서 방향 + 거리"로 계산한다.
 	if (current_preset_ == ControllerPreset::MouseOnly)
 	{
-		const Resolution design = _ScreenSystem.DesignResolution();
-		const Resolution window = _ScreenSystem.WindowResolution();
-
-		_float dx = s_cast(_float, mouse_delta_.x);
-		_float dy = s_cast(_float, mouse_delta_.y);
-
-		if (window.width > 0 && window.height > 0)
-		{
-			dx *= s_cast(_float, design.width) / s_cast(_float, window.width);
-			dy *= s_cast(_float, design.height) / s_cast(_float, window.height);
-		}
-
-		const _float distance = std::sqrt(dx * dx + dy * dy);
+		const _Point mouse_design = MousePointDesign();
 
 		ActionState& move_x = action_states_[ToActionIndex(InputAction::MoveX)];
 		ActionState& move_y = action_states_[ToActionIndex(InputAction::MoveY)];
+
+		if (!has_mouse_move_reference_point_)
+		{
+			move_x.value = 0.f;
+			move_y.value = 0.f;
+			move_x.is_down = false;
+			move_y.is_down = false;
+			return;
+		}
+
+		const _float dx = s_cast(_float, mouse_design.x - mouse_move_reference_point_.x);
+		const _float dy = s_cast(_float, mouse_design.y - mouse_move_reference_point_.y);
+		const _float distance = std::sqrt(dx * dx + dy * dy);
+
+		const _float range = MOUSE_MOVE_MAX_DISTANCE - MOUSE_MOVE_DEAD_ZONE;
+		if (range <= 0.f)
+		{
+			move_x.value = 0.f;
+			move_y.value = 0.f;
+			move_x.is_down = false;
+			move_y.is_down = false;
+			return;
+		}
 
 		// dead zone 이내는 이동 0으로 처리한다.
 		if (distance <= MOUSE_MOVE_DEAD_ZONE)
@@ -366,7 +505,6 @@ void InputManager::RebuildActionStates()
 		const _float dir_y = dy / safe_distance;
 
 		// dead zone 이후 거리를 0~1 범위로 정규화 후 clamp 한다.
-		const _float range = MOUSE_MOVE_MAX_DISTANCE - MOUSE_MOVE_DEAD_ZONE;
 		const _float normalized = (distance - MOUSE_MOVE_DEAD_ZONE) / range;
 		const _float magnitude = std::clamp(normalized, 0.f, 1.f);
 
@@ -442,7 +580,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 		set.bindings = {
 			{ InputAction::MoveX, InputSourceType::MouseAxis, 0, 1.f },
 			{ InputAction::MoveY, InputSourceType::MouseAxis, 1, 1.f },
-		   { InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
+			{ InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
 			{ InputAction::Dash, InputSourceType::MouseButton, VK_MBUTTON, 1.f },
 			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
@@ -460,7 +598,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'A', -1.f },
 			{ InputAction::MoveX, InputSourceType::KeyboardKey, 'D',  1.f },
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
-		 { InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
+			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
 		};
@@ -473,6 +611,7 @@ _bool InputManager::RunSelfTest()
 {
 	// 테스트 전 기존 상태를 보존하고 종료 시 복원한다.
 	const ControllerPreset prev_preset = current_preset_;
+	const PresetDefaultBindingTable prev_binding_table = default_binding_table_;
 	ResetAll();
 
 	_bool ok = true;
@@ -499,14 +638,15 @@ _bool InputManager::RunSelfTest()
 	// [케이스 2] MouseOnly dead zone / clamp 동작 확인
 	ResetAll();
 	SetCurrentPreset(ControllerPreset::MouseOnly);
+	SetMouseMoveReferencePoint(_Point{ 100, 100 });
 	BeginFrame();
-	OnMouseMove(0, MAKELPARAM(3, 4));
+	OnMouseMove(0, MAKELPARAM(103, 104));
 	SyncActionStates();
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveX)) < 0.001f, "MouseOnly.DeadZone.MoveX") && ok;
 	ok = ExpectInputSelfTest(std::abs(ActionValue(InputAction::MoveY)) < 0.001f, "MouseOnly.DeadZone.MoveY") && ok;
 
 	BeginFrame();
-	OnMouseMove(0, MAKELPARAM(303, 4));
+	OnMouseMove(0, MAKELPARAM(200, 100));
 	SyncActionStates();
 	const _float move_x = ActionValue(InputAction::MoveX);
 	const _float move_y = ActionValue(InputAction::MoveY);
@@ -539,6 +679,8 @@ _bool InputManager::RunSelfTest()
 
 	ResetAll();
 	SetCurrentPreset(prev_preset);
+	default_binding_table_ = prev_binding_table;
+	action_states_dirty_ = true;
 	ReportInputSelfTest(ok, "InputManager.RunSelfTest");
 	return ok;
 }

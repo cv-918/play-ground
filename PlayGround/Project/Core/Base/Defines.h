@@ -64,6 +64,10 @@
 
 #define _TF(value) value ? _T("true") : _T("false")
 
+// class name
+#define __CLASS_NAME _UtilFunc::ToWString(typeid(*this).name()) 
+#define __OBJ_CLASS_NAME(obj) _UtilFunc::ToWString(typeid(*obj).name())
+
 #if _DEBUG
 inline void DebugMsgBox(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
 {
