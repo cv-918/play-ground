@@ -87,7 +87,7 @@
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameMainView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameAttributeView.h" />
-    <ClInclude Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameOptionView.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNode.h" />
@@ -209,7 +209,7 @@
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameOptionView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />

@@ -57,6 +57,8 @@ void Grid::Render(_double _delta_time)
 	if (!IsVisible())
 		return;
 
+	__super::Render(_delta_time);
+
 	const _Rect grid_rect = GetRect();
 	const _Point start_pos = grid_rect.Lt();
 

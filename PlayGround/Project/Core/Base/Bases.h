@@ -74,6 +74,7 @@ namespace Path
 	const std::wstring Character = Texture + L"Characters/";
 	const std::wstring World = Texture + L"World/";
 	const std::wstring Particle = Texture + L"Particles/";
+	const std::wstring SceneImages = Texture + L"SceneImages/";
 
 	const std::wstring Font = Root + L"Fonts/";
 }

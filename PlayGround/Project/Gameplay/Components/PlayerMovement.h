@@ -28,6 +28,6 @@ private:
 	void _OnAxis(_double _delta_time);
 
 private:
-	const InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
+	InputManager* input_manager_ = nullptr; // 매 프레임 Get 호출 방지용 InputManager 캐싱
 	PlayerMovementType controller_type_ = PlayerMovementType::Axis;
 };

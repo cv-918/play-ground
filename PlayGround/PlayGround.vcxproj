@@ -207,7 +207,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Image.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameExitView.h" />
-    <ClInclude Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameOptionView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
@@ -361,7 +361,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
-    <ClCompile Include="Project\Gameplay\UI\Views\OutGameVideoOptionView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameOptionView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGameResultView.cpp" />

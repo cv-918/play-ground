@@ -101,6 +101,8 @@ public:
 	/* WndProc에서 호출 */
 	void OnMouseMove(WPARAM _wparam, LPARAM _lparam);
 	void OnMouseWheel(WPARAM _wparam, LPARAM _lparam);
+	// MouseOnly 이동 계산 기준점(예: 플레이어 화면 좌표)을 갱신한다.
+	void SetMouseMoveReferencePoint(const _Point& _point);
 
 	void OnMouseButtonDown(WPARAM _vk, LPARAM _lparam);
 	void OnMouseButtonUp(WPARAM _vk, LPARAM _lparam);
@@ -133,6 +135,12 @@ public:
 	// 6단계: 프리셋/액션 remap 가능 정책 조회 및 remap 시도 API
 	bool IsActionRemappable(ControllerPreset _preset, InputAction _action) const;
 	InputRemapResult TryRemapAction(ControllerPreset _preset, InputAction _action, const InputBinding& _new_binding);
+	InputRemapResult TryRemapBinding(ControllerPreset _preset, const InputBinding& _target_binding, const InputBinding& _new_binding);
+	bool TryGetPrimaryBinding(ControllerPreset _preset, InputAction _action, InputBinding* _out_binding) const;
+	bool HasBindingConflict(ControllerPreset _preset, const InputBinding& _candidate, InputAction _ignore_action = InputAction::Count) const;
+	bool HasBindingConflictExcept(ControllerPreset _preset, const InputBinding& _candidate, const InputBinding& _ignore_binding) const;
+
+	const PresetBindingSet* GetBindingSet(ControllerPreset _preset) const { return FindPresetBindingSet(_preset); }
 
 	_Point MousePoint() const { return mouse_; }
 	_Point MousePointDesign() const;
@@ -162,6 +170,8 @@ private:
 	_Point mouse_ = _Point::Zero();
 	_Point prev_mouse_ = _Point::Zero();
 	_Point mouse_delta_ = _Point::Zero();
+	_Point mouse_move_reference_point_ = _Point::Zero();
+	_bool has_mouse_move_reference_point_ = false;
 
 	_int wheel_delta_ = IV_ZERO;
 	_bool action_states_dirty_ = true;

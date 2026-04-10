@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-09 18:05)
+﻿# Project Structure (Updated: 2026-04-10 18:01)
 
 ```text
 Root
@@ -8,6 +8,7 @@ Root
 |   |   +--- Textures
 |   |   |   +--- Characters
 |   |   |   +--- Particles
+|   |   |   +--- SceneImages
 |   |   |   +--- Skills
 |   |   |   |   +--- Icons
 |   |   |   +--- World
@@ -202,8 +203,8 @@ Root
 |   |   |   |   |   OutGameExitView.h
 |   |   |   |   |   OutGameMainView.cpp
 |   |   |   |   |   OutGameMainView.h
-|   |   |   |   |   OutGameVideoOptionView.cpp
-|   |   |   |   |   OutGameVideoOptionView.h
+|   |   |   |   |   OutGameOptionView.cpp
+|   |   |   |   |   OutGameOptionView.h
 |   |   |   +--- Widgets
 |   |   |   |   |   AttributeNode.cpp
 |   |   |   |   |   AttributeNode.h

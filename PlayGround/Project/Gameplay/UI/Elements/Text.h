@@ -9,7 +9,7 @@ public:
 	void Render(_double _delta_time) override;
 
 public:
-	void SetText(const std::wstring& _text) { text_ = _text; }
+  void SetText(const std::wstring& _text);
 	void SetColor(const _Color& _color) { color_ = _color; }
 	void SetFontSize(_float _size) { font_size_ = _size; }
 
@@ -22,5 +22,5 @@ private:
 	std::wstring text_;
 	_Color color_ = Palette::Black;
 	_float font_size_ = 12.f;
-	_bool is_center_ = true;
+	_bool is_center_ = false;
 };

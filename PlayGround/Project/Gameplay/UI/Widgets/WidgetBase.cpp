@@ -44,7 +44,10 @@ void WidgetBase::Render(_double _delta_time)
 	for (UIBase* element : elements_)
 	{
 		if (element && !element->IsPendingDestruction())
+		{
 			element->Render(_delta_time);
+			element->DebugRender();
+		}
 	}
 }
 

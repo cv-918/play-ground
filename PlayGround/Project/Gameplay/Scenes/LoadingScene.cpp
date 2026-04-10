@@ -14,7 +14,9 @@ _bool LoadingScene::Initialize()
 
 _int LoadingScene::Update(_double _delta_time)
 {
-	__super::Update(_delta_time);
+	auto ret = __super::Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
 
     if (loading_complete_)
 		return UPDATE_CONTINUE;
@@ -73,10 +75,4 @@ void LoadingScene::Render(_double _delta_time)
 
 	object_manager_->Render(_delta_time);
 	ui_manager_->Render(_delta_time);
-}
-
-void LoadingScene::OnExit()
-{
-	loading_progress_ = 0;
-	loading_complete_ = false;
 }
