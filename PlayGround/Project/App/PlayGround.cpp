@@ -137,8 +137,16 @@ void PlayGround::Render(_double _delta_time)
 
 LRESULT PlayGround::HandleWindowMessage(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam)
 {
+	int i = 0;
 	switch (_msg)
 	{
+	case WM_SIZE:
+	{
+		const auto res = _ScreenSystem.WindowResolution();
+		i = 1;
+	}
+	break;
+
 	case WM_MOUSEMOVE:
 		input_manager_->OnMouseMove(_wparam, _lparam);
 		break;

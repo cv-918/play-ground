@@ -28,6 +28,12 @@ _int OutGameScene::Update(_double _delta_time)
 	if (ret != UPDATE_CONTINUE)
 		return ret;
 
+	if (last_applied_video_revision_ != _VideoSettingsMgr.AppliedRevision())
+	{
+		_HandleViewportChanged();
+		last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
+	}
+
 #ifdef _DEBUG
 	//if (_InputMgr.Down('Y'))
 	//{
@@ -177,6 +183,7 @@ void OutGameScene::Render(_double _delta_time)
 void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
+	last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
 
 	const auto res = _ScreenSystem.WindowResolution();
 
@@ -190,14 +197,14 @@ void OutGameScene::OnEnter()
 		s_float(background_info.nav_mesh_size_.x),
 		s_float(background_info.nav_mesh_size_.y));
 
-	const auto background = object_manager_->CreateActor<Background>(background_info);
-	if (nullptr == background)
+	background_ = object_manager_->CreateActor<Background>(background_info);
+	if (nullptr == background_)
 	{
 		_NULL_DETECTION_MSGBOX;
 		return;
 	}
 
-	const auto& nav_mesh = background->NavMesh();
+	const auto& nav_mesh = background_->NavMesh();
 
 	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
 	if (player_spawn_data == nullptr)
@@ -233,6 +240,37 @@ void OutGameScene::OnEnter()
 void OutGameScene::OnExit()
 {
 	_ColMgr.ClearAllColliders();
+	background_ = nullptr;
+}
+
+void OutGameScene::_HandleViewportChanged()
+{
+	const Resolution res = _ScreenSystem.WindowResolution();
+	if (res.width <= 0 || res.height <= 0)
+		return;
+
+	if (background_)
+		background_->UpdateViewport(_Size(res.width, res.height));
+
+	if (background_)
+	{
+		const auto& nav_mesh = background_->NavMesh();
+		if (test_town_player_)
+			test_town_player_->SetNavMesh(nav_mesh);
+
+		RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
+		_CameraMgr.Initialize(res.width, res.height);
+		if (test_town_player_)
+			_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
+		_CameraMgr.SetWorldBounds(world_bounds);
+		_CameraMgr.EnableClamp(true);
+	}
+
+	for (auto& pair : view_map_)
+	{
+		if (pair.second)
+			pair.second->OnViewportChanged();
+	}
 }
 
 void OutGameScene::_ChangeView(OutGameViewState _new_view_state)

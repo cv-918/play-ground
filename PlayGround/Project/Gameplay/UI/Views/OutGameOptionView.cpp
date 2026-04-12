@@ -337,6 +337,14 @@ _int OutGameOptionView::Update(_double _delta_time)
 	return __super::Update(_delta_time);
 }
 
+void OutGameOptionView::OnViewportChanged()
+{
+	has_layout_cache_ = false;
+	UpdateLayout();
+	RefreshControllerGrid();
+	RefreshTexts();
+}
+
 void OutGameOptionView::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);

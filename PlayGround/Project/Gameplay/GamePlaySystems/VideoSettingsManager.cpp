@@ -63,6 +63,7 @@ bool VideoSettingsManager::Apply()
     if (_ScreenSystem.ApplyVideoMode(pending_))
     {
         applied_ = pending_;
+        ++applied_revision_;
         return true;
     }
 

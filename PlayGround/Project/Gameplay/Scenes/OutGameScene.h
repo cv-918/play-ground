@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Scene.h"
+#include <cstdint>
 
 #include "GamePlaySystems/Dialogue/DialogueSystem.h"
 #include "GamePlaySystems/Dialogue/DialogueJsonConverter.h"
@@ -35,6 +36,7 @@ private:
 	// 뷰 전환 메소드
 	void _ChangeView(OutGameViewState _new_view_state);
 	WidgetBase* _CreateView();
+	void _HandleViewportChanged();
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;
 
@@ -45,6 +47,8 @@ private:
 
 	class TownPlayer* test_town_player_ = nullptr;
 	class TownNpc* test_town_npc_ = nullptr;
+	class Background* background_ = nullptr;
+	uint64_t last_applied_video_revision_ = 0;
 
 	// s, [ Dialogue System Test ]
 	DialogueSystem dialogue_system_;

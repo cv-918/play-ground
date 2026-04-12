@@ -17,6 +17,7 @@ public:
 	void SetPosition(const _Point& _position) override;
 	void SetSize(const _Size& _size) override;
 	void SetCenter(const _Point& _center) override;
+	virtual void OnViewportChanged() {}
 
 	void MoveX(const _int _dx) override;
 	void MoveY(const _int _dy) override;
