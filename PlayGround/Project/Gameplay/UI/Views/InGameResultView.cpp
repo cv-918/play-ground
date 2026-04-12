@@ -16,6 +16,10 @@ InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_cal
 	restart_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 화면 중앙
 	restart_btn_info.text = L"RESTART";
 	restart_btn_info.on_lclick = _restart_btn_callback;
+	restart_btn_info.normal_image_path = Path::Buttons + L"RESTART/RESTART_Default.png";
+	restart_btn_info.hovered_image_path = Path::Buttons + L"RESTART/RESTART_MO.png";
+	restart_btn_info.pressed_l_image_path = Path::Buttons + L"RESTART/RESTART_Push.png";
+	restart_btn_info.disabled_image_path = Path::Buttons + L"RESTART/RESTART_Disabled.png";
 	const auto restart_btn = CreateElement<Button>(restart_btn_info);
 	y += COMMON_BUTTON_CY + gap; // 다시 시작 버튼 아래에 위치하도록 y 좌표 조정
 
@@ -24,6 +28,10 @@ InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_cal
 	exit_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 다시 시작 버튼 아래
 	exit_btn_info.text = L"EXIT";
 	exit_btn_info.on_lclick = _exit_btn_callback;
+	exit_btn_info.normal_image_path = Path::Buttons + L"EXIT/EXIT_Default.png";
+	exit_btn_info.hovered_image_path = Path::Buttons + L"EXIT/EXIT_MO.png";
+	exit_btn_info.pressed_l_image_path = Path::Buttons + L"EXIT/EXIT_Push.png";
+	exit_btn_info.disabled_image_path = Path::Buttons + L"EXIT/EXIT_Disabled.png";
 	const auto exit_btn = CreateElement<Button>(exit_btn_info);
 	y += COMMON_BUTTON_CY + gap; // 다시 시작 버튼 아래에 위치하도록 y 좌표 조정
 }

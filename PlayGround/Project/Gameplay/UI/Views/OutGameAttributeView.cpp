@@ -22,6 +22,10 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	return_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE };
 	return_btn_info.text = L"RETURN";
 	return_btn_info.on_lclick = _return_btn_callback;
+	return_btn_info.normal_image_path = Path::Buttons + L"RETURN/RETURN_Default.png";
+	return_btn_info.hovered_image_path = Path::Buttons + L"RETURN/RETURN_MO.png";
+	return_btn_info.pressed_l_image_path = Path::Buttons + L"RETURN/RETURN_Push.png";
+	return_btn_info.disabled_image_path = Path::Buttons + L"RETURN/RETURN_Disabled.png";
 	return_btn_ = CreateElement<Button>(return_btn_info);
 
 	// 스킬 목록 그리드
