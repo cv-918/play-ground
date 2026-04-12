@@ -1,6 +1,19 @@
 ﻿#include "framework.h"
 #include "Image.h"
 
+Image::Image(const CreateInfo& _create_info)
+{
+    // 텍스처 경로과 스케일 모드를 설정합니다.
+    texture_path_ = _create_info.texture_path;
+    scale_mode_ = _create_info.scale_mode;
+    // 텍스처 경로가 유효하면 리소스 매니저에서 텍스처를 로드합니다.
+    if (!texture_path_.empty())
+		texture_ = _GraphicSourceMgr.GetTexture(texture_path_);
+
+    // UIBase의 CreateInfo를 초기화합니다.
+	SetRect(_create_info.rect);
+}
+
 // Image 요소를 화면에 렌더링합니다.
 void Image::Render(_double _delta_time)
 {

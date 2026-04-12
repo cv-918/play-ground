@@ -1,12 +1,13 @@
 ﻿#pragma once
 #include "../UIBase.h"
+#include <array>
 
 enum class ButtonState
 {
 	Normal,
 	Hovered,
 	Pressed_L,
-    Pressed_R,
+	Pressed_R,
 	Disabled
 };
 
@@ -16,7 +17,11 @@ public:
 	struct CreateInfo : public UIBase::UICreateInfo
 	{
 		std::wstring text;
-		std::wstring image_path;
+		std::wstring normal_image_path;
+		std::wstring hovered_image_path;
+		std::wstring pressed_l_image_path;
+		std::wstring pressed_r_image_path;
+		std::wstring disabled_image_path;
 		std::function<void()> on_lclick;
 		std::function<void()> on_rclick;
 	};
@@ -34,13 +39,17 @@ public:
 	// 버튼 클릭 시 호출될 콜백 함수 설정
 	void SetOnLClick(const std::function<void()>& _callback) { on_lclick_ = _callback; }
 	void SetOnRClick(const std::function<void()>& _callback) { on_rclick_ = _callback; }
+	void SetStateTexture(ButtonState _state, const std::wstring& _image_path);
 
 	// 버튼에 세팅된 콜백 실행 (예: 외부에서 강제로 클릭 이벤트 발생시키고 싶을 때)
 	void LClick() { if (on_lclick_) on_lclick_(); }
 	void RClick() { if (on_rclick_) on_rclick_(); }
 
 private:
-	const SpriteResource* sprite_ = nullptr;
+	const SpriteResource* _GetSpriteForState(ButtonState _state) const;
+
+	static constexpr size_t kStateCount = 5;
+	std::array<const SpriteResource*, kStateCount> state_sprites_{};
 	std::wstring text_; // 버튼에 표시될 텍스트
 	std::function<void()> on_lclick_; // 버튼 좌클릭 시 호출될 콜백 함수
 	std::function<void()> on_rclick_; // 버튼 우클릭 시 호출될 콜백 함수

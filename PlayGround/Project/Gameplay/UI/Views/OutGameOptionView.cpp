@@ -225,16 +225,28 @@ OutGameOptionView::OutGameOptionView(const std::function<void()>& _close_callbac
 	Button::CreateInfo apply_btn_info;
 	apply_btn_info.text = L"APPLY";
 	apply_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Apply(); };
+	apply_btn_info.normal_image_path = Path::Buttons + L"APPLY/APPLY_Default.png";
+	apply_btn_info.hovered_image_path = Path::Buttons + L"APPLY/APPLY_MO.png";
+	apply_btn_info.pressed_l_image_path = Path::Buttons + L"APPLY/APPLY_Push.png";
+	apply_btn_info.disabled_image_path = Path::Buttons + L"APPLY/APPLY_Disabled.png";
 	apply_btn_ = CreateElement<Button>(apply_btn_info);
 
 	Button::CreateInfo cancel_btn_info;
 	cancel_btn_info.text = L"CANCEL";
 	cancel_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Cancel(); };
+	cancel_btn_info.normal_image_path = Path::Buttons + L"CANCEL/CANCEL_Default.png";
+	cancel_btn_info.hovered_image_path = Path::Buttons + L"CANCEL/CANCEL_MO.png";
+	cancel_btn_info.pressed_l_image_path = Path::Buttons + L"CANCEL/CANCEL_Push.png";
+	cancel_btn_info.disabled_image_path = Path::Buttons + L"CANCEL/CANCEL_Disabled.png";
 	cancel_btn_ = CreateElement<Button>(cancel_btn_info);
 
 	Button::CreateInfo reset_btn_info;
 	reset_btn_info.text = L"RESET";
 	reset_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Reset(); };
+	reset_btn_info.normal_image_path = Path::Buttons + L"RESET/RESET_Default.png";
+	reset_btn_info.hovered_image_path = Path::Buttons + L"RESET/RESET_MO.png";
+	reset_btn_info.pressed_l_image_path = Path::Buttons + L"RESET/RESET_Push.png";
+	reset_btn_info.disabled_image_path = Path::Buttons + L"RESET/RESET_Disabled.png";
 	reset_btn_ = CreateElement<Button>(reset_btn_info);
 
 	Button::CreateInfo back_btn_info;
@@ -245,6 +257,10 @@ OutGameOptionView::OutGameOptionView(const std::function<void()>& _close_callbac
 			if (close_callback_)
 				close_callback_();
 		};
+	back_btn_info.normal_image_path = Path::Buttons + L"BACK/BACK_Default.png";
+	back_btn_info.hovered_image_path = Path::Buttons + L"BACK/BACK_MO.png";
+	back_btn_info.pressed_l_image_path = Path::Buttons + L"BACK/BACK_Push.png";
+	back_btn_info.disabled_image_path = Path::Buttons + L"BACK/BACK_Disabled.png";
 	back_btn_ = CreateElement<Button>(back_btn_info);
 
 	hint_text_ = CreateElement<Text>();

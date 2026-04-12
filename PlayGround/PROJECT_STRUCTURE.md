@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-12 15:25)
+﻿# Project Structure (Updated: 2026-04-12 18:42)
 
 ```text
 Root
@@ -9,8 +9,23 @@ Root
 |   |   |   +--- Characters
 |   |   |   +--- Particles
 |   |   |   +--- SceneImages
+|   |   |   |   +--- Title
 |   |   |   +--- Skills
 |   |   |   |   +--- Icons
+|   |   |   +--- UI
+|   |   |   |   +--- Buttons
+|   |   |   |   |   +--- APPLY
+|   |   |   |   |   +--- BACK
+|   |   |   |   |   +--- CANCEL
+|   |   |   |   |   +--- EXIT
+|   |   |   |   |   +--- NO
+|   |   |   |   |   +--- RESET
+|   |   |   |   |   +--- RESTART
+|   |   |   |   |   +--- RESUME
+|   |   |   |   |   +--- RETURN
+|   |   |   |   |   +--- SETTINGS
+|   |   |   |   |   +--- YES
+|   |   |   |   +--- PopUps
 |   |   |   +--- World
 +--- Project
 |   +--- App

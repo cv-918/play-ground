@@ -437,7 +437,7 @@ latex/
 xml/
 
 # Data
-Data/Resources/
+Resources/
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio

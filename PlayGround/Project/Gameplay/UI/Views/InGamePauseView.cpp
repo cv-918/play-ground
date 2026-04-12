@@ -16,6 +16,10 @@ InGamePauseView::InGamePauseView(const std::function<void()>& _resume_btn_callba
 	resume_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 화면 중앙
 	resume_btn_info.text = L"RESUME";
 	resume_btn_info.on_lclick = _resume_btn_callback;
+	resume_btn_info.normal_image_path = Path::Buttons + L"RESUME/RESUME_Default.png";
+	resume_btn_info.hovered_image_path = Path::Buttons + L"RESUME/RESUME_MO.png";
+	resume_btn_info.pressed_l_image_path = Path::Buttons + L"RESUME/RESUME_Push.png";
+	resume_btn_info.disabled_image_path = Path::Buttons + L"RESUME/RESUME_Disabled.png";
 	const auto resume_btn = CreateElement<Button>(resume_btn_info);
 
 	// 나가기 버튼
@@ -24,6 +28,10 @@ InGamePauseView::InGamePauseView(const std::function<void()>& _resume_btn_callba
 	exit_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE }; // 이어하기 버튼 아래
 	exit_btn_info.text = L"EXIT";
 	exit_btn_info.on_lclick = _exit_btn_callback;
+	exit_btn_info.normal_image_path = Path::Buttons + L"EXIT/EXIT_Default.png";
+	exit_btn_info.hovered_image_path = Path::Buttons + L"EXIT/EXIT_MO.png";
+	exit_btn_info.pressed_l_image_path = Path::Buttons + L"EXIT/EXIT_Push.png";
+	exit_btn_info.disabled_image_path = Path::Buttons + L"EXIT/EXIT_Disabled.png";
 	const auto exit_btn = CreateElement<Button>(exit_btn_info);
 }
 

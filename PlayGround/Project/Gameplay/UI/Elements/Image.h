@@ -18,6 +18,17 @@ enum class ImageScaleMode
 class Image final : public UIBase
 {
 public:
+    struct CreateInfo : public UIBase::UICreateInfo
+    {
+        std::wstring texture_path; // 렌더링할 텍스처의 파일 경로
+        ImageScaleMode scale_mode = ImageScaleMode::Stretch; // 이미지 스케일 모드
+	};
+
+public:
+	explicit Image() DEFAULT; // 추후에 삭제할 것
+	explicit Image(const CreateInfo& _create_info);
+
+public:
     // 현재 설정(텍스처, 틴트, 알파, 소스 영역, 스케일 모드)에 따라 이미지를 렌더링합니다.
     void Render(_double _delta_time) override;
 
