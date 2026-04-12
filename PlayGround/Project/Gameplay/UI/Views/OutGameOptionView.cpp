@@ -222,6 +222,12 @@ OutGameOptionView::OutGameOptionView(const std::function<void()>& _close_callbac
 	ui_scale_text_ = CreateElement<Text>();
 	ui_scale_text_->SetCenterAligned(false);
 
+	frame_limit_text_ = CreateElement<Text>();
+	frame_limit_text_->SetCenterAligned(false);
+
+	target_fps_text_ = CreateElement<Text>();
+	target_fps_text_->SetCenterAligned(false);
+
 	Button::CreateInfo apply_btn_info;
 	apply_btn_info.text = L"APPLY";
 	apply_btn_info.on_lclick = [this]() { _VideoSettingsMgr.Apply(); };
@@ -387,6 +393,14 @@ void OutGameOptionView::RefreshTexts()
 		focus_item_ == FocusItem::UiScale,
 		L"UIScale    : < " + ToUiScaleText() + L" >"));
 
+	frame_limit_text_->SetText(WrapFocusableLabel(
+		focus_item_ == FocusItem::FrameLimit,
+		L"FrameLimit : < " + ToFrameLimitText() + L" >"));
+
+	target_fps_text_->SetText(WrapFocusableLabel(
+		focus_item_ == FocusItem::TargetFps,
+		L"Target FPS : < " + ToTargetFpsText() + L" >"));
+
 	apply_btn_->SetText(WrapFocusableLabel(focus_item_ == FocusItem::Apply, L"APPLY"));
 	cancel_btn_->SetText(WrapFocusableLabel(focus_item_ == FocusItem::Cancel, L"CANCEL"));
 	reset_btn_->SetText(WrapFocusableLabel(focus_item_ == FocusItem::Reset, L"RESET"));
@@ -406,13 +420,33 @@ void OutGameOptionView::UpdateLayout()
 	const _float applied_ui_scale = _VideoSettingsMgr.Applied().ui_scale;
 
 	const _int x = ScaleByUi(START_X, applied_ui_scale);
-	const _int y = ScaleByUi(START_Y, applied_ui_scale);
-	const _int section_gap_y = ScaleByUi(SECTION_GAP_Y, applied_ui_scale);
-	const _int line_gap = ScaleByUi(LINE_GAP, applied_ui_scale);
-	const _int title_offset_y = ScaleByUi(40, applied_ui_scale);
-	const _int controller_grid_top_offset = ScaleByUi(CONTROLLER_GRID_TOP_OFFSET, applied_ui_scale);
+
+	const _int y_base = ScaleByUi(START_Y, applied_ui_scale);
+	const _int section_gap_base = ScaleByUi(SECTION_GAP_Y, applied_ui_scale);
+	const _int line_gap_base = ScaleByUi(LINE_GAP, applied_ui_scale);
+	const _int title_offset_base = ScaleByUi(40, applied_ui_scale);
+	const _int controller_grid_top_offset_base = ScaleByUi(CONTROLLER_GRID_TOP_OFFSET, applied_ui_scale);
 	const _int btn_gap = ScaleByUi(20, applied_ui_scale);
-	const _int hint_offset_y = ScaleByUi(50, applied_ui_scale);
+	const _int hint_offset_base = ScaleByUi(50, applied_ui_scale);
+
+	const _int bottom_margin = 20;
+	const _int scalable_sum = y_base + controller_grid_top_offset_base + section_gap_base + title_offset_base + line_gap_base * 6 + hint_offset_base;
+	const _int fixed_sum = CONTROLLER_GRID_CELL_H * CONTROLLER_GRID_ROW_COUNT + COMMON_BUTTON_CY;
+	const _int available_height = std::max(0, GAME_VIEW_HEIGHT - bottom_margin);
+
+	_float compression = 1.f;
+	if (scalable_sum > 0 && fixed_sum + scalable_sum > available_height)
+	{
+		compression = s_cast(_float, available_height - fixed_sum) / s_cast(_float, scalable_sum);
+		compression = _MathFunc::Clamp(compression, 0.f, 1.f);
+	}
+
+	const _int y = std::max(ScaleByUi(40, applied_ui_scale), s_int(std::round(y_base * compression)));
+	const _int section_gap_y = std::max(ScaleByUi(12, applied_ui_scale), s_int(std::round(section_gap_base * compression)));
+	const _int line_gap = std::max(ScaleByUi(18, applied_ui_scale), s_int(std::round(line_gap_base * compression)));
+	const _int title_offset_y = std::max(ScaleByUi(20, applied_ui_scale), s_int(std::round(title_offset_base * compression)));
+	const _int controller_grid_top_offset = std::max(ScaleByUi(18, applied_ui_scale), s_int(std::round(controller_grid_top_offset_base * compression)));
+	const _int hint_offset_y = std::max(ScaleByUi(14, applied_ui_scale), s_int(std::round(hint_offset_base * compression)));
 
 	controller_title_text_->SetPosition(_Point{ x, y - title_offset_y });
 	controller_type_text_->SetPosition(_Point{ x, y + line_gap * 0 });
@@ -425,8 +459,10 @@ void OutGameOptionView::UpdateLayout()
 	resolution_text_->SetPosition(_Point{ x, video_start_y + line_gap * 0 });
 	window_mode_text_->SetPosition(_Point{ x, video_start_y + line_gap * 1 });
 	ui_scale_text_->SetPosition(_Point{ x, video_start_y + line_gap * 2 });
+	frame_limit_text_->SetPosition(_Point{ x, video_start_y + line_gap * 3 });
+	target_fps_text_->SetPosition(_Point{ x, video_start_y + line_gap * 4 });
 
-	const _int btn_y = video_start_y + line_gap * 3;
+	const _int btn_y = video_start_y + line_gap * 6;
 	apply_btn_->SetRect(_Rect{ _Point{ x, btn_y }, COMMON_BUTTON_SIZE });
 	cancel_btn_->SetRect(_Rect{ _Point{ x + COMMON_BUTTON_CX + btn_gap, btn_y }, COMMON_BUTTON_SIZE });
 	reset_btn_->SetRect(_Rect{ _Point{ x + (COMMON_BUTTON_CX + btn_gap) * 2, btn_y }, COMMON_BUTTON_SIZE });
@@ -480,6 +516,13 @@ void OutGameOptionView::HandleHorizontalInput(_int _direction)
 		break;
 	case FocusItem::UiScale:
 		_VideoSettingsMgr.CyclePendingUiScale(_direction);
+		break;
+	case FocusItem::FrameLimit:
+		if (_direction != 0)
+			_VideoSettingsMgr.TogglePendingFrameLimit();
+		break;
+	case FocusItem::TargetFps:
+		_VideoSettingsMgr.CyclePendingTargetFps(_direction);
 		break;
 	default:
 		break;
@@ -663,4 +706,14 @@ std::wstring OutGameOptionView::ToUiScaleText() const
 	wchar_t buffer[32] = {};
 	swprintf_s(buffer, L"%.2f", _VideoSettingsMgr.Pending().ui_scale);
 	return buffer;
+}
+
+std::wstring OutGameOptionView::ToFrameLimitText() const
+{
+	return _VideoSettingsMgr.Pending().frame_limit_enabled ? L"On" : L"Off";
+}
+
+std::wstring OutGameOptionView::ToTargetFpsText() const
+{
+	return std::to_wstring(_VideoSettingsMgr.Pending().target_fps);
 }

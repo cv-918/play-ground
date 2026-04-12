@@ -19,6 +19,8 @@ private:
 		Resolution,
 		WindowMode,
 		UiScale,
+		FrameLimit,
+		TargetFps,
 		Apply,
 		Cancel,
 		Reset,
@@ -43,6 +45,8 @@ private:
 	std::wstring ToResolutionText() const;
 	std::wstring ToWindowModeText() const;
 	std::wstring ToUiScaleText() const;
+	std::wstring ToFrameLimitText() const;
+	std::wstring ToTargetFpsText() const;
 	void UpdateLayoutIfNeeded();
 
 private:
@@ -56,6 +60,8 @@ private:
 	Text* resolution_text_ = nullptr;
 	Text* window_mode_text_ = nullptr;
 	Text* ui_scale_text_ = nullptr;
+	Text* frame_limit_text_ = nullptr;
+	Text* target_fps_text_ = nullptr;
 	Text* hint_text_ = nullptr;
 
 	Grid* controller_grid_ = nullptr;
