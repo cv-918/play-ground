@@ -178,9 +178,11 @@ void OutGameScene::OnEnter()
 {
 	_ChangeView(OutGameViewState::Main);
 
+	const auto res = _ScreenSystem.WindowResolution();
+
 	Background::CreateInfo background_info;
 	background_info.background_path_ = Path::World + L"Field-2560x1600.png";
-	background_info.nav_mesh_size_ = _Size(2560, 1600);
+	background_info.nav_mesh_size_ = _Size(res.width, res.height);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(
 		0.f,
