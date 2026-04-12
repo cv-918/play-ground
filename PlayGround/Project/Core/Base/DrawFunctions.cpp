@@ -1,5 +1,4 @@
 ﻿#include "framework.h"
-#include "framework.h"
 #include "DrawFunctions.h"
 
 namespace
@@ -11,21 +10,31 @@ namespace
 
 	RECT ToRect(const _Rect& _rect)
 	{
+		const auto left = std::min(_rect.Left(), _rect.Right());
+		const auto right = std::max(_rect.Left(), _rect.Right());
+		const auto top = std::min(_rect.Top(), _rect.Bottom());
+		const auto bottom = std::max(_rect.Top(), _rect.Bottom());
+
 		RECT rc{};
-		rc.left = Ox(_rect.Left());
-		rc.top = Oy(_rect.Top());
-		rc.right = Ox(_rect.Right());
-		rc.bottom = Oy(_rect.Bottom());
+		rc.left = Ox(left);
+		rc.top = Oy(top);
+		rc.right = Ox(right);
+		rc.bottom = Oy(bottom);
 		return rc;
 	}
 
 	RECT ToRect(const _RectF& _rect)
 	{
+		const auto left = std::min(_rect.Left(), _rect.Right());
+		const auto right = std::max(_rect.Left(), _rect.Right());
+		const auto top = std::min(_rect.Top(), _rect.Bottom());
+		const auto bottom = std::max(_rect.Top(), _rect.Bottom());
+
 		RECT rc{};
-		rc.left = Ox(s_int(std::round(_rect.Left())));
-		rc.top = Oy(s_int(std::round(_rect.Top())));
-		rc.right = Ox(s_int(std::round(_rect.Right())));
-		rc.bottom = Oy(s_int(std::round(_rect.Bottom())));
+		rc.left = Ox(s_int(std::round(left)));
+		rc.top = Oy(s_int(std::round(top)));
+		rc.right = Ox(s_int(std::round(right)));
+		rc.bottom = Oy(s_int(std::round(bottom)));
 		return rc;
 	}
 

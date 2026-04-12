@@ -73,7 +73,7 @@ void ObjectManager::Render(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->IsActive() && !game_object->IsPendingDestruction())
+		if (game_object->IsVisible() && !game_object->IsPendingDestruction())
 		{
 			game_object->Render(_delta_time);
 			game_object->DebugRender();

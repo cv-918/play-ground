@@ -140,6 +140,16 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameExitView.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTypes.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\IDialogueEventListener.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueWindowView.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueSystem.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -255,6 +265,14 @@
     <ClCompile Include="Project\EngineSystems\Render\ScreenSystem.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueWindowView.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueSystem.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />

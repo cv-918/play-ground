@@ -3,6 +3,11 @@
 
 #include "Scene.h"
 
+#include "GamePlaySystems/Dialogue/DialogueSystem.h"
+#include "GamePlaySystems/Dialogue/DialogueJsonConverter.h"
+#include "GamePlaySystems/Dialogue/Sample/DialogueSampleFactory.h"
+#include "GamePlaySystems/Dialogue/Sample/DialogueDebugEventListener.h"
+
 class OutGameScene final : public Scene
 {
 	enum class OutGameViewState
@@ -40,4 +45,9 @@ private:
 
 	class TownPlayer* test_town_player_ = nullptr;
 	class TownNpc* test_town_npc_ = nullptr;
+
+	// s, [ Dialogue System Test ]
+	DialogueSystem dialogue_system_;
+	DialogueDebugEventListener dialogue_event_listener_;
+	// e, [ Dialogue System Test ]
 };

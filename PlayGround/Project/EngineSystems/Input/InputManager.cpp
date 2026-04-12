@@ -35,6 +35,13 @@ void InputManager::BeginFrame()
 	{
 		k.went_down = false;
 		k.went_up = false;
+		k.released_hold_seconds = 0.f;
+	}
+
+	// 이번 프레임에만 의미가 있는 액션 릴리즈 홀드 값 초기화
+	for (auto& a : action_states_)
+	{
+		a.released_hold_seconds = 0.f;
 	}
 
 	// 이번 프레임 문자 입력 버퍼 초기화
@@ -49,12 +56,20 @@ void InputManager::BeginFrame()
 	action_states_dirty_ = true;
 }
 
-void InputManager::SyncActionStates()
+void InputManager::SyncActionStates(_float _delta_time)
 {
 	if (!action_states_dirty_)
 		return;
 
+	// 홀드 값은 현재 raw 키 상태를 기준으로 먼저 누적한다.
+	UpdateKeyHoldStates(_delta_time);
+
+	// 그 다음 프리셋/바인딩을 반영해 액션 상태를 재구성한다.
 	RebuildActionStates();
+
+	// 액션 상태가 완성된 뒤 액션 홀드 값도 같은 방식으로 누적한다.
+	UpdateActionHoldStates(_delta_time);
+
 	action_states_dirty_ = false;
 }
 
@@ -63,11 +78,15 @@ void InputManager::ResetAll()
 	// 모든 키 상태 초기화(눌림 고정 방지)
 	std::fill(keys_.begin(), keys_.end(), KeyState{});
 
+	// 액션 상태도 같이 초기화한다.
+	std::fill(action_states_.begin(), action_states_.end(), ActionState{});
+
 	// 눌린 키 카운트도 초기화
 	pressed_key_count_ = IV_ZERO;
 
 	// 문자 입력 버퍼도 초기화
 	chars_.clear();
+
 	action_states_dirty_ = true;
 }
 
@@ -183,6 +202,44 @@ bool InputManager::Up(_int _vk) const
 	return keys_[s_cast(uint8_t, _vk)].went_up;
 }
 
+_int InputManager::HoldFrames(_int _vk) const
+{
+	if (_vk < 0 || _vk > UCHAR_MAX) return 0;
+	return keys_[s_cast(uint8_t, _vk)].hold_frames;
+}
+
+_float InputManager::HoldSeconds(_int _vk) const
+{
+	if (_vk < 0 || _vk > UCHAR_MAX) return 0.f;
+	return keys_[s_cast(uint8_t, _vk)].hold_seconds;
+}
+
+_bool InputManager::HeldFor(_int _vk, _float _seconds) const
+{
+	if (_vk < 0 || _vk > UCHAR_MAX) return false;
+	if (_seconds <= 0.f) return Pressed(_vk);
+
+	const KeyState& key = keys_[s_cast(uint8_t, _vk)];
+	return key.is_down && key.hold_seconds >= _seconds;
+}
+
+_bool InputManager::HoldTriggered(_int _vk, _float _seconds) const
+{
+	if (_vk < 0 || _vk > UCHAR_MAX) return false;
+	if (_seconds <= 0.f) return Down(_vk);
+
+	const KeyState& key = keys_[s_cast(uint8_t, _vk)];
+	return key.is_down
+		&& key.prev_hold_seconds < _seconds
+		&& key.hold_seconds >= _seconds;
+}
+
+_float InputManager::ReleasedHoldSeconds(_int _vk) const
+{
+	if (_vk < 0 || _vk > UCHAR_MAX) return 0.f;
+	return keys_[s_cast(uint8_t, _vk)].released_hold_seconds;
+}
+
 _Point InputManager::MousePointDesign() const
 {
 	const Resolution design = _ScreenSystem.DesignResolution();
@@ -201,8 +258,8 @@ _Point InputManager::MousePointDesign() const
 	converted.x = s_int(std::round(s_cast(_float, mouse_.x) * sx));
 	converted.y = s_int(std::round(s_cast(_float, mouse_.y) * sy));
 
-	// 가정: 프로젝트의 _Rect::PtInRect는 Right/Bottom 배타(<) 정책이다.
-	   // 따라서 입력 좌표는 [0, width-1], [0, height-1]로 보수적으로 clamp 한다.
+	// 프로젝트의 _Rect::PtInRect가 Right/Bottom 배타 정책이라고 가정한다.
+	// 따라서 입력 좌표는 [0, width - 1], [0, height - 1] 범위로 clamp 한다.
 	const _int max_x = std::max(0, design.width - 1);
 	const _int max_y = std::max(0, design.height - 1);
 	converted.x = std::clamp(converted.x, 0, max_x);
@@ -250,6 +307,56 @@ _float InputManager::ActionValue(InputAction _action) const
 		return 0.f;
 
 	return action_states_[ToActionIndex(_action)].value;
+}
+
+_int InputManager::ActionHoldFrames(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return 0;
+
+	return action_states_[ToActionIndex(_action)].hold_frames;
+}
+
+_float InputManager::ActionHoldSeconds(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return 0.f;
+
+	return action_states_[ToActionIndex(_action)].hold_seconds;
+}
+
+_bool InputManager::ActionHeldFor(InputAction _action, _float _seconds) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	if (_seconds <= 0.f)
+		return ActionDown(_action);
+
+	const ActionState& state = action_states_[ToActionIndex(_action)];
+	return state.is_down && state.hold_seconds >= _seconds;
+}
+
+_bool InputManager::ActionHoldTriggered(InputAction _action, _float _seconds) const
+{
+	if (_action >= InputAction::Count)
+		return false;
+
+	if (_seconds <= 0.f)
+		return ActionPressed(_action);
+
+	const ActionState& state = action_states_[ToActionIndex(_action)];
+	return state.is_down
+		&& state.prev_hold_seconds < _seconds
+		&& state.hold_seconds >= _seconds;
+}
+
+_float InputManager::ActionReleasedHoldSeconds(InputAction _action) const
+{
+	if (_action >= InputAction::Count)
+		return 0.f;
+
+	return action_states_[ToActionIndex(_action)].released_hold_seconds;
 }
 
 bool InputManager::IsActionRemappable(ControllerPreset _preset, InputAction _action) const
@@ -421,9 +528,69 @@ bool InputManager::HasBindingConflict(ControllerPreset _preset, const InputBindi
 	return false;
 }
 
+void InputManager::UpdateKeyHoldStates(_float _delta_time)
+{
+	for (auto& key : keys_)
+	{
+		key.prev_hold_frames = key.hold_frames;
+		key.prev_hold_seconds = key.hold_seconds;
+
+		if (key.is_down)
+		{
+			++key.hold_frames;
+
+			if (_delta_time > 0.f)
+				key.hold_seconds += _delta_time;
+		}
+		else
+		{
+			// 이번 프레임에 릴리즈되었다면 릴리즈 직전 홀드 시간을 보존한다.
+			if (key.went_up)
+				key.released_hold_seconds = key.prev_hold_seconds;
+
+			key.hold_frames = 0;
+			key.hold_seconds = 0.f;
+		}
+	}
+}
+
+void InputManager::UpdateActionHoldStates(_float _delta_time)
+{
+	for (auto& state : action_states_)
+	{
+		state.prev_hold_frames = state.hold_frames;
+		state.prev_hold_seconds = state.hold_seconds;
+
+		if (state.is_down)
+		{
+			++state.hold_frames;
+
+			if (_delta_time > 0.f)
+				state.hold_seconds += _delta_time;
+		}
+		else
+		{
+			// 액션도 키와 동일하게 릴리즈 직전 홀드 시간을 1프레임 보존한다.
+			if (state.went_up)
+				state.released_hold_seconds = state.prev_hold_seconds;
+
+			state.hold_frames = 0;
+			state.hold_seconds = 0.f;
+		}
+	}
+}
+
 void InputManager::RebuildActionStates()
 {
-	std::fill(action_states_.begin(), action_states_.end(), ActionState{});
+	// 홀드 관련 누적값은 별도 단계에서 관리하므로,
+	// 여기서는 프레임성 상태와 축 값만 재구성한다.
+	for (auto& state : action_states_)
+	{
+		state.is_down = false;
+		state.went_down = false;
+		state.went_up = false;
+		state.value = 0.f;
+	}
 
 	const PresetBindingSet* preset_set = FindPresetBindingSet(current_preset_);
 	if (nullptr == preset_set)
@@ -459,7 +626,7 @@ void InputManager::RebuildActionStates()
 		}
 	}
 
-	// 5단계: MouseOnly 프리셋 이동을 "플레이어-커서 방향 + 거리"로 계산한다.
+	// MouseOnly 프리셋 이동을 "플레이어-커서 방향 + 거리"로 계산한다.
 	if (current_preset_ == ControllerPreset::MouseOnly)
 	{
 		const _Point mouse_design = MousePointDesign();
@@ -676,6 +843,51 @@ _bool InputManager::RunSelfTest()
 	OnKeyDown('I', 0);
 	SyncActionStates();
 	ok = ExpectInputSelfTest(ActionDown(InputAction::MoveX), "TryRemap.KeyboardMouse.MoveX.Applied") && ok;
+
+	// [케이스 4] 키 홀드 시간 / 트리거 / 릴리즈 홀드 확인
+	ResetAll();
+	SetCurrentPreset(ControllerPreset::KeyboardA);
+
+	BeginFrame();
+	OnKeyDown(VK_SPACE, 0);
+	SyncActionStates(0.1f);
+	ok = ExpectInputSelfTest(HoldFrames(VK_SPACE) == 1, "Hold.Key.Frame1") && ok;
+	ok = ExpectInputSelfTest(HoldSeconds(VK_SPACE) >= 0.099f, "Hold.Key.Seconds1") && ok;
+	ok = ExpectInputSelfTest(!HoldTriggered(VK_SPACE, 0.15f), "Hold.Key.TriggerBeforeThreshold") && ok;
+
+	BeginFrame();
+	SyncActionStates(0.1f);
+	ok = ExpectInputSelfTest(HoldFrames(VK_SPACE) == 2, "Hold.Key.Frame2") && ok;
+	ok = ExpectInputSelfTest(HoldSeconds(VK_SPACE) >= 0.199f, "Hold.Key.Seconds2") && ok;
+	ok = ExpectInputSelfTest(HeldFor(VK_SPACE, 0.15f), "Hold.Key.HeldFor") && ok;
+	ok = ExpectInputSelfTest(HoldTriggered(VK_SPACE, 0.15f), "Hold.Key.TriggerAtThreshold") && ok;
+
+	BeginFrame();
+	OnKeyUp(VK_SPACE, 0);
+	SyncActionStates(0.016f);
+	ok = ExpectInputSelfTest(ReleasedHoldSeconds(VK_SPACE) >= 0.199f, "Hold.Key.ReleasedHold") && ok;
+	ok = ExpectInputSelfTest(HoldFrames(VK_SPACE) == 0, "Hold.Key.ResetAfterRelease") && ok;
+
+	// [케이스 5] 액션 홀드 시간 / 트리거 / 릴리즈 홀드 확인
+	ResetAll();
+	SetCurrentPreset(ControllerPreset::KeyboardA);
+
+	BeginFrame();
+	OnKeyDown('Q', 0);
+	SyncActionStates(0.12f);
+	ok = ExpectInputSelfTest(ActionHoldFrames(InputAction::Skill1) == 1, "Hold.Action.Frame1") && ok;
+	ok = ExpectInputSelfTest(ActionHoldSeconds(InputAction::Skill1) >= 0.119f, "Hold.Action.Seconds1") && ok;
+
+	BeginFrame();
+	SyncActionStates(0.12f);
+	ok = ExpectInputSelfTest(ActionHeldFor(InputAction::Skill1, 0.2f), "Hold.Action.HeldFor") && ok;
+	ok = ExpectInputSelfTest(ActionHoldTriggered(InputAction::Skill1, 0.2f), "Hold.Action.TriggerAtThreshold") && ok;
+
+	BeginFrame();
+	OnKeyUp('Q', 0);
+	SyncActionStates(0.016f);
+	ok = ExpectInputSelfTest(ActionReleasedHoldSeconds(InputAction::Skill1) >= 0.239f, "Hold.Action.ReleasedHold") && ok;
+	ok = ExpectInputSelfTest(ActionHoldFrames(InputAction::Skill1) == 0, "Hold.Action.ResetAfterRelease") && ok;
 
 	ResetAll();
 	SetCurrentPreset(prev_preset);

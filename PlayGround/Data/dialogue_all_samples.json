@@ -1,0 +1,128 @@
+[
+  {
+    "id_": 1,
+    "key_": "intro_basic",
+    "name_": "기본 테스트",
+    "allow_auto_advance_": false,
+    "allow_skip_in_choice_": false,
+    "block_game_input_": true,
+    "use_typing_effect_by_default_": true,
+    "default_auto_advance_delay_": 0.0,
+    "lines_": [
+      {
+        "index_": 0,
+        "message_type_": "dialogue",
+        "speaker_name_": "안내원",
+        "text_": "여긴 처음이지?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 1,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 1,
+        "message_type_": "dialogue",
+        "speaker_name_": "주인공",
+        "text_": "그래. 방금 도착했어.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": []
+      }
+    ]
+  },
+  {
+    "id_": 2,
+    "key_": "branch_choice_test",
+    "name_": "선택지 테스트",
+    "allow_auto_advance_": false,
+    "allow_skip_in_choice_": false,
+    "block_game_input_": true,
+    "use_typing_effect_by_default_": true,
+    "default_auto_advance_delay_": 0.0,
+    "lines_": [
+      {
+        "index_": 0,
+        "message_type_": "dialogue",
+        "speaker_name_": "안내원",
+        "text_": "어느 길로 갈 거지?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [
+          { "text_": "왼쪽 길로 간다.", "next_index_": 1 },
+          { "text_": "오른쪽 길로 간다.", "next_index_": 2 }
+        ],
+        "events_": []
+      },
+      {
+        "index_": 1,
+        "message_type_": "narration",
+        "speaker_name_": "",
+        "text_": "왼쪽 길은 어둡고 축축했다.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 2,
+        "message_type_": "narration",
+        "speaker_name_": "",
+        "text_": "오른쪽 길은 밝고 넓었다.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": []
+      }
+    ]
+  },
+  {
+    "id_": 3,
+    "key_": "event_skip_test",
+    "name_": "이벤트 테스트",
+    "allow_auto_advance_": false,
+    "allow_skip_in_choice_": true,
+    "block_game_input_": true,
+    "use_typing_effect_by_default_": true,
+    "default_auto_advance_delay_": 0.0,
+    "lines_": [
+      {
+        "index_": 0,
+        "message_type_": "dialogue",
+        "speaker_name_": "문지기",
+        "text_": "문을 열겠다.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 1,
+        "choices_": [],
+        "events_": [
+          { "category_": "gameplay", "trigger_": "on_enter", "event_id_": "OpenGate" },
+          { "category_": "session_direction", "trigger_": "on_exit", "event_id_": "PlayGateFx" }
+        ]
+      },
+      {
+        "index_": 1,
+        "message_type_": "system_message",
+        "speaker_name_": "",
+        "text_": "문이 열렸습니다.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": []
+      }
+    ]
+  }
+]
