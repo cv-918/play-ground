@@ -23,6 +23,8 @@ public:
 	void CyclePendingResolution(_int _direction);
 	void CyclePendingWindowMode(_int _direction);
 	void CyclePendingUiScale(_int _direction);
+	void TogglePendingFrameLimit();
+	void CyclePendingTargetFps(_int _direction);
 
 	_bool RunSelfTest();
 
