@@ -12,14 +12,9 @@
 
 OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_btn_callback)
 {
-	// 좌표 (우측 하단)
-	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
-	_int y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - 60;
-	const _int gap = 10;
-
 	// 돌아가기 버튼
 	Button::CreateInfo return_btn_info;
-	return_btn_info.rect = _Rect{ { x, y }, COMMON_BUTTON_SIZE };
+	return_btn_info.rect = _Rect{ { 0, 0 }, COMMON_BUTTON_SIZE };
 	return_btn_info.text = L"RETURN";
 	return_btn_info.on_lclick = _return_btn_callback;
 	return_btn_info.normal_image_path = Path::Buttons + L"RETURN/RETURN_Default.png";
@@ -40,22 +35,49 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	auto pos = GAME_VIEW_CENTER;
 	pos.y -= 250;
 
-	const auto skill_list_grid = CreateElement<Grid>(skill_list_grid_layout);
-	skill_list_grid->Initialize();
-	skill_list_grid->SetCenter(pos);
+	skill_list_grid_ = CreateElement<Grid>(skill_list_grid_layout);
+	skill_list_grid_->Initialize();
+	skill_list_grid_->SetCenter(pos);
 
 	_int col_index = -1;
 	for (const auto& pair : table)
 	{
 		const auto& skill_info = pair.second;
-		skill_list_grid->SetCellText(0, ++col_index, _UtilFunc::ToWString(skill_info.name_), Palette::Black, 12.f);
-		skill_list_grid->AddCellButton(0, col_index, _UtilFunc::ToWString(skill_info.name_),
+		skill_list_grid_->SetCellText(0, ++col_index, _UtilFunc::ToWString(skill_info.name_), Palette::Black, 12.f);
+		skill_list_grid_->AddCellButton(0, col_index, _UtilFunc::ToWString(skill_info.name_),
 			[col_index]() { _SkillMgr.ToggleSkillEquipState(0, col_index); },
 			[col_index]() { _SkillMgr.ToggleSkillEquipState(1, col_index); });
 	}
 
 	// 어트리뷰트 트리 생성
-	CreateElement<AttributeNodeTree>();
+	attribute_tree_ = CreateElement<AttributeNodeTree>();
+
+	UpdateLayout();
+}
+
+void OutGameAttributeView::OnViewportChanged()
+{
+	UpdateLayout();
+}
+
+void OutGameAttributeView::UpdateLayout()
+{
+	if (return_btn_ == nullptr)
+		return;
+
+	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
+	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - 60;
+	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
+
+	if (skill_list_grid_)
+	{
+		auto pos = GAME_VIEW_CENTER;
+		pos.y -= 250;
+		skill_list_grid_->SetCenter(pos);
+	}
+
+	if (attribute_tree_)
+		attribute_tree_->OnViewportChanged();
 }
 
 _int OutGameAttributeView::Update(_double _delta_time)
@@ -85,7 +107,7 @@ void OutGameAttributeView::Render(_double _delta_time)
 		swprintf_s(buffer, L"=== Attribute Stat ===");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 		const auto attribute_stat = _UserProfile.GetAttributeStat();
-		for(const auto& pair : attribute_stat.GetStats())
+		for (const auto& pair : attribute_stat.GetStats())
 		{
 			const auto& type = pair.first;
 			const auto& stat = pair.second;

@@ -22,6 +22,7 @@ public:
 
 public:
 	const _Rect& NavMesh() const { return nav_mesh_; }
+	void UpdateViewport(const _Size& _size);
 
 private:
 	CreateInfo create_info_;

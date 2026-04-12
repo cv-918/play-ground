@@ -28,6 +28,7 @@ private:
 
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
+	void OnViewportChanged() override;
 
 	void RefreshTexts();
 	void UpdateLayout();

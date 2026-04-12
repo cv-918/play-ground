@@ -9,6 +9,7 @@ AttributeNodeTree::AttributeNodeTree()
 {
 	_CreateTree();
 	_CreateTooltip();
+   last_center_ = GAME_VIEW_CENTER;
 }
 
 AttributeNodeTree::~AttributeNodeTree()
@@ -70,6 +71,22 @@ void AttributeNodeTree::Render(_double _delta_time)
 	// 마우스 오버된 노드가 있다면 해당 노드에 대한 툴팁이나 추가적인 UI 요소를 렌더링할 수 있습니다.
 	if (mouse_overed_node_)
 		tooltip_->Render(_delta_time);
+}
+
+void AttributeNodeTree::OnViewportChanged()
+{
+	const _Point new_center = GAME_VIEW_CENTER;
+	const _Point delta = new_center - last_center_;
+    if (delta.x == 0 && delta.y == 0)
+		return;
+
+	for (auto* node : nodes_)
+	{
+		if (node)
+			node->SetCenter(node->GetCenter() + delta);
+	}
+
+	last_center_ = new_center;
 }
 
 void AttributeNodeTree::_CreateTree()
