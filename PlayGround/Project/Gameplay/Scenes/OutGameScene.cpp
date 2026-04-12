@@ -29,19 +29,19 @@ _int OutGameScene::Update(_double _delta_time)
 		return ret;
 
 #ifdef _DEBUG
-	if (_InputMgr.Down('Y'))
-	{
-		if (test_town_player_ == nullptr)
-		{
-			_SYSTEM_LOG_INFO(_T("[OutGameScene Test] TownPlayer is null"));
-		}
-		else
-		{
-			const auto curr = test_town_player_->GetCurrentInteractable();
-			_SYSTEM_LOG_INFO(_T("[OutGameScene Test] Current interactable : %s"),
-				curr ? L"Exists" : L"None");
-		}
-	}
+	//if (_InputMgr.Down('Y'))
+	//{
+	//	if (test_town_player_ == nullptr)
+	//	{
+	//		_SYSTEM_LOG_INFO(_T("[OutGameScene Test] TownPlayer is null"));
+	//	}
+	//	else
+	//	{
+	//		const auto curr = test_town_player_->GetCurrentInteractable();
+	//		_SYSTEM_LOG_INFO(_T("[OutGameScene Test] Current interactable : %s"),
+	//			curr ? L"Exists" : L"None");
+	//	}
+	//}
 #endif
 
 	switch (view_state_)
@@ -50,19 +50,103 @@ _int OutGameScene::Update(_double _delta_time)
 		if (_InputMgr.Down(VK_ESCAPE))
 		{
 			_ChangeView(OutGameViewState::Exit);
-			break;
+			return UPDATE_BREAK;
 		}
 
-		if (_InputMgr.Down('T'))
-		{
-			_ChangeView(OutGameViewState::Attribute);
-		}
+		//if (_InputMgr.Down('T'))
+		//{
+		//	_ChangeView(OutGameViewState::Attribute);
+		//	return UPDATE_BREAK;
+		//}
 		break;
+
 	case OutGameScene::OutGameViewState::Attribute:
 		break;
 	default:
 		break;
 	}
+
+	// s, [ Dialogue System Test ]
+	{
+		if (_InputMgr.Down('T'))
+		{
+			if (!dialogue_system_.IsRunning())
+			{
+				//const DialogueSessionData session = DialogueSampleFactory::MakeBasicSession();
+				//dialogue_system_.StartSession(session, &dialogue_event_listener_);
+
+				DialogueSessionData session;
+
+				if (DialogueJsonConverter::BuildSessionByKey("event_skip_test", session))
+					dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			}
+		}
+
+		if (_InputMgr.Down('Y'))
+		{
+			if (!dialogue_system_.IsRunning())
+			{
+				const DialogueSessionData session = DialogueSampleFactory::MakeChoiceSession();
+				dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			}
+		}
+
+		if (_InputMgr.Down('U'))
+		{
+			if (!dialogue_system_.IsRunning())
+			{
+				const DialogueSessionData session = DialogueSampleFactory::MakeEventSession();
+				dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			}
+		}
+
+		dialogue_system_.Update(_delta_time);
+
+		if (dialogue_system_.IsRunning())
+		{
+			// Confirm
+			if (_InputMgr.Down(VK_SPACE) ||
+				_InputMgr.Down(VK_LBUTTON))
+			{
+				dialogue_system_.OnConfirmInput();
+			}
+
+			// Choice
+			if (_InputMgr.Down(VK_UP))
+			{
+				dialogue_system_.OnChoiceUpInput();
+			}
+
+			if (_InputMgr.Down(VK_DOWN))
+			{
+				dialogue_system_.OnChoiceDownInput();
+			}
+
+			// Hold skip
+			_float hold_seconds = 0.f;
+
+			// 여기 부분은 네 InputManager 실제 함수에 맞게 바꿔야 한다.
+			// 핵심은 Confirm 계열 입력의 홀드 시간을 하나의 값으로 구해서 넘기는 것.
+			hold_seconds = _InputMgr.HoldSeconds(VK_SPACE);
+
+			const _float mouse_hold = _InputMgr.HoldSeconds(VK_LBUTTON);
+			if (mouse_hold > hold_seconds)
+				hold_seconds = mouse_hold;
+
+			dialogue_system_.UpdateSkipHold(hold_seconds);
+		}
+
+		if (dialogue_system_.HasFinishedSession())
+		{
+			const DialogueSessionResult& result = dialogue_system_.GetLastSessionResult();
+
+			// TODO:
+			// 여기서 end_reason, choice_records 확인 가능
+
+			dialogue_system_.ClearFinishedState();
+		}
+	}
+	// e, [ Dialogue System Test ]
 
 	return UPDATE_CONTINUE;
 }
@@ -84,6 +168,10 @@ _int OutGameScene::LateUpdate(_double _delta_time)
 void OutGameScene::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
+
+	// s, [ Dialogue System Test ]
+	dialogue_system_.Render();
+	// e, [ Dialogue System Test ]
 }
 
 void OutGameScene::OnEnter()
@@ -156,6 +244,11 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 		current_view_->InActivate();
 
 	view_state_ = _new_view_state;
+
+	// 타운 플레이어는 메인 뷰에서만 업데이트 로직 수행(뷰가 열려있는 동안에 움직이지 않도록)
+	if (test_town_player_)
+		test_town_player_->SetEnable(view_state_ == OutGameViewState::Main);
+
 	const auto find = view_map_.find(view_state_);
 	if (find == view_map_.end())
 	{

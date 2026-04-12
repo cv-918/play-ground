@@ -13,6 +13,7 @@
 #include "GamePlaySystems/Json/UserDataManager.h"
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
 #include "GamePlaySystems/Json/ParticleDataManager.h"
+#include "GamePlaySystems/Json/DialogueJsonDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -40,6 +41,12 @@ _bool PlayGround::Initialize()
 	if (!_CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load playable character data from JSON."));
+		return false;
+	}
+
+	if (!_DialogueJsonDataMgr.Load("Data/dialogue_all_samples.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load dialogue data from JSON."));
 		return false;
 	}
 

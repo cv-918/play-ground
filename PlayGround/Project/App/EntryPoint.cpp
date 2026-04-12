@@ -75,9 +75,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (msg.message == WM_QUIT)
 			break;
 
-        _InputMgr.SyncActionStates();
-
         const auto dt = _Timer.DeltaTime();
+
+        _InputMgr.SyncActionStates(dt);
 
 		pg.Update(dt);
 		pg.Render(dt);

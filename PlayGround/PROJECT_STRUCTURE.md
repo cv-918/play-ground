@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-10 18:01)
+﻿# Project Structure (Updated: 2026-04-12 15:25)
 
 ```text
 Root
@@ -12,8 +12,6 @@ Root
 |   |   |   +--- Skills
 |   |   |   |   +--- Icons
 |   |   |   +--- World
-+--- html
-|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -125,9 +123,27 @@ Root
 |   |   |   |   Transform.cpp
 |   |   |   |   Transform.h
 |   |   +--- GamePlaySystems
+|   |   |   +--- Dialogue
+|   |   |   |   +--- Sample
+|   |   |   |   |   |   DialogueSampleFactory.cpp
+|   |   |   |   |   |   DialogueSampleFactory.h
+|   |   |   |   |   DialogueJsonConverter.cpp
+|   |   |   |   |   DialogueJsonConverter.h
+|   |   |   |   |   DialogueRunner.cpp
+|   |   |   |   |   DialogueRunner.h
+|   |   |   |   |   DialogueSystem.cpp
+|   |   |   |   |   DialogueSystem.h
+|   |   |   |   |   DialogueTextLayouter.cpp
+|   |   |   |   |   DialogueTextLayouter.h
+|   |   |   |   |   DialogueTypes.h
+|   |   |   |   |   DialogueWindowView.cpp
+|   |   |   |   |   DialogueWindowView.h
+|   |   |   |   |   IDialogueEventListener.h
 |   |   |   +--- Json
 |   |   |   |   |   AttributeNodeDataManager.cpp
 |   |   |   |   |   AttributeNodeDataManager.h
+|   |   |   |   |   DialogueJsonDataManager.cpp
+|   |   |   |   |   DialogueJsonDataManager.h
 |   |   |   |   |   EnemyDataManager.cpp
 |   |   |   |   |   EnemyDataManager.h
 |   |   |   |   |   ParticleDataManager.cpp
@@ -227,7 +243,6 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
-+--- xml
 +--- _DevLog
 |   +--- Documents
 |   |   +--- Copilot
@@ -240,7 +255,6 @@ Root
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
-+--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj
