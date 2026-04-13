@@ -176,11 +176,14 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Render\ParticleService.h" />
     <ClInclude Include="Project\EngineSystems\Render\ScreenSystem.h" />
     <ClInclude Include="Project\EngineSystems\Render\VideoSettings.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ActorTypes.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ActorUtil.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
+    <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationBuilder.h" />
     <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationSetData.h" />
     <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationTypes.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
@@ -314,6 +317,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
+    <ClCompile Include="Project\Gameplay\Animation\SpriteAnimationBuilder.cpp" />
     <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SpriteAnimatorComponent.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SpriteRendererComponent.cpp" />

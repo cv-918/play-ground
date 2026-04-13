@@ -6,14 +6,15 @@
 FloatingText::FloatingText(const FloatingTextCreationData& _data)
 	: data_(_data)
 {
+	SetSize(DEFAULT_SIZE_DAMAGE_FONT);
+	SetPosition(data_.pos_);
+	_SetFadeDuration(data_.life_time_);
+
 	damage_text_ = CreateElement<Text>();
 	damage_text_->SetText(data_.text_);
 	damage_text_->SetColor(data_.color_);
 	damage_text_->SetFontSize(data_.font_size_);
-
-	SetSize(DEFAULT_SIZE_DAMAGE_FONT);
-	SetPosition(data_.pos_);
-	_SetFadeDuration(data_.life_time_);
+	damage_text_->SetPosition(data_.pos_);
 }
 
 _int FloatingText::Update(_double _delta_time)

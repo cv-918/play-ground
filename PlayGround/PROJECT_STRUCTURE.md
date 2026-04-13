@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-13 10:57)
+﻿# Project Structure (Updated: 2026-04-13 17:55)
 
 ```text
 Root
@@ -114,7 +114,11 @@ Root
 |   |   |   |   |   TownNpc.h
 |   |   |   |   |   TownPlayer.cpp
 |   |   |   |   |   TownPlayer.h
+|   |   |   |   ActorTypes.h
+|   |   |   |   ActorUtil.h
 |   |   +--- Animation
+|   |   |   |   SpriteAnimationBuilder.cpp
+|   |   |   |   SpriteAnimationBuilder.h
 |   |   |   |   SpriteAnimationSetData.h
 |   |   |   |   SpriteAnimationTypes.h
 |   |   +--- Common

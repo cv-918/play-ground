@@ -157,7 +157,19 @@ _bool SpriteAnimatorComponent::_SetCurrentClip(const std::wstring& _clip_name)
 
 	const auto iter = animation_set_->clips.find(_clip_name);
 	if (iter == animation_set_->clips.end())
+	{
+		_SYSTEM_LOG_WARN(L"Clip not found: %s", _clip_name.c_str());
+
+		// fallback: 첫 번째 클립 사용
+		if (!animation_set_->clips.empty())
+		{
+			current_clip_ = &animation_set_->clips.begin()->second;
+			current_clip_name_ = current_clip_->clip_name;
+			return true;
+		}
+
 		return false;
+	}
 
 	if (iter->second.frames.empty() == true)
 		return false;
