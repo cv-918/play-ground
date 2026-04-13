@@ -27,7 +27,7 @@ struct VideoSettings
 {
 	Resolution resolution = { 1280, 720 };
 #ifdef _DEBUG
-	WindowMode window_mode = WindowMode::BorderlessFullscreen;
+	WindowMode window_mode = WindowMode::Windowed;
 #else
 	WindowMode window_mode = WindowMode::BorderlessFullscreen;
 #endif // _DEBUG
