@@ -181,8 +181,12 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
+    <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationSetData.h" />
+    <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationTypes.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
+    <ClInclude Include="Project\Gameplay\Components\SpriteAnimatorComponent.h" />
+    <ClInclude Include="Project\Gameplay\Components\SpriteRendererComponent.h" />
     <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.h" />
@@ -311,6 +315,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\SpriteAnimatorComponent.cpp" />
+    <ClCompile Include="Project\Gameplay\Components\SpriteRendererComponent.cpp" />
     <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.cpp" />

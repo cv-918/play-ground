@@ -49,6 +49,8 @@ enum class ComponentType
 	RectCollider,
 	EllipseCollider,
 	Combat,
+	SpriteRenderer,
+	SpriteAnimator,
 };
 
 enum class MovementPattern

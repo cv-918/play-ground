@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-12 21:30)
+﻿# Project Structure (Updated: 2026-04-13 10:57)
 
 ```text
 Root
@@ -7,6 +7,10 @@ Root
 |   |   +--- Fonts
 |   |   +--- Textures
 |   |   |   +--- Characters
+|   |   |   |   +--- Dusty
+|   |   |   |   |   +--- Dust_Idle
+|   |   |   |   |   +--- Dust_Move
+|   |   |   |   |   +--- Dust_Run
 |   |   |   +--- Particles
 |   |   |   +--- SceneImages
 |   |   |   |   +--- Title
@@ -27,6 +31,8 @@ Root
 |   |   |   |   |   +--- YES
 |   |   |   |   +--- PopUps
 |   |   |   +--- World
++--- html
+|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -108,6 +114,9 @@ Root
 |   |   |   |   |   TownNpc.h
 |   |   |   |   |   TownPlayer.cpp
 |   |   |   |   |   TownPlayer.h
+|   |   +--- Animation
+|   |   |   |   SpriteAnimationSetData.h
+|   |   |   |   SpriteAnimationTypes.h
 |   |   +--- Common
 |   |   |   |   CommonGamePlayDefine.h
 |   |   |   |   CommonGamePlayFunctions.h
@@ -131,6 +140,10 @@ Root
 |   |   |   |   RectCollider.h
 |   |   |   |   SphereCollider.cpp
 |   |   |   |   SphereCollider.h
+|   |   |   |   SpriteAnimatorComponent.cpp
+|   |   |   |   SpriteAnimatorComponent.h
+|   |   |   |   SpriteRendererComponent.cpp
+|   |   |   |   SpriteRendererComponent.h
 |   |   |   |   Status.cpp
 |   |   |   |   Status.h
 |   |   |   |   TownInteraction.cpp
@@ -258,6 +271,7 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
++--- xml
 +--- _DevLog
 |   +--- Document
 |   |   +--- FixLog
@@ -272,6 +286,7 @@ Root
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
++--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj
