@@ -154,6 +154,9 @@
     <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationSetData.h" />
     <ClInclude Include="Project\Gameplay\Components\SpriteRendererComponent.h" />
     <ClInclude Include="Project\Gameplay\Components\SpriteAnimatorComponent.h" />
+    <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationBuilder.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ActorTypes.h" />
+    <ClInclude Include="Project\Gameplay\Actors\ActorUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -279,6 +282,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SpriteRendererComponent.cpp" />
     <ClCompile Include="Project\Gameplay\Components\SpriteAnimatorComponent.cpp" />
+    <ClCompile Include="Project\Gameplay\Animation\SpriteAnimationBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />

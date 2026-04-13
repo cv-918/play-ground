@@ -2,6 +2,7 @@
 
 #include "../GameObjectBase.h"
 #include "GamePlay/Animation/SpriteAnimationSetData.h"
+#include "../ActorUtil.h"
 
 class TownPlayer final
 	: public GameObjectBase
@@ -25,10 +26,10 @@ private:
 	void _DrawObjectShape() override;
 
 	/**
-	 * 현재 info_->image_path_ 기준으로 최소 애니메이션 세트를 구성한다.
-	 * 현재 단계에서는 idle/run 모두 같은 단일 프레임을 사용한다.
+	 * 타운 플레이어용 기본 애니메이션 세트를 구성한다.
+	 * 현재는 Dusty 기준 idle / run 시퀀스를 코드에서 조립한다.
 	 */
-	_bool _BuildDefaultAnimationSet();
+	_bool _BuildAnimationSetFromInfo();
 
 private:
 	const PlayableCharacterJsonInfo* info_ = nullptr;

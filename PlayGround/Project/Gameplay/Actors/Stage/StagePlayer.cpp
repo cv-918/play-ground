@@ -253,8 +253,8 @@ void StagePlayer::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage);
 
-	// 데미지 폰트 출력
-	const auto position = transform_->Position();
+	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
+	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 
 	if (status_->IsDead())

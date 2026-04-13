@@ -18,7 +18,7 @@ _int UIManager::Update(_double _delta_time)
 
 	for (auto* ui : ui_list_)
 	{
-		if (ui->IsActive())
+		if (ui->IsActive() && !ui->IsPendingDestruction())
 		{
 			const auto ret = ui->Update(_delta_time);
 			if (ret != UPDATE_CONTINUE)
@@ -35,7 +35,7 @@ _int UIManager::LateUpdate(_double _delta_time)
 
 	for (auto* ui : ui_list_)
 	{
-		if (ui->IsActive())
+		if (ui->IsActive() && !ui->IsPendingDestruction())
 		{
 			const auto ret = ui->LateUpdate(_delta_time);
 			if (ret != UPDATE_CONTINUE)
@@ -54,7 +54,7 @@ void UIManager::Render(_double _delta_time)
 
 	for (auto* ui : ui_list_)
 	{
-		if (ui->IsActive())
+		if (ui->IsVisible() && !ui->IsPendingDestruction())
 		{
 			ui->Render(_delta_time);
 			ui->DebugRender();

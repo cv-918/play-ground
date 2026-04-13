@@ -34,7 +34,7 @@ struct VideoSettings
 
 	_float ui_scale = 1.0f;
 	bool frame_limit_enabled = true;
-	_uint target_fps = 60;
+	_uint target_fps = 144;
 
 	bool operator==(const VideoSettings& _rhs) const
 	{

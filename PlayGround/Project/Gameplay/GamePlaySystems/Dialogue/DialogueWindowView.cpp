@@ -7,7 +7,7 @@
 namespace
 {
     constexpr _float WINDOW_WIDTH_RATIO = 0.74f;
-    constexpr _float WINDOW_HEIGHT_RATIO = 0.25f;
+    constexpr _float WINDOW_HEIGHT_RATIO = 0.26f;
     constexpr _float WINDOW_BOTTOM_MARGIN_RATIO = 0.05f;
 
     constexpr _float WINDOW_PADDING = 16.f;
@@ -24,7 +24,7 @@ namespace
     constexpr _int CHOICE_MAX_LINE_COUNT = 2;
 
     const _Color WINDOW_BACKGROUND_COLOR = Palette::Charcoal;
-    const _Color NAME_BOX_BACKGROUND_COLOR = Palette::Charcoal;
+    const _Color NAME_BOX_BACKGROUND_COLOR = Palette::SlateGray;
     const _Color BODY_TEXT_COLOR = Palette::White;
     const _Color CHOICE_TEXT_COLOR = Palette::DustyGray;
     const _Color CHOICE_SELECTED_TEXT_COLOR = Palette::White;

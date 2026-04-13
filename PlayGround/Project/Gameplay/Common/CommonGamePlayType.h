@@ -132,6 +132,30 @@ struct UnitJsonInfo
 	std::string image_path_; // 플레이어 캐릭터의 이미지 경로. 필요에 따라 UI에서 캐릭터 이미지를 표시하거나, 게임 오브젝트의 스프라이트 렌더링에 활용할 수 있습니다.
 };
 
+struct AnimationClipPathInfo
+{
+	/** 클립 이름. 예: idle, run, attack */
+	std::string clip_name_;
+
+	/** 클립 프레임들이 들어있는 디렉터리 경로 */
+	std::string directory_;
+
+	/** 파일명 접두어. 예: Idle_, Move */
+	std::string prefix_;
+
+	/** 시작 프레임 번호 */
+	_int start_index_ = 1;
+
+	/** 끝 프레임 번호 */
+	_int end_index_ = 1;
+
+	/** 초당 프레임 수 */
+	_float fps_ = 8.0f;
+
+	/** 루프 여부 */
+	_bool loop_ = true;
+};
+
 struct EnemyJsonInfo : public UnitJsonInfo
 {
 	// ------ 몬스터 분류 관련 ------
@@ -162,6 +186,9 @@ struct PlayableCharacterJsonInfo : public UnitJsonInfo
 	_float move_speed_max_ = 0.f;	// 최대 이동 속도
 	_float acceleration_ = 0.f;		// 가속도. 높을수록 빠르게 최대 이동 속도에 도달
 	_float friction_ = 0.f;			// 마찰 계수. 높을수록 빠르게 감속
+
+	/** 실제 애니메이션 클립 메타 정보 */
+	std::vector<AnimationClipPathInfo> animation_clips_;
 };
 
 struct UnitCreationInfo

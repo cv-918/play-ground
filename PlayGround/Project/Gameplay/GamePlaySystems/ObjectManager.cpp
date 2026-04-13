@@ -21,7 +21,7 @@ _int ObjectManager::Update(_double _delta_time)
 
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->IsActive())
+		if (game_object->IsActive() && !game_object->IsPendingDestruction())
 		{
 			const auto ret = game_object->Update(_delta_time);
 			if (ret != UPDATE_CONTINUE)
@@ -36,7 +36,7 @@ _int ObjectManager::LateUpdate(_double _delta_time)
 {
 	for (auto* game_object : game_objects_)
 	{
-		if (game_object->IsActive())
+		if (game_object->IsActive() && !game_object->IsPendingDestruction())
 		{
 			const auto ret = game_object->LateUpdate(_delta_time);
 			if (ret != UPDATE_CONTINUE)

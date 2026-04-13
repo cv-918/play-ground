@@ -2,6 +2,17 @@
 #include "EngineSystems/Json/JsonDataManager.h"
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+	AnimationClipPathInfo,
+	clip_name_,
+	directory_,
+	prefix_,
+	start_index_,
+	end_index_,
+	fps_,
+	loop_
+)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	PlayableCharacterJsonInfo,
 	id_,
 	name_,
@@ -14,7 +25,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	collector_size_,
 	move_speed_max_,
 	acceleration_,
-	friction_
+	friction_,
+	animation_clips_
 )
 
 #define _CharacterDagaMgr PlayableCharacterDataManager::Get()

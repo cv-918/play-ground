@@ -88,13 +88,13 @@ void InGameScene::Render(_double _delta_time)
 	// 1. 카메라 오프셋 가져오기
 	_Point offset = _CameraMgr.GetShakeOffset();
 
-    // 2. 월드 렌더링 오프셋 적용
+	// 2. 월드 렌더링 오프셋 적용
 	_DrawFunc::SetGlobalOffset(offset);
 
 	// 3. 월드 요소들 렌더링 (배경, 캐릭터, 몬스터 등)
 	// 이 안에서 호출되는 모든 DrawFunctions가 흔들린 좌표에 그려집니다.
 	// s, [ 테스트용 배경 그리기 ]
-   const Resolution resolution = _ScreenSystem.WindowResolution();
+	const Resolution resolution = _ScreenSystem.WindowResolution();
 	const _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ resolution.width, resolution.height } };
 	_DrawFunc::FillRectangle(rt, Palette::Pearl);
 	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
@@ -106,7 +106,7 @@ void InGameScene::Render(_double _delta_time)
 
 	_ParticleService.Render(_delta_time);
 
-  // 4. 오프셋 초기화 (UI는 흔들리면 안 되므로!)
+	// 4. 오프셋 초기화 (UI는 흔들리면 안 되므로!)
 	_DrawFunc::SetGlobalOffset(_Point::Zero());
 
 	// 5. UI 렌더링 (고정된 위치)
@@ -132,7 +132,7 @@ void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _positio
 void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)
 {
 	FloatingTextCreationData data(_damage, _position);
- const auto damage_font = ui_manager_->CreateUI<FloatingText>(data);
+	const auto damage_font = ui_manager_->CreateUI<FloatingText>(data);
 }
 
 void InGameScene::ChangeView(InGameViewState _new_view_state)
@@ -182,15 +182,15 @@ WidgetBase* InGameScene::_CreateView()
 	switch (view_state_)
 	{
 	case InGameViewState::InGame:
-     return ui_manager_->CreateUI<InGamePlayView>();
+		return ui_manager_->CreateUI<InGamePlayView>();
 	case InGameViewState::Pause:
-      return ui_manager_->CreateUI<InGamePauseView>(
+		return ui_manager_->CreateUI<InGamePauseView>(
 			// 1) resume, 2) exit
 			[this]() { stage_manager_->ChangeState(StageState::Play); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }
 		);
 	case InGameViewState::Result:
-     return ui_manager_->CreateUI<InGameResultView>(
+		return ui_manager_->CreateUI<InGameResultView>(
 			// 1) restart, 2) go to lobby
 			[this]() { stage_manager_->ProgressRunSessionResult(); _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }
