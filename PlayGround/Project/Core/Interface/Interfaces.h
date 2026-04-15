@@ -102,8 +102,8 @@ public:
 	_int ID() const { return id_; }
 	void ID(const _int _id) { id_ = _id; }
 
-	std::wstring Name() const { return name_; }
-	void Name(const std::wstring _name) { name_ = _name; }
+	std::wstring GetName() const { return name_; }
+	void SetName(const std::wstring _name) { name_ = _name; }
 
 protected:
 	void _SetNumberingName()
@@ -129,7 +129,7 @@ protected:
 
 		_tchar buff[MAX_PATH]{};
 		swprintf_s(buff, L"%ls %d", type_name_w.c_str(), iter->second);
-		Name(buff);
+		SetName(buff);
 	}
 
 protected:

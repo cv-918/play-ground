@@ -27,7 +27,7 @@ protected:
 		, move_spd_(1.f), move_spd_max_(1.f)
 		, rotate_spd_(1.f), rotate_spd_max_(1.f)
 		, move_func_(nullptr)
-       , use_nav_mesh_(false)
+		, use_nav_mesh_(false)
 		, transform_(nullptr)
 		, control_mode_(MovementControlMode::Normal)
 		, dash_direction_(_Vector3::Zero())
@@ -81,7 +81,7 @@ public:
 	_float GetRotateSpdMax() const { return rotate_spd_max_; }
 	void SetRotateSpdMax(const _float _spd) { rotate_spd_max_ = _spd; }
 
-  void SetNavMesh(const _Rect& _rt) { nav_mesh_ = _rt; use_nav_mesh_ = true; }
+	void SetNavMesh(const _Rect& _rt) { nav_mesh_ = _rt; use_nav_mesh_ = true; }
 
 	MovementControlMode GetControlMode() const { return control_mode_; }
 	_bool IsDashing() const { return control_mode_ == MovementControlMode::Dash; }
@@ -94,6 +94,9 @@ public:
 
 	void StartDashByInputDir(_float _speed, _double _duration);
 	void ApplyKnockback(const _Vector3& _direction, _float _power);
+
+	_bool IsAllowNormalMove() const { return allow_normal_move_; }
+	void SetAllowNormalMove(_bool _allow) { allow_normal_move_ = _allow; }
 
 protected:
 	void _ClampMoveVelocity();
@@ -139,4 +142,6 @@ protected:
 	_double dash_elapsed_;
 	DashImpulsePolicy dash_impulse_policy_;
 	// e, [ 대시 ]
+
+	_bool allow_normal_move_ = true;
 };

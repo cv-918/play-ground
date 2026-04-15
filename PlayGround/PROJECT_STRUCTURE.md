@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-14 15:33)
+﻿# Project Structure (Updated: 2026-04-15 17:43)
 
 ```text
 Root
@@ -101,10 +101,18 @@ Root
 |   |   |   |   |   Props.cpp
 |   |   |   |   |   Props.h
 |   |   |   +--- Stage
+|   |   |   |   |   ContactAttackAbility.cpp
+|   |   |   |   |   ContactAttackAbility.h
 |   |   |   |   |   Enemy.cpp
 |   |   |   |   |   Enemy.h
+|   |   |   |   |   EnemyAbilitySet.cpp
+|   |   |   |   |   EnemyAbilitySet.h
+|   |   |   |   |   EnemyTypes.h
 |   |   |   |   |   ExpDust.cpp
 |   |   |   |   |   ExpDust.h
+|   |   |   |   |   IEnemyAbility.h
+|   |   |   |   |   ProjectileAttackAbility.cpp
+|   |   |   |   |   ProjectileAttackAbility.h
 |   |   |   |   |   StagePlayer.cpp
 |   |   |   |   |   StagePlayer.h
 |   |   |   |   |   UnitBase.cpp

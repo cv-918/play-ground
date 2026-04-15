@@ -42,7 +42,7 @@ _float Combat::GetDamage(_float _damage)
 	status_->SetCurrentHp(new_hp);
 
 	// 디버그 로그: 데미지 계산 결과와 적용된 데미지, 체력 변화 등을 로그로 출력
-	_SYSTEM_LOG_INFO(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->Name().c_str(), curr_hp, new_hp);
+	_SYSTEM_LOG_INFO(_T("Combat::GetDamage applied %.2f damage to [%s]. (HP: %.2f -> %.2f)"), final_damage, gameobject_->GetName().c_str(), curr_hp, new_hp);
 
 	// 데미지 폰트 노출을 위해서 최종 데미지 반환
 	return final_damage;

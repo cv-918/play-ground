@@ -30,10 +30,10 @@ _bool PlayerMovement::Initialize()
 
 void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 {
-   if (input_manager_ && transform_ && input_manager_->GetCurrentPreset() == ControllerPreset::MouseOnly)
+	if (input_manager_ && transform_ && input_manager_->GetCurrentPreset() == ControllerPreset::MouseOnly)
 	{
 		const _Vector3 player_pos = transform_->Position();
-     const _Point player_screen = _CameraMgr.WorldToScreen(_Vector2{ player_pos.x, player_pos.y });
+		const _Point player_screen = _CameraMgr.WorldToScreen(_Vector2{ player_pos.x, player_pos.y });
 		input_manager_->SetMouseMoveReferencePoint(player_screen);
 		input_manager_->SyncActionStates();
 	}
@@ -54,16 +54,15 @@ void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 
 void PlayerMovement::_OnImmediate(_double _delta_time)
 {
-	const _float dt = s_cast(_float, _delta_time);
-	(void)dt;
+	const auto dt = s_cast(_float, _delta_time);
 
 	_Vector3 input_dir = _Vector3::Zero();
 
-   // raw 키 대신 액션 축값으로 이동 입력을 계산한다.
+	// raw 키 대신 액션 축값으로 이동 입력을 계산한다.
 	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
 	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
- if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
+	if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
@@ -89,16 +88,16 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 
 	_Vector3 input_dir = _Vector3::Zero();
 
-   // preset/리맵 결과가 반영된 액션 축값을 사용한다.
+	// preset/리맵 결과가 반영된 액션 축값을 사용한다.
 	input_dir.x = input_manager_->ActionValue(InputAction::MoveX);
 	input_dir.y = input_manager_->ActionValue(InputAction::MoveY);
 
- if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
+	if (input_manager_->GetCurrentPreset() != ControllerPreset::MouseOnly && input_dir.LengthSq() > 0.f)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
 
- // 대시는 액션 에지 입력으로 시작한다.
+	// 대시는 액션 에지 입력으로 시작한다.
 	if (input_manager_->ActionPressed(InputAction::Dash))
 		StartDashByInputDir(1200.f, 0.075);
 

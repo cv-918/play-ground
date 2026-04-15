@@ -13,7 +13,7 @@ _bool Movement::Initialize()
 
 _int Movement::Update(_double _delta_time)
 {
-	if (move_func_)
+	if (allow_normal_move_ && move_func_)
 		move_func_(_delta_time);
 
 	_UpdateDash(_delta_time);

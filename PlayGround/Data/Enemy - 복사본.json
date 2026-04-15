@@ -1,7 +1,7 @@
 ﻿[
 	{
 		"id_": 1,
-		"name_": "M001",
+		"name_": "일반 먼지",
 		"body_size_": 40.0,
 		"attack_speed_": 0.0,
 		"hp_": 6.0,
@@ -20,7 +20,7 @@
 	},
 	{
 		"id_": 2,
-		"name_": "M002",
+		"name_": "중급 먼지",
 		"body_size_": 40.0,
 		"attack_speed_": 0.0,
 		"hp_": 8.0,
@@ -39,7 +39,7 @@
 	},
 	{
 		"id_": 3,
-		"name_": "M003",
+		"name_": "위험 먼지",
 		"body_size_": 50.0,
 		"attack_speed_": 0.0,
 		"hp_": 25.0,
@@ -53,12 +53,12 @@
 		"projectile_pattern_": 0,
 		"projectile_damage_": 0.0,
 		"projectile_speed_": 0.0,
-		"movement_pattern_": 4,
-		"move_speed_unit_": 2
+		"movement_pattern_": 3,
+		"move_speed_unit_": 3
 	},
 	{
-		"id_": 4,
-		"name_": "M004",
+		"id_": 10,
+		"name_": "특수 탱커",
 		"body_size_": 100.0,
 		"attack_speed_": 0.0,
 		"hp_": 200.0,
@@ -72,12 +72,12 @@
 		"projectile_pattern_": 0,
 		"projectile_damage_": 0.0,
 		"projectile_speed_": 0.0,
-		"movement_pattern_": 4,
+		"movement_pattern_": 3,
 		"move_speed_unit_": 2
 	},
 	{
-		"id_": 5,
-		"name_": "M005",
+		"id_": 11,
+		"name_": "특수 슈터",
 		"body_size_": 50.0,
 		"attack_speed_": 0.0,
 		"hp_": 50.0,
@@ -92,11 +92,11 @@
 		"projectile_damage_": 6.0,
 		"projectile_speed_": 0.0,
 		"movement_pattern_": 4,
-		"move_speed_unit_": 2
+		"move_speed_unit_": 1
 	},
 	{
-		"id_": 6,
-		"name_": "M006",
+		"id_": 12,
+		"name_": "특수 분열",
 		"body_size_": 60.0,
 		"attack_speed_": 0.0,
 		"hp_": 45.0,
@@ -110,7 +110,26 @@
 		"projectile_pattern_": 0,
 		"projectile_damage_": 0.0,
 		"projectile_speed_": 0.0,
-		"movement_pattern_": 4,
-		"move_speed_unit_": 1
+		"movement_pattern_": 3,
+		"move_speed_unit_": 2
 	},
+	{
+		"id_": 13,
+		"name_": "특수 보상",
+		"body_size_": 30.0,
+		"attack_speed_": 0.0,
+		"hp_": 60.0,
+		"contact_damage_": 4.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+		"tier_": 4,
+		"role_": 2,
+		"exp_reward_": 1,
+		"dust_reward_": 4,
+		"dust_resource_count_": 2,
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"movement_pattern_": 3,
+		"move_speed_unit_": 4
+	}
 ]

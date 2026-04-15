@@ -116,7 +116,7 @@ void GameObjectBase::DebugRender()
 
    const auto world_position = transform_->Position();
 	const auto screen_position = _CameraMgr.WorldToScreen(world_position);
-	_DrawFunc::DrawString(_Point{ screen_position.x, screen_position.y }, Name(), Palette::DarkGray);
+	_DrawFunc::DrawString(_Point{ screen_position.x, screen_position.y }, GetName(), Palette::DarkGray);
 
 	// 1. 방향 그리기
 	if (_GameState.debug_mode_)
@@ -255,7 +255,7 @@ ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name)
 {
 	for (const auto& component : components_)
 	{
-		if (component->Name() == _name)
+		if (component->GetName() == _name)
 			return component;
 	}
 
@@ -267,7 +267,7 @@ ComponentBase* GameObjectBase::GetComponent(const std::wstring& _name, const _in
 	_int count = 0;
 	for (const auto& component : components_)
 	{
-		if (component->Name() == _name)
+		if (component->GetName() == _name)
 		{
 			if (count == _index)
 				return component;
