@@ -16,7 +16,7 @@ AttributeNode::AttributeNode(const AttributeNodeJsonInfo* _node_info, const _Poi
 
 	SetSize(DEFAULT_SIZE_ATTRIBUTE_NODE);
 	SetCenter(_pos);
-	Name(_UtilFunc::ToWString(_node_info->name_));
+	SetName(_UtilFunc::ToWString(_node_info->name_));
 
 	Button::CreateInfo btn_info;
 	btn_info.rect = _Rect{ {_pos.x - DEFAULT_SIZE_ATTRIBUTE_NODE.x * 0.5f, _pos.y - DEFAULT_SIZE_ATTRIBUTE_NODE.y * 0.5f }, DEFAULT_SIZE_ATTRIBUTE_NODE }; // 버튼의 위치는 노드의 중심이므로 (0, 0)에서 시작

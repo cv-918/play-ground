@@ -36,7 +36,7 @@ _bool StagePlayer::Initialize()
 		return false;
 
 	// 플레이어 identifier 설정
-	Name(_UtilFunc::ToWString(info_->name_));
+	SetName(_UtilFunc::ToWString(info_->name_));
 
 	// 플레이어 Movement 컴포넌트 생성 및 등록
 	movement_ = new PlayerMovement(info_);
@@ -160,7 +160,7 @@ _int StagePlayer::LateUpdate(_double _delta_time)
 		const auto collideds = attack_col->CollidedColliders();
 		for (const auto& collider : collideds)
 		{
-			swprintf_s(buffer, L"충돌 대상 : %s", collider->GameObject()->Name().c_str());
+			swprintf_s(buffer, L"충돌 대상 : %s", collider->GameObject()->GetName().c_str());
 			_Assist.Text(L"플레이어 정보", std::wstring(buffer));
 		}
 

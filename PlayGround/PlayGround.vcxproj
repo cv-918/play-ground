@@ -181,6 +181,11 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Dust.h" />
     <ClInclude Include="Project\Gameplay\Actors\Props\Props.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\EnemyAbilitySet.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\EnemyTypes.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\IEnemyAbility.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationBuilder.h" />
@@ -315,6 +320,9 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\EnemyAbilitySet.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Animation\SpriteAnimationBuilder.cpp" />

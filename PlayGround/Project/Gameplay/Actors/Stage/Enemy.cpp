@@ -1,6 +1,9 @@
 ﻿#include "framework.h"
 #include "Enemy.h"
 
+#include "ContactAttackAbility.h"
+#include "ProjectileAttackAbility.h"
+
 namespace
 {
 	constexpr _double ENEMY_HIT_FLASH_DURATION = 0.18;
@@ -52,7 +55,7 @@ _bool Enemy::Initialize()
 	{
 		++enemy_instance_count_map[name_w];
 	}
-	Name(name_w + std::to_wstring(enemy_instance_count_map[name_w]));
+	SetName(name_w + std::to_wstring(enemy_instance_count_map[name_w]));
 
 	// 트랜스폼
 	transform_->Scale(info_->body_size_);
@@ -64,6 +67,7 @@ _bool Enemy::Initialize()
 	movement_->SetPattern(info_->movement_pattern_);
 	movement_->SetMoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
 	movement_->SetMoveDir(transform_->Forward2D().Normalized());
+	s_cast(NonPlayableMovement*, movement_)->Target(_RunState.GetPlayer());
 	RegisterComponent(movement_);
 
 	// 스테이터스
@@ -101,20 +105,36 @@ _bool Enemy::Initialize()
 		attack_collider->InActivate();
 	}
 
+	/* =========================
+	* Ability System Init
+	* ========================= */
+	_BuildAbilities();
+	ability_set_.InitializeAll(*this);
+
+	_ChangeState(EnemyActionState::Spawn);
+
 	return true;
 }
 
 _int Enemy::Update(_double _delta_time)
 {
-	_int ret = __super::Update(_delta_time);
-	if (0 != ret) return ret;
+	if (status_ && status_->IsDead() && action_state_ != EnemyActionState::Death)
+	{
+		_ChangeState(EnemyActionState::Death);
+	}
 
+	// 1. 이번 프레임의 상태/능력 판단을 먼저 수행
+	_UpdateState(_delta_time);
+	ability_set_.OnUpdate(*this, _delta_time);
+
+	// 2. 그 다음 컴포넌트 실행
+	_int ret = __super::Update(_delta_time);
+	if (0 != ret)
+		return ret;
+
+	// 3. 후처리
 	if (0.0 < hit_flash_timer_)
 		hit_flash_timer_ = std::max(0.0, hit_flash_timer_ - _delta_time);
-
-	// 투사체 발사 로직
-	if (ProjectilePattern::Undefined != info_->projectile_pattern_)
-		HandleProjectilePattern(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
@@ -157,22 +177,12 @@ void Enemy::OnDestroy()
 
 void Enemy::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-	switch (_other->GetLayer())
-	{
-	case CollisionLayer::PlayerBody:
-		_AttackPlayer(_this, _other);
-		break;
-	}
+	ability_set_.OnCollisionEnter(*this, _this, _other);
 }
 
 void Enemy::OnCollisionStay(Collider* _this, Collider* _other)
 {
-	switch (_other->GetLayer())
-	{
-	case CollisionLayer::PlayerBody:
-		_AttackPlayer(_this, _other);
-		break;
-	}
+	ability_set_.OnCollisionStay(*this, _this, _other);
 }
 
 void Enemy::GetDamage(_float _damage)
@@ -189,45 +199,6 @@ void Enemy::GetDamage(_float _damage)
 	// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
 	const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
 	movement_->ApplyKnockback(hit_dir, 800.f);
-}
-
-void Enemy::HandleProjectilePattern(_double _delta_time)
-{
-	// 투사체 발사 범위. 필요에 따라 몬스터가 플레이어를 추적해서 투사체를 발사하는 패턴에서 활용할 수 있습니다.
-	// 우선은 모든 유닛이 동일한 사거리를 갖도록 설정. 필요에 따라 몬스터별로 사거리를 다르게 설정하거나, JSON 데이터에서 사거리 정보를 받아서 활용할 수도 있습니다.
-	static _float common_range_distance = 200.f;
-
-	// 투사체 발사 간격. 필요에 따라 몬스터별로 발사 간격을 다르게 설정하거나, JSON 데이터에서 발사 간격 정보를 받아서 활용할 수도 있습니다.
-	static _double common_fire_interval = 5.f;
-
-	projectile_fire_timer_ += _delta_time;
-	_bool fire = false;
-
-	if (projectile_fire_timer_ >= common_fire_interval)
-	{
-		projectile_fire_timer_ = 0.0;
-
-		// 우선은 조준 시간 없이 바로 발사
-		fire = true;
-	}
-
-	if (false == fire)
-		return;
-
-	// 몬스터의 종류에 따라 JSON 데이터에서 투사체 발사 정보를 받아서 발사 패턴을 다양하게 구현할 수 있습니다. 예를 들어, 플레이어를 추적해서 발사하는 패턴, 일정 방향으로 발사하는 패턴, 랜덤한 방향으로 발사하는 패턴 등 다양한 패턴을 구현할 수 있습니다.
-
-	const auto pos = transform_->Position();
-
-	const auto player = _RunState.GetPlayer();
-	const auto target_pos = player->GetTransform()->Position();
-
-	//const auto target = pos + transform_->Forward2D() * 5.f;
-	switch (info_->projectile_pattern_)
-	{
-	case ProjectilePattern::Direct:
-		play_scene_->SpawnProjectile(this, pos, target_pos, info_->projectile_damage_, 240.f/*info_->projectile_speed_*/);
-		break;
-	}
 }
 
 void Enemy::_DrawObjectShape()
@@ -280,22 +251,112 @@ void Enemy::_DrawObjectShape()
 	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect);
 }
 
-void Enemy::_AttackPlayer(Collider* _attack_col, Collider* _player_body_collider)
+void Enemy::_BuildAbilities()
 {
-	if (info_->contact_damage_ <= 0.f)
+	// ContactAttack
+	if (info_->contact_damage_ > 0.f)
+	{
+		ability_set_.AddAbility(std::make_unique<ContactAttackAbility>());
+	}
+
+	// ProjectileAttack
+	if (ProjectilePattern::Undefined != info_->projectile_pattern_ ||
+		EnemySpecialRole::Shooter == info_->role_)
+	{
+		ability_set_.AddAbility(std::make_unique<ProjectileAttackAbility>());
+	}
+
+	// Dash (현재 데이터 없음 → 추후 JSON 확장 후 처리)
+}
+
+void Enemy::_ChangeState(EnemyActionState _new_state)
+{
+	if (action_state_ == _new_state)
 		return;
 
-	const auto target_player = _player_body_collider->GameObject();
-	target_player->SendMessageToHandlers(
-		HandlerSystemList::Damage,
-		[this](IHandler* _handler) { s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt()); }
-	);
+	if (!ability_set_.CanEnterState(*this, _new_state))
+		return;
 
-	const auto status = s_cast(Status*, target_player->GetComponent(ComponentType::Status));
+	ability_set_.OnExitState(*this, action_state_);
 
-	// 공격 속도에 따른 타이머 설정. 몬스터가 플레이어를 공격한 후 일정 시간 동안은 같은 플레이어에게 다시 공격하지 않도록 타이머를 설정
-	if (!status->IsDead())
+	action_state_ = _new_state;
+
+	ability_set_.OnEnterState(*this, action_state_);
+}
+
+void Enemy::_UpdateState(_double _delta_time)
+{
+	switch (action_state_)
 	{
-		_attack_col->SetTimerForTarget(_player_body_collider, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
+	case EnemyActionState::Spawn:
+		_UpdateOnSpawn(_delta_time);
+		break;
+	case EnemyActionState::Idle:
+		_UpdateOnIdle(_delta_time);
+		break;
+	case EnemyActionState::Move:
+		_UpdateOnMove(_delta_time);
+		break;
+	case EnemyActionState::Hit:
+		_UpdateOnHit(_delta_time);
+		break;
+	case EnemyActionState::Attack:
+		_UpdateOnAttack(_delta_time);
+		break;
+	case EnemyActionState::Death:
+		_UpdateOnDeath(_delta_time);
+		break;
 	}
+}
+
+void Enemy::_UpdateOnSpawn(_double _delta_time)
+{
+	// 현재는 즉시 Move 진입
+	_ChangeState(EnemyActionState::Move);
+}
+
+void Enemy::_UpdateOnIdle(_double _delta_time)
+{
+	if (movement_)
+		movement_->StopImmediately();
+}
+
+void Enemy::_UpdateOnMove(_double _delta_time)
+{
+	// 기본 이동은 Movement 컴포넌트가 처리
+}
+
+void Enemy::_UpdateOnHit(_double _delta_time)
+{
+	if (hit_flash_timer_ <= 0.0)
+	{
+		_ChangeState(EnemyActionState::Move);
+	}
+}
+
+void Enemy::_UpdateOnAttack(_double _delta_time)
+{
+	// 세부 공격 로직은 Ability가 담당
+}
+
+void Enemy::_UpdateOnDeath(_double _delta_time)
+{
+	if (movement_)
+		movement_->StopImmediately();
+}
+
+void Enemy::RequestChangeState(EnemyActionState _new_state)
+{
+	_ChangeState(_new_state);
+}
+
+GameObjectBase* Enemy::GetPrimaryTarget() const
+{
+	return _RunState.GetPlayer();
+}
+
+void Enemy::FaceTo(_Vector3 _target_pos)
+{
+	if (transform_)
+		transform_->LookAt(_target_pos);
 }

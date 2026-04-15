@@ -58,7 +58,7 @@ void Bullet::DebugRender()
 		return;
 
 	const auto position = transform_->Position();
-	_DrawFunc::DrawString(_Point{ position.x, position.y }, Name(), Palette::DarkGray);
+	_DrawFunc::DrawString(_Point{ position.x, position.y }, GetName(), Palette::DarkGray);
 
 	auto description_position = position;
 	description_position.y += 16.f; // 디버그용으로 위치 보정

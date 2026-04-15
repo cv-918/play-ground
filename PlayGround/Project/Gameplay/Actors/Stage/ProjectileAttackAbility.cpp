@@ -1,0 +1,170 @@
+﻿#include "framework.h"
+#include "ProjectileAttackAbility.h"
+
+#include "Enemy.h"
+
+#include "Actors/GameObjectBase.h"
+#include "Gameplay/Scenes/InGameScene.h"
+#include "Components/Movement.h"
+
+void ProjectileAttackAbility::OnInitialize(Enemy& _enemy)
+{
+	fire_cooldown_acc_ = fire_interval_;
+	attack_motion_elapsed_ = 0.0;
+	fired_in_current_attack_ = false;
+
+	// 현재 EnemyJsonInfo에 발사 주기/사거리/모션 시간 필드가 없으므로
+	// 1차 구현에서는 내부 기본값을 사용합니다.
+	// 추후 EnemyJsonInfo 확장 시 여기서 값 반영하도록 변경합니다.
+}
+
+_bool ProjectileAttackAbility::CanEnterState(const Enemy& _enemy, EnemyActionState _state) const
+{
+	if (EnemyActionState::Attack != _state)
+		return true;
+
+	return _CanStartAttack(_enemy);
+}
+
+void ProjectileAttackAbility::OnEnterState(Enemy& _enemy, EnemyActionState _state)
+{
+	if (EnemyActionState::Attack != _state)
+		return;
+
+	attack_motion_elapsed_ = 0.0;
+	fired_in_current_attack_ = false;
+
+	auto movement = _enemy.GetMovement();
+	if (movement)
+	{
+		movement->StopImmediately();
+		movement->SetAllowNormalMove(false);
+	}
+}
+
+void ProjectileAttackAbility::OnUpdate(Enemy& _enemy, _double _delta_time)
+{
+	fire_cooldown_acc_ += _delta_time;
+
+	switch (_enemy.GetActionState())
+	{
+	case EnemyActionState::Move:
+		_TryStartAttack(_enemy);
+		break;
+
+	case EnemyActionState::Attack:
+		_UpdateAttack(_enemy, _delta_time);
+		break;
+
+	default:
+		break;
+	}
+}
+
+void ProjectileAttackAbility::OnExitState(Enemy& _enemy, EnemyActionState _state)
+{
+	if (EnemyActionState::Attack != _state)
+		return;
+
+	auto movement = _enemy.GetMovement();
+	if (movement)
+	{
+		movement->SetAllowNormalMove(true);
+	}
+
+	attack_motion_elapsed_ = 0.0;
+	fired_in_current_attack_ = false;
+}
+
+_bool ProjectileAttackAbility::_CanStartAttack(const Enemy& _enemy) const
+{
+	const auto* info = _enemy.GetEnemyInfo();
+	if (nullptr == info)
+		return false;
+
+	if (ProjectilePattern::Undefined == info->projectile_pattern_)
+		return false;
+
+	if (fire_cooldown_acc_ < fire_interval_)
+		return false;
+
+	auto* target = _enemy.GetPrimaryTarget();
+	if (nullptr == target)
+		return false;
+
+	const auto enemy_pos = _enemy.GetTransform()->Position();
+	const auto target_pos = target->GetTransform()->Position();
+
+	const auto to_target = target_pos - enemy_pos;
+	const auto distance_sq = to_target.LengthSq();
+	const auto range_sq = attack_range_ * attack_range_;
+
+	return distance_sq <= range_sq;
+}
+
+void ProjectileAttackAbility::_TryStartAttack(Enemy& _enemy)
+{
+	if (!_CanStartAttack(_enemy))
+		return;
+
+	_enemy.RequestChangeState(EnemyActionState::Attack);
+}
+
+void ProjectileAttackAbility::_UpdateAttack(Enemy& _enemy, _double _delta_time)
+{
+	auto* target = _enemy.GetPrimaryTarget();
+	if (nullptr == target)
+	{
+		_enemy.RequestChangeState(EnemyActionState::Move);
+		return;
+	}
+
+	const auto target_pos = target->GetTransform()->Position();
+	_enemy.FaceTo(target_pos);
+
+	attack_motion_elapsed_ += _delta_time;
+
+	if (!fired_in_current_attack_ && attack_motion_elapsed_ >= attack_motion_duration_ * 0.5)
+	{
+		_SpawnProjectile(_enemy);
+		fired_in_current_attack_ = true;
+		fire_cooldown_acc_ = 0.0;
+	}
+
+	if (attack_motion_elapsed_ >= attack_motion_duration_)
+	{
+		_enemy.RequestChangeState(EnemyActionState::Move);
+	}
+}
+
+void ProjectileAttackAbility::_SpawnProjectile(Enemy& _enemy)
+{
+	auto* scene = _enemy.GetPlayScene();
+	if (nullptr == scene)
+		return;
+
+	const auto* info = _enemy.GetEnemyInfo();
+	if (nullptr == info)
+		return;
+
+	auto* target = _enemy.GetPrimaryTarget();
+	if (nullptr == target)
+		return;
+
+	const auto pos = _enemy.GetTransform()->Position();
+	const auto target_pos = target->GetTransform()->Position();
+
+	switch (info->projectile_pattern_)
+	{
+	case ProjectilePattern::Direct:
+	case ProjectilePattern::Aimed:
+	{
+		const _float speed = (info->projectile_speed_ > 0.f) ? info->projectile_speed_ : 240.f;
+		scene->SpawnProjectile(&_enemy, pos, target_pos, info->projectile_damage_, speed);
+	}
+	break;
+
+	default:
+		break;
+	}
+}
