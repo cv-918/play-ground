@@ -2,9 +2,7 @@
 #include "Background.h"
 
 Background::Background(const CreateInfo& _create_info)
-	: create_info_(_create_info)
-{
-}
+	: create_info_(_create_info) {}
 
 _bool Background::Initialize()
 {
@@ -51,6 +49,10 @@ void Background::Render(_double _delta_time)
 		sprite.image_rect.X + sprite.image_rect.Width,
 		sprite.image_rect.Y + sprite.image_rect.Height);
 	_DrawFunc::DrawTexture(sprite.image, dest_rect, src_rect);
+}
+
+void Background::DebugRender()
+{
 }
 
 void Background::UpdateViewport(const _Size& _size)

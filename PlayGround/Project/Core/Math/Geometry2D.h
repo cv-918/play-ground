@@ -81,24 +81,11 @@ public:
 
 struct _Rect
 {
-private:
-	_Point points_[2]; // 0: LT, 1: RB
-
-public:
+	/* 생성자 */
 	constexpr _Rect() : points_{ {}, {} } {}
 	constexpr _Rect(_Point _lt, _Point _rb) : points_{ _lt, _rb } {}
 	constexpr _Rect(_Point _lt, _Size _size) : points_{ _lt, {_lt.x + _size.x, _lt.y + _size.y} } {}
 	constexpr _Rect(_int _left, _int _top, _int _right, _int _bottom) : points_{ { _left, _top }, { _right, _bottom } } {}
-
-	// LT와 너비, 높이를 이용해 생성하는 편의 기능
-	static _Rect FromLtSize(_Point _lt, _Size _size) {
-		return { _lt, _Size{ _lt.x + _size.x, _lt.y + _size.y } };
-	}
-
-	// 중심점과 반지름(반너비/반높이)으로 생성하는 편의 기능
-	static _Rect FromCenter(_Point _center, _int _halfW, _int _halfH) {
-		return { _Point{_center.x - _halfW, _center.y - _halfH}, _Point{_center.x + _halfW, _center.y + _halfH} };
-	}
 
 	// 기본 정보 Get (실수형 반환 포함)
 	_Point Lt() const { return points_[0]; }
@@ -111,14 +98,14 @@ public:
 	_int Right() const { return points_[1].x; }
 	_int Bottom() const { return points_[1].y; }
 
+	_int Width() const { return points_[1].x - points_[0].x; }
+	_int Height() const { return points_[1].y - points_[0].y; }
+
+	// float 반환 버전
 	_float Left_f() const { return s_float(points_[0].x); }
 	_float Top_f() const { return s_float(points_[0].y); }
 	_float Right_f() const { return s_float(points_[1].x); }
 	_float Bottom_f() const { return s_float(points_[1].y); }
-
-	_int Width() const { return points_[1].x - points_[0].x; }
-	_int Height() const { return points_[1].y - points_[0].y; }
-	
 
 	// 충돌 체크 (벡터 호환)
 	_bool PtInRect(const _Point& _pt) const;
@@ -135,6 +122,18 @@ public:
 	void ScaleX(_int _dw) { ScaleFromLt({ Width() + _dw, Height() }); }
 	void ScaleY(_int _dh) { ScaleFromLt({ Width(), Height() + _dh }); }
 
+	// LT와 너비, 높이를 이용해 생성하는 편의 기능
+	static _Rect FromLtSize(_Point _lt, _Size _size) {
+		return { _lt, _Size{ _lt.x + _size.x, _lt.y + _size.y } };
+	}
+
+	// 중심점과 반지름(반너비/반높이)으로 생성하는 편의 기능
+	static _Rect FromCenter(_Point _center, _int _halfW, _int _halfH) {
+		return { _Point{_center.x - _halfW, _center.y - _halfH}, _Point{_center.x + _halfW, _center.y + _halfH} };
+	}
+
+	RECT ToRECT() const { return { Left(), Top(), Right(), Bottom() }; }
+
 	// 연산자 오버로드
 	_Rect operator+(const _Rect& _rhs) const { return { Lt() + _rhs.Lt(), Rb() + _rhs.Rb() }; }
 	_Rect operator-(const _Rect& _rhs) const { return { Lt() - _rhs.Lt(), Rb() - _rhs.Rb() }; }
@@ -148,6 +147,9 @@ public:
 	_Rect& operator-=(const _Rect& _rhs) { *this = *this - _rhs; return *this; }
 	_Rect& operator*=(const _int _s) { *this = *this * _s; return *this; }
 	_Rect& operator/=(const _int _s) { *this = *this / _s; return *this; }
+
+private:
+	_Point points_[2]; // 0: LT, 1: RB
 };
 
 struct _RectF

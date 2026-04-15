@@ -44,5 +44,4 @@ private:
 	SpriteAnimationSetData animation_set_;
 
 	_bool flip_sprite_x_ = false;
-	_int interact_key_ = 'E';
 };

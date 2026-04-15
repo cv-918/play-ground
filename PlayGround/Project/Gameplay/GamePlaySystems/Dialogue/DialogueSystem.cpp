@@ -55,7 +55,7 @@ void DialogueSystem::OnConfirmInput()
 
 void DialogueSystem::UpdateSkipHold(float _hold_seconds)
 {
-    static constexpr float SKIP_THRESHOLD = 3.0f;
+    static constexpr float SKIP_THRESHOLD = 2.0f;
 
     if (!runner_.HasActiveSession())
     {

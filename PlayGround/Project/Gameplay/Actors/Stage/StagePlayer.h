@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#pragma once
-
 #include "UnitBase.h"
 
 class StagePlayer final : public UnitBase

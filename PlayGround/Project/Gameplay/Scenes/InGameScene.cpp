@@ -49,7 +49,7 @@ _int InGameScene::Update(_double _delta_time)
 
 	stage_manager_->Update(_delta_time);
 
-	if (/*update_objects_ && */!_GameState.GetPause())
+	if (!_GameState.GetPause())
 	{
 		object_manager_->Update(_delta_time);
 		ui_manager_->Update(_delta_time);
@@ -66,7 +66,7 @@ _int InGameScene::Update(_double _delta_time)
 
 _int InGameScene::LateUpdate(_double _delta_time)
 {
-	if (/*update_objects_ && */!_GameState.GetPause())
+	if (!_GameState.GetPause())
 	{
 		object_manager_->LateUpdate(_delta_time);
 		ui_manager_->LateUpdate(_delta_time);
@@ -85,6 +85,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 
 void InGameScene::Render(_double _delta_time)
 {
+#ifdef _DEBUG
 	// 1. 카메라 오프셋 가져오기
 	_Point offset = _CameraMgr.GetShakeOffset();
 
@@ -92,18 +93,8 @@ void InGameScene::Render(_double _delta_time)
 	_DrawFunc::SetGlobalOffset(offset);
 
 	// 3. 월드 요소들 렌더링 (배경, 캐릭터, 몬스터 등)
-	// 이 안에서 호출되는 모든 DrawFunctions가 흔들린 좌표에 그려집니다.
-	// s, [ 테스트용 배경 그리기 ]
-	const Resolution resolution = _ScreenSystem.WindowResolution();
-	const _Rect rt = _Rect{ _Point{ 0, 0 }, _Size{ resolution.width, resolution.height } };
-	_DrawFunc::FillRectangle(rt, Palette::Pearl);
-	_DrawFunc::DrawString(rt.Center(), _CommonGamePlayFunc::GetSceneTypeName(type_));
-	// e, [ 테스트용 배경 그리기 ]
-
-	stage_manager_->Render(_delta_time);
-
+	stage_manager_->Render(_delta_time); // 스테이지 매니저 렌더는 디버그용 네비메시 정보 렌더링이 포함되어 있을 뿐이다. 참고.
 	object_manager_->Render(_delta_time);
-
 	_ParticleService.Render(_delta_time);
 
 	// 4. 오프셋 초기화 (UI는 흔들리면 안 되므로!)
@@ -111,6 +102,9 @@ void InGameScene::Render(_double _delta_time)
 
 	// 5. UI 렌더링 (고정된 위치)
 	ui_manager_->Render(_delta_time);
+#else
+	__super::Render(_delta_time);
+#endif // _DEBUG
 }
 
 void InGameScene::OnEnter()

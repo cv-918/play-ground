@@ -26,9 +26,10 @@
                 1
             ]
         ],
-        "dust_count_": 919,
-        "experience_": 680,
+        "dust_count_": 986,
+        "experience_": 761,
         "id_": 0,
+        "is_first_play_": true,
         "stage_progress_": 2,
         "unlocked_character_ids_": [
             1

@@ -56,10 +56,13 @@ void SpriteRendererComponent::Render(_double _delta_time)
 	const auto pivot_y = render_command_.pivot_y * scale_y;
 
 	const _RectF dest_rect(
-		screen_pos.x - pivot_x,
-		screen_pos.y - pivot_y,
-		screen_pos.x - pivot_x + draw_width,
-		screen_pos.y - pivot_y + draw_height);
+		screen_pos.x - render_command_.image_width * 0.5f,
+		screen_pos.y - render_command_.image_height * 0.5f,
+		screen_pos.x /*- pivot_x + draw_width*/ + render_command_.image_width * 0.5f,
+		screen_pos.y /*- pivot_y + draw_height*/ + render_command_.image_height * 0.5f);
+
+	const auto wid = dest_rect.Width();
+	const auto hei = dest_rect.Height();
 
 	if (render_command_.use_source_rect == true)
 	{
