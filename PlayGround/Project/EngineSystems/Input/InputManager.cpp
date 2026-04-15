@@ -282,7 +282,7 @@ bool InputManager::ActionPressed(InputAction _action) const
 	if (_action >= InputAction::Count)
 		return false;
 
-	return action_states_[ToActionIndex(_action)].went_down;
+	return action_states_[ToActionIndex(_action)].is_down;
 }
 
 bool InputManager::ActionDown(InputAction _action) const
@@ -290,7 +290,7 @@ bool InputManager::ActionDown(InputAction _action) const
 	if (_action >= InputAction::Count)
 		return false;
 
-	return action_states_[ToActionIndex(_action)].is_down;
+	return action_states_[ToActionIndex(_action)].went_down;
 }
 
 bool InputManager::ActionReleased(InputAction _action) const
@@ -720,7 +720,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'Q', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'E', 1.f },
+			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
 		};
 	}
 
@@ -736,7 +738,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'A', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'S', 1.f },
+			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
 		};
 	}
 
@@ -745,13 +749,12 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 		PresetBindingSet& set = table[s_cast(_uint, ControllerPreset::MouseOnly)];
 		set.preset = ControllerPreset::MouseOnly;
 		set.bindings = {
-			{ InputAction::MoveX, InputSourceType::MouseAxis, 0, 1.f },
-			{ InputAction::MoveY, InputSourceType::MouseAxis, 1, 1.f },
 			{ InputAction::Dash, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
-			{ InputAction::Dash, InputSourceType::MouseButton, VK_MBUTTON, 1.f },
 			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
+			{ InputAction::Interact, InputSourceType::MouseButton, VK_XBUTTON1, 1.f },
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+			{ InputAction::StageProgress, InputSourceType::MouseButton, VK_MBUTTON, 1.f},
 		};
 	}
 
@@ -767,7 +770,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
+			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
+			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
 		};
 	}
 

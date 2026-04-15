@@ -8,7 +8,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	experience_,
 	unlocked_character_ids_,
 	acquired_node_ids_,
-	stage_progress_
+	stage_progress_,
+	is_first_play_
 )
 
 #define _UserDataMgr UserDataManager::Get()

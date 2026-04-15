@@ -32,6 +32,9 @@ enum class InputAction
 	Interact,
 	// 일시정지
 	Pause,
+	// 스테이지 진행
+	StageProgress,
+	// 액션 개수
 	Count,
 };
 
@@ -207,7 +210,7 @@ public:
 	/** 이번 프레임 누적 마우스 델타를 반환한다. */
 	_Point MouseDelta() const { return mouse_delta_; }
 	/** 이번 프레임 휠 델타를 반환한다. */
-	_int WheelDelta() const { return wheel_delta_; }
+	_int MouseWheelDelta() const { return wheel_delta_; }
 
 	/** 이번 프레임에 들어온 WM_CHAR 문자 목록을 반환한다. */
 	const std::vector<_tchar>& Chars() const { return chars_; }

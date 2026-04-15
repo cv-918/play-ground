@@ -222,7 +222,7 @@ void RunTimeDebugWindow::UpdateScroll(_double _delta_time)
 	if (is_scrollable_ && max_scroll_y_ > 0.f)
 	{
 		const _Vector2 mouse_pos = _InputMgr.MousePoint();
-		const _int wheel_delta = _InputMgr.WheelDelta();
+		const _int wheel_delta = _InputMgr.MouseWheelDelta();
 		const _RectF content_rect = GetContentRect();
 
 		if (wheel_delta != 0 && IsPointInRect(mouse_pos, content_rect))

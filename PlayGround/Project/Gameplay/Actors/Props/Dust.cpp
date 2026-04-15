@@ -9,7 +9,7 @@ _bool Dust::Initialize()
 	if (false == __super::Initialize())
 		return false;
 
-	const auto DEFAULT_SCALE = 5.f;
+	const auto DEFAULT_SCALE = _Random.Range(10.f, 15.f);
 
 	transform_->Scale(DEFAULT_SCALE);
 	transform_->LookAt(creation_info_.look_point_);

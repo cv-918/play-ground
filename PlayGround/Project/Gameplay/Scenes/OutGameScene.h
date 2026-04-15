@@ -11,6 +11,13 @@
 
 class OutGameScene final : public Scene
 {
+	enum class SceneSequenceProgress
+	{
+		Undefined = 0,
+		Prologue,
+
+	};
+
 	enum class OutGameViewState
 	{
 		Undefined = 0,
@@ -36,7 +43,12 @@ private:
 	// 뷰 전환 메소드
 	void _ChangeView(OutGameViewState _new_view_state);
 	WidgetBase* _CreateView();
+
 	void _HandleViewportChanged();
+	_int _HandleSceneInput();
+
+	/* On Enter */
+
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;
 

@@ -34,43 +34,7 @@ _int OutGameScene::Update(_double _delta_time)
 		last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
 	}
 
-#ifdef _DEBUG
-	//if (_InputMgr.Down('Y'))
-	//{
-	//	if (test_town_player_ == nullptr)
-	//	{
-	//		_SYSTEM_LOG_INFO(_T("[OutGameScene Test] TownPlayer is null"));
-	//	}
-	//	else
-	//	{
-	//		const auto curr = test_town_player_->GetCurrentInteractable();
-	//		_SYSTEM_LOG_INFO(_T("[OutGameScene Test] Current interactable : %s"),
-	//			curr ? L"Exists" : L"None");
-	//	}
-	//}
-#endif
-
-	switch (view_state_)
-	{
-	case OutGameScene::OutGameViewState::Main:
-		if (_InputMgr.Down(VK_ESCAPE))
-		{
-			_ChangeView(OutGameViewState::Exit);
-			return UPDATE_BREAK;
-		}
-
-		//if (_InputMgr.Down('T'))
-		//{
-		//	_ChangeView(OutGameViewState::Attribute);
-		//	return UPDATE_BREAK;
-		//}
-		break;
-
-	case OutGameScene::OutGameViewState::Attribute:
-		break;
-	default:
-		break;
-	}
+	_HandleSceneInput();
 
 	// s, [ Dialogue System Test ]
 	{
@@ -118,12 +82,13 @@ _int OutGameScene::Update(_double _delta_time)
 			}
 
 			// Choice
-			if (_InputMgr.Down(VK_UP))
+			const auto md = _InputMgr.MouseWheelDelta();
+			if (_InputMgr.Down(VK_UP) || md > 0)
 			{
 				dialogue_system_.OnChoiceUpInput();
 			}
 
-			if (_InputMgr.Down(VK_DOWN))
+			if (_InputMgr.Down(VK_DOWN) || md < 0)
 			{
 				dialogue_system_.OnChoiceDownInput();
 			}
@@ -148,7 +113,6 @@ _int OutGameScene::Update(_double _delta_time)
 
 			// TODO:
 			// 여기서 end_reason, choice_records 확인 가능
-
 			dialogue_system_.ClearFinishedState();
 		}
 	}
@@ -231,9 +195,7 @@ void OutGameScene::OnEnter()
 
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
-
-	RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
-	_CameraMgr.SetWorldBounds(world_bounds);
+	_CameraMgr.SetWorldBounds(nav_mesh.ToRECT());
 	_CameraMgr.EnableClamp(true);
 }
 
@@ -258,11 +220,10 @@ void OutGameScene::_HandleViewportChanged()
 		if (test_town_player_)
 			test_town_player_->SetNavMesh(nav_mesh);
 
-		RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
 		_CameraMgr.Initialize(res.width, res.height);
 		if (test_town_player_)
 			_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
-		_CameraMgr.SetWorldBounds(world_bounds);
+		_CameraMgr.SetWorldBounds(nav_mesh.ToRECT());
 		_CameraMgr.EnableClamp(true);
 	}
 
@@ -270,6 +231,31 @@ void OutGameScene::_HandleViewportChanged()
 	{
 		if (pair.second)
 			pair.second->OnViewportChanged();
+	}
+}
+
+_int OutGameScene::_HandleSceneInput()
+{
+	switch (view_state_)
+	{
+	case OutGameScene::OutGameViewState::Main:
+		if (_InputMgr.Down(VK_ESCAPE))
+		{
+			_ChangeView(OutGameViewState::Exit);
+			return UPDATE_BREAK;
+		}
+
+		//if (_InputMgr.Down('T'))
+		//{
+		//	_ChangeView(OutGameViewState::Attribute);
+		//	return UPDATE_BREAK;
+		//}
+		break;
+
+	case OutGameScene::OutGameViewState::Attribute:
+		break;
+	default:
+		break;
 	}
 }
 

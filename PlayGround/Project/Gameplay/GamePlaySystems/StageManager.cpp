@@ -199,12 +199,14 @@ void StageManager::_OnEnter()
 	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
 	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
 
+	proceed_to_next_stage_timer_ = 0.0;
+	can_progress_next_stage_ = false;
+
 	// 카메라 초기화
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(player->GetTransform());
 
-	RECT world_bounds = { nav_mesh.Left(), nav_mesh.Top(), nav_mesh.Right(), nav_mesh.Bottom() };
-	_CameraMgr.SetWorldBounds(world_bounds);
+	_CameraMgr.SetWorldBounds(nav_mesh.ToRECT());
 	_CameraMgr.EnableClamp(true);
 
 	// 게임 상태 초기화
@@ -330,7 +332,7 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 
 	if (can_progress_next_stage_)
 	{
-		if (_InputMgr.Pressed(VK_SPACE))
+		if (_InputMgr.ActionPressed(InputAction::StageProgress))
 		{
 			proceed_to_next_stage_timer_ += _delta_time;
 		}
@@ -342,6 +344,7 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 		if (proceed_to_next_stage_timer_ >= PROCEED_TO_NEXT_STAGE_HOLD_TIME)
 		{
 			proceed_to_next_stage_timer_ = 0.0;
+			can_progress_next_stage_ = false;
 
 			const auto curr_stage_lv = _UserProfile.GetStageProgress();
 			if (curr_stage_lv < _StageDataMgr.GetStageCount())

@@ -19,6 +19,7 @@ public:
 public:
 	_bool Initialize() override;
 	void Render(_double _delta_time) override;
+	void DebugRender() override;
 
 public:
 	const _Rect& NavMesh() const { return nav_mesh_; }

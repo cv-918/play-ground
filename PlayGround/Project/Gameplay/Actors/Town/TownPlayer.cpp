@@ -68,10 +68,12 @@ _int TownPlayer::Update(_double _delta_time)
 {
 	__super::Update(_delta_time);
 
-	if (interaction_ != nullptr)
-		interaction_->Update(_delta_time);
+	if (!interaction_)
+		return UPDATE_CONTINUE;
 
-	if (_InputMgr.Down(interact_key_) && interaction_ != nullptr)
+	interaction_->Update(_delta_time);
+
+	if (_InputMgr.ActionDown(InputAction::Interact))
 		interaction_->TryInteract();
 
 	if (movement_ != nullptr && sprite_animator_ != nullptr)
