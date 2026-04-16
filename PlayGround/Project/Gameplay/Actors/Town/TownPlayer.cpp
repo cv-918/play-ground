@@ -33,6 +33,9 @@ _bool TownPlayer::Initialize()
 	movement_ = new PlayerMovement(info_);
 	RegisterComponent(movement_);
 	movement_->SetControllerType(PlayerMovementType::Town);
+	movement_->SetNavBoundaryMode(info_->nav_boundary_mode_);
+	movement_->SetNavFootprint(info_->nav_footprint_radius_, info_->nav_footprint_offset_y_);
+	movement_->SetNavVisualMargin(info_->nav_visual_margin_x_, info_->nav_visual_margin_y_);
 
 	interaction_collider_ = new EllipseCollider(info_->body_size_);
 	RegisterComponent(interaction_collider_);

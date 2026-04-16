@@ -55,12 +55,17 @@ enum class ComponentType
 
 enum class MovementPattern
 {
-	Undefined = 0,	// 초기화 값
-	Playable,		// 직접 조작
-	Stopped,		// 정지 (이동 없음)
-	Directional,	// 직선 이동
-	Target,			// 타겟 추적 이동
-	Count,
+    Undefined = 0,	// 초기화 값
+	Directional = 1,	// 직선 이동
+	Target = 2,		// 타겟 추적 이동
+	Count = 3,
+};
+
+enum class NavBoundaryMode
+{
+	None = 0,					// 이동 영역 제한 없음
+	ContainFootprint = 1,		// 발밑 footprint만 이동 가능 영역 안에 유지
+	ContainVisualBounds = 2,	// footprint + 시각 여백까지 화면 안쪽에 유지
 };
 
 enum class EnemyCategory
@@ -203,6 +208,11 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	// ------ 이동 관련 ------
 	MovementPattern movement_pattern_ = MovementPattern::Undefined;
 	_uint move_speed_unit_ = 0; // 실제 이동 속도는 이 값에 20.f를 곱해서 계산
+	NavBoundaryMode nav_boundary_mode_ = NavBoundaryMode::None;
+	_float nav_footprint_radius_ = 0.f;
+	_float nav_footprint_offset_y_ = 0.f;
+	_float nav_visual_margin_x_ = 0.f;
+	_float nav_visual_margin_y_ = 0.f;
 
 	// ------ 능력 관련 ------
 	EnemyAbilityFlags ability_flags_ = EnemyAbilityFlags::None;
@@ -234,6 +244,11 @@ struct PlayableCharacterJsonInfo : public UnitJsonInfo
 	_float move_speed_max_ = 0.f;	// 최대 이동 속도
 	_float acceleration_ = 0.f;		// 가속도. 높을수록 빠르게 최대 이동 속도에 도달
 	_float friction_ = 0.f;			// 마찰 계수. 높을수록 빠르게 감속
+	NavBoundaryMode nav_boundary_mode_ = NavBoundaryMode::ContainFootprint;
+	_float nav_footprint_radius_ = 0.f;
+	_float nav_footprint_offset_y_ = 0.f;
+	_float nav_visual_margin_x_ = 0.f;
+	_float nav_visual_margin_y_ = 0.f;
 
 	/** 실제 애니메이션 클립 메타 정보 */
 	std::vector<AnimationClipPathInfo> animation_clips_;
@@ -244,6 +259,9 @@ struct UnitCreationInfo
 	_Vector3 position_;
 	_Vector3 look_point_;
 	_float stat_multiplier_ = 1.f; // 스탯 배율. 필요에 따라 몬스터의 체력이나 공격력을 스테이지 진행 시간에 비례해서 증가시키는 로직에서 활용할 수 있습니다.
+	_bool skip_spawn_fade_ = false; // 초기 배치처럼 즉시 활성화되어야 하는 경우 Spawn 페이드를 건너뛴다.
+	_bool has_nav_mesh_ = false; // 생성 시점에 유닛이 참조할 스테이지 nav mesh가 함께 전달되었는지 여부
+	_Rect nav_mesh_{}; // 유닛이 사용하는 이동 가능 영역. 현재는 최종 위치 클램프 용도로 사용
 
 	// 이 유닛을 소유하는 게임 오브젝트에 대한 포인터. 필요에 따라 스킬 오브젝트가 소환될 때, 이 정보를 활용하여 스킬 오브젝트가 소유자(예: 플레이어 캐릭터)의 위치나 방향을 참조하거나, 소유자와 상호작용하는 로직에서 활용할 수 있습니다.
 	class GameObjectBase* owner_ = nullptr;
@@ -514,9 +532,9 @@ struct SkillJsonInfo
 	 * @{
 	 */
 
-	/** @name [COMMON] 공용 정보 */
-	///@{
-	/** 스킬 ID. 필요에 따라 스킬의 행동이나 효과를 관리하는 로직에서 활용할 수 있습니다. 예시에서는 스킬의 고유 식별자로 사용하고 있습니다. */
+	 /** @name [COMMON] 공용 정보 */
+	 ///@{
+	 /** 스킬 ID. 필요에 따라 스킬의 행동이나 효과를 관리하는 로직에서 활용할 수 있습니다. 예시에서는 스킬의 고유 식별자로 사용하고 있습니다. */
 	_uint id_ = 0;
 
 	/** 스킬 이름. 필요에 따라 스킬의 행동이나 효과를 관리하는 로직에서 활용할 수 있습니다. 예시에서는 스킬의 기본적인 이름을 담는 용도로 사용하고 있습니다. */
@@ -528,7 +546,7 @@ struct SkillJsonInfo
 	/** 스킬 아이콘 이미지 경로. UI에서 스킬 슬롯, 툴팁, 스킬 선택창 등에 표시할 때 사용합니다. */
 	std::string icon_path_;
 	///@}
-	
+
 	/** 스킬의 유형. 필요에 따라 스킬의 행동이나 효과를 관리하는 로직에서 활용할 수 있습니다. 예시에서는 액티브 스킬, 설치형 스킬, 소환형 스킬로 구분하고 있습니다. */
 	SkillType type_ = SkillType::Undefined;
 
@@ -558,7 +576,7 @@ struct SkillJsonInfo
 
 	/** @name [PROJECTILE] 투사체 정보 */
 	///@{
-	/** 발사되는 투사체의 수.필요에 따라 스킬이 여러 개의 투사체를 발사하는 형태로 구현할 수 있습니다. */ 
+	/** 발사되는 투사체의 수.필요에 따라 스킬이 여러 개의 투사체를 발사하는 형태로 구현할 수 있습니다. */
 	_uint proj_count_ = 1;
 
 	/** 투사체의 이동 속도.필요에 따라 스킬이 발사하는 투사체의 속도를 관리하는 로직에서 활용할 수 있습니다. */
@@ -606,7 +624,7 @@ enum class __DebugColliderRenderState
 {
 	// 비활성화 상태. 콜라이더 렌더링이 완전히 꺼진 상태입니다.
 	OnDisabled,
-	
+
 	// 일반 상태. 충돌 상태와 무관하게 모든 콜라이더가 초록색으로 렌더링됩니다.
 	OnNormal,
 

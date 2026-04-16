@@ -186,7 +186,7 @@ WidgetBase* InGameScene::_CreateView()
 	case InGameViewState::Result:
 		return ui_manager_->CreateUI<InGameResultView>(
 			// 1) restart, 2) go to lobby
-			[this]() { stage_manager_->ProgressRunSessionResult(); _SceneMgr.ChangeScene(SceneType::InGame); },
+			[this]() { stage_manager_->ProgressRunSessionResult(); _SceneMgr.ChangeScene(SceneType::InGame, true); },
 			[this]() { stage_manager_->ChangeState(StageState::Exit); }
 		);
 	}

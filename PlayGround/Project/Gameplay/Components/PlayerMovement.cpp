@@ -9,7 +9,6 @@
 PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
 {
-	move_pattern_ = MovementPattern::Playable;
 	move_func_ = [this](_double _delta_time) { _ProcessOnPlayerControl(_delta_time); };
 
 	input_manager_ = &_InputMgr.Get();

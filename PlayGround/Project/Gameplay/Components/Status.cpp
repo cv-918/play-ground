@@ -12,6 +12,7 @@ void Status::SetCurrentHp(const _float _hp)
 		current_hp_ = 0;
 		is_dead_ = true;
 
-		gameobject_->ReserveDestruction();
+		if (auto_reserve_destruction_on_zero_hp_ && gameobject_)
+			gameobject_->ReserveDestruction();
 	}
 }

@@ -41,6 +41,9 @@ _bool StagePlayer::Initialize()
 	// 플레이어 Movement 컴포넌트 생성 및 등록
 	movement_ = new PlayerMovement(info_);
 	RegisterComponent(movement_);
+	movement_->SetNavBoundaryMode(info_->nav_boundary_mode_);
+	movement_->SetNavFootprint(info_->nav_footprint_radius_, info_->nav_footprint_offset_y_);
+	movement_->SetNavVisualMargin(info_->nav_visual_margin_x_, info_->nav_visual_margin_y_);
 
 	// 플레이어 컴포넌트 설정
 	const auto attribute_stat = _UserProfile.GetAttributeStat();

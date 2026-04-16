@@ -354,7 +354,7 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 
 			// 결과 적용 및 스테이지 재시작
 			ProgressRunSessionResult();
-			_SceneMgr.ChangeScene(SceneType::InGame);
+			_SceneMgr.ChangeScene(SceneType::InGame, true);
 
 			_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());
 			return UPDATE_BREAK;
@@ -480,6 +480,12 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 		// 스태 스케일링 (Over-scaling 방지 적용)
 		// 시간이 지날수록 몬스터의 공격력/체력 배율을 높임
 		creation_info.stat_multiplier_ = GetTimeScalingFactor();
+		creation_info.skip_spawn_fade_ = !_on_play;
+		creation_info.has_nav_mesh_ = (stage_nav_mesh_ != nullptr);
+		if (creation_info.has_nav_mesh_)
+		{
+			creation_info.nav_mesh_ = *stage_nav_mesh_;
+		}
 
 		// 플레이 중에 스폰되는 경우에는 화면 밖으로 밀어내기
 		// Enter 상태에서 초기 스폰되는 경우, 플레이어가 생성 위치와 충돌하지 않도록 조정하는 작업이 추가로 필요함

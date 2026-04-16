@@ -52,6 +52,9 @@ public:
 	_bool IsDead() const { return is_dead_; }
 	void MarkAsDead() { is_dead_ = true; }
 
+	_bool IsAutoReserveDestructionOnZeroHp() const { return auto_reserve_destruction_on_zero_hp_; }
+	void SetAutoReserveDestructionOnZeroHp(const _bool _auto_reserve) { auto_reserve_destruction_on_zero_hp_ = _auto_reserve; }
+
 	_bool IsInvincible() const { return is_invincible_; }
 	void SetInvincible(const _bool _invincible) { is_invincible_ = _invincible; }
 
@@ -64,6 +67,7 @@ private:
 	_int att_ = 0;
 
 	_bool is_dead_ = false; // 캐릭터의 생사 여부를 관리하는 플래그. 필요에 따라 구현.
+	_bool auto_reserve_destruction_on_zero_hp_ = true; // 체력이 0이 되었을 때 즉시 삭제 예약할지 여부.
 	_bool is_invincible_ = false; // 무적 상태 여부를 관리하는 플래그. 필요에 따라 구현.
 };
 

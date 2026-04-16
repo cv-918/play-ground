@@ -8,9 +8,6 @@ _bool NonPlayableMovement::Initialize()
 
 	switch (move_pattern_)
 	{
-	case MovementPattern::Stopped:
-		move_func_ = [this](_double _delta_time) { _ProcessOnstopped(_delta_time); };
-		break;
 	case MovementPattern::Directional:
 		move_func_ = [this](_double _delta_time) { _ProcessOnDirectional(_delta_time); };
 		break;
@@ -22,13 +19,6 @@ _bool NonPlayableMovement::Initialize()
 	MAKE_INITIALIZED;
 	return true;
 }
-
-void NonPlayableMovement::_ProcessOnstopped(_double _delta_time)
-{
-	// 자체적인 이동 외에 '밀림' 같은 내용이 필요하다면 여기에서 구현
-	SetMoveVelocity(_Vector3::Zero());
-}
-
 void NonPlayableMovement::_ProcessOnDirectional(_double _delta_time)
 {
 	// 정해진 방향으로만 직선 이동
