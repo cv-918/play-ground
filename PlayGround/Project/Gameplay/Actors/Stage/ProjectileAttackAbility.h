@@ -41,10 +41,10 @@ private:
 	_double fire_cooldown_acc_ = 0.0;
 	_double attack_motion_elapsed_ = 0.0;
 
-	_double fire_interval_ = 5.0;          // 추후 JSON 데이터화
-	_double attack_motion_duration_ = 0.6; // 추후 JSON 데이터화
+	_double fire_interval_ = 0.0;
+	_double attack_motion_duration_ = 0.0;
 
-	_float attack_range_ = 200.f;          // 추후 JSON 데이터화
+	_float attack_range_ = 0.f;
 
 	_bool fired_in_current_attack_ = false;
 };

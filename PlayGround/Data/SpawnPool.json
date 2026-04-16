@@ -4,7 +4,7 @@
 		"spawn_enemies_info_": [
 			{
 				"id_": 1,
-				"weight_": 60,
+				"weight_": 25,
 				"spawn_interval_": 0.0
 			},
 			{
@@ -14,12 +14,22 @@
 			},
 			{
 				"id_": 3,
-				"weight_": 10,
+				"weight_": 15,
 				"spawn_interval_": 0.0
 			},
 			{
-				"id_": 11,
-				"weight_": 5,
+				"id_": 4,
+				"weight_": 15,
+				"spawn_interval_": 1.0
+			},
+			{
+				"id_": 5,
+				"weight_": 10,
+				"spawn_interval_": 1.0
+			},
+			{
+				"id_": 6,
+				"weight_": 10,
 				"spawn_interval_": 1.0
 			}
 		]

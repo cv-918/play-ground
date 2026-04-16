@@ -162,6 +162,8 @@
     <ClInclude Include="Project\Gameplay\Actors\Stage\EnemyAbilitySet.h" />
     <ClInclude Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.h" />
     <ClInclude Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.h" />
+    <ClInclude Include="Project\Gameplay\Actors\Stage\DashAbility.h" />
+    <ClInclude Include="Project\Gameplay\Common\HitContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -291,6 +293,7 @@
     <ClCompile Include="Project\Gameplay\Actors\Stage\EnemyAbilitySet.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.cpp" />
+    <ClCompile Include="Project\Gameplay\Actors\Stage\DashAbility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />

@@ -90,6 +90,39 @@ enum class EnemySpecialRole
 	Count,
 };
 
+enum class EnemyAbilityFlags : _uint
+{
+	None = 0,
+	ContactAttack = 1 << 0,
+	Dash = 1 << 1,
+	ProjectileAttack = 1 << 2,
+};
+
+/** @brief 비트 OR 연산자 */
+inline EnemyAbilityFlags operator|(EnemyAbilityFlags _lhs, EnemyAbilityFlags _rhs)
+{
+	return s_cast(EnemyAbilityFlags, s_uint(_lhs) | s_uint(_rhs));
+}
+
+/** @brief 비트 AND 연산자 */
+inline EnemyAbilityFlags operator&(EnemyAbilityFlags _lhs, EnemyAbilityFlags _rhs)
+{
+	return s_cast(EnemyAbilityFlags, s_uint(_lhs) & s_uint(_rhs));
+}
+
+/** @brief 비트 OR 대입 연산자 */
+inline EnemyAbilityFlags& operator|=(EnemyAbilityFlags& _lhs, EnemyAbilityFlags _rhs)
+{
+	_lhs = (_lhs | _rhs);
+	return _lhs;
+}
+
+/** @brief 특정 Ability 플래그 포함 여부 확인 */
+inline _bool HasEnemyAbilityFlag(EnemyAbilityFlags _flags, EnemyAbilityFlags _flag)
+{
+	return 0 != (s_uint(_flags) & s_uint(_flag));
+}
+
 enum class ProjectilePattern
 {
 	Undefined = 0,	// 초기화 값
@@ -167,15 +200,30 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	_uint dust_reward_ = 0; // 드랍하는 먼지 보상량
 	_uint dust_resource_count_ = 0; // 드랍하는 먼지 수
 
+	// ------ 이동 관련 ------
+	MovementPattern movement_pattern_ = MovementPattern::Undefined;
+	_uint move_speed_unit_ = 0; // 실제 이동 속도는 이 값에 20.f를 곱해서 계산
+
+	// ------ 능력 관련 ------
+	EnemyAbilityFlags ability_flags_ = EnemyAbilityFlags::None;
+
+	// ------ 공통 공격 관련 ------
+	_float attack_range_ = 0.f;            // 공격 개시 범위
+	_double attack_motion_duration_ = 0.0; // 공격 모션 시간
+
+	// ------ 돌진 관련 ------
+	_float dash_speed_ = 0.f;
+	_double dash_duration_ = 0.0;
+	_double dash_cooldown_ = 0.0;
+	_double dash_recovery_duration_ = 0.0;
+	_float dash_damage_multiplier_ = 1.f;
+	_float dash_knockback_power_ = 0.f;
+
 	// ------ 투사체 관련 ------
-	// 투사체 종류가 다양해진다면, 투사체 스크립트 따로 빼서 넘기는게 나을 수도 있다. 그렇지 않을 경우 이대로
 	ProjectilePattern projectile_pattern_ = ProjectilePattern::Undefined;
 	_float projectile_damage_ = 0.f;
 	_float projectile_speed_ = 0.f;
-
-	// ------ 이동 관련 ------
-	MovementPattern movement_pattern_ = MovementPattern::Undefined;
-	_uint move_speed_unit_ = 0; // 몬스터의 이동 속도 단위. 실제 이동 속도는 이 값에 20.f를 곱해서 계산
+	_float projectile_knockback_power_ = 0.f;
 };
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo

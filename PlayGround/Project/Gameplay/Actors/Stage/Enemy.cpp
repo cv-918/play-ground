@@ -3,6 +3,7 @@
 
 #include "ContactAttackAbility.h"
 #include "ProjectileAttackAbility.h"
+#include "DashAbility.h"
 
 namespace
 {
@@ -123,16 +124,21 @@ _int Enemy::Update(_double _delta_time)
 		_ChangeState(EnemyActionState::Death);
 	}
 
-	// 1. 이번 프레임의 상태/능력 판단을 먼저 수행
+	// 상태 흐름 갱신
 	_UpdateState(_delta_time);
+
+	// 이번 프레임 공격 컨텍스트 초기화
+	attack_context_.Reset();
+
+	// Ability가 이번 프레임의 공격 컨텍스트를 다시 구성
 	ability_set_.OnUpdate(*this, _delta_time);
 
-	// 2. 그 다음 컴포넌트 실행
+	// 컴포넌트 실행
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret)
 		return ret;
 
-	// 3. 후처리
+	// 후처리
 	if (0.0 < hit_flash_timer_)
 		hit_flash_timer_ = std::max(0.0, hit_flash_timer_ - _delta_time);
 
@@ -196,9 +202,33 @@ void Enemy::GetDamage(_float _damage)
 
 	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
 
+	// 동작 도중 피격 당하면 캔슬되고 Hit 상태로 전환.
+	if (EnemyActionState::Attack == action_state_)
+	{
+		movement_->SetAllowNormalMove(false);
+		movement_->StopImmediately();
+
+		movement_->EndDash();
+	}
+
 	// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
 	const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
 	movement_->ApplyKnockback(hit_dir, 800.f);
+
+	// 상태 전환
+	_ChangeState(status_->IsDead() ? EnemyActionState::Death : EnemyActionState::Hit);
+}
+
+void Enemy::ApplyHit(const HitContext& _hit)
+{
+	// 1. 기존 피격 경로 재사용
+	GetDamage(_hit.damage_);
+
+	// 2. 넉백 적용
+	if (movement_ && _hit.knockback_power_ > 0.f)
+	{
+		movement_->ApplyKnockback(_hit.knockback_direction_, _hit.knockback_power_);
+	}
 }
 
 void Enemy::_DrawObjectShape()
@@ -253,20 +283,22 @@ void Enemy::_DrawObjectShape()
 
 void Enemy::_BuildAbilities()
 {
-	// ContactAttack
-	if (info_->contact_damage_ > 0.f)
+	const auto flags = info_->ability_flags_;
+
+	if (HasEnemyAbilityFlag(flags, EnemyAbilityFlags::ContactAttack))
 	{
 		ability_set_.AddAbility(std::make_unique<ContactAttackAbility>());
 	}
 
-	// ProjectileAttack
-	if (ProjectilePattern::Undefined != info_->projectile_pattern_ ||
-		EnemySpecialRole::Shooter == info_->role_)
+	if (HasEnemyAbilityFlag(flags, EnemyAbilityFlags::ProjectileAttack))
 	{
 		ability_set_.AddAbility(std::make_unique<ProjectileAttackAbility>());
 	}
 
-	// Dash (현재 데이터 없음 → 추후 JSON 확장 후 처리)
+	if (HasEnemyAbilityFlag(flags, EnemyAbilityFlags::Dash))
+	{
+		ability_set_.AddAbility(std::make_unique<DashAbility>());
+	}
 }
 
 void Enemy::_ChangeState(EnemyActionState _new_state)

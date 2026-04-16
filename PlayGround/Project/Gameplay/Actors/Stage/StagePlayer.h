@@ -19,6 +19,7 @@ public:
 
 	// IDamagable을(를) 통해 상속됨
 	void GetDamage(_float _damage) override;
+	void ApplyHit(const HitContext& _hit) override;
 
 private:
 	void _DrawObjectShape() override;
