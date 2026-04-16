@@ -45,7 +45,6 @@ _bool StagePlayer::Initialize()
 	// 플레이어 컴포넌트 설정
 	const auto attribute_stat = _UserProfile.GetAttributeStat();
 
-	//transform_->Rotation(0, 1);
 	transform_->Scale(info_->body_size_);
 
 	const auto start_hp = attribute_stat.GetStat(AttributeType::Hp).GetTotalIncrease(info_->hp_);
@@ -57,7 +56,8 @@ _bool StagePlayer::Initialize()
 
 	// 플레이어 콜라이더 설정
 	const auto body_col = GetDefaultCollider(UnitDefaultColliderId::Body);
-	body_col->SetRadius(info_->body_size_); // 플레이어의 몸통 콜라이더는 플레이어 크기에 비례해서 설정
+	body_col->SetRadius(20.f); // 플레이어의 몸통 콜라이더는 플레이어 크기에 비례해서 설정
+	body_col->SetDrawAlways(true);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, body_col);
 
 	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
@@ -263,6 +263,18 @@ void StagePlayer::GetDamage(_float _damage)
 	}
 }
 
+void StagePlayer::ApplyHit(const HitContext& _hit)
+{
+	// 1. 기존 플레이어 피격 로직 재사용
+	GetDamage(_hit.damage_);
+
+	// 2. 넉백 적용
+	if (movement_ && _hit.knockback_power_ > 0.f)
+	{
+		movement_->ApplyKnockback(_hit.knockback_direction_, _hit.knockback_power_);
+	}
+}
+
 void StagePlayer::_DrawObjectShape()
 {
 	if (!player_sprite_ || !player_sprite_->image)
@@ -306,9 +318,20 @@ void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_coll
 	const auto target_enemy = _enemy_body_collider->GameObject();
 	target_enemy->SendMessageToHandlers(
 		HandlerSystemList::Damage,
-		[this](IHandler* _handler)
+		[this, target_enemy](IHandler* _handler)
 		{
-			s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());
+			/*s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());*/
+
+			HitContext hit;
+			hit.source_ = this;
+			hit.damage_ = status_->GetAtt();
+
+			const auto target_pos = target_enemy->GetTransform()->Position();
+			const auto pos = transform_->Position();
+			hit.knockback_direction_ = (target_pos - pos).Normalized();
+			hit.knockback_power_ = hit.damage_ * 0.5f; // 데미지의 절반을 넉백으로 적용 (예시)
+
+			s_cast(IDamagable*, _handler)->ApplyHit(hit);
 			_CameraMgr.Shake(2.f, 0.25f);
 		}
 	);

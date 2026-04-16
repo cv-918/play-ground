@@ -24,7 +24,7 @@ void ContactAttackAbility::_TryAttackPlayer(Enemy& _enemy, Collider* _attack_col
 	if (CollisionLayer::PlayerBody != _other->GetLayer())
 		return;
 
-	const auto info = _enemy.GetEnemyInfo();
+	const auto* info = _enemy.GetEnemyInfo();
 	if (nullptr == info)
 		return;
 
@@ -35,19 +35,37 @@ void ContactAttackAbility::_TryAttackPlayer(Enemy& _enemy, Collider* _attack_col
 	if (nullptr == target_player)
 		return;
 
-	target_player->SendMessageToHandlers(
-		HandlerSystemList::Damage,
-		[&_enemy](IHandler* _handler)
-		{
-			s_cast(IDamagable*, _handler)->GetDamage(_enemy.GetStatus()->GetAtt());
-		}
-	);
+	auto* damagable = d_cast(IDamagable*, target_player);
+	if (nullptr == damagable)
+		return;
+
+	const auto& attack_ctx = _enemy.GetAttackContext();
+
+	const _float base_damage = info->contact_damage_;
+	const _float final_damage = base_damage * attack_ctx.damage_multiplier_;
+
+	const auto attacker_pos = _enemy.GetTransform()->Position();
+	const auto target_pos = target_player->GetTransform()->Position();
+
+	_Vector3 knockback_dir = target_pos - attacker_pos;
+	if (knockback_dir.LengthSq() > 0.f)
+	{
+		knockback_dir = knockback_dir.Normalized();
+	}
+
+	HitContext hit;
+	hit.source_ = &_enemy;
+	hit.damage_ = final_damage;
+	hit.knockback_direction_ = knockback_dir;
+	hit.knockback_power_ = attack_ctx.knockback_power_;
+	hit.is_dash_attack_ = attack_ctx.is_dash_attack_;
+
+	damagable->ApplyHit(hit);
 
 	auto* status = s_cast(Status*, target_player->GetComponent(ComponentType::Status));
 	if (nullptr == status)
 		return;
 
-	// 대상이 살아 있다면, 동일 대상에 대한 재공격 간격을 Attack Collider 타이머로 제어
 	if (!status->IsDead())
 	{
 		_attack_col->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info->attack_speed_);

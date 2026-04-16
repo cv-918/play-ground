@@ -32,18 +32,6 @@ _bool Dust_LintSatellite::Execute(GameObjectBase* _owner, const _Vector3& _direc
 		// Object의 Initialize에서 이를 받아 초기 위치를 잡음
 		c_info.look_point_ = _Vector3(angle_step * i, 0.f, 0.f);
 		_RunState.GetInGameScene()->GetObjectManager()->CreateActor<LintSatelliteObject>(info_, c_info);
-
-		//// 4. 오브젝트 생성 및 씬에 등록
-		//auto satellite = new LintSatelliteObject(info_, c_info);
-		//if (satellite->Initialize())
-		//{
-		//	// 전용 레이어 혹은 기본 스킬 오브젝트 레이어에 등록
-		//	scene->RegisterGameObject(SceneLayer::SkillObject, satellite);
-		//}
-		//else
-		//{
-		//	SAFE_DELETE(satellite);
-		//}
 	}
 
 	// 4. 쿨타임 리셋

@@ -22,10 +22,7 @@ private:
 	void OnCollisionStay(Collider* _this, Collider* _other) override;
 
 	void GetDamage(_float _damage) override;
-
-	/* =========================
-	 * Ability / State System
-	 * ========================= */
+	void ApplyHit(const HitContext& _hit) override;
 
 private:
 	void _BuildAbilities();
@@ -48,6 +45,9 @@ public:
 	InGameScene* GetPlayScene() const { return play_scene_; }
 	const UnitCreationInfo& GetCreationInfo() const { return creation_info_; }
 
+	EnemyAttackContext& GetAttackContext() { return attack_context_; }
+	const EnemyAttackContext& GetAttackContext() const { return attack_context_; }
+
 	void RequestChangeState(EnemyActionState _new_state);
 
 	GameObjectBase* GetPrimaryTarget() const;
@@ -59,6 +59,7 @@ protected:
 
 	EnemyActionState action_state_ = EnemyActionState::Spawn;
 	EnemyAbilitySet ability_set_;
+	EnemyAttackContext attack_context_;
 
 	_double hit_flash_timer_ = 0.0;
 

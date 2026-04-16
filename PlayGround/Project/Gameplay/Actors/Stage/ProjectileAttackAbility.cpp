@@ -9,13 +9,19 @@
 
 void ProjectileAttackAbility::OnInitialize(Enemy& _enemy)
 {
-	fire_cooldown_acc_ = fire_interval_;
+	fire_cooldown_acc_ = 0.0;
 	attack_motion_elapsed_ = 0.0;
 	fired_in_current_attack_ = false;
 
-	// 현재 EnemyJsonInfo에 발사 주기/사거리/모션 시간 필드가 없으므로
-	// 1차 구현에서는 내부 기본값을 사용합니다.
-	// 추후 EnemyJsonInfo 확장 시 여기서 값 반영하도록 변경합니다.
+	const auto* info = _enemy.GetEnemyInfo();
+	if (nullptr == info)
+		return;
+
+	attack_range_ = info->attack_range_;
+	attack_motion_duration_ = info->attack_motion_duration_;
+
+	// 기존 공통 attack_speed_를 공격 간격 계산에 활용
+	fire_interval_ = std::max(0.1, DEFAULT_ATTACK_SPEED - info->attack_speed_);
 }
 
 _bool ProjectileAttackAbility::CanEnterState(const Enemy& _enemy, EnemyActionState _state) const

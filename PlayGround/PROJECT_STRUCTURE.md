@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-15 17:43)
+﻿# Project Structure (Updated: 2026-04-16 17:27)
 
 ```text
 Root
@@ -103,6 +103,8 @@ Root
 |   |   |   +--- Stage
 |   |   |   |   |   ContactAttackAbility.cpp
 |   |   |   |   |   ContactAttackAbility.h
+|   |   |   |   |   DashAbility.cpp
+|   |   |   |   |   DashAbility.h
 |   |   |   |   |   Enemy.cpp
 |   |   |   |   |   Enemy.h
 |   |   |   |   |   EnemyAbilitySet.cpp
@@ -133,6 +135,7 @@ Root
 |   |   |   |   CommonGamePlayDefine.h
 |   |   |   |   CommonGamePlayFunctions.h
 |   |   |   |   CommonGamePlayType.h
+|   |   |   |   HitContext.h
 |   |   +--- Components
 |   |   |   |   Collider.cpp
 |   |   |   |   Collider.h

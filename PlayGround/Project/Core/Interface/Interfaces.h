@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string>
+#include <Common/HitContext.h>
 
 template <typename T>
 class ISingleton abstract
@@ -167,12 +168,22 @@ public:
 
 class IDamagable : public IHandler
 {
-protected:
-	explicit IDamagable() DEFAULT;
-	virtual ~IDamagable() DEFAULT;
+public:
+	virtual ~IDamagable() = default;
 
 public:
-	virtual void GetDamage(_float _damage) PURE;
+	virtual void GetDamage(_float _damage) = 0;
+
+	/**
+	 * @brief 피격 정보를 적용합니다.
+	 *
+	 * 기본 구현은 데미지만 반영합니다.
+	 * 넉백까지 반영해야 하는 실제 유닛은 override 합니다.
+	 */
+	virtual void ApplyHit(const HitContext& _hit)
+	{
+		GetDamage(_hit.damage_);
+	}
 };
 
 class GameObjectBase;
