@@ -28,6 +28,11 @@ protected:
 		, rotate_spd_(1.f), rotate_spd_max_(1.f)
 		, move_func_(nullptr)
 		, use_nav_mesh_(false)
+		, nav_boundary_mode_(NavBoundaryMode::None)
+		, nav_footprint_radius_(0.f)
+		, nav_footprint_offset_y_(0.f)
+		, nav_visual_margin_x_(0.f)
+		, nav_visual_margin_y_(0.f)
 		, transform_(nullptr)
 		, control_mode_(MovementControlMode::Normal)
 		, dash_direction_(_Vector3::Zero())
@@ -81,7 +86,10 @@ public:
 	_float GetRotateSpdMax() const { return rotate_spd_max_; }
 	void SetRotateSpdMax(const _float _spd) { rotate_spd_max_ = _spd; }
 
-	void SetNavMesh(const _Rect& _rt) { nav_mesh_ = _rt; use_nav_mesh_ = true; }
+	void SetNavMesh(const _Rect& _rt) { nav_mesh_ = _rt; use_nav_mesh_ = true; _ClampToNavMesh(); }
+	void SetNavBoundaryMode(NavBoundaryMode _mode) { nav_boundary_mode_ = _mode; }
+	void SetNavFootprint(_float _radius, _float _offset_y = 0.f) { nav_footprint_radius_ = std::max(0.f, _radius); nav_footprint_offset_y_ = _offset_y; }
+	void SetNavVisualMargin(_float _margin_x, _float _margin_y) { nav_visual_margin_x_ = std::max(0.f, _margin_x); nav_visual_margin_y_ = std::max(0.f, _margin_y); }
 
 	MovementControlMode GetControlMode() const { return control_mode_; }
 	_bool IsDashing() const { return control_mode_ == MovementControlMode::Dash; }
@@ -106,6 +114,8 @@ protected:
 	void _UpdateDash(_double _delta_time);
 	void _UpdateImpulse(_double _delta_time);
 	void _ApplyFinalMovement(_double _delta_time);
+	_Vector2 _GetNavSamplePoint() const;
+	void _ClampToNavMesh();
 
 protected:
 	MovementPattern move_pattern_;
@@ -131,6 +141,11 @@ protected:
 
 	_Rect nav_mesh_;
 	_bool use_nav_mesh_;
+	NavBoundaryMode nav_boundary_mode_;
+	_float nav_footprint_radius_;
+	_float nav_footprint_offset_y_;
+	_float nav_visual_margin_x_;
+	_float nav_visual_margin_y_;
 
 	class Transform* transform_;
 

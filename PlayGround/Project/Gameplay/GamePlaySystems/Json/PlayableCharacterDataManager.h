@@ -26,6 +26,11 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	move_speed_max_,
 	acceleration_,
 	friction_,
+	nav_boundary_mode_,
+	nav_footprint_radius_,
+	nav_footprint_offset_y_,
+	nav_visual_margin_x_,
+	nav_visual_margin_y_,
 	animation_clips_
 )
 

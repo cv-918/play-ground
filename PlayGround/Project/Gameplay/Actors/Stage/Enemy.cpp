@@ -9,6 +9,16 @@ namespace
 {
 	constexpr _double ENEMY_HIT_FLASH_DURATION = 0.18;
 	constexpr _double ENEMY_HIT_FLASH_BLINK_INTERVAL = 0.045;
+	constexpr _double ENEMY_SPAWN_FADE_DURATION = 1.0;
+	constexpr _double ENEMY_DEATH_FADE_DURATION = 1.0;
+	constexpr _float TANK_WANDER_RADIUS = 220.f;
+	constexpr _float TANK_WANDER_MIN_TARGET_DISTANCE = 42.f;
+	constexpr _float TANK_WANDER_ARRIVE_DISTANCE = 24.f;
+	constexpr _double TANK_WANDER_WAIT_MIN = 0.8;
+	constexpr _double TANK_WANDER_WAIT_MAX = 2.0;
+	constexpr _double TANK_WANDER_REPICK_TIMEOUT = 4.0;
+	constexpr _uint TANK_WANDER_PICK_TRY_COUNT = 12;
+	constexpr _float TANK_WANDER_TWO_PI = 6.28318530718f;
 }
 
 Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
@@ -29,14 +39,6 @@ Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
 				image_path.c_str());
 			return;
 		}
-
-		// 필요 시 특정 리소스만 수동 피벗 보정 가능
-		// 예시:
-		// _GraphicSourceMgr.SetSpritePivot(image_path, Gdiplus::PointF(
-		// 	enemy_sprite_->visible_bounds.CenterX(),
-		// 	s_cast(_float, enemy_sprite_->visible_bounds.max_y)
-		// ));
-		// enemy_sprite_ = _GraphicSourceMgr.GetSprite(image_path);
 	}
 }
 
@@ -68,10 +70,23 @@ _bool Enemy::Initialize()
 	movement_->SetPattern(info_->movement_pattern_);
 	movement_->SetMoveSpd(info_->move_speed_unit_ * ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER);
 	movement_->SetMoveDir(transform_->Forward2D().Normalized());
-	s_cast(NonPlayableMovement*, movement_)->Target(_RunState.GetPlayer());
+	const auto non_playable_movement = s_cast(NonPlayableMovement*, movement_);
+	non_playable_movement->Target(_RunState.GetPlayer());
+
+	if (_UsesTankWanderPolicy())
+	{
+		movement_->SetPattern(MovementPattern::Directional);
+		movement_->SetMoveDir(_Vector3::Zero());
+		non_playable_movement->Target(nullptr);
+		_InitializeTankWanderRuntime();
+	}
+
 	RegisterComponent(movement_);
+	_ConfigureNavigationProfile();
 
 	// 스테이터스
+	status_->SetAutoReserveDestructionOnZeroHp(false);
+
 	const auto lv = s_int(info_->tier_);
 	const auto scaled_lv = lv * creation_info_.stat_multiplier_;
 	status_->SetLv(lv * scaled_lv);
@@ -112,7 +127,21 @@ _bool Enemy::Initialize()
 	_BuildAbilities();
 	ability_set_.InitializeAll(*this);
 
-	_ChangeState(EnemyActionState::Spawn);
+	render_opacity_ = 0.f;
+	spawn_state_elapsed_ = 0.0;
+	death_state_elapsed_ = 0.0;
+	death_fade_start_opacity_ = 1.f;
+	death_destruction_reserved_ = false;
+
+	if (creation_info_.skip_spawn_fade_)
+	{
+		render_opacity_ = 1.f;
+		_ChangeState(EnemyActionState::Move);
+	}
+	else
+	{
+		_ChangeState(EnemyActionState::Spawn);
+	}
 
 	return true;
 }
@@ -137,6 +166,8 @@ _int Enemy::Update(_double _delta_time)
 	_int ret = __super::Update(_delta_time);
 	if (0 != ret)
 		return ret;
+
+	_UpdateDeferredNavigationActivation();
 
 	// 후처리
 	if (0.0 < hit_flash_timer_)
@@ -183,22 +214,39 @@ void Enemy::OnDestroy()
 
 void Enemy::OnCollisionEnter(Collider* _this, Collider* _other)
 {
+	if (_IsCombatCollisionBlocked())
+		return;
+
 	ability_set_.OnCollisionEnter(*this, _this, _other);
 }
 
 void Enemy::OnCollisionStay(Collider* _this, Collider* _other)
 {
+	if (_IsCombatCollisionBlocked())
+		return;
+
 	ability_set_.OnCollisionStay(*this, _this, _other);
 }
 
 void Enemy::GetDamage(_float _damage)
 {
+	if (_IsCombatCollisionBlocked())
+		return;
+
 	const auto final_damage = combat_->GetDamage(_damage);
-	hit_flash_timer_ = ENEMY_HIT_FLASH_DURATION;
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	play_scene_->ShowDamageUI(final_damage, _Vector2{ position.x, position.y });
+
+	if (status_ && status_->IsDead())
+	{
+		hit_flash_timer_ = 0.0;
+		_ChangeState(EnemyActionState::Death);
+		return;
+	}
+
+	hit_flash_timer_ = ENEMY_HIT_FLASH_DURATION;
 
 	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
 
@@ -221,8 +269,14 @@ void Enemy::GetDamage(_float _damage)
 
 void Enemy::ApplyHit(const HitContext& _hit)
 {
+	if (_IsCombatCollisionBlocked())
+		return;
+
 	// 1. 기존 피격 경로 재사용
 	GetDamage(_hit.damage_);
+
+	if (_IsCombatCollisionBlocked())
+		return;
 
 	// 2. 넉백 적용
 	if (movement_ && _hit.knockback_power_ > 0.f)
@@ -235,7 +289,10 @@ void Enemy::_DrawObjectShape()
 {
 	if (!enemy_sprite_ || !enemy_sprite_->image)
 	{
+		const auto original_color = color_;
+		color_.SetAlpha(render_opacity_);
 		__super::_DrawObjectShape();
+		color_ = original_color;
 		return;
 	}
 
@@ -274,11 +331,11 @@ void Enemy::_DrawObjectShape()
 		const auto fade_out = s_float(hit_flash_timer_ / ENEMY_HIT_FLASH_DURATION);
 		const auto flash = std::clamp(blink_strength * fade_out, 0.0f, 1.0f);
 
-		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, flash);
+		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, flash, _GetRenderAlphaByte());
 		return;
 	}
 
-	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect);
+	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect, false, false, _GetRenderAlphaByte());
 }
 
 void Enemy::_BuildAbilities()
@@ -301,9 +358,80 @@ void Enemy::_BuildAbilities()
 	}
 }
 
+void Enemy::_ConfigureNavigationProfile()
+{
+	if (!movement_)
+		return;
+
+	movement_->SetNavBoundaryMode(info_->nav_boundary_mode_);
+	movement_->SetNavFootprint(info_->nav_footprint_radius_, info_->nav_footprint_offset_y_);
+	movement_->SetNavVisualMargin(info_->nav_visual_margin_x_, info_->nav_visual_margin_y_);
+
+	if (!creation_info_.has_nav_mesh_)
+	{
+		nav_boundary_activation_pending_ = false;
+		return;
+	}
+
+	switch (info_->nav_boundary_mode_)
+	{
+	case NavBoundaryMode::ContainFootprint:
+	case NavBoundaryMode::ContainVisualBounds:
+	{
+		const auto position = transform_ ? transform_->Position() : creation_info_.position_;
+		const auto sample_point = _Vector2{ position.x, position.y + info_->nav_footprint_offset_y_ };
+		const auto is_inside_nav_mesh = creation_info_.nav_mesh_.PtInRect(sample_point);
+
+		if (is_inside_nav_mesh)
+		{
+			SetNavMesh(creation_info_.nav_mesh_);
+			nav_boundary_activation_pending_ = false;
+		}
+		else
+		{
+			// 화면 밖에서 자연스럽게 진입하도록, footprint가 nav mesh 안에 들어올 때까지는 보정을 유예한다.
+			nav_boundary_activation_pending_ = true;
+		}
+		break;
+	}
+
+	case NavBoundaryMode::None:
+	default:
+		nav_boundary_activation_pending_ = false;
+		break;
+	}
+}
+
+void Enemy::_UpdateDeferredNavigationActivation()
+{
+	if (!nav_boundary_activation_pending_ || !transform_)
+		return;
+
+	const auto position = transform_->Position();
+	const auto sample_point = _Vector2{ position.x, position.y + info_->nav_footprint_offset_y_ };
+	if (!creation_info_.nav_mesh_.PtInRect(sample_point))
+		return;
+
+	SetNavMesh(creation_info_.nav_mesh_);
+	nav_boundary_activation_pending_ = false;
+}
+
 void Enemy::_ChangeState(EnemyActionState _new_state)
 {
 	if (action_state_ == _new_state)
+		return;
+
+	if (EnemyActionState::Death == action_state_ && EnemyActionState::Death != _new_state)
+		return;
+
+	if (EnemyActionState::Spawn == action_state_ &&
+		EnemyActionState::Move != _new_state &&
+		EnemyActionState::Death != _new_state)
+	{
+		return;
+	}
+
+	if (status_ && status_->IsDead() && EnemyActionState::Death != _new_state)
 		return;
 
 	if (!ability_set_.CanEnterState(*this, _new_state))
@@ -312,6 +440,56 @@ void Enemy::_ChangeState(EnemyActionState _new_state)
 	ability_set_.OnExitState(*this, action_state_);
 
 	action_state_ = _new_state;
+
+	switch (action_state_)
+	{
+	case EnemyActionState::Spawn:
+		spawn_state_elapsed_ = 0.0;
+		render_opacity_ = 0.f;
+		death_destruction_reserved_ = false;
+		_DisableCombatCollisions();
+		if (movement_)
+		{
+			movement_->SetAllowNormalMove(false);
+			movement_->StopImmediately();
+			movement_->EndDash();
+		}
+		break;
+
+	case EnemyActionState::Idle:
+		if (movement_)
+		{
+			movement_->SetAllowNormalMove(false);
+			movement_->StopImmediately();
+		}
+		break;
+
+	case EnemyActionState::Move:
+		render_opacity_ = 1.f;
+		_EnableCombatCollisions();
+		if (movement_ && (!status_ || !status_->IsDead()))
+		{
+			movement_->SetAllowNormalMove(true);
+		}
+		break;
+
+	case EnemyActionState::Death:
+		death_state_elapsed_ = 0.0;
+		death_fade_start_opacity_ = render_opacity_;
+		death_destruction_reserved_ = false;
+		hit_flash_timer_ = 0.0;
+		_DisableCombatCollisions();
+		if (movement_)
+		{
+			movement_->SetAllowNormalMove(false);
+			movement_->StopImmediately();
+			movement_->EndDash();
+		}
+		break;
+
+	default:
+		break;
+	}
 
 	ability_set_.OnEnterState(*this, action_state_);
 }
@@ -343,8 +521,21 @@ void Enemy::_UpdateState(_double _delta_time)
 
 void Enemy::_UpdateOnSpawn(_double _delta_time)
 {
-	// 현재는 즉시 Move 진입
-	_ChangeState(EnemyActionState::Move);
+	if (movement_)
+	{
+		movement_->SetAllowNormalMove(false);
+		movement_->StopImmediately();
+	}
+
+	spawn_state_elapsed_ = std::min(spawn_state_elapsed_ + _delta_time, ENEMY_SPAWN_FADE_DURATION);
+	const auto t = s_float(spawn_state_elapsed_ / ENEMY_SPAWN_FADE_DURATION);
+	render_opacity_ = std::clamp(t, 0.f, 1.f);
+
+	if (spawn_state_elapsed_ >= ENEMY_SPAWN_FADE_DURATION)
+	{
+		render_opacity_ = 1.f;
+		_ChangeState(EnemyActionState::Move);
+	}
 }
 
 void Enemy::_UpdateOnIdle(_double _delta_time)
@@ -355,7 +546,15 @@ void Enemy::_UpdateOnIdle(_double _delta_time)
 
 void Enemy::_UpdateOnMove(_double _delta_time)
 {
-	// 기본 이동은 Movement 컴포넌트가 처리
+	render_opacity_ = 1.f;
+
+	if (movement_ && (!status_ || !status_->IsDead()))
+		movement_->SetAllowNormalMove(true);
+
+	if (_UsesTankWanderPolicy())
+	{
+		_UpdateTankWander(_delta_time);
+	}
 }
 
 void Enemy::_UpdateOnHit(_double _delta_time)
@@ -374,7 +573,22 @@ void Enemy::_UpdateOnAttack(_double _delta_time)
 void Enemy::_UpdateOnDeath(_double _delta_time)
 {
 	if (movement_)
+	{
+		movement_->SetAllowNormalMove(false);
 		movement_->StopImmediately();
+	}
+
+	death_state_elapsed_ = std::min(death_state_elapsed_ + _delta_time, ENEMY_DEATH_FADE_DURATION);
+
+	const auto t = s_float(death_state_elapsed_ / ENEMY_DEATH_FADE_DURATION);
+	render_opacity_ = std::clamp(death_fade_start_opacity_ * (1.f - t), 0.f, 1.f);
+
+	if (!death_destruction_reserved_ && death_state_elapsed_ >= ENEMY_DEATH_FADE_DURATION)
+	{
+		render_opacity_ = 0.f;
+		death_destruction_reserved_ = true;
+		ReserveDestruction();
+	}
 }
 
 void Enemy::RequestChangeState(EnemyActionState _new_state)
@@ -384,6 +598,9 @@ void Enemy::RequestChangeState(EnemyActionState _new_state)
 
 GameObjectBase* Enemy::GetPrimaryTarget() const
 {
+	if (_UsesTankWanderPolicy())
+		return nullptr;
+
 	return _RunState.GetPlayer();
 }
 
@@ -391,4 +608,208 @@ void Enemy::FaceTo(_Vector3 _target_pos)
 {
 	if (transform_)
 		transform_->LookAt(_target_pos);
+}
+
+_ubyte Enemy::_GetRenderAlphaByte() const
+{
+	return s_ubyte(std::round(std::clamp(render_opacity_, 0.f, 1.f) * 255.f));
+}
+
+void Enemy::_EnableCombatCollisions()
+{
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	if (body_collider)
+	{
+		body_collider->Activate();
+		_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+		_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
+	}
+
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	if (attack_collider)
+	{
+		attack_collider->ClearCollisionState();
+
+		if (info_->contact_damage_ > 0.f)
+		{
+			attack_collider->Activate();
+			_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+			_ColMgr.RegisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+		}
+		else
+		{
+			attack_collider->InActivate();
+			_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+		}
+	}
+}
+
+void Enemy::_DisableCombatCollisions()
+{
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	if (body_collider)
+	{
+		body_collider->ClearCollisionState();
+		body_collider->InActivate();
+		_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
+	}
+
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	if (attack_collider)
+	{
+		attack_collider->ClearCollisionState();
+		attack_collider->InActivate();
+		_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
+	}
+}
+
+_bool Enemy::_IsCombatCollisionBlocked() const
+{
+	return (action_state_ == EnemyActionState::Spawn) ||
+		(action_state_ == EnemyActionState::Death) ||
+		(status_ && status_->IsDead());
+}
+
+_bool Enemy::_UsesTankWanderPolicy() const
+{
+	return info_ && info_->role_ == EnemySpecialRole::Tank;
+}
+
+void Enemy::_InitializeTankWanderRuntime()
+{
+	tank_wander_.anchor_ = _ClampPointToMoveBounds(creation_info_.position_);
+	tank_wander_.target_point_ = tank_wander_.anchor_;
+	tank_wander_.wait_timer_ = 0.0;
+	tank_wander_.repick_elapsed_ = 0.0;
+	tank_wander_.has_target_ = false;
+}
+
+void Enemy::_UpdateTankWander(_double _delta_time)
+{
+	if (!movement_ || !transform_)
+		return;
+
+	tank_wander_.repick_elapsed_ += _delta_time;
+
+	if (tank_wander_.wait_timer_ > 0.0)
+	{
+		tank_wander_.wait_timer_ = std::max(0.0, tank_wander_.wait_timer_ - _delta_time);
+		movement_->SetMoveDir(_Vector3::Zero());
+		return;
+	}
+
+	const auto position = transform_->Position();
+	const auto to_target = tank_wander_.target_point_ - position;
+	const auto arrive_distance_sq = TANK_WANDER_ARRIVE_DISTANCE * TANK_WANDER_ARRIVE_DISTANCE;
+	const auto has_arrived = tank_wander_.has_target_ && to_target.LengthSq() <= arrive_distance_sq;
+
+	if (has_arrived)
+	{
+		tank_wander_.has_target_ = false;
+		tank_wander_.repick_elapsed_ = 0.0;
+		tank_wander_.wait_timer_ = _Random.Range(TANK_WANDER_WAIT_MIN, TANK_WANDER_WAIT_MAX);
+		movement_->SetMoveDir(_Vector3::Zero());
+		return;
+	}
+
+	if (!tank_wander_.has_target_ || tank_wander_.repick_elapsed_ >= TANK_WANDER_REPICK_TIMEOUT)
+	{
+		tank_wander_.repick_elapsed_ = 0.0;
+		if (!_TryPickTankWanderTarget())
+		{
+			movement_->SetMoveDir(_Vector3::Zero());
+			return;
+		}
+	}
+
+	const auto wander_dir = (tank_wander_.target_point_ - transform_->Position()).Normalized();
+	if (wander_dir.LengthSq() <= 0.f)
+	{
+		movement_->SetMoveDir(_Vector3::Zero());
+		return;
+	}
+
+	FaceTo(tank_wander_.target_point_);
+	movement_->SetMoveDir(wander_dir);
+}
+
+_bool Enemy::_TryPickTankWanderTarget()
+{
+	if (!transform_)
+		return false;
+
+	const auto position = transform_->Position();
+	const auto min_distance_sq = TANK_WANDER_MIN_TARGET_DISTANCE * TANK_WANDER_MIN_TARGET_DISTANCE;
+
+	for (_uint attempt = 0; attempt < TANK_WANDER_PICK_TRY_COUNT; ++attempt)
+	{
+		const auto angle = _Random.Range(0.f, TANK_WANDER_TWO_PI);
+		const auto distance = _Random.Range(TANK_WANDER_MIN_TARGET_DISTANCE, TANK_WANDER_RADIUS);
+		const _Vector3 offset{
+			std::cos(angle) * distance,
+			std::sin(angle) * distance,
+			0.f
+		};
+
+		const auto candidate = _ClampPointToMoveBounds(tank_wander_.anchor_ + offset);
+		if ((candidate - position).LengthSq() <= min_distance_sq)
+			continue;
+
+		tank_wander_.target_point_ = candidate;
+		tank_wander_.has_target_ = true;
+		return true;
+	}
+
+	const auto fallback_point = _ClampPointToMoveBounds(tank_wander_.anchor_);
+	if ((fallback_point - position).LengthSq() <= min_distance_sq)
+	{
+		tank_wander_.has_target_ = false;
+		return false;
+	}
+
+	tank_wander_.target_point_ = fallback_point;
+	tank_wander_.has_target_ = true;
+	return true;
+}
+
+_Vector3 Enemy::_ClampPointToMoveBounds(const _Vector3& _point) const
+{
+	if (!creation_info_.has_nav_mesh_)
+		return _point;
+
+	if (info_->nav_boundary_mode_ == NavBoundaryMode::None)
+		return _point;
+
+	auto clamped = _point;
+
+	const auto footprint_radius = std::max(0.f, info_->nav_footprint_radius_);
+	_float margin_x = footprint_radius;
+	_float margin_y = footprint_radius;
+
+	if (info_->nav_boundary_mode_ == NavBoundaryMode::ContainVisualBounds)
+	{
+		margin_x += std::max(0.f, info_->nav_visual_margin_x_);
+		margin_y += std::max(0.f, info_->nav_visual_margin_y_);
+	}
+
+	auto sample = _Vector2{ clamped.x, clamped.y + info_->nav_footprint_offset_y_ };
+
+	const auto min_x = creation_info_.nav_mesh_.Left_f() + margin_x;
+	const auto max_x = creation_info_.nav_mesh_.Right_f() - margin_x;
+	const auto min_y = creation_info_.nav_mesh_.Top_f() + margin_y;
+	const auto max_y = creation_info_.nav_mesh_.Bottom_f() - margin_y;
+
+	if (min_x <= max_x)
+		sample.x = std::clamp(sample.x, min_x, max_x);
+	else
+		sample.x = (min_x + max_x) * 0.5f;
+
+	if (min_y <= max_y)
+		sample.y = std::clamp(sample.y, min_y, max_y);
+	else
+		sample.y = (min_y + max_y) * 0.5f;
+
+	clamped.x = sample.x;
+	clamped.y = sample.y - info_->nav_footprint_offset_y_;
+	return clamped;
 }

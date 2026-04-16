@@ -128,6 +128,27 @@ void Collider::DeregisterFromCollidedList(Collider* _other)
 		});
 }
 
+void Collider::ClearCollisionState()
+{
+	if (!collided_colliders_.empty())
+	{
+		std::vector<Collider*> others(collided_colliders_.begin(), collided_colliders_.end());
+		for (auto* other : others)
+		{
+			if (!other)
+				continue;
+
+			other->DeregisterFromCollidedList(this);
+			other->EraseTimerTarget(this);
+			DeregisterFromCollidedList(other);
+		}
+	}
+
+	collision_timers_.clear();
+	erase_waiting_list_.clear();
+	_UpdateIsCollidingState();
+}
+
 void Collider::SetTimerForTarget(Collider* _other, _double _time)
 {
 	if (!_other)

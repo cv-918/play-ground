@@ -91,10 +91,6 @@ namespace CommonGamePlayFunctions
 	{
 		switch (_movement_pattern)
 		{
-		case MovementPattern::Playable:
-			return L"Playable";
-		case MovementPattern::Stopped:
-			return L"Stopped";
 		case MovementPattern::Directional:
 			return L"Directional";
 		case MovementPattern::Target:

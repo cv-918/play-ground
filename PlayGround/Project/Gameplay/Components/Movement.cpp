@@ -37,6 +37,15 @@ void Movement::Render(_double _delta_time)
 
 		_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Palette::Crimson);
 	}
+
+	if (use_nav_mesh_ && nav_boundary_mode_ != NavBoundaryMode::None && nav_footprint_radius_ > 0.f)
+	{
+		const auto sample = _GetNavSamplePoint();
+		const auto screen_sample = _CameraMgr.WorldToScreen(sample);
+		const _float diameter = nav_footprint_radius_ * 2.f;
+		const _Point lt = { s_int(screen_sample.x - nav_footprint_radius_), s_int(screen_sample.y - nav_footprint_radius_) };
+		_DrawFunc::DrawEllipse({ lt, _Size{ diameter, diameter } }, Palette::Gold, 1.25f);
+	}
 }
 
 void Movement::SetAsMaxSpeed()
@@ -178,35 +187,65 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 	final_velocity += impulse_velocity_;
 
 	if (final_velocity.LengthSq() <= 0.f)
+	{
+		_ClampToNavMesh();
 		return;
+	}
 
 	const _Vector3 delta = final_velocity * s_cast(_float, _delta_time);
-   transform_->Translate(delta);
+	transform_->Translate(delta);
+	_ClampToNavMesh();
+}
 
-	if (!use_nav_mesh_)
+_Vector2 Movement::_GetNavSamplePoint() const
+{
+	if (!transform_)
+		return _Vector2::Zero();
+
+	const auto position = transform_->Position();
+	return _Vector2{ position.x, position.y + nav_footprint_offset_y_ };
+}
+
+void Movement::_ClampToNavMesh()
+{
+	if (!use_nav_mesh_ || !transform_)
+		return;
+
+	if (nav_boundary_mode_ == NavBoundaryMode::None)
 		return;
 
 	if (nav_mesh_.Width() <= 0 || nav_mesh_.Height() <= 0)
 		return;
 
-	auto position = transform_->Position();
-	const auto radius_x = transform_->Scale().x;
-	const auto radius_y = radius_x * 0.6f;
+	const auto footprint_radius = std::max(0.f, nav_footprint_radius_);
+	_float margin_x = footprint_radius;
+	_float margin_y = footprint_radius;
 
-	const auto min_x = nav_mesh_.Left_f() + radius_x;
-	const auto max_x = nav_mesh_.Right_f() - radius_x;
-	const auto min_y = nav_mesh_.Top_f() + radius_y;
-	const auto max_y = nav_mesh_.Bottom_f() - radius_y;
+	if (nav_boundary_mode_ == NavBoundaryMode::ContainVisualBounds)
+	{
+		margin_x += nav_visual_margin_x_;
+		margin_y += nav_visual_margin_y_;
+	}
+
+	auto sample = _GetNavSamplePoint();
+
+	const auto min_x = nav_mesh_.Left_f() + margin_x;
+	const auto max_x = nav_mesh_.Right_f() - margin_x;
+	const auto min_y = nav_mesh_.Top_f() + margin_y;
+	const auto max_y = nav_mesh_.Bottom_f() - margin_y;
 
 	if (min_x <= max_x)
-		position.x = std::clamp(position.x, min_x, max_x);
+		sample.x = std::clamp(sample.x, min_x, max_x);
 	else
-		position.x = (min_x + max_x) * 0.5f;
+		sample.x = (min_x + max_x) * 0.5f;
 
 	if (min_y <= max_y)
-		position.y = std::clamp(position.y, min_y, max_y);
+		sample.y = std::clamp(sample.y, min_y, max_y);
 	else
-		position.y = (min_y + max_y) * 0.5f;
+		sample.y = (min_y + max_y) * 0.5f;
 
+	auto position = transform_->Position();
+	position.x = sample.x;
+	position.y = sample.y - nav_footprint_offset_y_;
 	transform_->Position(position);
 }

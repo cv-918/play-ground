@@ -25,6 +25,7 @@ public:
 	virtual _bool CheckCollided(Collider* _other) PURE;
 	void RegisterOnCollidedList(Collider* _other);
 	void DeregisterFromCollidedList(Collider* _other);
+	void ClearCollisionState();
 
 	ColliderType GetType() const { return type_; }
 

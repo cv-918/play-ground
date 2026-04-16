@@ -2,6 +2,8 @@
 #include "SpriteAnimatorComponent.h"
 #include "SpriteRendererComponent.h"
 
+#include "Core/Math/MathFunctions.h"
+
 SpriteAnimatorComponent::SpriteAnimatorComponent()
 	: ComponentBase(ComponentType::SpriteAnimator)
 {
@@ -23,11 +25,23 @@ _bool SpriteAnimatorComponent::Initialize()
  */
 _int SpriteAnimatorComponent::LateUpdate(_double _delta_time)
 {
+	const auto delta_time = s_cast(_float, _delta_time);
+	_bool has_visual_change = false;
+
+	if (is_fading_ == true)
+	{
+		_UpdateFade(delta_time);
+		has_visual_change = true;
+	}
+
 	if ((is_playing_ == true) && (is_paused_ == false))
 	{
-		_Advance(s_cast(_float, _delta_time));
-		_PushCurrentFrameToRenderer();
+		_Advance(delta_time);
+		has_visual_change = true;
 	}
+
+	if (has_visual_change == true)
+		_PushCurrentFrameToRenderer();
 
 	return UPDATE_CONTINUE;
 }
@@ -52,6 +66,12 @@ _bool SpriteAnimatorComponent::SetAnimationSet(const SpriteAnimationSetData* _an
 	current_frame_index_ = 0;
 	frame_elapsed_ = 0.f;
 	speed_ = 1.f;
+	opacity_ = 1.f;
+	fade_start_opacity_ = 1.f;
+	fade_target_opacity_ = 1.f;
+	fade_duration_ = 0.f;
+	fade_elapsed_ = 0.f;
+	is_fading_ = false;
 	is_playing_ = false;
 	is_paused_ = false;
 	is_finished_ = false;
@@ -130,6 +150,77 @@ void SpriteAnimatorComponent::SetSpeed(_float _speed)
 }
 
 /**
+ * 전체 투명도를 즉시 설정한다.
+ */
+void SpriteAnimatorComponent::SetOpacity(_float _opacity)
+{
+	opacity_ = MathFunctions::Clamp(_opacity, 0.f, 1.f);
+	fade_start_opacity_ = opacity_;
+	fade_target_opacity_ = opacity_;
+	fade_duration_ = 0.f;
+	fade_elapsed_ = 0.f;
+	is_fading_ = false;
+	_PushCurrentFrameToRenderer();
+}
+
+/**
+ * 현재 전체 투명도를 반환한다.
+ */
+_float SpriteAnimatorComponent::GetOpacity() const
+{
+	return opacity_;
+}
+
+/**
+ * 현재 값에서 1.0까지 페이드 인한다.
+ */
+void SpriteAnimatorComponent::FadeIn(_float _duration, _bool _from_zero)
+{
+	if (_from_zero == true)
+		opacity_ = 0.f;
+
+	fade_start_opacity_ = opacity_;
+	fade_target_opacity_ = 1.f;
+	fade_duration_ = std::max(0.f, _duration);
+	fade_elapsed_ = 0.f;
+	is_fading_ = (fade_duration_ > 0.f);
+
+	if (is_fading_ == false)
+		opacity_ = fade_target_opacity_;
+
+	_PushCurrentFrameToRenderer();
+}
+
+/**
+ * 현재 값에서 0.0까지 페이드 아웃한다.
+ */
+void SpriteAnimatorComponent::FadeOut(_float _duration)
+{
+	fade_start_opacity_ = opacity_;
+	fade_target_opacity_ = 0.f;
+	fade_duration_ = std::max(0.f, _duration);
+	fade_elapsed_ = 0.f;
+	is_fading_ = (fade_duration_ > 0.f);
+
+	if (is_fading_ == false)
+		opacity_ = fade_target_opacity_;
+
+	_PushCurrentFrameToRenderer();
+}
+
+/**
+ * 진행 중인 페이드를 중단한다.
+ */
+void SpriteAnimatorComponent::ClearFade()
+{
+	fade_start_opacity_ = opacity_;
+	fade_target_opacity_ = opacity_;
+	fade_duration_ = 0.f;
+	fade_elapsed_ = 0.f;
+	is_fading_ = false;
+}
+
+/**
  * 좌우 반전 여부를 설정한다.
  */
 void SpriteAnimatorComponent::SetFlipX(_bool _flip_x)
@@ -163,9 +254,7 @@ _bool SpriteAnimatorComponent::_SetCurrentClip(const std::wstring& _clip_name)
 		// fallback: 첫 번째 클립 사용
 		if (!animation_set_->clips.empty())
 		{
-			current_clip_ = &animation_set_->clips.begin()->second;
-			current_clip_name_ = current_clip_->clip_name;
-			return true;
+			return _SetCurrentClip(animation_set_->clips.begin()->first);
 		}
 
 		return false;
@@ -216,6 +305,33 @@ void SpriteAnimatorComponent::_Advance(_float _delta_time)
 
 		if (is_playing_ == false)
 			break;
+	}
+}
+
+/**
+ * 페이드를 갱신한다.
+ */
+void SpriteAnimatorComponent::_UpdateFade(_float _delta_time)
+{
+	if (is_fading_ == false)
+		return;
+
+	if (fade_duration_ <= 0.f)
+	{
+		opacity_ = fade_target_opacity_;
+		is_fading_ = false;
+		return;
+	}
+
+	fade_elapsed_ = std::min(fade_elapsed_ + std::max(0.f, _delta_time), fade_duration_);
+
+	const auto t = fade_elapsed_ / fade_duration_;
+	opacity_ = _MathFunc::Lerp(fade_start_opacity_, fade_target_opacity_, t);
+
+	if (fade_elapsed_ >= fade_duration_)
+	{
+		opacity_ = fade_target_opacity_;
+		is_fading_ = false;
 	}
 }
 
@@ -333,8 +449,17 @@ void SpriteAnimatorComponent::_PushCurrentFrameToRenderer()
 	cmd.visible_height = std::max(1.f, sprite.visible_height);
 	cmd.flip_x = flip_x_;
 	cmd.flip_y = flip_y_;
-	cmd.alpha = 255;
-	cmd.visible = (sprite.texture != nullptr);
+	cmd.alpha = _GetCurrentAlphaByte();
+	cmd.visible = (sprite.texture != nullptr) && (cmd.alpha > 0);
 
 	renderer_->SetRenderCommand(cmd);
+}
+
+/**
+ * 현재 opacity 값을 알파 바이트로 변환한다.
+ */
+_ubyte SpriteAnimatorComponent::_GetCurrentAlphaByte() const
+{
+	const auto opacity = MathFunctions::Clamp(opacity_, 0.f, 1.f);
+	return s_ubyte(std::round(opacity * 255.f));
 }

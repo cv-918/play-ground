@@ -61,6 +61,31 @@ public:
 	void SetSpeed(_float _speed);
 
 	/**
+	 * 즉시 적용되는 전체 투명도를 설정한다. (0~1)
+	 */
+	void SetOpacity(_float _opacity);
+
+	/**
+	 * 현재 전체 투명도를 반환한다. (0~1)
+	 */
+	_float GetOpacity() const;
+
+	/**
+	 * 현재 값에서 1.0까지 페이드 인한다.
+	 */
+	void FadeIn(_float _duration, _bool _from_zero = true);
+
+	/**
+	 * 현재 값에서 0.0까지 페이드 아웃한다.
+	 */
+	void FadeOut(_float _duration);
+
+	/**
+	 * 진행 중인 페이드를 종료하고 현재 투명도를 유지한다.
+	 */
+	void ClearFade();
+
+	/**
 	 * 좌우 반전 여부를 설정한다.
 	 */
 	void SetFlipX(_bool _flip_x);
@@ -82,6 +107,11 @@ private:
 	void _Advance(_float _delta_time);
 
 	/**
+	 * 페이드 상태를 진행한다.
+	 */
+	void _UpdateFade(_float _delta_time);
+
+	/**
 	 * 다음 프레임으로 진행한다.
 	 */
 	void _StepNextFrame();
@@ -100,6 +130,11 @@ private:
 	 * 현재 프레임을 렌더러에 반영한다.
 	 */
 	void _PushCurrentFrameToRenderer();
+
+	/**
+	 * 현재 투명도를 드로우 알파 값으로 변환한다.
+	 */
+	_ubyte _GetCurrentAlphaByte() const;
 
 private:
 	/** 연결된 렌더러 */
@@ -122,6 +157,20 @@ private:
 
 	/** 런타임 재생 속도 */
 	_float speed_ = 1.f;
+
+	/** 전체 투명도 */
+	_float opacity_ = 1.f;
+
+	/** 페이드 시작/목표 값 */
+	_float fade_start_opacity_ = 1.f;
+	_float fade_target_opacity_ = 1.f;
+
+	/** 페이드 진행 시간 */
+	_float fade_duration_ = 0.f;
+	_float fade_elapsed_ = 0.f;
+
+	/** 페이드 진행 여부 */
+	_bool is_fading_ = false;
 
 	/** 재생 중 여부 */
 	_bool is_playing_ = false;

@@ -25,9 +25,25 @@ private:
 	void ApplyHit(const HitContext& _hit) override;
 
 private:
+	struct TankWanderRuntime
+	{
+		_Vector3 anchor_ = _Vector3::Zero();
+		_Vector3 target_point_ = _Vector3::Zero();
+		_double wait_timer_ = 0.0;
+		_double repick_elapsed_ = 0.0;
+		_bool has_target_ = false;
+	};
+
+private:
 	void _BuildAbilities();
+	void _ConfigureNavigationProfile();
+	void _UpdateDeferredNavigationActivation();
 	void _ChangeState(EnemyActionState _new_state);
 	void _UpdateState(_double _delta_time);
+	_ubyte _GetRenderAlphaByte() const;
+	void _EnableCombatCollisions();
+	void _DisableCombatCollisions();
+	_bool _IsCombatCollisionBlocked() const;
 
 	void _UpdateOnSpawn(_double _delta_time);
 	void _UpdateOnIdle(_double _delta_time);
@@ -35,6 +51,11 @@ private:
 	void _UpdateOnHit(_double _delta_time);
 	void _UpdateOnAttack(_double _delta_time);
 	void _UpdateOnDeath(_double _delta_time);
+	_bool _UsesTankWanderPolicy() const;
+	void _InitializeTankWanderRuntime();
+	void _UpdateTankWander(_double _delta_time);
+	_bool _TryPickTankWanderTarget();
+	_Vector3 _ClampPointToMoveBounds(const _Vector3& _point) const;
 
 	void _DrawObjectShape() override;
 
@@ -57,11 +78,20 @@ protected:
 	const EnemyJsonInfo* info_ = nullptr;
 	const UnitCreationInfo creation_info_;
 
-	EnemyActionState action_state_ = EnemyActionState::Spawn;
+	EnemyActionState action_state_ = EnemyActionState::Idle;
 	EnemyAbilitySet ability_set_;
 	EnemyAttackContext attack_context_;
 
 	_double hit_flash_timer_ = 0.0;
+	_double spawn_state_elapsed_ = 0.0;
+	_double death_state_elapsed_ = 0.0;
+
+	_float render_opacity_ = 0.f;
+	_float death_fade_start_opacity_ = 1.f;
+
+	_bool death_destruction_reserved_ = false;
+	_bool nav_boundary_activation_pending_ = false;
+	TankWanderRuntime tank_wander_;
 
 	const SpriteResource* enemy_sprite_ = nullptr;
 };

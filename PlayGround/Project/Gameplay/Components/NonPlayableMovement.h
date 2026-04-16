@@ -9,7 +9,6 @@ public:
 	_bool Initialize() override;
 
 private:
-	void _ProcessOnstopped(_double _delta_time);
 	void _ProcessOnDirectional(_double _delta_time);
 	void _ProcessOnToTarget(_double _delta_time);
 

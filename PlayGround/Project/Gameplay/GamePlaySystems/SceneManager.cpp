@@ -1,5 +1,7 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "SceneManager.h"
+
+#include "EngineSystems/Render/ScreenSystem.h"
 
 #include "Scenes/Scene.h"
 #include "Scenes/IntroScene.h"
@@ -14,30 +16,36 @@ SceneManager::~SceneManager()
 
 _bool SceneManager::Initialize()
 {
-	// 초기 씬 설정 등 필요한 초기화 작업 수행
-	// 예시: 첫 번째 씬을 설정하거나, 리소스 로드 등을 수행할 수 있습니다.
-
-	ChangeScene(SceneType::Intro); // 초기 씬을 Intro으로 설정
+	// Queue the first scene so the game can start with a fade-in.
+	ChangeScene(SceneType::Intro);
 	return true;
 }
 
 _int SceneManager::Update(_double _delta_time)
 {
-	if (next_scene_type_ != SceneType::Count)
-	{
-		_CleanupCurrentScene();
+	if (curr_scene_ == nullptr && next_scene_type_ != SceneType::Count)
 		_CreateNextScene();
-		return UPDATE_BREAK;
+
+	if (transition_phase_ == TransitionPhase::FadingOut)
+	{
+		_UpdateTransition(_delta_time);
+		return UPDATE_CONTINUE;
 	}
 
 	if (curr_scene_ && curr_scene_->IsActive())
 		curr_scene_->Update(_delta_time);
+
+	if (transition_phase_ == TransitionPhase::FadingIn)
+		_UpdateTransition(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
 
 _int SceneManager::LateUpdate(_double _delta_time)
 {
+	if (transition_phase_ == TransitionPhase::FadingOut)
+		return UPDATE_CONTINUE;
+
 	if (curr_scene_ && curr_scene_->IsActive())
 		curr_scene_->LateUpdate(_delta_time);
 
@@ -48,12 +56,96 @@ void SceneManager::Render(_double _delta_time)
 {
 	if (curr_scene_ && curr_scene_->IsActive())
 		curr_scene_->Render(_delta_time);
+
+	_RenderTransitionOverlay();
 }
 
-void SceneManager::ChangeScene(const SceneType _type)
+void SceneManager::ChangeScene(const SceneType _type, const _bool _force_reload)
 {
+	if (_type == SceneType::Count)
+	{
+		_SYSTEM_LOG_ERROR(_T("Invalid scene change requested."));
+		return;
+	}
+
+	if (!_force_reload &&
+		_type == curr_scene_type_ &&
+		next_scene_type_ == SceneType::Count &&
+		transition_phase_ == TransitionPhase::None)
+	{
+		_SYSTEM_LOG_INFO(_T("Scene change ignored. Already in [%s]."), _GetSceneName(_type).c_str());
+		return;
+	}
+
 	next_scene_type_ = _type;
+
+	if (curr_scene_)
+		_BeginFadeOut();
+
 	_SYSTEM_LOG_INFO(_T("Scene change requested to [%s]"), _GetSceneName(_type).c_str());
+}
+
+void SceneManager::_BeginFadeOut()
+{
+	transition_phase_ = TransitionPhase::FadingOut;
+	transition_elapsed_ = 0.0;
+	transition_alpha_ = 0.f;
+}
+
+void SceneManager::_BeginFadeIn()
+{
+	transition_phase_ = TransitionPhase::FadingIn;
+	transition_elapsed_ = 0.0;
+	transition_alpha_ = 1.f;
+}
+
+void SceneManager::_UpdateTransition(_double _delta_time)
+{
+	transition_elapsed_ += _delta_time;
+
+	if (transition_phase_ == TransitionPhase::FadingOut)
+	{
+		const auto duration = std::max(fade_out_duration_, 0.0001);
+		transition_alpha_ = s_float(std::clamp(transition_elapsed_ / duration, 0.0, 1.0));
+		if (transition_elapsed_ < duration)
+			return;
+
+		transition_alpha_ = 1.f;
+		_CleanupCurrentScene();
+		_CreateNextScene();
+		return;
+	}
+
+	if (transition_phase_ == TransitionPhase::FadingIn)
+	{
+		const auto duration = std::max(fade_in_duration_, 0.0001);
+		transition_alpha_ = 1.f - s_float(std::clamp(transition_elapsed_ / duration, 0.0, 1.0));
+		if (transition_elapsed_ < duration)
+			return;
+
+		transition_alpha_ = 0.f;
+		transition_phase_ = TransitionPhase::None;
+		transition_elapsed_ = 0.0;
+	}
+}
+
+void SceneManager::_RenderTransitionOverlay() const
+{
+	if (transition_alpha_ <= 0.f)
+		return;
+
+	const Resolution resolution = _ScreenSystem.WindowResolution();
+	if (resolution.width <= 0 || resolution.height <= 0)
+		return;
+
+	_DrawFunc::SetGlobalOffset(_Point::Zero());
+	_DrawFunc::FillRectangle(
+		_Rect{ _Point{ 0, 0 }, _Size{ resolution.width, resolution.height } },
+		_Color(
+			MathFunctions::Clamp(s_int(std::round(transition_alpha_ * 255.f)), 0, 255),
+			0,
+			0,
+			0));
 }
 
 void SceneManager::_CreateNextScene()
@@ -68,6 +160,9 @@ void SceneManager::_CreateNextScene()
 	{
 		_SYSTEM_LOG_ERROR(_T("Unsupported scene type requested: %d"), s_int(next_scene_type_));
 		next_scene_type_ = SceneType::Count;
+		transition_phase_ = TransitionPhase::None;
+		transition_elapsed_ = 0.0;
+		transition_alpha_ = 0.f;
 	}
 	return;
 
@@ -78,6 +173,9 @@ void SceneManager::_CreateNextScene()
 		_SYSTEM_LOG_ERROR(_T("Failed to initialize scene: %s"), _GetSceneName(next_scene_type_).c_str());
 		SAFE_DELETE(curr_scene_);
 		next_scene_type_ = SceneType::Count;
+		transition_phase_ = TransitionPhase::None;
+		transition_elapsed_ = 0.0;
+		transition_alpha_ = 0.f;
 		return;
 	}
 
@@ -85,6 +183,7 @@ void SceneManager::_CreateNextScene()
 
 	curr_scene_type_ = next_scene_type_;
 	next_scene_type_ = SceneType::Count;
+	_BeginFadeIn();
 
 	scene_history_.push_back(curr_scene_type_);
 }
@@ -97,6 +196,7 @@ void SceneManager::_CleanupCurrentScene()
 
 		delete curr_scene_;
 		curr_scene_ = nullptr;
+		curr_scene_type_ = SceneType::Count;
 	}
 }
 
