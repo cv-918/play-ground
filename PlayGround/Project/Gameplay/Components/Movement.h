@@ -2,6 +2,7 @@
 #include "ComponentBase.h"
 
 #include "Gameplay/Actors/GameObjectBase.h"
+#include "Gameplay/Common/GameplayEffectTypes.h"
 #include "Gameplay/Common/HitReaction.h"
 #include "Gameplay/Components/Transform.h"
 
@@ -52,6 +53,7 @@ public:
 
 public:
 	void SetAsMaxSpeed();
+	void ApplyImmediateMoveSpeedBoost();
 	void StopImmediately();
 
 	MovementPattern GetPattern() const { return move_pattern_; }
@@ -77,9 +79,13 @@ public:
 
 	_float GetMoveSpd() const { return move_spd_; }
 	void SetMoveSpd(const _float _spd) { move_spd_ = _spd; }
+	_float GetEffectiveMoveSpd() const { return move_spd_ * std::max(0.f, external_move_speed_multiplier_); }
 
 	_float GetMoveSpdMax() const { return move_spd_max_; }
 	void SetMoveSpdMax(const _float _spd) { move_spd_max_ = _spd; }
+	_float GetEffectiveMoveSpdMax() const { return move_spd_max_ * std::max(0.f, external_move_speed_multiplier_); }
+	void SetExternalMoveSpeedMultiplier(_float _multiplier) { external_move_speed_multiplier_ = std::max(0.f, _multiplier); }
+	_float GetExternalMoveSpeedMultiplier() const { return external_move_speed_multiplier_; }
 
 	_float GetRotateSpd() const { return rotate_spd_; }
 	void SetRotateSpd(const _float _spd) { rotate_spd_ = _spd; }
@@ -108,6 +114,11 @@ public:
 
 	_bool IsAllowNormalMove() const { return allow_normal_move_; }
 	void SetAllowNormalMove(_bool _allow) { allow_normal_move_ = _allow; }
+	void AddMovementLock(MovementControlLock _lock) { manual_control_locks_ |= s_uint(_lock); }
+	void RemoveMovementLock(MovementControlLock _lock) { manual_control_locks_ &= ~s_uint(_lock); }
+	void ClearMovementLocks() { manual_control_locks_ = 0; }
+	void SetEffectControlLocks(MovementControlLock _locks) { effect_control_locks_ = s_uint(_locks); }
+	_bool HasMovementLock(MovementControlLock _lock) const { return 0 != ((manual_control_locks_ | effect_control_locks_) & s_uint(_lock)); }
 
 protected:
 	_float _GetRemainingKnockbackDistance() const;
@@ -171,4 +182,7 @@ protected:
 	KnockbackCurve knockback_curve_ = KnockbackCurve::OutCubic;
 
 	_bool allow_normal_move_ = true;
+	_uint manual_control_locks_ = 0;
+	_uint effect_control_locks_ = 0;
+	_float external_move_speed_multiplier_ = 1.f;
 };

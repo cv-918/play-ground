@@ -25,6 +25,7 @@ enum class UnitDefaultColliderId
 #include "UI/Elements/ProgressBar.h"
 
 class Movement;
+class GameplayEffectController;
 
 class UnitBase abstract
 	: public GameObjectBase
@@ -56,6 +57,7 @@ public:
 
 	Combat* GetCombat() const { return combat_; }
 	Status* GetStatus() const { return status_; }
+	GameplayEffectController* GetEffectController() const { return effect_controller_; }
 
 protected:
 	// 유닛이 속한 씬에 대한 포인터. 필요에 따라 유닛이 속한 씬의 정보나 기능을 참조할 때 사용할 수 있습니다.
@@ -72,6 +74,9 @@ protected:
 
 	// 유닛의 상태를 관리하는 컴포넌트. 체력, 마나, 버프/디버프 상태 등을 관리할 수 있습니다.
 	Status* status_ = nullptr;
+
+	// 유닛의 상태 태그와 수치 변경자를 관리하는 공통 효과 컨트롤러.
+	GameplayEffectController* effect_controller_ = nullptr;
 
 	_float last_received_damage_ = 0.f;
 	_double hit_flash_timer_ = 0.0;

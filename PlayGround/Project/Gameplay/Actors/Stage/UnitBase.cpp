@@ -2,6 +2,7 @@
 #include "UnitBase.h"
 
 #include "EngineSystems/Render/CameraManager.h"
+#include "Components/GameplayEffectController.h"
 #include "Components/Movement.h"
 #include "Common/HitReaction.h"
 
@@ -33,6 +34,8 @@ _bool UnitBase::Initialize()
 	RegisterComponent(status_);
 	combat_ = new Combat(status_); // Combat 컴포넌트는 Status 컴포넌트를 필요로 하므로, Status 컴포넌트를 먼저 생성하고 전달
 	RegisterComponent(combat_);
+	effect_controller_ = new GameplayEffectController();
+	RegisterComponent(effect_controller_);
 
 	return true;
 }
@@ -53,11 +56,18 @@ void UnitBase::ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player)
 
 	if (movement_ && resolved.knockback_distance_world_px_ > 0.f && resolved.knockback_duration_sec_ > 0.f)
 	{
-		movement_->StartKnockback(
-			_hit.knockback_direction_,
-			resolved.knockback_distance_world_px_,
-			resolved.knockback_duration_sec_,
-			_hit.reaction_.knockback_curve_);
+		const _bool is_knockback_immune =
+			effect_controller_ &&
+			effect_controller_->IsKnockbackImmune();
+
+		if (!is_knockback_immune)
+		{
+			movement_->StartKnockback(
+				_hit.knockback_direction_,
+				resolved.knockback_distance_world_px_,
+				resolved.knockback_duration_sec_,
+				_hit.reaction_.knockback_curve_);
+		}
 	}
 
 	if (resolved.trauma_gain_ > 0.f)

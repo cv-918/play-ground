@@ -284,7 +284,7 @@ void GameObjectBase::_DrawObjectShape()
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	//const auto position = transform_->Position();
 	const auto radius = transform_->Scale().x;
-	const auto radius_y = radius * 0.6f; // 타원 비율 조정 (예시로 y축을 x축의 60%로 설정)
+	const auto radius_y = radius/* * 0.6f*/; // 타원 비율 조정 (예시로 y축을 x축의 60%로 설정)
 
 	const _Point left_top = { s_int(position.x - radius), s_int(position.y - radius_y) };
 	const _Size size = { s_int(radius * 2), s_int(radius_y * 2) };

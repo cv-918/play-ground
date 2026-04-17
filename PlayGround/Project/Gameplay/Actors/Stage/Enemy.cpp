@@ -9,9 +9,6 @@
 
 namespace
 {
-<<<<<<< Updated upstream
-	constexpr _double ENEMY_HIT_FLASH_DURATION = 0.18;
-	constexpr _double ENEMY_HIT_FLASH_BLINK_INTERVAL = 0.045;
 	constexpr _double ENEMY_SPAWN_FADE_DURATION = 1.0;
 	constexpr _double ENEMY_DEATH_FADE_DURATION = 1.0;
 	constexpr _float TANK_WANDER_RADIUS = 220.f;
@@ -22,7 +19,7 @@ namespace
 	constexpr _double TANK_WANDER_REPICK_TIMEOUT = 4.0;
 	constexpr _uint TANK_WANDER_PICK_TRY_COUNT = 12;
 	constexpr _float TANK_WANDER_TWO_PI = 6.28318530718f;
-=======
+
 	HitReactionProfile MakeEnemyContactReaction(const EnemyJsonInfo& _info)
 	{
 		return MakeHitReactionProfile(
@@ -32,7 +29,6 @@ namespace
 			_info.contact_knockback_curve_,
 			_info.contact_camera_shake_scale_);
 	}
->>>>>>> Stashed changes
 }
 
 Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
@@ -185,15 +181,8 @@ _int Enemy::Update(_double _delta_time)
 	if (0 != ret)
 		return ret;
 
-<<<<<<< Updated upstream
 	_UpdateDeferredNavigationActivation();
-
-	// 후처리
-	if (0.0 < hit_flash_timer_)
-		hit_flash_timer_ = std::max(0.0, hit_flash_timer_ - _delta_time);
-=======
 	UpdateHitFlash(_delta_time);
->>>>>>> Stashed changes
 
 	return UPDATE_CONTINUE;
 }
@@ -256,17 +245,17 @@ void Enemy::GetDamage(_float _damage)
 		return;
 
 	const auto final_damage = combat_->GetDamage(_damage);
-<<<<<<< Updated upstream
-=======
+
 	RecordLastReceivedDamage(final_damage);
+	if (final_damage <= 0.f)
+		return;
+
 	StartHitFlash();
->>>>>>> Stashed changes
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	play_scene_->ShowDamageUI(final_damage, _Vector2{ position.x, position.y });
 
-<<<<<<< Updated upstream
 	if (status_ && status_->IsDead())
 	{
 		hit_flash_timer_ = 0.0;
@@ -274,12 +263,6 @@ void Enemy::GetDamage(_float _damage)
 		return;
 	}
 
-	hit_flash_timer_ = ENEMY_HIT_FLASH_DURATION;
-
-	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
-
-=======
->>>>>>> Stashed changes
 	// 동작 도중 피격 당하면 캔슬되고 Hit 상태로 전환.
 	if (EnemyActionState::Attack == action_state_)
 	{
@@ -289,35 +272,17 @@ void Enemy::GetDamage(_float _damage)
 		movement_->EndDash();
 	}
 
-	//// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
-	//const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
-	//movement_->ApplyKnockback(hit_dir, 800.f);
-
 	// 상태 전환
 	_ChangeState(status_->IsDead() ? EnemyActionState::Death : EnemyActionState::Hit);
 }
 
 void Enemy::ApplyHit(const HitContext& _hit)
 {
-<<<<<<< Updated upstream
 	if (_IsCombatCollisionBlocked())
 		return;
 
-	// 1. 기존 피격 경로 재사용
-	GetDamage(_hit.damage_);
-
-	if (_IsCombatCollisionBlocked())
-		return;
-
-	// 2. 넉백 적용
-	if (movement_ && _hit.knockback_power_ > 0.f)
-	{
-		movement_->ApplyKnockback(_hit.knockback_direction_, _hit.knockback_power_);
-	}
-=======
 	GetDamage(_hit.damage_);
 	ApplyHitReaction(_hit, false);
->>>>>>> Stashed changes
 }
 
 void Enemy::_DrawObjectShape()
@@ -348,17 +313,7 @@ void Enemy::_DrawObjectShape()
 
 	if (IsHitFlashing())
 	{
-<<<<<<< Updated upstream
-		const auto elapsed = ENEMY_HIT_FLASH_DURATION - hit_flash_timer_;
-		const auto blink_index = s_int(elapsed / ENEMY_HIT_FLASH_BLINK_INTERVAL);
-		const auto blink_strength = (0 == (blink_index % 2)) ? 1.0f : 0.35f;
-		const auto fade_out = s_float(hit_flash_timer_ / ENEMY_HIT_FLASH_DURATION);
-		const auto flash = std::clamp(blink_strength * fade_out, 0.0f, 1.0f);
-
-		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, flash, _GetRenderAlphaByte());
-=======
 		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, GetHitFlashStrength());
->>>>>>> Stashed changes
 		return;
 	}
 
@@ -636,7 +591,6 @@ void Enemy::FaceTo(_Vector3 _target_pos)
 	if (transform_)
 		transform_->LookAt(_target_pos);
 }
-<<<<<<< Updated upstream
 
 _ubyte Enemy::_GetRenderAlphaByte() const
 {
@@ -841,5 +795,3 @@ _Vector3 Enemy::_ClampPointToMoveBounds(const _Vector3& _point) const
 	clamped.y = sample.y - info_->nav_footprint_offset_y_;
 	return clamped;
 }
-=======
->>>>>>> Stashed changes

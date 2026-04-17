@@ -94,9 +94,6 @@ void Collider::RegisterOnCollidedList(Collider* _other)
 		collided_colliders_.push_back(_other);
 		_UpdateIsCollidingState();
 
-		// 누구의 목록에 어떤 오브젝트가 들어갔는지 로깅
-		//_SYSTEM_LOG_INFO(L"Collider: Collision detected - This: %s (ID: %d), Other: %s (ID: %d)", Name().c_str(), ID(), _other->Name().c_str(), _other->ID());
-
 		if (!_IsCollidableWith(_other))
 			return;
 

@@ -7,6 +7,7 @@
 #include "GamePlaySystems/SceneManager.h"
 
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "GamePlaySystems/Json/SkillDefinitionDataManager.h"
 #include "GamePlaySystems/Json/SkillJsonDataManager.h"
 #include "GamePlaySystems/Json/EnemyDataManager.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
@@ -53,6 +54,12 @@ _bool PlayGround::Initialize()
 	if (!_SkillDataMgr.Load("Data/Skill.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load skill data from JSON."));
+		return false;
+	}
+
+	if (!_SkillDefinitionDataMgr.Load("Data/Skill.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load skill definition data from JSON."));
 		return false;
 	}
 

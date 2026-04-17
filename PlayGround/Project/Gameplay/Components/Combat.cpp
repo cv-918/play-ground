@@ -2,6 +2,7 @@
 #include "Combat.h"
 
 #include "Actors/GameObjectBase.h"
+#include "Components/GameplayEffectController.h"
 #include "Components/Status.h"
 
 #include "GamePlaySystems/StageManager.h"
@@ -19,6 +20,14 @@ _float Combat::GetDamage(_float _damage)
 	if (status_->IsInvincible())
 	{
 		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called but target is invincible. Ignoring damage application."));
+		return 0.f;
+	}
+
+	const auto effect_controller =
+		s_cast(GameplayEffectController*, gameobject_->GetComponent(ComponentType::GameplayEffectController));
+	if (effect_controller && effect_controller->IsInvincible())
+	{
+		_SYSTEM_LOG_INFO(_T("Combat::GetDamage called but target has invincible gameplay state. Ignoring damage application."));
 		return 0.f;
 	}
 

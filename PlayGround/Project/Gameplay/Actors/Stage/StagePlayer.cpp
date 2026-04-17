@@ -269,6 +269,10 @@ void StagePlayer::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage);
 	RecordLastReceivedDamage(final_damage);
+
+	if (final_damage <= 0.f)
+		return;
+
 	StartHitFlash();
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다

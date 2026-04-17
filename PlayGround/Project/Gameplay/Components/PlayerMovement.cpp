@@ -65,7 +65,7 @@ void PlayerMovement::_OnImmediate(_double _delta_time)
 		input_dir = input_dir.Normalized();
 
 	move_direction_ = input_dir;
-	move_velocity_ = input_dir * move_spd_max_;
+	move_velocity_ = input_dir * GetEffectiveMoveSpdMax();
 
 	// 진행 방향을 바라보도록 회전
 	if (input_dir.LengthSq() > 0.f)
@@ -103,7 +103,7 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 	// 입력이 있으면 목표 속도까지 가속
 	if (input_dir.LengthSq() > 0.f)
 	{
-		const _Vector3 desired_velocity = input_dir * move_spd_max_;
+		const _Vector3 desired_velocity = input_dir * GetEffectiveMoveSpdMax();
 		_Vector3 delta_velocity = desired_velocity - move_velocity_;
 
 		_float accel = acceleration_;
