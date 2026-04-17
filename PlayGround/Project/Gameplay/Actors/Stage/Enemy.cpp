@@ -1,12 +1,15 @@
 ﻿#include "framework.h"
 #include "Enemy.h"
 
+#include "Animation/SpriteAnimationTypes.h"
 #include "ContactAttackAbility.h"
 #include "ProjectileAttackAbility.h"
 #include "DashAbility.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 
 namespace
 {
+<<<<<<< Updated upstream
 	constexpr _double ENEMY_HIT_FLASH_DURATION = 0.18;
 	constexpr _double ENEMY_HIT_FLASH_BLINK_INTERVAL = 0.045;
 	constexpr _double ENEMY_SPAWN_FADE_DURATION = 1.0;
@@ -19,6 +22,17 @@ namespace
 	constexpr _double TANK_WANDER_REPICK_TIMEOUT = 4.0;
 	constexpr _uint TANK_WANDER_PICK_TRY_COUNT = 12;
 	constexpr _float TANK_WANDER_TWO_PI = 6.28318530718f;
+=======
+	HitReactionProfile MakeEnemyContactReaction(const EnemyJsonInfo& _info)
+	{
+		return MakeHitReactionProfile(
+			_info.contact_impact_,
+			_info.contact_knockback_distance_world_px_,
+			_info.contact_knockback_duration_sec_,
+			_info.contact_knockback_curve_,
+			_info.contact_camera_shake_scale_);
+	}
+>>>>>>> Stashed changes
 }
 
 Enemy::Enemy(const EnemyJsonInfo* _info, const UnitCreationInfo& _creation_info)
@@ -158,6 +172,10 @@ _int Enemy::Update(_double _delta_time)
 
 	// 이번 프레임 공격 컨텍스트 초기화
 	attack_context_.Reset();
+	if (info_)
+	{
+		attack_context_.reaction_ = MakeEnemyContactReaction(*info_);
+	}
 
 	// Ability가 이번 프레임의 공격 컨텍스트를 다시 구성
 	ability_set_.OnUpdate(*this, _delta_time);
@@ -167,11 +185,15 @@ _int Enemy::Update(_double _delta_time)
 	if (0 != ret)
 		return ret;
 
+<<<<<<< Updated upstream
 	_UpdateDeferredNavigationActivation();
 
 	// 후처리
 	if (0.0 < hit_flash_timer_)
 		hit_flash_timer_ = std::max(0.0, hit_flash_timer_ - _delta_time);
+=======
+	UpdateHitFlash(_delta_time);
+>>>>>>> Stashed changes
 
 	return UPDATE_CONTINUE;
 }
@@ -234,11 +256,17 @@ void Enemy::GetDamage(_float _damage)
 		return;
 
 	const auto final_damage = combat_->GetDamage(_damage);
+<<<<<<< Updated upstream
+=======
+	RecordLastReceivedDamage(final_damage);
+	StartHitFlash();
+>>>>>>> Stashed changes
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	play_scene_->ShowDamageUI(final_damage, _Vector2{ position.x, position.y });
 
+<<<<<<< Updated upstream
 	if (status_ && status_->IsDead())
 	{
 		hit_flash_timer_ = 0.0;
@@ -250,6 +278,8 @@ void Enemy::GetDamage(_float _damage)
 
 	const auto player = _RunState.GetPlayer(); const auto player_transform = player->GetTransform();
 
+=======
+>>>>>>> Stashed changes
 	// 동작 도중 피격 당하면 캔슬되고 Hit 상태로 전환.
 	if (EnemyActionState::Attack == action_state_)
 	{
@@ -259,9 +289,9 @@ void Enemy::GetDamage(_float _damage)
 		movement_->EndDash();
 	}
 
-	// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
-	const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
-	movement_->ApplyKnockback(hit_dir, 800.f);
+	//// 에너미에게 넉백 적용. 넉백 방향은 플레이어에서 에너미로 향하는 방향으로 설정.
+	//const _Vector3 hit_dir = (transform_->GetToePosition() - player_transform->GetToePosition()).Normalized();
+	//movement_->ApplyKnockback(hit_dir, 800.f);
 
 	// 상태 전환
 	_ChangeState(status_->IsDead() ? EnemyActionState::Death : EnemyActionState::Hit);
@@ -269,6 +299,7 @@ void Enemy::GetDamage(_float _damage)
 
 void Enemy::ApplyHit(const HitContext& _hit)
 {
+<<<<<<< Updated upstream
 	if (_IsCombatCollisionBlocked())
 		return;
 
@@ -283,6 +314,10 @@ void Enemy::ApplyHit(const HitContext& _hit)
 	{
 		movement_->ApplyKnockback(_hit.knockback_direction_, _hit.knockback_power_);
 	}
+=======
+	GetDamage(_hit.damage_);
+	ApplyHitReaction(_hit, false);
+>>>>>>> Stashed changes
 }
 
 void Enemy::_DrawObjectShape()
@@ -298,24 +333,12 @@ void Enemy::_DrawObjectShape()
 
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
-
-	const auto visible_width = enemy_sprite_->visible_bounds.Width() > 0 ? s_float(enemy_sprite_->visible_bounds.Width()) : 1.f;
-	const auto visible_height = enemy_sprite_->visible_bounds.Height() > 0 ? s_float(enemy_sprite_->visible_bounds.Height()) : 1.f;
-
-	const auto scale_x = transform_->Scale().x / visible_width;
-	const auto scale_y = (transform_->Scale().x * 0.6f) / visible_height;
-
-	const auto draw_width = enemy_sprite_->image_rect.Width * scale_x;
-	const auto draw_height = enemy_sprite_->image_rect.Height * scale_y;
-
-	const auto pivot_x = enemy_sprite_->pivot.X * scale_x;
-	const auto pivot_y = enemy_sprite_->pivot.Y * scale_y;
-
-	const _RectF dest_rect(
-		screen_pos.x - pivot_x,
-		screen_pos.y - pivot_y,
-		screen_pos.x - pivot_x + draw_width,
-		screen_pos.y - pivot_y + draw_height);
+	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*enemy_sprite_);
+	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
+		screen_pos,
+		transform_->Scale().x,
+		metrics,
+		_ScreenSystem.GetWorldResourceScale());
 
 	const _RectF src_rect(
 		enemy_sprite_->image_rect.X,
@@ -323,8 +346,9 @@ void Enemy::_DrawObjectShape()
 		enemy_sprite_->image_rect.X + enemy_sprite_->image_rect.Width,
 		enemy_sprite_->image_rect.Y + enemy_sprite_->image_rect.Height);
 
-	if (0.0 < hit_flash_timer_)
+	if (IsHitFlashing())
 	{
+<<<<<<< Updated upstream
 		const auto elapsed = ENEMY_HIT_FLASH_DURATION - hit_flash_timer_;
 		const auto blink_index = s_int(elapsed / ENEMY_HIT_FLASH_BLINK_INTERVAL);
 		const auto blink_strength = (0 == (blink_index % 2)) ? 1.0f : 0.35f;
@@ -332,6 +356,9 @@ void Enemy::_DrawObjectShape()
 		const auto flash = std::clamp(blink_strength * fade_out, 0.0f, 1.0f);
 
 		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, flash, _GetRenderAlphaByte());
+=======
+		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, GetHitFlashStrength());
+>>>>>>> Stashed changes
 		return;
 	}
 
@@ -559,7 +586,7 @@ void Enemy::_UpdateOnMove(_double _delta_time)
 
 void Enemy::_UpdateOnHit(_double _delta_time)
 {
-	if (hit_flash_timer_ <= 0.0)
+	if (!IsHitFlashing())
 	{
 		_ChangeState(EnemyActionState::Move);
 	}
@@ -609,6 +636,7 @@ void Enemy::FaceTo(_Vector3 _target_pos)
 	if (transform_)
 		transform_->LookAt(_target_pos);
 }
+<<<<<<< Updated upstream
 
 _ubyte Enemy::_GetRenderAlphaByte() const
 {
@@ -813,3 +841,5 @@ _Vector3 Enemy::_ClampPointToMoveBounds(const _Vector3& _point) const
 	clamped.y = sample.y - info_->nav_footprint_offset_y_;
 	return clamped;
 }
+=======
+>>>>>>> Stashed changes

@@ -33,6 +33,12 @@ class UnitBase abstract
 {
 protected:
 	_bool Initialize() override;
+	void RecordLastReceivedDamage(_float _damage) { last_received_damage_ = _damage; }
+	void ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player);
+	void StartHitFlash();
+	void UpdateHitFlash(_double _delta_time);
+	_bool IsHitFlashing() const;
+	_float GetHitFlashStrength() const;
 
 public:
 	void SetPlayScene(InGameScene* _scene) { play_scene_ = _scene; }
@@ -66,5 +72,8 @@ protected:
 
 	// 유닛의 상태를 관리하는 컴포넌트. 체력, 마나, 버프/디버프 상태 등을 관리할 수 있습니다.
 	Status* status_ = nullptr;
+
+	_float last_received_damage_ = 0.f;
+	_double hit_flash_timer_ = 0.0;
 };
 

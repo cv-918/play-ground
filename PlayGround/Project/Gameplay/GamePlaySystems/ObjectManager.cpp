@@ -107,9 +107,9 @@ void ObjectManager::CleanUp()
 }
 
 GameObjectBase* ObjectManager::SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
-	const _Point& _target, _float _damage, _float _speed)
+	const _Point& _target, _float _damage, _float _speed, const HitReactionProfile& _reaction)
 {
-	GameObjectBase* bullet = new Bullet(_owner, _damage, _speed);
+	GameObjectBase* bullet = new Bullet(_owner, _damage, _speed, _reaction);
 
 	if (bullet->Initialize())
 	{

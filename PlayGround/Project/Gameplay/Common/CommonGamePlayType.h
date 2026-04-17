@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "HitReaction.h"
+
 #pragma region [ 코어 시스템 관련 ]
 enum class CollisionLayer
 {
@@ -220,6 +222,11 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	// ------ 공통 공격 관련 ------
 	_float attack_range_ = 0.f;            // 공격 개시 범위
 	_double attack_motion_duration_ = 0.0; // 공격 모션 시간
+	_float contact_impact_ = 0.f;
+	_float contact_knockback_distance_world_px_ = 0.f;
+	_float contact_knockback_duration_sec_ = 0.f;
+	KnockbackCurve contact_knockback_curve_ = KnockbackCurve::OutCubic;
+	_float contact_camera_shake_scale_ = 0.f;
 
 	// ------ 돌진 관련 ------
 	_float dash_speed_ = 0.f;
@@ -227,12 +234,22 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	_double dash_cooldown_ = 0.0;
 	_double dash_recovery_duration_ = 0.0;
 	_float dash_damage_multiplier_ = 1.f;
+	_float dash_impact_ = 0.f;
+	_float dash_knockback_distance_world_px_ = 0.f;
+	_float dash_knockback_duration_sec_ = 0.f;
+	KnockbackCurve dash_knockback_curve_ = KnockbackCurve::OutCubic;
+	_float dash_camera_shake_scale_ = 0.f;
 	_float dash_knockback_power_ = 0.f;
 
 	// ------ 투사체 관련 ------
 	ProjectilePattern projectile_pattern_ = ProjectilePattern::Undefined;
 	_float projectile_damage_ = 0.f;
 	_float projectile_speed_ = 0.f;
+	_float projectile_impact_ = 0.f;
+	_float projectile_knockback_distance_world_px_ = 0.f;
+	_float projectile_knockback_duration_sec_ = 0.f;
+	KnockbackCurve projectile_knockback_curve_ = KnockbackCurve::OutCubic;
+	_float projectile_camera_shake_scale_ = 0.f;
 	_float projectile_knockback_power_ = 0.f;
 };
 

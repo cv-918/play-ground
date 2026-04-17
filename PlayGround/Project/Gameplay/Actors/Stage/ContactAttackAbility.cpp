@@ -57,7 +57,7 @@ void ContactAttackAbility::_TryAttackPlayer(Enemy& _enemy, Collider* _attack_col
 	hit.source_ = &_enemy;
 	hit.damage_ = final_damage;
 	hit.knockback_direction_ = knockback_dir;
-	hit.knockback_power_ = attack_ctx.knockback_power_;
+	hit.reaction_ = attack_ctx.reaction_;
 	hit.is_dash_attack_ = attack_ctx.is_dash_attack_;
 
 	damagable->ApplyHit(hit);

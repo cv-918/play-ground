@@ -18,6 +18,7 @@ _int Movement::Update(_double _delta_time)
 
 	_UpdateDash(_delta_time);
 	_UpdateImpulse(_delta_time);
+	_UpdateKnockback(_delta_time);
 	_ApplyFinalMovement(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -62,6 +63,7 @@ void Movement::StopImmediately()
 {
 	move_velocity_ = _Vector3::Zero();
 	impulse_velocity_ = _Vector3::Zero();
+	ClearKnockback();
 }
 
 void Movement::StartDash(const _Vector3& _direction, _float _speed, _double _duration)
@@ -107,6 +109,16 @@ void Movement::ClearImpulse()
 	impulse_velocity_ = _Vector3::Zero();
 }
 
+void Movement::ClearKnockback()
+{
+	knockback_direction_ = _Vector3::Zero();
+	knockback_velocity_ = _Vector3::Zero();
+	knockback_total_distance_ = 0.f;
+	knockback_duration_ = 0.0;
+	knockback_elapsed_ = 0.0;
+	knockback_curve_ = KnockbackCurve::OutCubic;
+}
+
 void Movement::StartDashByInputDir(_float _speed, _double _duration)
 {
 	_Vector3 dash_dir = move_direction_;
@@ -122,12 +134,52 @@ void Movement::StartDashByInputDir(_float _speed, _double _duration)
 	StartDash(dash_dir, _speed, _duration);
 }
 
+void Movement::StartKnockback(const _Vector3& _direction, _float _distance_world_px, _float _duration_sec, KnockbackCurve _curve)
+{
+	if (_direction.LengthSq() <= 0.f || _distance_world_px <= 0.f || _duration_sec <= 0.f)
+		return;
+
+	if (IsDashing() && dash_impulse_policy_ == DashImpulsePolicy::CancelDashOnImpulse)
+		EndDash();
+
+	if (IsDashing() && dash_impulse_policy_ == DashImpulsePolicy::IgnoreImpulse)
+		return;
+
+	if (_GetRemainingKnockbackDistance() >= _distance_world_px)
+		return;
+
+	knockback_direction_ = _direction.Normalized();
+	knockback_total_distance_ = _distance_world_px;
+	knockback_duration_ = _duration_sec;
+	knockback_elapsed_ = 0.0;
+	knockback_velocity_ = _Vector3::Zero();
+	knockback_curve_ = _curve;
+}
+
 void Movement::ApplyKnockback(const _Vector3& _direction, _float _power)
 {
 	if (_direction.LengthSq() <= 0.f || _power <= 0.f)
 		return;
 
-	AddImpulse(_direction.Normalized() * _power);
+	const _float normalized_power = _MathFunc::Clamp(_power / 900.f, 0.f, 1.f);
+	const _float legacy_distance = _power / 7.5f;
+	const _float legacy_duration = _MathFunc::Lerp(0.10f, 0.20f, normalized_power);
+
+	StartKnockback(_direction, legacy_distance, legacy_duration, KnockbackCurve::OutCubic);
+}
+
+_float Movement::_GetRemainingKnockbackDistance() const
+{
+	if (knockback_total_distance_ <= 0.f || knockback_duration_ <= 0.0)
+		return 0.f;
+
+	const _float progress = _MathFunc::Clamp(
+		s_cast(_float, knockback_elapsed_ / knockback_duration_),
+		0.f,
+		1.f);
+
+	const _float eased_progress = EvaluateKnockbackCurve(progress, knockback_curve_);
+	return knockback_total_distance_ * (1.f - eased_progress);
 }
 
 void Movement::_ClampMoveVelocity()
@@ -175,6 +227,37 @@ void Movement::_UpdateImpulse(_double _delta_time)
 	_ApplyFrictionToImpulseVelocity(_delta_time);
 }
 
+void Movement::_UpdateKnockback(_double _delta_time)
+{
+	knockback_velocity_ = _Vector3::Zero();
+
+	if (knockback_total_distance_ <= 0.f || knockback_duration_ <= 0.0)
+		return;
+
+	if (_delta_time <= 0.0)
+		return;
+
+	if (knockback_elapsed_ >= knockback_duration_)
+		return;
+
+	const _double next_elapsed = std::min(knockback_elapsed_ + _delta_time, knockback_duration_);
+	const _float prev_progress = _MathFunc::Clamp(s_cast(_float, knockback_elapsed_ / knockback_duration_), 0.f, 1.f);
+	const _float next_progress = _MathFunc::Clamp(s_cast(_float, next_elapsed / knockback_duration_), 0.f, 1.f);
+
+	const _float prev_eased = EvaluateKnockbackCurve(prev_progress, knockback_curve_);
+	const _float next_eased = EvaluateKnockbackCurve(next_progress, knockback_curve_);
+	const _float eased_delta = std::max(0.f, next_eased - prev_eased);
+
+	knockback_elapsed_ = next_elapsed;
+
+	if (eased_delta <= 0.f)
+		return;
+
+	const _float frame_distance = knockback_total_distance_ * eased_delta;
+	const _float dt = s_cast(_float, _delta_time);
+	knockback_velocity_ = knockback_direction_ * (frame_distance / dt);
+}
+
 void Movement::_ApplyFinalMovement(_double _delta_time)
 {
 	_Vector3 final_velocity = _Vector3::Zero();
@@ -185,6 +268,7 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 		final_velocity = move_velocity_;
 
 	final_velocity += impulse_velocity_;
+	final_velocity += knockback_velocity_;
 
 	if (final_velocity.LengthSq() <= 0.f)
 	{
@@ -194,8 +278,11 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 
 	const _Vector3 delta = final_velocity * s_cast(_float, _delta_time);
 	transform_->Translate(delta);
+<<<<<<< Updated upstream
 	_ClampToNavMesh();
 }
+=======
+>>>>>>> Stashed changes
 
 _Vector2 Movement::_GetNavSamplePoint() const
 {

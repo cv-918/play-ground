@@ -3,10 +3,11 @@
 #include "Actors/Stage/UnitBase.h"
 #include "Components/SphereCollider.h"
 
-Bullet::Bullet(GameObjectBase* _owner, _float _damage, _float _speed)
+Bullet::Bullet(GameObjectBase* _owner, _float _damage, _float _speed, const HitReactionProfile& _reaction)
 	: owner_(_owner)
 	, damage_(_damage)
 	, speed_(_speed)
+	, reaction_(_reaction)
 {
 }
 
@@ -69,16 +70,14 @@ void Bullet::DebugRender()
 void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	_other->GameObject()->SendMessageToHandlers(HandlerSystemList::Damage, [this, _other](IHandler* _handler) {
-		/*s_cast(IDamagable*, _handler)->GetDamage(damage_);*/
-
 		HitContext hit;
 		hit.source_ = owner_;
 		hit.damage_ = damage_;
+		hit.reaction_ = reaction_;
 
 		const auto target_pos = _other->GameObject()->GetTransform()->Position();
 		const auto pos = transform_->Position();
 		hit.knockback_direction_ = (target_pos - pos).Normalized();
-		hit.knockback_power_ = damage_ * 0.5f; // 데미지의 절반을 넉백으로 적용 (예시)
 		s_cast(IDamagable*, _handler)->ApplyHit(hit);
 		});
 

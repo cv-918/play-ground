@@ -166,7 +166,14 @@ void ProjectileAttackAbility::_SpawnProjectile(Enemy& _enemy)
 	case ProjectilePattern::Aimed:
 	{
 		const _float speed = (info->projectile_speed_ > 0.f) ? info->projectile_speed_ : 240.f;
-		scene->SpawnProjectile(&_enemy, pos, target_pos, info->projectile_damage_, speed);
+		const auto reaction = MakeHitReactionProfile(
+			info->projectile_impact_,
+			info->projectile_knockback_distance_world_px_,
+			info->projectile_knockback_duration_sec_,
+			info->projectile_knockback_curve_,
+			info->projectile_camera_shake_scale_);
+
+		scene->SpawnProjectile(&_enemy, pos, target_pos, info->projectile_damage_, speed, reaction);
 	}
 	break;
 

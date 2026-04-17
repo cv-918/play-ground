@@ -24,6 +24,7 @@ public:
 	void SetWorldBounds(const RECT& _world_bounds);
 	void EnableClamp(bool _enable);
 
+	void AddTrauma(_float _normalized_amount);
 	void Shake(_float _intensity, _float _duration);
 
 	_Point WorldToScreen(const _Vector2& _world_position) const;
@@ -55,6 +56,8 @@ private:
 	_int viewport_width_ = 0;
 	_int viewport_height_ = 0;
 
-	_float shake_intensity_ = 0.f;
-	_float shake_duration_ = 0.f;
+	_float trauma_ = 0.f;
+	_float min_shake_px_at_design_ = 1.f;
+	_float max_shake_px_at_design_ = 8.f;
+	_float trauma_decay_per_sec_ = 2.2f;
 };

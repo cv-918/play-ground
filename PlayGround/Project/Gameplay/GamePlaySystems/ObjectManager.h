@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Common/HitReaction.h"
+
 class GameObjectBase;
 
 /*
@@ -27,7 +29,7 @@ public:
 	// 템플릿 메서드를 사용하여 다양한 타입의 게임 오브젝트를 생성할 수 있도록 지원
 	// 단, 몬스터 생성 메서드, 오브젝트 생성 메서드 등을 구분하고 인자로는 해당 타입의 정보를 받는다
 	GameObjectBase* SpawnProjectile(GameObjectBase* _owner, const _Point& _position,
-                                     const _Point& _target, _float _damage, _float _speed);
+                                     const _Point& _target, _float _damage, _float _speed, const HitReactionProfile& _reaction);
 
 	// 게임 오브젝트가 존재할 수 있는 영역을 생성하는 메서드. 예를 들어, 네비게이션 메시의 영역에서 일정 마진을 둔 영역을 계산하여 play_area_에 저장할 수 있습니다. 필요에 따라 몬스터나 오브젝트가 생성될 수 있는 영역을 동적으로 계산하여 관리할 수 있도록 구현할 수 있습니다.
 	void GeneratePlayArea(const _Rect& _nav_mesh_rect, const _int margin);

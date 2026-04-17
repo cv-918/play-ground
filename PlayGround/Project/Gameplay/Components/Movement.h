@@ -2,6 +2,7 @@
 #include "ComponentBase.h"
 
 #include "Gameplay/Actors/GameObjectBase.h"
+#include "Gameplay/Common/HitReaction.h"
 #include "Gameplay/Components/Transform.h"
 
 enum class MovementControlMode
@@ -99,20 +100,24 @@ public:
 
 	void AddImpulse(const _Vector3& _impulse);
 	void ClearImpulse();
+	void ClearKnockback();
 
 	void StartDashByInputDir(_float _speed, _double _duration);
+	void StartKnockback(const _Vector3& _direction, _float _distance_world_px, _float _duration_sec, KnockbackCurve _curve);
 	void ApplyKnockback(const _Vector3& _direction, _float _power);
 
 	_bool IsAllowNormalMove() const { return allow_normal_move_; }
 	void SetAllowNormalMove(_bool _allow) { allow_normal_move_ = _allow; }
 
 protected:
+	_float _GetRemainingKnockbackDistance() const;
 	void _ClampMoveVelocity();
 	void _ApplyFrictionToMoveVelocity(_double _delta_time);
 	void _ApplyFrictionToImpulseVelocity(_double _delta_time);
 
 	void _UpdateDash(_double _delta_time);
 	void _UpdateImpulse(_double _delta_time);
+	void _UpdateKnockback(_double _delta_time);
 	void _ApplyFinalMovement(_double _delta_time);
 	_Vector2 _GetNavSamplePoint() const;
 	void _ClampToNavMesh();
@@ -157,6 +162,13 @@ protected:
 	_double dash_elapsed_;
 	DashImpulsePolicy dash_impulse_policy_;
 	// e, [ 대시 ]
+
+	_Vector3 knockback_direction_ = _Vector3::Zero();
+	_Vector3 knockback_velocity_ = _Vector3::Zero();
+	_float knockback_total_distance_ = 0.f;
+	_double knockback_duration_ = 0.0;
+	_double knockback_elapsed_ = 0.0;
+	KnockbackCurve knockback_curve_ = KnockbackCurve::OutCubic;
 
 	_bool allow_normal_move_ = true;
 };

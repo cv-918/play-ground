@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Scene.h"
+#include "Common/HitReaction.h"
 
 enum class InGameViewState
 {
@@ -25,7 +26,7 @@ public:
 
 public:
 	// GameObject 생성 메서드들
-	void SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed);
+	void SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed, const HitReactionProfile& _reaction);
 
 	// UI 노출 메서드들
 	void ShowDamageUI(_float _damage, const _Point& _position);

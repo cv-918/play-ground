@@ -194,6 +194,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Animation\SpriteAnimationTypes.h" />
     <ClInclude Include="Project\Gameplay\Common\CommonGamePlayFunctions.h" />
     <ClInclude Include="Project\Gameplay\Common\HitContext.h" />
+    <ClInclude Include="Project\Gameplay\Common\HitReaction.h" />
     <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\SpriteAnimatorComponent.h" />
     <ClInclude Include="Project\Gameplay\Components\SpriteRendererComponent.h" />
@@ -425,7 +426,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
-    <None Include="_DevLog\Document\FixLog\2026-04-12.md" />
+    <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
