@@ -1,13 +1,14 @@
-﻿#pragma once
+#pragma once
 
 #include "Actors/GameObjectBase.h"
 #include "Scenes/InGameScene.h"
+#include "SkillRuntimeTypes.h"
 
-class SkillBase abstract
-	: public IUpdatable
+class SkillBase : public IUpdatable
 {
 public:
-	explicit SkillBase(const SkillJsonInfo* _info) : info_(_info), curr_cool_timer_(0.0) {}
+	explicit SkillBase(const SkillJsonInfo* _info);
+	SkillBase(const SkillDefinition* _definition, const SkillJsonInfo* _info);
 	virtual ~SkillBase() DEFAULT;
 
 public:
@@ -15,20 +16,32 @@ public:
 
 public:
 	const SkillJsonInfo* GetInfo() const { return info_; }
+	const SkillDefinition* GetDefinition() const { return definition_; }
 
-	_bool IsReady() const { return curr_cool_timer_ <= 0.0; }
-	_float GetCooldownRatio() const { return info_->cooldown_ > 0.0 ? s_float(curr_cool_timer_ / info_->cooldown_) : 0.f; }
+	_bool IsReady() const;
+	_bool IsCasting() const { return runtime_.phase_ == SkillRuntimePhase::Casting; }
+	_float GetCooldownRatio() const;
 
-	_double GetCurrentCooldown() const { return curr_cool_timer_; }
-	_double GetMaxCooldown() const { return info_ ? info_->cooldown_ : 0.0; }
+	_double GetCurrentCooldown() const;
+	_double GetMaxCooldown() const
+	{
+		if (definition_ && definition_->cooldown_sec_ > 0.0)
+			return definition_->cooldown_sec_;
+		return info_ ? info_->cooldown_ : 0.0;
+	}
 
-	// 실행 성공 시 true 반환 (쿨타임 리셋용)
-	virtual _bool Execute(GameObjectBase* _owner, const _Vector3& _direction) PURE;
+	virtual _bool Execute(GameObjectBase* _owner, const _Vector3& _direction);
 
 protected:
-	void _ResetCoolTime() { curr_cool_timer_ = info_->cooldown_; }
+	void _ResetCoolTime();
+	void _BeginCooldown();
+	_bool _ProcessGraphEvent(SkillGraphEvent _event);
+	void _ExecuteNode(const SkillGraphNode& _node);
+	void _SpawnExecution(const ExecutionEntitySpec& _spec);
+	_Vector3 _ResolveAimDirection(GameObjectBase* _owner, const _Vector3& _direction) const;
 
 protected:
-	const SkillJsonInfo* info_;
-	_double curr_cool_timer_;
+	const SkillJsonInfo* info_ = nullptr;
+	const SkillDefinition* definition_ = nullptr;
+	SkillRuntimeState runtime_{};
 };

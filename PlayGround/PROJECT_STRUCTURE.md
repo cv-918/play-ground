@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-﻿# Project Structure (Updated: 2026-04-17 03:19)
-=======
-﻿# Project Structure (Updated: 2026-04-17 14:34)
->>>>>>> Stashed changes
+﻿# Project Structure (Updated: 2026-04-17 17:44)
 
 ```text
 Root
@@ -35,6 +31,8 @@ Root
 |   |   |   |   |   +--- YES
 |   |   |   |   +--- PopUps
 |   |   |   +--- World
++--- html
+|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -137,6 +135,7 @@ Root
 |   |   |   |   CommonGamePlayDefine.h
 |   |   |   |   CommonGamePlayFunctions.h
 |   |   |   |   CommonGamePlayType.h
+|   |   |   |   GameplayEffectTypes.h
 |   |   |   |   HitContext.h
 |   |   |   |   HitReaction.h
 |   |   +--- Components
@@ -148,6 +147,8 @@ Root
 |   |   |   |   ComponentBase.h
 |   |   |   |   EllipseCollider.cpp
 |   |   |   |   EllipseCollider.h
+|   |   |   |   GameplayEffectController.cpp
+|   |   |   |   GameplayEffectController.h
 |   |   |   |   Movement.cpp
 |   |   |   |   Movement.h
 |   |   |   |   NonPlayableMovement.cpp
@@ -196,6 +197,8 @@ Root
 |   |   |   |   |   ParticleDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
+|   |   |   |   |   SkillDefinitionDataManager.cpp
+|   |   |   |   |   SkillDefinitionDataManager.h
 |   |   |   |   |   SkillJsonDataManager.cpp
 |   |   |   |   |   SkillJsonDataManager.h
 |   |   |   |   |   StageJsonDataManager.cpp
@@ -213,6 +216,11 @@ Root
 |   |   |   |   |   Dust_LintSatellite.h
 |   |   |   |   |   SkillBase.cpp
 |   |   |   |   |   SkillBase.h
+|   |   |   |   |   SkillDefinitionCompiler.cpp
+|   |   |   |   |   SkillDefinitionCompiler.h
+|   |   |   |   |   SkillExecutionActors.cpp
+|   |   |   |   |   SkillExecutionActors.h
+|   |   |   |   |   SkillRuntimeTypes.h
 |   |   |   |   GameState.cpp
 |   |   |   |   GameState.h
 |   |   |   |   RunState.cpp
@@ -289,6 +297,7 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
++--- xml
 +--- _DevLog
 |   +--- Documents
 |   |   +--- Copilot
@@ -297,12 +306,14 @@ Root
 |   |   |   +--- Input
 |   |   |   +--- Option
 |   |   |   |   +--- Video
+|   |   |   +--- Render
 |   |   +--- FixLog
 |   |   +--- Memo
 |   |   +--- Scope
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
++--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

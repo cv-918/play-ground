@@ -13,8 +13,24 @@ _bool Movement::Initialize()
 
 _int Movement::Update(_double _delta_time)
 {
-	if (allow_normal_move_ && move_func_)
+	const _bool is_rooted = HasMovementLock(MovementControlLock::Root);
+	const _bool is_input_locked =
+		HasMovementLock(MovementControlLock::MoveInputLock) ||
+		HasMovementLock(MovementControlLock::CastLock);
+	const _bool can_process_normal_move = allow_normal_move_ && !is_rooted && !is_input_locked;
+
+	if (can_process_normal_move && move_func_)
+	{
 		move_func_(_delta_time);
+	}
+	else if (is_rooted)
+	{
+		move_velocity_ = _Vector3::Zero();
+	}
+	else if (is_input_locked)
+	{
+		_ApplyFrictionToMoveVelocity(_delta_time);
+	}
 
 	_UpdateDash(_delta_time);
 	_UpdateImpulse(_delta_time);
@@ -29,6 +45,8 @@ void Movement::Render(_double _delta_time)
 	if (!_GameState.debug_mode_)
 		return;
 
+	(void)_delta_time;
+
 	if (impulse_velocity_.Magnitude() > 3.f)
 	{
 		const float line_length = 75.f;
@@ -39,13 +57,55 @@ void Movement::Render(_double _delta_time)
 		_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Palette::Crimson);
 	}
 
-	if (use_nav_mesh_ && nav_boundary_mode_ != NavBoundaryMode::None && nav_footprint_radius_ > 0.f)
+    if (use_nav_mesh_ && nav_boundary_mode_ != NavBoundaryMode::None)
 	{
 		const auto sample = _GetNavSamplePoint();
 		const auto screen_sample = _CameraMgr.WorldToScreen(sample);
-		const _float diameter = nav_footprint_radius_ * 2.f;
-		const _Point lt = { s_int(screen_sample.x - nav_footprint_radius_), s_int(screen_sample.y - nav_footprint_radius_) };
-		_DrawFunc::DrawEllipse({ lt, _Size{ diameter, diameter } }, Palette::Gold, 1.25f);
+
+		const _float footprint_radius = std::max(0.f, nav_footprint_radius_);
+		if (footprint_radius > 0.f)
+		{
+			const _float diameter = footprint_radius * 2.f;
+			const _Point lt = { s_int(screen_sample.x - footprint_radius), s_int(screen_sample.y - footprint_radius) };
+			_DrawFunc::DrawEllipse({ lt, _Size{ diameter, diameter } }, Palette::Gold, 1.25f);
+		}
+
+		_float margin_x = footprint_radius;
+		_float margin_y = footprint_radius;
+		if (nav_boundary_mode_ == NavBoundaryMode::ContainVisualBounds)
+		{
+			margin_x += nav_visual_margin_x_;
+			margin_y += nav_visual_margin_y_;
+
+			const _Rect visual_bounds = _Rect::FromCenter(
+				screen_sample,
+				s_int(std::round(margin_x)),
+				s_int(std::round(margin_y)));
+			_DrawFunc::DrawRectangle(visual_bounds, Palette::Orange, 1.25f);
+		}
+
+		if (nav_mesh_.Width() > 0 && nav_mesh_.Height() > 0)
+		{
+			const _Rect nav_mesh_screen = {
+				_CameraMgr.WorldToScreen(_Vector2{ nav_mesh_.Left_f(), nav_mesh_.Top_f() }),
+				_CameraMgr.WorldToScreen(_Vector2{ nav_mesh_.Right_f(), nav_mesh_.Bottom_f() })
+			};
+			_DrawFunc::DrawRectangle(nav_mesh_screen, Palette::SlateGray, 1.f);
+
+			const _float min_x = nav_mesh_.Left_f() + margin_x;
+			const _float max_x = nav_mesh_.Right_f() - margin_x;
+			const _float min_y = nav_mesh_.Top_f() + margin_y;
+			const _float max_y = nav_mesh_.Bottom_f() - margin_y;
+
+			if (min_x <= max_x && min_y <= max_y)
+			{
+				const _Rect movable_sample_rect = {
+					_CameraMgr.WorldToScreen(_Vector2{ min_x, min_y }),
+					_CameraMgr.WorldToScreen(_Vector2{ max_x, max_y })
+				};
+				_DrawFunc::DrawRectangle(movable_sample_rect, Palette::Aqua, 1.f);
+			}
+		}
 	}
 }
 
@@ -56,7 +116,23 @@ void Movement::SetAsMaxSpeed()
 	if (velocity.LengthSq() <= 0.f)
 		return;
 
-	SetMoveVelocity(velocity.Normalized() * move_spd_max_);
+	SetMoveVelocity(velocity.Normalized() * GetEffectiveMoveSpdMax());
+}
+
+void Movement::ApplyImmediateMoveSpeedBoost()
+{
+	_Vector3 boost_direction = move_direction_;
+
+	if (boost_direction.LengthSq() <= 0.f && move_velocity_.LengthSq() > 0.f)
+		boost_direction = move_velocity_.Normalized();
+
+	if (boost_direction.LengthSq() <= 0.f && transform_)
+		boost_direction = transform_->Forward2D();
+
+	if (boost_direction.LengthSq() <= 0.f)
+		return;
+
+	move_velocity_ = boost_direction.Normalized() * GetEffectiveMoveSpdMax();
 }
 
 void Movement::StopImmediately()
@@ -184,9 +260,10 @@ _float Movement::_GetRemainingKnockbackDistance() const
 
 void Movement::_ClampMoveVelocity()
 {
-	const _float max_speed_sq = move_spd_max_ * move_spd_max_;
+	const _float effective_max_speed = GetEffectiveMoveSpdMax();
+	const _float max_speed_sq = effective_max_speed * effective_max_speed;
 	if (move_velocity_.LengthSq() > max_speed_sq)
-		move_velocity_ = move_velocity_.Normalized() * move_spd_max_;
+		move_velocity_ = move_velocity_.Normalized() * effective_max_speed;
 }
 
 void Movement::_ApplyFrictionToMoveVelocity(_double _delta_time)
@@ -278,11 +355,8 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 
 	const _Vector3 delta = final_velocity * s_cast(_float, _delta_time);
 	transform_->Translate(delta);
-<<<<<<< Updated upstream
 	_ClampToNavMesh();
 }
-=======
->>>>>>> Stashed changes
 
 _Vector2 Movement::_GetNavSamplePoint() const
 {

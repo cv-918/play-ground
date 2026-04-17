@@ -82,8 +82,6 @@ protected:
 	EnemyAbilitySet ability_set_;
 	EnemyAttackContext attack_context_;
 
-<<<<<<< Updated upstream
-	_double hit_flash_timer_ = 0.0;
 	_double spawn_state_elapsed_ = 0.0;
 	_double death_state_elapsed_ = 0.0;
 
@@ -93,8 +91,5 @@ protected:
 	_bool death_destruction_reserved_ = false;
 	_bool nav_boundary_activation_pending_ = false;
 	TankWanderRuntime tank_wander_;
-
-=======
->>>>>>> Stashed changes
 	const SpriteResource* enemy_sprite_ = nullptr;
 };

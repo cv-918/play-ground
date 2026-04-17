@@ -51,6 +51,7 @@ enum class ComponentType
 	RectCollider,
 	EllipseCollider,
 	Combat,
+	GameplayEffectController,
 	SpriteRenderer,
 	SpriteAnimator,
 };

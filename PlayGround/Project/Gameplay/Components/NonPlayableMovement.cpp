@@ -28,7 +28,7 @@ void NonPlayableMovement::_ProcessOnDirectional(_double _delta_time)
 		return;
 	}
 
-	SetMoveVelocity(move_direction_.Normalized() * move_spd_);
+	SetMoveVelocity(move_direction_.Normalized() * GetEffectiveMoveSpd());
 }
 
 void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
@@ -84,7 +84,7 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 		const auto look_point = position + new_look * 5.f;
 		transform_->LookAt(look_point);
 
-		SetMoveVelocity(new_look * move_spd_);
+		SetMoveVelocity(new_look * GetEffectiveMoveSpd());
 	}
 	break;
 
@@ -106,7 +106,7 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 		direction_to_target = direction_to_target.Normalized();
 
 		transform_->LookAt(target_position);
-		SetMoveVelocity(direction_to_target * move_spd_);
+		SetMoveVelocity(direction_to_target * GetEffectiveMoveSpd());
 	}
 	break;
 	}
