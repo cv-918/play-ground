@@ -1,10 +1,21 @@
 ﻿#include "framework.h"
 #include "StagePlayer.h"
 
+#include "Animation/SpriteAnimationTypes.h"
 #include "Components/PlayerMovement.h"
+#include "Common/HitReaction.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 #include "GamePlaySystems/SkillManager.h"
 
 #include "GamePlaySystems/Json/ParticleDataManager.h"
+
+namespace
+{
+	HitReactionProfile MakePlayerMeleeReaction()
+	{
+		return MakeHitReactionProfile(0.35f, 36.f, 0.10f, KnockbackCurve::OutCubic, 1.0f);
+	}
+}
 
 StagePlayer::StagePlayer(const PlayableCharacterJsonInfo* _info)
 	: info_(_info)
@@ -91,6 +102,8 @@ _int StagePlayer::Update(_double _delta_time)
 	auto ret = __super::Update(_delta_time);
 	if (ret != UPDATE_CONTINUE)
 		return ret;
+
+	UpdateHitFlash(_delta_time);
 
 	// 입력 스펙 기준으로 Skill1/Skill2 액션을 스킬 사용에 연결한다.
 	if (input_manager_->ActionPressed(InputAction::Skill1))
@@ -255,6 +268,8 @@ void StagePlayer::OnCollisionStay(Collider* _this, Collider* _other)
 void StagePlayer::GetDamage(_float _damage)
 {
 	const auto final_damage = combat_->GetDamage(_damage);
+	RecordLastReceivedDamage(final_damage);
+	StartHitFlash();
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
@@ -268,14 +283,8 @@ void StagePlayer::GetDamage(_float _damage)
 
 void StagePlayer::ApplyHit(const HitContext& _hit)
 {
-	// 1. 기존 플레이어 피격 로직 재사용
 	GetDamage(_hit.damage_);
-
-	// 2. 넉백 적용
-	if (movement_ && _hit.knockback_power_ > 0.f)
-	{
-		movement_->ApplyKnockback(_hit.knockback_direction_, _hit.knockback_power_);
-	}
+	ApplyHitReaction(_hit, true);
 }
 
 void StagePlayer::_DrawObjectShape()
@@ -288,30 +297,24 @@ void StagePlayer::_DrawObjectShape()
 
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
-
-	const auto visible_width = player_sprite_->visible_bounds.Width() > 0 ? s_float(player_sprite_->visible_bounds.Width()) : 1.f;
-	const auto visible_height = player_sprite_->visible_bounds.Height() > 0 ? s_float(player_sprite_->visible_bounds.Height()) : 1.f;
-
-	const auto scale_x = transform_->Scale().x / visible_width;
-	const auto scale_y = (transform_->Scale().x * 0.6f) / visible_height;
-
-	const auto draw_width = player_sprite_->image_rect.Width * scale_x;
-	const auto draw_height = player_sprite_->image_rect.Height * scale_y;
-
-	const auto pivot_x = player_sprite_->pivot.X * scale_x;
-	const auto pivot_y = player_sprite_->pivot.Y * scale_y;
-
-	const _RectF dest_rect(
-		screen_pos.x - pivot_x,
-		screen_pos.y - pivot_y,
-		screen_pos.x - pivot_x + draw_width,
-		screen_pos.y - pivot_y + draw_height);
+	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*player_sprite_);
+	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
+		screen_pos,
+		transform_->Scale().x,
+		metrics,
+		_ScreenSystem.GetWorldResourceScale());
 
 	const _RectF src_rect(
 		player_sprite_->image_rect.X,
 		player_sprite_->image_rect.Y,
 		player_sprite_->image_rect.X + player_sprite_->image_rect.Width,
 		player_sprite_->image_rect.Y + player_sprite_->image_rect.Height);
+
+	if (IsHitFlashing())
+	{
+		_DrawFunc::DrawTextureWhiteFlash(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_, false, GetHitFlashStrength());
+		return;
+	}
 
 	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }
@@ -323,19 +326,16 @@ void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_coll
 		HandlerSystemList::Damage,
 		[this, target_enemy](IHandler* _handler)
 		{
-			/*s_cast(IDamagable*, _handler)->GetDamage(status_->GetAtt());*/
-
 			HitContext hit;
 			hit.source_ = this;
 			hit.damage_ = status_->GetAtt();
+			hit.reaction_ = MakePlayerMeleeReaction();
 
 			const auto target_pos = target_enemy->GetTransform()->Position();
 			const auto pos = transform_->Position();
 			hit.knockback_direction_ = (target_pos - pos).Normalized();
-			hit.knockback_power_ = hit.damage_ * 0.5f; // 데미지의 절반을 넉백으로 적용 (예시)
 
 			s_cast(IDamagable*, _handler)->ApplyHit(hit);
-			_CameraMgr.Shake(2.f, 0.25f);
 		}
 	);
 

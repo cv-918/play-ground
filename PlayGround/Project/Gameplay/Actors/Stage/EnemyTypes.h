@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Common/HitReaction.h"
+
 /**
  * @brief 적 유닛이 가질 수 있는 전역 행동 상태입니다.
  *
@@ -40,13 +42,13 @@ enum class EnemyAbilityType
 struct EnemyAttackContext
 {
 	_float damage_multiplier_ = 1.f;
-	_float knockback_power_ = 0.f;
+	HitReactionProfile reaction_;
 	_bool is_dash_attack_ = false;
 
 	void Reset()
 	{
 		damage_multiplier_ = 1.f;
-		knockback_power_ = 0.f;
+		reaction_ = HitReactionProfile{};
 		is_dash_attack_ = false;
 	}
 };

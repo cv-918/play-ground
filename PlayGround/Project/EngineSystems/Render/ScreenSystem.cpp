@@ -5,6 +5,19 @@
 
 namespace
 {
+	_float ComputeResolutionScale(const Resolution& _base_resolution, const Resolution& _window_resolution, _bool _use_cover_mode)
+	{
+		if (_base_resolution.width <= 0 || _base_resolution.height <= 0)
+			return 1.f;
+
+		if (_window_resolution.width <= 0 || _window_resolution.height <= 0)
+			return 1.f;
+
+		const _float scale_x = s_cast(_float, _window_resolution.width) / s_cast(_float, _base_resolution.width);
+		const _float scale_y = s_cast(_float, _window_resolution.height) / s_cast(_float, _base_resolution.height);
+		return _use_cover_mode ? std::max(scale_x, scale_y) : std::min(scale_x, scale_y);
+	}
+
 	bool TryGetCurrentMonitorResolution(Resolution& _out_resolution)
 	{
 		if (g_hwnd == nullptr)
@@ -43,6 +56,16 @@ namespace
 	}
 }
 
+_float ScreenSystem::GetWorldResourceScale() const
+{
+	return _CalculateAuthoringScale(false);
+}
+
+_float ScreenSystem::GetBackgroundCoverScale() const
+{
+	return _CalculateAuthoringScale(true);
+}
+
 Resolution ScreenSystem::WindowResolution() const
 {
 	if (g_hwnd)
@@ -61,6 +84,11 @@ Resolution ScreenSystem::WindowResolution() const
 		return Resolution{ g_screen_size.x, g_screen_size.y };
 
 	return design_resolution_;
+}
+
+_float ScreenSystem::_CalculateAuthoringScale(_bool _use_cover_mode) const
+{
+	return ComputeResolutionScale(asset_authoring_resolution_, WindowResolution(), _use_cover_mode);
 }
 
 bool ScreenSystem::ApplyVideoMode(const VideoSettings& _settings)

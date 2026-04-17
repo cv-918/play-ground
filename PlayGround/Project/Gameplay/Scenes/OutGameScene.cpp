@@ -186,11 +186,13 @@ void OutGameScene::OnEnter()
 	test_town_player_->SetNavMesh(nav_mesh);
 	test_town_player_->GetTransform()->Position(_Vector3(300.f, 300.f, 0.f));
 
-	test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(500.f, 300.f, 0.f));
-	if (test_town_npc_ == nullptr)
+	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
+	for (_uint i = 0; i < 3; ++i)
 	{
-		_NULL_DETECTION_MSGBOX;
-		return;
+		const auto gap = res.width / 3;
+		const auto x = (gap >> 1) + (i * gap);
+		const auto y = res.height >> 1;
+		test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(x, y));
 	}
 
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);

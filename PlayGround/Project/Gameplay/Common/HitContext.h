@@ -3,6 +3,7 @@
 
 #include <Base/Bases.h>
 #include "Core/Math/Vector3.h"
+#include "HitReaction.h"
 
 class GameObjectBase;
 
@@ -23,6 +24,7 @@ struct HitContext
 	// 넉백 관련
 	_Vector3 knockback_direction_ = _Vector3::Zero();
 	_float knockback_power_ = 0.f;
+	HitReactionProfile reaction_;
 
 	// 공격 메타 정보
 	_bool is_dash_attack_ = false;

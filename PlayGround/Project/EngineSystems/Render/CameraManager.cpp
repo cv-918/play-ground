@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 #include "CameraManager.h"
 
+#include "ScreenSystem.h"
 #include "GamePlay/Components/Transform.h"
 
 void CameraManager::Initialize(_int _viewport_width, _int _viewport_height)
@@ -13,18 +14,31 @@ void CameraManager::Update(_double _delta_time)
 {
 	UpdateFollow(_delta_time);
 
-	if (shake_duration_ > 0.f)
+	const _float trauma = trauma_;
+	if (trauma >= 0.08f)
 	{
-		shake_duration_ -= (_float)_delta_time;
+		const auto window_resolution = _ScreenSystem.WindowResolution();
+		const auto design_resolution = _ScreenSystem.DesignResolution();
 
-		camera_offset_.x = _Random.Range(-shake_intensity_, shake_intensity_);
-		camera_offset_.y = _Random.Range(-shake_intensity_, shake_intensity_);
+		_float resolution_scale_x = 1.f;
+		_float resolution_scale_y = 1.f;
+		if (design_resolution.width > 0)
+			resolution_scale_x = s_cast(_float, window_resolution.width) / s_cast(_float, design_resolution.width);
+		if (design_resolution.height > 0)
+			resolution_scale_y = s_cast(_float, window_resolution.height) / s_cast(_float, design_resolution.height);
+
+		const _float resolution_scale = std::min(resolution_scale_x, resolution_scale_y);
+		const _float shake_strength = _MathFunc::Lerp(min_shake_px_at_design_, max_shake_px_at_design_, trauma * trauma) * resolution_scale;
+
+		camera_offset_.x = s_int(std::round(_Random.Range(-shake_strength, shake_strength)));
+		camera_offset_.y = s_int(std::round(_Random.Range(-shake_strength, shake_strength)));
 	}
 	else
 	{
 		camera_offset_ = { 0, 0 };
-		shake_intensity_ = 0.f;
 	}
+
+	trauma_ = std::max(0.f, trauma_ - trauma_decay_per_sec_ * s_cast(_float, _delta_time));
 }
 
 void CameraManager::SetPosition(const _Vector2& _position)
@@ -68,10 +82,24 @@ void CameraManager::EnableClamp(bool _enable)
 	use_clamp_ = _enable;
 }
 
+void CameraManager::AddTrauma(_float _normalized_amount)
+{
+	if (_normalized_amount <= 0.f)
+		return;
+
+	trauma_ = _MathFunc::Clamp(trauma_ + _normalized_amount, 0.f, 1.f);
+}
+
 void CameraManager::Shake(_float _intensity, _float _duration)
 {
-	shake_intensity_ = _intensity;
-	shake_duration_ = _duration;
+	(void)_duration;
+
+	const _float normalized_trauma = _MathFunc::Clamp(
+		_intensity / std::max(1.f, max_shake_px_at_design_),
+		0.f,
+		1.f);
+
+	AddTrauma(normalized_trauma);
 }
 
 _Point CameraManager::WorldToScreen(const _Vector2& _world_position) const

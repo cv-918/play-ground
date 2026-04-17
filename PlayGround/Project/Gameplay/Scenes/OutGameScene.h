@@ -40,15 +40,11 @@ public:
 	void OnExit() override;
 
 private:
-	// 뷰 전환 메소드
 	void _ChangeView(OutGameViewState _new_view_state);
 	WidgetBase* _CreateView();
 
 	void _HandleViewportChanged();
 	_int _HandleSceneInput();
-
-	/* On Enter */
-
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;
 

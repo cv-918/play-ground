@@ -2,6 +2,7 @@
 #include "SpriteRendererComponent.h"
 
 #include "Actors/GameObjectBase.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 
 SpriteRendererComponent::SpriteRendererComponent()
 	: ComponentBase(ComponentType::SpriteRenderer)
@@ -44,25 +45,12 @@ void SpriteRendererComponent::Render(_double _delta_time)
 
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
-
-	// 현재 프로젝트의 기존 시각 비율을 유지한다.
-	const auto scale_x = transform_->Scale().x / std::max(1.f, render_command_.visible_width);
-	const auto scale_y = (transform_->Scale().x * 0.6f) / std::max(1.f, render_command_.visible_height);
-
-	const auto draw_width = render_command_.image_width * scale_x;
-	const auto draw_height = render_command_.image_height * scale_y;
-
-	const auto pivot_x = render_command_.pivot_x * scale_x;
-	const auto pivot_y = render_command_.pivot_y * scale_y;
-
-	const _RectF dest_rect(
-		screen_pos.x - render_command_.image_width * 0.5f,
-		screen_pos.y - render_command_.image_height * 0.5f,
-		screen_pos.x /*- pivot_x + draw_width*/ + render_command_.image_width * 0.5f,
-		screen_pos.y /*- pivot_y + draw_height*/ + render_command_.image_height * 0.5f);
-
-	const auto wid = dest_rect.Width();
-	const auto hei = dest_rect.Height();
+	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(render_command_);
+	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
+		screen_pos,
+		transform_->Scale().x,
+		metrics,
+		_ScreenSystem.GetWorldResourceScale());
 
 	if (render_command_.use_source_rect == true)
 	{

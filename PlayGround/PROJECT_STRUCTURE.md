@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 ﻿# Project Structure (Updated: 2026-04-17 03:19)
+=======
+﻿# Project Structure (Updated: 2026-04-17 14:34)
+>>>>>>> Stashed changes
 
 ```text
 Root
@@ -134,6 +138,7 @@ Root
 |   |   |   |   CommonGamePlayFunctions.h
 |   |   |   |   CommonGamePlayType.h
 |   |   |   |   HitContext.h
+|   |   |   |   HitReaction.h
 |   |   +--- Components
 |   |   |   |   Collider.cpp
 |   |   |   |   Collider.h
@@ -285,14 +290,14 @@ Root
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
 +--- _DevLog
-|   +--- Document
-|   |   +--- FixLog
 |   +--- Documents
 |   |   +--- Copilot
 |   |   +--- Design
+|   |   |   +--- Combat
 |   |   |   +--- Input
 |   |   |   +--- Option
 |   |   |   |   +--- Video
+|   |   +--- FixLog
 |   |   +--- Memo
 |   |   +--- Scope
 |   +--- Idea

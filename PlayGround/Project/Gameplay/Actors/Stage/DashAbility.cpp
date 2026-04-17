@@ -85,7 +85,12 @@ void DashAbility::OnUpdate(Enemy& _enemy, _double _delta_time)
 			if (info)
 			{
 				ctx.damage_multiplier_ = info->dash_damage_multiplier_;
-				ctx.knockback_power_ = info->dash_knockback_power_;
+				ctx.reaction_ = MakeHitReactionProfile(
+					info->dash_impact_,
+					info->dash_knockback_distance_world_px_,
+					info->dash_knockback_duration_sec_,
+					info->dash_knockback_curve_,
+					info->dash_camera_shake_scale_);
 			}
 		}
 	}

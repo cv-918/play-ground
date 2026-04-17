@@ -858,6 +858,24 @@ void DrawFunctions::DrawTextureWhiteFlash(const TextureResource* _texture, const
 	DeleteObject(flashed_bitmap);
 }
 
+void DrawFunctions::DrawTextureWhiteFlash(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, _bool _flip_x, _bool _flip_y, _float _flash, _ubyte _alpha)
+{
+	if (!_texture)
+		return;
+
+	auto flashed_bitmap = CreateWhiteFlashBitmap(_texture, _flash);
+	if (!flashed_bitmap)
+	{
+		DrawTexture(_texture, _dest_rect, _source_rect, _flip_x, _flip_y, _alpha);
+		return;
+	}
+
+	TextureResource temp = *_texture;
+	temp.bitmap = flashed_bitmap;
+	DrawTexture(&temp, _dest_rect, _source_rect, _flip_x, _flip_y, _alpha);
+	DeleteObject(flashed_bitmap);
+}
+
 _Vector2 DrawFunctions::MeasureString(
 	const std::wstring& _text,
 	_float _font_size,

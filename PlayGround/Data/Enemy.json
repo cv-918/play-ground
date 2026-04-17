@@ -25,6 +25,7 @@
 
     "ability_flags_": 0,
 
+<<<<<<< Updated upstream
     "attack_range_": 0.0,
     "attack_motion_duration_": 0.0,
 
@@ -48,6 +49,46 @@
     "hp_": 8.0,
     "contact_damage_": 0.0,
     "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+=======
+		"attack_range_": 0.0,
+		"attack_motion_duration_": 0.0,
+		"contact_impact_": 0.0,
+		"contact_knockback_distance_world_px_": 0.0,
+		"contact_knockback_duration_sec_": 0.0,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.0,
+
+		"dash_speed_": 0.0,
+		"dash_duration_": 0.0,
+		"dash_cooldown_": 0.0,
+		"dash_recovery_duration_": 0.0,
+		"dash_damage_multiplier_": 1.0,
+		"dash_impact_": 0.0,
+		"dash_knockback_distance_world_px_": 0.0,
+		"dash_knockback_duration_sec_": 0.0,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 0.0,
+		"dash_knockback_power_": 0.0,
+
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"projectile_impact_": 0.0,
+		"projectile_knockback_distance_world_px_": 0.0,
+		"projectile_knockback_duration_sec_": 0.0,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.0,
+		"projectile_knockback_power_": 0.0
+	},
+	{
+		"id_": 2,
+		"name_": "M002 - 플랑2",
+		"body_size_": 30.0,
+		"attack_speed_": 0.0,
+		"hp_": 8.0,
+		"contact_damage_": 0.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+>>>>>>> Stashed changes
 
     "tier_": 2,
     "role_": 0,
@@ -66,6 +107,7 @@
 
     "ability_flags_": 0,
 
+<<<<<<< Updated upstream
     "attack_range_": 0.0,
     "attack_motion_duration_": 0.0,
 
@@ -89,6 +131,46 @@
     "hp_": 40.0,
     "contact_damage_": 12.0,
     "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+=======
+		"attack_range_": 0.0,
+		"attack_motion_duration_": 0.0,
+		"contact_impact_": 0.0,
+		"contact_knockback_distance_world_px_": 0.0,
+		"contact_knockback_duration_sec_": 0.0,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.0,
+
+		"dash_speed_": 0.0,
+		"dash_duration_": 0.0,
+		"dash_cooldown_": 0.0,
+		"dash_recovery_duration_": 0.0,
+		"dash_damage_multiplier_": 1.0,
+		"dash_impact_": 0.0,
+		"dash_knockback_distance_world_px_": 0.0,
+		"dash_knockback_duration_sec_": 0.0,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 0.0,
+		"dash_knockback_power_": 0.0,
+
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"projectile_impact_": 0.0,
+		"projectile_knockback_distance_world_px_": 0.0,
+		"projectile_knockback_duration_sec_": 0.0,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.0,
+		"projectile_knockback_power_": 0.0
+	},
+	{
+		"id_": 3,
+		"name_": "M003 - 기체",
+		"body_size_": 32.0,
+		"attack_speed_": 1.0,
+		"hp_": 40.0,
+		"contact_damage_": 12.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+>>>>>>> Stashed changes
 
     "tier_": 1,
     "role_": 0,
@@ -107,6 +189,7 @@
 
     "ability_flags_": 1,
 
+<<<<<<< Updated upstream
     "attack_range_": 0.0,
     "attack_motion_duration_": 0.0,
 
@@ -130,6 +213,46 @@
     "hp_": 45.0,
     "contact_damage_": 12.0,
     "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+=======
+		"attack_range_": 0.0,
+		"attack_motion_duration_": 0.0,
+		"contact_impact_": 0.3,
+		"contact_knockback_distance_world_px_": 24.0,
+		"contact_knockback_duration_sec_": 0.12,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.85,
+
+		"dash_speed_": 0.0,
+		"dash_duration_": 0.0,
+		"dash_cooldown_": 0.0,
+		"dash_recovery_duration_": 0.0,
+		"dash_damage_multiplier_": 1.0,
+		"dash_impact_": 0.0,
+		"dash_knockback_distance_world_px_": 0.0,
+		"dash_knockback_duration_sec_": 0.0,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 0.0,
+		"dash_knockback_power_": 0.0,
+
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"projectile_impact_": 0.0,
+		"projectile_knockback_distance_world_px_": 0.0,
+		"projectile_knockback_duration_sec_": 0.0,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.0,
+		"projectile_knockback_power_": 0.0
+	},
+	{
+		"id_": 4,
+		"name_": "M004 - 돌체",
+		"body_size_": 32.0,
+		"attack_speed_": 1.0,
+		"hp_": 45.0,
+		"contact_damage_": 12.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+>>>>>>> Stashed changes
 
     "tier_": 3,
     "role_": 0,
@@ -148,6 +271,7 @@
 
     "ability_flags_": 3,
 
+<<<<<<< Updated upstream
     "attack_range_": 0.0,
     "attack_motion_duration_": 0.0,
 
@@ -171,6 +295,46 @@
     "hp_": 35.0,
     "contact_damage_": 4.0,
     "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+=======
+		"attack_range_": 0.0,
+		"attack_motion_duration_": 0.0,
+		"contact_impact_": 0.3,
+		"contact_knockback_distance_world_px_": 24.0,
+		"contact_knockback_duration_sec_": 0.12,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.85,
+
+		"dash_speed_": 500.0,
+		"dash_duration_": 0.35,
+		"dash_cooldown_": 4.0,
+		"dash_recovery_duration_": 1.25,
+		"dash_damage_multiplier_": 1.2,
+		"dash_impact_": 0.75,
+		"dash_knockback_distance_world_px_": 120.0,
+		"dash_knockback_duration_sec_": 0.2,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 1.25,
+		"dash_knockback_power_": 900.0,
+
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"projectile_impact_": 0.0,
+		"projectile_knockback_distance_world_px_": 0.0,
+		"projectile_knockback_duration_sec_": 0.0,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.0,
+		"projectile_knockback_power_": 0.0
+	},
+	{
+		"id_": 5,
+		"name_": "M005 - 슈터",
+		"body_size_": 32.0,
+		"attack_speed_": 1.0,
+		"hp_": 35.0,
+		"contact_damage_": 4.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+>>>>>>> Stashed changes
 
     "tier_": 4,
     "role_": 3,
@@ -189,6 +353,7 @@
 
     "ability_flags_": 5,
 
+<<<<<<< Updated upstream
     "attack_range_": 200.0,
     "attack_motion_duration_": 0.6,
 
@@ -212,6 +377,46 @@
     "hp_": 45.0,
     "contact_damage_": 4.0,
     "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+=======
+		"attack_range_": 200.0,
+		"attack_motion_duration_": 0.6,
+		"contact_impact_": 0.3,
+		"contact_knockback_distance_world_px_": 24.0,
+		"contact_knockback_duration_sec_": 0.12,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.85,
+
+		"dash_speed_": 0.0,
+		"dash_duration_": 0.0,
+		"dash_cooldown_": 0.0,
+		"dash_recovery_duration_": 0.0,
+		"dash_damage_multiplier_": 1.0,
+		"dash_impact_": 0.0,
+		"dash_knockback_distance_world_px_": 0.0,
+		"dash_knockback_duration_sec_": 0.0,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 0.0,
+		"dash_knockback_power_": 0.0,
+
+		"projectile_pattern_": 1,
+		"projectile_damage_": 6.0,
+		"projectile_speed_": 240.0,
+		"projectile_impact_": 0.25,
+		"projectile_knockback_distance_world_px_": 28.0,
+		"projectile_knockback_duration_sec_": 0.14,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.9,
+		"projectile_knockback_power_": 200.0
+	},
+	{
+		"id_": 6,
+		"name_": "M006 - 탱커",
+		"body_size_": 60.0,
+		"attack_speed_": 0.0,
+		"hp_": 45.0,
+		"contact_damage_": 4.0,
+		"image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+>>>>>>> Stashed changes
 
     "tier_": 4,
     "role_": 1,
@@ -230,6 +435,7 @@
 
     "ability_flags_": 1,
 
+<<<<<<< Updated upstream
     "attack_range_": 0.0,
     "attack_motion_duration_": 0.0,
 
@@ -245,4 +451,36 @@
     "projectile_speed_": 0.0,
     "projectile_knockback_power_": 0.0
   }
+=======
+		"attack_range_": 0.0,
+		"attack_motion_duration_": 0.0,
+		"contact_impact_": 0.3,
+		"contact_knockback_distance_world_px_": 24.0,
+		"contact_knockback_duration_sec_": 0.12,
+		"contact_knockback_curve_": 2,
+		"contact_camera_shake_scale_": 0.85,
+
+		"dash_speed_": 0.0,
+		"dash_duration_": 0.0,
+		"dash_cooldown_": 0.0,
+		"dash_recovery_duration_": 0.0,
+		"dash_damage_multiplier_": 1.0,
+		"dash_impact_": 0.0,
+		"dash_knockback_distance_world_px_": 0.0,
+		"dash_knockback_duration_sec_": 0.0,
+		"dash_knockback_curve_": 2,
+		"dash_camera_shake_scale_": 0.0,
+		"dash_knockback_power_": 0.0,
+
+		"projectile_pattern_": 0,
+		"projectile_damage_": 0.0,
+		"projectile_speed_": 0.0,
+		"projectile_impact_": 0.0,
+		"projectile_knockback_distance_world_px_": 0.0,
+		"projectile_knockback_duration_sec_": 0.0,
+		"projectile_knockback_curve_": 2,
+		"projectile_camera_shake_scale_": 0.0,
+		"projectile_knockback_power_": 0.0
+	}
+>>>>>>> Stashed changes
 ]

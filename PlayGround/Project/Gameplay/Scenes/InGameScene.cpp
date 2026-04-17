@@ -118,9 +118,9 @@ void InGameScene::OnExit()
 	_ColMgr.ClearAllColliders();
 }
 
-void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed)
+void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed, const HitReactionProfile& _reaction)
 {
-	object_manager_->SpawnProjectile(_owner, _position, _target, _damage, _speed);
+	object_manager_->SpawnProjectile(_owner, _position, _target, _damage, _speed, _reaction);
 }
 
 void InGameScene::ShowDamageUI(_float _damage, const _Point& _position)

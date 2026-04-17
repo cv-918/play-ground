@@ -2,6 +2,7 @@
 
 #include "../GameObjectBase.h"
 #include "EngineSystems/Physics/CollisionManager.h"
+#include "Common/HitReaction.h"
 
 class SphereCollider;
 
@@ -10,7 +11,7 @@ class Bullet final
     , public ICollidable
 {
 public:
-    explicit Bullet(GameObjectBase* _owner, _float _damage, _float _speed);
+    explicit Bullet(GameObjectBase* _owner, _float _damage, _float _speed, const HitReactionProfile& _reaction);
 
 private:
     _bool Initialize() override;
@@ -27,6 +28,7 @@ private:
     
     _float damage_ = 0.f;             // 피해량
     _float speed_ = 0.f;              // 이동 속도
+    HitReactionProfile reaction_;
     _double lifetime_ = 30.0;           // 생존 시간 (초)
     _double elapsed_time_ = 0.f;
 };

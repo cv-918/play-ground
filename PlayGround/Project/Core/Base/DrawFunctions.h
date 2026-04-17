@@ -71,4 +71,5 @@ namespace DrawFunctions
 	void DrawTexture(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, const _Color& _color, _ubyte _alpha = 255);
 	void DrawTextureWhiteFlash(const TextureResource* _texture, const _RectF& _dest_rect, _float _flash, _ubyte _alpha = 255);
 	void DrawTextureWhiteFlash(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, _float _flash, _ubyte _alpha = 255);
+	void DrawTextureWhiteFlash(const TextureResource* _texture, const _RectF& _dest_rect, const _RectF& _source_rect, _bool _flip_x, _bool _flip_y, _float _flash, _ubyte _alpha = 255);
 }
