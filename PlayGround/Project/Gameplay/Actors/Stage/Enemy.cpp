@@ -142,6 +142,7 @@ _bool Enemy::Initialize()
 	death_state_elapsed_ = 0.0;
 	death_fade_start_opacity_ = 1.f;
 	death_destruction_reserved_ = false;
+	death_finalized_ = false;
 
 	if (creation_info_.skip_spawn_fade_)
 	{
@@ -187,42 +188,6 @@ _int Enemy::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void Enemy::OnDestroy()
-{
-	__super::OnDestroy();
-
-	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyBody, body_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::EnemyAttack, attack_collider);
-
-	if (status_->IsDead())
-	{
-		_RunState.GetEnemyKillReward(info_);
-
-		// 코인 획득 텍스트 ui 노출(선택)
-		// play_scene_->ShowCoinEarnedUI(info_->reward_, transform_->Position());
-
-		// 먼지 드랍
-		if (0 < info_->dust_resource_count_)
-		{
-			const auto pos = transform_->Position();
-
-			// 먼지 드랍량 증가는 여기서 추가적으로 구현 가능. 예를 들어, 몬스터의 체력이나 난이도에 비례해서 드랍량을 증가시키는 로직을 추가할 수 있습니다.
-			for (_uint i = 0; i < info_->dust_resource_count_; ++i)
-			{
-				const auto x = _Random.Range(-1, 1);
-				const auto y = _Random.Range(-1, 1);
-				UnitCreationInfo creation_info;
-				creation_info.position_ = pos;
-				creation_info.look_point_ = pos + _Vector3(x, y);
-				_StageMgr.SpawnProps(PropsType::Dust, creation_info, (void*)&info_->dust_reward_);
-			}
-		}
-	}
-}
-
 void Enemy::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	if (_IsCombatCollisionBlocked())
@@ -239,12 +204,12 @@ void Enemy::OnCollisionStay(Collider* _this, Collider* _other)
 	ability_set_.OnCollisionStay(*this, _this, _other);
 }
 
-void Enemy::GetDamage(_float _damage)
+void Enemy::ApplyHit(const HitContext& _hit)
 {
 	if (_IsCombatCollisionBlocked())
 		return;
 
-	const auto final_damage = combat_->GetDamage(_damage);
+	const auto final_damage = combat_->GetDamage(_hit.damage_);
 
 	RecordLastReceivedDamage(final_damage);
 	if (final_damage <= 0.f)
@@ -274,14 +239,7 @@ void Enemy::GetDamage(_float _damage)
 
 	// 상태 전환
 	_ChangeState(status_->IsDead() ? EnemyActionState::Death : EnemyActionState::Hit);
-}
 
-void Enemy::ApplyHit(const HitContext& _hit)
-{
-	if (_IsCombatCollisionBlocked())
-		return;
-
-	GetDamage(_hit.damage_);
 	ApplyHitReaction(_hit, false);
 }
 
@@ -460,6 +418,7 @@ void Enemy::_ChangeState(EnemyActionState _new_state)
 		death_fade_start_opacity_ = render_opacity_;
 		death_destruction_reserved_ = false;
 		hit_flash_timer_ = 0.0;
+		_FinalizeDeathIfNeeded();
 		_DisableCombatCollisions();
 		if (movement_)
 		{
@@ -576,6 +535,16 @@ void Enemy::_UpdateOnDeath(_double _delta_time)
 void Enemy::RequestChangeState(EnemyActionState _new_state)
 {
 	_ChangeState(_new_state);
+}
+
+void Enemy::_FinalizeDeathIfNeeded()
+{
+	if (death_finalized_ || status_ == nullptr || !status_->IsDead())
+		return;
+
+	death_finalized_ = true;
+	const auto death_position = transform_ ? transform_->Position() : creation_info_.position_;
+	_StageMgr.HandleEnemyDeath(info_, death_position);
 }
 
 GameObjectBase* Enemy::GetPrimaryTarget() const

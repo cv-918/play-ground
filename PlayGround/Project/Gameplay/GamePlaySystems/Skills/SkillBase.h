@@ -9,7 +9,7 @@ class SkillBase : public IUpdatable
 public:
 	explicit SkillBase(const SkillJsonInfo* _info);
 	SkillBase(const SkillDefinition* _definition, const SkillJsonInfo* _info);
-	virtual ~SkillBase() DEFAULT;
+	virtual ~SkillBase();
 
 public:
 	_int Update(_double _delta_time) override;
@@ -29,6 +29,7 @@ public:
 			return definition_->cooldown_sec_;
 		return info_ ? info_->cooldown_ : 0.0;
 	}
+	void ResetRuntimeToReady();
 
 	virtual _bool Execute(GameObjectBase* _owner, const _Vector3& _direction);
 
@@ -39,9 +40,14 @@ protected:
 	void _ExecuteNode(const SkillGraphNode& _node);
 	void _SpawnExecution(const ExecutionEntitySpec& _spec);
 	_Vector3 _ResolveAimDirection(GameObjectBase* _owner, const _Vector3& _direction) const;
+	void _BindActiveOwner(GameObjectBase* _owner);
+	void _DetachActiveOwner();
+	void _HandleActiveOwnerDestroyed();
+	void _ClearActiveInstance();
 
 protected:
 	const SkillJsonInfo* info_ = nullptr;
 	const SkillDefinition* definition_ = nullptr;
 	SkillRuntimeState runtime_{};
+	IDestroyable::DestructionCallbackId active_owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 };

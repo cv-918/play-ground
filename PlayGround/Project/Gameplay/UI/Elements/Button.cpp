@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Button.h"
 
 namespace
@@ -59,6 +59,18 @@ void Button::SetStateTexture(ButtonState _state, const std::wstring& _image_path
 	}
 
 	state_sprites_[state_index] = sprite;
+}
+
+void Button::SetMaskOverlayColor(const _Color& _color)
+{
+	mask_overlay_color_ = _color;
+	has_mask_overlay_ = mask_overlay_color_.GetAlpha() > 0;
+}
+
+void Button::ClearMaskOverlay()
+{
+	mask_overlay_color_ = Palette::Transparent;
+	has_mask_overlay_ = false;
 }
 
 const SpriteResource* Button::_GetSpriteForState(ButtonState _state) const
@@ -137,7 +149,8 @@ void Button::Render(_double _delta_time)
 	const _Rect rt = BuildScaledRect(GetRect(), applied_ui_scale);
 
 	const SpriteResource* sprite = _GetSpriteForState(state_);
-	if (sprite && sprite->image)
+	const _bool has_sprite = (sprite && sprite->image);
+	if (has_sprite)
 	{
 		const _RectF dest_rect(
 			s_float(rt.Left()),
@@ -152,39 +165,47 @@ void Button::Render(_double _delta_time)
 			sprite->image_rect.Y + sprite->image_rect.Height);
 
 		_DrawFunc::DrawTexture(sprite->image, dest_rect, src_rect);
-		return;
 	}
-
-	// 비활성화 상태일 때는 회색으로 표시
-	if (state_ == ButtonState::Disabled)
+	else if (state_ == ButtonState::Disabled)
 	{
 		_DrawFunc::FillRectangle(rt, Palette::Gray);
 		_DrawFunc::DrawRectangle(rt, Palette::Black);
 		_DrawFunc::DrawString(rt.Center(), text_, Palette::DarkGray, 12.f * applied_ui_scale, true);
 		return;
 	}
-
-	// g_back_dc를 사용하여 버튼 배경과 텍스트 출력
-	_DrawFunc::DrawRectangle(rt, Palette::Black);
-
-	_Color draw_color = Palette::White;
-	switch (state_)
+	else
 	{
-	case ButtonState::Normal:
-		break;
-	case ButtonState::Hovered: // 연회색
-		draw_color = _Color(200, 200, 200); break;
-	case ButtonState::Pressed_L: // 진회색
-		draw_color = _Color(150, 150, 150); break;
-	case ButtonState::Pressed_R: // 우클릭 프레스(청회색)
-		draw_color = _Color(150, 170, 200); break;
-	case ButtonState::Disabled:
-		break;
-	default:
-		break;
+		// g_back_dc를 사용하여 버튼 배경과 텍스트 출력
+		_DrawFunc::DrawRectangle(rt, Palette::Black);
+
+		_Color draw_color = Palette::White;
+		switch (state_)
+		{
+		case ButtonState::Normal:
+			break;
+		case ButtonState::Hovered: // 연회색
+			draw_color = _Color(200, 200, 200); break;
+		case ButtonState::Pressed_L: // 진회색
+			draw_color = _Color(150, 150, 150); break;
+		case ButtonState::Pressed_R: // 우클릭 프레스(청회색)
+			draw_color = _Color(150, 170, 200); break;
+		case ButtonState::Disabled:
+			break;
+		default:
+			break;
+		}
+
+		_DrawFunc::FillRectangle(rt, draw_color);
 	}
 
-	_DrawFunc::FillRectangle(rt, draw_color);
-	_DrawFunc::DrawRectangle(rt, Palette::Black);
-	_DrawFunc::DrawString(rt.Center(), text_, Palette::Black, 12.f * applied_ui_scale, true);
+	if (has_mask_overlay_)
+	{
+		_DrawFunc::FillRectangle(rt, mask_overlay_color_);
+	}
+
+	if (!has_sprite)
+	{
+		_DrawFunc::DrawRectangle(rt, Palette::Black);
+		_DrawFunc::DrawString(rt.Center(), text_, Palette::Black, 12.f * applied_ui_scale, true);
+	}
 }

@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 #include "RunState.h"
 
+#include "Actors/GameObjectBase.h"
 #include "GamePlaySystems/StageManager.h"
 
 void RunState::Ready()
@@ -11,8 +12,10 @@ void RunState::Ready()
 
 void RunState::Clear()
 {
+	ingame_scene_ = nullptr;
+
 	// 플레이어 참조 초기화 및 사망 여부 초기화
-	player_ = nullptr;
+	SetPlayer(nullptr);
 	is_player_died_ = false;
 
 	// 인게임 진입 후 획득한 코인 수 및 경험치 초기화
@@ -21,6 +24,26 @@ void RunState::Clear()
 
 	// 킬 카운트 초기화 및 클리어 조건 설정
 	kill_count_ = 0;
+}
+
+void RunState::SetPlayer(GameObjectBase* _player)
+{
+	if (player_ == _player)
+		return;
+
+	if (player_ && player_destruction_callback_id_ != IDestroyable::kInvalidDestructionCallbackId)
+		player_->RemoveDestructionCallback(player_destruction_callback_id_);
+
+	player_ = _player;
+	player_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+
+	if (player_ == nullptr)
+		return;
+
+	player_destruction_callback_id_ = player_->AddDestructionCallback([this]()
+		{
+			_HandlePlayerDestroyed();
+		});
 }
 
 RunSessionResult RunState::CreateResult() const
@@ -56,4 +79,10 @@ void RunState::GetEnemyKillReward(const EnemyJsonInfo* _info)
 		// 다음 스테이지로 진행이 가능한 상태로 열어줌
 		_StageMgr.MarkCanProgressNextStage();
 	}
+}
+
+void RunState::_HandlePlayerDestroyed()
+{
+	player_ = nullptr;
+	player_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 }

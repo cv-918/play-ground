@@ -72,19 +72,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)</OutDir>
-    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)</IntDir>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)</OutDir>
-    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)</IntDir>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)_Bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>_Intermediate\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -92,6 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
@@ -115,6 +120,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
@@ -138,11 +144,21 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)GenerateTree.ps1"
+if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
+xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -152,6 +168,11 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>framework.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project;$(ProjectDir)Project\Core;$(ProjectDir)Project\GamePlay;$(ProjectDir)Project\System;$(ProjectDir)Project\Framework</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,6 +180,11 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)GenerateTree.ps1"
+if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
+xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
@@ -212,6 +238,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
@@ -230,6 +257,9 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\UI\Elements\Image.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameExitView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameOptionView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameSkillView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
@@ -363,8 +393,11 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Framework\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />
@@ -394,6 +427,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Elements\ProgressBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Text.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameOptionView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameSkillView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGameResultView.cpp" />
@@ -404,6 +439,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Widgets\HpBar.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\InGameSkillSlot.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\WidgetBase.cpp" />
     <ClCompile Include="Project\Gameplay\World\Background.cpp" />

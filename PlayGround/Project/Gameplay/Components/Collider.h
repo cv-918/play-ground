@@ -25,7 +25,7 @@ public:
 	virtual _bool CheckCollided(Collider* _other) PURE;
 	void RegisterOnCollidedList(Collider* _other);
 	void DeregisterFromCollidedList(Collider* _other);
-	void ClearCollisionState();
+	void ClearCollisionState(_bool _notify = true);
 
 	ColliderType GetType() const { return type_; }
 
@@ -72,6 +72,7 @@ protected:
 	}
 
 private:
+	void _RemoveCollidedCollider(Collider* _other, _bool _notify);
 	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }
 
 private:

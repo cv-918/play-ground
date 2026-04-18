@@ -7,9 +7,14 @@
 
 namespace
 {
+	_bool CanUseObjectTransform(GameObjectBase* _object)
+	{
+		return _object && !_object->IsPendingDestruction() && _object->GetTransform();
+	}
+
 	GameplayEffectController* GetEffectController(GameObjectBase* _target)
 	{
-		if (!_target)
+		if (!CanUseObjectTransform(_target))
 			return nullptr;
 
 		return s_cast(
@@ -23,9 +28,11 @@ namespace
 		GameObjectBase* _target)
 	{
 		GameplayEffectApplicationParams params;
-		params.source_ = _source_owner;
+		params.source_ = (_source_owner && !_source_owner->IsPendingDestruction())
+			? _source_owner
+			: nullptr;
 
-		if (_target)
+		if (CanUseObjectTransform(_target))
 		{
 			const auto target_position = _target->GetTransform()->Position();
 			params.knockback_direction_ = (target_position - _origin).Normalized();
@@ -33,6 +40,11 @@ namespace
 
 		return params;
 	}
+}
+
+HitPolicyRuntime::~HitPolicyRuntime()
+{
+	Clear();
 }
 
 void HitPolicyRuntime::Update(_double _delta_time)
@@ -52,8 +64,10 @@ void HitPolicyRuntime::Update(_double _delta_time)
 
 _bool HitPolicyRuntime::TryConsumeTarget(GameObjectBase* _target)
 {
-	if (!_target)
+	if (!CanUseObjectTransform(_target))
 		return false;
+
+	_TrackTarget(_target);
 
 	switch (kind_)
 	{
@@ -77,6 +91,60 @@ _bool HitPolicyRuntime::TryConsumeTarget(GameObjectBase* _target)
 	}
 }
 
+void HitPolicyRuntime::Clear()
+{
+	const auto tracked_targets = target_callback_ids_;
+	for (const auto& [target, callback_id] : tracked_targets)
+	{
+		if (target && callback_id != IDestroyable::kInvalidDestructionCallbackId)
+			target->RemoveDestructionCallback(callback_id);
+	}
+
+	lifetime_targets_.clear();
+	target_timers_.clear();
+	target_callback_ids_.clear();
+}
+
+void HitPolicyRuntime::_TrackTarget(GameObjectBase* _target)
+{
+	if (!_target || target_callback_ids_.find(_target) != target_callback_ids_.end())
+		return;
+
+	const auto callback_id = _target->AddDestructionCallback(
+		[this, _target]()
+		{
+			_ForgetTarget(_target, false);
+		});
+
+	if (callback_id != IDestroyable::kInvalidDestructionCallbackId)
+		target_callback_ids_[_target] = callback_id;
+}
+
+void HitPolicyRuntime::_ForgetTarget(GameObjectBase* _target, const _bool _detach_callback)
+{
+	if (!_target)
+		return;
+
+	if (_detach_callback)
+	{
+		const auto callback_iter = target_callback_ids_.find(_target);
+		if (callback_iter != target_callback_ids_.end())
+		{
+			if (callback_iter->second != IDestroyable::kInvalidDestructionCallbackId)
+				_target->RemoveDestructionCallback(callback_iter->second);
+
+			target_callback_ids_.erase(callback_iter);
+		}
+	}
+	else
+	{
+		target_callback_ids_.erase(_target);
+	}
+
+	lifetime_targets_.erase(_target);
+	target_timers_.erase(_target);
+}
+
 ProjectileExecutionActor::ProjectileExecutionActor(
 	GameObjectBase* _owner,
 	const ExecutionEntitySpec& _spec,
@@ -91,14 +159,20 @@ ProjectileExecutionActor::ProjectileExecutionActor(
 {
 }
 
+ProjectileExecutionActor::~ProjectileExecutionActor()
+{
+	_DetachOwner();
+}
+
 _bool ProjectileExecutionActor::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
+	_BindOwner(owner_);
 	transform_->Position(spawn_position_);
 
-	if (direction_.LengthSq() <= 0.f && owner_)
+	if (direction_.LengthSq() <= 0.f && CanUseObjectTransform(owner_))
 		direction_ = owner_->GetTransform()->Forward2D();
 
 	if (direction_.LengthSq() <= 0.f)
@@ -154,6 +228,9 @@ void ProjectileExecutionActor::_TryApplyHit(Collider* _other)
 		return;
 
 	auto* target = _other->GameObject();
+	if (!CanUseObjectTransform(target))
+		return;
+
 	if (!hit_policy_runtime_.TryConsumeTarget(target))
 		return;
 
@@ -171,6 +248,40 @@ void ProjectileExecutionActor::_TryApplyHit(Collider* _other)
 	}
 }
 
+void ProjectileExecutionActor::_BindOwner(GameObjectBase* _owner)
+{
+	_DetachOwner();
+	owner_ = _owner;
+	if (!owner_)
+		return;
+
+	owner_destruction_callback_id_ = owner_->AddDestructionCallback(
+		[this]()
+		{
+			_HandleOwnerDestroyed();
+		});
+}
+
+void ProjectileExecutionActor::_DetachOwner()
+{
+	if (!owner_ || owner_destruction_callback_id_ == IDestroyable::kInvalidDestructionCallbackId)
+	{
+		owner_ = nullptr;
+		owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+		return;
+	}
+
+	owner_->RemoveDestructionCallback(owner_destruction_callback_id_);
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void ProjectileExecutionActor::_HandleOwnerDestroyed()
+{
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
 AreaFieldExecutionActor::AreaFieldExecutionActor(
 	GameObjectBase* _owner,
 	const ExecutionEntitySpec& _spec,
@@ -183,11 +294,17 @@ AreaFieldExecutionActor::AreaFieldExecutionActor(
 {
 }
 
+AreaFieldExecutionActor::~AreaFieldExecutionActor()
+{
+	_DetachOwner();
+}
+
 _bool AreaFieldExecutionActor::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
+	_BindOwner(owner_);
 	transform_->Position(spawn_position_);
 	transform_->Scale(spec_.size_);
 	color_ = Palette::Rust;
@@ -239,6 +356,9 @@ void AreaFieldExecutionActor::_TryCapture(Collider* _other)
 		return;
 
 	auto* target = _other->GameObject();
+	if (!CanUseObjectTransform(target))
+		return;
+
 	if (!hit_policy_runtime_.TryConsumeTarget(target))
 		return;
 
@@ -247,8 +367,42 @@ void AreaFieldExecutionActor::_TryCapture(Collider* _other)
 		return;
 
 	GameplayEffectApplicationParams params;
-	params.source_ = owner_;
+	params.source_ = (owner_ && !owner_->IsPendingDestruction()) ? owner_ : nullptr;
 	controller->ApplyEffect(spec_.on_capture_effect_, params);
+}
+
+void AreaFieldExecutionActor::_BindOwner(GameObjectBase* _owner)
+{
+	_DetachOwner();
+	owner_ = _owner;
+	if (!owner_)
+		return;
+
+	owner_destruction_callback_id_ = owner_->AddDestructionCallback(
+		[this]()
+		{
+			_HandleOwnerDestroyed();
+		});
+}
+
+void AreaFieldExecutionActor::_DetachOwner()
+{
+	if (!owner_ || owner_destruction_callback_id_ == IDestroyable::kInvalidDestructionCallbackId)
+	{
+		owner_ = nullptr;
+		owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+		return;
+	}
+
+	owner_->RemoveDestructionCallback(owner_destruction_callback_id_);
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void AreaFieldExecutionActor::_HandleOwnerDestroyed()
+{
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 }
 
 OrbitExecutionActor::OrbitExecutionActor(
@@ -263,11 +417,17 @@ OrbitExecutionActor::OrbitExecutionActor(
 {
 }
 
+OrbitExecutionActor::~OrbitExecutionActor()
+{
+	_DetachOwner();
+}
+
 _bool OrbitExecutionActor::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
+	_BindOwner(owner_);
 	transform_->Scale(spec_.size_);
 	color_ = Palette::AshGray;
 	SetAlpha(0.5f);
@@ -326,6 +486,9 @@ void OrbitExecutionActor::_TryApplyHit(Collider* _other)
 		return;
 
 	auto* target = _other->GameObject();
+	if (!CanUseObjectTransform(target))
+		return;
+
 	if (!hit_policy_runtime_.TryConsumeTarget(target))
 		return;
 
@@ -340,7 +503,7 @@ void OrbitExecutionActor::_TryApplyHit(Collider* _other)
 
 void OrbitExecutionActor::_UpdateOrbitPosition() const
 {
-	if (!owner_)
+	if (!CanUseObjectTransform(owner_))
 		return;
 
 	const auto owner_position = owner_->GetTransform()->Position();
@@ -351,4 +514,38 @@ void OrbitExecutionActor::_UpdateOrbitPosition() const
 	position.y += sinf(angle_rad) * spec_.orbit_radius_;
 
 	transform_->Position(position);
+}
+
+void OrbitExecutionActor::_BindOwner(GameObjectBase* _owner)
+{
+	_DetachOwner();
+	owner_ = _owner;
+	if (!owner_)
+		return;
+
+	owner_destruction_callback_id_ = owner_->AddDestructionCallback(
+		[this]()
+		{
+			_HandleOwnerDestroyed();
+		});
+}
+
+void OrbitExecutionActor::_DetachOwner()
+{
+	if (!owner_ || owner_destruction_callback_id_ == IDestroyable::kInvalidDestructionCallbackId)
+	{
+		owner_ = nullptr;
+		owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+		return;
+	}
+
+	owner_->RemoveDestructionCallback(owner_destruction_callback_id_);
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void OrbitExecutionActor::_HandleOwnerDestroyed()
+{
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 }

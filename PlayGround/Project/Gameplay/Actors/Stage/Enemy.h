@@ -16,12 +16,10 @@ protected:
 
 private:
 	_int Update(_double _delta_time) override;
-	void OnDestroy() override;
 
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Collider* _this, Collider* _other) override;
 
-	void GetDamage(_float _damage) override;
 	void ApplyHit(const HitContext& _hit) override;
 
 private:
@@ -51,6 +49,7 @@ private:
 	void _UpdateOnHit(_double _delta_time);
 	void _UpdateOnAttack(_double _delta_time);
 	void _UpdateOnDeath(_double _delta_time);
+	void _FinalizeDeathIfNeeded();
 	_bool _UsesTankWanderPolicy() const;
 	void _InitializeTankWanderRuntime();
 	void _UpdateTankWander(_double _delta_time);
@@ -89,6 +88,7 @@ protected:
 	_float death_fade_start_opacity_ = 1.f;
 
 	_bool death_destruction_reserved_ = false;
+	_bool death_finalized_ = false;
 	_bool nav_boundary_activation_pending_ = false;
 	TankWanderRuntime tank_wander_;
 	const SpriteResource* enemy_sprite_ = nullptr;

@@ -5,6 +5,7 @@
 class InGameScene;
 class ObjectManager;
 class UIManager;
+struct EnemyJsonInfo;
 
 class StageManager final
 	: public ISingleton<StageManager>
@@ -18,6 +19,8 @@ public:
 	void ChangeState(StageState _new_state);
 	void ProgressRunSessionResult();
 	void MarkCanProgressNextStage();
+	void HandlePlayerDeath();
+	void HandleEnemyDeath(const EnemyJsonInfo* _info, const _Vector3& _position);
 
 	_bool SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data);
 

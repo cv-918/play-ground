@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Grid.h"
 #include "Button.h"
 
@@ -34,9 +34,6 @@ _bool Grid::Initialize()
 
 _int Grid::Update(_double _delta_time)
 {
-	if (!IsEnable())
-		return UPDATE_CONTINUE;
-
 	_SyncCellButtonsLayout();
 
 	for (auto& cell : cells_)
@@ -44,8 +41,13 @@ _int Grid::Update(_double _delta_time)
 		if (nullptr == cell.button)
 			continue;
 
-		cell.button->SetEnable(IsEnable());
 		cell.button->SetVisible(IsVisible());
+		if (!IsEnable())
+		{
+			cell.button->SetEnable(false);
+			continue;
+		}
+
 		cell.button->Update(_delta_time);
 	}
 

@@ -92,13 +92,27 @@ void CollisionManager::DeregisterCollider(CollisionLayer _layer, Collider* _coll
 
 void CollisionManager::ClearAllColliders()
 {
+	std::vector<Collider*> colliders_to_clear;
+	for (auto& vec : layer_colliders_)
+	{
+		for (auto* collider : vec)
+		{
+			if (!collider)
+				continue;
+
+			if (std::find(colliders_to_clear.begin(), colliders_to_clear.end(), collider) == colliders_to_clear.end())
+				colliders_to_clear.push_back(collider);
+		}
+	}
+
+	for (auto* collider : colliders_to_clear)
+		collider->ClearCollisionState(false);
+
 	for (auto& vec : layer_colliders_)
 	{
 		vec.clear();
 		std::vector<Collider*>().swap(vec); // 메모리 해제
 	}
-
-	layer_colliders_->clear();
 }
 
 _bool CollisionManager::_IsColliding(Collider* _a, Collider* _b)

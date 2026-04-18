@@ -1,7 +1,8 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "UserProfile.h"
 
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
+#include "GamePlaySystems/SkillManager.h"
 
 void UserProfile::ResetUserData()
 {
@@ -9,11 +10,14 @@ void UserProfile::ResetUserData()
 	experience_ = 0;
 	std::vector<_uint>().swap(unlocked_character_ids_); // unlocked_character_ids_ 벡터를 초기화하여 메모리 해제
 	std::vector<std::pair<_uint, _uint>>().swap(acquired_node_ids_); // acquired_node_ids_ 벡터를 초기화하여 메모리 해제
+	equipped_skill_ids_.fill(-1);
 	stage_progress_ = 0;
 }
 
 void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 {
+	const auto loaded_equipped_skill_ids = _info.equipped_skill_ids_;
+
 	dust_count_ = _info.dust_count_;
 	experience_ = _info.experience_;
 	unlocked_character_ids_ = _info.unlocked_character_ids_;
@@ -28,6 +32,17 @@ void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 		_SYSTEM_LOG_INFO(_T("No unlocked characters found. Default character (Dusty) has been added to the unlocked character list."));
 	}
 
+	_SkillMgr.UnequipSkill(0);
+	_SkillMgr.UnequipSkill(1);
+
+	for (_uint slot_idx = 0; slot_idx < loaded_equipped_skill_ids.size(); ++slot_idx)
+	{
+		if (loaded_equipped_skill_ids[slot_idx] < 0)
+			continue;
+
+		_SkillMgr.EquipSkill(slot_idx, s_uint(loaded_equipped_skill_ids[slot_idx]));
+	}
+
 	UpdateAttributeStat(); // 유저 데이터를 저장한 후 어트리뷰트 수치를 업데이트하여 최신 상태로 유지
 }
 
@@ -39,9 +54,26 @@ UserDataJsonInfo UserProfile::GetUserData() const
 	info.experience_ = experience_;
 	info.unlocked_character_ids_ = unlocked_character_ids_;
 	info.acquired_node_ids_ = acquired_node_ids_;
+	info.equipped_skill_ids_ = equipped_skill_ids_;
 	info.stage_progress_ = stage_progress_;
 
 	return info;
+}
+
+void UserProfile::SetEquippedSkillId(const _uint _slot_idx, const _int _skill_id)
+{
+	if (_slot_idx >= equipped_skill_ids_.size())
+		return;
+
+	equipped_skill_ids_[_slot_idx] = _skill_id;
+}
+
+_int UserProfile::GetEquippedSkillId(const _uint _slot_idx) const
+{
+	if (_slot_idx >= equipped_skill_ids_.size())
+		return -1;
+
+	return equipped_skill_ids_[_slot_idx];
 }
 
 void UserProfile::IncreaseCoins(const _uint _count)

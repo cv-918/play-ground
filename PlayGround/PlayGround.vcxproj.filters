@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Default">
@@ -136,6 +136,9 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameExitView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Views\OutGameSkillView.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTypes.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\IDialogueEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.h" />
@@ -144,6 +147,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
@@ -233,6 +237,9 @@
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameMainView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameAttributeView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameOptionView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Views\OutGameSkillView.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />
@@ -277,6 +284,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />

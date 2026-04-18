@@ -7,10 +7,10 @@
 ObjectManager::~ObjectManager()
 {
 	for (auto& game_object : game_objects_)
-		SAFE_DELETE(game_object);
+		_DestroyGameObject(game_object, true);
 
 	for (auto& new_obj : new_game_objects_)
-		SAFE_DELETE(new_obj);
+		_DestroyGameObject(new_obj, true);
 
 	SAFE_DELETE(play_area_);
 }
@@ -97,10 +97,7 @@ void ObjectManager::CleanUp()
 
 	// 2. it부터 end()까지는 이제 확실하게 '삭제 대기 중인 객체들'만 모여있습니다.
 	for (auto temp_it = it; temp_it != game_objects_.end(); ++temp_it)
-	{
-		(*temp_it)->OnDestroy();
-		delete (*temp_it);
-	}
+		_DestroyGameObject(*temp_it, false);
 
 	// 3. 컨테이너에서 제거
 	game_objects_.erase(it, game_objects_.end());
@@ -148,6 +145,19 @@ void ObjectManager::_PushGameObject(GameObjectBase* _game_object)
 
 	new_game_objects_.push_back(_game_object);
 	//_SYSTEM_LOG_INFO(L"ObjectManager: Added game object - Name: %s, ID: %d", _game_object->Name().c_str(), _game_object->ID());
+}
+
+void ObjectManager::_DestroyGameObject(GameObjectBase* _game_object, const _bool _scene_shutdown)
+{
+	if (_game_object == nullptr)
+		return;
+
+	if (_scene_shutdown)
+		_game_object->OnSceneShutdown();
+	else
+		_game_object->OnDestroy();
+
+	delete _game_object;
 }
 
 void ObjectManager::_MergeNewGameObjects()

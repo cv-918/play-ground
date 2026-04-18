@@ -11,10 +11,17 @@ Bullet::Bullet(GameObjectBase* _owner, _float _damage, _float _speed, const HitR
 {
 }
 
+Bullet::~Bullet()
+{
+	_DetachOwner();
+}
+
 _bool Bullet::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
+
+	_BindOwner(owner_);
 
 	// 콜라이더 생성 및 설정
 	collider_ = new SphereCollider(5.f);
@@ -82,4 +89,37 @@ void Bullet::OnCollisionEnter(Collider* _this, Collider* _other)
 		});
 
 	ReserveDestruction();  // 충돌 후 총알 제거
+}
+
+void Bullet::_BindOwner(GameObjectBase* _owner)
+{
+	_DetachOwner();
+	owner_ = _owner;
+	if (!owner_)
+		return;
+
+	owner_destruction_callback_id_ = owner_->AddDestructionCallback([this]()
+		{
+			_HandleOwnerDestroyed();
+		});
+}
+
+void Bullet::_DetachOwner()
+{
+	if (!owner_ || owner_destruction_callback_id_ == IDestroyable::kInvalidDestructionCallbackId)
+	{
+		owner_ = nullptr;
+		owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+		return;
+	}
+
+	owner_->RemoveDestructionCallback(owner_destruction_callback_id_);
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void Bullet::_HandleOwnerDestroyed()
+{
+	owner_ = nullptr;
+	owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 }

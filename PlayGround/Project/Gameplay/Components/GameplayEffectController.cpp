@@ -5,6 +5,11 @@
 #include "Common/HitContext.h"
 #include "Components/Movement.h"
 
+GameplayEffectController::~GameplayEffectController()
+{
+	_ClearSourceTracking();
+}
+
 _int GameplayEffectController::Update(_double _delta_time)
 {
 	_bool requires_rebuild = false;
@@ -47,7 +52,9 @@ _int GameplayEffectController::Update(_double _delta_time)
 
 		if (expired_by_duration || expired_by_tick_count)
 		{
+			const auto source = effect.params_.source_;
 			iter = active_effects_.erase(iter);
+			_ReleaseTrackedSource(source);
 			requires_rebuild = true;
 			continue;
 		}
@@ -81,6 +88,7 @@ void GameplayEffectController::ApplyEffect(const GameplayEffectSpec& _spec, cons
 			active_effects_.end());
 
 		requires_rebuild = (old_size != active_effects_.size());
+		_ReleaseUnusedTrackedSources();
 	}
 
 	if (_spec.apply_damage_on_start_)
@@ -105,8 +113,10 @@ void GameplayEffectController::ApplyEffect(const GameplayEffectSpec& _spec, cons
 	ActiveEffectInstance instance;
 	instance.spec_ = _spec;
 	instance.params_ = _params;
+	instance.params_.source_ = _SanitizeSource(instance.params_.source_);
 	instance.remaining_duration_sec_ = _spec.duration_sec_;
 	active_effects_.push_back(instance);
+	_TrackSource(instance.params_.source_);
 
 	_RebuildAggregates();
 }
@@ -122,7 +132,7 @@ void GameplayEffectController::_ApplyDamagePayload(const DamagePayload& _payload
 		return;
 
 	HitContext hit;
-	hit.source_ = _params.source_;
+	hit.source_ = _SanitizeSource(_params.source_);
 	hit.damage_ = _payload.amount_;
 	hit.knockback_direction_ = _params.knockback_direction_;
 
@@ -137,6 +147,98 @@ void GameplayEffectController::_ApplyDamagePayload(const DamagePayload& _payload
 		{
 			s_cast(IDamagable*, _handler)->ApplyHit(hit);
 		});
+}
+
+GameObjectBase* GameplayEffectController::_SanitizeSource(GameObjectBase* _source) const
+{
+	if (_source == nullptr || _source->IsPendingDestruction())
+		return nullptr;
+
+	return _source;
+}
+
+void GameplayEffectController::_TrackSource(GameObjectBase* _source)
+{
+	if (_source == nullptr || tracked_sources_.find(_source) != tracked_sources_.end())
+		return;
+
+	const auto callback_id = _source->AddDestructionCallback([this, _source]()
+		{
+			_HandleSourceDestroyed(_source);
+		});
+
+	if (callback_id != IDestroyable::kInvalidDestructionCallbackId)
+		tracked_sources_[_source] = callback_id;
+}
+
+void GameplayEffectController::_HandleSourceDestroyed(GameObjectBase* _source)
+{
+	for (auto& effect : active_effects_)
+	{
+		if (effect.params_.source_ == _source)
+			effect.params_.source_ = nullptr;
+	}
+
+	tracked_sources_.erase(_source);
+}
+
+void GameplayEffectController::_ReleaseTrackedSource(GameObjectBase* _source)
+{
+	if (_source == nullptr || _HasTrackedSourceReference(_source))
+		return;
+
+	const auto iter = tracked_sources_.find(_source);
+	if (iter == tracked_sources_.end())
+		return;
+
+	if (iter->second != IDestroyable::kInvalidDestructionCallbackId)
+		_source->RemoveDestructionCallback(iter->second);
+
+	tracked_sources_.erase(iter);
+}
+
+void GameplayEffectController::_ReleaseUnusedTrackedSources()
+{
+	for (auto iter = tracked_sources_.begin(); iter != tracked_sources_.end();)
+	{
+		if (_HasTrackedSourceReference(iter->first))
+		{
+			++iter;
+			continue;
+		}
+
+		if (iter->first && iter->second != IDestroyable::kInvalidDestructionCallbackId)
+			iter->first->RemoveDestructionCallback(iter->second);
+
+		iter = tracked_sources_.erase(iter);
+	}
+}
+
+_bool GameplayEffectController::_HasTrackedSourceReference(GameObjectBase* _source) const
+{
+	if (_source == nullptr)
+		return false;
+
+	for (const auto& effect : active_effects_)
+	{
+		if (effect.params_.source_ == _source)
+			return true;
+	}
+
+	return false;
+}
+
+void GameplayEffectController::_ClearSourceTracking()
+{
+	for (const auto& [source, callback_id] : tracked_sources_)
+	{
+		if (source && callback_id != IDestroyable::kInvalidDestructionCallbackId)
+			source->RemoveDestructionCallback(callback_id);
+	}
+
+	tracked_sources_.clear();
+	for (auto& effect : active_effects_)
+		effect.params_.source_ = nullptr;
 }
 
 void GameplayEffectController::_RebuildAggregates()

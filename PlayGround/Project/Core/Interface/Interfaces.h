@@ -1,14 +1,18 @@
 ﻿#pragma once
 
+#include <algorithm>
+#include <cstddef>
+#include <functional>
 #include <string>
+#include <vector>
 #include <Common/HitContext.h>
 
 template <typename T>
 class ISingleton abstract
 {
 protected:
-	ISingleton() = default;
-	virtual ~ISingleton() = default;
+	ISingleton() DEFAULT;
+	virtual ~ISingleton() DEFAULT;
 
 public:
 	ISingleton(const ISingleton&) = delete;
@@ -75,22 +79,78 @@ protected:
 class IDestroyable abstract
 {
 public:
+	using DestructionCallbackId = std::size_t;
+	static constexpr DestructionCallbackId kInvalidDestructionCallbackId = 0;
+
+private:
+	struct DestructionCallbackEntry
+	{
+		DestructionCallbackId id_ = kInvalidDestructionCallbackId;
+		std::function<void()> callback_;
+	};
+
+public:
 	explicit IDestroyable() DEFAULT;
 	virtual ~IDestroyable() DEFAULT;
 
-	virtual void OnDestroy() { for (const auto& callback : destruction_callbacks_) callback(); }
+	virtual void OnDestroy() { _NotifyDestructionCallbacks(); }
+	virtual void OnSceneShutdown() { _NotifyDestructionCallbacks(); }
 
 	_bool IsPendingDestruction() const { return pending_destruction_; }
 	void ReserveDestruction() { pending_destruction_ = true; }
 
-	void AddDestructionCallback(const std::function<void()>& _callback) { destruction_callbacks_.push_back(_callback); }
+	DestructionCallbackId AddDestructionCallback(const std::function<void()>& _callback)
+	{
+		if (!_callback)
+			return kInvalidDestructionCallbackId;
+
+		const auto callback_id = next_destruction_callback_id_++;
+		destruction_callbacks_.push_back({ callback_id, _callback });
+		return callback_id;
+	}
+
+	void RemoveDestructionCallback(const DestructionCallbackId _callback_id)
+	{
+		if (_callback_id == kInvalidDestructionCallbackId || destruction_callbacks_.empty())
+			return;
+
+		const auto it = std::remove_if(
+			destruction_callbacks_.begin(),
+			destruction_callbacks_.end(),
+			[_callback_id](const auto& _entry)
+			{
+				return _entry.id_ == _callback_id;
+			});
+
+		destruction_callbacks_.erase(it, destruction_callbacks_.end());
+	}
+
+protected:
+	void _NotifyDestructionCallbacks()
+	{
+		if (destruction_callbacks_notified_)
+			return;
+
+		destruction_callbacks_notified_ = true;
+
+		const auto callbacks = destruction_callbacks_;
+		destruction_callbacks_.clear();
+		for (const auto& callback : callbacks)
+		{
+			if (callback.callback_)
+				callback.callback_();
+		}
+	}
 
 private:
+
 	// 게임 오브젝트가 파괴되었는지 여부를 나타내는 플래그. 필요에 따라 게임 오브젝트의 생명 주기를 관리하는 데 활용할 수 있습니다.
 	_bool pending_destruction_ = false;
+	_bool destruction_callbacks_notified_ = false;
 
 	// 게임 오브젝트가 파괴될 때 호출될 콜백 함수들을 저장하는 컨테이너. 필요에 따라 다른 시스템과 연동하여 파괴 시 다양한 효과를 구현할 수 있습니다.
-	std::vector<std::function<void()>> destruction_callbacks_;
+	DestructionCallbackId next_destruction_callback_id_ = 1;
+	std::vector<DestructionCallbackEntry> destruction_callbacks_;
 };
 
 class IIdentifiable abstract
@@ -169,21 +229,16 @@ public:
 class IDamagable : public IHandler
 {
 public:
-	virtual ~IDamagable() = default;
+	virtual ~IDamagable() DEFAULT;
 
 public:
-	virtual void GetDamage(_float _damage) = 0;
-
 	/**
 	 * @brief 피격 정보를 적용합니다.
 	 *
 	 * 기본 구현은 데미지만 반영합니다.
 	 * 넉백까지 반영해야 하는 실제 유닛은 override 합니다.
 	 */
-	virtual void ApplyHit(const HitContext& _hit)
-	{
-		GetDamage(_hit.damage_);
-	}
+	virtual void ApplyHit(const HitContext& _hit) PURE;
 };
 
 class GameObjectBase;

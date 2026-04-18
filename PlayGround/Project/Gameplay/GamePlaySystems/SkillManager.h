@@ -20,6 +20,7 @@ public:
 	void UnequipSkill(_uint _slot_idx);
 	void ToggleSkillEquipState(_uint _slot_idx, _uint _skill_id);
 	void UseSkill(_uint _slot_idx, GameObjectBase* _owner, const _Vector3& _dir);
+	void ResetEquippedSkillsToReady();
 
 	_float GetSkillCooldownRatio(_uint _slot_idx) const;
 	SkillBase* GetEquippedSkill(_uint _slot_idx) const;

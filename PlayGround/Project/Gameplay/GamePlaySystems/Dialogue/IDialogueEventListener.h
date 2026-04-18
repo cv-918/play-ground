@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 
@@ -11,12 +11,12 @@
 class IDialogueEventListener
 {
 public:
-    virtual ~IDialogueEventListener() = default;
+	virtual ~IDialogueEventListener() = default;
 
 public:
-    /**
-     * @brief 다이얼로그 이벤트 발생 시 호출된다.
-     * @param _event_id 실행할 이벤트 식별자.
-     */
-    virtual void OnDialogueEvent(const std::wstring& _event_id) = 0;
+	/**
+	 * @brief 다이얼로그 이벤트 발생 시 호출된다.
+	 * @param _event_id 실행할 이벤트 식별자.
+	 */
+	virtual void OnDialogueEvent(const std::wstring& _event_id) = 0;
 };

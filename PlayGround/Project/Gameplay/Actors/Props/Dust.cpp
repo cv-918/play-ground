@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 #include "Dust.h"
 
+#include "Actors/GameObjectBase.h"
 #include "Components/SphereCollider.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
@@ -61,10 +62,17 @@ void Dust::Render(_double _delta_time)
 
 void Dust::OnDestroy()
 {
+	_DetachTrackingTarget();
 	__super::OnDestroy();
 
 	// 여기서 추가 자원 획득 어트리뷰트 적용
 	_RunState.IncreaseEarnedCoinCount(dust_amount_);
+}
+
+void Dust::OnSceneShutdown()
+{
+	_DetachTrackingTarget();
+	__super::OnSceneShutdown();
 }
 
 void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
@@ -83,7 +91,7 @@ void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 		{
 		case CollisionLayer::PlayerCollector:
 		{
-			BeginBounce(_other->GameObject()->GetTransform());
+			BeginBounce(_other->GameObject());
 
 			// 수집 시작 후에는 더 이상 충돌 검사하지 않도록 제거
 			_ColMgr.DeregisterCollider(CollisionLayer::PropsBody, collider_);
@@ -95,9 +103,23 @@ void Dust::OnCollisionEnter(Collider* _this, Collider* _other)
 	}
 }
 
-void Dust::BeginBounce(Transform* _tracking_transform)
+void Dust::BeginBounce(GameObjectBase* _tracking_target)
 {
-	tracking_transform_ = _tracking_transform;
+	if (_tracking_target == nullptr)
+		return;
+
+	_DetachTrackingTarget();
+	tracking_target_ = _tracking_target;
+	tracking_transform_ = _tracking_target->GetTransform();
+	tracking_target_callback_id_ = tracking_target_->AddDestructionCallback([this]() {
+		_HandleTrackedTargetDestroyed();
+		});
+
+	if (tracking_transform_ == nullptr)
+	{
+		_HandleTrackedTargetDestroyed();
+		return;
+	}
 
 	const auto player_pos = tracking_transform_->Position();
 	const auto dust_pos = transform_->Position();
@@ -140,7 +162,7 @@ void Dust::UpdateBounce(_double _delta_time)
 
 void Dust::UpdateTracking(_double _delta_time)
 {
-	if (tracking_transform_ == nullptr)
+	if (tracking_target_ == nullptr || tracking_transform_ == nullptr || tracking_target_->IsPendingDestruction())
 	{
 		ReserveDestruction();
 		return;
@@ -180,4 +202,21 @@ void Dust::UpdateTracking(_double _delta_time)
 	}
 
 	transform_->Position(pos + dir * move_dist);
+}
+
+void Dust::_DetachTrackingTarget()
+{
+	if (tracking_target_ && tracking_target_callback_id_ != IDestroyable::kInvalidDestructionCallbackId)
+		tracking_target_->RemoveDestructionCallback(tracking_target_callback_id_);
+
+	tracking_target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	tracking_target_ = nullptr;
+	tracking_transform_ = nullptr;
+}
+
+void Dust::_HandleTrackedTargetDestroyed()
+{
+	tracking_target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	tracking_target_ = nullptr;
+	tracking_transform_ = nullptr;
 }

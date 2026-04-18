@@ -27,6 +27,7 @@ public:
 
 	// 위젯이 파괴될 때 포함된 UI 요소들도 함께 파괴되도록 구현. 필요에 따라 위젯이 파괴될 때 포함된 UI 요소들의 생명 주기를 관리할 때 활용할 수 있습니다.
 	void OnDestroy() override;
+	void OnSceneShutdown() override;
 
 private:
 	// 위젯은 여러 UI 요소를 포함할 수 있으므로, UI 요소를 추가하는 메서드를 제공

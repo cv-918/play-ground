@@ -20,8 +20,11 @@ HpBar::HpBar(GameObjectBase* _target, const _Vector3& _offset)
 	tracking_transform_ = _target->GetTransform();
 	tracking_status_ = s_cast(Status*, _target->GetComponent(ComponentType::Status));
 	tracking_offset_ = _offset;
+	tracking_target_callback_id_ = tracking_target_->AddDestructionCallback([this]() {
+		_HandleTrackedTargetDestroyed();
+		});
 
-	current_hp_ = tracking_status_->GetCurrentHp();
+	current_hp_ = tracking_status_ ? tracking_status_->GetCurrentHp() : 0.f;
 
 	_SetFadeDuration(DEFAULT_FADE_DURATION_HP_BAR);
 
@@ -56,6 +59,12 @@ _int HpBar::LateUpdate(_double _delta_time)
 	_int ret = __super::LateUpdate(_delta_time);
 	if (UPDATE_CONTINUE != ret) return ret;
 
+	if (tracking_status_ == nullptr)
+	{
+		ReserveDestruction();
+		return UPDATE_CONTINUE;
+	}
+
 	// 비율 갱신 및 체력바가 나타날 때마다 체력 변화가 있는지 체크하여 체력바의 값을 갱신
 	// 지금은 구조적으로 접근하지 않고 일단 이렇게 구현해둔다
 	const _float currentHP = tracking_status_->GetCurrentHp();
@@ -71,13 +80,13 @@ _int HpBar::LateUpdate(_double _delta_time)
 	if (life_time_timer_ <= DEFAULT_DURATION_HP_BAR)
 	{
 		// 대상이 파괴되었는지 체크 (지난번에 만든 IsDestroyed 활용)
-		if (tracking_target_->IsPendingDestruction())
+		if (tracking_target_ == nullptr || tracking_transform_ == nullptr || tracking_target_->IsPendingDestruction())
 		{
 			this->ReserveDestruction(); // 대상이 없으면 UI도 자폭
 			return UPDATE_CONTINUE;
 		}
 		// 대상의 월드 좌표 + 오프셋을 계산하여 UI의 rect_ 위치를 갱신
-		_Vector3 targetPos = tracking_target_->GetTransform()->Position();
+		_Vector3 targetPos = tracking_transform_->Position();
 		_Point screenPos = _Point{ targetPos + tracking_offset_ };
 
 		// UI의 중심이 대상에 오도록 설정하거나, Lt를 설정
@@ -102,4 +111,36 @@ void HpBar::Appear(_double _duration)
 	// 체력바가 나타날 때 알파값을 255로 초기화
 	if (hp_bar_)
 		hp_bar_->SetAlpha(1.0f);
+}
+
+void HpBar::OnDestroy()
+{
+	_DetachTrackingTarget();
+	__super::OnDestroy();
+}
+
+void HpBar::OnSceneShutdown()
+{
+	_DetachTrackingTarget();
+	__super::OnSceneShutdown();
+}
+
+void HpBar::_DetachTrackingTarget()
+{
+	if (tracking_target_ && tracking_target_callback_id_ != IDestroyable::kInvalidDestructionCallbackId)
+		tracking_target_->RemoveDestructionCallback(tracking_target_callback_id_);
+
+	tracking_target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	tracking_target_ = nullptr;
+	tracking_transform_ = nullptr;
+	tracking_status_ = nullptr;
+}
+
+void HpBar::_HandleTrackedTargetDestroyed()
+{
+	tracking_target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	tracking_target_ = nullptr;
+	tracking_transform_ = nullptr;
+	tracking_status_ = nullptr;
+	ReserveDestruction();
 }

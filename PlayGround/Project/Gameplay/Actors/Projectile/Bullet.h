@@ -12,6 +12,7 @@ class Bullet final
 {
 public:
     explicit Bullet(GameObjectBase* _owner, _float _damage, _float _speed, const HitReactionProfile& _reaction);
+    ~Bullet() override;
 
 private:
     _bool Initialize() override;
@@ -23,7 +24,13 @@ private:
     void OnCollisionEnter(Collider* _this, Collider* _other) override;
 
 private:
+    void _BindOwner(GameObjectBase* _owner);
+    void _DetachOwner();
+    void _HandleOwnerDestroyed();
+
+private:
     GameObjectBase* owner_ = nullptr;           // 발사한 유닛 (데미지 판정용)
+    IDestroyable::DestructionCallbackId owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
     SphereCollider* collider_ = nullptr;
     
     _float damage_ = 0.f;             // 피해량

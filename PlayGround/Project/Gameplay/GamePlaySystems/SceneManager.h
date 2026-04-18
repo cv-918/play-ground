@@ -40,7 +40,7 @@ private:
 	void _CreateNextScene();
 
 	// 씬을 정리하는 메서드. 필요에 따라 씬이 변경될 때마다 이전 씬을 정리하는 로직을 구현할 수 있습니다.
-	void _CleanupCurrentScene();
+	void _CleanupCurrentScene(_bool _clear_particle_service = true);
 
 	// 디버그용 씬 이름 반환 메서드. 필요에 따라 씬 타입에 따른 씬 이름을 반환하는 로직을 구현할 수 있습니다.
 	std::wstring _GetSceneName(SceneType _type) const;

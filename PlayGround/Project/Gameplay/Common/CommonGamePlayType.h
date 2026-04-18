@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "HitReaction.h"
 
@@ -627,6 +627,9 @@ struct UserDataJsonInfo
 
 	/** 플레이어가 습득한 노드의 ID 목록. 필요에 따라 노드 습득 시스템이 구현되면 이 부분을 활용하여 플레이어가 습득한 노드들을 관리할 수 있습니다. */
 	std::vector<std::pair<_uint, _uint>> acquired_node_ids_;
+
+	/** 플레이어가 현재 장착한 스킬 ID. 비어 있는 슬롯은 -1을 사용합니다. */
+	std::array<_int, 2> equipped_skill_ids_ = { -1, -1 };
 
 	/** 플레이어의 현재 스테이지 진행 상황을 나타내는 변수. 필요에 따라 플레이어가 클리어한 스테이지 수나 현재 스테이지 번호 등을 관리하는 데 활용할 수 있습니다. */
 	_uint stage_progress_ = 0;

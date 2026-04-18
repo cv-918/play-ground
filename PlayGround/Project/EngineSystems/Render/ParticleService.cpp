@@ -1,42 +1,46 @@
 ﻿#include "framework.h"
 #include "ParticleService.h"
 
+#include "GamePlay/Actors/GameObjectBase.h"
+#include "GamePlaySystems/Json/ParticleDataManager.h"
+
 _bool ParticleService::Initialize(_uint _pool_size)
 {
+	ClearSceneState();
+
 	pool_size_ = _pool_size;
 	particle_pool_.resize(pool_size_);
 
 	free_indices_.resize(pool_size_);
-	std::iota(free_indices_.begin(), free_indices_.end(), 0); // 0, 1, 2, ..., pool_size_-1로 초기화
+	std::iota(free_indices_.begin(), free_indices_.end(), 0);
+	next_emitter_handle_ = 1;
 	return true;
 }
 
 _int ParticleService::Update(_double _delta_time)
 {
 	const auto dt = s_float(_delta_time);
+	_UpdateEmitters(dt);
+
 	for (auto it = active_indices_.begin(); it != active_indices_.end(); )
 	{
 		_uint idx = *it;
 		auto& p = particle_pool_[idx];
 
-		// 1. 수명 관리
 		p.life_time_ -= dt;
-		if (p.life_time_ <= 0.f) {
+		if (p.life_time_ <= 0.f)
+		{
 			p.is_active_ = false;
-			free_indices_.push_back(idx); // 인덱스 반납
-			it = active_indices_.erase(it); // 활성 리스트에서 제거
+			free_indices_.push_back(idx);
+			it = active_indices_.erase(it);
 			continue;
 		}
 
-		// 2. 진행 비율 계산 (0.0: 탄생 ~ 1.0: 소멸)
 		_float ratio = 1.0f - (p.life_time_ / p.max_life_time_);
 
-		// 3. 물리 연산: 공기 저항(Damping) 적용
-		// 속도가 매 프레임 일정 비율로 줄어들어 자연스럽게 멈춥니다.
 		p.velocity_ *= (1.0f - p.setting_.airResistance * dt);
 		p.position_ += p.velocity_ * dt;
 
-		// 4. 시각적 변화: Easing 적용 (크기)
 		p.currentScale = _MathFunc::LerpWithEase(
 			p.setting_.startScale,
 			p.setting_.endScale,
@@ -44,9 +48,7 @@ _int ParticleService::Update(_double _delta_time)
 			p.setting_.sizeEase
 		);
 
-		// 5. 시각적 변화: 색상 및 알파 보간
-		// (실제 구현 시에는 Gdiplus::Color의 ARGB를 각각 Lerp합니다)
-        _int a = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetAlpha(), (_float)p.setting_.endColor.GetAlpha(), ratio, p.setting_.colorEase)));
+		_int a = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetAlpha(), (_float)p.setting_.endColor.GetAlpha(), ratio, p.setting_.colorEase)));
 		_int r = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetR(), (_float)p.setting_.endColor.GetR(), ratio, p.setting_.colorEase)));
 		_int g = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetG(), (_float)p.setting_.endColor.GetG(), ratio, p.setting_.colorEase)));
 		_int b = s_int(std::round(_MathFunc::LerpWithEase((_float)p.setting_.startColor.GetB(), (_float)p.setting_.endColor.GetB(), ratio, p.setting_.colorEase)));
@@ -65,13 +67,11 @@ void ParticleService::Render(_double _delta_time)
 	{
 		auto& p = particle_pool_[idx];
 
-		// 텍스처가 없는 경우: 기본 도형 렌더링
 		if (p.setting_.textureKey.empty())
 		{
-			_float r = p.currentScale * 5.0f; // 기본 반지름 기준
+			_float r = p.currentScale * 5.0f;
 			_DrawFunc::FillCircle(_Point(p.position_.x, p.position_.y), r, p.currentColor);
 		}
-		// 텍스처가 있는 경우: 텍스처 파티클 렌더링
 		else
 		{
 			auto tex = _GraphicSourceMgr.GetTexture(p.setting_.textureKey);
@@ -90,35 +90,297 @@ void ParticleService::Emit(const ParticleSetting& _setting, const _Vector2& _pos
 {
 	for (_uint i = 0; i < _count; ++i)
 	{
-		if (free_indices_.empty()) break; // 풀이 가득 차면 중단
+		if (free_indices_.empty())
+			break;
 
 		_uint idx = free_indices_.back();
 		free_indices_.pop_back();
 		active_indices_.push_back(idx);
 
 		auto& p = particle_pool_[idx];
-		p.setting_ = _setting; // 레시피 복사
+		p.setting_ = _setting;
 		p.is_active_ = true;
 		p.currentScale = _setting.startScale;
 		p.currentColor = _setting.startColor;
 
-		// 1. 초기 위치 결정 (Shape)
 		p.position_ = _pos;
-		if (_setting.shape == EmitterShape::Circle) {
-			// 원형 범위 내 랜덤 위치 (간단한 구현)
+		if (_setting.shape == EmitterShape::Circle)
+		{
 			_float angle = _MathFunc::ToRadian(s_float(rand() % 360));
 			_float dist = s_float(rand() % 100) / 100.f * _setting.shapeRadius;
 			p.position_.x += cosf(angle) * dist;
 			p.position_.y += sinf(angle) * dist;
 		}
 
-		// 2. 초기 속도 및 방향 결정
 		_float speed = _MathFunc::Lerp(_setting.minSpeed, _setting.maxSpeed, s_float(rand() % 100) / 100.f);
 		_float moveAngle = _MathFunc::ToRadian(s_float(rand() % (_int)_setting.arcAngle) - (_setting.arcAngle / 2.f));
 		p.velocity_ = { cosf(moveAngle) * speed, sinf(moveAngle) * speed };
 
-		// 3. 수명 설정
 		p.max_life_time_ = _MathFunc::Lerp(_setting.minLife, _setting.maxLife, s_float(rand() % 100) / 100.f);
 		p.life_time_ = p.max_life_time_;
 	}
+}
+
+ParticleEmitterHandle ParticleService::PlayEmitterAt(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos)
+{
+	return _PlayEmitterInternal(_spec, _world_pos, nullptr, _Vector2::Zero());
+}
+
+ParticleEmitterHandle ParticleService::PlayEmitterAttached(const ParticleEmitterSpec& _spec, GameObjectBase* _owner, const _Vector2& _local_offset)
+{
+	if (_owner == nullptr || _owner->IsPendingDestruction() || _owner->GetTransform() == nullptr)
+	{
+		_SYSTEM_LOG_ERROR(L"PlayEmitterAttached failed: owner is invalid.");
+		return 0;
+	}
+
+	return _PlayEmitterInternal(_spec, _Vector2::Zero(), _owner, _local_offset);
+}
+
+void ParticleService::StopEmitter(ParticleEmitterHandle _handle)
+{
+	const auto iter = active_emitters_.find(_handle);
+	if (iter == active_emitters_.end())
+		return;
+
+	_SetEmitterPendingStop(iter->second, ParticleEmitterStopReason::Explicit);
+}
+
+void ParticleService::StopAllEmittersByOwner(GameObjectBase* _owner)
+{
+	if (_owner == nullptr)
+		return;
+
+	for (auto& [handle, emitter] : active_emitters_)
+	{
+		(void)handle;
+		if (emitter.owner_ == _owner)
+			_SetEmitterPendingStop(emitter, ParticleEmitterStopReason::Explicit);
+	}
+}
+
+void ParticleService::ClearSceneState()
+{
+	_ClearEmitters(ParticleEmitterStopReason::ServiceShutdown);
+	_ClearParticles();
+}
+
+ParticleEmitterHandle ParticleService::_CreateEmitterHandle()
+{
+	constexpr ParticleEmitterHandle invalid_handle = 0;
+	const auto start = next_emitter_handle_;
+
+	do
+	{
+		if (next_emitter_handle_ == invalid_handle)
+			++next_emitter_handle_;
+
+		const auto candidate = next_emitter_handle_++;
+		if (candidate != invalid_handle &&
+			active_emitters_.find(candidate) == active_emitters_.end())
+		{
+			return candidate;
+		}
+	} while (next_emitter_handle_ != start);
+
+	return invalid_handle;
+}
+
+ParticleEmitterHandle ParticleService::_PlayEmitterInternal(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos, GameObjectBase* _owner, const _Vector2& _local_offset)
+{
+	const auto* setting = _ResolveParticleSetting(_spec);
+	if (!_ValidateEmitterSpec(_spec, setting))
+	{
+		_LogInvalidEmitterSpec(_spec);
+		return 0;
+	}
+
+	ActiveEmitter emitter;
+	emitter.handle_ = _CreateEmitterHandle();
+	if (emitter.handle_ == 0)
+	{
+		_SYSTEM_LOG_ERROR(L"Failed to allocate particle emitter handle.");
+		return 0;
+	}
+
+	emitter.spec_ = _spec;
+	emitter.resolved_particle_setting_ = setting;
+	emitter.owner_ = _owner;
+	emitter.fixed_world_position_ = _world_pos;
+	emitter.local_offset_ = _local_offset;
+
+	if (emitter.owner_)
+	{
+		const auto handle = emitter.handle_;
+		emitter.owner_callback_id_ = emitter.owner_->AddDestructionCallback(
+			[this, handle]()
+		{
+			const auto iter = active_emitters_.find(handle);
+			if (iter == active_emitters_.end())
+				return;
+
+			_SetEmitterPendingStop(iter->second, ParticleEmitterStopReason::OwnerDestroyed);
+		});
+	}
+
+	active_emitters_.emplace(emitter.handle_, emitter);
+	return emitter.handle_;
+}
+
+const ParticleSetting* ParticleService::_ResolveParticleSetting(const ParticleEmitterSpec& _spec) const
+{
+	return _ParticleDataMgr.GetData(_spec.particle_setting_id_);
+}
+
+_bool ParticleService::_ValidateEmitterSpec(const ParticleEmitterSpec& _spec, const ParticleSetting* _setting) const
+{
+	if (_spec.emit_interval_sec_ <= 0.f)
+		return false;
+
+	if (_spec.emit_count_per_tick_ == 0)
+		return false;
+
+	if (_spec.duration_sec_ < 0.f)
+		return false;
+
+	return _setting != nullptr;
+}
+
+void ParticleService::_SetEmitterPendingStop(ActiveEmitter& _emitter, ParticleEmitterStopReason _reason)
+{
+	const auto priority = [](ParticleEmitterStopReason _value)
+	{
+		switch (_value)
+		{
+		case ParticleEmitterStopReason::Explicit: return 4;
+		case ParticleEmitterStopReason::OwnerDestroyed: return 3;
+		case ParticleEmitterStopReason::ServiceShutdown: return 2;
+		case ParticleEmitterStopReason::DurationExpired: return 1;
+		case ParticleEmitterStopReason::InvalidSpec:
+		default:
+			return 0;
+		}
+	};
+
+	if (!_emitter.pending_stop_ || priority(_reason) > priority(_emitter.stop_reason_))
+	{
+		_emitter.pending_stop_ = true;
+		_emitter.stop_reason_ = _reason;
+	}
+}
+
+void ParticleService::_UpdateEmitters(_float _dt)
+{
+	for (auto& [handle, emitter] : active_emitters_)
+	{
+		(void)handle;
+
+		if (emitter.pending_stop_ || emitter.resolved_particle_setting_ == nullptr)
+			continue;
+
+		_float emit_dt = _dt;
+		if (emitter.spec_.duration_sec_ > 0.f)
+		{
+			const auto remaining = std::max(0.f, emitter.spec_.duration_sec_ - emitter.elapsed_sec_);
+			emit_dt = std::min(_dt, remaining);
+		}
+
+		const auto world_pos = _GetEmitterWorldPosition(emitter);
+		if (!emitter.pending_stop_ && emit_dt > 0.f)
+		{
+			emitter.emit_accumulator_sec_ += emit_dt;
+			while (emitter.emit_accumulator_sec_ >= emitter.spec_.emit_interval_sec_)
+			{
+				Emit(*emitter.resolved_particle_setting_, world_pos, emitter.spec_.emit_count_per_tick_);
+				emitter.emit_accumulator_sec_ -= emitter.spec_.emit_interval_sec_;
+			}
+		}
+
+		emitter.elapsed_sec_ += _dt;
+		if (emitter.spec_.duration_sec_ > 0.f && emitter.elapsed_sec_ >= emitter.spec_.duration_sec_)
+			_SetEmitterPendingStop(emitter, ParticleEmitterStopReason::DurationExpired);
+	}
+
+	for (auto iter = active_emitters_.begin(); iter != active_emitters_.end();)
+	{
+		if (!iter->second.pending_stop_)
+		{
+			++iter;
+			continue;
+		}
+
+		_DetachEmitterOwner(iter->second);
+		iter = active_emitters_.erase(iter);
+	}
+}
+
+_Vector2 ParticleService::_GetEmitterWorldPosition(ActiveEmitter& _emitter)
+{
+	if (_emitter.owner_ == nullptr)
+		return _emitter.fixed_world_position_;
+
+	if (_emitter.owner_->IsPendingDestruction() || _emitter.owner_->GetTransform() == nullptr)
+	{
+		_SetEmitterPendingStop(_emitter, ParticleEmitterStopReason::OwnerDestroyed);
+		return _emitter.fixed_world_position_;
+	}
+
+	const auto owner_transform = _emitter.owner_->GetTransform();
+	const auto owner_position = _Vector2(owner_transform->Position());
+	const auto right = _Vector2(owner_transform->Right2D());
+	const auto forward = _Vector2(owner_transform->Forward2D());
+	return owner_position + (right * _emitter.local_offset_.x) + (forward * _emitter.local_offset_.y);
+}
+
+void ParticleService::_ClearEmitters(ParticleEmitterStopReason _reason)
+{
+	for (auto& [handle, emitter] : active_emitters_)
+	{
+		(void)handle;
+		_SetEmitterPendingStop(emitter, _reason);
+		_DetachEmitterOwner(emitter);
+	}
+
+	active_emitters_.clear();
+}
+
+void ParticleService::_ClearParticles()
+{
+	active_indices_.clear();
+	free_indices_.resize(pool_size_);
+	std::iota(free_indices_.begin(), free_indices_.end(), 0);
+
+	for (auto& particle : particle_pool_)
+	{
+		particle.is_active_ = false;
+		particle.life_time_ = 0.f;
+		particle.max_life_time_ = 0.f;
+		particle.position_ = _Vector2::Zero();
+		particle.velocity_ = _Vector2::Zero();
+		particle.currentScale = 1.f;
+		particle.currentColor = _Color();
+	}
+}
+
+void ParticleService::_DetachEmitterOwner(ActiveEmitter& _emitter)
+{
+	if (_emitter.owner_ &&
+		_emitter.owner_callback_id_ != IDestroyable::kInvalidDestructionCallbackId)
+	{
+		_emitter.owner_->RemoveDestructionCallback(_emitter.owner_callback_id_);
+	}
+
+	_emitter.owner_ = nullptr;
+	_emitter.owner_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void ParticleService::_LogInvalidEmitterSpec(const ParticleEmitterSpec& _spec) const
+{
+	_SYSTEM_LOG_ERROR(
+		L"Invalid ParticleEmitterSpec. id=%u particle_setting_id=%u emit_interval=%.3f emit_count=%u duration=%.3f",
+		_spec.id_,
+		_spec.particle_setting_id_,
+		_spec.emit_interval_sec_,
+		_spec.emit_count_per_tick_,
+		_spec.duration_sec_);
 }

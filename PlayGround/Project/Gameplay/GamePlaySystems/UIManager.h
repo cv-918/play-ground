@@ -21,6 +21,7 @@ public:
 private:
 	void _PushUI(UIBase* _ui);
 	void _MergeNewUIs();
+	void _DestroyUI(UIBase* _ui, _bool _scene_shutdown);
 
 private:
 	std::vector<UIBase*> ui_list_;

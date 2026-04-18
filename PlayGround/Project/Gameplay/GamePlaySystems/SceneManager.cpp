@@ -1,4 +1,4 @@
-#include "framework.h"
+﻿#include "framework.h"
 #include "SceneManager.h"
 
 #include "EngineSystems/Render/ScreenSystem.h"
@@ -11,7 +11,7 @@
 
 SceneManager::~SceneManager()
 {
-	_CleanupCurrentScene();
+	_CleanupCurrentScene(false);
 }
 
 _bool SceneManager::Initialize()
@@ -188,16 +188,21 @@ void SceneManager::_CreateNextScene()
 	scene_history_.push_back(curr_scene_type_);
 }
 
-void SceneManager::_CleanupCurrentScene()
+void SceneManager::_CleanupCurrentScene(const _bool _clear_particle_service)
 {
-	if (curr_scene_)
-	{
-		curr_scene_->OnExit();
+	if (curr_scene_ == nullptr)
+		return;
 
-		delete curr_scene_;
-		curr_scene_ = nullptr;
-		curr_scene_type_ = SceneType::Count;
-	}
+	curr_scene_->OnExit();
+
+	// During normal scene transitions we can safely touch global services.
+	// During static shutdown, singleton destruction order is not guaranteed.
+	if (_clear_particle_service)
+		_ParticleService.ClearSceneState();
+
+	delete curr_scene_;
+	curr_scene_ = nullptr;
+	curr_scene_type_ = SceneType::Count;
 }
 
 std::wstring SceneManager::_GetSceneName(SceneType _type) const

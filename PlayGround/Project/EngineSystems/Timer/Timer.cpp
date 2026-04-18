@@ -3,7 +3,7 @@
 
 _bool Timer::Initialize()
 {
-	// ÇÏµå¿þ¾î°¡ °íÇØ»óµµ Ä«¿îÅÍ¸¦ Áö¿øÇÏ´ÂÁö È®ÀÎ ¹× ºóµµ¼ö Ãëµæ
+	// í•˜ë“œì›¨ì–´ê°€ ê³ í•´ìƒë„ ì¹´ìš´í„°ë¥¼ ì§€ì›í•˜ëŠ”ì§€ í™•ì¸ ë° ë¹ˆë„ìˆ˜ ì·¨ë“
 	if (!QueryPerformanceFrequency(&frequency_))
 		return false;
 
@@ -16,16 +16,16 @@ void Timer::Update()
 	LARGE_INTEGER curr_count;
 	QueryPerformanceCounter(&curr_count);
 
-	// µ¨Å¸ Å¸ÀÓ °è»ê (ÇöÀç Ä«¿îÆ® - ÀÌÀü Ä«¿îÆ®) / ºóµµ¼ö
+	// ë¸íƒ€ íƒ€ìž„ ê³„ì‚° (í˜„ìž¬ ì¹´ìš´íŠ¸ - ì´ì „ ì¹´ìš´íŠ¸) / ë¹ˆë„ìˆ˜
 	delta_time_ = s_cast(_double, curr_count.QuadPart - prev_count_.QuadPart) / s_cast(_double, frequency_.QuadPart);
 
-	// ºñÁ¤»óÀûÀ¸·Î Å« °ª ¹æÁö (µð¹ö±ë ºê·¹ÀÌÅ© Æ÷ÀÎÆ® µî ´ëÀÀ)
+	// ë¹„ì •ìƒì ìœ¼ë¡œ í° ê°’ ë°©ì§€ (ë””ë²„ê¹… ë¸Œë ˆì´í¬ í¬ì¸íŠ¸ ë“± ëŒ€ì‘)
 	if (delta_time_ > 0.1) delta_time_ = 0.016;
 
 	prev_count_ = curr_count;
 	total_time_ += delta_time_;
 
-	// FPS °è»ê
+	// FPS ê³„ì‚°
 	fps_timer_ += delta_time_;
 	fps_count_++;
 	if (fps_timer_ >= 1.0)

@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Props.h"
 
+class GameObjectBase;
+
 class Dust final
 	: public Props
 	, public ICollidable
@@ -15,14 +17,17 @@ public:
 	void Render(_double _delta_time) override;
 
 	void OnDestroy() override;
+	void OnSceneShutdown() override;
 
 	// ICollidable을(를) 통해 상속됨
 	void OnCollisionEnter(Collider* _this, Collider* _other) override;
 
 private:
-	void BeginBounce(Transform* _tracking_transform);
+	void BeginBounce(GameObjectBase* _tracking_target);
 	void UpdateBounce(_double _delta_time);
 	void UpdateTracking(_double _delta_time);
+	void _DetachTrackingTarget();
+	void _HandleTrackedTargetDestroyed();
 
 private:
 	_float move_spd_ = 0.f;
@@ -30,7 +35,9 @@ private:
 
 	class SphereCollider* collider_ = nullptr;
 
+	GameObjectBase* tracking_target_ = nullptr;
 	Transform* tracking_transform_ = nullptr;
+	IDestroyable::DestructionCallbackId tracking_target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 
 	// Bounce 상태용
 	_Vector3 bounce_start_pos_ = {};

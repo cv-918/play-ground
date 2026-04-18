@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Scene.h"
 #include "Common/HitReaction.h"
+#include <map>
 
 enum class InGameViewState
 {
@@ -36,6 +37,9 @@ public:
 
 private:
 	WidgetBase* _CreateView();
+	void _TrackView(InGameViewState _state, WidgetBase* _view);
+	void _HandleViewDestroyed(InGameViewState _state, WidgetBase* _view);
+	void _ClearTrackedViews();
 
 private:
 	class StageManager* stage_manager_ = nullptr;
@@ -43,5 +47,6 @@ private:
 
 	InGameViewState view_state_ = InGameViewState::Undefined;
 	std::map<InGameViewState, WidgetBase*> view_map_;
+	std::map<WidgetBase*, IDestroyable::DestructionCallbackId> view_callback_ids_;
 	WidgetBase* current_view_ = nullptr;
 };

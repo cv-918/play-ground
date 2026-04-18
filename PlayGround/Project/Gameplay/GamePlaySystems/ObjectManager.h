@@ -37,6 +37,7 @@ public:
 private:
 	// 오브젝트 추가 경로 통제하기 위한 메서드
 	void _PushGameObject(GameObjectBase* _game_object);
+	void _DestroyGameObject(GameObjectBase* _game_object, _bool _scene_shutdown);
 
 	// Update 루프 안에서 생성, 파괴된 게임 오브젝트를 일괄 관리하는 메서드
 	void _MergeNewGameObjects();

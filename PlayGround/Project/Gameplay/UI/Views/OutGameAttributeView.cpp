@@ -2,17 +2,36 @@
 #include "OutGameAttributeView.h"
 
 #include "../Elements/Button.h"
-#include "../Elements/Grid.h"
 #include "../Widgets/AttributeNodeTree.h"
 
-#include "GamePlaySystems/Json/SkillJsonDataManager.h"
 #include "GamePlaySystems/SkillManager.h"
-
 #include "GamePlaySystems/Skills/SkillBase.h"
 
-OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_btn_callback)
+namespace
 {
-	// 돌아가기 버튼
+	_Rect BuildScaledRect(const _Rect& _base_rect, _float _scale)
+	{
+		if (_scale <= 0.f)
+			_scale = 1.f;
+
+		const _Point center = _base_rect.Center();
+		const _Size base_size = _base_rect.Size();
+		const _int scaled_w = std::max(1, s_int(std::round(base_size.x * _scale)));
+		const _int scaled_h = std::max(1, s_int(std::round(base_size.y * _scale)));
+		return _Rect::FromCenter(center, scaled_w / 2, scaled_h / 2);
+	}
+}
+
+OutGameAttributeView::OutGameAttributeView(
+	const std::function<void()>& _skills_btn_callback,
+	const std::function<void()>& _return_btn_callback)
+{
+	Button::CreateInfo skills_btn_info;
+	skills_btn_info.rect = _Rect{ { 0, 0 }, COMMON_BUTTON_SIZE };
+	skills_btn_info.text = L"SKILLS";
+	skills_btn_info.on_lclick = _skills_btn_callback;
+	skills_btn_ = CreateElement<Button>(skills_btn_info);
+
 	Button::CreateInfo return_btn_info;
 	return_btn_info.rect = _Rect{ { 0, 0 }, COMMON_BUTTON_SIZE };
 	return_btn_info.text = L"RETURN";
@@ -23,36 +42,18 @@ OutGameAttributeView::OutGameAttributeView(const std::function<void()>& _return_
 	return_btn_info.disabled_image_path = Path::Buttons + L"RETURN/RETURN_Disabled.png";
 	return_btn_ = CreateElement<Button>(return_btn_info);
 
-	// 스킬 목록 그리드
-	const auto table = _SkillDataMgr.GetTable(); // 스킬 데이터 로드 (디버그용))
-	GridCreateInfo skill_list_grid_layout;
-	skill_list_grid_layout.rows = 1;
-	skill_list_grid_layout.cols = table.size();
-	skill_list_grid_layout.cell_size = _Size{ 64, 64 };
-	skill_list_grid_layout.line_color = Palette::Black;
-	skill_list_grid_layout.line_thickness = 1.0f;
-
-	auto pos = GAME_VIEW_CENTER;
-	pos.y -= 250;
-
-	skill_list_grid_ = CreateElement<Grid>(skill_list_grid_layout);
-	skill_list_grid_->Initialize();
-	skill_list_grid_->SetCenter(pos);
-
-	_int col_index = -1;
-	for (const auto& pair : table)
-	{
-		const auto& skill_info = pair.second;
-		skill_list_grid_->SetCellText(0, ++col_index, _UtilFunc::ToWString(skill_info.name_), Palette::Black, 12.f);
-		skill_list_grid_->AddCellButton(0, col_index, _UtilFunc::ToWString(skill_info.name_),
-			[col_index]() { _SkillMgr.ToggleSkillEquipState(0, col_index); },
-			[col_index]() { _SkillMgr.ToggleSkillEquipState(1, col_index); });
-	}
-
-	// 어트리뷰트 트리 생성
 	attribute_tree_ = CreateElement<AttributeNodeTree>();
 
 	UpdateLayout();
+}
+
+void OutGameAttributeView::ResetTreeViewState()
+{
+	if (attribute_tree_ == nullptr)
+		return;
+
+	attribute_tree_->ResetView();
+	_UpdateTreeInputRegion();
 }
 
 void OutGameAttributeView::OnViewportChanged()
@@ -62,22 +63,20 @@ void OutGameAttributeView::OnViewportChanged()
 
 void OutGameAttributeView::UpdateLayout()
 {
-	if (return_btn_ == nullptr)
+	if (skills_btn_ == nullptr || return_btn_ == nullptr)
 		return;
 
+	const _int button_gap = 20;
 	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
 	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - 60;
+	skills_btn_->SetRect(_Rect{ { x, y - COMMON_BUTTON_CY - button_gap }, COMMON_BUTTON_SIZE });
 	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 
-	if (skill_list_grid_)
-	{
-		auto pos = GAME_VIEW_CENTER;
-		pos.y -= 250;
-		skill_list_grid_->SetCenter(pos);
-	}
-
 	if (attribute_tree_)
+	{
 		attribute_tree_->OnViewportChanged();
+		_UpdateTreeInputRegion();
+	}
 }
 
 _int OutGameAttributeView::Update(_double _delta_time)
@@ -93,6 +92,23 @@ _int OutGameAttributeView::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void OutGameAttributeView::_UpdateTreeInputRegion()
+{
+	if (nullptr == attribute_tree_)
+		return;
+
+	std::vector<_Rect> excluded_rects;
+	excluded_rects.reserve(2);
+
+	if (skills_btn_)
+		excluded_rects.push_back(BuildScaledRect(skills_btn_->GetRect(), _VideoSettingsMgr.Applied().ui_scale));
+
+	if (return_btn_)
+		excluded_rects.push_back(BuildScaledRect(return_btn_->GetRect(), _VideoSettingsMgr.Applied().ui_scale));
+
+	attribute_tree_->SetInputRegion(GAME_VIEW_RECT, excluded_rects);
+}
+
 void OutGameAttributeView::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
@@ -103,7 +119,7 @@ void OutGameAttributeView::Render(_double _delta_time)
 		const auto x = 20;
 		auto y = 20; auto index = 0;
 
-		// 모든 어트리뷰트 스탯 정보 출력
+		// Print all attribute stats.
 		swprintf_s(buffer, L"=== Attribute Stat ===");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 		const auto attribute_stat = _UserProfile.GetAttributeStat();
@@ -111,7 +127,7 @@ void OutGameAttributeView::Render(_double _delta_time)
 		{
 			const auto& type = pair.first;
 			const auto& stat = pair.second;
-			swprintf_s(buffer, L"[%s] 덧셈 증가량: %.0f, 곱셈 증가율: %.0f%%", _CommonGamePlayFunc::GetAttributeTypeName(type).c_str(), stat.additive_increase_, (stat.multiplicative_increase_rate_) * 100.f);
+			swprintf_s(buffer, L"[%s] Additive: %.0f, Multiplier: %.0f%%", _CommonGamePlayFunc::GetAttributeTypeName(type).c_str(), stat.additive_increase_, (stat.multiplicative_increase_rate_) * 100.f);
 			_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 		}
 
@@ -119,7 +135,7 @@ void OutGameAttributeView::Render(_double _delta_time)
 		swprintf_s(buffer, L"=== Collectable ===");
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 
-		swprintf_s(buffer, L"Dust cloud : %d", _UserProfile.GetCoinCount());
+		swprintf_s(buffer, L"Dust Cloud : %d", _UserProfile.GetCoinCount());
 		_DrawFunc::DrawString(_Point{ x, 20 * ++index }, buffer, Palette::Black, 12.f, false);
 
 		swprintf_s(buffer, L"Experience : %d", _UserProfile.GetExperience());

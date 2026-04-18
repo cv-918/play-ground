@@ -58,6 +58,8 @@ _bool StagePlayer::Initialize()
 
 	// 플레이어 컴포넌트 설정
 	const auto attribute_stat = _UserProfile.GetAttributeStat();
+	death_processed_ = false;
+	status_->SetAutoReserveDestructionOnZeroHp(false);
 
 	transform_->Scale(info_->body_size_);
 
@@ -67,18 +69,20 @@ _bool StagePlayer::Initialize()
 
 	const auto start_att = attribute_stat.GetStat(AttributeType::Attack).GetTotalIncrease(info_->contact_damage_);
 	status_->SetAtt(start_att);
+	attack_interval_ = std::max(0.1, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
+	attack_cooldown_acc_ = attack_interval_;
 
 	// 플레이어 콜라이더 설정
 	const auto body_col = GetDefaultCollider(UnitDefaultColliderId::Body);
 	body_col->SetRadius(20.f); // 플레이어의 몸통 콜라이더는 플레이어 크기에 비례해서 설정
-	body_col->SetDrawAlways(true);
+	body_col->SetDrawAlways(false);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerBody, body_col);
 
 	const auto attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
 	const auto start_attack_radius = attribute_stat.GetStat(AttributeType::AttackRange).GetTotalIncrease(info_->attack_range_); // 공격 범위는 플레이어 크기에 비례해서 설정
 	attack_col->SetRadius(start_attack_radius);
 	attack_col->SetDebugColor(Palette::Gray, Palette::Maroon, COLLIDER_DEBUG_COLOR_ATTACK);
-	attack_col->SetDrawAlways(false);
+	attack_col->SetDrawAlways(true);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, attack_col);
 
 	const auto start_collector_size = attribute_stat.GetStat(AttributeType::CollectionRange).GetTotalIncrease(info_->collector_size_); // 수집 콜라이더는 플레이어 크기에 비례해서 설정
@@ -105,6 +109,15 @@ _int StagePlayer::Update(_double _delta_time)
 
 	UpdateHitFlash(_delta_time);
 
+	if (status_ && status_->IsDead())
+	{
+		_HandleDeathIfNeeded();
+		return UPDATE_CONTINUE;
+	}
+
+	_UpdateAttackTimer(_delta_time);
+	_TryPerformAttackTick();
+
 	// 입력 스펙 기준으로 Skill1/Skill2 액션을 스킬 사용에 연결한다.
 	if (input_manager_->ActionPressed(InputAction::Skill1))
 	{
@@ -126,14 +139,6 @@ _int StagePlayer::Update(_double _delta_time)
 			flip_sprite_x_ = true;
 	}
 
-	// // 공격 액션은 제거되었으므로 디버그 파티클은 Skill1 입력에 맞춰 표시한다.
-	   //if (input_manager_->ActionPressed(InputAction::Skill1))
-	   //{
-	   //	const auto mouse_pt = input_manager_->MousePoint();
-	   //	const auto data = _ParticleDataMgr.GetDataByIndex(2);
-	   //	_ParticleService.Emit(*data, mouse_pt, 10); // 한 번에 10개 생성
-	   //}
-
 	return UPDATE_CONTINUE;
 }
 
@@ -153,6 +158,13 @@ _int StagePlayer::LateUpdate(_double _delta_time)
 		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
 
 		swprintf_s(buffer, L"HP : %.0f", status_->GetCurrentHp());
+		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
+
+		swprintf_s(
+			buffer,
+			L"공격 주기 : %.2f | 남은 쿨다운 : %.2f",
+			attack_interval_,
+			std::max(0.0, attack_interval_ - attack_cooldown_acc_));
 		_Assist.Text(L"플레이어 정보", std::wstring(buffer));
 
 		swprintf_s(buffer, L"가속도(Acceleration) : %.f", movement_->GetAcceleration());
@@ -209,86 +221,38 @@ _int StagePlayer::LateUpdate(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
-void StagePlayer::OnDestroy()
-{
-	__super::OnDestroy();
-
-	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-
-	_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
-	_ColMgr.DeregisterCollider(CollisionLayer::PlayerCollector, collector_col_);
-
-	if (status_->IsDead())
-	{
-		_RunState.MarkAsPlayerDied();
-		_StageMgr.ChangeState(StageState::Result);
-	}
-}
-
 void StagePlayer::OnCollisionEnter(Collider* _this, Collider* _other)
 {
-	switch (_this->GetLayer())
-	{
-		/* 몸통 collider 충돌 처리 */
-	case CollisionLayer::PlayerBody:
-		break;
-		/* 공격 collider 충돌 처리 */
-	case CollisionLayer::PlayerAttack:
-		switch (_other->GetLayer())
-		{
-		case CollisionLayer::EnemyBody:
-			_AttackEnemy(_this, _other);
-			break;
-		}
-		break;
-	}
+	UNREFERENCED_PARAMETER(_this);
+	UNREFERENCED_PARAMETER(_other);
 }
 
 void StagePlayer::OnCollisionStay(Collider* _this, Collider* _other)
 {
-	switch (_this->GetLayer())
-	{
-		/* 몸통 collider 충돌 처리 */
-	case CollisionLayer::PlayerBody:
-		break;
-		/* 공격 collider 충돌 처리 */
-	case CollisionLayer::PlayerAttack:
-		switch (_other->GetLayer())
-		{
-		case CollisionLayer::EnemyBody:
-			_AttackEnemy(_this, _other);
-			break;
-		}
-		break;
-	}
+	UNREFERENCED_PARAMETER(_this);
+	UNREFERENCED_PARAMETER(_other);
 }
 
-void StagePlayer::GetDamage(_float _damage)
+void StagePlayer::ApplyHit(const HitContext& _hit)
 {
-	const auto final_damage = combat_->GetDamage(_damage);
+	const auto final_damage = combat_->GetDamage(_hit.damage_);
 	RecordLastReceivedDamage(final_damage);
 
 	if (final_damage <= 0.f)
 		return;
 
 	StartHitFlash();
+	ApplyHitReaction(_hit, true);
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
 	play_scene_->ShowDamageUI(final_damage, _Point{ position.x, position.y });
 
-	if (status_->IsDead())
+	if (status_ && status_->IsDead())
 	{
-		_bool debug = true;
+		_HandleDeathIfNeeded();
+		return;
 	}
-}
-
-void StagePlayer::ApplyHit(const HitContext& _hit)
-{
-	GetDamage(_hit.damage_);
-	ApplyHitReaction(_hit, true);
 }
 
 void StagePlayer::_DrawObjectShape()
@@ -323,9 +287,64 @@ void StagePlayer::_DrawObjectShape()
 	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }
 
+void StagePlayer::_UpdateAttackTimer(_double _delta_time)
+{
+	attack_cooldown_acc_ = std::min(attack_interval_, attack_cooldown_acc_ + _delta_time);
+}
+
+void StagePlayer::_TryPerformAttackTick()
+{
+	if (attack_cooldown_acc_ < attack_interval_)
+		return;
+
+	auto* attack_col = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	if (nullptr == attack_col || !attack_col->IsEnable())
+		return;
+
+	const auto& collideds = attack_col->CollidedColliders();
+	if (collideds.empty())
+		return;
+
+	// 공격 도중 대상이 죽거나 콜라이더 상태가 바뀌면 원본 리스트가 수정될 수 있으므로,
+	// 이번 틱은 스냅샷을 기준으로 안전하게 순회한다.
+	const std::vector<Collider*> collided_snapshot(collideds.begin(), collideds.end());
+
+	_bool attacked_any_enemy = false;
+	for (auto* collider : collided_snapshot)
+	{
+		if (nullptr == collider)
+			continue;
+
+		if (CollisionLayer::EnemyBody != collider->GetLayer())
+			continue;
+
+		auto* target_enemy = collider->GameObject();
+		if (nullptr == target_enemy)
+			continue;
+
+		auto* target_status = s_cast(Status*, target_enemy->GetComponent(ComponentType::Status));
+		if (nullptr != target_status && target_status->IsDead())
+			continue;
+
+		_AttackEnemy(attack_col, collider);
+		attacked_any_enemy = true;
+	}
+
+	if (attacked_any_enemy)
+	{
+		attack_cooldown_acc_ = 0.0;
+	}
+}
+
 void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_collider)
 {
+	if (nullptr == _attack_col || nullptr == _enemy_body_collider)
+		return;
+
 	const auto target_enemy = _enemy_body_collider->GameObject();
+	if (nullptr == target_enemy)
+		return;
+
 	target_enemy->SendMessageToHandlers(
 		HandlerSystemList::Damage,
 		[this, target_enemy](IHandler* _handler)
@@ -344,10 +363,42 @@ void StagePlayer::_AttackEnemy(Collider* _attack_col, Collider* _enemy_body_coll
 	);
 
 	const auto status = s_cast(Status*, target_enemy->GetComponent(ComponentType::Status));
+	UNREFERENCED_PARAMETER(status);
+}
 
-	// 공격 속도에 따른 타이머 설정. 플레이어가 공격한 적이 아직 죽지 않았다면, 일정 시간 동안은 같은 적에게 다시 공격하지 않도록 타이머를 설정
-	if (!status->IsDead())
+void StagePlayer::_HandleDeathIfNeeded()
+{
+	if (death_processed_ || status_ == nullptr || !status_->IsDead())
+		return;
+
+	death_processed_ = true;
+
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	if (body_collider)
 	{
-		_attack_col->SetTimerForTarget(_enemy_body_collider, DEFAULT_ATTACK_SPEED - info_->attack_speed_);
+		body_collider->ClearCollisionState(false);
+		body_collider->InActivate();
+		_ColMgr.DeregisterCollider(CollisionLayer::PlayerBody, body_collider);
 	}
+
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	if (attack_collider)
+	{
+		attack_collider->ClearCollisionState(false);
+		attack_collider->InActivate();
+		_ColMgr.DeregisterCollider(CollisionLayer::PlayerAttack, attack_collider);
+	}
+
+	if (collector_col_)
+	{
+		collector_col_->ClearCollisionState(false);
+		collector_col_->InActivate();
+		_ColMgr.DeregisterCollider(CollisionLayer::PlayerCollector, collector_col_);
+	}
+
+	if (movement_)
+		movement_->StopImmediately();
+
+	_StageMgr.HandlePlayerDeath();
+	ReserveDestruction();
 }

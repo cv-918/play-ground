@@ -8,8 +8,8 @@
 
 Scene::~Scene()
 {
-	SAFE_DELETE(object_manager_);
 	SAFE_DELETE(ui_manager_);
+	SAFE_DELETE(object_manager_);
 }
 
 _bool Scene::Initialize()
@@ -52,6 +52,8 @@ _int Scene::LateUpdate(_double _delta_time)
 	ret = ui_manager_->LateUpdate(_delta_time);
 	if (ret != UPDATE_CONTINUE)
 		return ret;
+
+	_ParticleService.Update(_delta_time);
 
 	return ret;
 }

@@ -1,8 +1,7 @@
 ﻿#pragma once
-#pragma once
-
 #include "Scene.h"
 #include <cstdint>
+#include <map>
 
 #include "GamePlaySystems/Dialogue/DialogueSystem.h"
 #include "GamePlaySystems/Dialogue/DialogueJsonConverter.h"
@@ -23,6 +22,7 @@ class OutGameScene final : public Scene
 		Undefined = 0,
 		Main,
 		Attribute,
+		Skill,
 		Option,
 		Exit,
 	};
@@ -42,6 +42,9 @@ public:
 private:
 	void _ChangeView(OutGameViewState _new_view_state);
 	WidgetBase* _CreateView();
+	void _TrackView(OutGameViewState _state, WidgetBase* _view);
+	void _HandleViewDestroyed(OutGameViewState _state, WidgetBase* _view);
+	void _ClearTrackedViews();
 
 	void _HandleViewportChanged();
 	_int _HandleSceneInput();
@@ -51,6 +54,7 @@ private:
 private:
 	OutGameViewState view_state_ = OutGameViewState::Undefined;
 	std::map<OutGameViewState, WidgetBase*> view_map_;
+	std::map<WidgetBase*, IDestroyable::DestructionCallbackId> view_callback_ids_;
 	WidgetBase* current_view_ = nullptr;
 
 	class TownPlayer* test_town_player_ = nullptr;

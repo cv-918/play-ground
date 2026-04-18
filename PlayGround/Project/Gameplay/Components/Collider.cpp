@@ -8,12 +8,7 @@
 
 Collider::~Collider()
 {
-	for (auto* other : collided_colliders_)
-	{
-		other->DeregisterFromCollidedList(this);
-		other->EraseTimerTarget(this);
-	}
-
+	ClearCollisionState(false);
 	_ColMgr.DeregisterCollider(layer_, this);
 }
 
@@ -106,26 +101,10 @@ void Collider::RegisterOnCollidedList(Collider* _other)
 
 void Collider::DeregisterFromCollidedList(Collider* _other)
 {
-	if (collided_colliders_.empty())
-		return;
-
-	if (!_IsAlreadyColliding(_other))
-		return;
-
-	auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
-	collided_colliders_.erase(it);
-	_UpdateIsCollidingState();
-
-	// 누구의 목록에서 어떤 오브젝트가 빠졌는지 로깅
-	//_SYSTEM_LOG_INFO(L"Collider '%s' removed Collider '%s' from collided list.", GameObject()->Name().c_str(), _other->GameObject()->Name().c_str());
-
-	// Exit 신호 전파
-	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-		s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
-		});
+	_RemoveCollidedCollider(_other, true);
 }
 
-void Collider::ClearCollisionState()
+void Collider::ClearCollisionState(const _bool _notify)
 {
 	if (!collided_colliders_.empty())
 	{
@@ -135,15 +114,35 @@ void Collider::ClearCollisionState()
 			if (!other)
 				continue;
 
-			other->DeregisterFromCollidedList(this);
+			other->_RemoveCollidedCollider(this, _notify);
 			other->EraseTimerTarget(this);
-			DeregisterFromCollidedList(other);
+			_RemoveCollidedCollider(other, _notify);
 		}
 	}
 
 	collision_timers_.clear();
 	erase_waiting_list_.clear();
 	_UpdateIsCollidingState();
+}
+
+void Collider::_RemoveCollidedCollider(Collider* _other, const _bool _notify)
+{
+	if (!_other || collided_colliders_.empty())
+		return;
+
+	const auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
+	if (it == collided_colliders_.end())
+		return;
+
+	collided_colliders_.erase(it);
+	_UpdateIsCollidingState();
+
+	if (!_notify)
+		return;
+
+	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+		s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
+		});
 }
 
 void Collider::SetTimerForTarget(Collider* _other, _double _time)

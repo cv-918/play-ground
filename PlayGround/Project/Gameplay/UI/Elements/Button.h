@@ -1,4 +1,5 @@
-﻿#pragma once
+#pragma once
+
 #include "../UIBase.h"
 #include <array>
 
@@ -40,6 +41,8 @@ public:
 	void SetOnLClick(const std::function<void()>& _callback) { on_lclick_ = _callback; }
 	void SetOnRClick(const std::function<void()>& _callback) { on_rclick_ = _callback; }
 	void SetStateTexture(ButtonState _state, const std::wstring& _image_path);
+	void SetMaskOverlayColor(const _Color& _color);
+	void ClearMaskOverlay();
 
 	// 버튼에 세팅된 콜백 실행 (예: 외부에서 강제로 클릭 이벤트 발생시키고 싶을 때)
 	void LClick() { if (on_lclick_) on_lclick_(); }
@@ -55,5 +58,7 @@ private:
 	std::function<void()> on_rclick_; // 버튼 우클릭 시 호출될 콜백 함수
 
 	ButtonState state_ = ButtonState::Normal; // 버튼의 현재 상태
+	_Color mask_overlay_color_ = Palette::Transparent;
+	_bool has_mask_overlay_ = false;
 };
 

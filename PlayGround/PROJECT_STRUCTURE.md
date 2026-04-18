@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-17 17:44)
+﻿# Project Structure (Updated: 2026-04-18 21:22)
 
 ```text
 Root
@@ -31,8 +31,6 @@ Root
 |   |   |   |   |   +--- YES
 |   |   |   |   +--- PopUps
 |   |   |   +--- World
-+--- html
-|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -195,6 +193,8 @@ Root
 |   |   |   |   |   EnemyDataManager.h
 |   |   |   |   |   ParticleDataManager.cpp
 |   |   |   |   |   ParticleDataManager.h
+|   |   |   |   |   ParticleEmitterDataManager.cpp
+|   |   |   |   |   ParticleEmitterDataManager.h
 |   |   |   |   |   PlayableCharacterDataManager.cpp
 |   |   |   |   |   PlayableCharacterDataManager.h
 |   |   |   |   |   SkillDefinitionDataManager.cpp
@@ -206,14 +206,6 @@ Root
 |   |   |   |   |   UserDataManager.cpp
 |   |   |   |   |   UserDataManager.h
 |   |   |   +--- Skills
-|   |   |   |   |   Dust_AtmosphericCorrosion.cpp
-|   |   |   |   |   Dust_AtmosphericCorrosion.h
-|   |   |   |   |   Dust_DarkSight.cpp
-|   |   |   |   |   Dust_DarkSight.h
-|   |   |   |   |   Dust_DustGust.cpp
-|   |   |   |   |   Dust_DustGust.h
-|   |   |   |   |   Dust_LintSatellite.cpp
-|   |   |   |   |   Dust_LintSatellite.h
 |   |   |   |   |   SkillBase.cpp
 |   |   |   |   |   SkillBase.h
 |   |   |   |   |   SkillDefinitionCompiler.cpp
@@ -275,6 +267,8 @@ Root
 |   |   |   |   |   OutGameMainView.h
 |   |   |   |   |   OutGameOptionView.cpp
 |   |   |   |   |   OutGameOptionView.h
+|   |   |   |   |   OutGameSkillView.cpp
+|   |   |   |   |   OutGameSkillView.h
 |   |   |   +--- Widgets
 |   |   |   |   |   AttributeNode.cpp
 |   |   |   |   |   AttributeNode.h
@@ -288,6 +282,10 @@ Root
 |   |   |   |   |   HpBar.h
 |   |   |   |   |   InGameSkillSlot.cpp
 |   |   |   |   |   InGameSkillSlot.h
+|   |   |   |   |   OutGameSkillSlot.cpp
+|   |   |   |   |   OutGameSkillSlot.h
+|   |   |   |   |   OutGameSkillToolTip.cpp
+|   |   |   |   |   OutGameSkillToolTip.h
 |   |   |   |   |   WidgetBase.cpp
 |   |   |   |   |   WidgetBase.h
 |   |   |   |   UIBase.cpp
@@ -297,7 +295,6 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
-+--- xml
 +--- _DevLog
 |   +--- Documents
 |   |   +--- Copilot
@@ -313,7 +310,6 @@ Root
 |   +--- Idea
 |   +--- Minutes
 +--- _Intermediate
-+--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

@@ -14,7 +14,7 @@ public:
 	void SetInGameScene(InGameScene* _scene) { ingame_scene_ = _scene; }
 
 	GameObjectBase* GetPlayer() const { return player_; }
-	void SetPlayer(GameObjectBase* _player) { player_ = _player; }
+	void SetPlayer(GameObjectBase* _player);
 
 	_bool IsPlayerDied() const { return is_player_died_; }
 	void MarkAsPlayerDied() { is_player_died_ = true; }
@@ -29,9 +29,13 @@ public:
 	_uint GetKillCountForClear() const { return kill_count_for_clear_; }
 
 private:
+	void _HandlePlayerDestroyed();
+
+private:
 	InGameScene* ingame_scene_ = nullptr; // 현재 활성화된 게임 씬에 대한 포인터. 필요에 따라 현재 씬의 상태를 확인하거나 씬 전환 로직에서 활용할 수 있습니다.
 
 	GameObjectBase* player_ = nullptr;
+	IDestroyable::DestructionCallbackId player_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 	_bool is_player_died_ = false; // 플레이어의 사망 여부를 나타내는 변수. 필요에 따라 게임 오버 처리나 결과 화면에서 활용할 수 있습니다.
 
 	_uint earned_coin_count_ = 0; // 인게임 진입 후 획득한 코인 수를 나타내는 변수. 필요에 따라 인게임에서의 코인 획득과 소비를 관리하는 데 활용할 수 있습니다.

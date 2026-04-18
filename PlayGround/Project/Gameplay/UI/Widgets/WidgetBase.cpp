@@ -206,6 +206,16 @@ void WidgetBase::OnDestroy()
 	}
 }
 
+void WidgetBase::OnSceneShutdown()
+{
+	__super::OnSceneShutdown();
+	for (UIBase* element : elements_)
+	{
+		if (element)
+			element->OnSceneShutdown();
+	}
+}
+
 void WidgetBase::_AddElement(UIBase* _element)
 {
 	// 요소가 유효한지 확인

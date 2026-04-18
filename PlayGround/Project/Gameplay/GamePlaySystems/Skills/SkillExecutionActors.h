@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "Actors/GameObjectBase.h"
@@ -17,16 +18,26 @@ public:
 		, interval_sec_(_spec.per_target_interval_sec_)
 	{
 	}
+	~HitPolicyRuntime();
+
+	HitPolicyRuntime(const HitPolicyRuntime&) = delete;
+	HitPolicyRuntime& operator=(const HitPolicyRuntime&) = delete;
 
 public:
 	void Update(_double _delta_time);
 	_bool TryConsumeTarget(GameObjectBase* _target);
+	void Clear();
+
+private:
+	void _TrackTarget(GameObjectBase* _target);
+	void _ForgetTarget(GameObjectBase* _target, _bool _detach_callback = true);
 
 private:
 	SkillHitPolicyKind kind_ = SkillHitPolicyKind::None;
 	_double interval_sec_ = 0.0;
 	std::unordered_set<GameObjectBase*> lifetime_targets_;
 	std::map<GameObjectBase*, _double> target_timers_;
+	std::unordered_map<GameObjectBase*, IDestroyable::DestructionCallbackId> target_callback_ids_;
 };
 
 class ProjectileExecutionActor final
@@ -39,6 +50,7 @@ public:
 		const ExecutionEntitySpec& _spec,
 		const _Vector3& _spawn_position,
 		const _Vector3& _direction);
+	~ProjectileExecutionActor() override;
 
 public:
 	_bool Initialize() override;
@@ -49,6 +61,9 @@ public:
 
 private:
 	void _TryApplyHit(Collider* _other);
+	void _BindOwner(GameObjectBase* _owner);
+	void _DetachOwner();
+	void _HandleOwnerDestroyed();
 
 private:
 	GameObjectBase* owner_ = nullptr;
@@ -58,6 +73,7 @@ private:
 	SphereCollider* collider_ = nullptr;
 	HitPolicyRuntime hit_policy_runtime_;
 	_double remaining_lifetime_sec_ = 0.0;
+	IDestroyable::DestructionCallbackId owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 };
 
 class AreaFieldExecutionActor final
@@ -69,6 +85,7 @@ public:
 		GameObjectBase* _owner,
 		const ExecutionEntitySpec& _spec,
 		const _Vector3& _spawn_position);
+	~AreaFieldExecutionActor() override;
 
 public:
 	_bool Initialize() override;
@@ -78,6 +95,9 @@ public:
 
 private:
 	void _TryCapture(Collider* _other);
+	void _BindOwner(GameObjectBase* _owner);
+	void _DetachOwner();
+	void _HandleOwnerDestroyed();
 
 private:
 	GameObjectBase* owner_ = nullptr;
@@ -87,6 +107,7 @@ private:
 	HitPolicyRuntime hit_policy_runtime_;
 	_double remaining_lifetime_sec_ = 0.0;
 	_double elapsed_sec_ = 0.0;
+	IDestroyable::DestructionCallbackId owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 };
 
 class OrbitExecutionActor final
@@ -98,6 +119,7 @@ public:
 		GameObjectBase* _owner,
 		const ExecutionEntitySpec& _spec,
 		_float _initial_angle_deg);
+	~OrbitExecutionActor() override;
 
 public:
 	_bool Initialize() override;
@@ -109,6 +131,9 @@ public:
 private:
 	void _TryApplyHit(Collider* _other);
 	void _UpdateOrbitPosition() const;
+	void _BindOwner(GameObjectBase* _owner);
+	void _DetachOwner();
+	void _HandleOwnerDestroyed();
 
 private:
 	GameObjectBase* owner_ = nullptr;
@@ -117,4 +142,5 @@ private:
 	SphereCollider* collider_ = nullptr;
 	HitPolicyRuntime hit_policy_runtime_;
 	_double remaining_lifetime_sec_ = 0.0;
+	IDestroyable::DestructionCallbackId owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 };

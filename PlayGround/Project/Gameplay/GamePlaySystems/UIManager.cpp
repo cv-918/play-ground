@@ -6,10 +6,10 @@
 UIManager::~UIManager()
 {
 	for (auto& ui : ui_list_)
-		SAFE_DELETE(ui);
+		_DestroyUI(ui, true);
 
 	for (auto& new_ui : new_ui_list_)
-		SAFE_DELETE(new_ui);
+		_DestroyUI(new_ui, true);
 }
 
 _int UIManager::Update(_double _delta_time)
@@ -100,11 +100,21 @@ void UIManager::CleanUp()
 
 	// 2. it부터 end()까지는 이제 확실하게 '삭제 대기 중인 객체들'만 모여있습니다.
 	for (auto temp_it = it; temp_it != ui_list_.end(); ++temp_it)
-	{
-		(*temp_it)->OnDestroy();
-		delete (*temp_it);
-	}
+		_DestroyUI(*temp_it, false);
 
 	// 3. 컨테이너에서 제거
 	ui_list_.erase(it, ui_list_.end());
+}
+
+void UIManager::_DestroyUI(UIBase* _ui, const _bool _scene_shutdown)
+{
+	if (_ui == nullptr)
+		return;
+
+	if (_scene_shutdown)
+		_ui->OnSceneShutdown();
+	else
+		_ui->OnDestroy();
+
+	delete _ui;
 }

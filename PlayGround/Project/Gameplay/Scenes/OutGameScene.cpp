@@ -1,8 +1,9 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "OutGameScene.h"
 
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
+#include "UI/Views/OutGameSkillView.h"
 #include "UI/Views/OutGameOptionView.h"
 #include "UI/Views/OutGameExitView.h"
 
@@ -34,7 +35,9 @@ _int OutGameScene::Update(_double _delta_time)
 		last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
 	}
 
-	_HandleSceneInput();
+	const auto scene_input_result = _HandleSceneInput();
+	if (scene_input_result != UPDATE_CONTINUE)
+		return scene_input_result;
 
 	// s, [ Dialogue System Test ]
 	{
@@ -48,7 +51,11 @@ _int OutGameScene::Update(_double _delta_time)
 				DialogueSessionData session;
 
 				if (DialogueJsonConverter::BuildSessionByKey("event_skip_test", session))
-					dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				{
+					const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+					if (!started)
+						_SYSTEM_LOG_WARN(L"Failed to start dialogue session: event_skip_test");
+				}
 			}
 		}
 
@@ -57,7 +64,9 @@ _int OutGameScene::Update(_double _delta_time)
 			if (!dialogue_system_.IsRunning())
 			{
 				const DialogueSessionData session = DialogueSampleFactory::MakeChoiceSession();
-				dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start choice dialogue session");
 			}
 		}
 
@@ -66,11 +75,13 @@ _int OutGameScene::Update(_double _delta_time)
 			if (!dialogue_system_.IsRunning())
 			{
 				const DialogueSessionData session = DialogueSampleFactory::MakeEventSession();
-				dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start event dialogue session");
 			}
 		}
 
-		dialogue_system_.Update(_delta_time);
+		dialogue_system_.Update(s_float(_delta_time));
 
 		if (dialogue_system_.IsRunning())
 		{
@@ -192,7 +203,7 @@ void OutGameScene::OnEnter()
 		const auto gap = res.width / 3;
 		const auto x = (gap >> 1) + (i * gap);
 		const auto y = res.height >> 1;
-		test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(x, y));
+		test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(s_float(x), s_float(y)));
 	}
 
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
@@ -203,8 +214,13 @@ void OutGameScene::OnEnter()
 
 void OutGameScene::OnExit()
 {
+	_CameraMgr.ClearFollowTarget();
 	_ColMgr.ClearAllColliders();
+	_ClearTrackedViews();
+	view_state_ = OutGameViewState::Undefined;
 	background_ = nullptr;
+	test_town_player_ = nullptr;
+	test_town_npc_ = nullptr;
 }
 
 void OutGameScene::_HandleViewportChanged()
@@ -259,6 +275,8 @@ _int OutGameScene::_HandleSceneInput()
 	default:
 		break;
 	}
+
+	return UPDATE_CONTINUE;
 }
 
 void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
@@ -269,7 +287,12 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 	_SYSTEM_LOG_INFO(_T("Changing view from %s to %s"), _GetViewName(view_state_).c_str(), _GetViewName(_new_view_state).c_str());
 
 	if (current_view_)
+	{
+		if (view_state_ == OutGameViewState::Skill)
+			current_view_->ReserveDestruction();
+
 		current_view_->InActivate();
+	}
 
 	view_state_ = _new_view_state;
 
@@ -278,15 +301,22 @@ void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
 		test_town_player_->SetEnable(view_state_ == OutGameViewState::Main);
 
 	const auto find = view_map_.find(view_state_);
-	if (find == view_map_.end())
+	if (find == view_map_.end() || find->second == nullptr)
 	{
-		view_map_[view_state_] = _CreateView();
-		current_view_ = view_map_[view_state_];
+		current_view_ = _CreateView();
+		_TrackView(view_state_, current_view_);
 	}
 	else
 	{
 		current_view_ = find->second;
-		current_view_->Activate();
+		if (current_view_)
+			current_view_->Activate();
+	}
+
+	if (view_state_ == OutGameViewState::Attribute)
+	{
+		if (auto* attribute_view = dynamic_cast<OutGameAttributeView*>(current_view_))
+			attribute_view->ResetTreeViewState();
 	}
 
 	if (view_state_ == OutGameViewState::Option)
@@ -310,6 +340,12 @@ WidgetBase* OutGameScene::_CreateView()
 		);
 	case OutGameScene::OutGameViewState::Attribute:
 		return ui_manager_->CreateUI<OutGameAttributeView>(
+			[this]() { _ChangeView(OutGameViewState::Skill); },
+			[this]() { _ChangeView(OutGameViewState::Main); }
+		);
+	case OutGameScene::OutGameViewState::Skill:
+		return ui_manager_->CreateUI<OutGameSkillView>(
+			[this]() { _ChangeView(OutGameViewState::Attribute); },
 			[this]() { _ChangeView(OutGameViewState::Main); }
 		);
 	case OutGameScene::OutGameViewState::Option:
@@ -326,6 +362,54 @@ WidgetBase* OutGameScene::_CreateView()
 	return nullptr;
 }
 
+void OutGameScene::_TrackView(OutGameViewState _state, WidgetBase* _view)
+{
+	if (_view == nullptr)
+		return;
+
+	const auto existing_iter = view_map_.find(_state);
+	if (existing_iter != view_map_.end() && existing_iter->second != _view)
+	{
+		const auto callback_iter = view_callback_ids_.find(existing_iter->second);
+		if (callback_iter != view_callback_ids_.end())
+		{
+			existing_iter->second->RemoveDestructionCallback(callback_iter->second);
+			view_callback_ids_.erase(callback_iter);
+		}
+	}
+
+	view_map_[_state] = _view;
+	view_callback_ids_[_view] = _view->AddDestructionCallback([this, _state, _view]()
+	{
+		_HandleViewDestroyed(_state, _view);
+	});
+}
+
+void OutGameScene::_HandleViewDestroyed(OutGameViewState _state, WidgetBase* _view)
+{
+	const auto view_iter = view_map_.find(_state);
+	if (view_iter != view_map_.end() && view_iter->second == _view)
+		view_map_.erase(view_iter);
+
+	view_callback_ids_.erase(_view);
+
+	if (current_view_ == _view)
+		current_view_ = nullptr;
+}
+
+void OutGameScene::_ClearTrackedViews()
+{
+	for (const auto& [view, callback_id] : view_callback_ids_)
+	{
+		if (view)
+			view->RemoveDestructionCallback(callback_id);
+	}
+
+	view_callback_ids_.clear();
+	view_map_.clear();
+	current_view_ = nullptr;
+}
+
 std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 {
 	switch (_view_state)
@@ -334,6 +418,8 @@ std::wstring OutGameScene::_GetViewName(OutGameViewState _view_state) const
 		return L"Main View";
 	case OutGameScene::OutGameViewState::Attribute:
 		return L"Attribute View";
+	case OutGameScene::OutGameViewState::Skill:
+		return L"Skill View";
 	case OutGameScene::OutGameViewState::Option:
 		return L"Option View";
 	case OutGameScene::OutGameViewState::Exit:

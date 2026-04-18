@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 
 #include "ComponentBase.h"
@@ -14,6 +15,7 @@ public:
 		: ComponentBase(ComponentType::GameplayEffectController)
 	{
 	}
+	~GameplayEffectController() override;
 
 public:
 	_int Update(_double _delta_time) override;
@@ -36,12 +38,20 @@ private:
 	};
 
 private:
+	GameObjectBase* _SanitizeSource(GameObjectBase* _source) const;
+	void _TrackSource(GameObjectBase* _source);
+	void _HandleSourceDestroyed(GameObjectBase* _source);
+	void _ReleaseTrackedSource(GameObjectBase* _source);
+	void _ReleaseUnusedTrackedSources();
+	_bool _HasTrackedSourceReference(GameObjectBase* _source) const;
+	void _ClearSourceTracking();
 	void _ApplyDamagePayload(const DamagePayload& _payload, const GameplayEffectApplicationParams& _params);
 	void _RebuildAggregates();
 	Movement* _GetMovement() const;
 
 private:
 	std::vector<ActiveEffectInstance> active_effects_;
+	std::unordered_map<GameObjectBase*, IDestroyable::DestructionCallbackId> tracked_sources_;
 	GameplayStateTag aggregated_state_tags_ = GameplayStateTag::None;
 	_float aggregated_move_speed_multiplier_ = 1.f;
 };

@@ -14,6 +14,7 @@
 #include "GamePlaySystems/Json/UserDataManager.h"
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
 #include "GamePlaySystems/Json/ParticleDataManager.h"
+#include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
 #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
 
 _bool PlayGround::Initialize()
@@ -66,6 +67,12 @@ _bool PlayGround::Initialize()
 	if (!_ParticleDataMgr.Load("Data/Particle.json"))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load particle data from JSON."));
+		return false;
+	}
+
+	if (!_ParticleEmitterDataMgr.Load("Data/ParticleEmitter.json"))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load particle emitter data from JSON."));
 		return false;
 	}
 

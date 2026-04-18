@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InGameScene.h"
 
 #include "UI/Views/InGamePauseView.h"
@@ -73,7 +73,6 @@ _int InGameScene::LateUpdate(_double _delta_time)
 
 		_ColMgr.Update();
 		_CameraMgr.Update(_delta_time);
-		_ParticleService.Update(_delta_time);
 	}
 	else if (current_view_)
 	{
@@ -109,13 +108,21 @@ void InGameScene::Render(_double _delta_time)
 
 void InGameScene::OnEnter()
 {
+	_SkillMgr.ResetEquippedSkillsToReady();
+
 	// 스테이지 매니저의 상태를 Enter 상태로 변경하여 스테이지 매니저가 Enter 상태에서 수행해야 하는 로직을 실행하도록 함. 예를 들어, Enter 상태에서는 스테이지 시작 시 필요한 초기화 작업이나 연출 등을 수행할 수 있음
 	stage_manager_->ChangeState(StageState::Enter);
 }
 
 void InGameScene::OnExit()
 {
+	_CameraMgr.ClearFollowTarget();
 	_ColMgr.ClearAllColliders();
+	_ClearTrackedViews();
+	view_state_ = InGameViewState::Undefined;
+	_RunState.SetPlayer(nullptr);
+	_RunState.SetInGameScene(nullptr);
+	_StageMgr.SetPlayScene(nullptr);
 }
 
 void InGameScene::SpawnProjectile(GameObjectBase* _owner, const _Point& _position, const _Point& _target, _float _damage, _float _speed, const HitReactionProfile& _reaction)
@@ -140,7 +147,8 @@ void InGameScene::ChangeView(InGameViewState _new_view_state)
 	case InGameViewState::InGame:
 	case InGameViewState::Pause:
 	case InGameViewState::Result:
-		current_view_->InActivate();
+		if (current_view_)
+			current_view_->InActivate();
 		break;
 	}
 
@@ -153,15 +161,16 @@ void InGameScene::ChangeView(InGameViewState _new_view_state)
 	case InGameViewState::Result:
 	{
 		auto iter = view_map_.find(view_state_);
-		if (iter != view_map_.end())
+		if (iter != view_map_.end() && iter->second)
 		{
 			current_view_ = iter->second;
-			current_view_->Activate();
+			if (current_view_)
+				current_view_->Activate();
 		}
 		else
 		{
-			view_map_[view_state_] = _CreateView();
-			current_view_ = view_map_[view_state_];
+			current_view_ = _CreateView();
+			_TrackView(view_state_, current_view_);
 		}
 	}
 	break;
@@ -192,4 +201,52 @@ WidgetBase* InGameScene::_CreateView()
 	}
 
 	return nullptr;
+}
+
+void InGameScene::_TrackView(InGameViewState _state, WidgetBase* _view)
+{
+	if (_view == nullptr)
+		return;
+
+	const auto existing_iter = view_map_.find(_state);
+	if (existing_iter != view_map_.end() && existing_iter->second != _view)
+	{
+		const auto callback_iter = view_callback_ids_.find(existing_iter->second);
+		if (callback_iter != view_callback_ids_.end())
+		{
+			existing_iter->second->RemoveDestructionCallback(callback_iter->second);
+			view_callback_ids_.erase(callback_iter);
+		}
+	}
+
+	view_map_[_state] = _view;
+	view_callback_ids_[_view] = _view->AddDestructionCallback([this, _state, _view]()
+	{
+		_HandleViewDestroyed(_state, _view);
+	});
+}
+
+void InGameScene::_HandleViewDestroyed(InGameViewState _state, WidgetBase* _view)
+{
+	const auto view_iter = view_map_.find(_state);
+	if (view_iter != view_map_.end() && view_iter->second == _view)
+		view_map_.erase(view_iter);
+
+	view_callback_ids_.erase(_view);
+
+	if (current_view_ == _view)
+		current_view_ = nullptr;
+}
+
+void InGameScene::_ClearTrackedViews()
+{
+	for (const auto& [view, callback_id] : view_callback_ids_)
+	{
+		if (view)
+			view->RemoveDestructionCallback(callback_id);
+	}
+
+	view_callback_ids_.clear();
+	view_map_.clear();
+	current_view_ = nullptr;
 }

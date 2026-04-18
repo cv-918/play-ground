@@ -106,11 +106,55 @@ void StageManager::MarkCanProgressNextStage()
 	can_progress_next_stage_ = true;
 }
 
+void StageManager::HandlePlayerDeath()
+{
+	if (!_RunState.IsPlayerDied())
+		_RunState.MarkAsPlayerDied();
+
+	if (curr_state_ != StageState::Result && curr_state_ != StageState::Exit)
+	{
+		if (play_scene_ && ui_manager_)
+			ChangeState(StageState::Result);
+		else
+			curr_state_ = StageState::Result;
+	}
+}
+
+void StageManager::HandleEnemyDeath(const EnemyJsonInfo* _info, const _Vector3& _position)
+{
+	if (_info == nullptr)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	_RunState.GetEnemyKillReward(_info);
+
+	if (_info->dust_resource_count_ <= 0 || object_manager_ == nullptr)
+		return;
+
+	for (_uint i = 0; i < _info->dust_resource_count_; ++i)
+	{
+		const auto x = _Random.Range(-1, 1);
+		const auto y = _Random.Range(-1, 1);
+		UnitCreationInfo creation_info;
+		creation_info.position_ = _position;
+		creation_info.look_point_ = _position + _Vector3(x, y);
+		SpawnProps(PropsType::Dust, creation_info, (void*)&_info->dust_reward_);
+	}
+}
+
 _bool StageManager::SpawnProps(PropsType _props_type, const UnitCreationInfo& _creation_info, void* _extra_data)
 {
+	if (object_manager_ == nullptr)
+		return false;
+
 	switch (_props_type)
 	{
 	case PropsType::Dust:
+		if (_extra_data == nullptr)
+			return false;
+
 		object_manager_->CreateActor<Dust>(_creation_info, _Random.Range(3.f, 25.f), *r_cast(_uint*, _extra_data));
 		break;
 	default:
@@ -124,7 +168,18 @@ void StageManager::SetPlayScene(InGameScene* _play_scene)
 {
 	if (nullptr == _play_scene)
 	{
-		_NULL_DETECTION_MSGBOX;
+		play_scene_ = nullptr;
+		object_manager_ = nullptr;
+		ui_manager_ = nullptr;
+		stage_nav_mesh_ = nullptr;
+		prev_state_ = StageState::Undefined;
+		curr_state_ = StageState::Undefined;
+		stage_elapsed_time_ = 0.0;
+		stage_duration_ = 0.0;
+		spawn_timer_ = 0.0;
+		spawn_interval_ = 0.0;
+		can_progress_next_stage_ = false;
+		proceed_to_next_stage_timer_ = 0.0;
 		return;
 	}
 

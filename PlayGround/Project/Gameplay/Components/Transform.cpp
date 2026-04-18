@@ -24,32 +24,32 @@ void Transform::Rotate2D(const _float _delta)
 
 void Transform::LookAt(const _Vector3& _target)
 {
-	// ¹æÇâ º¤ÅÍ
+	// ë°©í–¥ ë²¡í„°
 	const _float dx = _target.x - position_.x;
 	const _float dy = _target.y - position_.y;
 
-	// °°Àº À§Ä¡¸¦ ¹Ù¶óº¸·Á°í ÇÏ¸é È¸Àü ºÒ°¡
+	// ê°™ì€ ìœ„ì¹˜ë¥¼ ë°”ë¼ë³´ë ¤ê³  í•˜ë©´ íšŒì „ ë¶ˆê°€
 	if (dx == 0.0f && dy == 0.0f)
 		return;
 
-	// atan2 °á°ú´Â ¶óµğ¾È & WinAPI ÁÂÇ¥°è º¸Á¤: y ¹İÀü
+	// atan2 ê²°ê³¼ëŠ” ë¼ë””ì•ˆ & WinAPI ì¢Œí‘œê³„ ë³´ì •: y ë°˜ì „
 	const _float rad = (_float)std::atan2(-dy, dx);
 
-	// degree·Î º¯È¯ & +Y forward ±âÁØÀ¸·Î ¸ÂÃß±â À§ÇØ -90µµ
+	// degreeë¡œ ë³€í™˜ & +Y forward ê¸°ì¤€ìœ¼ë¡œ ë§ì¶”ê¸° ìœ„í•´ -90ë„
 	const _float deg = rad * (180.0f / PI) - 90.f;
 
-	// zÃà È¸Àü¿¡ ÀúÀå
+	// zì¶• íšŒì „ì— ì €ì¥
 	Rotation(_Vector3{ rotation_.x, rotation_.y, deg });
 }
 
 _Vector3 Transform::Forward2D() const
 {
-	// rotation_.z¸¦ µµ ´ÜÀ§·Î °¡Á¤
+	// rotation_.zë¥¼ ë„ ë‹¨ìœ„ë¡œ ê°€ì •
 	const _float rad = rotation_.z * (PI / 180.0f);
 	const _float c = s_float(std::cos(rad));
 	const _float s = s_float(std::sin(rad));
 
-	// (0,-1)À» È¸Àü½ÃÅ² °á°ú
+	// (0,-1)ì„ íšŒì „ì‹œí‚¨ ê²°ê³¼
 	return _Vector3(-s, -c, 0.0f);
 }
 
@@ -60,7 +60,7 @@ _Vector3 Transform::Back2D() const
 
 _Vector3 Transform::Right2D() const
 {
-	// forward¸¦ 90µµ È¸ÀüÇÑ º¤ÅÍ
+	// forwardë¥¼ 90ë„ íšŒì „í•œ ë²¡í„°
 	_Vector3 f = Forward2D();
 	return _Vector3(f.y * -1.0f, f.x, 0.0f);
 }

@@ -4,10 +4,11 @@
 class AttributeNode final : public WidgetBase
 {
 public:
-	explicit AttributeNode(const AttributeNodeJsonInfo* _node_info, const _Point& _pos, AttributeNode* _parent);
+	explicit AttributeNode(const AttributeNodeJsonInfo* _node_info, const _Point& _pos, const _Size& _node_size, AttributeNode* _parent);
 
 public:
 	const AttributeNodeJsonInfo* GetInfo() const { return info_; }
+	void SetVisualLayout(const _Point& _center, const _Size& _size);
 
 	const std::map<NodeDirection, AttributeNode*>& GetChildNodes() { return child_nodes_; }
 	void SetChildNodes(const std::map<NodeDirection, AttributeNode*>& _child_nodes) { child_nodes_ = _child_nodes; }
@@ -62,16 +63,16 @@ private:
 		std::string name_;			// 유저에게 보일 이름 (예: "단단한 먼지")
 		NodeType type_;				// 일반, 핵심, 특성(키스톤) 구분
 		std::string desc_;			// 노드 설명
-	
+
 		// --- 3단계 시스템용 변수 ---
 		NodeState state_;			// 현재 상태 (발견/해금/습득 등)
 		int curr_lv_;				// 현재 레벨 (0 -> 1 -> ...)
 		int last_lv_;				// 최대 마스터 레벨
-	
+
 		// --- 로직용 연결 데이터 ---
 		int character_unlock_id_;	// 이 캐릭터를 얻어야 '발견'됨
 		std::vector<int, int> children_nodes_info_; // 자식 노드 ID와 연결 방향 정보 (예: { {child_node_id, direction}, ... })
-	
+
 		// --- 효과 데이터 (예시) ---
 		AttributeType stat_type_;	// 공격력, 방어력, 습기저항 등
 		float value_per_lv_;		// 레벨당 증가 수치

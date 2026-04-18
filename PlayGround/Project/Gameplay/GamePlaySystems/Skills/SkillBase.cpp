@@ -29,6 +29,11 @@ SkillBase::SkillBase(const SkillDefinition* _definition, const SkillJsonInfo* _i
 {
 }
 
+SkillBase::~SkillBase()
+{
+	_DetachActiveOwner();
+}
+
 _int SkillBase::Update(_double _delta_time)
 {
 	switch (runtime_.phase_)
@@ -39,7 +44,7 @@ _int SkillBase::Update(_double _delta_time)
 		{
 			runtime_.phase_ = SkillRuntimePhase::Idle;
 			_ProcessGraphEvent(SkillGraphEvent::OnCastCompleted);
-			runtime_.active_instance_ = {};
+			_ClearActiveInstance();
 			_BeginCooldown();
 		}
 		break;
@@ -80,20 +85,33 @@ _double SkillBase::GetCurrentCooldown() const
 	return runtime_.cooldown_remaining_sec_;
 }
 
+void SkillBase::ResetRuntimeToReady()
+{
+	_ClearActiveInstance();
+	runtime_.phase_ = SkillRuntimePhase::Idle;
+	runtime_.cooldown_remaining_sec_ = 0.0;
+	runtime_.cast_remaining_sec_ = 0.0;
+}
+
 _bool SkillBase::Execute(GameObjectBase* _owner, const _Vector3& _direction)
 {
-	if (!definition_ || !info_ || !_owner || !IsReady())
+	if (!definition_ || !info_ || !_owner || _owner->IsPendingDestruction() || !_owner->GetTransform() || !IsReady())
 		return false;
 
+	_ClearActiveInstance();
 	runtime_.active_instance_.definition_ = definition_;
-	runtime_.active_instance_.context_.owner_ = _owner;
+	_BindActiveOwner(_owner);
 	runtime_.active_instance_.context_.aim_direction_ = _ResolveAimDirection(_owner, _direction);
 
 	const _bool did_dispatch = _ProcessGraphEvent(SkillGraphEvent::OnUseRequested);
 	if (did_dispatch && runtime_.phase_ != SkillRuntimePhase::Casting)
 	{
-		runtime_.active_instance_ = {};
+		_ClearActiveInstance();
 		_BeginCooldown();
+	}
+	else if (!did_dispatch)
+	{
+		_ClearActiveInstance();
 	}
 
 	return did_dispatch;
@@ -134,7 +152,7 @@ _bool SkillBase::_ProcessGraphEvent(SkillGraphEvent _event)
 			runtime_.cast_remaining_sec_ = std::max(0.0, node->duration_sec_);
 
 			auto* owner = runtime_.active_instance_.context_.owner_;
-			if (owner && runtime_.cast_remaining_sec_ > 0.0)
+			if (owner && !owner->IsPendingDestruction() && runtime_.cast_remaining_sec_ > 0.0)
 			{
 				auto* controller = s_cast(
 					GameplayEffectController*,
@@ -173,7 +191,7 @@ _bool SkillBase::_ProcessGraphEvent(SkillGraphEvent _event)
 void SkillBase::_ExecuteNode(const SkillGraphNode& _node)
 {
 	auto* owner = runtime_.active_instance_.context_.owner_;
-	if (!owner)
+	if (!owner || owner->IsPendingDestruction() || !owner->GetTransform())
 		return;
 
 	switch (_node.kind_)
@@ -227,7 +245,7 @@ void SkillBase::_SpawnExecution(const ExecutionEntitySpec& _spec)
 
 	auto* object_manager = scene->GetObjectManager();
 	auto* owner = runtime_.active_instance_.context_.owner_;
-	if (!object_manager || !owner)
+	if (!object_manager || !owner || owner->IsPendingDestruction() || !owner->GetTransform())
 		return;
 
 	const auto spawn_position = owner->GetTransform()->Position();
@@ -276,8 +294,57 @@ _Vector3 SkillBase::_ResolveAimDirection(GameObjectBase* _owner, const _Vector3&
 	if (_direction.LengthSq() > 0.f)
 		return _direction.Normalized();
 
-	if (_owner && _owner->GetTransform())
+	if (_owner && !_owner->IsPendingDestruction() && _owner->GetTransform())
 		return _owner->GetTransform()->Forward2D();
 
 	return _Vector3(1.f, 0.f);
+}
+
+void SkillBase::_BindActiveOwner(GameObjectBase* _owner)
+{
+	_DetachActiveOwner();
+	runtime_.active_instance_.context_.owner_ = _owner;
+	if (!_owner)
+		return;
+
+	active_owner_destruction_callback_id_ = _owner->AddDestructionCallback(
+		[this]()
+	{
+		_HandleActiveOwnerDestroyed();
+	});
+}
+
+void SkillBase::_DetachActiveOwner()
+{
+	auto* owner = runtime_.active_instance_.context_.owner_;
+	if (!owner || active_owner_destruction_callback_id_ == IDestroyable::kInvalidDestructionCallbackId)
+	{
+		runtime_.active_instance_.context_.owner_ = nullptr;
+		active_owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+		return;
+	}
+
+	owner->RemoveDestructionCallback(active_owner_destruction_callback_id_);
+	runtime_.active_instance_.context_.owner_ = nullptr;
+	active_owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+}
+
+void SkillBase::_HandleActiveOwnerDestroyed()
+{
+	runtime_.active_instance_.definition_ = nullptr;
+	runtime_.active_instance_.context_.owner_ = nullptr;
+	runtime_.active_instance_.context_.aim_direction_ = _Vector3::Zero();
+	active_owner_destruction_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+
+	if (runtime_.phase_ == SkillRuntimePhase::Casting)
+	{
+		runtime_.phase_ = SkillRuntimePhase::Idle;
+		runtime_.cast_remaining_sec_ = 0.0;
+	}
+}
+
+void SkillBase::_ClearActiveInstance()
+{
+	_DetachActiveOwner();
+	runtime_.active_instance_ = {};
 }

@@ -1,6 +1,13 @@
 ﻿#include "framework.h"
 #include "NonPlayableMovement.h"
 
+#include "Actors/GameObjectBase.h"
+
+NonPlayableMovement::~NonPlayableMovement()
+{
+	_DetachTarget();
+}
+
 _bool NonPlayableMovement::Initialize()
 {
 	if (!__super::Initialize())
@@ -19,6 +26,23 @@ _bool NonPlayableMovement::Initialize()
 	MAKE_INITIALIZED;
 	return true;
 }
+
+void NonPlayableMovement::Target(GameObjectBase* _object)
+{
+	if (target_ == _object)
+		return;
+
+	_DetachTarget();
+
+	target_ = _object;
+	if (target_ == nullptr)
+		return;
+
+	target_callback_id_ = target_->AddDestructionCallback([this]() {
+		_HandleTargetDestroyed();
+	});
+}
+
 void NonPlayableMovement::_ProcessOnDirectional(_double _delta_time)
 {
 	// 정해진 방향으로만 직선 이동
@@ -33,7 +57,7 @@ void NonPlayableMovement::_ProcessOnDirectional(_double _delta_time)
 
 void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 {
-	if (nullptr == target_)
+	if (target_ == nullptr || target_->IsPendingDestruction())
 	{
 		SetMoveVelocity(_Vector3::Zero());
 		return;
@@ -52,6 +76,12 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 	case MoveMethod::Steering:
 	{
 		const auto target_transform = target_->GetTransform();
+		if (target_transform == nullptr)
+		{
+			SetMoveVelocity(_Vector3::Zero());
+			return;
+		}
+
 		const auto target_position = target_transform->Position();
 
 		const auto position = transform_->Position();
@@ -91,6 +121,12 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 	case MoveMethod::Immediate:
 	{
 		const auto target_transform = target_->GetTransform();
+		if (target_transform == nullptr)
+		{
+			SetMoveVelocity(_Vector3::Zero());
+			return;
+		}
+
 		const auto target_position = target_transform->Position();
 
 		const auto position = transform_->Position();
@@ -110,4 +146,19 @@ void NonPlayableMovement::_ProcessOnToTarget(_double _delta_time)
 	}
 	break;
 	}
+}
+
+void NonPlayableMovement::_HandleTargetDestroyed()
+{
+	target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	target_ = nullptr;
+}
+
+void NonPlayableMovement::_DetachTarget()
+{
+	if (target_ && target_callback_id_ != IDestroyable::kInvalidDestructionCallbackId)
+		target_->RemoveDestructionCallback(target_callback_id_);
+
+	target_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
+	target_ = nullptr;
 }
