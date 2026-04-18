@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "EnemyAbilitySet.h"
 
 #include "Enemy.h"
@@ -100,6 +100,34 @@ _bool EnemyAbilitySet::CanEnterState(const Enemy& _enemy, EnemyActionState _stat
 	}
 
 	return true;
+}
+
+_bool EnemyAbilitySet::ShouldSuppressHitState(const Enemy& _enemy) const
+{
+	for (const auto& ability : abilities_)
+	{
+		if (!ability)
+			continue;
+
+		if (ability->ShouldSuppressHitState(_enemy))
+			return true;
+	}
+
+	return false;
+}
+
+_bool EnemyAbilitySet::ShouldSuppressKnockback(const Enemy& _enemy) const
+{
+	for (const auto& ability : abilities_)
+	{
+		if (!ability)
+			continue;
+
+		if (ability->ShouldSuppressKnockback(_enemy))
+			return true;
+	}
+
+	return false;
 }
 
 void EnemyAbilitySet::OnCollisionEnter(Enemy& _enemy, Collider* _this, Collider* _other)

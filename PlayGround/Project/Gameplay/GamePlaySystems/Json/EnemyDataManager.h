@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "EngineSystems/Json/JsonDataManager.h"
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
@@ -32,6 +32,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	contact_camera_shake_scale_,
 	dash_speed_,
 	dash_duration_,
+	dash_charge_duration_,
 	dash_cooldown_,
 	dash_recovery_duration_,
 	dash_damage_multiplier_,

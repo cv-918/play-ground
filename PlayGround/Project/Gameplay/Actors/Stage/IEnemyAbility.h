@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "EnemyTypes.h"
 
@@ -47,4 +47,11 @@ public:
 
 	/** @brief 충돌 유지 이벤트를 전달받습니다. */
 	virtual void OnCollisionStay(Enemy& _enemy, Collider* _this, Collider* _other) {}
+
+public:
+	/** @brief 현재 프레임에 피격 시 Hit 상태 전환을 억제할지 여부를 반환합니다. */
+	virtual _bool ShouldSuppressHitState(const Enemy& _enemy) const { return false; }
+
+	/** @brief 현재 프레임에 피격 시 넉백/피격 반응을 억제할지 여부를 반환합니다. */
+	virtual _bool ShouldSuppressKnockback(const Enemy& _enemy) const { return false; }
 };

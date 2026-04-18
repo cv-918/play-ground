@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "ParticleService.h"
 
 #include "GamePlay/Actors/GameObjectBase.h"
@@ -38,7 +38,7 @@ _int ParticleService::Update(_double _delta_time)
 
 		_float ratio = 1.0f - (p.life_time_ / p.max_life_time_);
 
-		p.velocity_ *= (1.0f - p.setting_.airResistance * dt);
+		p.velocity_ *= std::max(0.f, 1.0f - p.setting_.airResistance * dt);
 		p.position_ += p.velocity_ * dt;
 
 		p.currentScale = _MathFunc::LerpWithEase(
@@ -66,6 +66,8 @@ void ParticleService::Render(_double _delta_time)
 	for (_uint idx : active_indices_)
 	{
 		auto& p = particle_pool_[idx];
+		if (p.currentScale <= 0.01f || p.currentColor.GetAlpha() <= 1)
+			continue;
 
 		if (p.setting_.textureKey.empty())
 		{
@@ -90,35 +92,39 @@ void ParticleService::Emit(const ParticleSetting& _setting, const _Vector2& _pos
 {
 	for (_uint i = 0; i < _count; ++i)
 	{
-		if (free_indices_.empty())
-			break;
-
-		_uint idx = free_indices_.back();
-		free_indices_.pop_back();
-		active_indices_.push_back(idx);
-
-		auto& p = particle_pool_[idx];
-		p.setting_ = _setting;
-		p.is_active_ = true;
-		p.currentScale = _setting.startScale;
-		p.currentColor = _setting.startColor;
-
-		p.position_ = _pos;
+		auto particle_pos = _pos;
 		if (_setting.shape == EmitterShape::Circle)
 		{
-			_float angle = _MathFunc::ToRadian(s_float(rand() % 360));
-			_float dist = s_float(rand() % 100) / 100.f * _setting.shapeRadius;
-			p.position_.x += cosf(angle) * dist;
-			p.position_.y += sinf(angle) * dist;
+			const auto angle = _MathFunc::ToRadian(_Random.Range(0.f, 360.f));
+			const auto dist = _Random.Range(0.f, _setting.shapeRadius);
+			particle_pos.x += cosf(angle) * dist;
+			particle_pos.y += sinf(angle) * dist;
 		}
 
-		_float speed = _MathFunc::Lerp(_setting.minSpeed, _setting.maxSpeed, s_float(rand() % 100) / 100.f);
-		_float moveAngle = _MathFunc::ToRadian(s_float(rand() % (_int)_setting.arcAngle) - (_setting.arcAngle / 2.f));
-		p.velocity_ = { cosf(moveAngle) * speed, sinf(moveAngle) * speed };
-
-		p.max_life_time_ = _MathFunc::Lerp(_setting.minLife, _setting.maxLife, s_float(rand() % 100) / 100.f);
-		p.life_time_ = p.max_life_time_;
+		const auto speed = _Random.Range(_setting.minSpeed, _setting.maxSpeed);
+		const auto angle_offset = _Random.Range(-(_setting.arcAngle * 0.5f), _setting.arcAngle * 0.5f);
+		const auto move_angle = _MathFunc::ToRadian(angle_offset);
+		const _Vector2 velocity{ cosf(move_angle) * speed, sinf(move_angle) * speed };
+		const auto life_time = _Random.Range(_setting.minLife, _setting.maxLife);
+		_ActivateParticle(_setting, particle_pos, velocity, life_time, _setting.startScale);
 	}
+}
+
+void ParticleService::EmitCustom(
+	const ParticleSetting& _setting,
+	const _Vector2& _pos,
+	const _Vector2& _velocity,
+	_float _life_time_override,
+	_float _start_scale_override)
+{
+	const auto life_time = (_life_time_override > 0.f)
+		? _life_time_override
+		: _Random.Range(_setting.minLife, _setting.maxLife);
+	const auto start_scale = (_start_scale_override >= 0.f)
+		? _start_scale_override
+		: _setting.startScale;
+
+	_ActivateParticle(_setting, _pos, _velocity, life_time, start_scale);
 }
 
 ParticleEmitterHandle ParticleService::PlayEmitterAt(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos)
@@ -163,6 +169,35 @@ void ParticleService::ClearSceneState()
 {
 	_ClearEmitters(ParticleEmitterStopReason::ServiceShutdown);
 	_ClearParticles();
+}
+
+void ParticleService::_ActivateParticle(
+	const ParticleSetting& _setting,
+	const _Vector2& _pos,
+	const _Vector2& _velocity,
+	_float _life_time,
+	_float _start_scale)
+{
+	if (free_indices_.empty())
+		return;
+
+	const auto clamped_life_time = std::max(0.01f, _life_time);
+	const auto start_scale = std::max(0.f, _start_scale);
+
+	_uint idx = free_indices_.back();
+	free_indices_.pop_back();
+	active_indices_.push_back(idx);
+
+	auto& p = particle_pool_[idx];
+	p.setting_ = _setting;
+	p.is_active_ = true;
+	p.position_ = _pos;
+	p.velocity_ = _velocity;
+	p.max_life_time_ = clamped_life_time;
+	p.life_time_ = clamped_life_time;
+	p.currentScale = start_scale;
+	p.currentColor = _setting.startColor;
+	p.setting_.startScale = start_scale;
 }
 
 ParticleEmitterHandle ParticleService::_CreateEmitterHandle()

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -62,6 +62,8 @@ public:
 	 * 하나라도 false를 반환하면 진입을 허용하지 않습니다.
 	 */
 	_bool CanEnterState(const Enemy& _enemy, EnemyActionState _state) const;
+	_bool ShouldSuppressHitState(const Enemy& _enemy) const;
+	_bool ShouldSuppressKnockback(const Enemy& _enemy) const;
 
 	/** @brief 등록된 Ability 수를 반환합니다. */
 	_uint Count() const { return s_uint(abilities_.size()); }

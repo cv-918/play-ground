@@ -73,6 +73,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 
 		_ColMgr.Update();
 		_CameraMgr.Update(_delta_time);
+		_ParticleService.Update(_delta_time);
 	}
 	else if (current_view_)
 	{

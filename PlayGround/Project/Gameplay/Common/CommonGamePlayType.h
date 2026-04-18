@@ -58,7 +58,7 @@ enum class ComponentType
 
 enum class MovementPattern
 {
-    Undefined = 0,	// 초기화 값
+	Undefined = 0,	// 초기화 값
 	Directional = 1,	// 직선 이동
 	Target = 2,		// 타겟 추적 이동
 	Count = 3,
@@ -232,6 +232,7 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	// ------ 돌진 관련 ------
 	_float dash_speed_ = 0.f;
 	_double dash_duration_ = 0.0;
+	_double dash_charge_duration_ = 0.0;
 	_double dash_cooldown_ = 0.0;
 	_double dash_recovery_duration_ = 0.0;
 	_float dash_damage_multiplier_ = 1.f;

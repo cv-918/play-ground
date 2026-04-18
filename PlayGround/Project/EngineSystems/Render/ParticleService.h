@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ParticleData.h"
 #define _ParticleService ParticleService::Get()
 
@@ -27,6 +27,12 @@ public:
 
 	// Immediate one-shot burst emission.
 	void Emit(const ParticleSetting& _setting, const _Vector2& _pos, _uint _count = 1);
+	void EmitCustom(
+		const ParticleSetting& _setting,
+		const _Vector2& _pos,
+		const _Vector2& _velocity,
+		_float _life_time_override = -1.f,
+		_float _start_scale_override = -1.f);
 	ParticleEmitterHandle PlayEmitterAt(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos);
 	ParticleEmitterHandle PlayEmitterAttached(const ParticleEmitterSpec& _spec, GameObjectBase* _owner, const _Vector2& _local_offset = _Vector2::Zero());
 	void StopEmitter(ParticleEmitterHandle _handle);
@@ -34,6 +40,13 @@ public:
 	void ClearSceneState();
 
 private:
+	void _ActivateParticle(
+		const ParticleSetting& _setting,
+		const _Vector2& _pos,
+		const _Vector2& _velocity,
+		_float _life_time,
+		_float _start_scale);
+
 	struct ActiveEmitter
 	{
 		ParticleEmitterHandle handle_ = 0;

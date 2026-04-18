@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Enemy.h"
 
 #include "Animation/SpriteAnimationTypes.h"
@@ -228,8 +228,12 @@ void Enemy::ApplyHit(const HitContext& _hit)
 		return;
 	}
 
+	const auto suppress_hit_state = ability_set_.ShouldSuppressHitState(*this);
+	const auto suppress_knockback = ability_set_.ShouldSuppressKnockback(*this);
+	const auto suppress_hit_reaction = suppress_hit_state || suppress_knockback;
+
 	// 동작 도중 피격 당하면 캔슬되고 Hit 상태로 전환.
-	if (EnemyActionState::Attack == action_state_)
+	if (EnemyActionState::Attack == action_state_ && !suppress_hit_reaction)
 	{
 		movement_->SetAllowNormalMove(false);
 		movement_->StopImmediately();
@@ -237,10 +241,15 @@ void Enemy::ApplyHit(const HitContext& _hit)
 		movement_->EndDash();
 	}
 
-	// 상태 전환
-	_ChangeState(status_->IsDead() ? EnemyActionState::Death : EnemyActionState::Hit);
+	if (!suppress_hit_state)
+	{
+		_ChangeState(EnemyActionState::Hit);
+	}
 
-	ApplyHitReaction(_hit, false);
+	if (!suppress_knockback)
+	{
+		ApplyHitReaction(_hit, false);
+	}
 }
 
 void Enemy::_DrawObjectShape()
