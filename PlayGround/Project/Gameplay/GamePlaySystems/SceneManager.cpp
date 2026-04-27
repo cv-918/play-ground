@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "SceneManager.h"
 
 #include "EngineSystems/Render/ScreenSystem.h"
@@ -158,7 +158,7 @@ void SceneManager::_CreateNextScene()
 	case SceneType::OutGame:	curr_scene_ = new OutGameScene();	break;
 	case SceneType::InGame:		curr_scene_ = new InGameScene();	break;
 	case SceneType::WorkStation:
-#ifdef _DEBUG
+#ifndef SHIPPING
 		curr_scene_ = new WorkStationScene();
 		break;
 #else

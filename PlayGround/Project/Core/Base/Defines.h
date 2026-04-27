@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define PURE						= 0
 #define DEFAULT						= default
@@ -68,10 +68,10 @@
 #define __CLASS_NAME _UtilFunc::ToWString(typeid(*this).name()) 
 #define __OBJ_CLASS_NAME(obj) _UtilFunc::ToWString(typeid(*obj).name())
 
-#if _DEBUG
+#ifndef SHIPPING
 inline void DebugMsgBox(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
 {
-#ifdef _DEBUG
+#ifndef SHIPPING
 	_tchar buf[512] = {};
 	va_list args;
 	va_start(args, _fmt);
@@ -87,7 +87,7 @@ inline void DebugMsgBox(const _tchar* _path, _int _line, const _tchar* _fmt, ...
 
 	_tcscat_s(out, _countof(out), buf);
 	MessageBox(NULL, out, _T("Debug"), MB_OK | MB_ICONERROR);
-#endif // _DEBUG
+#endif // SHIPPING
 }
 
 inline void DevLogW(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
@@ -152,4 +152,4 @@ inline void DevLogW(const _tchar* _path, _int _line, const _tchar* _fmt, ...)
 
 #define _NULL_DETECTION_MSGBOX
 #define _NULL_DETECTION_MSGBOX_EX(fmt, ...)
-#endif // _DEBUG
+#endif // SHIPPING

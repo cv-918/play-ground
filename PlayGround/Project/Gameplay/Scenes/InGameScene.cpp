@@ -107,7 +107,7 @@ _int InGameScene::LateUpdate(_double _delta_time)
 
 void InGameScene::Render(_double _delta_time)
 {
-#ifdef _DEBUG
+#ifndef SHIPPING
 	// 1. 카메라 오프셋 가져오기
 	_Point offset = _CameraMgr.GetShakeOffset();
 
@@ -126,7 +126,7 @@ void InGameScene::Render(_double _delta_time)
 	ui_manager_->Render(_delta_time);
 #else
 	__super::Render(_delta_time);
-#endif // _DEBUG
+#endif // SHIPPING
 }
 
 void InGameScene::OnEnter()

@@ -7,34 +7,34 @@
             ],
             [
                 1,
-                0
-            ],
-            [
-                6,
-                5
+                2
             ],
             [
                 2,
                 0
             ],
             [
-                5,
-                5
+                6,
+                4
             ],
             [
                 3,
                 1
+            ],
+            [
+                5,
+                1
             ]
         ],
-        "dust_count_": 1096,
+        "dust_count_": 1215,
         "equipped_skill_ids_": [
             0,
             3
         ],
-        "experience_": 1002,
+        "experience_": 1197,
         "id_": 0,
-        "is_first_play_": true,
-        "stage_progress_": 2,
+        "is_first_play_": 0,
+        "stage_progress_": 5,
         "unlocked_character_ids_": [
             1
         ]

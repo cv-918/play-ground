@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "OutGameOptionView.h"
 
 #include "../Elements/Button.h"
@@ -41,7 +41,7 @@ namespace
 			BindingSlotDesc{ 2, 0, L"스킬 1",   InputAction::Skill1, 1.f, false, false },
 			BindingSlotDesc{ 2, 2, L"스킬 2",   InputAction::Skill2, 1.f, false, false },
 			BindingSlotDesc{ 3, 0, L"인터랙션", InputAction::Interact, 1.f, false, false },
-			BindingSlotDesc{ 3, 2, L"",         InputAction::Count, 0.f, false, true  },
+			BindingSlotDesc{ 3, 2, L"스테이지 진행", InputAction::StageProgress, 1.f, false, false },
 		};
 	}
 
@@ -74,6 +74,7 @@ namespace
 		case InputAction::Skill2: return L"Skill2";
 		case InputAction::Interact: return L"Interact";
 		case InputAction::Pause: return L"Pause";
+		case InputAction::StageProgress: return L"StageProgress";
 		default: return L"Unknown";
 		}
 	}

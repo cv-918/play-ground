@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "IntroScene.h"
 
 #include "EngineSystems/Render/ScreenSystem.h"
@@ -49,7 +49,7 @@ _bool IntroScene::Initialize()
 		images_.push_back(st);
 	}
 
-#ifdef _DEBUG
+#ifndef SHIPPING
 	Button::CreateInfo workstation_button_info;
 	workstation_button_info.rect = _Rect{ _Point{ 24, 24 }, _Size{ 180, 42 } };
 	workstation_button_info.text = L"WorkStation";
@@ -59,7 +59,7 @@ _bool IntroScene::Initialize()
 	};
 
 	debug_workstation_button_ = ui_manager_->CreateUI<Button>(workstation_button_info);
-#endif
+#endif // SHIPPING
 
 	MAKE_INITIALIZED;
 	return true;
@@ -73,13 +73,13 @@ _int IntroScene::Update(_double _delta_time)
 
 	elapsed_time_ += _delta_time;
 
-#ifdef _DEBUG
+#ifdef SHIPPING
 	if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
 	{
 		_SceneMgr.ChangeScene(SceneType::OutGame);
 		return UPDATE_BREAK;
 	}
-#endif // _DEBUG
+#endif // SHIPPING
 
 	constexpr _double kFadeInStart = 1.0;
 	constexpr _double kFadeInDuration = 1.25;

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define _StageMgr StageManager::Get()
 
@@ -58,6 +58,12 @@ private:
 
 	_bool _SpawnEnemy(_bool _on_play = true, _uint _count = 1);
 	_uint _SelectMonsterFromPool(const std::vector<SpawnEnemyJsonInfo>& _pool);
+
+	void _ProcessStageClear();
+#ifndef SHIPPING
+	void _TestFunction_StageChange(_bool _to_next_stage);
+#endif // SHIPPING
+
 
 private:
 	// --- 씬과 매니저 간의 상호작용을 위한 포인터들 ---

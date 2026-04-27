@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-19 17:16)
+﻿# Project Structure (Updated: 2026-04-27 16:37)
 
 ```text
 Root
@@ -31,6 +31,8 @@ Root
 |   |   |   |   |   +--- YES
 |   |   |   |   +--- PopUps
 |   |   |   +--- World
++--- html
+|   +--- search
 +--- Project
 |   +--- App
 |   |   |   EntryPoint.cpp
@@ -299,6 +301,7 @@ Root
 |   |   |   |   Background.h
 |   |   |   |   NavMesh.cpp
 |   |   |   |   NavMesh.h
++--- xml
 +--- _DevLog
 |   +--- Documents
 |   |   +--- Copilot
@@ -312,8 +315,8 @@ Root
 |   |   +--- Memo
 |   |   +--- Scope
 |   +--- Idea
-|   +--- Minutes
 +--- _Intermediate
++--- 리소스
 |   PlayGround.ico
 |   PlayGround.sln
 |   PlayGround.vcxproj

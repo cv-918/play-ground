@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InputManager.h"
 
 #include <windowsx.h>
@@ -368,12 +368,14 @@ bool InputManager::IsActionRemappable(ControllerPreset _preset, InputAction _act
 	if (_preset == ControllerPreset::MouseOnly)
 		return false;
 
-	// KeyboardMouse는 이동/대시만 remap 허용한다.
+	// KeyboardMouse는 이동/대시와 상호작용/스테이지 진행 remap을 허용한다.
 	if (_preset == ControllerPreset::KeyboardMouse)
 	{
 		return (_action == InputAction::MoveX)
 			|| (_action == InputAction::MoveY)
-			|| (_action == InputAction::Dash);
+			|| (_action == InputAction::Dash)
+			|| (_action == InputAction::Interact)
+			|| (_action == InputAction::StageProgress);
 	}
 
 	// 그 외 프리셋은 현재 정책에서 허용한다.
@@ -720,9 +722,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'Q', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'E', 1.f },
-			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
+			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
 		};
 	}
 
@@ -738,9 +740,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::KeyboardKey, 'A', 1.f },
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'S', 1.f },
-			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
+			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
 		};
 	}
 
@@ -770,9 +772,9 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Dash, InputSourceType::KeyboardKey, VK_SPACE, 1.f },
 			{ InputAction::Skill1, InputSourceType::MouseButton, VK_LBUTTON, 1.f },
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
-			{ InputAction::Interact, InputSourceType::MouseButton, 'E', 1.f},
+			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::MouseButton, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
 		};
 	}
 
@@ -831,6 +833,8 @@ _bool InputManager::RunSelfTest()
 	ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::MouseOnly, InputAction::MoveX), "Policy.MouseOnly.Deny") && ok;
 	ok = ExpectInputSelfTest(!IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Skill1), "Policy.KeyboardMouse.Skill1Deny") && ok;
 	ok = ExpectInputSelfTest(IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Dash), "Policy.KeyboardMouse.DashAllow") && ok;
+	ok = ExpectInputSelfTest(IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::Interact), "Policy.KeyboardMouse.InteractAllow") && ok;
+	ok = ExpectInputSelfTest(IsActionRemappable(ControllerPreset::KeyboardMouse, InputAction::StageProgress), "Policy.KeyboardMouse.StageProgressAllow") && ok;
 
 	InputBinding remap_binding;
 	remap_binding.action = InputAction::MoveX;
@@ -842,6 +846,14 @@ _bool InputManager::RunSelfTest()
 		"TryRemap.MouseOnly.Rejected") && ok;
 	ok = ExpectInputSelfTest(TryRemapAction(ControllerPreset::KeyboardMouse, InputAction::MoveX, remap_binding) == InputRemapResult::Success,
 		"TryRemap.KeyboardMouse.MoveX.Success") && ok;
+
+	InputBinding interact_remap_binding;
+	interact_remap_binding.action = InputAction::Interact;
+	interact_remap_binding.source_type = InputSourceType::KeyboardKey;
+	interact_remap_binding.source_code = 'O';
+	interact_remap_binding.scale = 1.f;
+	ok = ExpectInputSelfTest(TryRemapAction(ControllerPreset::KeyboardMouse, InputAction::Interact, interact_remap_binding) == InputRemapResult::Success,
+		"TryRemap.KeyboardMouse.Interact.Success") && ok;
 
 	SetCurrentPreset(ControllerPreset::KeyboardMouse);
 	BeginFrame();

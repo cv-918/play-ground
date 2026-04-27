@@ -125,13 +125,13 @@ void DashAbility::OnExitState(Enemy& _enemy, EnemyActionState _state)
 _bool DashAbility::ShouldSuppressHitState(const Enemy& _enemy) const
 {
 	(void)_enemy;
-	return DashPhase::Charging == phase_;
+	return DashPhase::Charging == phase_ || DashPhase::Dashing == phase_;
 }
 
 _bool DashAbility::ShouldSuppressKnockback(const Enemy& _enemy) const
 {
 	(void)_enemy;
-	return DashPhase::Charging == phase_;
+	return DashPhase::Charging == phase_ || DashPhase::Dashing == phase_;
 }
 
 _bool DashAbility::_CanStartDash(const Enemy& _enemy) const

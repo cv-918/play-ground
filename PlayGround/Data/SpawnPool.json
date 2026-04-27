@@ -1,6 +1,81 @@
-﻿[
+[
 	{
 		"id_": 1,
+		"spawn_enemies_info_": [
+			{
+				"id_": 1,
+				"weight_": 70,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 2,
+				"weight_": 25,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 3,
+				"weight_": 5,
+				"spawn_interval_": 1.5
+			}
+		]
+	},
+	{
+		"id_": 2,
+		"spawn_enemies_info_": [
+			{
+				"id_": 1,
+				"weight_": 45,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 2,
+				"weight_": 30,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 3,
+				"weight_": 20,
+				"spawn_interval_": 1.0
+			},
+			{
+				"id_": 4,
+				"weight_": 5,
+				"spawn_interval_": 4.0
+			}
+		]
+	},
+	{
+		"id_": 3,
+		"spawn_enemies_info_": [
+			{
+				"id_": 1,
+				"weight_": 30,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 2,
+				"weight_": 25,
+				"spawn_interval_": 0.0
+			},
+			{
+				"id_": 3,
+				"weight_": 25,
+				"spawn_interval_": 1.0
+			},
+			{
+				"id_": 4,
+				"weight_": 10,
+				"spawn_interval_": 4.0
+			},
+			{
+				"id_": 5,
+				"weight_": 10,
+				"spawn_interval_": 4.0
+			}
+		]
+	},
+	{
+		"id_": 4,
 		"spawn_enemies_info_": [
 			{
 				"id_": 1,
@@ -14,23 +89,23 @@
 			},
 			{
 				"id_": 3,
-				"weight_": 15,
-				"spawn_interval_": 0.0
+				"weight_": 25,
+				"spawn_interval_": 1.0
 			},
 			{
 				"id_": 4,
-				"weight_": 15,
-				"spawn_interval_": 1.0
+				"weight_": 10,
+				"spawn_interval_": 4.0
 			},
 			{
 				"id_": 5,
 				"weight_": 10,
-				"spawn_interval_": 1.0
+				"spawn_interval_": 4.0
 			},
 			{
 				"id_": 6,
-				"weight_": 10,
-				"spawn_interval_": 1.0
+				"weight_": 5,
+				"spawn_interval_": 6.0
 			}
 		]
 	}

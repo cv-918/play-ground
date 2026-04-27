@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Scene.h"
 
 class IntroScene final : public Scene
@@ -16,7 +16,7 @@ class IntroScene final : public Scene
 		TextureResource* texture = nullptr;
 		_float opacity = 0.f; // 0.0 (투명) ~ 1.0 (불투명)
 		_Vector2 offset = _Vector2::Zero();
-		_RectF render_dest_rect = {};
+		_RectF render_dest_rect;
 	};
 
 	enum class IntroSceneState
@@ -42,8 +42,8 @@ private:
 	IntroSceneState current_state_ = IntroSceneState::None;
 	_bool is_press_any_key_fading_in_ = false;
 
-#ifdef _DEBUG
+#ifndef SHIPPING
 	class Button* debug_workstation_button_ = nullptr;
-#endif
+#endif // SHIPPING
 };
 

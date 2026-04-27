@@ -1,13 +1,13 @@
-﻿[
+[
 	{
 		"id_": 1,
 		"name_": "더스티",
 		"body_size_": 60.0,
-		"attack_speed_": 2.25,
+		"attack_speed_": 2.75,
 		"hp_": 10.0,
 		"contact_damage_": 6.0,
 		"image_path_": "Data/Resources/Textures/Characters/Dust.png",
-		"attack_range_": 60.0,
+		"attack_range_": 80.0,
 		"collector_size_": 60.0,
 		"move_speed_max_": 300.0,
 		"acceleration_": 400.0,

@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "StageManager.h"
 
 #include "GamePlay/Scenes/InGameScene.h"
@@ -59,7 +59,7 @@ void StageManager::ChangeState(StageState _new_state)
 	case StageState::Ready:
 	{
 		FloatingTextCreationData data;
-		data.text_ = std::wstring(_T("= Stage ")) + std::to_wstring(_UserProfile.GetStageProgress() + 1) + _T(" =");
+		data.text_ = std::wstring(_T("= Stage ")) + std::to_wstring(_UserProfile.GetStageProgress()) + _T(" =");
 		data.pos_ = GAME_VIEW_CENTER;
 		data.life_time_ = 3.0;
 		data.font_size_ = 80.f;
@@ -251,8 +251,8 @@ void StageManager::_OnEnter()
 	// 스테이지 타이머 설정
 	stage_elapsed_time_ = 0.0;
 
-	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime);
-	stage_duration_ = (DEFAULT_STAGE_DURATION + time_stat.additive_increase_) * time_stat.multiplicative_increase_rate_;
+	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime).GetTotalIncrease(DEFAULT_STAGE_DURATION);
+	stage_duration_ = time_stat;
 
 	proceed_to_next_stage_timer_ = 0.0;
 	can_progress_next_stage_ = false;
@@ -373,7 +373,7 @@ void StageManager::_OnExit()
 _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 {
 	// 테스트 전용 인풋 처리. 나중에 필요 없으면 제거
-#ifdef _DEBUG
+#ifndef SHIPPING
 	if (_InputMgr.Pressed(VK_CONTROL))
 	{
 		// A키를 누르면 스폰 타이머가 초기화되어 즉시 적이 스폰되도록 함
@@ -383,7 +383,18 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 			_SYSTEM_LOG_INFO(_T("[Test Function] Spawn timer reset by pressing A key"));
 		}
 	}
-#endif // _DEBUG
+
+	if (_InputMgr.Down(VK_PRIOR))
+	{
+		// Page Up 키를 누르면 다음 스테이지로 넘어가는 타이머가 초기화되어 즉시 다음 스테이지로 넘어가도록 함
+		_TestFunction_StageChange(true);
+	}
+	else if (_InputMgr.Down(VK_NEXT))
+	{
+		// Page Down 키를 누르면 다음 스테이지로 넘어가는 타이머가 초기화되어 즉시 다음 스테이지로 넘어가지 않도록 함
+		_TestFunction_StageChange(false);
+	}
+#endif // SHIPPING
 
 	if (can_progress_next_stage_)
 	{
@@ -398,20 +409,7 @@ _int StageManager::_HandleInputDuringPlay(_double _delta_time)
 
 		if (proceed_to_next_stage_timer_ >= PROCEED_TO_NEXT_STAGE_HOLD_TIME)
 		{
-			proceed_to_next_stage_timer_ = 0.0;
-			can_progress_next_stage_ = false;
-
-			const auto curr_stage_lv = _UserProfile.GetStageProgress();
-			if (curr_stage_lv < _StageDataMgr.GetStageCount())
-			{
-				_UserProfile.IncreaseStageProgress();
-			}
-
-			// 결과 적용 및 스테이지 재시작
-			ProgressRunSessionResult();
-			_SceneMgr.ChangeScene(SceneType::InGame, true);
-
-			_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());
+			_ProcessStageClear();
 			return UPDATE_BREAK;
 		}
 	}
@@ -573,9 +571,6 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 
 		// 프로그레스바 생성 및 설정. 적마다 체력바가 필요하다고 가정하고, 적이 스폰될 때마다 체력바를 생성하여 트래킹하도록 설정
 		const auto hp_bar = ui_manager_->CreateUI<HpBar>(spawned_enemy, DEFAULT_OFFSET_HP_BAR);
-
-		// 어떤 몬스터가 스폰됐는지 로깅 (테스트용, 나중에 필요 없으면 제거)
-		// _SYSTEM_LOG_INFO(_T("Spawned enemy: %s (ID: %d)"), spawned_enemy->Name().c_str(), enemy_data->id_);
 	}
 
 	return true;
@@ -610,3 +605,53 @@ _uint StageManager::_SelectMonsterFromPool(const std::vector<SpawnEnemyJsonInfo>
 
 	return 0;
 }
+
+void StageManager::_ProcessStageClear()
+{
+	proceed_to_next_stage_timer_ = 0.0;
+	can_progress_next_stage_ = false;
+
+	const auto curr_stage_lv = _UserProfile.GetStageProgress();
+	if (curr_stage_lv < _StageDataMgr.GetStageCount())
+	{
+		_UserProfile.IncreaseStageProgress();
+	}
+
+	// 결과 적용 및 스테이지 재시작
+	ProgressRunSessionResult();
+	_SceneMgr.ChangeScene(SceneType::InGame, true);
+
+	_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());
+}
+
+#ifndef SHIPPING
+void StageManager::_TestFunction_StageChange(_bool _to_next_stage)
+{
+	_bool valid_transition = false;
+	const auto curr_stage_lv = _UserProfile.GetStageProgress();
+	if (_to_next_stage && curr_stage_lv < _StageDataMgr.GetStageCount())
+	{
+		_UserProfile.IncreaseStageProgress();
+		valid_transition = true;
+	}
+	else if (!_to_next_stage && curr_stage_lv > 1)
+	{
+		_UserProfile.DecreaseStageProgress();
+		valid_transition = true;
+	}
+	
+	if (!valid_transition)
+	{
+		_SYSTEM_LOG_INFO(_T("Invalid stage transition attempted. Current stage progress: %d"), curr_stage_lv);
+		return;
+	}
+
+	proceed_to_next_stage_timer_ = 0.0;
+	can_progress_next_stage_ = false;
+
+	ProgressRunSessionResult();
+	_SceneMgr.ChangeScene(SceneType::InGame, true);
+
+	_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());
+}
+#endif // SHIPPING

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define GAME_VIEW_WIDTH		g_screen_size.x
 #define GAME_VIEW_WIDTH_H	(g_screen_size.x >> 1)
@@ -46,7 +46,6 @@
 #define ENEMY_DEFAULT_MOVE_SPEED_MULTIPLIER 20.f
 
 #define DEFAULT_SPAWN_COUNT 15
-#define KILL_COUNT_UNIT_FOR_CLEAR 8
 #pragma endregion
 
 #pragma region [ 디버그 관련 ]

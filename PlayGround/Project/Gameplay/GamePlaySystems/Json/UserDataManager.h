@@ -11,7 +11,7 @@ inline void to_json(json& _json, const UserDataJsonInfo& _info)
 		{ "acquired_node_ids_", _info.acquired_node_ids_ },
 		{ "equipped_skill_ids_", _info.equipped_skill_ids_ },
 		{ "stage_progress_", _info.stage_progress_ },
-		{ "is_first_play_", _info.is_first_play_ }
+		{ "is_first_play_", _info.main_story_progress_ }
 	};
 }
 
@@ -24,7 +24,11 @@ inline void from_json(const json& _json, UserDataJsonInfo& _info)
 	_info.acquired_node_ids_ = _json.value("acquired_node_ids_", std::vector<std::pair<_uint, _uint>>{});
 	_info.equipped_skill_ids_ = _json.value("equipped_skill_ids_", std::array<_int, 2>{ -1, -1 });
 	_info.stage_progress_ = _json.value("stage_progress_", 0u);
-	_info.is_first_play_ = _json.value("is_first_play_", true);
+
+	if (_info.stage_progress_ <= 0)
+		_info.stage_progress_ = 1;
+
+	_info.main_story_progress_ = s_cast(MainStoryProgress, _json.value("main_story_progress_", 0u));
 }
 
 #define _UserDataMgr UserDataManager::Get()

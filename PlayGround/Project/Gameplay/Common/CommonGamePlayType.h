@@ -545,6 +545,15 @@ enum class SkillUnlockType
 	TimeElapsed,	// 플레이 시간 경과 시 획득
 };
 
+enum class MainStoryProgress
+{
+	Undefined = 0,
+	Prologue,
+	Chapter1,
+	Chapter2,
+	Epilogue,
+};
+
 struct SkillJsonInfo
 {
 	/** @defgroup SKILL_TABLE Skill Table
@@ -636,9 +645,8 @@ struct UserDataJsonInfo
 	/** 플레이어의 현재 스테이지 진행 상황을 나타내는 변수. 필요에 따라 플레이어가 클리어한 스테이지 수나 현재 스테이지 번호 등을 관리하는 데 활용할 수 있습니다. */
 	_uint stage_progress_ = 0;
 
-	/** 플레이어의 첫 플레이 여부를 나타내는 변수.필요에 따라 게임 내에서 첫 플레이 시 특별한 튜토리얼을 제공하거나, 특정 보상을 주는 등의 로직에서 활용할 수 있습니다. */
-	_bool is_first_play_ = true;
-
+	/** 플레이어의 메인 스토리 진행 상황을 나타내는 변수. 필요에 따라 플레이어가 메인 스토리에서 어느 지점까지 진행했는지를 관리하는 데 활용할 수 있습니다. */
+	MainStoryProgress main_story_progress_ = MainStoryProgress::Undefined;
 };
 #pragma endregion
 

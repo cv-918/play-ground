@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 struct Resolution
 {
@@ -26,11 +26,11 @@ enum class WindowMode
 struct VideoSettings
 {
 	Resolution resolution = { 1280, 720 };
-#ifdef _DEBUG
+#ifndef SHIPPING
 	WindowMode window_mode = WindowMode::Windowed;
 #else
 	WindowMode window_mode = WindowMode::BorderlessFullscreen;
-#endif // _DEBUG
+#endif // SHIPPING
 
 	_float ui_scale = 1.0f;
 	bool frame_limit_enabled = true;

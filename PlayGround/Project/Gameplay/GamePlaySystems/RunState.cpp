@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "RunState.h"
 
 #include "Actors/GameObjectBase.h"
@@ -7,7 +7,55 @@
 void RunState::Ready()
 {
 	// 클리어 조건 설정
-	kill_count_for_clear_ = KILL_COUNT_UNIT_FOR_CLEAR * _UserProfile.GetStageProgress();
+	// 인크리멘탈 구조 기준:
+	// 목표 처치 수 = 1회 진입 기대 처치 수 * 목표 재진입 횟수
+	const int stage_progress = std::max(1u, _UserProfile.GetStageProgress());
+
+	int expected_kills_per_run = 0;
+	if (stage_progress <= 2)
+	{
+		expected_kills_per_run = 2;
+	}
+	else if (stage_progress <= 4)
+	{
+		expected_kills_per_run = 3;
+	}
+	else if (stage_progress <= 6)
+	{
+		expected_kills_per_run = 4;
+	}
+	else if (stage_progress <= 8)
+	{
+		expected_kills_per_run = 5;
+	}
+	else
+	{
+		expected_kills_per_run = 6;
+	}
+
+	int target_run_count_for_clear = 0;
+	if (stage_progress <= 1)
+	{
+		target_run_count_for_clear = 2;
+	}
+	else if (stage_progress <= 3)
+	{
+		target_run_count_for_clear = 3;
+	}
+	else if (stage_progress <= 5)
+	{
+		target_run_count_for_clear = 4;
+	}
+	else if (stage_progress <= 7)
+	{
+		target_run_count_for_clear = 5;
+	}
+	else
+	{
+		target_run_count_for_clear = 6;
+	}
+
+	kill_count_for_clear_ = expected_kills_per_run * target_run_count_for_clear;
 }
 
 void RunState::Clear()

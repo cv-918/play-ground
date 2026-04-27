@@ -4,6 +4,17 @@
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 #include "GamePlaySystems/SkillManager.h"
 
+namespace
+{
+	_uint CalculateNodeLevelCost(const AttributeNodeJsonInfo* _data, const _uint _current_level)
+	{
+		if (nullptr == _data)
+			return 0;
+
+		return s_uint(_data->cost_ * (_data->cost_growth_rate_ * std::max(s_uint(1), _current_level)));
+	}
+}
+
 void UserProfile::ResetUserData()
 {
 	dust_count_ = 0;
@@ -153,22 +164,22 @@ void UserProfile::UpdateAttributeStat()
 
 void UserProfile::NodeLevelUp(const _uint node_id)
 {
+	const auto data = _AttributeNodeDataMgr.GetData(node_id);
+	if (nullptr == data)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
 	auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
 		[&](const std::pair<_uint, _uint>& pair) { return pair.first == node_id; });
 	if (it != acquired_node_ids_.end())
 	{
 		// 노드 데이터를 가져와서
-		const auto data = _AttributeNodeDataMgr.GetData(node_id);
-		if (nullptr == data)
-		{
-			_NULL_DETECTION_MSGBOX;
-			return;
-		}
-
 		// 레벨업 가능 여부 판단 (예: 최대 레벨 체크 등). 필요에 따라 노드 레벨업 시 추가적인 로직을 작성할 수 있습니다.)
 		const auto condition_level = it->second < data->max_lv_;
 
-		const auto total_cost = s_uint(data->cost_ * (data->cost_growth_rate_ * std::max(s_uint(1), it->second)));
+		const auto total_cost = CalculateNodeLevelCost(data, it->second);
 		const auto condition_cost = dust_count_ >= total_cost;
 		if (condition_level && condition_cost)
 		{
@@ -181,11 +192,51 @@ void UserProfile::NodeLevelUp(const _uint node_id)
 	else
 	{
 		// 노드를 처음 획득하는 경우 레벨 1로 추가
+		const auto total_cost = CalculateNodeLevelCost(data, 0);
+		if (dust_count_ < total_cost)
+		{
+			_SYSTEM_LOG_INFO(_T("Node ID %u failed to acquire due to insufficient coin. Current: %u, Need: %u"), node_id, dust_count_, total_cost);
+			return;
+		}
+
+		dust_count_ -= total_cost;
 		acquired_node_ids_.emplace_back(node_id, s_uint(1));
 		_SYSTEM_LOG_INFO(_T("Node ID %u acquired at level 1"), node_id);
 	}
 
 	UpdateAttributeStat(); // 노드 레벨업 후 어트리뷰트 수치를 업데이트하여 최신 상태로 유지
+}
+
+void UserProfile::NodeLevelDown(const _uint node_id)
+{
+	const auto data = _AttributeNodeDataMgr.GetData(node_id);
+	if (nullptr == data)
+	{
+		_NULL_DETECTION_MSGBOX;
+		return;
+	}
+
+	auto it = std::find_if(acquired_node_ids_.begin(), acquired_node_ids_.end(),
+		[&](const std::pair<_uint, _uint>& pair) { return pair.first == node_id; });
+	if (it == acquired_node_ids_.end() || it->second == 0)
+		return;
+
+	const auto current_level = it->second;
+	const auto refund_cost = CalculateNodeLevelCost(data, current_level - 1);
+
+	if (current_level > 1)
+	{
+		--it->second;
+		_SYSTEM_LOG_INFO(_T("Node ID %u leveled down to level %u"), node_id, it->second);
+	}
+	else
+	{
+		acquired_node_ids_.erase(it);
+		_SYSTEM_LOG_INFO(_T("Node ID %u has been removed from acquired nodes"), node_id);
+	}
+
+	dust_count_ += refund_cost;
+	UpdateAttributeStat();
 }
 
 NodeState UserProfile::GetNodeState(const AttributeNodeJsonInfo* _info) const
