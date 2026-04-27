@@ -7,8 +7,14 @@
 
 #include "GamePlaySystems/StageManager.h"
 #include "GamePlaySystems/SkillManager.h"
+#include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 #include "EngineSystems/Render/ScreenSystem.h"
+
+namespace
+{
+	constexpr _uint DEBUG_SAMPLE_PARTICLE_EMITTER_ID = 2001;
+}
 
 _bool InGameScene::Initialize()
 {
@@ -45,6 +51,22 @@ _int InGameScene::Update(_double _delta_time)
 			stage_manager_->ChangeState(next_state);
 
 		return UPDATE_CONTINUE;
+	}
+
+	if (!_GameState.GetPause() && _InputMgr.Down(VK_F6))
+	{
+		const auto* emitter_spec = _ParticleEmitterDataMgr.GetData(DEBUG_SAMPLE_PARTICLE_EMITTER_ID);
+		if (emitter_spec)
+		{
+			const auto mouse_world_pos = _CameraMgr.ScreenToWorld(_InputMgr.MousePointDesign());
+			_ParticleService.PlayEmitterAt(*emitter_spec, mouse_world_pos);
+		}
+		else
+		{
+			_SYSTEM_LOG_ERROR(
+				L"Particle emitter sample not found. id=%u",
+				DEBUG_SAMPLE_PARTICLE_EMITTER_ID);
+		}
 	}
 
 	stage_manager_->Update(_delta_time);
@@ -110,6 +132,9 @@ void InGameScene::Render(_double _delta_time)
 void InGameScene::OnEnter()
 {
 	_SkillMgr.ResetEquippedSkillsToReady();
+	_SYSTEM_LOG_INFO(
+		L"Particle emitter sample ready. Press F6 in InGame to play emitter id=%u at the mouse cursor.",
+		DEBUG_SAMPLE_PARTICLE_EMITTER_ID);
 
 	// 스테이지 매니저의 상태를 Enter 상태로 변경하여 스테이지 매니저가 Enter 상태에서 수행해야 하는 로직을 실행하도록 함. 예를 들어, Enter 상태에서는 스테이지 시작 시 필요한 초기화 작업이나 연출 등을 수행할 수 있음
 	stage_manager_->ChangeState(StageState::Enter);

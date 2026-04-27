@@ -61,6 +61,7 @@
     <ClInclude Include="Project\Gameplay\Components\GameplayEffectController.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\StageManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\GameState.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\GameDataLoader.h" />
     <ClInclude Include="Project\Gameplay\Scenes\Scene.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SceneManager.h" />
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
@@ -68,6 +69,7 @@
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\InGameScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\WorkStationScene.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Button.h" />
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
@@ -211,6 +213,7 @@
     <ClCompile Include="Project\Gameplay\Components\GameplayEffectController.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\GameDataLoader.cpp" />
     <ClCompile Include="Project\Core\Math\Geometry2D.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\Scene.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
@@ -218,6 +221,7 @@
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\WorkStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />

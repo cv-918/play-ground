@@ -41,5 +41,9 @@ private:
 
 	IntroSceneState current_state_ = IntroSceneState::None;
 	_bool is_press_any_key_fading_in_ = false;
+
+#ifdef _DEBUG
+	class Button* debug_workstation_button_ = nullptr;
+#endif
 };
 

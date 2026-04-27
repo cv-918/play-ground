@@ -1,1 +1,9 @@
-﻿[]
+[
+  {
+    "id_": 2001,
+    "particle_setting_id_": 1003,
+    "emit_interval_sec_": 0.03,
+    "emit_count_per_tick_": 4,
+    "duration_sec_": 0.42
+  }
+]

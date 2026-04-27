@@ -1,4 +1,4 @@
-﻿# Project Structure (Updated: 2026-04-18 21:50)
+﻿# Project Structure (Updated: 2026-04-19 17:16)
 
 ```text
 Root
@@ -213,6 +213,8 @@ Root
 |   |   |   |   |   SkillExecutionActors.cpp
 |   |   |   |   |   SkillExecutionActors.h
 |   |   |   |   |   SkillRuntimeTypes.h
+|   |   |   |   GameDataLoader.cpp
+|   |   |   |   GameDataLoader.h
 |   |   |   |   GameState.cpp
 |   |   |   |   GameState.h
 |   |   |   |   RunState.cpp
@@ -240,6 +242,8 @@ Root
 |   |   |   |   OutGameScene.h
 |   |   |   |   Scene.cpp
 |   |   |   |   Scene.h
+|   |   |   |   WorkStationScene.cpp
+|   |   |   |   WorkStationScene.h
 |   |   +--- UI
 |   |   |   +--- Elements
 |   |   |   |   |   Button.cpp

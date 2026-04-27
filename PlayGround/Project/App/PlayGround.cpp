@@ -4,18 +4,8 @@
 #include "EngineSystems/Render/RenderChain.h"
 #include "EngineSystems/Render/ScreenSystem.h"
 #include "EngineSystems/Physics/CollisionManager.h"
+#include "GamePlaySystems/GameDataLoader.h"
 #include "GamePlaySystems/SceneManager.h"
-
-#include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
-#include "GamePlaySystems/Json/SkillDefinitionDataManager.h"
-#include "GamePlaySystems/Json/SkillJsonDataManager.h"
-#include "GamePlaySystems/Json/EnemyDataManager.h"
-#include "GamePlaySystems/Json/AttributeNodeDataManager.h"
-#include "GamePlaySystems/Json/UserDataManager.h"
-#include "GamePlaySystems/Json/StageJsonDataManager.h"
-#include "GamePlaySystems/Json/ParticleDataManager.h"
-#include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
-#include "GamePlaySystems/Json/DialogueJsonDataManager.h"
 
 _bool PlayGround::Initialize()
 {
@@ -40,65 +30,8 @@ _bool PlayGround::Initialize()
 #endif
 
 	// --- 게임 데이터 로드 ---
-	if (!_CharacterDagaMgr.Load("Data/PlayableCharacter.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load playable character data from JSON."));
+	if (!GameDataLoader::LoadAll())
 		return false;
-	}
-
-	if (!_DialogueJsonDataMgr.Load("Data/dialogue_all_samples.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load dialogue data from JSON."));
-		return false;
-	}
-
-	if (!_SkillDataMgr.Load("Data/Skill.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load skill data from JSON."));
-		return false;
-	}
-
-	if (!_SkillDefinitionDataMgr.Load("Data/Skill.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load skill definition data from JSON."));
-		return false;
-	}
-
-	if (!_ParticleDataMgr.Load("Data/Particle.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load particle data from JSON."));
-		return false;
-	}
-
-	if (!_ParticleEmitterDataMgr.Load("Data/ParticleEmitter.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load particle emitter data from JSON."));
-		return false;
-	}
-
-	if (!_EnemyDataMgr.Load("Data/Enemy.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
-		return false;
-	}
-
-	if (!_AttributeNodeDataMgr.Load("Data/AttributeNode.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load attribute node data from JSON."));
-		return false;
-	}
-
-	if (!_StageDataMgr.Load("Data/Stage.json", "Data/SpawnPool.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load stage data from JSON."));
-		return false;
-	}
-
-	if (!_UserDataMgr.Load("Data/UserData.json"))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load user data from JSON."));
-		return false;
-	}
 
 	// --- 충돌 레이어 설정 ---
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyAttack, true);

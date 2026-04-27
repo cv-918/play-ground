@@ -8,6 +8,7 @@
 #include "Scenes/LoadingScene.h"
 #include "Scenes/OutGameScene.h"
 #include "Scenes/InGameScene.h"
+#include "Scenes/WorkStationScene.h"
 
 SceneManager::~SceneManager()
 {
@@ -156,6 +157,18 @@ void SceneManager::_CreateNextScene()
 	case SceneType::Loading:	curr_scene_ = new LoadingScene();	break;
 	case SceneType::OutGame:	curr_scene_ = new OutGameScene();	break;
 	case SceneType::InGame:		curr_scene_ = new InGameScene();	break;
+	case SceneType::WorkStation:
+#ifdef _DEBUG
+		curr_scene_ = new WorkStationScene();
+		break;
+#else
+		_SYSTEM_LOG_ERROR(_T("WorkStation scene is only available in debug builds."));
+		next_scene_type_ = SceneType::Count;
+		transition_phase_ = TransitionPhase::None;
+		transition_elapsed_ = 0.0;
+		transition_alpha_ = 0.f;
+		return;
+#endif
 	default:
 	{
 		_SYSTEM_LOG_ERROR(_T("Unsupported scene type requested: %d"), s_int(next_scene_type_));
@@ -213,6 +226,7 @@ std::wstring SceneManager::_GetSceneName(SceneType _type) const
 	case SceneType::Loading:	return L"Loading";
 	case SceneType::OutGame:	return L"OutGame";
 	case SceneType::InGame:		return L"InGame";
+	case SceneType::WorkStation:	return L"WorkStation";
 	}
 
 	return L"Unknown";

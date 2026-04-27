@@ -3,6 +3,9 @@
 
 _bool StageJsonDataManager::Load(const std::string& _stage_path, const std::string& _pool_path)
 {
+	stage_table_.clear();
+	pool_table_.clear();
+
 	// 1. Stage Info 로드
 	std::ifstream stage_file(_stage_path);
 	if (stage_file.is_open())

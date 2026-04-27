@@ -34,6 +34,8 @@ namespace CommonGamePlayFunctions
 			return L"OutGame";
 		case SceneType::InGame:
 			return L"InGame";
+		case SceneType::WorkStation:
+			return L"WorkStation";
 		default:
 			return L"Undefined";
 		}

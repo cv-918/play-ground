@@ -49,13 +49,28 @@ _bool IntroScene::Initialize()
 		images_.push_back(st);
 	}
 
+#ifdef _DEBUG
+	Button::CreateInfo workstation_button_info;
+	workstation_button_info.rect = _Rect{ _Point{ 24, 24 }, _Size{ 180, 42 } };
+	workstation_button_info.text = L"WorkStation";
+	workstation_button_info.on_lclick = [this]()
+	{
+		_SceneMgr.ChangeScene(SceneType::WorkStation);
+	};
+
+	debug_workstation_button_ = ui_manager_->CreateUI<Button>(workstation_button_info);
+#endif
+
 	MAKE_INITIALIZED;
 	return true;
 }
 
 _int IntroScene::Update(_double _delta_time)
 {
-	__super::Update(_delta_time);
+	const auto ret = __super::Update(_delta_time);
+	if (ret != UPDATE_CONTINUE)
+		return ret;
+
 	elapsed_time_ += _delta_time;
 
 #ifdef _DEBUG
@@ -133,4 +148,7 @@ void IntroScene::Render(_double _delta_time)
 		const auto alpha_byte = s_ubyte(std::round(std::clamp(entity.opacity, 0.f, 1.f) * 255.f));
 		_DrawFunc::DrawTexture(entity.texture, entity.render_dest_rect, alpha_byte);
 	}
+
+	if (ui_manager_)
+		ui_manager_->Render(_delta_time);
 }
