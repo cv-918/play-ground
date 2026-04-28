@@ -142,6 +142,9 @@ void InGameScene::OnEnter()
 
 void InGameScene::OnExit()
 {
+	if (_UserProfile.GetMainStoryProgress() == MainStoryProgress::Prologue1)
+		_UserProfile.SetMainStoryProgress(MainStoryProgress::Prologue2);
+
 	_CameraMgr.ClearFollowTarget();
 	_ColMgr.ClearAllColliders();
 	_ClearTrackedViews();
@@ -247,9 +250,9 @@ void InGameScene::_TrackView(InGameViewState _state, WidgetBase* _view)
 
 	view_map_[_state] = _view;
 	view_callback_ids_[_view] = _view->AddDestructionCallback([this, _state, _view]()
-	{
-		_HandleViewDestroyed(_state, _view);
-	});
+		{
+			_HandleViewDestroyed(_state, _view);
+		});
 }
 
 void InGameScene::_HandleViewDestroyed(InGameViewState _state, WidgetBase* _view)

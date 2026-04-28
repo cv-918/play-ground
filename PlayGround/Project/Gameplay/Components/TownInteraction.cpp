@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "TownInteraction.h"
 
 #include "GamePlay/Actors/GameObjectBase.h"
@@ -78,7 +78,7 @@ _bool TownInteraction::CanInteractCurrent() const
 	if (!_IsTargetValid(current_interactable_))
 		return false;
 
-	return current_interactable_->CanInteract(owner_);
+	return current_interactable_->CheckAvailableInteract(owner_);
 }
 
 void TownInteraction::_UpdateCurrentInteractable()
@@ -107,7 +107,7 @@ void TownInteraction::_UpdateCurrentInteractable()
 		if (target_transform == nullptr)
 			continue;
 
-		if (!target->CanInteract(owner_))
+		if (!target->CheckAvailableInteract(owner_))
 			continue;
 
 		const auto delta = my_transform->Position() - target_transform->Position();

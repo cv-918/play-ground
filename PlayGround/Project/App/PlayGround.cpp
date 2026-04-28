@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "PlayGround.h"
 
 #include "EngineSystems/Render/RenderChain.h"
@@ -53,11 +53,13 @@ _bool PlayGround::Initialize()
 
 _int PlayGround::Update(_double _delta_time)
 {
+#ifndef SHIPPING
 	if (input_manager_->Down(VK_F3))
 	{
 		_GameState.debug_mode_ = !_GameState.debug_mode_;
 		_SYSTEM_LOG_INFO("Debug mode %s", _TF(_GameState.debug_mode_));
 	}
+#endif // !SHIPPING
 
 	if (_GameState.debug_mode_)
 		_Assist.BeginFrame();

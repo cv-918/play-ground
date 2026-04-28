@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define _SceneMgr SceneManager::Get()
 
@@ -14,6 +14,8 @@ private:
 		None,
 		FadingOut,
 		FadingIn,
+		HoldingBlack,
+		SwitchingWhileBlack,
 	};
 
 public:
@@ -29,6 +31,7 @@ public:
 public:
 	// 씬 변경 요청. 필요 시 같은 씬 타입도 강제로 다시 로드할 수 있습니다.
 	void ChangeScene(SceneType _type, _bool _force_reload = false);
+	_bool ReleaseHeldBlackWithFadeIn();
 
 private:
 	void _BeginFadeOut();

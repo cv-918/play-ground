@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InGamePauseView.h"
 #include "InGameViewRenderUtils.h"
 
@@ -21,6 +21,10 @@ InGamePauseView::InGamePauseView(const std::function<void()>& _resume_btn_callba
 	resume_btn_info.pressed_l_image_path = Path::Buttons + L"RESUME/RESUME_Push.png";
 	resume_btn_info.disabled_image_path = Path::Buttons + L"RESUME/RESUME_Disabled.png";
 	const auto resume_btn = CreateElement<Button>(resume_btn_info);
+
+	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
+	if (main_story_proc < MainStoryProgress::Chapter1)
+		return; // 챕터1 진입 이전에는 이어하기 버튼만 노출
 
 	// 나가기 버튼
 	y += COMMON_BUTTON_CY + gap; // 이어하기 버튼 아래에 위치하도록 y 좌표 조정

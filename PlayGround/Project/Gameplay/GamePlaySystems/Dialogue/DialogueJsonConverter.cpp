@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "DialogueJsonConverter.h"
 
 _bool DialogueJsonConverter::BuildSessionByKey(const std::string& _key, DialogueSessionData& _out_session)
@@ -78,7 +78,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 	// 1. 라인 존재 체크
 	if (_json.lines_.empty())
 	{
-		_SYSTEM_LOG_ERROR(_T("[Dialogue] lines_ empty: %s"), _TF(_json.key_.c_str()));
+		_DEBUG_MSGBOX(_T("[Dialogue] lines_ empty: %s"), _TF(_json.key_.c_str()));
 		return false;
 	}
 
@@ -89,10 +89,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 	{
 		if (_json.lines_[i].index_ != i)
 		{
-			_SYSTEM_LOG_ERROR(_T("[Dialogue] index mismatch: key=%s expected=%d actual=%d"),
-				_TF(_json.key_.c_str()),
-				i,
-				_json.lines_[i].index_);
+			_DEBUG_MSGBOX(_T("[Dialogue] index mismatch: key=%s expected=%d actual=%d"), _UtilFunc::ToWString(_json.key_).c_str(), i, _json.lines_[i].index_);
 			return false;
 		}
 	}
@@ -105,10 +102,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 
 		if (line.next_index_ < 0 || line.next_index_ >= line_count)
 		{
-			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid next_index: key=%s line=%d next=%d"),
-				_TF(_json.key_.c_str()),
-				line.index_,
-				line.next_index_);
+			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid next_index: key=%s line=%d next=%d"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_, line.next_index_);
 			return false;
 		}
 	}
@@ -124,9 +118,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 		{
 			if (choice.next_index_ < 0 || choice.next_index_ >= line_count)
 			{
-				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid choice next_index: key=%s line=%d"),
-					_TF(_json.key_.c_str()),
-					line.index_);
+				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid choice next_index: key=%s line=%d"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_);
 				return false;
 			}
 		}
@@ -137,9 +129,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 	{
 		if (line.text_.empty())
 		{
-			_SYSTEM_LOG_ERROR(_T("[Dialogue] empty text: key=%s line=%d"),
-				_UtilFunc::ToWString((_json.key_)).c_str(),
-				line.index_);
+			_SYSTEM_LOG_ERROR(_T("[Dialogue] empty text: key=%s line=%d"), _UtilFunc::ToWString((_json.key_)).c_str(), line.index_);
 			return false;
 		}
 	}
@@ -150,10 +140,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 		const auto type = ParseMessageType(line.message_type_);
 		if (type == DialogueMessageType::None)
 		{
-			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid message_type: key=%s line=%d type=%s"),
-				_TF(_json.key_.c_str()),
-				line.index_,
-				_TF(line.message_type_.c_str()));
+			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid message_type: key=%s line=%d type=%s"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_, _UtilFunc::ToWString(line.message_type_).c_str());
 			return false;
 		}
 	}
@@ -163,9 +150,7 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 	{
 		if (line.use_auto_advance_ && line.auto_advance_delay_ <= 0.0)
 		{
-			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid auto_advance_delay: key=%s line=%d"),
-				_TF(_json.key_.c_str()),
-				line.index_);
+			_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid auto_advance_delay: key=%s line=%d"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_);
 			return false;
 		}
 	}
@@ -177,17 +162,13 @@ _bool DialogueJsonConverter::Validate(const DialogueJsonInfo& _json)
 		{
 			if (ParseEventCategory(ev.category_) == DialogueEventCategory::None)
 			{
-				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid event category: key=%s line=%d"),
-					_TF(_json.key_.c_str()),
-					line.index_);
+				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid event category: key=%s line=%d"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_);
 				return false;
 			}
 
 			if (ParseEventTrigger(ev.trigger_) == DialogueEventTrigger::None)
 			{
-				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid event trigger: key=%s line=%d"),
-					_TF(_json.key_.c_str()),
-					line.index_);
+				_SYSTEM_LOG_ERROR(_T("[Dialogue] invalid event trigger: key=%s line=%d"), _UtilFunc::ToWString(_json.key_).c_str(), line.index_);
 				return false;
 			}
 		}

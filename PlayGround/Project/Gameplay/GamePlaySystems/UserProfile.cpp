@@ -23,6 +23,7 @@ void UserProfile::ResetUserData()
 	std::vector<std::pair<_uint, _uint>>().swap(acquired_node_ids_); // acquired_node_ids_ 벡터를 초기화하여 메모리 해제
 	equipped_skill_ids_.fill(-1);
 	stage_progress_ = 0;
+	main_story_progress_ = MainStoryProgress::Undefined;
 }
 
 void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
@@ -34,6 +35,7 @@ void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 	unlocked_character_ids_ = _info.unlocked_character_ids_;
 	acquired_node_ids_ = _info.acquired_node_ids_;
 	stage_progress_ = _info.stage_progress_;
+	main_story_progress_ = _info.main_story_progress_;
 
 	// 최초에 unlock 캐릭터가 아무것도 없을 경우 0(더스티)을 넣어준다
 	// 여기서 하는게 맞는지 모르겠지만 일단 여기서
@@ -67,6 +69,7 @@ UserDataJsonInfo UserProfile::GetUserData() const
 	info.acquired_node_ids_ = acquired_node_ids_;
 	info.equipped_skill_ids_ = equipped_skill_ids_;
 	info.stage_progress_ = stage_progress_;
+	info.main_story_progress_ = main_story_progress_;
 
 	return info;
 }

@@ -1,8 +1,8 @@
 [
   {
     "id_": 1,
-    "key_": "intro_basic",
-    "name_": "기본 테스트",
+    "key_": "Prologue1",
+    "name_": "Prologue1",
     "allow_auto_advance_": false,
     "allow_skip_in_choice_": false,
     "block_game_input_": true,
@@ -12,8 +12,8 @@
       {
         "index_": 0,
         "message_type_": "dialogue",
-        "speaker_name_": "안내원",
-        "text_": "여긴 처음이지?",
+        "speaker_name_": "???",
+        "text_": "...",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
@@ -24,21 +24,63 @@
       {
         "index_": 1,
         "message_type_": "dialogue",
-        "speaker_name_": "주인공",
-        "text_": "그래. 방금 도착했어.",
+        "speaker_name_": "???",
+        "text_": "...",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 2,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 2,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "... ...?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 3,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 3,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "뭐야 이 녀석은? 나가라.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 4,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 4,
+        "message_type_": "narration",
+        "speaker_name_": "",
+        "text_": "(위이잉!)",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
         "next_index_": -1,
         "choices_": [],
-        "events_": []
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_enter",
+            "event_id_": "PlayGateFx"
+          }
+        ]
       }
     ]
   },
   {
     "id_": 2,
-    "key_": "branch_choice_test",
-    "name_": "선택지 테스트",
+    "key_": "Prologue2",
+    "name_": "Prologue2",
     "allow_auto_advance_": false,
     "allow_skip_in_choice_": false,
     "block_game_input_": true,
@@ -48,48 +90,51 @@
       {
         "index_": 0,
         "message_type_": "dialogue",
-        "speaker_name_": "안내원",
-        "text_": "어느 길로 갈 거지?",
+        "speaker_name_": "???",
+        "text_": "음? 너는...",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
-        "next_index_": -1,
-        "choices_": [
-          { "text_": "왼쪽 길로 간다.", "next_index_": 1 },
-          { "text_": "오른쪽 길로 간다.", "next_index_": 2 }
-        ],
+        "next_index_": 1,
+        "choices_": [],
         "events_": []
       },
       {
         "index_": 1,
-        "message_type_": "narration",
-        "speaker_name_": "",
-        "text_": "왼쪽 길은 어둡고 축축했다.",
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "이 녀석, 어떻게 다시 온거지?",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
-        "next_index_": -1,
+        "next_index_": 2,
         "choices_": [],
         "events_": []
       },
       {
         "index_": 2,
-        "message_type_": "narration",
-        "speaker_name_": "",
-        "text_": "오른쪽 길은 밝고 넓었다.",
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "할아범을 찾아가봐야겠군",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
         "next_index_": -1,
         "choices_": [],
-        "events_": []
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_exit",
+            "event_id_": "ToPrologue3"
+          }
+        ]
       }
     ]
   },
   {
     "id_": 3,
-    "key_": "event_skip_test",
-    "name_": "이벤트 테스트",
+    "key_": "Prologue3",
+    "name_": "Prologue3",
     "allow_auto_advance_": false,
     "allow_skip_in_choice_": true,
     "block_game_input_": true,
@@ -99,29 +144,203 @@
       {
         "index_": 0,
         "message_type_": "dialogue",
-        "speaker_name_": "문지기",
-        "text_": "문을 열겠다.",
+        "speaker_name_": "???",
+        "text_": "그래? 어떻게 돌아왔는지는 모르고?",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
         "next_index_": 1,
         "choices_": [],
-        "events_": [
-          { "category_": "gameplay", "trigger_": "on_enter", "event_id_": "OpenGate" },
-          { "category_": "session_direction", "trigger_": "on_exit", "event_id_": "PlayGateFx" }
-        ]
+        "events_": []
       },
       {
         "index_": 1,
-        "message_type_": "system_message",
-        "speaker_name_": "",
-        "text_": "문이 열렸습니다.",
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "네.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 2,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 2,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "알겠네. 내가 잠시 돌볼 테니 자네는 돌아가도록 하게.",
         "use_typing_effect_": true,
         "use_auto_advance_": false,
         "auto_advance_delay_": 0.0,
         "next_index_": -1,
         "choices_": [],
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_exit",
+            "event_id_": "ToPrologue4"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id_": 4,
+    "key_": "Prologue4",
+    "name_": "Prologue4",
+    "allow_auto_advance_": false,
+    "allow_skip_in_choice_": true,
+    "block_game_input_": true,
+    "use_typing_effect_by_default_": true,
+    "default_auto_advance_delay_": 0.0,
+    "lines_": [
+      {
+        "index_": 0,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "오, 그래. 정신이 좀 들었나?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 1,
+        "choices_": [],
         "events_": []
+      },
+      {
+        "index_": 1,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "네.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 2,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 2,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "자네 누군가?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [
+          {
+            "text_": "모르겠어요.",
+            "next_index_": 3
+          },
+          {
+            "text_": "내 이름은 더스티. 탐ㅈ.. 아니, 먼지이죠.",
+            "next_index_": 3
+          }
+        ],
+        "events_": []
+      },
+      {
+        "index_": 3,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "... 그래, 그렇구만. 잠시 따라오겠나?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_exit",
+            "event_id_": "ToPrologue5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id_": 5,
+    "key_": "Prologue5",
+    "name_": "Prologue5",
+    "allow_auto_advance_": false,
+    "allow_skip_in_choice_": true,
+    "block_game_input_": true,
+    "use_typing_effect_by_default_": true,
+    "default_auto_advance_delay_": 0.0,
+    "lines_": [
+      {
+        "index_": 0,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "이 위에 잠깐 서보겠나?",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 1,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 1,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "네.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 2,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 2,
+        "message_type_": "system_message",
+        "speaker_name_": "",
+        "text_": "(화려한 조명이 나를 감싸네~)",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 3,
+        "choices_": [],
+        "events_": []
+      },
+      {
+        "index_": 3,
+        "message_type_": "system_message",
+        "speaker_name_": "",
+        "text_": "(방금까지 존재하지 않던 물체가 눈 앞에 나타났다.)",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": 4,
+        "choices_": [],
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_enter",
+            "event_id_": "ActiveRing"
+          }
+        ]
+      },
+      {
+        "index_": 4,
+        "message_type_": "dialogue",
+        "speaker_name_": "???",
+        "text_": "... 그래, 때가 되었나보구만.",
+        "use_typing_effect_": true,
+        "use_auto_advance_": false,
+        "auto_advance_delay_": 0.0,
+        "next_index_": -1,
+        "choices_": [],
+        "events_": [
+          {
+            "category_": "gameplay",
+            "trigger_": "on_enter",
+            "event_id_": "ToChapter1"
+          }
+        ]
       }
     ]
   }

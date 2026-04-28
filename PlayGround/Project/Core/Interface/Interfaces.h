@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <algorithm>
 #include <cstddef>
@@ -249,6 +249,6 @@ protected:
 	virtual ~IInteractable() DEFAULT;
 
 public:
-	virtual _bool CanInteract(GameObjectBase* _actor) PURE;
+	virtual _bool CheckAvailableInteract(GameObjectBase* _actor) PURE;
 	virtual void Interact(GameObjectBase* _actor) PURE;
 };

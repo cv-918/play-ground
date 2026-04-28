@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InGamePlayView.h"
 
 #include "../Elements/ProgressBar.h"
@@ -16,6 +16,10 @@ InGamePlayView::InGamePlayView()
 	stage_duration_gauge_->SetCenter(_Point{ GAME_VIEW_WIDTH_H, GAME_VIEW_HEIGHT - 60 });
 	stage_duration_gauge_->SetFillColor(Palette::SlateGray);
 	stage_duration_gauge_->SetBorderEnabled(false);
+
+	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
+	if (main_story_proc < MainStoryProgress::Chapter1)
+		return; // 챕터1 진입 이전에는 Next Wind Progress 게이지만 노출
 
 	// 화면 중앙 하단, Stage Clear Progress 게이지
 	stage_clear_progress_ = CreateElement<ProgressBar>();

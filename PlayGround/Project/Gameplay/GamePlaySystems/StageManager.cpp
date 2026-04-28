@@ -13,6 +13,12 @@
 
 #include "Actors/Props/Dust.h"
 
+namespace
+{
+	constexpr _float INITIAL_ENEMY_SPAWN_SAFE_RADIUS = 180.f;
+	constexpr _uint SPAWN_POSITION_RETRY_COUNT = 16;
+}
+
 _int StageManager::Update(_double _delta_time)
 {
 	// 1) 상태와 상관없는 업데이트 로직 처리가 있다면 이곳에 작성
@@ -340,6 +346,16 @@ void StageManager::_OnResult()
 	// 예시: 점수 계산, 랭킹 업데이트, 결과 화면 연출 등
 	// 결과 UI 노출 후 UI 입력에 의해 Exit 상태로 전환 (Exit 상태가 굳이 필요한가? UI 입력에 의해 로비로 바로 이동해도 될 것 같음)
 
+	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
+	if (main_story_proc <= MainStoryProgress::Chapter1)
+	{
+		// 메인 스토리 진행상황이 챕터1에 다다르지 못했다면, 프롤로그 전투 상황이라고 판정
+		// 곧장 아웃게임 씬으로 이동시킨다
+		_SceneMgr.ChangeScene(SceneType::OutGame);
+		_SYSTEM_LOG_INFO(_T("Main story progress is %s, skipping result screen and moving to lobby"), _CommonGamePlayFunc::GetMainStoryProgressTypeName(main_story_proc).c_str());
+		return;
+	}
+
 	switch (prev_state_)
 	{
 	case StageState::Play:
@@ -464,34 +480,69 @@ void StageManager::_UpdateGenerationAreas()
 	};
 }
 
-_Point StageManager::_GeneratePosition(_bool _in_screen, _bool _include_center)
+_Point StageManager::_GeneratePosition(
+	_bool _in_screen,
+	_bool _include_center,
+	const _Point* _avoid_center,
+	_float _avoid_radius)
 {
+	const auto is_valid_position = [_avoid_center, _avoid_radius](const _Point& _position)
+		{
+			if (nullptr == _avoid_center || _avoid_radius <= 0.f)
+				return true;
+
+			const auto dx = s_float(_position.x - _avoid_center->x);
+			const auto dy = s_float(_position.y - _avoid_center->y);
+			return dx * dx + dy * dy >= _avoid_radius * _avoid_radius;
+		};
+
+	const auto generate_in_area = [](const _Rect& _area)
+		{
+			return _Point{
+				_Random.Range(_area.Left(), _area.Right()),
+				_Random.Range(_area.Top(), _area.Bottom())
+			};
+		};
+
 	if (_in_screen)
 	{
-		return {
-			_Random.Range(stage_nav_mesh_->Left(), stage_nav_mesh_->Right()),
-			_Random.Range(stage_nav_mesh_->Top(), stage_nav_mesh_->Bottom())
-		};
+		for (_uint retry = 0; retry < SPAWN_POSITION_RETRY_COUNT; ++retry)
+		{
+			const auto position = generate_in_area(*stage_nav_mesh_);
+			if (is_valid_position(position))
+				return position;
+		}
+
+		const auto center = stage_nav_mesh_->Center();
+		const auto fallback_x = (_avoid_center && _avoid_center->x <= center.x) ? stage_nav_mesh_->Right() - 1 : stage_nav_mesh_->Left();
+		const auto fallback_y = (_avoid_center && _avoid_center->y <= center.y) ? stage_nav_mesh_->Bottom() - 1 : stage_nav_mesh_->Top();
+		return _Point{ fallback_x, fallback_y };
 	}
 
-	std::vector<_Rect> areas = { generation_area_[0], generation_area_[0], generation_area_[0], generation_area_[0] };
-	_uint area_index_max = 3;
-
+	std::vector<_Rect> areas = { generation_area_[0], generation_area_[1], generation_area_[2], generation_area_[3] };
 	if (_include_center)
 	{
-		const auto quarter_and_three_rt = *stage_nav_mesh_ * 0.75f;
+		auto quarter_and_three_rt = *stage_nav_mesh_;
+		quarter_and_three_rt.ScaleFromCenter(0.75f);
 
 		areas.insert(areas.begin(), quarter_and_three_rt);
-		area_index_max = 4;
 	}
 
 	// 임의의 생성 구역을 선택
-	const auto area_index = _Random.Range(0, area_index_max);
+	for (_uint retry = 0; retry < SPAWN_POSITION_RETRY_COUNT; ++retry)
+	{
+		const auto area_index = _Random.Range(0, s_int(areas.size() - 1));
+		const auto position = generate_in_area(areas[area_index]);
+		if (is_valid_position(position))
+			return position;
+	}
+
+	const auto area_index = _Random.Range(0, s_int(areas.size() - 1));
 
 	// 생성 구역 안의 임의의 좌표를 반환
 	return {
-		_Random.Range(generation_area_[area_index].Left(), generation_area_[area_index].Right()),
-		_Random.Range(generation_area_[area_index].Top(), generation_area_[area_index].Bottom())
+		_Random.Range(areas[area_index].Left(), areas[area_index].Right()),
+		_Random.Range(areas[area_index].Top(), areas[area_index].Bottom())
 	};
 }
 
@@ -527,7 +578,10 @@ _bool StageManager::_SpawnEnemy(_bool _on_play, _uint _count)
 		}
 
 		UnitCreationInfo creation_info;
-		creation_info.position_ = _GeneratePosition(!_on_play, !_on_play);
+		const auto player_spawn_position = GAME_VIEW_CENTER;
+		creation_info.position_ = _on_play
+			? _GeneratePosition(false, false)
+			: _GeneratePosition(true, true, &player_spawn_position, INITIAL_ENEMY_SPAWN_SAFE_RADIUS);
 		creation_info.look_point_ = _GeneratePosition(true, true);
 
 		// 스태 스케일링 (Over-scaling 방지 적용)
@@ -639,7 +693,7 @@ void StageManager::_TestFunction_StageChange(_bool _to_next_stage)
 		_UserProfile.DecreaseStageProgress();
 		valid_transition = true;
 	}
-	
+
 	if (!valid_transition)
 	{
 		_SYSTEM_LOG_INFO(_T("Invalid stage transition attempted. Current stage progress: %d"), curr_stage_lv);

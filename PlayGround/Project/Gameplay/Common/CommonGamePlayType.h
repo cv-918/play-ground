@@ -548,10 +548,14 @@ enum class SkillUnlockType
 enum class MainStoryProgress
 {
 	Undefined = 0,
-	Prologue,
+	Prologue1,
+	Prologue2,
+	Prologue3,
+	Prologue4,
+	Prologue5,
+
 	Chapter1,
 	Chapter2,
-	Epilogue,
 };
 
 struct SkillJsonInfo

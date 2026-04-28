@@ -54,7 +54,11 @@ private:
 	// --- 스테이지 진행 시 필요한 각종 영역 계산 및 위치 생성 메서드 ---
 	void _SetNavMesh(const _Rect& _rt);
 	void _UpdateGenerationAreas();
-	_Point _GeneratePosition(_bool _in_screen, _bool _include_center);
+	_Point _GeneratePosition(
+		_bool _in_screen,
+		_bool _include_center,
+		const _Point* _avoid_center = nullptr,
+		_float _avoid_radius = 0.f);
 
 	_bool _SpawnEnemy(_bool _on_play = true, _uint _count = 1);
 	_uint _SelectMonsterFromPool(const std::vector<SpawnEnemyJsonInfo>& _pool);

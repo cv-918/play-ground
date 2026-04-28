@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "GamePlaySystems/SceneManager.h"
 
@@ -15,6 +15,12 @@ class GameObjectBase;
 class ObjectManager;
 class UIManager;
 
+enum class SceneEnterOverlayPolicy
+{
+	NormalFadeIn,
+	HoldBlack,
+};
+
 class Scene abstract
 	: public IInitializable
 	, public IUpdatable
@@ -30,6 +36,8 @@ public:
 
 	virtual void OnEnter() EMPTY_FUNC;
 	virtual void OnExit() EMPTY_FUNC;
+	virtual SceneEnterOverlayPolicy GetEnterOverlayPolicy() const { return SceneEnterOverlayPolicy::NormalFadeIn; }
+	virtual void RenderAboveTransitionOverlay(_double _delta_time) EMPTY_FUNC;
 
 public:
 	void CleanUp();

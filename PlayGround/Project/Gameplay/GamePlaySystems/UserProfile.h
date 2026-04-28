@@ -37,6 +37,10 @@ public:
 	void DecreaseStageProgress() { if (stage_progress_ > 0) --stage_progress_; }
 	_uint GetStageProgress() const { return stage_progress_; }
 
+	// --- 메인 스토리 관련 ---
+	void SetMainStoryProgress(MainStoryProgress _progress) { main_story_progress_ = _progress; }
+	MainStoryProgress GetMainStoryProgress() const { return main_story_progress_; }
+
 private:
 	// 플레이어가 획득한 코인 수를 나타내는 변수. 필요에 따라 게임 내에서 코인 획득과 소비를 관리하는 데 활용할 수 있습니다.
 	_uint dust_count_ = 0;
@@ -58,4 +62,7 @@ private:
 
 	// 플레이어의 어트리뷰트 수치를 관리하는 구조체. 필요에 따라 공격력, 체력, 이동 속도 등의 수치를 포함하여 플레이어의 능력치를 관리할 수 있습니다.
 	AttributeStat attribute_stat_;
+
+	/** 플레이어의 메인 스토리 진행 상황을 나타내는 변수.필요에 따라 플레이어가 메인 스토리에서 어느 지점까지 진행했는지를 관리하는 데 활용할 수 있습니다. */
+	MainStoryProgress main_story_progress_ = MainStoryProgress::Undefined;
 };

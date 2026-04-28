@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define _CommonGamePlayFunc CommonGamePlayFunctions
 namespace CommonGamePlayFunctions
@@ -287,6 +287,29 @@ namespace CommonGamePlayFunctions
 			return L"Left";
 		case NodeDirection::LeftUp:
 			return L"LeftUp";
+		default:
+			return L"Undefined";
+		}
+	}
+
+	inline std::wstring GetMainStoryProgressTypeName(MainStoryProgress _main_story_progress)
+	{
+		switch (_main_story_progress)
+		{
+		case MainStoryProgress::Prologue1:
+			return L"Prologue1";
+		case MainStoryProgress::Prologue2:
+			return L"Prologue2";
+		case MainStoryProgress::Prologue3:
+			return L"Prologue3";
+		case MainStoryProgress::Prologue4:
+			return L"Prologue4";
+		case MainStoryProgress::Prologue5:
+			return L"Prologue5";
+		case MainStoryProgress::Chapter1:
+			return L"Chapter1";
+		case MainStoryProgress::Chapter2:
+			return L"Chapter2";
 		default:
 			return L"Undefined";
 		}

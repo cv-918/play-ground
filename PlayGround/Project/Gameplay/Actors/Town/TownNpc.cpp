@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "TownNpc.h"
 
 #include "GamePlay/Actors/Town/TownPlayer.h"
@@ -7,16 +7,15 @@
 
 #include "EngineSystems/Physics/CollisionManager.h"
 
-TownNpc::TownNpc(const _Vector3& _position)
-	: position_(_position)
-{}
+TownNpc::TownNpc(const CreateInfo& _create_info)
+	: create_info_(_create_info), on_interact_(create_info_.on_interact) {}
 
 _bool TownNpc::Initialize()
 {
 	if (!__super::Initialize())
 		return false;
 
-	transform_->Position(position_);
+	transform_->Position(create_info_.position);
 	transform_->Scale(_Vector3(40.f, 40.f, 1.f));
 	color_ = Palette::DarkBlue;
 
@@ -38,7 +37,7 @@ _int TownNpc::Update(_double _delta_time)
 	return 0;
 }
 
-_bool TownNpc::CanInteract(GameObjectBase* _actor)
+_bool TownNpc::CheckAvailableInteract(GameObjectBase* _actor)
 {
 	if (_actor == nullptr)
 		return false;
@@ -50,6 +49,9 @@ _bool TownNpc::CanInteract(GameObjectBase* _actor)
 	if (IsPendingDestruction())
 		return false;
 
+	if (!can_interact_)
+		return false;
+
 	return true;
 }
 
@@ -57,7 +59,14 @@ void TownNpc::Interact(GameObjectBase* _actor)
 {
 	UNREFERENCED_PARAMETER(_actor);
 
-	_SYSTEM_LOG_INFO(L"[TownNpc] NPC 상호작용 실행");
+	if (!on_interact_)
+	{
+		_SYSTEM_LOG_WARN(L"[TownNpc] 상호작용 콜백이 설정되지 않았습니다.");
+		return;
+	}
+
+	on_interact_();
+	_SYSTEM_LOG_INFO(L"[TownNpc] %s의 상호작용 콜백 호출", GetName().c_str());
 }
 
 void TownNpc::OnCollisionEnter(Collider* _this, Collider* _other)

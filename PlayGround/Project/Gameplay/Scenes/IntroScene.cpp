@@ -73,7 +73,7 @@ _int IntroScene::Update(_double _delta_time)
 
 	elapsed_time_ += _delta_time;
 
-#ifdef SHIPPING
+#ifndef SHIPPING
 	if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
 	{
 		_SceneMgr.ChangeScene(SceneType::OutGame);

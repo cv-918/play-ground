@@ -27,6 +27,13 @@ _int SceneManager::Update(_double _delta_time)
 	if (curr_scene_ == nullptr && next_scene_type_ != SceneType::Count)
 		_CreateNextScene();
 
+	if (transition_phase_ == TransitionPhase::SwitchingWhileBlack)
+	{
+		_CleanupCurrentScene();
+		_CreateNextScene();
+		return UPDATE_CONTINUE;
+	}
+
 	if (transition_phase_ == TransitionPhase::FadingOut)
 	{
 		_UpdateTransition(_delta_time);
@@ -59,6 +66,9 @@ void SceneManager::Render(_double _delta_time)
 		curr_scene_->Render(_delta_time);
 
 	_RenderTransitionOverlay();
+
+	if (curr_scene_ && curr_scene_->IsActive())
+		curr_scene_->RenderAboveTransitionOverlay(_delta_time);
 }
 
 void SceneManager::ChangeScene(const SceneType _type, const _bool _force_reload)
@@ -81,9 +91,38 @@ void SceneManager::ChangeScene(const SceneType _type, const _bool _force_reload)
 	next_scene_type_ = _type;
 
 	if (curr_scene_)
-		_BeginFadeOut();
+	{
+		if (transition_phase_ == TransitionPhase::HoldingBlack)
+		{
+			transition_phase_ = TransitionPhase::SwitchingWhileBlack;
+			transition_elapsed_ = 0.0;
+			transition_alpha_ = 1.f;
+		}
+		else
+		{
+			_BeginFadeOut();
+		}
+	}
 
 	_SYSTEM_LOG_INFO(_T("Scene change requested to [%s]"), _GetSceneName(_type).c_str());
+}
+
+_bool SceneManager::ReleaseHeldBlackWithFadeIn()
+{
+	if (transition_phase_ != TransitionPhase::HoldingBlack)
+	{
+		_SYSTEM_LOG_WARN(
+			_T("ReleaseHeldBlackWithFadeIn ignored. Current transition phase: %d"),
+			s_int(transition_phase_));
+		return false;
+	}
+
+	transition_phase_ = TransitionPhase::FadingIn;
+	transition_elapsed_ = 0.0;
+	transition_alpha_ = 1.f;
+
+	_SYSTEM_LOG_INFO(_T("HoldingBlack released with fade-in."));
+	return true;
 }
 
 void SceneManager::_BeginFadeOut()
@@ -196,7 +235,17 @@ void SceneManager::_CreateNextScene()
 
 	curr_scene_type_ = next_scene_type_;
 	next_scene_type_ = SceneType::Count;
-	_BeginFadeIn();
+
+	if (curr_scene_->GetEnterOverlayPolicy() == SceneEnterOverlayPolicy::HoldBlack)
+	{
+		transition_phase_ = TransitionPhase::HoldingBlack;
+		transition_elapsed_ = 0.0;
+		transition_alpha_ = 1.f;
+	}
+	else
+	{
+		_BeginFadeIn();
+	}
 
 	scene_history_.push_back(curr_scene_type_);
 }

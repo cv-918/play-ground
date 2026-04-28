@@ -11,7 +11,7 @@ inline void to_json(json& _json, const UserDataJsonInfo& _info)
 		{ "acquired_node_ids_", _info.acquired_node_ids_ },
 		{ "equipped_skill_ids_", _info.equipped_skill_ids_ },
 		{ "stage_progress_", _info.stage_progress_ },
-		{ "is_first_play_", _info.main_story_progress_ }
+		{ "main_story_progress_", _info.main_story_progress_ }
 	};
 }
 
@@ -29,6 +29,9 @@ inline void from_json(const json& _json, UserDataJsonInfo& _info)
 		_info.stage_progress_ = 1;
 
 	_info.main_story_progress_ = s_cast(MainStoryProgress, _json.value("main_story_progress_", 0u));
+
+	if (_info.main_story_progress_ <= MainStoryProgress::Undefined)
+		_info.main_story_progress_ = MainStoryProgress::Prologue1;
 }
 
 #define _UserDataMgr UserDataManager::Get()

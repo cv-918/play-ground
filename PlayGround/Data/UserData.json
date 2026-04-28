@@ -26,15 +26,15 @@
                 1
             ]
         ],
-        "dust_count_": 1215,
+        "dust_count_": 1245,
         "equipped_skill_ids_": [
-            0,
-            3
+            -1,
+            -1
         ],
-        "experience_": 1197,
+        "experience_": 1226,
         "id_": 0,
-        "is_first_play_": 0,
-        "stage_progress_": 5,
+        "main_story_progress_": 6,
+        "stage_progress_": 1,
         "unlocked_character_ids_": [
             1
         ]

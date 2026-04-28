@@ -19,6 +19,8 @@ _bool OutGameScene::Initialize()
 	if (!__super::Initialize())
 		return false;
 
+	dialogue_event_listener_.SetOutGameScene(this);
+
 	MAKE_INITIALIZED;
 	return true;
 }
@@ -41,46 +43,6 @@ _int OutGameScene::Update(_double _delta_time)
 
 	// s, [ Dialogue System Test ]
 	{
-		if (_InputMgr.Down('T'))
-		{
-			if (!dialogue_system_.IsRunning())
-			{
-				//const DialogueSessionData session = DialogueSampleFactory::MakeBasicSession();
-				//dialogue_system_.StartSession(session, &dialogue_event_listener_);
-
-				DialogueSessionData session;
-
-				if (DialogueJsonConverter::BuildSessionByKey("event_skip_test", session))
-				{
-					const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-					if (!started)
-						_SYSTEM_LOG_WARN(L"Failed to start dialogue session: event_skip_test");
-				}
-			}
-		}
-
-		if (_InputMgr.Down('Y'))
-		{
-			if (!dialogue_system_.IsRunning())
-			{
-				const DialogueSessionData session = DialogueSampleFactory::MakeChoiceSession();
-				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-				if (!started)
-					_SYSTEM_LOG_WARN(L"Failed to start choice dialogue session");
-			}
-		}
-
-		if (_InputMgr.Down('U'))
-		{
-			if (!dialogue_system_.IsRunning())
-			{
-				const DialogueSessionData session = DialogueSampleFactory::MakeEventSession();
-				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-				if (!started)
-					_SYSTEM_LOG_WARN(L"Failed to start event dialogue session");
-			}
-		}
-
 		dialogue_system_.Update(s_float(_delta_time));
 
 		if (dialogue_system_.IsRunning())
@@ -121,10 +83,34 @@ _int OutGameScene::Update(_double _delta_time)
 		if (dialogue_system_.HasFinishedSession())
 		{
 			const DialogueSessionResult& result = dialogue_system_.GetLastSessionResult();
+			const auto story_progress = _UserProfile.GetMainStoryProgress();
 
 			// TODO:
 			// 여기서 end_reason, choice_records 확인 가능
 			dialogue_system_.ClearFinishedState();
+
+			if (story_progress == MainStoryProgress::Prologue1)
+				_SceneMgr.ChangeScene(SceneType::InGame);
+
+			if (story_progress == MainStoryProgress::Prologue3)
+				_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+			if (story_progress == MainStoryProgress::Prologue4)
+				_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+			if (story_progress == MainStoryProgress::Prologue5)
+				_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+			if (story_progress == MainStoryProgress::Chapter1)
+			{
+				// 어트리뷰트 상호작용 오픈
+				npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+
+				// 더스티 어트리뷰트 획득
+				_UserProfile.NodeLevelUp(0);
+
+				// 안내 메시지 노출(정신이 깨어나는 기분이다. 물체에 가까이 다가가보자.)
+			}
 		}
 	}
 	// e, [ Dialogue System Test ]
@@ -151,17 +137,20 @@ void OutGameScene::Render(_double _delta_time)
 	__super::Render(_delta_time);
 
 	// s, [ Dialogue System Test ]
-	dialogue_system_.Render();
+	if (!hold_enter_black_ || !dialogue_system_.IsRunning())
+		dialogue_system_.Render();
 	// e, [ Dialogue System Test ]
 }
 
 void OutGameScene::OnEnter()
 {
+	hold_enter_black_ = false;
 	_ChangeView(OutGameViewState::Main);
 	last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
 
 	const auto res = _ScreenSystem.WindowResolution();
 
+	// s, [ Temporary Background and NavMesh Setup for Town Testing ]
 	Background::CreateInfo background_info;
 	background_info.background_path_ = Path::World + L"Field-2560x1600.png";
 	background_info.nav_mesh_size_ = _Size(res.width, res.height);
@@ -178,9 +167,11 @@ void OutGameScene::OnEnter()
 		_NULL_DETECTION_MSGBOX;
 		return;
 	}
+	// e, [ Temporary Background and NavMesh Setup for Town Testing ]
 
 	const auto& nav_mesh = background_->NavMesh();
 
+	// s, [ Temporary Town Player Setup for Testing ]
 	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
 	if (player_spawn_data == nullptr)
 	{
@@ -195,15 +186,158 @@ void OutGameScene::OnEnter()
 		return;
 	}
 	test_town_player_->SetNavMesh(nav_mesh);
-	test_town_player_->GetTransform()->Position(_Vector3(300.f, 300.f, 0.f));
+	// e, [ Temporary Town Player Setup for Testing ]
 
 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
-	for (_uint i = 0; i < 3; ++i)
+
+	for (_uint i = 0; i < npc_names.size(); ++i)
 	{
-		const auto gap = res.width / 3;
+		const auto gap = 1280 / npc_names.size();
 		const auto x = (gap >> 1) + (i * gap);
-		const auto y = res.height >> 1;
-		test_town_npc_ = object_manager_->CreateActor<TownNpc>(_Vector3(s_float(x), s_float(y)));
+		const auto y = 720 >> 1;
+
+		TownNpc::CreateInfo npc_info;
+		npc_info.position = _Vector3(s_float(x), s_float(y), 0.f);
+		npc_info.on_interact;
+
+		const auto npc = object_manager_->CreateActor<TownNpc>(npc_info);
+		npc->SetName(npc_names[i]);
+
+		npcs_.push_back(npc);
+	}
+
+	switch (_UserProfile.GetMainStoryProgress())
+	{
+	case MainStoryProgress::Undefined:
+		_DEBUG_MSGBOX(L"Undefined Main Story Progress - This should not happen. Please check user profile data.");
+		break;
+	case MainStoryProgress::Prologue1:
+	{
+		// 모든 npc 비활성화
+		for (const auto& npc : npcs_)
+			npc->InActivate();
+
+		// 테스트 타운 플레이어도 비활성화 (이벤트 진행 중에는 움직이지 않도록)
+		test_town_player_->InActivate();
+
+		// 이벤트 실행
+		hold_enter_black_ = true;
+		DialogueSessionData session;
+		if (DialogueJsonConverter::BuildSessionByKey("Prologue1", session))
+		{
+			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			if (!started)
+				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue1");
+		}
+	}
+	break;
+
+	case MainStoryProgress::Prologue2:
+	{
+		// 모든 npc 비활성화
+		for (const auto& npc : npcs_)
+			npc->InActivate();
+
+		// 엔지니어 바로 아래에 플레이어 위치시키기
+		const auto npc_pos = npcs_[1]->GetTransform()->Position();
+		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+		test_town_player_->GetTransform()->Position(player_pos);
+
+		// 이벤트 실행
+		hold_enter_black_ = true;
+		DialogueSessionData session;
+		if (DialogueJsonConverter::BuildSessionByKey("Prologue2", session))
+		{
+			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			if (!started)
+				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue2");
+		}
+	}
+	break;
+
+	case MainStoryProgress::Prologue3:
+	{
+		// 모든 npc 비활성화
+		for (const auto& npc : npcs_)
+			npc->InActivate();
+
+		// 할아버지 바로 아래에 플레이어 위치시키기
+		const auto npc_pos = npcs_[0]->GetTransform()->Position();
+		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+		test_town_player_->GetTransform()->Position(player_pos);
+
+		// 이벤트 실행
+		hold_enter_black_ = true;
+		DialogueSessionData session;
+		if (DialogueJsonConverter::BuildSessionByKey("Prologue3", session))
+		{
+			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			if (!started)
+				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue3");
+		}
+	}
+	break;
+
+	case MainStoryProgress::Prologue4:
+	{
+		// 반지 비활성화, 엔지니어 상호작용 불가
+		npcs_[2]->InActivate();
+		npcs_[1]->SetCanInteract(false);
+
+		npcs_[0]->SetOnInteractCallback([this]()
+			{
+				// 이벤트 실행
+				DialogueSessionData session;
+				if (DialogueJsonConverter::BuildSessionByKey("Prologue4", session))
+				{
+					const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+					if (!started)
+						_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue4");
+				}
+			});
+
+		// 할아버지 바로 아래에 플레이어 위치시키기
+		const auto npc_pos = npcs_[0]->GetTransform()->Position();
+		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+		test_town_player_->GetTransform()->Position(player_pos);
+	}
+	break;
+
+	case MainStoryProgress::Prologue5:
+	{
+		// 반지 비활성화, 엔지니어 상호작용 불가
+		npcs_[2]->InActivate();
+		npcs_[1]->SetCanInteract(false);
+
+		// 반지 바로 아래에 플레이어 위치시키기
+		const auto npc_pos = npcs_[2]->GetTransform()->Position();
+		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+		test_town_player_->GetTransform()->Position(player_pos);
+
+		// 이벤트 실행
+		DialogueSessionData session;
+		if (DialogueJsonConverter::BuildSessionByKey("Prologue5", session))
+		{
+			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+			if (!started)
+				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue5");
+		}
+	}
+	break;
+
+	default:
+	{
+		// 여기도 바로 안 들어가고 엔지니어랑 한 마디 하고 들어가게 바꿔도 좋음. 완성도 측면에서.
+		npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
+		npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+
+		// 엔지니어 바로 아래에 플레이어 위치시키기
+		const auto npc_pos = npcs_[1]->GetTransform()->Position();
+		const auto player_pos = npc_pos + _Vector3(0.f, 80.f, 0.f);
+		test_town_player_->GetTransform()->Position(player_pos);
+	}
+	break;
+
 	}
 
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
@@ -214,13 +348,37 @@ void OutGameScene::OnEnter()
 
 void OutGameScene::OnExit()
 {
+	hold_enter_black_ = false;
 	_CameraMgr.ClearFollowTarget();
 	_ColMgr.ClearAllColliders();
 	_ClearTrackedViews();
 	view_state_ = OutGameViewState::Undefined;
 	background_ = nullptr;
 	test_town_player_ = nullptr;
-	test_town_npc_ = nullptr;
+	npcs_.clear();
+}
+
+SceneEnterOverlayPolicy OutGameScene::GetEnterOverlayPolicy() const
+{
+	return hold_enter_black_ ? SceneEnterOverlayPolicy::HoldBlack : SceneEnterOverlayPolicy::NormalFadeIn;
+}
+
+void OutGameScene::RenderAboveTransitionOverlay(_double _delta_time)
+{
+	UNREFERENCED_PARAMETER(_delta_time);
+
+	if (hold_enter_black_ && dialogue_system_.IsRunning())
+		dialogue_system_.Render();
+}
+
+void OutGameScene::ProcessDialogueEvent(const std::wstring& _event_id)
+{
+	_SYSTEM_LOG_INFO(L"Processing dialogue event: %s", _event_id.c_str());
+
+	if (L"ActiveRing" == _event_id)
+	{
+		npcs_[2]->Activate();
+	}
 }
 
 void OutGameScene::_HandleViewportChanged()
@@ -380,9 +538,9 @@ void OutGameScene::_TrackView(OutGameViewState _state, WidgetBase* _view)
 
 	view_map_[_state] = _view;
 	view_callback_ids_[_view] = _view->AddDestructionCallback([this, _state, _view]()
-	{
-		_HandleViewDestroyed(_state, _view);
-	});
+		{
+			_HandleViewDestroyed(_state, _view);
+		});
 }
 
 void OutGameScene::_HandleViewDestroyed(OutGameViewState _state, WidgetBase* _view)

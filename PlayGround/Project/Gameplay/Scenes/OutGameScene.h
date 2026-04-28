@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Scene.h"
 #include <cstdint>
 #include <map>
@@ -38,6 +38,10 @@ public:
 
 	void OnEnter() override;
 	void OnExit() override;
+	SceneEnterOverlayPolicy GetEnterOverlayPolicy() const override;
+	void RenderAboveTransitionOverlay(_double _delta_time) override;
+
+	void ProcessDialogueEvent(const std::wstring& _event_id);
 
 private:
 	void _ChangeView(OutGameViewState _new_view_state);
@@ -58,12 +62,15 @@ private:
 	WidgetBase* current_view_ = nullptr;
 
 	class TownPlayer* test_town_player_ = nullptr;
-	class TownNpc* test_town_npc_ = nullptr;
+	std::vector<class TownNpc*> npcs_;
 	class Background* background_ = nullptr;
 	uint64_t last_applied_video_revision_ = 0;
+	_bool hold_enter_black_ = false;
 
 	// s, [ Dialogue System Test ]
 	DialogueSystem dialogue_system_;
 	DialogueDebugEventListener dialogue_event_listener_;
+
+	_bool should_talk_to_elder_ = false;
 	// e, [ Dialogue System Test ]
 };
