@@ -1,5 +1,33 @@
 # Copilot Implementation Request
 
+## Recommended Copilot Model
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+
+Permission:
+Modify only the approved files listed in the prompt.
+```
+
+For small low-risk single-file or documentation tasks, use:
+
+```text
+Recommended Copilot Model:
+GPT-5 mini or GPT-5.4 mini
+
+Recommended Intelligence:
+Auto or Medium
+```
+
+---
+
 Use this template when implementation is approved and GitHub Copilot Agent Mode should modify local files.
 
 ---

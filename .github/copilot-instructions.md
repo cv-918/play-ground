@@ -57,6 +57,27 @@ Prefer long-term maintainable architecture over short-term convenience.
 
 ---
 
+
+## 2.1 Recommended Model Policy
+
+For repository-aware implementation tasks, use:
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+```
+
+For small low-risk single-file or documentation tasks, `GPT-5 mini` or `GPT-5.4 mini` with `Auto` or `Medium` intelligence may be sufficient.
+
+Model choice does not override approval gates, file scope, or validation requirements.
+
+---
 ## 3. Copilot Role
 
 Copilot's role is:
@@ -207,6 +228,22 @@ Approval needed before proceeding.
 
 ---
 
+
+## Visual Studio Project File Rules
+
+When modifying `.vcxproj` or `.vcxproj.filters`:
+
+- Add only approved file entries.
+- Do not reorder unrelated project entries.
+- Do not corrupt existing filter names.
+- Preserve Korean filter names.
+- Avoid unnecessary encoding/BOM changes.
+- Ensure `ResourceCompile`, `Image`, and `None` entries still point to correct filters.
+- Do not rewrite the whole project file.
+
+If project file edits cause encoding damage or broad unrelated changes, stop and report.
+
+---
 ## 7. C++ Implementation Rules
 
 Follow existing project conventions.
@@ -267,6 +304,26 @@ Be careful when touching:
 - Event or callback connection
 - Delayed destruction
 - Owner-following behavior
+
+
+Additional rule:
+
+Avoid broad early returns from scene lifecycle functions after partial initialization.
+
+For functions such as:
+
+```text
+Initialize
+OnEnter
+OnExit
+Ready
+Load
+Setup
+```
+
+do not return from the middle of the function after creating partial scene state unless the lifecycle function is designed to fail atomically.
+
+If only a sub-feature is invalid, guard that sub-feature only and continue core scene initialization when safe.
 
 If a change depends on update order or lifecycle order, document the assumption in the implementation summary.
 

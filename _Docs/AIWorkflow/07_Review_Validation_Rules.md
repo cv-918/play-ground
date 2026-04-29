@@ -413,6 +413,50 @@ If the diff is too large, the reviewer should recommend splitting the task.
 
 ---
 
+## 19.1 New File Diff Capture
+
+When reviewing newly created files, ensure untracked file contents are included in the diff.
+
+A plain `git diff` does not include untracked file contents.
+
+Use one of the following methods:
+
+```bash
+git add -N <new_file>
+git diff > review.diff
+```
+
+or:
+
+```bash
+git add <intended_files>
+git diff --cached > review.diff
+```
+
+Do not complete final review if newly created source, data, or project files are missing from the diff.
+
+---
+
+## 19.2 Visual Studio Project File Review
+
+When `.vcxproj` or `.vcxproj.filters` changes, review the project-file diff explicitly.
+
+Check:
+
+```text
+[ ] Only approved new files were added.
+[ ] Unrelated entries were not reordered.
+[ ] Existing filter names were not corrupted.
+[ ] Korean filter names remain valid.
+[ ] Encoding/BOM changes are intentional or harmless.
+[ ] ResourceCompile/Image/None entries still point to the correct filters.
+[ ] No broad project-file rewrite occurred.
+```
+
+Any unrelated project-file rewrite or encoding corruption should be treated as a review issue.
+
+---
+
 ## 20. Validation Checklist
 
 Validation should be selected based on task type.
@@ -538,6 +582,42 @@ Check:
 - Re-entering the scene works.
 - Previous scene state does not leak.
 - Missing data does not crash release builds.
+
+---
+
+## 26.1 Scene Lifecycle Early Return Review
+
+When reviewing scene lifecycle functions, check whether the implementation uses broad early returns after partial initialization.
+
+Functions requiring caution include:
+
+```text
+Initialize
+OnEnter
+OnExit
+Ready
+Load
+Setup
+```
+
+Avoid returning from the middle of a scene lifecycle function after partially creating scene objects unless the function is designed to fail atomically.
+
+Preferred pattern:
+
+```text
+- Log missing optional data.
+- Guard only the invalid sub-feature branch.
+- Continue core scene initialization when safe.
+```
+
+Avoid:
+
+```text
+- Returning from the middle of OnEnter after background/player/NPC partial setup.
+- Leaving camera, UI, cleanup symmetry, or registration setup incomplete.
+```
+
+If only a sub-feature is invalid, guard that sub-feature only.
 
 ---
 

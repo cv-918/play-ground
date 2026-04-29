@@ -63,6 +63,46 @@ Review for:
 - Style consistency
 - Documentation impact
 
+
+---
+
+## New File Diff Requirement
+
+If the change created new files, make sure the diff includes their contents.
+
+A plain `git diff` does not include untracked file contents.
+
+Use one of:
+
+```bash
+git add -N <new_file>
+git diff > review.diff
+```
+
+or:
+
+```bash
+git add <intended_files>
+git diff --cached > review.diff
+```
+
+Do not ask for final review if newly created files are missing from the diff.
+
+---
+
+## Visual Studio Project File Review
+
+If `.vcxproj` or `.vcxproj.filters` changed, review:
+
+```text
+[ ] Only approved new files were added.
+[ ] Unrelated entries were not reordered.
+[ ] Existing filter names were not corrupted.
+[ ] Korean filter names remain valid.
+[ ] Encoding/BOM changes are intentional or harmless.
+[ ] ResourceCompile/Image/None entries still point to the correct filters.
+[ ] No broad project-file rewrite occurred.
+```
 ---
 
 ## Required Output

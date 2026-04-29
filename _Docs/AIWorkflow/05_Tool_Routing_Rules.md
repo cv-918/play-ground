@@ -253,6 +253,56 @@ Every Copilot implementation prompt must include:
 
 ---
 
+
+## Copilot Model Recommendation
+
+For Copilot Agent Mode tasks, include an explicit model recommendation in the implementation prompt.
+
+Default for repository-aware implementation:
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+
+Permission:
+Modify only the approved files listed in the prompt.
+```
+
+For small low-risk work:
+
+```text
+Recommended Copilot Model:
+GPT-5 mini or GPT-5.4 mini
+
+Recommended Intelligence:
+Auto or Medium
+
+Reason:
+This is a low-risk single-file or documentation task.
+```
+
+For architecture or review work:
+
+```text
+Recommended Model:
+GPT-5.4 or GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+This task requires architecture/risk review rather than direct implementation.
+```
+
+The model recommendation does not replace approval gates or file-scope restrictions.
+
+---
 ## Do Not Use Copilot Agent Mode For
 
 Do not use Copilot Agent Mode when:

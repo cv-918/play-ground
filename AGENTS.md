@@ -263,6 +263,17 @@ Be careful with:
 - Owner destruction
 - Event/callback cleanup
 
+
+Additional lifecycle safety rule:
+
+```text
+Avoid broad early returns from scene lifecycle functions after partial initialization.
+```
+
+For functions such as `Initialize`, `OnEnter`, `OnExit`, `Ready`, `Load`, or `Setup`, do not abort the entire lifecycle flow after creating partial scene state unless the function is designed to fail atomically.
+
+If only a sub-feature is invalid, guard that sub-feature only and allow core scene initialization to continue when safe.
+
 If lifecycle assumptions are required, state them explicitly.
 
 ---
