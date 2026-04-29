@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InGameResultView.h"
 #include "InGameViewRenderUtils.h"
 
@@ -34,6 +34,13 @@ InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_cal
 	exit_btn_info.disabled_image_path = Path::Buttons + L"EXIT/EXIT_Disabled.png";
 	const auto exit_btn = CreateElement<Button>(exit_btn_info);
 	y += COMMON_BUTTON_CY + gap; // 다시 시작 버튼 아래에 위치하도록 y 좌표 조정
+
+	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
+	if (main_story_proc < MainStoryProgress::Chapter1)
+	{
+		restart_btn->InActivate();
+		exit_btn->InActivate();
+	}
 }
 
 void InGameResultView::Render(_double _delta_time)

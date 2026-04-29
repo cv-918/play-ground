@@ -13,6 +13,7 @@
 #include "GamePlaySystems/Json/ParticleDataManager.h"
 #include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
 #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
+#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
 
 namespace
 {
@@ -26,6 +27,7 @@ namespace
 	constexpr char kStagePath[] = "Data/Stage.json";
 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
 	constexpr char kUserDataPath[] = "Data/UserData.json";
+	constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
 }
 
 _bool GameDataLoader::LoadAll()
@@ -101,6 +103,14 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 	{
 		_DEBUG_MSGBOX(_T("Failed to load user data from JSON."));
 		return false;
+	}
+
+	if (!_TownNpcPlacementDataMgr.Load(kTownNpcPlacementPath))
+	{
+		_SYSTEM_LOG_ERROR(L"Failed to load town npc placement data from JSON. path: %s", _UtilFunc::ToWString(kTownNpcPlacementPath).c_str());
+#ifdef _DEBUG
+		_DEBUG_MSGBOX(_T("Failed to load town npc placement data from JSON."));
+#endif
 	}
 
 	return true;

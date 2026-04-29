@@ -13,6 +13,8 @@
 #include "GamePlay/Actors/Town/TownPlayer.h"
 #include "GamePlay/Actors/Town/TownNpc.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
+#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
+#include "GamePlaySystems/TownNpcPlacementSpawner.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
 _bool OutGameScene::Initialize()
@@ -104,8 +106,16 @@ _int OutGameScene::Update(_double _delta_time)
 
 			if (story_progress == MainStoryProgress::Chapter1)
 			{
-				// 어트리뷰트 상호작용 오픈
-				npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+				if (npcs_.size() >= 3)
+				{
+					// 어트리뷰트 상호작용 오픈
+					npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+					npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
+				}
+				else
+				{
+					_SYSTEM_LOG_ERROR(L"Chapter1 interaction setup skipped: required TownNpc placements missing. spawned: %d", s_int(npcs_.size()));
+				}
 
 				// 더스티 어트리뷰트 획득
 				_UserProfile.NodeLevelUp(0);
@@ -191,109 +201,107 @@ void OutGameScene::OnEnter()
 	ui_manager_->CreateUI<TownNpcInteractionIndicator>(
 		test_town_player_,
 		[this]() -> _bool
-		{
-			return view_state_ == OutGameViewState::Main && !dialogue_system_.IsRunning();
-		}
+	{
+		return view_state_ == OutGameViewState::Main && !dialogue_system_.IsRunning();
+	}
 	);
 	// e, [ Temporary Town Player Setup for Testing ]
 
+	TownNpcPlacementSpawner npc_placement_spawner;
+	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements());
+
 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
+	for (_uint i = 0; i < npc_names.size() && i < npcs_.size(); ++i)
+		npcs_[i]->SetName(npc_names[i]);
 
-	for (_uint i = 0; i < npc_names.size(); ++i)
+	const bool has_required_story_npcs = (npcs_.size() >= 3);
+	if (!has_required_story_npcs)
 	{
-		const auto gap = 1280 / npc_names.size();
-		const auto x = (gap >> 1) + (i * gap);
-		const auto y = 720 >> 1;
-
-		TownNpc::CreateInfo npc_info;
-		npc_info.position = _Vector3(s_float(x), s_float(y), 0.f);
-		npc_info.on_interact;
-
-		const auto npc = object_manager_->CreateActor<TownNpc>(npc_info);
-		npc->SetName(npc_names[i]);
-
-		npcs_.push_back(npc);
+		_SYSTEM_LOG_ERROR(L"OutGameScene requires at least 3 spawned TownNpc placements. spawned: %d", s_int(npcs_.size()));
+		_DEBUG_MSGBOX(L"OutGameScene requires at least 3 TownNpc placements in Data/TownNpcPlacement.json");
 	}
 
-	switch (_UserProfile.GetMainStoryProgress())
+	if (has_required_story_npcs)
 	{
-	case MainStoryProgress::Undefined:
-		_DEBUG_MSGBOX(L"Undefined Main Story Progress - This should not happen. Please check user profile data.");
+		switch (_UserProfile.GetMainStoryProgress())
+		{
+		case MainStoryProgress::Undefined:
+			_DEBUG_MSGBOX(L"Undefined Main Story Progress - This should not happen. Please check user profile data.");
+			break;
+		case MainStoryProgress::Prologue1:
+		{
+			// 모든 npc 비활성화
+			for (const auto& npc : npcs_)
+				npc->InActivate();
+
+			// 테스트 타운 플레이어도 비활성화 (이벤트 진행 중에는 움직이지 않도록)
+			test_town_player_->InActivate();
+
+			// 이벤트 실행
+			hold_enter_black_ = true;
+			DialogueSessionData session;
+			if (DialogueJsonConverter::BuildSessionByKey("Prologue1", session))
+			{
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue1");
+			}
+		}
 		break;
-	case MainStoryProgress::Prologue1:
-	{
-		// 모든 npc 비활성화
-		for (const auto& npc : npcs_)
-			npc->InActivate();
 
-		// 테스트 타운 플레이어도 비활성화 (이벤트 진행 중에는 움직이지 않도록)
-		test_town_player_->InActivate();
-
-		// 이벤트 실행
-		hold_enter_black_ = true;
-		DialogueSessionData session;
-		if (DialogueJsonConverter::BuildSessionByKey("Prologue1", session))
+		case MainStoryProgress::Prologue2:
 		{
-			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-			if (!started)
-				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue1");
+			// 모든 npc 비활성화
+			for (const auto& npc : npcs_)
+				npc->InActivate();
+
+			// 엔지니어 바로 아래에 플레이어 위치시키기
+			const auto npc_pos = npcs_[1]->GetTransform()->Position();
+			const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+			test_town_player_->GetTransform()->Position(player_pos);
+
+			// 이벤트 실행
+			hold_enter_black_ = true;
+			DialogueSessionData session;
+			if (DialogueJsonConverter::BuildSessionByKey("Prologue2", session))
+			{
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue2");
+			}
 		}
-	}
-	break;
+		break;
 
-	case MainStoryProgress::Prologue2:
-	{
-		// 모든 npc 비활성화
-		for (const auto& npc : npcs_)
-			npc->InActivate();
-
-		// 엔지니어 바로 아래에 플레이어 위치시키기
-		const auto npc_pos = npcs_[1]->GetTransform()->Position();
-		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
-		test_town_player_->GetTransform()->Position(player_pos);
-
-		// 이벤트 실행
-		hold_enter_black_ = true;
-		DialogueSessionData session;
-		if (DialogueJsonConverter::BuildSessionByKey("Prologue2", session))
+		case MainStoryProgress::Prologue3:
 		{
-			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-			if (!started)
-				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue2");
+			// 모든 npc 비활성화
+			for (const auto& npc : npcs_)
+				npc->InActivate();
+
+			// 할아버지 바로 아래에 플레이어 위치시키기
+			const auto npc_pos = npcs_[0]->GetTransform()->Position();
+			const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+			test_town_player_->GetTransform()->Position(player_pos);
+
+			// 이벤트 실행
+			hold_enter_black_ = true;
+			DialogueSessionData session;
+			if (DialogueJsonConverter::BuildSessionByKey("Prologue3", session))
+			{
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue3");
+			}
 		}
-	}
-	break;
+		break;
 
-	case MainStoryProgress::Prologue3:
-	{
-		// 모든 npc 비활성화
-		for (const auto& npc : npcs_)
-			npc->InActivate();
-
-		// 할아버지 바로 아래에 플레이어 위치시키기
-		const auto npc_pos = npcs_[0]->GetTransform()->Position();
-		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
-		test_town_player_->GetTransform()->Position(player_pos);
-
-		// 이벤트 실행
-		hold_enter_black_ = true;
-		DialogueSessionData session;
-		if (DialogueJsonConverter::BuildSessionByKey("Prologue3", session))
+		case MainStoryProgress::Prologue4:
 		{
-			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-			if (!started)
-				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue3");
-		}
-	}
-	break;
+			// 반지 비활성화, 엔지니어 상호작용 불가
+			npcs_[2]->InActivate();
+			npcs_[1]->SetCanInteract(false);
 
-	case MainStoryProgress::Prologue4:
-	{
-		// 반지 비활성화, 엔지니어 상호작용 불가
-		npcs_[2]->InActivate();
-		npcs_[1]->SetCanInteract(false);
-
-		npcs_[0]->SetOnInteractCallback([this]()
+			npcs_[0]->SetOnInteractCallback([this]()
 			{
 				// 이벤트 실행
 				DialogueSessionData session;
@@ -305,48 +313,49 @@ void OutGameScene::OnEnter()
 				}
 			});
 
-		// 할아버지 바로 아래에 플레이어 위치시키기
-		const auto npc_pos = npcs_[0]->GetTransform()->Position();
-		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
-		test_town_player_->GetTransform()->Position(player_pos);
-	}
-	break;
-
-	case MainStoryProgress::Prologue5:
-	{
-		// 반지 비활성화, 엔지니어 상호작용 불가
-		npcs_[2]->InActivate();
-		npcs_[1]->SetCanInteract(false);
-
-		// 반지 바로 아래에 플레이어 위치시키기
-		const auto npc_pos = npcs_[2]->GetTransform()->Position();
-		const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
-		test_town_player_->GetTransform()->Position(player_pos);
-
-		// 이벤트 실행
-		DialogueSessionData session;
-		if (DialogueJsonConverter::BuildSessionByKey("Prologue5", session))
-		{
-			const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
-			if (!started)
-				_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue5");
+			// 할아버지 바로 아래에 플레이어 위치시키기
+			const auto npc_pos = npcs_[0]->GetTransform()->Position();
+			const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+			test_town_player_->GetTransform()->Position(player_pos);
 		}
-	}
-	break;
+		break;
 
-	default:
-	{
-		// 여기도 바로 안 들어가고 엔지니어랑 한 마디 하고 들어가게 바꿔도 좋음. 완성도 측면에서.
-		npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
-		npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+		case MainStoryProgress::Prologue5:
+		{
+			// 반지 비활성화, 엔지니어 상호작용 불가
+			npcs_[2]->InActivate();
+			//npcs_[1]->SetCanInteract(false);
 
-		// 엔지니어 바로 아래에 플레이어 위치시키기
-		const auto npc_pos = npcs_[1]->GetTransform()->Position();
-		const auto player_pos = npc_pos + _Vector3(0.f, 80.f, 0.f);
-		test_town_player_->GetTransform()->Position(player_pos);
-	}
-	break;
+			// 반지 바로 아래에 플레이어 위치시키기
+			const auto npc_pos = npcs_[2]->GetTransform()->Position();
+			const auto player_pos = npc_pos + _Vector3(0.f, 20.f, 0.f);
+			test_town_player_->GetTransform()->Position(player_pos);
 
+			// 이벤트 실행
+			DialogueSessionData session;
+			if (DialogueJsonConverter::BuildSessionByKey("Prologue5", session))
+			{
+				const bool started = dialogue_system_.StartSession(session, &dialogue_event_listener_);
+				if (!started)
+					_SYSTEM_LOG_WARN(L"Failed to start dialogue session: Prologue5");
+			}
+		}
+		break;
+
+		default:
+		{
+			// 여기도 바로 안 들어가고 엔지니어랑 한 마디 하고 들어가게 바꿔도 좋음. 완성도 측면에서.
+			npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
+			npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+
+			// 엔지니어 바로 아래에 플레이어 위치시키기
+			const auto npc_pos = npcs_[1]->GetTransform()->Position();
+			const auto player_pos = npc_pos + _Vector3(0.f, 80.f, 0.f);
+			test_town_player_->GetTransform()->Position(player_pos);
+		}
+		break;
+
+		}
 	}
 
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
@@ -386,7 +395,10 @@ void OutGameScene::ProcessDialogueEvent(const std::wstring& _event_id)
 
 	if (L"ActiveRing" == _event_id)
 	{
-		npcs_[2]->Activate();
+		if (npcs_.size() >= 3)
+			npcs_[2]->Activate();
+		else
+			_SYSTEM_LOG_ERROR(L"ActiveRing event skipped: required TownNpc placements missing. spawned: %d", s_int(npcs_.size()));
 	}
 }
 
@@ -547,9 +559,9 @@ void OutGameScene::_TrackView(OutGameViewState _state, WidgetBase* _view)
 
 	view_map_[_state] = _view;
 	view_callback_ids_[_view] = _view->AddDestructionCallback([this, _state, _view]()
-		{
-			_HandleViewDestroyed(_state, _view);
-		});
+	{
+		_HandleViewDestroyed(_state, _view);
+	});
 }
 
 void OutGameScene::_HandleViewDestroyed(OutGameViewState _state, WidgetBase* _view)

@@ -1,0 +1,38 @@
+{
+  "scene_id": "out_game",
+  "placements": [
+    {
+      "placement_id": "town_elder_001",
+      "npc_id": "elder",
+      "position": {
+        "x": 213.0,
+        "y": 360.0,
+        "z": 0.0
+      },
+      "facing": "right",
+      "enabled": true
+    },
+    {
+      "placement_id": "town_engineer_001",
+      "npc_id": "engineer",
+      "position": {
+        "x": 639.0,
+        "y": 360.0,
+        "z": 0.0
+      },
+      "facing": "right",
+      "enabled": true
+    },
+    {
+      "placement_id": "town_ring_001",
+      "npc_id": "ring",
+      "position": {
+        "x": 1066.0,
+        "y": 360.0,
+        "z": 0.0
+      },
+      "facing": "right",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,507 @@
+diff --git a/PlayGround/Data/TownNpcPlacement.json b/PlayGround/Data/TownNpcPlacement.json
+new file mode 100644
+index 0000000..baefc41
+--- /dev/null
++++ b/PlayGround/Data/TownNpcPlacement.json
+@@ -0,0 +1,38 @@
++{
++  "scene_id": "out_game",
++  "placements": [
++    {
++      "placement_id": "town_elder_001",
++      "npc_id": "elder",
++      "position": {
++        "x": 213.0,
++        "y": 360.0,
++        "z": 0.0
++      },
++      "facing": "right",
++      "enabled": true
++    },
++    {
++      "placement_id": "town_engineer_001",
++      "npc_id": "engineer",
++      "position": {
++        "x": 639.0,
++        "y": 360.0,
++        "z": 0.0
++      },
++      "facing": "right",
++      "enabled": true
++    },
++    {
++      "placement_id": "town_ring_001",
++      "npc_id": "ring",
++      "position": {
++        "x": 1066.0,
++        "y": 360.0,
++        "z": 0.0
++      },
++      "facing": "right",
++      "enabled": true
++    }
++  ]
++}
+diff --git a/PlayGround/PlayGround.vcxproj b/PlayGround/PlayGround.vcxproj
+index 19f740e..8e2782d 100644
+--- a/PlayGround/PlayGround.vcxproj
++++ b/PlayGround/PlayGround.vcxproj
+@@ -332,6 +332,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
+@@ -339,6 +340,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillExecutionActors.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillRuntimeTypes.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.h" />
+     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
+@@ -498,6 +500,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />
+@@ -505,6 +508,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillExecutionActors.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
+@@ -549,6 +553,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
+   </ItemGroup>
+   <ItemGroup>
++    <None Include="Data\TownNpcPlacement.json" />
+     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
+@@ -556,4 +561,4 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/PlayGround/PlayGround.vcxproj.filters b/PlayGround/PlayGround.vcxproj.filters
+index ea8d0dc..0af7b44 100644
+--- a/PlayGround/PlayGround.vcxproj.filters
++++ b/PlayGround/PlayGround.vcxproj.filters
+@@ -4,7 +4,7 @@
+     <Filter Include="Default">
+       <UniqueIdentifier>{0fd233c8-1155-45c4-948c-7494157a77e8}</UniqueIdentifier>
+     </Filter>
+-    <Filter Include="Default\리소스 파일">
++    <Filter Include="Default\리소???�일">
+       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+     </Filter>
+@@ -170,18 +170,20 @@
+     <ClInclude Include="Project\Gameplay\Actors\Stage\DashAbility.h" />
+     <ClInclude Include="Project\Gameplay\Common\HitContext.h" />
+     <ClInclude Include="Project\Gameplay\Common\HitReaction.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <ResourceCompile Include="Project\Framework\PlayGround.rc">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </ResourceCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <Image Include="small.ico">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </Image>
+     <Image Include="PlayGround.ico">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </Image>
+   </ItemGroup>
+   <ItemGroup>
+@@ -303,10 +305,13 @@
+     <ClCompile Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.cpp" />
+     <ClCompile Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.cpp" />
+     <ClCompile Include="Project\Gameplay\Actors\Stage\DashAbility.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
++    <None Include="Data\TownNpcPlacement.json" />
+   </ItemGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp b/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
+index 2b50f98..48482aa 100644
+--- a/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
+@@ -13,6 +13,7 @@
+ #include "GamePlaySystems/Json/ParticleDataManager.h"
+ #include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
+ #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
++#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
+ 
+ namespace
+ {
+@@ -26,6 +27,7 @@ namespace
+ 	constexpr char kStagePath[] = "Data/Stage.json";
+ 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
+ 	constexpr char kUserDataPath[] = "Data/UserData.json";
++   constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
+ }
+ 
+ _bool GameDataLoader::LoadAll()
+@@ -103,5 +105,11 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
+ 		return false;
+ 	}
+ 
++	if (!_TownNpcPlacementDataMgr.Load(kTownNpcPlacementPath))
++	{
++		_DEBUG_MSGBOX(_T("Failed to load town npc placement data from JSON."));
++		return false;
++	}
++
+ 	return true;
+ }
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.cpp b/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.cpp
+new file mode 100644
+index 0000000..ab4071e
+--- /dev/null
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.cpp
+@@ -0,0 +1,177 @@
++#include "framework.h"
++#include "TownNpcPlacementDataManager.h"
++
++namespace
++{
++    constexpr const char* kOutGameSceneId = "out_game";
++
++    _bool _ParsePosition(const nlohmann::json& _position_json, _Vector3& _out_position)
++    {
++        if (!_position_json.is_object())
++            return false;
++
++        if (!_position_json.contains("x") || !_position_json["x"].is_number())
++            return false;
++
++        if (!_position_json.contains("y") || !_position_json["y"].is_number())
++            return false;
++
++        if (!_position_json.contains("z") || !_position_json["z"].is_number())
++            return false;
++
++        _out_position.x = _position_json["x"].get<_float>();
++        _out_position.y = _position_json["y"].get<_float>();
++        _out_position.z = _position_json["z"].get<_float>();
++        return true;
++    }
++
++    void _OnInvalidPlacement(const std::wstring& _file_path_w, const _int _index, const wchar_t* _reason)
++    {
++        _SYSTEM_LOG_WARN(L"TownNpcPlacement invalid entry skipped. file: %s, index: %d, reason: %s", _file_path_w.c_str(), _index, _reason);
++#ifdef _DEBUG
++        _ASSERTE(false);
++#endif
++    }
++}
++
++_bool TownNpcPlacementDataManager::Load(const std::string& _file_path)
++{
++    scene_table_.clear();
++
++    const std::wstring file_path_w = _UtilFunc::ToWString(_file_path);
++
++    std::ifstream file(_file_path);
++    if (!file.is_open())
++    {
++        _SYSTEM_LOG_ERROR(L"TownNpcPlacement file open failed: %s", file_path_w.c_str());
++        _DEBUG_MSGBOX(L"Failed to open town npc placement file: %s", file_path_w.c_str());
++        return false;
++    }
++
++    nlohmann::json root;
++    try
++    {
++        file >> root;
++    }
++    catch (const nlohmann::json::exception& e)
++    {
++        const std::wstring error_w = _UtilFunc::ToWString(e.what());
++        _SYSTEM_LOG_ERROR(L"TownNpcPlacement json parse failed. file: %s, error: %s", file_path_w.c_str(), error_w.c_str());
++        _DEBUG_MSGBOX(L"Failed to parse town npc placement file: %s", file_path_w.c_str());
++        return false;
++    }
++
++    if (!root.is_object())
++    {
++        _SYSTEM_LOG_ERROR(L"TownNpcPlacement root must be an object. file: %s", file_path_w.c_str());
++        _DEBUG_MSGBOX(L"TownNpcPlacement root must be an object. file: %s", file_path_w.c_str());
++        return false;
++    }
++
++    if (!root.contains("scene_id") || !root["scene_id"].is_string())
++    {
++        _SYSTEM_LOG_ERROR(L"TownNpcPlacement requires scene_id string. file: %s", file_path_w.c_str());
++        _DEBUG_MSGBOX(L"TownNpcPlacement requires scene_id string. file: %s", file_path_w.c_str());
++        return false;
++    }
++
++    if (!root.contains("placements") || !root["placements"].is_array())
++    {
++        _SYSTEM_LOG_ERROR(L"TownNpcPlacement requires placements array. file: %s", file_path_w.c_str());
++        _DEBUG_MSGBOX(L"TownNpcPlacement requires placements array. file: %s", file_path_w.c_str());
++        return false;
++    }
++
++    TownNpcPlacementSceneData scene_data;
++    scene_data.scene_id_ = root["scene_id"].get<std::string>();
++
++    std::unordered_map<std::string, _bool> placement_id_table;
++
++    const auto& placements_json = root["placements"];
++    for (size_t i = 0; i < placements_json.size(); ++i)
++    {
++        const auto& entry_json = placements_json[i];
++        if (!entry_json.is_object())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"entry must be object");
++            continue;
++        }
++
++        TownNpcPlacementEntry entry;
++
++        if (!entry_json.contains("placement_id") || !entry_json["placement_id"].is_string())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"missing placement_id");
++            continue;
++        }
++
++        entry.placement_id_ = entry_json["placement_id"].get<std::string>();
++        if (entry.placement_id_.empty())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"empty placement_id");
++            continue;
++        }
++
++        if (placement_id_table.find(entry.placement_id_) != placement_id_table.end())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"duplicate placement_id");
++            continue;
++        }
++
++        if (!entry_json.contains("npc_id") || !entry_json["npc_id"].is_string())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"missing npc_id");
++            continue;
++        }
++
++        entry.npc_id_ = entry_json["npc_id"].get<std::string>();
++        if (entry.npc_id_.empty())
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"empty npc_id");
++            continue;
++        }
++
++        if (!entry_json.contains("position"))
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"missing position");
++            continue;
++        }
++
++        if (!_ParsePosition(entry_json["position"], entry.position_))
++        {
++            _OnInvalidPlacement(file_path_w, s_int(i), L"invalid position");
++            continue;
++        }
++
++        if (entry_json.contains("facing") && entry_json["facing"].is_string())
++            entry.facing_ = entry_json["facing"].get<std::string>();
++
++        if (entry_json.contains("enabled") && entry_json["enabled"].is_boolean())
++            entry.enabled_ = entry_json["enabled"].get<_bool>();
++
++        placement_id_table[entry.placement_id_] = true;
++        scene_data.placements_.push_back(entry);
++    }
++
++    scene_table_[scene_data.scene_id_] = scene_data;
++    _SYSTEM_LOG_INFO(L"TownNpcPlacement loaded. scene_id: %s, entry_count: %d", _UtilFunc::ToWString(scene_data.scene_id_).c_str(), s_int(scene_data.placements_.size()));
++    return true;
++}
++
++const TownNpcPlacementSceneData* TownNpcPlacementDataManager::GetSceneData(const std::string& _scene_id) const
++{
++    auto it = scene_table_.find(_scene_id);
++    if (it == scene_table_.end())
++        return nullptr;
++
++    return &it->second;
++}
++
++const std::vector<TownNpcPlacementEntry>& TownNpcPlacementDataManager::GetOutGamePlacements() const
++{
++    const auto* scene_data = GetSceneData(kOutGameSceneId);
++    if (scene_data == nullptr)
++        return empty_placements_;
++
++    return scene_data->placements_;
++}
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.h b/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.h
+new file mode 100644
+index 0000000..2e8931e
+--- /dev/null
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/Json/TownNpcPlacementDataManager.h
+@@ -0,0 +1,34 @@
++#pragma once
++
++#include "EngineSystems/Json/JsonDataManager.h"
++
++struct TownNpcPlacementEntry
++{
++    std::string placement_id_;
++    std::string npc_id_;
++    _Vector3 position_ = _Vector3::Zero();
++    std::string facing_;
++    _bool enabled_ = true;
++};
++
++struct TownNpcPlacementSceneData
++{
++    std::string scene_id_;
++    std::vector<TownNpcPlacementEntry> placements_;
++};
++
++#define _TownNpcPlacementDataMgr TownNpcPlacementDataManager::Get()
++
++class TownNpcPlacementDataManager final
++    : public ISingleton<TownNpcPlacementDataManager>
++{
++public:
++    _bool Load(const std::string& _file_path);
++
++    const TownNpcPlacementSceneData* GetSceneData(const std::string& _scene_id) const;
++    const std::vector<TownNpcPlacementEntry>& GetOutGamePlacements() const;
++
++private:
++    std::unordered_map<std::string, TownNpcPlacementSceneData> scene_table_;
++    std::vector<TownNpcPlacementEntry> empty_placements_;
++};
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.cpp b/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.cpp
+new file mode 100644
+index 0000000..548f225
+--- /dev/null
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.cpp
+@@ -0,0 +1,36 @@
++#include "framework.h"
++#include "TownNpcPlacementSpawner.h"
++
++#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
++#include "GamePlaySystems/ObjectManager.h"
++#include "GamePlay/Actors/Town/TownNpc.h"
++
++std::vector<TownNpc*> TownNpcPlacementSpawner::Spawn(ObjectManager* _object_manager, const std::vector<TownNpcPlacementEntry>& _placements) const
++{
++    std::vector<TownNpc*> spawned_npcs;
++    if (_object_manager == nullptr)
++        return spawned_npcs;
++
++    spawned_npcs.reserve(_placements.size());
++
++    for (const auto& placement : _placements)
++    {
++        if (!placement.enabled_)
++            continue;
++
++        TownNpc::CreateInfo create_info;
++        create_info.position = placement.position_;
++
++        auto* npc = _object_manager->CreateActor<TownNpc>(create_info);
++        if (npc == nullptr)
++        {
++            _SYSTEM_LOG_WARN(L"TownNpcPlacement spawn failed. placement_id: %s", _UtilFunc::ToWString(placement.placement_id_).c_str());
++            continue;
++        }
++
++        npc->SetName(_UtilFunc::ToWString(placement.placement_id_));
++        spawned_npcs.push_back(npc);
++    }
++
++    return spawned_npcs;
++}
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.h b/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.h
+new file mode 100644
+index 0000000..698f9e0
+--- /dev/null
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/TownNpcPlacementSpawner.h
+@@ -0,0 +1,11 @@
++#pragma once
++
++class ObjectManager;
++class TownNpc;
++struct TownNpcPlacementEntry;
++
++class TownNpcPlacementSpawner final
++{
++public:
++    std::vector<TownNpc*> Spawn(ObjectManager* _object_manager, const std::vector<TownNpcPlacementEntry>& _placements) const;
++};
+diff --git a/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp b/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+index 2d604da..2d7de54 100644
+--- a/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
++++ b/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+@@ -13,6 +13,8 @@
+ #include "GamePlay/Actors/Town/TownPlayer.h"
+ #include "GamePlay/Actors/Town/TownNpc.h"
+ #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
++#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
++#include "GamePlaySystems/TownNpcPlacementSpawner.h"
+ #include "EngineSystems/Physics/CollisionManager.h"
+ 
+ _bool OutGameScene::Initialize()
+@@ -197,22 +199,18 @@ void OutGameScene::OnEnter()
+ 	);
+ 	// e, [ Temporary Town Player Setup for Testing ]
+ 
++  TownNpcPlacementSpawner npc_placement_spawner;
++	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements());
++
+ 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
++	for (_uint i = 0; i < npc_names.size() && i < npcs_.size(); ++i)
++		npcs_[i]->SetName(npc_names[i]);
+ 
+-	for (_uint i = 0; i < npc_names.size(); ++i)
++	if (npcs_.size() < 3)
+ 	{
+-		const auto gap = 1280 / npc_names.size();
+-		const auto x = (gap >> 1) + (i * gap);
+-		const auto y = 720 >> 1;
+-
+-		TownNpc::CreateInfo npc_info;
+-		npc_info.position = _Vector3(s_float(x), s_float(y), 0.f);
+-		npc_info.on_interact;
+-
+-		const auto npc = object_manager_->CreateActor<TownNpc>(npc_info);
+-		npc->SetName(npc_names[i]);
+-
+-		npcs_.push_back(npc);
++		_SYSTEM_LOG_ERROR(L"OutGameScene requires at least 3 spawned TownNpc placements. spawned: %d", s_int(npcs_.size()));
++		_DEBUG_MSGBOX(L"OutGameScene requires at least 3 TownNpc placements in Data/TownNpcPlacement.json");
++		return;
+ 	}
+ 
+ 	switch (_UserProfile.GetMainStoryProgress())

@@ -37,7 +37,8 @@ InGameSkillSlot::InGameSkillSlot(_uint _slot_index, const std::wstring& _key_lab
 
 _int InGameSkillSlot::Update(_double _delta_time)
 {
-	__super::Update(_delta_time);
+	_int ret = __super::Update(_delta_time);
+	if (UPDATE_CONTINUE != ret) return ret;
 
 	_UpdateFlash(_delta_time);
 
@@ -54,6 +55,9 @@ _int InGameSkillSlot::Update(_double _delta_time)
 
 void InGameSkillSlot::Render(_double _delta_time)
 {
+	if (!IsVisible())
+		return;
+
 	const _Rect slot_rect = GetRect();
 
 	// 1. 배경

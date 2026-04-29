@@ -1,0 +1,181 @@
+diff --git a/PlayGround/PlayGround.vcxproj b/PlayGround/PlayGround.vcxproj
+index 19f740e..8e2782d 100644
+--- a/PlayGround/PlayGround.vcxproj
++++ b/PlayGround/PlayGround.vcxproj
+@@ -332,6 +332,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
+@@ -339,6 +340,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillExecutionActors.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillRuntimeTypes.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
+     <ClInclude Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.h" />
+     <ClInclude Include="Project\Gameplay\UI\Elements\Grid.h" />
+@@ -498,6 +500,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />
+@@ -505,6 +508,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillExecutionActors.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\StageManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\UIManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
+     <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
+@@ -549,6 +553,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+     <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
+   </ItemGroup>
+   <ItemGroup>
++    <None Include="Data\TownNpcPlacement.json" />
+     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
+@@ -556,4 +561,4 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/PlayGround/PlayGround.vcxproj.filters b/PlayGround/PlayGround.vcxproj.filters
+index ea8d0dc..0af7b44 100644
+--- a/PlayGround/PlayGround.vcxproj.filters
++++ b/PlayGround/PlayGround.vcxproj.filters
+@@ -4,7 +4,7 @@
+     <Filter Include="Default">
+       <UniqueIdentifier>{0fd233c8-1155-45c4-948c-7494157a77e8}</UniqueIdentifier>
+     </Filter>
+-    <Filter Include="Default\리소스 파일">
++    <Filter Include="Default\리소???�일">
+       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+     </Filter>
+@@ -170,18 +170,20 @@
+     <ClInclude Include="Project\Gameplay\Actors\Stage\DashAbility.h" />
+     <ClInclude Include="Project\Gameplay\Common\HitContext.h" />
+     <ClInclude Include="Project\Gameplay\Common\HitReaction.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
++    <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <ResourceCompile Include="Project\Framework\PlayGround.rc">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </ResourceCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <Image Include="small.ico">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </Image>
+     <Image Include="PlayGround.ico">
+-      <Filter>Default\리소스 파일</Filter>
++      <Filter>Default\리소???�일</Filter>
+     </Image>
+   </ItemGroup>
+   <ItemGroup>
+@@ -303,10 +305,13 @@
+     <ClCompile Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.cpp" />
+     <ClCompile Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.cpp" />
+     <ClCompile Include="Project\Gameplay\Actors\Stage\DashAbility.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
++    <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
+     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
++    <None Include="Data\TownNpcPlacement.json" />
+   </ItemGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp b/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
+index 2b50f98..48482aa 100644
+--- a/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
++++ b/PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp
+@@ -13,6 +13,7 @@
+ #include "GamePlaySystems/Json/ParticleDataManager.h"
+ #include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
+ #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
++#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
+ 
+ namespace
+ {
+@@ -26,6 +27,7 @@ namespace
+ 	constexpr char kStagePath[] = "Data/Stage.json";
+ 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
+ 	constexpr char kUserDataPath[] = "Data/UserData.json";
++   constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
+ }
+ 
+ _bool GameDataLoader::LoadAll()
+@@ -103,5 +105,11 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
+ 		return false;
+ 	}
+ 
++	if (!_TownNpcPlacementDataMgr.Load(kTownNpcPlacementPath))
++	{
++		_DEBUG_MSGBOX(_T("Failed to load town npc placement data from JSON."));
++		return false;
++	}
++
+ 	return true;
+ }
+diff --git a/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp b/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+index 2d604da..2d7de54 100644
+--- a/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
++++ b/PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+@@ -13,6 +13,8 @@
+ #include "GamePlay/Actors/Town/TownPlayer.h"
+ #include "GamePlay/Actors/Town/TownNpc.h"
+ #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
++#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
++#include "GamePlaySystems/TownNpcPlacementSpawner.h"
+ #include "EngineSystems/Physics/CollisionManager.h"
+ 
+ _bool OutGameScene::Initialize()
+@@ -197,22 +199,18 @@ void OutGameScene::OnEnter()
+ 	);
+ 	// e, [ Temporary Town Player Setup for Testing ]
+ 
++  TownNpcPlacementSpawner npc_placement_spawner;
++	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements());
++
+ 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
++	for (_uint i = 0; i < npc_names.size() && i < npcs_.size(); ++i)
++		npcs_[i]->SetName(npc_names[i]);
+ 
+-	for (_uint i = 0; i < npc_names.size(); ++i)
++	if (npcs_.size() < 3)
+ 	{
+-		const auto gap = 1280 / npc_names.size();
+-		const auto x = (gap >> 1) + (i * gap);
+-		const auto y = 720 >> 1;
+-
+-		TownNpc::CreateInfo npc_info;
+-		npc_info.position = _Vector3(s_float(x), s_float(y), 0.f);
+-		npc_info.on_interact;
+-
+-		const auto npc = object_manager_->CreateActor<TownNpc>(npc_info);
+-		npc->SetName(npc_names[i]);
+-
+-		npcs_.push_back(npc);
++		_SYSTEM_LOG_ERROR(L"OutGameScene requires at least 3 spawned TownNpc placements. spawned: %d", s_int(npcs_.size()));
++		_DEBUG_MSGBOX(L"OutGameScene requires at least 3 TownNpc placements in Data/TownNpcPlacement.json");
++		return;
+ 	}
+ 
+ 	switch (_UserProfile.GetMainStoryProgress())

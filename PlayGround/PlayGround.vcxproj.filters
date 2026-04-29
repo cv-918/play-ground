@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Default">
@@ -170,6 +170,8 @@
     <ClInclude Include="Project\Gameplay\Actors\Stage\DashAbility.h" />
     <ClInclude Include="Project\Gameplay\Common\HitContext.h" />
     <ClInclude Include="Project\Gameplay\Common\HitReaction.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -303,10 +305,13 @@
     <ClCompile Include="Project\Gameplay\Actors\Stage\ContactAttackAbility.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\ProjectileAttackAbility.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\DashAbility.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
+    <None Include="Data\TownNpcPlacement.json" />
   </ItemGroup>
 </Project>

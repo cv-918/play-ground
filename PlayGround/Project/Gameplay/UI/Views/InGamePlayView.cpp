@@ -17,10 +17,6 @@ InGamePlayView::InGamePlayView()
 	stage_duration_gauge_->SetFillColor(Palette::SlateGray);
 	stage_duration_gauge_->SetBorderEnabled(false);
 
-	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
-	if (main_story_proc < MainStoryProgress::Chapter1)
-		return; // 챕터1 진입 이전에는 Next Wind Progress 게이지만 노출
-
 	// 화면 중앙 하단, Stage Clear Progress 게이지
 	stage_clear_progress_ = CreateElement<ProgressBar>();
 	stage_clear_progress_->SetSize({ 300, 10 });
@@ -45,6 +41,15 @@ InGamePlayView::InGamePlayView()
 	skill_slot_1_ = CreateElement<InGameSkillSlot>(1, L"ALT");
 	skill_slot_1_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H + 46, GAME_VIEW_HEIGHT - 110 });
 	skill_slot_1_->SetShowSkillName(true);
+
+	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
+	if (main_story_proc < MainStoryProgress::Chapter1)
+	{
+		stage_clear_progress_->InActivate();
+		next_stage_progress_->InActivate();
+		skill_slot_0_->InActivate();
+		skill_slot_1_->InActivate();
+	}
 }
 
 _int InGamePlayView::Update(_double _delta_time)

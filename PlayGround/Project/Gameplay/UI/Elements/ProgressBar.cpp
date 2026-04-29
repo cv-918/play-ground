@@ -1,8 +1,11 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "ProgressBar.h"
 
 void ProgressBar::Render(_double _delta_time)
 {
+	if (!IsVisible())
+		return;
+
 	const _Rect rt = GetRect();
 
 	// 1. 배경 그리기 (회색 등)
