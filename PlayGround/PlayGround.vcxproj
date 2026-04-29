@@ -219,8 +219,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)GenerateTree.ps1"
-if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
+      <Command>if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
 xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -245,8 +244,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)GenerateTree.ps1"
-if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
+      <Command>if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
 xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -271,8 +269,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)GenerateTree.ps1"
-if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
+      <Command>if not exist "$(OutDir)Data" mkdir "$(OutDir)Data"
 xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

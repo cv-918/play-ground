@@ -41,25 +41,11 @@ void CollisionManager::Update()
 
 					if (_IsColliding(colA, colB))
 					{
-						colA->RegisterOnCollidedList(colB);
-						if (!_CanProcessCollider(left_layer, colA) ||
-							!_CanProcessCollider(right_layer, colB))
-						{
-							continue;
-						}
-
-						colB->RegisterOnCollidedList(colA);
+						_RegisterCollisionPair(left_layer, colA, right_layer, colB);
 					}
 					else
 					{
-						colA->DeregisterFromCollidedList(colB);
-						if (!_CanProcessCollider(left_layer, colA) ||
-							!_CanProcessCollider(right_layer, colB))
-						{
-							continue;
-						}
-
-						colB->DeregisterFromCollidedList(colA);
+						_DeregisterCollisionPair(left_layer, colA, right_layer, colB);
 					}
 				}
 			}
@@ -97,12 +83,17 @@ void CollisionManager::RegisterCollider(CollisionLayer _layer, Collider* _collid
 		return;
 	}
 
+	_TrackCollider(_collider);
+
 	if (is_updating_)
 	{
 		_collider->SetLayer(_layer);
 
-		if (!_ContainsCollider(_layer, _collider) && !_HasPendingRegister(_layer, _collider))
+		if ((!_ContainsCollider(_layer, _collider) || _HasPendingDeregistration(_layer, _collider)) &&
+			!_HasPendingRegister(_layer, _collider))
+		{
 			pending_registers_.push_back({ _layer, _collider });
+		}
 
 		return;
 	}
@@ -148,6 +139,54 @@ void CollisionManager::DeregisterCollider(CollisionLayer _layer, Collider* _coll
 	_DeregisterColliderImmediate(_layer, _collider);
 }
 
+void CollisionManager::NotifyColliderDestroying(Collider* _collider)
+{
+	if (!_collider)
+		return;
+
+	std::vector<Collider*> live_colliders(alive_colliders_.begin(), alive_colliders_.end());
+	for (auto* other : live_colliders)
+	{
+		if (!other || other == _collider)
+			continue;
+
+		other->_ForgetCollisionReference(_collider);
+	}
+
+	for (auto& vec : layer_colliders_)
+		vec.erase(std::remove(vec.begin(), vec.end(), _collider), vec.end());
+
+	pending_registers_.erase(
+		std::remove_if(
+			pending_registers_.begin(),
+			pending_registers_.end(),
+			[_collider](const PendingColliderChange& _change)
+			{
+				return _change.collider_ == _collider;
+			}),
+		pending_registers_.end());
+
+	pending_deregisters_.erase(
+		std::remove_if(
+			pending_deregisters_.begin(),
+			pending_deregisters_.end(),
+			[_collider](const PendingColliderChange& _change)
+			{
+				return _change.collider_ == _collider;
+			}),
+		pending_deregisters_.end());
+
+	alive_colliders_.erase(_collider);
+}
+
+_bool CollisionManager::IsColliderAlive(Collider* _collider) const
+{
+	if (!_collider)
+		return false;
+
+	return alive_colliders_.find(_collider) != alive_colliders_.end();
+}
+
 void CollisionManager::ClearAllColliders()
 {
 	std::vector<Collider*> colliders_to_clear;
@@ -186,6 +225,69 @@ _bool CollisionManager::_IsColliding(Collider* _a, Collider* _b)
 	return _a->CheckCollided(_b) && _b->CheckCollided(_a);
 }
 
+void CollisionManager::_RegisterCollisionPair(CollisionLayer _left_layer, Collider* _left, CollisionLayer _right_layer, Collider* _right)
+{
+	if (!_CanProcessCollider(_left_layer, _left) || !_CanProcessCollider(_right_layer, _right))
+		return;
+
+	const auto left_was_colliding = _left->_IsAlreadyColliding(_right);
+	const auto right_was_colliding = _right->_IsAlreadyColliding(_left);
+
+	if (!left_was_colliding)
+		_left->_AddCollisionReference(_right);
+
+	if (!right_was_colliding)
+		_right->_AddCollisionReference(_left);
+
+	if (_CanProcessCollider(_left_layer, _left) && _CanProcessCollider(_right_layer, _right))
+	{
+		if (left_was_colliding)
+			_left->_NotifyCollisionStay(_right);
+		else
+			_left->_NotifyCollisionEnter(_right);
+	}
+
+	if (_CanProcessCollider(_left_layer, _left) && _CanProcessCollider(_right_layer, _right))
+	{
+		if (right_was_colliding)
+			_right->_NotifyCollisionStay(_left);
+		else
+			_right->_NotifyCollisionEnter(_left);
+	}
+}
+
+void CollisionManager::_DeregisterCollisionPair(CollisionLayer _left_layer, Collider* _left, CollisionLayer _right_layer, Collider* _right)
+{
+	if (!_left || !_right)
+		return;
+
+	const auto left_was_colliding = _left->_IsAlreadyColliding(_right);
+	const auto right_was_colliding = _right->_IsAlreadyColliding(_left);
+
+	if (!left_was_colliding && !right_was_colliding)
+		return;
+
+	if (left_was_colliding)
+		_left->_ForgetCollisionReference(_right);
+
+	if (right_was_colliding)
+		_right->_ForgetCollisionReference(_left);
+
+	if (left_was_colliding &&
+		_CanProcessCollider(_left_layer, _left) &&
+		IsColliderAlive(_right))
+	{
+		_left->_NotifyCollisionExit(_right);
+	}
+
+	if (right_was_colliding &&
+		_CanProcessCollider(_right_layer, _right) &&
+		IsColliderAlive(_left))
+	{
+		_right->_NotifyCollisionExit(_left);
+	}
+}
+
 _bool CollisionManager::_IsValidLayer(CollisionLayer _layer) const
 {
 	const auto layer_index = s_int(_layer);
@@ -217,6 +319,9 @@ _bool CollisionManager::_CanProcessCollider(CollisionLayer _layer, Collider* _co
 	if (!_collider)
 		return false;
 
+	if (!IsColliderAlive(_collider))
+		return false;
+
 	if (_HasPendingDeregistration(_layer, _collider))
 		return false;
 
@@ -242,6 +347,12 @@ _bool CollisionManager::_HasPendingRegister(CollisionLayer _layer, Collider* _co
 		{
 			return _change.layer_ == _layer && _change.collider_ == _collider;
 		}) != pending_registers_.end();
+}
+
+void CollisionManager::_TrackCollider(Collider* _collider)
+{
+	if (_collider)
+		alive_colliders_.insert(_collider);
 }
 
 void CollisionManager::_RegisterColliderImmediate(CollisionLayer _layer, Collider* _collider)

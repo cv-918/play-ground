@@ -18,6 +18,10 @@ _bool PlayGround::Initialize()
 	render_chain_ = &_RenderChain;
 	render_chain_->Initialize();
 
+	// Scene-owned colliders touch CollisionManager while scenes are being destroyed.
+	// Construct it first so static shutdown fallback keeps that dependency alive.
+	CollisionManager::Get();
+
 	scene_manager_ = &_SceneMgr;
 	scene_manager_->Initialize();
 
@@ -49,6 +53,18 @@ _bool PlayGround::Initialize()
 	}
 
 	return true;
+}
+
+void PlayGround::Shutdown()
+{
+	if (scene_manager_)
+	{
+		scene_manager_->Shutdown();
+		scene_manager_ = nullptr;
+	}
+
+	input_manager_ = nullptr;
+	render_chain_ = nullptr;
 }
 
 _int PlayGround::Update(_double _delta_time)

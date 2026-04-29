@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "SkillExecutionActors.h"
 
+#include "Components/EllipseCollider.h"
 #include "Components/GameplayEffectController.h"
 #include "Components/SphereCollider.h"
 #include "EngineSystems/Physics/CollisionManager.h"
@@ -308,9 +309,9 @@ _bool AreaFieldExecutionActor::Initialize()
 	transform_->Position(spawn_position_);
 	transform_->Scale(spec_.size_);
 	color_ = Palette::Rust;
-	SetAlpha(0.45f);
+	SetAlpha(0.35f);
 
-	collider_ = new SphereCollider(0.f);
+	collider_ = new EllipseCollider(0.f, 0.6f);
 	collider_->SetDrawAlways(true);
 	RegisterComponent(collider_);
 	_ColMgr.RegisterCollider(CollisionLayer::PlayerAttack, collider_);
@@ -330,7 +331,7 @@ _int AreaFieldExecutionActor::Update(_double _delta_time)
 
 	const _double grow_duration = std::max(0.0001, spec_.grow_duration_sec_);
 	const _float grow_ratio = std::clamp(s_float(elapsed_sec_ / grow_duration), 0.f, 1.f);
-	collider_->SetRadius((spec_.size_ * 0.5f) * grow_ratio);
+	collider_->SetRadius(spec_.size_ * grow_ratio, 0.6f);
 
 	remaining_lifetime_sec_ -= _delta_time;
 	if (remaining_lifetime_sec_ <= 0.0)

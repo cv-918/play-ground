@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "GamePlay/Components/ComponentBase.h"
 #include "Components/Transform.h"
@@ -40,7 +40,7 @@ public:
 
 	// --- 색상 및 알파 설정 함수 ---
 	void SetColor(const _Color& _color) { color_ = _color; }
-	void SetAlpha(_float _alpha) { color_ = _Color(s_ubyte(_alpha * UCHAR_MAX), color_.GetR(), color_.GetG(), color_.GetB()); }
+	void SetAlpha(_float _alpha) { color_.SetAlpha(_alpha); }
 
 protected:
 	virtual void _DrawObjectShape();

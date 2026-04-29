@@ -23,6 +23,7 @@ public:
 
 public:
 	_bool Initialize() override;
+	void Shutdown(_bool _clear_particle_service = true);
 
 	_int Update(_double _delta_time) override;
 	_int LateUpdate(_double _delta_time) override;

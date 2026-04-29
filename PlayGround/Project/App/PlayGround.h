@@ -4,6 +4,7 @@ class PlayGround final
 {
 public:
 	_bool Initialize();
+	void Shutdown();
 	_int Update(_double _delta_time);
 	void Render(_double _delta_time);
 

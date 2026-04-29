@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "DrawFunctions.h"
 
 namespace
@@ -41,6 +41,132 @@ namespace
 	COLORREF ToColorRef(const _Color& _color)
 	{
 		return RGB(_color.GetR(), _color.GetG(), _color.GetB());
+	}
+
+	RECT NormalizeRect(_int _left, _int _top, _int _right, _int _bottom)
+	{
+		RECT rc{};
+		rc.left = std::min(_left, _right);
+		rc.top = std::min(_top, _bottom);
+		rc.right = std::max(_left, _right);
+		rc.bottom = std::max(_top, _bottom);
+
+		if (rc.left == rc.right)
+			++rc.right;
+		if (rc.top == rc.bottom)
+			++rc.bottom;
+
+		return rc;
+	}
+
+	RECT InflateRectCopy(const RECT& _rect, _int _padding)
+	{
+		RECT rc = _rect;
+		rc.left -= _padding;
+		rc.top -= _padding;
+		rc.right += _padding;
+		rc.bottom += _padding;
+		return rc;
+	}
+
+	template <typename DrawFunc, typename MaskFunc>
+	void DrawWithColorAlpha(HDC _dest_dc, const RECT& _bounds, const _Color& _color, DrawFunc _draw_func, MaskFunc _mask_func)
+	{
+		if (!_dest_dc)
+			return;
+
+		const auto alpha = _color.GetAlpha();
+		if (alpha == 0)
+			return;
+
+		const auto width = _bounds.right - _bounds.left;
+		const auto height = _bounds.bottom - _bounds.top;
+		if (width <= 0 || height <= 0)
+			return;
+
+		if (alpha == 255)
+		{
+			_draw_func(_dest_dc);
+			return;
+		}
+
+		BITMAPINFO bmi{};
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmi.bmiHeader.biWidth = width;
+		bmi.bmiHeader.biHeight = -height;
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		bmi.bmiHeader.biCompression = BI_RGB;
+
+		void* mask_bits_ptr = nullptr;
+		void* dst_bits_ptr = nullptr;
+
+		HDC mask_dc = CreateCompatibleDC(_dest_dc);
+		HDC dst_dc = CreateCompatibleDC(_dest_dc);
+		if (!mask_dc || !dst_dc)
+		{
+			if (mask_dc) DeleteDC(mask_dc);
+			if (dst_dc) DeleteDC(dst_dc);
+			return;
+		}
+
+		HBITMAP mask_bitmap = CreateDIBSection(_dest_dc, &bmi, DIB_RGB_COLORS, &mask_bits_ptr, nullptr, 0);
+		HBITMAP dst_bitmap = CreateDIBSection(_dest_dc, &bmi, DIB_RGB_COLORS, &dst_bits_ptr, nullptr, 0);
+		if (!mask_bitmap || !dst_bitmap || !mask_bits_ptr || !dst_bits_ptr)
+		{
+			if (mask_bitmap) DeleteObject(mask_bitmap);
+			if (dst_bitmap) DeleteObject(dst_bitmap);
+			DeleteDC(mask_dc);
+			DeleteDC(dst_dc);
+			return;
+		}
+
+		auto old_mask_bitmap = SelectObject(mask_dc, mask_bitmap);
+		auto old_dst_bitmap = SelectObject(dst_dc, dst_bitmap);
+
+		PatBlt(mask_dc, 0, 0, width, height, BLACKNESS);
+		BitBlt(dst_dc, 0, 0, width, height, _dest_dc, _bounds.left, _bounds.top, SRCCOPY);
+
+		_mask_func(mask_dc);
+
+		auto* mask_pixels = reinterpret_cast<_uint*>(mask_bits_ptr);
+		auto* dst_pixels = reinterpret_cast<_uint*>(dst_bits_ptr);
+		const auto src_r = static_cast<_uint>(_color.GetR());
+		const auto src_g = static_cast<_uint>(_color.GetG());
+		const auto src_b = static_cast<_uint>(_color.GetB());
+
+		const auto pixel_count = static_cast<size_t>(width) * static_cast<size_t>(height);
+		for (size_t i = 0; i < pixel_count; ++i)
+		{
+			const auto mask = (mask_pixels[i] >> 16) & 0xFFu;
+			if (mask == 0)
+				continue;
+
+			const auto coverage = (mask * static_cast<_uint>(alpha)) / 255u;
+			if (coverage == 0)
+				continue;
+
+			const auto inv = 255u - coverage;
+
+			const auto dst_b = dst_pixels[i] & 0xFFu;
+			const auto dst_g = (dst_pixels[i] >> 8) & 0xFFu;
+			const auto dst_r = (dst_pixels[i] >> 16) & 0xFFu;
+
+			const auto out_b = (dst_b * inv + src_b * coverage) / 255u;
+			const auto out_g = (dst_g * inv + src_g * coverage) / 255u;
+			const auto out_r = (dst_r * inv + src_r * coverage) / 255u;
+
+			dst_pixels[i] = (out_r << 16) | (out_g << 8) | out_b;
+		}
+
+		BitBlt(_dest_dc, _bounds.left, _bounds.top, width, height, dst_dc, 0, 0, SRCCOPY);
+
+		SelectObject(mask_dc, old_mask_bitmap);
+		SelectObject(dst_dc, old_dst_bitmap);
+		DeleteObject(mask_bitmap);
+		DeleteObject(dst_bitmap);
+		DeleteDC(mask_dc);
+		DeleteDC(dst_dc);
 	}
 
 	void FillRectWithColorAlpha(HDC _dest_dc, const RECT& _rc, const _Color& _color)
@@ -223,6 +349,33 @@ namespace
 		DeleteObject(dst_bitmap);
 		DeleteDC(mask_dc);
 		DeleteDC(dst_dc);
+	}
+
+	void DrawTextRectWithAlpha(HDC _dest_dc, const RECT& _layout_rect, const std::wstring& _text, HFONT _font, const _Color& _color, UINT _format)
+	{
+		if (!_dest_dc || _text.empty())
+			return;
+
+		DrawWithColorAlpha(
+			_dest_dc,
+			_layout_rect,
+			_color,
+			[&](HDC _dc)
+			{
+				SetBkMode(_dc, TRANSPARENT);
+				SetTextColor(_dc, ToColorRef(_color));
+				RECT layout_rect = _layout_rect;
+				DrawTextW(_dc, _text.c_str(), -1, &layout_rect, _format);
+			},
+			[&](HDC _dc)
+			{
+				auto old_font = SelectObject(_dc, _font);
+				SetBkMode(_dc, TRANSPARENT);
+				SetTextColor(_dc, RGB(255, 255, 255));
+				RECT local_rect{ 0, 0, _layout_rect.right - _layout_rect.left, _layout_rect.bottom - _layout_rect.top };
+				DrawTextW(_dc, _text.c_str(), -1, &local_rect, _format);
+				SelectObject(_dc, old_font);
+			});
 	}
 
 	UINT SetupTextFormat(
@@ -442,11 +595,34 @@ void DrawFunctions::DrawLine(const _Point& _start, const _Point& _end, const _Co
 	if (!g_back_dc)
 		return;
 
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	MoveToEx(g_back_dc, Ox(_start.x), Oy(_start.y), nullptr);
-	LineTo(g_back_dc, Ox(_end.x), Oy(_end.y));
-	SelectObject(g_back_dc, old_pen);
+	const auto start_x = Ox(_start.x);
+	const auto start_y = Oy(_start.y);
+	const auto end_x = Ox(_end.x);
+	const auto end_y = Oy(_end.y);
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(start_x, start_y, end_x, end_y), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			MoveToEx(_dc, start_x, start_y, nullptr);
+			LineTo(_dc, end_x, end_y);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			MoveToEx(_dc, start_x - bounds.left, start_y - bounds.top, nullptr);
+			LineTo(_dc, end_x - bounds.left, end_y - bounds.top);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::DrawRectangle(const _Rect& _rect, const _Color& _color, _float _thickness)
@@ -454,12 +630,36 @@ void DrawFunctions::DrawRectangle(const _Rect& _rect, const _Color& _color, _flo
 	if (!g_back_dc)
 		return;
 
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
-	Rectangle(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(_rect.Left());
+	const auto top = Oy(_rect.Top());
+	const auto right = Ox(_rect.Right());
+	const auto bottom = Oy(_rect.Bottom());
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Rectangle(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Rectangle(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::DrawRectangle(const _RectF& _rect, const _Color& _color, _float _thickness)
@@ -468,12 +668,36 @@ void DrawFunctions::DrawRectangle(const _RectF& _rect, const _Color& _color, _fl
 		return;
 
 	const auto rect = _rect.ToRect();
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
-	Rectangle(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(rect.Left());
+	const auto top = Oy(rect.Top());
+	const auto right = Ox(rect.Right());
+	const auto bottom = Oy(rect.Bottom());
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Rectangle(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Rectangle(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::FillRectangle(const _Rect& _rect, const _Color& _color)
@@ -513,12 +737,36 @@ void DrawFunctions::DrawCircle(const _Point& _center, _float _radius, const _Col
 		return;
 
 	const auto radius = std::max(0, s_int(std::round(_radius)));
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
-	Ellipse(g_back_dc, Ox(_center.x - radius), Oy(_center.y - radius), Ox(_center.x + radius), Oy(_center.y + radius));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(_center.x - radius);
+	const auto top = Oy(_center.y - radius);
+	const auto right = Ox(_center.x + radius);
+	const auto bottom = Oy(_center.y + radius);
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const _Color& _color)
@@ -527,12 +775,35 @@ void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const _Col
 		return;
 
 	const auto radius = std::max(0, s_int(std::round(_radius)));
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
-	auto old_brush = SelectObject(g_back_dc, brush);
-	Ellipse(g_back_dc, Ox(_center.x - radius), Oy(_center.y - radius), Ox(_center.x + radius), Oy(_center.y + radius));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(_center.x - radius);
+	const auto top = Oy(_center.y - radius);
+	const auto right = Ox(_center.x + radius);
+	const auto bottom = Oy(_center.y + radius);
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto brush = _GraphicSourceMgr.GetBrush(_color);
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto brush = CreateSolidBrush(RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(brush);
+		});
 }
 
 void DrawFunctions::FillCircle(const _Point& _center, _float _radius, const std::wstring& _tex_path, RenderStyle::WrapMode _mode)
@@ -557,12 +828,36 @@ void DrawFunctions::DrawEllipse(const _Rect& _rect, const _Color& _color, _float
 	if (!g_back_dc)
 		return;
 
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
-	Ellipse(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(_rect.Left());
+	const auto top = Oy(_rect.Top());
+	const auto right = Ox(_rect.Right());
+	const auto bottom = Oy(_rect.Bottom());
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::DrawEllipse(const _RectF& _rect, const _Color& _color, _float _thickness)
@@ -571,12 +866,36 @@ void DrawFunctions::DrawEllipse(const _RectF& _rect, const _Color& _color, _floa
 		return;
 
 	const auto rect = _rect.ToRect();
-	auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
-	auto old_pen = SelectObject(g_back_dc, pen);
-	auto old_brush = SelectObject(g_back_dc, GetStockObject(NULL_BRUSH));
-	Ellipse(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(rect.Left());
+	const auto top = Oy(rect.Top());
+	const auto right = Ox(rect.Right());
+	const auto bottom = Oy(rect.Bottom());
+	const auto thickness = std::max(1, s_int(std::round(_thickness)));
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), thickness + 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto pen = _GraphicSourceMgr.GetPen(_color, _thickness);
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto pen = CreatePen(PS_SOLID, thickness, RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, pen);
+			auto old_brush = SelectObject(_dc, GetStockObject(NULL_BRUSH));
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(pen);
+		});
 }
 
 void DrawFunctions::FillEllipse(const _Rect& _rect, const _Color& _color)
@@ -584,12 +903,35 @@ void DrawFunctions::FillEllipse(const _Rect& _rect, const _Color& _color)
 	if (!g_back_dc)
 		return;
 
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
-	auto old_brush = SelectObject(g_back_dc, brush);
-	Ellipse(g_back_dc, Ox(_rect.Left()), Oy(_rect.Top()), Ox(_rect.Right()), Oy(_rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(_rect.Left());
+	const auto top = Oy(_rect.Top());
+	const auto right = Ox(_rect.Right());
+	const auto bottom = Oy(_rect.Bottom());
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto brush = _GraphicSourceMgr.GetBrush(_color);
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto brush = CreateSolidBrush(RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(brush);
+		});
 }
 
 void DrawFunctions::FillEllipse(const _RectF& _rect, const _Color& _color)
@@ -598,12 +940,35 @@ void DrawFunctions::FillEllipse(const _RectF& _rect, const _Color& _color)
 		return;
 
 	const auto rect = _rect.ToRect();
-	auto brush = _GraphicSourceMgr.GetBrush(_color);
-	auto old_pen = SelectObject(g_back_dc, GetStockObject(NULL_PEN));
-	auto old_brush = SelectObject(g_back_dc, brush);
-	Ellipse(g_back_dc, Ox(rect.Left()), Oy(rect.Top()), Ox(rect.Right()), Oy(rect.Bottom()));
-	SelectObject(g_back_dc, old_brush);
-	SelectObject(g_back_dc, old_pen);
+	const auto left = Ox(rect.Left());
+	const auto top = Oy(rect.Top());
+	const auto right = Ox(rect.Right());
+	const auto bottom = Oy(rect.Bottom());
+	const auto bounds = InflateRectCopy(NormalizeRect(left, top, right, bottom), 1);
+
+	DrawWithColorAlpha(
+		g_back_dc,
+		bounds,
+		_color,
+		[&](HDC _dc)
+		{
+			auto brush = _GraphicSourceMgr.GetBrush(_color);
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left, top, right, bottom);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+		},
+		[&](HDC _dc)
+		{
+			auto brush = CreateSolidBrush(RGB(255, 255, 255));
+			auto old_pen = SelectObject(_dc, GetStockObject(NULL_PEN));
+			auto old_brush = SelectObject(_dc, brush);
+			Ellipse(_dc, left - bounds.left, top - bounds.top, right - bounds.left, bottom - bounds.top);
+			SelectObject(_dc, old_brush);
+			SelectObject(_dc, old_pen);
+			DeleteObject(brush);
+		});
 }
 
 void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, const _Color& _color, _float _font_size, _bool _is_center)
@@ -640,12 +1005,13 @@ void DrawFunctions::DrawString(const _Point& _pos, const std::wstring& _text, co
 
 	auto font = _GraphicSourceMgr.GetFont(_font_size, FONT_STYLE_BOLD);
 	auto old_font = SelectObject(g_back_dc, font);
-	SetBkMode(g_back_dc, TRANSPARENT);
-	SetTextColor(g_back_dc, ToColorRef(_color));
 
 	RECT layout_rect{ Ox(_pos.x), Oy(_pos.y), Ox(_pos.x + s_int(_max_width)), Oy(_pos.y + 10000) };
 	UINT format = DT_WORDBREAK | (_is_center ? DT_CENTER : DT_LEFT);
-	DrawTextW(g_back_dc, _text.c_str(), -1, &layout_rect, format);
+	RECT calc_rect{ 0, 0, s_int(_max_width), 10000 };
+	DrawTextW(g_back_dc, _text.c_str(), -1, &calc_rect, DT_CALCRECT | format);
+	layout_rect.bottom = layout_rect.top + (calc_rect.bottom - calc_rect.top);
+	DrawTextRectWithAlpha(g_back_dc, layout_rect, _text, font, _color, format);
 
 	SelectObject(g_back_dc, old_font);
 }
@@ -668,12 +1034,10 @@ void DrawFunctions::DrawString(
 
 	auto font = _GraphicSourceMgr.GetFont(_font_size, _style_bitmask);
 	auto old_font = SelectObject(g_back_dc, font);
-	SetBkMode(g_back_dc, TRANSPARENT);
-	SetTextColor(g_back_dc, ToColorRef(_color));
 
 	auto layout_rect = ToRect(_rect);
 	const auto format = SetupTextFormat(_alignment_horizontal, _alignment_vertical, _is_no_wrap);
-	DrawTextW(g_back_dc, _text.c_str(), -1, &layout_rect, format);
+	DrawTextRectWithAlpha(g_back_dc, layout_rect, _text, font, _color, format);
 
 	SelectObject(g_back_dc, old_font);
 }

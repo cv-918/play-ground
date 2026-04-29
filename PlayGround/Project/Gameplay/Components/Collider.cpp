@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Collider.h"
 
 #include "Actors/GameObjectBase.h"
@@ -9,7 +9,7 @@
 Collider::~Collider()
 {
 	ClearCollisionState(false);
-	_ColMgr.DeregisterCollider(layer_, this);
+	_ColMgr.NotifyColliderDestroying(this);
 }
 
 _bool Collider::Initialize()
@@ -76,26 +76,12 @@ void Collider::RegisterOnCollidedList(Collider* _other)
 {
 	if (_IsAlreadyColliding(_other))
 	{
-		if (!_IsCollidableWith(_other))
-			return;
-
-		// Stay 신호 전파
-		GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-			s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
-			});
+		_NotifyCollisionStay(_other);
 	}
 	else
 	{
-		collided_colliders_.push_back(_other);
-		_UpdateIsCollidingState();
-
-		if (!_IsCollidableWith(_other))
-			return;
-
-		// Enter 신호 전파
-		GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
-			s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
-			});
+		_AddCollisionReference(_other);
+		_NotifyCollisionEnter(_other);
 	}
 }
 
@@ -109,14 +95,25 @@ void Collider::ClearCollisionState(const _bool _notify)
 	if (!collided_colliders_.empty())
 	{
 		std::vector<Collider*> others(collided_colliders_.begin(), collided_colliders_.end());
+		collided_colliders_.clear();
+		_UpdateIsCollidingState();
+
 		for (auto* other : others)
 		{
-			if (!other)
+			if (!other || !_ColMgr.IsColliderAlive(other))
 				continue;
 
-			other->_RemoveCollidedCollider(this, _notify);
-			other->EraseTimerTarget(this);
-			_RemoveCollidedCollider(other, _notify);
+			const auto other_was_colliding = other->_IsAlreadyColliding(this);
+			other->_ForgetCollisionReference(this);
+
+			if (!_notify)
+				continue;
+
+			if (other_was_colliding)
+				other->_NotifyCollisionExit(this);
+
+			if (_ColMgr.IsColliderAlive(other))
+				_NotifyCollisionExit(other);
 		}
 	}
 
@@ -125,19 +122,67 @@ void Collider::ClearCollisionState(const _bool _notify)
 	_UpdateIsCollidingState();
 }
 
+void Collider::_AddCollisionReference(Collider* _other)
+{
+	if (!_other || _IsAlreadyColliding(_other))
+		return;
+
+	collided_colliders_.push_back(_other);
+	_UpdateIsCollidingState();
+}
+
+void Collider::_ForgetCollisionReference(Collider* _other)
+{
+	if (!_other)
+		return;
+
+	collided_colliders_.remove(_other);
+	collision_timers_.erase(_other);
+	erase_waiting_list_.erase(
+		std::remove(erase_waiting_list_.begin(), erase_waiting_list_.end(), _other),
+		erase_waiting_list_.end());
+	_UpdateIsCollidingState();
+}
+
 void Collider::_RemoveCollidedCollider(Collider* _other, const _bool _notify)
 {
 	if (!_other || collided_colliders_.empty())
 		return;
 
-	const auto it = std::find(collided_colliders_.begin(), collided_colliders_.end(), _other);
-	if (it == collided_colliders_.end())
+	if (!_IsAlreadyColliding(_other))
 		return;
 
-	collided_colliders_.erase(it);
-	_UpdateIsCollidingState();
+	_ForgetCollisionReference(_other);
 
 	if (!_notify)
+		return;
+
+	_NotifyCollisionExit(_other);
+}
+
+void Collider::_NotifyCollisionEnter(Collider* _other)
+{
+	if (!_other || !_IsCollidableWith(_other))
+		return;
+
+	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+		s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
+		});
+}
+
+void Collider::_NotifyCollisionStay(Collider* _other)
+{
+	if (!_other || !_IsCollidableWith(_other))
+		return;
+
+	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
+		s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
+		});
+}
+
+void Collider::_NotifyCollisionExit(Collider* _other)
+{
+	if (!_other)
 		return;
 
 	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {

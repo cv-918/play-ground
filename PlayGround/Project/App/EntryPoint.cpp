@@ -104,6 +104,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (!pg.Initialize())
 	{
 		_DEBUG_MSGBOX(L"PlayGround 초기화 실패");
+		pg.Shutdown();
 		return FALSE;
 	}
 
@@ -168,6 +169,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 	}
 
+	pg.Shutdown();
 	return (int)msg.wParam;
 }
 

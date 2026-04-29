@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ComponentBase.h"
 
 enum class ColliderType
@@ -10,8 +10,11 @@ enum class ColliderType
 };
 
 class Transform;
+class CollisionManager;
 class Collider abstract : public ComponentBase
 {
+	friend class CollisionManager;
+
 public:
 	explicit Collider(ComponentType _component_type, const ColliderType _collider_type) : ComponentBase(_component_type), type_(_collider_type), layer_(CollisionLayer::End) {}
 	~Collider() override;
@@ -72,7 +75,12 @@ protected:
 	}
 
 private:
+	void _AddCollisionReference(Collider* _other);
+	void _ForgetCollisionReference(Collider* _other);
 	void _RemoveCollidedCollider(Collider* _other, _bool _notify);
+	void _NotifyCollisionEnter(Collider* _other);
+	void _NotifyCollisionStay(Collider* _other);
+	void _NotifyCollisionExit(Collider* _other);
 	void _UpdateIsCollidingState() { is_colliding_ = !collided_colliders_.empty(); }
 
 private:

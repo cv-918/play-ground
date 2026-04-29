@@ -76,7 +76,7 @@
     "cooldown_": 4.0,
     "duration_": 3.0,
     "dot_interval_": 1.0,
-    "area_of_effect_": 100.0,
+    "area_of_effect_": 200.0,
     "damage_multiplier_": 0.0,
     "flat_damage_": 3.0,
     "proj_count_": 0,
@@ -102,7 +102,7 @@
         "execution_spec_": {
           "kind_": "AreaField",
           "hit_policy_": "EnterOnlyCapture",
-          "size_": 100.0,
+          "size_": 200.0,
           "lifetime_sec_": 0.5,
           "grow_duration_sec_": 0.5,
           "on_capture_effect_": {

@@ -12,7 +12,7 @@
 
 SceneManager::~SceneManager()
 {
-	_CleanupCurrentScene(false);
+	Shutdown(false);
 }
 
 _bool SceneManager::Initialize()
@@ -20,6 +20,16 @@ _bool SceneManager::Initialize()
 	// Queue the first scene so the game can start with a fade-in.
 	ChangeScene(SceneType::Intro);
 	return true;
+}
+
+void SceneManager::Shutdown(const _bool _clear_particle_service)
+{
+	next_scene_type_ = SceneType::Count;
+	transition_phase_ = TransitionPhase::None;
+	transition_elapsed_ = 0.0;
+	transition_alpha_ = 0.f;
+
+	_CleanupCurrentScene(_clear_particle_service);
 }
 
 _int SceneManager::Update(_double _delta_time)

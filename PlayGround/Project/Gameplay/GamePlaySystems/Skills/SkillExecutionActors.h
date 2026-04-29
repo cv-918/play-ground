@@ -8,6 +8,7 @@
 #include "SkillRuntimeTypes.h"
 
 class Collider;
+class EllipseCollider;
 class SphereCollider;
 
 class HitPolicyRuntime final
@@ -103,7 +104,7 @@ private:
 	GameObjectBase* owner_ = nullptr;
 	ExecutionEntitySpec spec_{};
 	_Vector3 spawn_position_ = _Vector3::Zero();
-	SphereCollider* collider_ = nullptr;
+	EllipseCollider* collider_ = nullptr;
 	HitPolicyRuntime hit_policy_runtime_;
 	_double remaining_lifetime_sec_ = 0.0;
 	_double elapsed_sec_ = 0.0;
