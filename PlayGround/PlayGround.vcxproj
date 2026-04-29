@@ -283,6 +283,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Text.h" />
     <ClInclude Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.h" />
     <ClInclude Include="Project\EngineSystems\Debug\RunTimeDebugWindow.h" />
+    <ClInclude Include="Project\EngineSystems\Input\InputDisplayText.h" />
     <ClInclude Include="Project\EngineSystems\Render\CameraManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\GraphicResourceManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleData.h" />
@@ -347,6 +348,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameSkillView.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\TownNpcInteractionIndicator.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePauseView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGamePlayView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\InGameResultView.h" />
@@ -432,6 +434,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Text.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\RunTimeDebugWindow.cpp" />
+    <ClCompile Include="Project\EngineSystems\Input\InputDisplayText.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\CameraManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\GraphicResourceManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
@@ -522,6 +525,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameOptionView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameSkillView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\TownNpcInteractionIndicator.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePlayView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGameResultView.cpp" />

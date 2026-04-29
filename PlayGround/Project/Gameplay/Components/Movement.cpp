@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Movement.h"
 
 _bool Movement::Initialize()
@@ -17,7 +17,8 @@ _int Movement::Update(_double _delta_time)
 	const _bool is_input_locked =
 		HasMovementLock(MovementControlLock::MoveInputLock) ||
 		HasMovementLock(MovementControlLock::CastLock);
-	const _bool can_process_normal_move = allow_normal_move_ && !is_rooted && !is_input_locked;
+	const _bool is_knockback_active = IsKnockbackActive();
+	const _bool can_process_normal_move = allow_normal_move_ && !is_rooted && !is_input_locked && !is_knockback_active;
 
 	if (can_process_normal_move && move_func_)
 	{
@@ -57,7 +58,7 @@ void Movement::Render(_double _delta_time)
 		_DrawFunc::DrawLine(_Point{ position.x, position.y }, _Point{ line_to.x, line_to.y }, Palette::Crimson);
 	}
 
-    if (use_nav_mesh_ && nav_boundary_mode_ != NavBoundaryMode::None)
+	if (use_nav_mesh_ && nav_boundary_mode_ != NavBoundaryMode::None)
 	{
 		const auto sample = _GetNavSamplePoint();
 		const auto screen_sample = _CameraMgr.WorldToScreen(sample);
@@ -195,6 +196,13 @@ void Movement::ClearKnockback()
 	knockback_curve_ = KnockbackCurve::OutCubic;
 }
 
+_bool Movement::IsKnockbackActive() const
+{
+	return knockback_total_distance_ > 0.f &&
+		knockback_duration_ > 0.0 &&
+		knockback_elapsed_ < knockback_duration_;
+}
+
 void Movement::StartDashByInputDir(_float _speed, _double _duration)
 {
 	_Vector3 dash_dir = move_direction_;
@@ -230,6 +238,7 @@ void Movement::StartKnockback(const _Vector3& _direction, _float _distance_world
 	knockback_elapsed_ = 0.0;
 	knockback_velocity_ = _Vector3::Zero();
 	knockback_curve_ = _curve;
+	move_velocity_ = _Vector3::Zero();
 }
 
 void Movement::ApplyKnockback(const _Vector3& _direction, _float _power)
@@ -242,6 +251,17 @@ void Movement::ApplyKnockback(const _Vector3& _direction, _float _power)
 	const _float legacy_duration = _MathFunc::Lerp(0.10f, 0.20f, normalized_power);
 
 	StartKnockback(_direction, legacy_distance, legacy_duration, KnockbackCurve::OutCubic);
+}
+
+MovementState Movement::_GetMovementState() const
+{
+	if (IsDashing())
+		return MovementState::Dash;
+
+	if (IsKnockbackActive())
+		return MovementState::Knockback;
+
+	return MovementState::Normal;
 }
 
 _float Movement::_GetRemainingKnockbackDistance() const
@@ -339,10 +359,20 @@ void Movement::_ApplyFinalMovement(_double _delta_time)
 {
 	_Vector3 final_velocity = _Vector3::Zero();
 
-	if (IsDashing())
+	switch (_GetMovementState())
+	{
+	case MovementState::Dash:
 		final_velocity = dash_direction_ * dash_speed_;
-	else
+		break;
+
+	case MovementState::Knockback:
+		break;
+
+	case MovementState::Normal:
+	default:
 		final_velocity = move_velocity_;
+		break;
+	}
 
 	final_velocity += impulse_velocity_;
 	final_velocity += knockback_velocity_;

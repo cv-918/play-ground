@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ComponentBase.h"
 
 #include "Gameplay/Actors/GameObjectBase.h"
@@ -10,6 +10,13 @@ enum class MovementControlMode
 {
 	Normal,
 	Dash,
+};
+
+enum class MovementState
+{
+	Normal,
+	Dash,
+	Knockback,
 };
 
 enum class DashImpulsePolicy
@@ -100,6 +107,7 @@ public:
 
 	MovementControlMode GetControlMode() const { return control_mode_; }
 	_bool IsDashing() const { return control_mode_ == MovementControlMode::Dash; }
+	_bool IsKnockbackActive() const;
 
 	void StartDash(const _Vector3& _direction, _float _speed, _double _duration);
 	void EndDash();
@@ -121,6 +129,7 @@ public:
 	_bool HasMovementLock(MovementControlLock _lock) const { return 0 != ((manual_control_locks_ | effect_control_locks_) & s_uint(_lock)); }
 
 protected:
+	MovementState _GetMovementState() const;
 	_float _GetRemainingKnockbackDistance() const;
 	void _ClampMoveVelocity();
 	void _ApplyFrictionToMoveVelocity(_double _delta_time);

@@ -32,6 +32,7 @@
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
     <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
+    <ClInclude Include="Project\EngineSystems\Input\InputDisplayText.h" />
     <ClInclude Include="Project\EngineSystems\Input\InputManager.h" />
     <ClInclude Include="Project\Gameplay\Actors\Stage\UnitBase.h" />
     <ClInclude Include="Project\Gameplay\Components\ComponentBase.h" />
@@ -141,6 +142,7 @@
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameSkillView.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.h" />
+    <ClInclude Include="Project\Gameplay\UI\Widgets\TownNpcInteractionIndicator.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTypes.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\IDialogueEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueRunner.h" />
@@ -190,6 +192,7 @@
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
     <ClCompile Include="Project\Gameplay\Actors\GameObjectBase.cpp" />
+    <ClCompile Include="Project\EngineSystems\Input\InputDisplayText.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputManager.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
     <ClCompile Include="Project\Gameplay\Components\ComponentBase.cpp" />
@@ -244,6 +247,7 @@
     <ClCompile Include="Project\Gameplay\UI\Views\OutGameSkillView.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillSlot.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\OutGameSkillToolTip.cpp" />
+    <ClCompile Include="Project\Gameplay\UI\Widgets\TownNpcInteractionIndicator.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeTree.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNode.cpp" />

@@ -6,6 +6,7 @@
 #include "UI/Views/OutGameSkillView.h"
 #include "UI/Views/OutGameOptionView.h"
 #include "UI/Views/OutGameExitView.h"
+#include "UI/Widgets/TownNpcInteractionIndicator.h"
 
 #include "GamePlay/World/Background.h"
 
@@ -186,6 +187,14 @@ void OutGameScene::OnEnter()
 		return;
 	}
 	test_town_player_->SetNavMesh(nav_mesh);
+
+	ui_manager_->CreateUI<TownNpcInteractionIndicator>(
+		test_town_player_,
+		[this]() -> _bool
+		{
+			return view_state_ == OutGameViewState::Main && !dialogue_system_.IsRunning();
+		}
+	);
 	// e, [ Temporary Town Player Setup for Testing ]
 
 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
