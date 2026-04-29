@@ -39,12 +39,10 @@ InGamePlayView::InGamePlayView()
 	// 스킬 슬롯 2개
 	// -------------------------
 	skill_slot_0_ = CreateElement<InGameSkillSlot>(0, L"CTRL");
-	skill_slot_0_->SetSlotSize({ 72, 72 });
 	skill_slot_0_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H - 46, GAME_VIEW_HEIGHT - 110 });
 	skill_slot_0_->SetShowSkillName(true);
 
 	skill_slot_1_ = CreateElement<InGameSkillSlot>(1, L"ALT");
-	skill_slot_1_->SetSlotSize({ 72, 72 });
 	skill_slot_1_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H + 46, GAME_VIEW_HEIGHT - 110 });
 	skill_slot_1_->SetShowSkillName(true);
 }

@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "InGameSkillSlot.h"
 
 #include "../Elements/Image.h"
@@ -132,9 +132,8 @@ void InGameSkillSlot::_UpdateLayout()
 
 	cooldown_text_->SetCenter(center);
 
-	key_text_->SetPosition(_Point(slot_rect.Left() + 16, slot_rect.Bottom() - 12));
-	name_text_->SetCenter(_Point(center.x, slot_rect.Top() - 12));
-
+	key_text_->SetPosition(_Point(slot_rect.Left() + 4, slot_rect.Bottom() - 18));
+	name_text_->SetPosition(_Point(slot_rect.Left() + 4, slot_rect.Top() - 14));
 }
 
 void InGameSkillSlot::_ApplyEmptyState()

@@ -136,7 +136,8 @@ void StageManager::HandleEnemyDeath(const EnemyJsonInfo* _info, const _Vector3& 
 
 	_RunState.GetEnemyKillReward(_info);
 
-	if (_info->dust_resource_count_ <= 0 || object_manager_ == nullptr)
+	const auto dusty_node_lv = _UserProfile.GetNodeLevel(0);
+	if (_info->dust_resource_count_ <= 0 || object_manager_ == nullptr || dusty_node_lv <= 0)
 		return;
 
 	for (_uint i = 0; i < _info->dust_resource_count_; ++i)
@@ -347,7 +348,7 @@ void StageManager::_OnResult()
 	// 결과 UI 노출 후 UI 입력에 의해 Exit 상태로 전환 (Exit 상태가 굳이 필요한가? UI 입력에 의해 로비로 바로 이동해도 될 것 같음)
 
 	const auto main_story_proc = _UserProfile.GetMainStoryProgress();
-	if (main_story_proc <= MainStoryProgress::Chapter1)
+	if (main_story_proc < MainStoryProgress::Chapter1)
 	{
 		// 메인 스토리 진행상황이 챕터1에 다다르지 못했다면, 프롤로그 전투 상황이라고 판정
 		// 곧장 아웃게임 씬으로 이동시킨다

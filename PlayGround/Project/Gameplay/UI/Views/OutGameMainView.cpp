@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "framework.h"
 #include "OutGameMainView.h"
 
@@ -13,27 +13,29 @@ OutGameMainView::OutGameMainView(
 {
 	// 옵션 버튼
 	Button::CreateInfo option_btn_info;
-   option_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
+	option_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
 	option_btn_info.text = L"VIDEO OPTION";
 	option_btn_info.on_lclick = _video_option_btn_callback;
 	option_btn_info.normal_image_path = Path::Buttons + L"SETTINGS/Settings_Default.png";
 	option_btn_info.hovered_image_path = Path::Buttons + L"SETTINGS/Settings_MO.png";
 	option_btn_info.pressed_l_image_path = Path::Buttons + L"SETTINGS/Settings_Push.png";
- option_btn_ = CreateElement<Button>(option_btn_info);
+	option_btn_ = CreateElement<Button>(option_btn_info);
 
 	// 시작 버튼
 	Button::CreateInfo start_btn_info;
-  start_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
+	start_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
 	start_btn_info.text = L"GAME START";
 	start_btn_info.on_lclick = _start_btn_callback;
-   start_btn_ = CreateElement<Button>(start_btn_info);
+	start_btn_ = CreateElement<Button>(start_btn_info);
+	start_btn_->InActivate();
 
 	// 어트리뷰트 버튼
 	Button::CreateInfo attr_btn_info;
-    attr_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
+	attr_btn_info.rect = _Rect{ { 0, 0 }, _Size{ 50, 50 } };
 	attr_btn_info.text = L"ATTRIBUTE";
 	attr_btn_info.on_lclick = _attr_btn_callback;
- attr_btn_ = CreateElement<Button>(attr_btn_info);
+	attr_btn_ = CreateElement<Button>(attr_btn_info);
+	attr_btn_->InActivate();
 
 	UpdateLayout();
 }

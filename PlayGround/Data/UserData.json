@@ -2,39 +2,39 @@
     {
         "acquired_node_ids_": [
             [
-                0,
-                1
-            ],
-            [
-                1,
-                2
-            ],
-            [
                 2,
                 0
+            ],
+            [
+                0,
+                1
             ],
             [
                 6,
                 4
             ],
             [
-                3,
-                1
+                1,
+                5
             ],
             [
                 5,
-                1
+                5
+            ],
+            [
+                3,
+                5
             ]
         ],
-        "dust_count_": 1245,
+        "dust_count_": 1544,
         "equipped_skill_ids_": [
-            -1,
-            -1
+            0,
+            3
         ],
-        "experience_": 1226,
+        "experience_": 1750,
         "id_": 0,
         "main_story_progress_": 6,
-        "stage_progress_": 1,
+        "stage_progress_": 3,
         "unlocked_character_ids_": [
             1
         ]
