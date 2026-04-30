@@ -7,6 +7,27 @@
 
 ---
 
+
+# 2.1 Recommended Model Policy — 모델 추천 정책
+
+저장소 기반 구현 작업에는 다음을 사용한다.
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+```
+
+작은 저위험 단일 파일 수정이나 문서 작업에는 `GPT-5 mini` 또는 `GPT-5.4 mini`와 `Auto` 또는 `Medium` intelligence를 사용할 수 있다.
+
+모델 선택은 승인 게이트, 파일 범위, 검증 요구사항을 대체하지 않는다.
+
+---
 # 3. Copilot Role — Copilot의 역할
 
 Copilot의 역할은 다음이다.
@@ -139,6 +160,22 @@ Approval needed before proceeding.
 
 ---
 
+
+## Visual Studio 프로젝트 파일 규칙
+
+`.vcxproj` 또는 `.vcxproj.filters`를 수정할 때:
+
+- 승인된 파일 entry만 추가한다.
+- 관련 없는 project entry를 재정렬하지 않는다.
+- 기존 filter 이름을 깨뜨리지 않는다.
+- 한글 filter 이름을 보존한다.
+- 불필요한 encoding/BOM 변경을 피한다.
+- `ResourceCompile`, `Image`, `None` entry가 올바른 filter를 가리키는지 확인한다.
+- 프로젝트 파일 전체를 재작성하지 않는다.
+
+프로젝트 파일 수정으로 인코딩 손상이나 관련 없는 대규모 변경이 생기면 멈추고 보고한다.
+
+---
 # 7. C++ Implementation Rules — C++ 구현 규칙
 
 기존 프로젝트 규칙을 따른다.
@@ -199,6 +236,26 @@ JSON 기반 데이터를 추가하거나 변경할 때는 다음을 정의한다
 - Event 또는 callback 연결
 - 지연 파괴
 - owner-following behavior
+
+
+추가 규칙:
+
+Scene 생명주기 함수에서 부분 초기화 이후 넓은 early return을 피한다.
+
+주의할 함수:
+
+```text
+Initialize
+OnEnter
+OnExit
+Ready
+Load
+Setup
+```
+
+생명주기 함수가 원자적으로 실패하도록 설계된 경우가 아니라면, 일부 scene state를 만든 뒤 함수 중간에서 return하지 않는다.
+
+하위 기능 하나만 invalid라면 해당 하위 기능만 guard하고, 안전하다면 core scene initialization은 계속 진행한다.
 
 변경이 update 순서 또는 생명주기 순서에 의존한다면 구현 요약에 그 가정을 기록한다.
 
