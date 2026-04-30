@@ -32,6 +32,7 @@ validation
 blocked
 done
 deferred
+partial_done
 ```
 
 ---
@@ -39,11 +40,11 @@ deferred
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-001
-title: Seed durable workflow state documents
+task_id: WF-003-WF-004
+title: Validate Level 3 local helper scripts v1
 status: done
-workflow_path: fast_path_documentation
-priority: P0
+workflow_path: local_script_validation
+priority: P1
 risk_level: low
 requested_by: human_director
 requested_at: 2026-04-30
@@ -54,14 +55,15 @@ last_updated: 2026-04-30
 
 ## Goal
 
-Create the first durable workflow state layer for Level 2 AI Orchestrator operation.
+Validate the first local helper scripts for Level 3 workflow preparation.
 
-Files:
+Scripts:
 
 ```text
-_Docs/AIWorkflow/ProjectStatus.md
-_Docs/AIWorkflow/Backlog.md
-_Docs/AIWorkflow/ActiveTask.md
+tools/aiworkflow/status.bat
+tools/aiworkflow/capture_diff.bat
+tools/aiworkflow/json_smoke_check.bat
+tools/aiworkflow/json_smoke_check.ps1
 ```
 
 ---
@@ -71,11 +73,11 @@ _Docs/AIWorkflow/ActiveTask.md
 Included:
 
 ```text
-- Summarize Codex project status analysis.
-- Summarize workflow automation readiness.
-- Seed project status snapshot.
-- Seed actionable backlog.
-- Define active task state format.
+- Run status.bat.
+- Run capture_diff.bat --include-untracked.
+- Run json_smoke_check.bat.
+- Confirm generated _Temp output behavior.
+- Commit scripts after cleanup.
 ```
 
 Excluded:
@@ -83,10 +85,9 @@ Excluded:
 ```text
 - Source code implementation.
 - Discord bot implementation.
-- Local orchestrator implementation.
-- Build execution.
+- Automatic commit/push.
 - Runtime validation.
-- Automatic project modification.
+- GameDataLoader runtime validation.
 ```
 
 ---
@@ -94,25 +95,50 @@ Excluded:
 ## Tool Route
 
 ```yaml
-chatgpt: generate state documents
-codex: already provided read-only analysis
+chatgpt: generated scripts and interpreted results
+codex: prior read-only analysis provided context
 copilot: not used
-git: user review and commit
-validation: document review only
+git: user executed status/diff/commit
+validation: local script execution
 ```
 
 ---
 
-## Current Findings
+## Validation Evidence
+
+```yaml
+status_bat:
+  result: passed
+  branch: main
+  workflow_state_files: ok
+  core_workflow_entry_files: ok
+
+capture_diff_bat_include_untracked:
+  result: passed
+  generated:
+    - _Temp/AIWorkflowDiffs/review_status_20260430_120214.txt
+    - _Temp/AIWorkflowDiffs/review_diff_20260430_120214.diff
+    - _Temp/AIWorkflowDiffs/review_diff_check_20260430_120214.txt
+  git_diff_check: passed
+
+json_smoke_check_bat:
+  result: passed
+  total: 11
+  failed: 0
+  report:
+    - _Temp/AIWorkflowReports/json_smoke_20260430_120218.txt
+```
+
+---
+
+## Findings
 
 ```text
-- Project is not an empty prototype skeleton.
-- Town/out-game, combat scene, dialogue, skills, enemies, and profile persistence exist.
-- Critical JSON integrity may be the current top blocker.
-- Run clear semantics are split.
-- Town NPC story logic remains order-coupled.
-- Workflow is approximately Level 2 but lacks durable state documents.
-- Discord automation should start as read-only status mirror + prompt generator + approval reminder.
+- Local helper scripts v1 are operational.
+- JSON syntax smoke check currently passes for all 11 JSON files under PlayGround/Data.
+- Previously reported JSON syntax parse blocker is not currently reproduced locally.
+- GameDataLoader runtime validation remains separate and not yet verified.
+- _Temp/ output should remain ignored by Git.
 ```
 
 ---
@@ -120,9 +146,9 @@ validation: document review only
 ## Human Action Required
 
 ```text
-1. Save ProjectStatus.md, Backlog.md, and ActiveTask.md.
-2. Review document contents.
-3. Commit the state documents.
+1. Save updated ProjectStatus.md, Backlog.md, and ActiveTask.md.
+2. Review document diff.
+3. Commit state document update.
 ```
 
 ---
@@ -130,20 +156,13 @@ validation: document review only
 ## Next Recommended Task
 
 ```text
-GAME-001: Verify/fix Skill.json, PlayableCharacter.json, AttributeNode.json integrity
+WF-002: Define fixed task status enum and lifecycle transition rules
 ```
 
-Recommended path:
+Alternative gameplay validation task:
 
 ```text
-Full Path:
-ChatGPT orchestrator
--> Codex focused read-only analysis
--> approval
--> implementation
--> JSON parse validation
--> boot smoke test
--> Dev Log
+GAME-001B: Runtime validate GameDataLoader after JSON syntax smoke check
 ```
 
 ---
@@ -151,9 +170,9 @@ ChatGPT orchestrator
 ## Completion Criteria
 
 ```text
-[ ] ProjectStatus.md saved
-[ ] Backlog.md saved
-[ ] ActiveTask.md saved
+[ ] ProjectStatus.md updated
+[ ] Backlog.md updated
+[ ] ActiveTask.md updated
 [ ] Document diff reviewed
 [ ] Commit completed or explicitly deferred
 ```

@@ -110,6 +110,7 @@ _Docs/AIWorkflow/09_Operational_Playbook.md
 _Docs/AIWorkflow/10_Quick_Checklists.md
 _Docs/AIWorkflow/11_Workflow_Examples.md
 _Docs/AIWorkflow/12_Troubleshooting_and_Recovery_Guide.md
+_Docs/AIWorkflow/Unity_Workflow_Context.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.
