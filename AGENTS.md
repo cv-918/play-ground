@@ -119,6 +119,8 @@ _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Spec.md
 _Docs/AIWorkflow/Discord_Orchestrator_Safety_Rules.md
 _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md
 _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Setup_Checklist.md
+_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Validation_Result.md
+_Docs/AIWorkflow/Active_Project_Selector.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.

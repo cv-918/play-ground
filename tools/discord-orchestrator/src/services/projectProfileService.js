@@ -50,20 +50,26 @@ export async function listProjectProfiles(config) {
 }
 
 export async function getProjectProfile(config, projectId) {
-  const selectedProjectId = projectId || config.defaultProjectId;
+  const args = [];
 
-  if (!validateProjectId(selectedProjectId)) {
-    return {
-      ok: false,
-      error: "Invalid project id. Allowed characters: A-Z, a-z, 0-9, underscore, hyphen.",
-    };
+  if (projectId && projectId.trim().length > 0) {
+    const selectedProjectId = projectId.trim();
+
+    if (!validateProjectId(selectedProjectId)) {
+      return {
+        ok: false,
+        error: "Invalid project id. Allowed characters: A-Z, a-z, 0-9, underscore, hyphen.",
+      };
+    }
+
+    args.push("--project", selectedProjectId);
   }
 
-  const result = await runScript(config, "tools/aiworkflow/project_profile_status.bat", [
-    "--project",
-    selectedProjectId,
-    "--json",
-  ]);
+  // If no project id is provided, do not inject config.defaultProjectId here.
+  // project_profile_status.bat resolves the default through ActiveProject.json.
+  args.push("--json");
+
+  const result = await runScript(config, "tools/aiworkflow/project_profile_status.bat", args);
 
   if (!result.ok) {
     return {

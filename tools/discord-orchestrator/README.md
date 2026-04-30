@@ -59,55 +59,6 @@ Do not commit `_Local/`.
 
 ---
 
-## Environment Variable
-
-Set the bot token as an environment variable.
-
-CMD example:
-
-```bat
-setx AIWORKFLOW_DISCORD_BOT_TOKEN "YOUR_TOKEN_HERE"
-```
-
-Then open a new CMD window.
-
-To check:
-
-```bat
-echo %AIWORKFLOW_DISCORD_BOT_TOKEN%
-```
-
----
-
-## Install
-
-From repository root:
-
-```bat
-cd tools\discord-orchestrator
-npm install
-```
-
----
-
-## Register Slash Commands
-
-```bat
-npm run register
-```
-
-This registers one `/ai` command with subcommands.
-
----
-
-## Start Bot
-
-```bat
-npm start
-```
-
----
-
 ## Supported Commands
 
 ```text
@@ -124,22 +75,24 @@ npm start
 For project profile:
 
 ```text
+/ai project profile
 /ai project profile id:dustland_custom_cpp_prototype
 /ai project profile id:unity_project_template
 ```
 
----
-
-## Safety
-
-The bot checks:
+Default behavior:
 
 ```text
-allowed_user_ids
-allowed_channel_ids
+/ai project profile
 ```
 
-If either list is empty or does not contain the caller/channel, the command is rejected.
+uses:
+
+```text
+_Docs/AIWorkflow/ActiveProject.json
+```
+
+Explicit `id:` overrides the active project selector for that request only.
 
 ---
 
@@ -155,7 +108,8 @@ After starting the bot:
 [ ] /ai backlog works.
 [ ] /ai next works.
 [ ] /ai project list works.
-[ ] /ai project profile works.
+[ ] /ai project profile shows Source: ActiveProject.json.
+[ ] /ai project profile id:unity_project_template shows Source: explicit project id.
 [ ] Git status remains unchanged after commands.
 ```
 
@@ -167,7 +121,7 @@ This bot runs local scripts:
 
 ```text
 tools/aiworkflow/workflow_status.bat --json
-tools/aiworkflow/project_profile_status.bat --list --json
+tools/aiworkflow/project_profile_status.bat --json
 tools/aiworkflow/project_profile_status.bat --project <id> --json
 ```
 

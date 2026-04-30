@@ -104,7 +104,11 @@ async function handleProjectCommand(interaction, config, subcommand) {
   }
 
   if (subcommand === "profile") {
-    const projectId = interaction.options.getString("id") || config.defaultProjectId;
+    // Important:
+    // Do not fall back to config.defaultProjectId here.
+    // If id is omitted, projectProfileService calls project_profile_status.bat without --project,
+    // and the local script resolves the default from _Docs/AIWorkflow/ActiveProject.json.
+    const projectId = interaction.options.getString("id");
     const result = await getProjectProfile(config, projectId);
 
     if (!result.ok) {

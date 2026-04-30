@@ -48,6 +48,8 @@ This README is the entry point for the document set.
 | `Discord_ReadOnly_Bot_v1_Implementation_Plan.md` | Defines implementation plan, runtime model, command mapping, safety constraints, and validation plan for Discord Read-Only Bot v1 |
 | `Discord_ReadOnly_Bot_v1_Setup_Checklist.md` | Checklist for Discord Developer Portal setup, local environment setup, and v1 bot validation |
 | `Discord_Bot_Config_Template.json` | Template for local Discord bot configuration without secrets |
+| `Discord_ReadOnly_Bot_v1_Validation_Result.md` | Records validation results, fixes, limitations, and safety constraints for Discord Read-Only Bot v1 |
+| `Active_Project_Selector.md` | Defines the durable active project selector convention for multi-project and Unity-ready workflow operation |
 
 ---
 
@@ -101,6 +103,7 @@ Current profiles:
 |---|---|
 | `dustland_custom_cpp_prototype.json` | Current Dust Land custom C++ / WinAPI prototype profile |
 | `unity_project_template.json` | Template for future Unity-based solo game projects |
+| `ActiveProject.json` | Selects the currently active project profile |
 
 ---
 

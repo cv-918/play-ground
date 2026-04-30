@@ -12,10 +12,11 @@ REM   tools\aiworkflow\project_profile_status.bat --project unity_project_templa
 REM   tools\aiworkflow\project_profile_status.bat --list
 REM   tools\aiworkflow\project_profile_status.bat --json
 REM   tools\aiworkflow\project_profile_status.bat --project unity_project_template --json
+REM
+REM Default behavior:
+REM   If --project is omitted, the script resolves the active project from:
+REM   _Docs\AIWorkflow\ActiveProject.json
 
-REM IMPORTANT:
-REM   Capture script directory before using SHIFT.
-REM   Depending on argument parsing, relying on %~dp0 after SHIFT can resolve incorrectly.
 set "SCRIPT_DIR=%~dp0"
 
 for %%I in ("%SCRIPT_DIR%..\..") do set "REPO_ROOT=%%~fI"
@@ -24,7 +25,7 @@ cd /d "%REPO_ROOT%" || (
     exit /b 1
 )
 
-set "PROJECT_ID=dustland_custom_cpp_prototype"
+set "PROJECT_ID="
 set "JSON_ARG="
 set "LIST_ARG="
 
@@ -64,5 +65,9 @@ echo   tools\aiworkflow\project_profile_status.bat --json
 exit /b 1
 
 :run_script
-powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%project_profile_status.ps1" -RepoRoot "%REPO_ROOT%" -ProjectId "%PROJECT_ID%" %JSON_ARG% %LIST_ARG%
+if "%PROJECT_ID%"=="" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%project_profile_status.ps1" -RepoRoot "%REPO_ROOT%" %JSON_ARG% %LIST_ARG%
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%project_profile_status.ps1" -RepoRoot "%REPO_ROOT%" -ProjectId "%PROJECT_ID%" %JSON_ARG% %LIST_ARG%
+)
 exit /b %ERRORLEVEL%

@@ -126,6 +126,53 @@ Current missing pieces for Level 3 stabilization:
 
 ---
 
+## Discord Read-Only Bot v1 Status
+
+```yaml
+status: passed
+validated_at: 2026-04-30
+permission_level: read_only
+workflow_stage: Discord Read-Only Bot v1
+```
+
+Validated commands:
+
+```text
+/ai status
+/ai active
+/ai backlog
+/ai next
+/ai project list
+/ai project profile
+/ai project profile id:unity_project_template
+```
+
+Current capability:
+
+```text
+Discord can be used as a remote read-only status interface for AIWorkflow.
+```
+
+Safety constraints:
+
+```text
+No file writes.
+No source edits.
+No document edits.
+No build/test execution.
+No Copilot execution.
+No commit/push/release automation.
+```
+
+Known limitation:
+
+```text
+There is not yet a durable active project selector.
+The next recommended workflow task is WF-012.
+```
+
+---
+
 ## Current Gameplay Status
 
 | Area | Current State | Notes |

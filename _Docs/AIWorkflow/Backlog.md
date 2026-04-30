@@ -80,9 +80,12 @@ release
 | WF-009 | P1 | done | workflow | Define project profile schema for multi-project workflow | Future games are Unity-based; workflow must not overfit to Dust Land C++ prototype | ChatGPT | Schema review |
 | WF-010 | P1 | done | automation | Implement read-only task status summarizer | Discord v1 needs machine-readable summaries from ActiveTask/Backlog/ProjectStatus | ChatGPT -> manual | status output review |
 | WF-011 | P1 | done | automation | Create project profile status reader | Future Discord and local orchestration need to read active project profile safely | ChatGPT -> manual | profile parse and summary output |
-| WF-012 | P1 | todo | automation | Define active project selector/config convention | Multi-project workflow needs a stable active project selection mechanism | ChatGPT -> manual | active project read test |
+| WF-012 | P1 | done | automation | Define active project selector/config convention | Multi-project workflow needs a stable active project selection mechanism | ChatGPT -> manual | active project read test |
 | WF-013 | P1 | done | automation | Design Discord Read-Only Bot v1 implementation plan | Discord v1 should expose read-only workflow/project status without write operations | ChatGPT | architecture review |
 | WF-014 | P2 | done | automation | Implement Discord Read-Only Bot v1 | First Discord integration stage after command/spec approval | manual/Copilot bounded later | local bot command test |
+| WF-015 | P2 | done | documentation | Document Discord Bot v1 validation result | Discord integration needs evidence before expanding permissions | ChatGPT | validation evidence review |
+| WF-016 | P1 | done | automation | Implement active project status reader | Local scripts and Discord should read ActiveProject.json instead of relying only on local config defaults | ChatGPT -> manual | active project read test |
+| WF-017 | P2 | done | automation | Integrate Discord project profile default with ActiveProject.json explicitly | Discord command behavior should make active project resolution obvious to users | ChatGPT -> manual | Discord project profile default test |
 | UNITY-001 | P1 | todo | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | Document review |
 | UNITY-002 | P2 | todo | unity | Define Unity validation profile candidates | Unity workflows need build/playmode/editmode/package validation categories | ChatGPT -> Codex later | Validation profile review |
 | UNITY-003 | P2 | todo | release | Define release-track workflow fields for Steam and Google Play | Long-term workflow includes publishing, not just coding | ChatGPT | Release checklist review |

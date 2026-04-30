@@ -10,7 +10,6 @@ export function formatStatus(status) {
   const task = status.active_task ?? {};
   const backlog = status.backlog ?? {};
   const workflow = status.workflow ?? {};
-  const git = status.git ?? {};
 
   const lines = [
     "**AI Workflow Status**",
@@ -122,12 +121,17 @@ export function formatProjectProfile(data) {
   const releaseTargets = data.release_targets ?? [];
   const forbidden = data.forbidden_operations ?? [];
 
+  const sourceLabel = data.resolved_from_active_project === true
+    ? "ActiveProject.json"
+    : "explicit project id";
+
   const lines = [
     "**Project Profile**",
     `ID: ${project.project_id ?? "unknown"}`,
     `Name: ${project.display_name ?? "unknown"}`,
     `Engine: ${project.engine ?? "unknown"}`,
     `Type: ${project.project_type ?? "unknown"}`,
+    `Source: ${sourceLabel}`,
     `Build profiles: ${counts.build_profiles ?? 0}`,
     `Validation profiles: ${counts.validation_profiles ?? 0}`,
     `Release targets: ${counts.release_targets ?? 0}`,
@@ -163,6 +167,7 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/ActiveTask.md",
     "- _Docs/AIWorkflow/Task_State_Model.md",
     "- _Docs/AIWorkflow/Project_Profile_Schema.md",
+    "- _Docs/AIWorkflow/Active_Project_Selector.md",
     "- _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md",
   ].join("\n");
 }

@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "active_project_id": "dustland_custom_cpp_prototype",
+  "profile_path": "_Docs/AIWorkflow/ProjectProfiles/dustland_custom_cpp_prototype.json",
+  "updated_at": "2026-04-30",
+  "updated_by": "human_director",
+  "reason": "Current Dust Land custom C++ prototype is the active workflow testbed. The workflow remains Unity-ready and multi-project capable."
+}

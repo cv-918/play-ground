@@ -21,6 +21,8 @@ status.bat
 capture_diff.bat
 json_smoke_check.bat
 workflow_status.bat
+project_profile_status.bat
+active_project_status.bat
 ```
 
 ---
@@ -44,6 +46,8 @@ tools\aiworkflow\capture_diff.bat
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\capture_diff.bat --staged
 ```
+
+Use `--include-untracked` when newly created files must appear in the diff.
 
 ---
 
@@ -82,7 +86,70 @@ JSON output for future Discord integration:
 tools\aiworkflow\workflow_status.bat --json
 ```
 
-This script is read-only.
+---
+
+## project_profile_status.bat
+
+Reads project profile JSON files from:
+
+```text
+_Docs\AIWorkflow\ProjectProfiles\
+```
+
+Default behavior now resolves the selected profile from:
+
+```text
+_Docs\AIWorkflow\ActiveProject.json
+```
+
+List available profiles:
+
+```bat
+tools\aiworkflow\project_profile_status.bat --list
+```
+
+Active project profile summary:
+
+```bat
+tools\aiworkflow\project_profile_status.bat
+```
+
+Specific project profile:
+
+```bat
+tools\aiworkflow\project_profile_status.bat --project unity_project_template
+```
+
+JSON output:
+
+```bat
+tools\aiworkflow\project_profile_status.bat --json
+tools\aiworkflow\project_profile_status.bat --project unity_project_template --json
+```
+
+---
+
+## active_project_status.bat
+
+Reads and validates:
+
+```text
+_Docs\AIWorkflow\ActiveProject.json
+```
+
+Human-readable output:
+
+```bat
+tools\aiworkflow\active_project_status.bat
+```
+
+JSON output:
+
+```bat
+tools\aiworkflow\active_project_status.bat --json
+```
+
+This confirms whether the active project selector points to an existing project profile and whether the profile's `project_id` matches `active_project_id`.
 
 ---
 
@@ -93,7 +160,10 @@ From repository root:
 ```bat
 tools\aiworkflow\status.bat
 tools\aiworkflow\workflow_status.bat
-tools\aiworkflow\workflow_status.bat --json
+tools\aiworkflow\active_project_status.bat
+tools\aiworkflow\active_project_status.bat --json
+tools\aiworkflow\project_profile_status.bat
+tools\aiworkflow\project_profile_status.bat --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 ```
