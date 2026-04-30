@@ -21,7 +21,6 @@ status.bat
 capture_diff.bat
 json_smoke_check.bat
 workflow_status.bat
-project_profile_status.bat
 ```
 
 ---
@@ -45,8 +44,6 @@ tools\aiworkflow\capture_diff.bat
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\capture_diff.bat --staged
 ```
-
-Use `--include-untracked` when newly created files must appear in the diff.
 
 ---
 
@@ -85,40 +82,6 @@ JSON output for future Discord integration:
 tools\aiworkflow\workflow_status.bat --json
 ```
 
----
-
-## project_profile_status.bat
-
-Reads project profile JSON files from:
-
-```text
-_Docs\AIWorkflow\ProjectProfiles\
-```
-
-List available profiles:
-
-```bat
-tools\aiworkflow\project_profile_status.bat --list
-```
-
-Default Dust Land profile summary:
-
-```bat
-tools\aiworkflow\project_profile_status.bat
-```
-
-Specific project profile:
-
-```bat
-tools\aiworkflow\project_profile_status.bat --project unity_project_template
-```
-
-JSON output for future Discord integration:
-
-```bat
-tools\aiworkflow\project_profile_status.bat --project unity_project_template --json
-```
-
 This script is read-only.
 
 ---
@@ -130,9 +93,7 @@ From repository root:
 ```bat
 tools\aiworkflow\status.bat
 tools\aiworkflow\workflow_status.bat
-tools\aiworkflow\project_profile_status.bat --list
-tools\aiworkflow\project_profile_status.bat
-tools\aiworkflow\project_profile_status.bat --project unity_project_template
+tools\aiworkflow\workflow_status.bat --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 ```

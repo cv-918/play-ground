@@ -439,8 +439,14 @@ xml/
 # Data
 Resources/
 
-# Temp
+# Workflow
 _Temp/
+
+# Discord
+_Local/
+node_modules/
+tools/discord-orchestrator/.env
+tools/discord-orchestrator/.env.local
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio

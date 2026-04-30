@@ -42,6 +42,12 @@ This README is the entry point for the document set.
 | `Task_State_Model.md` | Defines fixed task states, lifecycle transitions, approval-sensitive transitions, and completion rules for future local/Discord orchestration |
 | `ActiveTask_Template.md` | Template for replacing `ActiveTask.md` when starting a new workflow task |
 | `Project_Profile_Schema.md` | Defines project profile schema for multi-project, Unity-ready, and Discord-connected workflow orchestration |
+| `Discord_Orchestrator_Implementation_Stages.md` | Defines staged implementation plan for Discord-connected AI workflow orchestration |
+| `Discord_ReadOnly_Bot_v1_Spec.md` | Defines read-only Discord Bot v1 commands, behavior, output, and restrictions |
+| `Discord_Orchestrator_Safety_Rules.md` | Defines permission classes and safety rules for Discord-connected orchestration |
+| `Discord_ReadOnly_Bot_v1_Implementation_Plan.md` | Defines implementation plan, runtime model, command mapping, safety constraints, and validation plan for Discord Read-Only Bot v1 |
+| `Discord_ReadOnly_Bot_v1_Setup_Checklist.md` | Checklist for Discord Developer Portal setup, local environment setup, and v1 bot validation |
+| `Discord_Bot_Config_Template.json` | Template for local Discord bot configuration without secrets |
 
 ---
 

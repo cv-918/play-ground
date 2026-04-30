@@ -1,0 +1,23 @@
+{
+  "discord_token_env": "AIWORKFLOW_DISCORD_BOT_TOKEN",
+  "client_id": "",
+  "guild_id": "",
+  "repo_root": "C:/Users/kalux/workStation/play-ground",
+  "default_project_id": "dustland_custom_cpp_prototype",
+  "allowed_user_ids": [],
+  "allowed_channel_ids": [],
+  "scripts": {
+    "workflow_status_json": "tools/aiworkflow/workflow_status.bat --json",
+    "project_profile_list": "tools/aiworkflow/project_profile_status.bat --list",
+    "project_profile_json": "tools/aiworkflow/project_profile_status.bat --json"
+  },
+  "safety": {
+    "read_only": true,
+    "allow_file_writes": false,
+    "allow_source_writes": false,
+    "allow_git_commit": false,
+    "allow_git_push": false,
+    "allow_build": false,
+    "allow_release": false
+  }
+}

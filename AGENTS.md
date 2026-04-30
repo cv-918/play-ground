@@ -114,6 +114,11 @@ _Docs/AIWorkflow/Unity_Workflow_Context.md
 _Docs/AIWorkflow/Task_State_Model.md
 _Docs/AIWorkflow/ActiveTask_Template.md
 _Docs/AIWorkflow/Project_Profile_Schema.md
+_Docs/AIWorkflow/Discord_Orchestrator_Implementation_Stages.md
+_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Spec.md
+_Docs/AIWorkflow/Discord_Orchestrator_Safety_Rules.md
+_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md
+_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Setup_Checklist.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.
