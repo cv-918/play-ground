@@ -96,6 +96,7 @@ Repository-level process documents, workflow documents, and development logs sho
 The AI Orchestrator workflow is defined by these documents:
 
 ```text
+_Docs/AIWorkflow/README.md
 _Docs/AIWorkflow/00_AI_Orchestrator_Overview.md
 _Docs/AIWorkflow/01_AI_Orchestrator_Protocol.md
 _Docs/AIWorkflow/02_Workflow_Scope.md

@@ -36,6 +36,8 @@ This README is the entry point for the document set.
 | `08_DevLog_Rules.md` | Defines when and how to write Dev Logs |
 | `09_Operational_Playbook.md` | Practical runbook for day-to-day workflow execution |
 | `10_Quick_Checklists.md` | Short checklists for starting, reviewing, validating, and committing tasks |
+| `11_Workflow_Examples.md` | Practical examples for choosing Fast Path, Full Path, Codex, Copilot, manual implementation, review-fix loops, validation, Dev Logs, and stop conditions |
+| `12_Troubleshooting_and_Recovery_Guide.md` | Recovery procedures for AI workflow failures such as forbidden file edits, missing new-file diffs, build/runtime failures, project-file corruption, and scope expansion |
 
 ---
 
