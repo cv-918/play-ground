@@ -1,0 +1,303 @@
+# AI Workflow Document Index
+
+## 1. Purpose
+
+This directory contains the AI Orchestrator workflow documents for this repository.
+
+The workflow defines how AI tools should be used for development work, including:
+
+- Planning
+- Architecture decisions
+- Tool routing
+- Human approval gates
+- Codex analysis
+- Copilot implementation
+- Diff review
+- Validation
+- Dev Logs
+- Commit decisions
+
+This README is the entry point for the document set.
+
+---
+
+## 2. Document Map
+
+| File | Purpose |
+|---|---|
+| `00_AI_Orchestrator_Overview.md` | High-level overview of the AI Orchestrator workflow |
+| `01_AI_Orchestrator_Protocol.md` | Full execution protocol from request to completion |
+| `02_Workflow_Scope.md` | Defines when to use full workflow, fast path, or direct work |
+| `03_Agent_Roles.md` | Defines AI/team roles such as Orchestrator, Architect, Reviewer, Validator |
+| `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
+| `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
+| `06_Task_Templates.md` | Defines canonical task request templates |
+| `07_Review_Validation_Rules.md` | Defines review severity, validation evidence, and completion rules |
+| `08_DevLog_Rules.md` | Defines when and how to write Dev Logs |
+| `09_Operational_Playbook.md` | Practical runbook for day-to-day workflow execution |
+| `10_Quick_Checklists.md` | Short checklists for starting, reviewing, validating, and committing tasks |
+
+---
+
+## 3. Required-Read Korean Files
+
+Files ending in `_Required_Read_KR.md` are Korean support documents for the human developer.
+
+They are not the primary source of truth for AI tools.
+
+The English workflow documents remain the operational source of truth.
+
+Use Korean required-read files when quick human judgment is needed.
+
+---
+
+## 4. Prompt Templates
+
+Reusable prompt templates are stored under:
+
+```text
+PromptTemplates/
+```
+
+Current template set:
+
+| File | Purpose |
+|---|---|
+| `01_orchestrator_task_request.md` | Start an orchestrated task |
+| `02_architecture_request.md` | Request architecture design or review |
+| `03_implementation_planning_request.md` | Convert approved design into implementation plan |
+| `04_codex_analysis_request.md` | Ask Codex for read-only repository analysis |
+| `05_copilot_implementation_request.md` | Ask Copilot Agent Mode for bounded implementation |
+| `06_review_request.md` | Review code, diff, or generated changes |
+| `07_validation_request.md` | Define validation steps |
+| `08_devlog_request.md` | Generate Dev Log draft |
+| `09_workflow_update_request.md` | Propose workflow rule updates |
+
+---
+
+## 5. Task Request Records
+
+Concrete task prompts and workflow requests may be stored under:
+
+```text
+TaskRequests/
+```
+
+This folder is used for:
+
+- Copilot implementation requests
+- Copilot fix requests
+- Workflow update requests
+- Reusable task-specific prompts
+- Records of what was given to external tools
+
+Task request files are not always permanent rules.
+
+They are execution records and reusable prompts.
+
+---
+
+## 6. How to Start a New Task
+
+Use this command in ChatGPT:
+
+```text
+이 작업에 대해 AI 오케스트레이터 워크플로우 실행해줘.
+
+Task:
+...
+
+Context:
+...
+
+Scope:
+...
+
+Non-Goals:
+...
+
+Output needed:
+...
+```
+
+For meaningful code or data work, do not start with Copilot directly.
+
+Start with orchestration, then route to Codex or Copilot only when appropriate.
+
+---
+
+## 7. Recommended Default Flow
+
+For meaningful implementation work:
+
+```text
+1. ChatGPT: Orchestrator intake
+2. ChatGPT: Architecture and reduced scope
+3. Human: Approval
+4. Codex: Read-only repository analysis if needed
+5. ChatGPT: Implementation prompt generation
+6. Copilot: Bounded implementation
+7. Git: Full diff capture
+8. ChatGPT: Diff review
+9. Human: Build and runtime validation
+10. ChatGPT: Dev Log draft
+11. Human: Commit decision
+```
+
+---
+
+## 8. Fast Path
+
+Fast Path may be used for:
+
+- Documentation edits
+- Prompt template edits
+- Dev Log generation
+- Explanation-only requests
+- Formatting-only changes
+
+Fast Path should not be used for:
+
+- Runtime behavior changes
+- Data schema changes
+- Save/load changes
+- Scene/actor lifecycle changes
+- Broad refactoring
+- AI-generated implementation across multiple files
+
+---
+
+## 9. Full Path
+
+Full Path is required for:
+
+- New systems
+- Runtime behavior changes
+- Data schema changes
+- Scene or actor lifecycle changes
+- Save/load behavior changes
+- Multiple-file implementation
+- Copilot Agent Mode implementation
+- Refactoring
+- Build/project file changes
+
+Full Path requires approval, review, validation, and documentation when meaningful.
+
+---
+
+## 10. Critical Operating Rules
+
+```text
+Do not let AI jump from idea to implementation.
+Do not use Copilot before architecture and scope are approved.
+Do not review a diff that is missing newly created files.
+Do not treat build success as full validation.
+Do not commit without reviewing staged changes.
+Do not invent validation results.
+```
+
+---
+
+## 11. Git Review Reminders
+
+For newly created untracked files:
+
+```bash
+git add -N <new_file>
+git diff > review.diff
+```
+
+or:
+
+```bash
+git add <intended_files>
+git diff --cached > review.diff
+```
+
+Before commit:
+
+```bash
+git diff --check
+git status
+git diff --cached --stat
+```
+
+Avoid `git add .` unless the whole working tree has been reviewed.
+
+---
+
+## 12. Dev Log Locations
+
+Use:
+
+```text
+_DevLog/FixLog/
+```
+
+for completed implementation or bug-fix records.
+
+Use:
+
+```text
+_DevLog/WorkLog/
+```
+
+for investigation or partial progress.
+
+Use:
+
+```text
+_DevLog/Retrospective/
+```
+
+for workflow/process retrospectives.
+
+---
+
+## 13. Relationship to Repository-Level Instructions
+
+Top-level AI rules are stored at:
+
+```text
+AGENTS.md
+.github/copilot-instructions.md
+```
+
+This directory contains detailed workflow documentation.
+
+`AGENTS.md` is the repository-level entry point for AI tools.
+
+`.github/copilot-instructions.md` is the Copilot-specific implementation guide.
+
+---
+
+## 14. Maintenance Policy
+
+Update this document when:
+
+- A new numbered workflow document is added.
+- A major prompt template is added.
+- Folder structure changes.
+- Tool responsibility changes.
+- The workflow operating sequence changes.
+
+Do not silently change workflow rules.
+
+Use `09_workflow_update_request.md` when changing workflow behavior.
+
+---
+
+## 15. Summary
+
+This document set exists to make AI-assisted development:
+
+```text
+Structured
+Bounded
+Reviewable
+Validated
+Traceable
+Commit-safe
+```
+
+Use this README as the starting point when navigating the workflow documents.

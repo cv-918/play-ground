@@ -106,6 +106,9 @@ _Docs/AIWorkflow/06_Task_Templates.md
 _Docs/AIWorkflow/07_Review_Validation_Rules.md
 _Docs/AIWorkflow/08_DevLog_Rules.md
 _Docs/AIWorkflow/09_Operational_Playbook.md
+_Docs/AIWorkflow/10_Quick_Checklists.md
+_Docs/AIWorkflow/11_Workflow_Examples.md
+_Docs/AIWorkflow/12_Troubleshooting_and_Recovery_Guide.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.
