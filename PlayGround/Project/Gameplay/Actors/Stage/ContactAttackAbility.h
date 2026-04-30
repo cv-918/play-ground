@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "IEnemyAbility.h"
 
@@ -7,7 +7,7 @@
  *
  * 책임:
  * - 플레이어 바디와 충돌했을 때 접촉 공격 수행
- * - 공격 쿨타임은 Attack Collider의 타이머 기능을 활용
+ * - 대상별 접촉 공격 쿨타임 관리
  *
  * 주의:
  * - 실제 피해 적용은 대상의 Damage Handler / Combat 시스템을 통해 이뤄집니다.
@@ -19,9 +19,16 @@ public:
 	EnemyAbilityType Type() const override { return EnemyAbilityType::ContactAttack; }
 
 public:
+	void OnUpdate(Enemy& _enemy, _double _delta_time) override;
 	void OnCollisionEnter(Enemy& _enemy, Collider* _this, Collider* _other) override;
 	void OnCollisionStay(Enemy& _enemy, Collider* _this, Collider* _other) override;
 
 private:
 	void _TryAttackPlayer(Enemy& _enemy, Collider* _attack_col, Collider* _other);
+	void _UpdateTargetCooldowns(_double _delta_time);
+	_bool _IsTargetOnCooldown(Collider* _target) const;
+	void _StartTargetCooldown(Collider* _target, _double _cooldown_sec);
+
+private:
+	std::map<Collider*, _double> target_cooldowns_;
 };

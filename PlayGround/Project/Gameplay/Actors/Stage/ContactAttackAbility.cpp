@@ -1,10 +1,18 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "ContactAttackAbility.h"
 
 #include "Enemy.h"
 
 #include "Components/Collider.h"
 #include "Components/Status.h"
+#include "EngineSystems/Physics/CollisionManager.h"
+
+void ContactAttackAbility::OnUpdate(Enemy& _enemy, _double _delta_time)
+{
+	UNREFERENCED_PARAMETER(_enemy);
+
+	_UpdateTargetCooldowns(_delta_time);
+}
 
 void ContactAttackAbility::OnCollisionEnter(Enemy& _enemy, Collider* _this, Collider* _other)
 {
@@ -39,6 +47,9 @@ void ContactAttackAbility::_TryAttackPlayer(Enemy& _enemy, Collider* _attack_col
 	if (nullptr == damagable)
 		return;
 
+	if (_IsTargetOnCooldown(_other))
+		return;
+
 	const auto& attack_ctx = _enemy.GetAttackContext();
 
 	const _float base_damage = info->contact_damage_;
@@ -68,6 +79,51 @@ void ContactAttackAbility::_TryAttackPlayer(Enemy& _enemy, Collider* _attack_col
 
 	if (!status->IsDead())
 	{
-		_attack_col->SetTimerForTarget(_other, DEFAULT_ATTACK_SPEED - info->attack_speed_);
+		_StartTargetCooldown(_other, DEFAULT_ATTACK_SPEED - info->attack_speed_);
 	}
+}
+
+void ContactAttackAbility::_UpdateTargetCooldowns(_double _delta_time)
+{
+	if (_delta_time <= 0.0)
+		return;
+
+	for (auto iter = target_cooldowns_.begin(); iter != target_cooldowns_.end();)
+	{
+		auto* target = iter->first;
+		if (target == nullptr || !_ColMgr.IsColliderAlive(target))
+		{
+			iter = target_cooldowns_.erase(iter);
+			continue;
+		}
+
+		iter->second -= _delta_time;
+		if (iter->second <= 0.0)
+			iter = target_cooldowns_.erase(iter);
+		else
+			++iter;
+	}
+}
+
+_bool ContactAttackAbility::_IsTargetOnCooldown(Collider* _target) const
+{
+	if (_target == nullptr)
+		return false;
+
+	const auto iter = target_cooldowns_.find(_target);
+	return iter != target_cooldowns_.end() && iter->second > 0.0;
+}
+
+void ContactAttackAbility::_StartTargetCooldown(Collider* _target, _double _cooldown_sec)
+{
+	if (_target == nullptr)
+		return;
+
+	if (_cooldown_sec <= 0.0)
+	{
+		target_cooldowns_.erase(_target);
+		return;
+	}
+
+	target_cooldowns_[_target] = _cooldown_sec;
 }

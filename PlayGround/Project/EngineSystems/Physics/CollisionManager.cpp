@@ -125,9 +125,9 @@ void CollisionManager::DeregisterCollider(CollisionLayer _layer, Collider* _coll
 				pending_registers_.begin(),
 				pending_registers_.end(),
 				[_layer, _collider](const PendingColliderChange& _change)
-				{
-					return _change.layer_ == _layer && _change.collider_ == _collider;
-				}),
+		{
+			return _change.layer_ == _layer && _change.collider_ == _collider;
+		}),
 			pending_registers_.end());
 
 		if (!_HasPendingDeregistration(_layer, _collider))
@@ -150,7 +150,7 @@ void CollisionManager::NotifyColliderDestroying(Collider* _collider)
 		if (!other || other == _collider)
 			continue;
 
-		other->_ForgetCollisionReference(_collider);
+		other->_ForgetCollisionReference(_collider, true);
 	}
 
 	for (auto& vec : layer_colliders_)
@@ -161,9 +161,9 @@ void CollisionManager::NotifyColliderDestroying(Collider* _collider)
 			pending_registers_.begin(),
 			pending_registers_.end(),
 			[_collider](const PendingColliderChange& _change)
-			{
-				return _change.collider_ == _collider;
-			}),
+	{
+		return _change.collider_ == _collider;
+	}),
 		pending_registers_.end());
 
 	pending_deregisters_.erase(
@@ -171,9 +171,9 @@ void CollisionManager::NotifyColliderDestroying(Collider* _collider)
 			pending_deregisters_.begin(),
 			pending_deregisters_.end(),
 			[_collider](const PendingColliderChange& _change)
-			{
-				return _change.collider_ == _collider;
-			}),
+	{
+		return _change.collider_ == _collider;
+	}),
 		pending_deregisters_.end());
 
 	alive_colliders_.erase(_collider);
@@ -309,9 +309,9 @@ _bool CollisionManager::_HasPendingDeregistration(CollisionLayer _layer, Collide
 		pending_deregisters_.begin(),
 		pending_deregisters_.end(),
 		[_layer, _collider](const PendingColliderChange& _change)
-		{
-			return _change.layer_ == _layer && _change.collider_ == _collider;
-		}) != pending_deregisters_.end();
+	{
+		return _change.layer_ == _layer && _change.collider_ == _collider;
+	}) != pending_deregisters_.end();
 }
 
 _bool CollisionManager::_CanProcessCollider(CollisionLayer _layer, Collider* _collider) const
@@ -344,9 +344,9 @@ _bool CollisionManager::_HasPendingRegister(CollisionLayer _layer, Collider* _co
 		pending_registers_.begin(),
 		pending_registers_.end(),
 		[_layer, _collider](const PendingColliderChange& _change)
-		{
-			return _change.layer_ == _layer && _change.collider_ == _collider;
-		}) != pending_registers_.end();
+	{
+		return _change.layer_ == _layer && _change.collider_ == _collider;
+	}) != pending_registers_.end();
 }
 
 void CollisionManager::_TrackCollider(Collider* _collider)

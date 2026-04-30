@@ -169,6 +169,56 @@ Copilot에는 제한된 구현 프롬프트를 전달해야 한다.
 - 검증 메모
 - 중단 조건
 
+
+## Copilot 모델 추천 블록
+
+Copilot Agent Mode 작업 프롬프트에는 명시적인 모델 추천 블록을 포함한다.
+
+저장소 기반 구현 기본값:
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+
+Permission:
+Modify only the approved files listed in the prompt.
+```
+
+작고 저위험인 작업:
+
+```text
+Recommended Copilot Model:
+GPT-5 mini or GPT-5.4 mini
+
+Recommended Intelligence:
+Auto or Medium
+
+Reason:
+This is a low-risk single-file or documentation task.
+```
+
+아키텍처 또는 리뷰 작업:
+
+```text
+Recommended Model:
+GPT-5.4 or GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+This task requires architecture/risk review rather than direct implementation.
+```
+
+모델 추천은 승인 게이트나 파일 범위 제한을 대체하지 않는다.
+
+---
 ## Copilot Agent Mode를 쓰면 안 되는 경우
 
 다음 상황에서는 사용하지 않는다.

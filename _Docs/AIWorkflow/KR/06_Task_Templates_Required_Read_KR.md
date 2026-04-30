@@ -191,6 +191,30 @@ Codex는 다음 질문에 답해야 한다.
 
 ---
 
+
+## 모델 추천 블록
+
+Copilot 구현 요청 템플릿에는 모델 추천 블록을 포함한다.
+
+기본값:
+
+```text
+Recommended Copilot Model:
+GPT-5.3-Codex
+
+Recommended Intelligence:
+High
+
+Reason:
+Repository-aware implementation, C++ structure preservation, and bounded multi-file editing are required.
+
+Permission:
+Modify only the approved files listed in the prompt.
+```
+
+작은 저위험 작업이면 mini 모델을 사용할 수 있지만, 저장소 기반 다중 파일 구현은 `GPT-5.3-Codex`를 기본으로 둔다.
+
+---
 # 9. 06_review_request.md — 리뷰 요청 템플릿
 
 ## 목적

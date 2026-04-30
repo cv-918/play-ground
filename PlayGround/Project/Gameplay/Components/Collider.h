@@ -76,7 +76,7 @@ protected:
 
 private:
 	void _AddCollisionReference(Collider* _other);
-	void _ForgetCollisionReference(Collider* _other);
+	void _ForgetCollisionReference(Collider* _other, _bool _clear_timer = false);
 	void _RemoveCollidedCollider(Collider* _other, _bool _notify);
 	void _NotifyCollisionEnter(Collider* _other);
 	void _NotifyCollisionStay(Collider* _other);

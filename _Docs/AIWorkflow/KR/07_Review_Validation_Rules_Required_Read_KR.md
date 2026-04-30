@@ -303,6 +303,50 @@ Update 순서가 중요하다면 리뷰에 명시해야 한다.
 
 ---
 
+
+## 신규 파일 diff 포함 규칙
+
+신규 파일을 리뷰할 때는 untracked 파일 본문이 diff에 포함되었는지 확인한다.
+
+일반 `git diff`는 untracked 신규 파일 내용을 보여주지 않는다.
+
+다음 중 하나를 사용한다.
+
+```bash
+git add -N <new_file>
+git diff > review.diff
+```
+
+또는:
+
+```bash
+git add <intended_files>
+git diff --cached > review.diff
+```
+
+새로 만든 소스, 데이터, 프로젝트 파일 본문이 diff에 빠져 있다면 최종 리뷰를 완료하면 안 된다.
+
+---
+
+## Visual Studio 프로젝트 파일 리뷰
+
+`.vcxproj` 또는 `.vcxproj.filters`가 변경되면 프로젝트 파일 diff를 별도로 확인한다.
+
+체크리스트:
+
+```text
+[ ] 승인된 새 파일만 추가되었는가?
+[ ] 관련 없는 entry가 재정렬되지 않았는가?
+[ ] 기존 filter 이름이 깨지지 않았는가?
+[ ] 한글 filter 이름이 정상인가?
+[ ] encoding/BOM 변경이 의도적이거나 무해한가?
+[ ] ResourceCompile/Image/None entry가 올바른 filter를 가리키는가?
+[ ] 넓은 프로젝트 파일 재작성은 없는가?
+```
+
+관련 없는 프로젝트 파일 재작성이나 인코딩 손상은 리뷰 이슈로 처리한다.
+
+---
 # 20. Validation Checklist — 검증 체크리스트
 
 검증은 작업 유형에 따라 선택한다.
@@ -400,6 +444,42 @@ Save / Load 검증
 
 ---
 
+
+# Scene Lifecycle Early Return Review — Scene 생명주기 early return 리뷰
+
+Scene 생명주기 함수에서 부분 초기화 이후 넓은 early return을 사용하는지 확인한다.
+
+주의할 함수:
+
+```text
+Initialize
+OnEnter
+OnExit
+Ready
+Load
+Setup
+```
+
+함수가 원자적으로 실패하도록 설계된 경우가 아니라면, Scene 객체 일부를 만든 뒤 생명주기 함수 중간에서 return하지 않는다.
+
+선호하는 방식:
+
+```text
+- optional data 누락을 로그로 남김
+- 문제가 있는 하위 기능 분기만 guard
+- 안전하다면 core scene initialization은 계속 진행
+```
+
+피해야 할 방식:
+
+```text
+- background/player/NPC 일부를 생성한 뒤 OnEnter 중간에서 return
+- camera, UI, cleanup symmetry, registration setup을 불완전하게 남김
+```
+
+하위 기능 하나만 invalid라면 전체 생명주기를 중단하지 말고 해당 하위 기능만 guard한다.
+
+---
 # 31. Validation Result Format — 검증 결과 형식
 
 검증 결과는 다음 형식을 사용한다.

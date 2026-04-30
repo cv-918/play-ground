@@ -104,7 +104,7 @@ void Collider::ClearCollisionState(const _bool _notify)
 				continue;
 
 			const auto other_was_colliding = other->_IsAlreadyColliding(this);
-			other->_ForgetCollisionReference(this);
+			other->_ForgetCollisionReference(this, true);
 
 			if (!_notify)
 				continue;
@@ -131,13 +131,14 @@ void Collider::_AddCollisionReference(Collider* _other)
 	_UpdateIsCollidingState();
 }
 
-void Collider::_ForgetCollisionReference(Collider* _other)
+void Collider::_ForgetCollisionReference(Collider* _other, _bool _clear_timer)
 {
 	if (!_other)
 		return;
 
 	collided_colliders_.remove(_other);
-	collision_timers_.erase(_other);
+	if (_clear_timer)
+		collision_timers_.erase(_other);
 	erase_waiting_list_.erase(
 		std::remove(erase_waiting_list_.begin(), erase_waiting_list_.end(), _other),
 		erase_waiting_list_.end());
@@ -167,7 +168,7 @@ void Collider::_NotifyCollisionEnter(Collider* _other)
 
 	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 		s_cast(ICollidable*, h)->OnCollisionEnter(this, _other);
-		});
+	});
 }
 
 void Collider::_NotifyCollisionStay(Collider* _other)
@@ -177,7 +178,7 @@ void Collider::_NotifyCollisionStay(Collider* _other)
 
 	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 		s_cast(ICollidable*, h)->OnCollisionStay(this, _other);
-		});
+	});
 }
 
 void Collider::_NotifyCollisionExit(Collider* _other)
@@ -187,7 +188,7 @@ void Collider::_NotifyCollisionExit(Collider* _other)
 
 	GameObject()->SendMessageToHandlers(HandlerSystemList::Collision, [this, _other](IHandler* h) {
 		s_cast(ICollidable*, h)->OnCollisionExit(this, _other);
-		});
+	});
 }
 
 void Collider::SetTimerForTarget(Collider* _other, _double _time)
