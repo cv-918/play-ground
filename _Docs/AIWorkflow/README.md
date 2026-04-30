@@ -39,6 +39,9 @@ This README is the entry point for the document set.
 | `11_Workflow_Examples.md` | Practical examples for choosing Fast Path, Full Path, Codex, Copilot, manual implementation, review-fix loops, validation, Dev Logs, and stop conditions |
 | `12_Troubleshooting_and_Recovery_Guide.md` | Recovery procedures for AI workflow failures such as forbidden file edits, missing new-file diffs, build/runtime failures, project-file corruption, and scope expansion |
 | `Unity_Workflow_Context.md` | Records the Unity-first long-term direction and prevents the workflow from overfitting to the current Dust Land custom C++ prototype |
+| `Task_State_Model.md` | Defines fixed task states, lifecycle transitions, approval-sensitive transitions, and completion rules for future local/Discord orchestration |
+| `ActiveTask_Template.md` | Template for replacing `ActiveTask.md` when starting a new workflow task |
+| `Project_Profile_Schema.md` | Defines project profile schema for multi-project, Unity-ready, and Discord-connected workflow orchestration |
 
 ---
 
@@ -78,7 +81,24 @@ Current template set:
 
 ---
 
-## 5. Task Request Records
+## 5. Project Profiles
+
+Project-specific workflow profiles are stored under:
+
+```text
+ProjectProfiles/
+```
+
+Current profiles:
+
+| File | Purpose |
+|---|---|
+| `dustland_custom_cpp_prototype.json` | Current Dust Land custom C++ / WinAPI prototype profile |
+| `unity_project_template.json` | Template for future Unity-based solo game projects |
+
+---
+
+## 6. Task Request Records
 
 Concrete task prompts and workflow requests may be stored under:
 
@@ -100,7 +120,7 @@ They are execution records and reusable prompts.
 
 ---
 
-## 6. How to Start a New Task
+## 7. How to Start a New Task
 
 Use this command in ChatGPT:
 
@@ -129,7 +149,7 @@ Start with orchestration, then route to Codex or Copilot only when appropriate.
 
 ---
 
-## 7. Recommended Default Flow
+## 8. Recommended Default Flow
 
 For meaningful implementation work:
 
@@ -149,7 +169,7 @@ For meaningful implementation work:
 
 ---
 
-## 8. Fast Path
+## 9. Fast Path
 
 Fast Path may be used for:
 
@@ -170,7 +190,7 @@ Fast Path should not be used for:
 
 ---
 
-## 9. Full Path
+## 10. Full Path
 
 Full Path is required for:
 
@@ -188,7 +208,7 @@ Full Path requires approval, review, validation, and documentation when meaningf
 
 ---
 
-## 10. Critical Operating Rules
+## 11. Critical Operating Rules
 
 ```text
 Do not let AI jump from idea to implementation.
@@ -201,7 +221,7 @@ Do not invent validation results.
 
 ---
 
-## 11. Git Review Reminders
+## 12. Git Review Reminders
 
 For newly created untracked files:
 
@@ -229,7 +249,7 @@ Avoid `git add .` unless the whole working tree has been reviewed.
 
 ---
 
-## 12. Dev Log Locations
+## 13. Dev Log Locations
 
 Use:
 
@@ -257,7 +277,7 @@ for workflow/process retrospectives.
 
 ---
 
-## 13. Relationship to Repository-Level Instructions
+## 14. Relationship to Repository-Level Instructions
 
 Top-level AI rules are stored at:
 
@@ -274,7 +294,7 @@ This directory contains detailed workflow documentation.
 
 ---
 
-## 14. Maintenance Policy
+## 15. Maintenance Policy
 
 Update this document when:
 
@@ -290,7 +310,7 @@ Use `09_workflow_update_request.md` when changing workflow behavior.
 
 ---
 
-## 15. Summary
+## 16. Summary
 
 This document set exists to make AI-assisted development:
 

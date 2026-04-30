@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0",
+  "project_id": "unity_project_template",
+  "display_name": "Unity Project Template",
+  "project_type": "template",
+  "engine": "unity",
+  "engine_version": "",
+  "repo_path": "",
+  "docs_path": "_Docs/AIWorkflow",
+  "devlog_path": "_DevLog",
+  "workflow_state_files": {
+    "project_status": "_Docs/AIWorkflow/ProjectStatus.md",
+    "backlog": "_Docs/AIWorkflow/Backlog.md",
+    "active_task": "_Docs/AIWorkflow/ActiveTask.md"
+  },
+  "source_roots": [
+    "Assets/Scripts"
+  ],
+  "data_roots": [
+    "Assets",
+    "ProjectSettings",
+    "Packages"
+  ],
+  "asset_roots": [
+    "Assets"
+  ],
+  "build_profiles": [
+    {
+      "id": "unity_editor_manual",
+      "label": "Unity Editor manual validation",
+      "type": "unity_editor",
+      "command": "",
+      "working_directory": "",
+      "requires_approval": true,
+      "expected_output": "Unity Editor opens without compile errors"
+    },
+    {
+      "id": "windows_steam_build",
+      "label": "Windows Steam build",
+      "type": "unity_cli",
+      "command": "",
+      "working_directory": "",
+      "requires_approval": true,
+      "expected_output": "Windows build artifact"
+    },
+    {
+      "id": "android_development_build",
+      "label": "Android development build",
+      "type": "unity_cli",
+      "command": "",
+      "working_directory": "",
+      "requires_approval": true,
+      "expected_output": "APK/AAB artifact"
+    }
+  ],
+  "validation_profiles": [
+    {
+      "id": "unity_compile_check",
+      "label": "Unity compile check",
+      "type": "unity_editor",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "Unity console has no compile errors"
+    },
+    {
+      "id": "unity_editmode_tests",
+      "label": "Unity EditMode tests",
+      "type": "unity_editmode",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "test report"
+    },
+    {
+      "id": "unity_playmode_tests",
+      "label": "Unity PlayMode tests",
+      "type": "unity_playmode",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "test report"
+    },
+    {
+      "id": "scene_boot",
+      "label": "Main scene boot smoke test",
+      "type": "manual_runtime",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "user-provided runtime result"
+    },
+    {
+      "id": "store_package_check",
+      "label": "Store package readiness check",
+      "type": "store_package_check",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "Steam/Google Play checklist"
+    }
+  ],
+  "release_targets": [
+    {
+      "id": "steam",
+      "label": "Steam",
+      "type": "pc_store",
+      "requires_approval": true
+    },
+    {
+      "id": "google_play",
+      "label": "Google Play",
+      "type": "mobile_store",
+      "requires_approval": true
+    }
+  ],
+  "allowed_readonly_commands": [
+    "git status",
+    "git diff --stat",
+    "git diff --check",
+    "tools/aiworkflow/status.bat",
+    "tools/aiworkflow/workflow_status.bat"
+  ],
+  "allowed_write_commands": [],
+  "forbidden_operations": [
+    "automatic_source_modification",
+    "automatic_scene_modification",
+    "automatic_asset_deletion",
+    "automatic_commit",
+    "automatic_push",
+    "automatic_release",
+    "automatic_store_upload",
+    "automatic_validation_pass_fail_decision"
+  ],
+  "approval_policy": {
+    "read_status": "auto_allowed",
+    "capture_diff": "auto_allowed",
+    "build": "approval_required",
+    "runtime_execution": "approval_required",
+    "write_docs": "approval_required",
+    "write_source": "approval_required",
+    "write_scene_asset": "approval_required",
+    "commit": "human_only",
+    "push": "human_only",
+    "release": "human_only"
+  },
+  "tool_adapters": {
+    "git": {
+      "enabled": true
+    },
+    "unity": {
+      "enabled": true
+    },
+    "custom_cpp": {
+      "enabled": false
+    },
+    "discord": {
+      "enabled": false,
+      "planned_role": "read_only_status_ui"
+    }
+  },
+  "unity": {
+    "unity_version": "",
+    "project_settings_path": "ProjectSettings",
+    "assets_path": "Assets",
+    "packages_path": "Packages",
+    "scenes": [],
+    "assemblies": [],
+    "editor_tests": [],
+    "playmode_tests": [],
+    "addressables": false,
+    "target_platforms": [
+      "windows_steam",
+      "android_google_play"
+    ]
+  },
+  "notes": [
+    "This is the future default project profile shape for solo Unity game projects.",
+    "Store release workflows should remain human-approved.",
+    "Discord should begin as read-only status UI before gaining controlled execution permissions."
+  ]
+}

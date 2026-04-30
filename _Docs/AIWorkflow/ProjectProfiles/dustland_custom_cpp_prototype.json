@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0",
+  "project_id": "dustland_custom_cpp_prototype",
+  "display_name": "Dust Land Custom C++ Prototype",
+  "project_type": "prototype",
+  "engine": "custom_cpp",
+  "engine_version": "custom",
+  "repo_path": "C:/Users/kalux/workStation/play-ground",
+  "docs_path": "_Docs/AIWorkflow",
+  "devlog_path": "_DevLog",
+  "workflow_state_files": {
+    "project_status": "_Docs/AIWorkflow/ProjectStatus.md",
+    "backlog": "_Docs/AIWorkflow/Backlog.md",
+    "active_task": "_Docs/AIWorkflow/ActiveTask.md"
+  },
+  "source_roots": [
+    "PlayGround/Project"
+  ],
+  "data_roots": [
+    "PlayGround/Data"
+  ],
+  "asset_roots": [
+    "PlayGround/Resource",
+    "PlayGround/Data"
+  ],
+  "build_profiles": [
+    {
+      "id": "debug_visual_studio",
+      "label": "Debug build in Visual Studio",
+      "type": "visual_studio",
+      "command": "",
+      "working_directory": "PlayGround",
+      "requires_approval": true,
+      "expected_output": "Visual Studio build success"
+    }
+  ],
+  "validation_profiles": [
+    {
+      "id": "workflow_status",
+      "label": "AIWorkflow read-only status summary",
+      "type": "script",
+      "command": "tools/aiworkflow/workflow_status.bat",
+      "requires_approval": false,
+      "evidence_required": "command output"
+    },
+    {
+      "id": "json_smoke",
+      "label": "JSON syntax smoke check",
+      "type": "script",
+      "command": "tools/aiworkflow/json_smoke_check.bat",
+      "requires_approval": false,
+      "evidence_required": "total/failed JSON parse result"
+    },
+    {
+      "id": "capture_diff",
+      "label": "Review diff capture",
+      "type": "script",
+      "command": "tools/aiworkflow/capture_diff.bat --include-untracked",
+      "requires_approval": false,
+      "evidence_required": "generated diff path"
+    },
+    {
+      "id": "manual_boot_outgame",
+      "label": "Manual boot and OutGame entry smoke test",
+      "type": "manual_runtime",
+      "command": "",
+      "requires_approval": true,
+      "evidence_required": "user-provided runtime result"
+    }
+  ],
+  "release_targets": [
+    {
+      "id": "prototype_local",
+      "label": "Local prototype sharing",
+      "type": "manual_package",
+      "requires_approval": true
+    },
+    {
+      "id": "future_unity_steam",
+      "label": "Future Unity Steam release",
+      "type": "future_target",
+      "requires_approval": true
+    }
+  ],
+  "allowed_readonly_commands": [
+    "git status",
+    "git diff --stat",
+    "git diff --check",
+    "tools/aiworkflow/status.bat",
+    "tools/aiworkflow/workflow_status.bat",
+    "tools/aiworkflow/json_smoke_check.bat"
+  ],
+  "allowed_write_commands": [
+    "tools/aiworkflow/capture_diff.bat --include-untracked"
+  ],
+  "forbidden_operations": [
+    "automatic_source_modification",
+    "automatic_commit",
+    "automatic_push",
+    "automatic_release",
+    "automatic_project_file_editing",
+    "automatic_validation_pass_fail_decision"
+  ],
+  "approval_policy": {
+    "read_status": "auto_allowed",
+    "capture_diff": "auto_allowed",
+    "json_smoke_check": "auto_allowed",
+    "build": "approval_required",
+    "runtime_execution": "approval_required",
+    "write_docs": "approval_required",
+    "write_source": "approval_required",
+    "commit": "human_only",
+    "push": "human_only",
+    "release": "human_only"
+  },
+  "tool_adapters": {
+    "git": {
+      "enabled": true
+    },
+    "custom_cpp": {
+      "enabled": true
+    },
+    "unity": {
+      "enabled": false
+    },
+    "discord": {
+      "enabled": false,
+      "planned_role": "read_only_status_ui"
+    }
+  },
+  "custom_cpp": {
+    "solution_file": "PlayGround/PlayGround.sln",
+    "project_file": "PlayGround/PlayGround.vcxproj",
+    "data_path": "PlayGround/Data",
+    "visual_studio_version": "",
+    "toolset": "",
+    "runtime_entry_scene": "Intro -> OutGame",
+    "manual_runtime_validation": [
+      "Boot game",
+      "Enter OutGameScene",
+      "Enter InGameScene",
+      "Return to OutGameScene"
+    ]
+  },
+  "notes": [
+    "Dust Land is a custom-engine prototype and workflow testbed.",
+    "The long-term production direction is Unity-based solo game development.",
+    "Avoid overfitting common workflow automation to this C++/WinAPI structure."
+  ]
+}
