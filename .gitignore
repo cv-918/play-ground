@@ -439,6 +439,9 @@ xml/
 # Data
 Resources/
 
+# Temp
+_Temp/
+
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
