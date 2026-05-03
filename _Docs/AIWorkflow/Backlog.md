@@ -88,6 +88,8 @@ release
 | WF-017 | P2 | done | automation | Integrate Discord project profile default with ActiveProject.json explicitly | Discord command behavior should make active project resolution obvious to users | ChatGPT -> manual | Discord project profile default test |
 | WF-018 | P2 | done | documentation | Document Discord Bot v1 operation guide for daily use | Discord read-only bot needs stable daily operation guidance before further automation | ChatGPT | guide review |
 | WF-019 | P2 | todo | automation | Design Discord approval-note workflow | Next Discord stage should record human approvals without executing implementation work | ChatGPT | architecture review |
+| WF-020 | P1 | done | automation | Add Discord Bot always-on operation scripts | Discord bot must support local start/stop/status/restart and background operation | Codex App -> manual validation | always-on operation validation passed |
+| WF-021 | P2 | todo | maintenance | Harden Discord bot Node warnings and commandRunner shell usage | Bot logs show deprecation/security warnings that should be cleaned up after always-on operation is stable | Codex App -> manual validation | warning-free bot log check |
 | UNITY-001 | P1 | todo | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | Document review |
 | UNITY-002 | P2 | todo | unity | Define Unity validation profile candidates | Unity workflows need build/playmode/editmode/package validation categories | ChatGPT -> Codex later | Validation profile review |
 | UNITY-003 | P2 | todo | release | Define release-track workflow fields for Steam and Google Play | Long-term workflow includes publishing, not just coding | ChatGPT | Release checklist review |

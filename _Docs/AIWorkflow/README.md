@@ -52,6 +52,7 @@ This README is the entry point for the document set.
 | `Active_Project_Selector.md` | Defines the durable active project selector convention for multi-project and Unity-ready workflow operation |
 | `Discord_Bot_v1_Operation_Guide.md` | Daily operation guide for starting, using, shutting down, and safely operating Discord Read-Only Bot v1 |
 | `Discord_Bot_v1_Troubleshooting.md` | Troubleshooting reference for Discord Bot v1 token, command, local script, active project, and Git safety issues |
+| `Discord_Bot_Always_On_Guide.md` | Operation guide for Discord Bot always-on background start, stop, status, restart, logging, and local safety checks |
 
 ---
 
