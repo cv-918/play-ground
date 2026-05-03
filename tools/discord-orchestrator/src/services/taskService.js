@@ -82,6 +82,47 @@ export async function createTask(config, input) {
   };
 }
 
+export async function approveTask(config, input) {
+  return updateTaskStatus(config, {
+    id: input.id,
+    status: "ready_for_implementation",
+    notePrefix: "approved",
+    noteText: input.note,
+    fallbackNote: "approved from Discord",
+  });
+}
+
+export async function blockTask(config, input) {
+  return updateTaskStatus(config, {
+    id: input.id,
+    status: "blocked",
+    notePrefix: "blocked",
+    noteText: input.reason,
+    fallbackNote: "",
+    requiredNoteName: "reason",
+  });
+}
+
+export async function deferTask(config, input) {
+  return updateTaskStatus(config, {
+    id: input.id,
+    status: "deferred",
+    notePrefix: "deferred",
+    noteText: input.reason,
+    fallbackNote: "deferred from Discord",
+  });
+}
+
+export async function completeTask(config, input) {
+  return updateTaskStatus(config, {
+    id: input.id,
+    status: "done",
+    notePrefix: "done",
+    noteText: input.evidence,
+    fallbackNote: "done from Discord",
+  });
+}
+
 export async function setActiveTask(config, taskId) {
   const id = normalizeTaskId(taskId);
   const backlogPath = resolveRepoPath(config, BACKLOG_RELATIVE_PATH);
@@ -116,6 +157,78 @@ export async function setActiveTask(config, taskId) {
         risk_level: selected.priority === "P0" ? "medium" : "low",
         workflow_path: "discord_task_management",
       },
+    },
+  };
+}
+
+async function updateTaskStatus(config, transition) {
+  const id = normalizeTaskId(transition.id);
+  const backlogPath = resolveRepoPath(config, BACKLOG_RELATIVE_PATH);
+  const activePath = resolveRepoPath(config, ACTIVE_TASK_RELATIVE_PATH);
+  assertAllowedWrite(config, backlogPath);
+
+  const noteBody = transition.requiredNoteName
+    ? normalizeRequiredText(transition.noteText, transition.requiredNoteName)
+    : normalizeChoice(transition.noteText, transition.fallbackNote);
+  const statusNote = `${transition.notePrefix}: ${sanitizeStatusNote(noteBody)}`;
+  const now = formatDate(new Date());
+
+  const backlogContent = await fs.readFile(backlogPath, "utf8");
+  const table = parseBacklogTable(backlogContent);
+  const rowIndex = table.rows.findIndex((row) => rowToTask(row).id === id);
+
+  if (rowIndex < 0) {
+    return {
+      ok: false,
+      error: `Task not found in Backlog.md: ${id}`,
+    };
+  }
+
+  const activeContent = await fs.readFile(activePath, "utf8");
+  const activeMetadata = parseActiveTaskMetadata(activeContent);
+  const shouldUpdateActiveTask = activeMetadata.task_id === id;
+
+  if (shouldUpdateActiveTask) {
+    assertAllowedWrite(config, activePath);
+  }
+
+  const nextBacklogContent = updateBacklogRow(contentLines(backlogContent), table, rowIndex, {
+    status: transition.status,
+    validation: statusNote,
+  });
+
+  const selectedBefore = rowToTask(table.rows[rowIndex]);
+  const selectedAfter = {
+    ...selectedBefore,
+    status: transition.status,
+    validation: statusNote,
+  };
+
+  const nextActiveContent = shouldUpdateActiveTask
+    ? updateActiveTaskStatusNote(activeContent, {
+        status: transition.status,
+        note: statusNote,
+        date: now,
+      })
+    : activeContent;
+
+  await createBackup(config, backlogPath, "Backlog");
+  if (shouldUpdateActiveTask) {
+    await createBackup(config, activePath, "ActiveTask");
+  }
+
+  await fs.writeFile(backlogPath, nextBacklogContent, "utf8");
+  if (shouldUpdateActiveTask) {
+    await fs.writeFile(activePath, nextActiveContent, "utf8");
+  }
+
+  return {
+    ok: true,
+    data: {
+      task: selectedAfter,
+      status: transition.status,
+      note: statusNote,
+      active_task_updated: shouldUpdateActiveTask,
     },
   };
 }
@@ -216,6 +329,18 @@ function appendBacklogRow(content, table, task) {
   ];
   lines.splice(table.rowEndIndex, 0, formatTableRow(row));
   return lines.join("\n");
+}
+
+function updateBacklogRow(lines, table, rowIndex, patch) {
+  const row = [...table.rows[rowIndex]];
+  row[2] = patch.status;
+  row[7] = patch.validation;
+  lines[table.headerIndex + 2 + rowIndex] = formatTableRow(row);
+  return lines.join("\n");
+}
+
+function contentLines(content) {
+  return String(content).split(/\r?\n/);
 }
 
 function parseTableLine(line) {
@@ -394,6 +519,69 @@ Review Backlog.md for the next highest-priority open task after this task is com
 `;
 }
 
+function updateActiveTaskStatusNote(content, update) {
+  const withMetadata = updateActiveTaskMetadata(content, {
+    status: update.status,
+    last_updated: update.date,
+  });
+
+  return upsertMarkdownSection(
+    withMetadata,
+    "Latest Status Note",
+    [
+      "```text",
+      `status: ${update.status}`,
+      `note: ${update.note}`,
+      `updated_at: ${update.date}`,
+      "source: Discord task status command",
+      "```",
+    ].join("\n"),
+  );
+}
+
+function updateActiveTaskMetadata(content, patch) {
+  const pattern = /(## Active Task Metadata\s+```ya?ml\s+)([\s\S]*?)(```)/i;
+  const match = content.match(pattern);
+  if (!match) {
+    throw new Error("ActiveTask.md metadata block was not found.");
+  }
+
+  const seen = new Set();
+  const lines = match[2].split(/\r?\n/).map((line) => {
+    const parts = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!parts || !(parts[1] in patch)) {
+      return line;
+    }
+
+    seen.add(parts[1]);
+    return `${parts[1]}: ${patch[parts[1]]}`;
+  });
+
+  for (const [key, value] of Object.entries(patch)) {
+    if (!seen.has(key)) {
+      lines.push(`${key}: ${value}`);
+    }
+  }
+
+  return content.replace(pattern, `${match[1]}${lines.join("\n")}${match[3]}`);
+}
+
+function upsertMarkdownSection(content, title, body) {
+  const section = `## ${title}\n\n${body}\n`;
+  const pattern = new RegExp(`## ${escapeRegExp(title)}\\s+[\\s\\S]*?(?=\\n---\\n|\\n## |$)`, "i");
+
+  if (pattern.test(content)) {
+    return content.replace(pattern, section.trimEnd());
+  }
+
+  const nextRecommendedPattern = /\n---\n\n## Next Recommended Task/i;
+  if (nextRecommendedPattern.test(content)) {
+    return content.replace(nextRecommendedPattern, `\n---\n\n${section}\n---\n\n## Next Recommended Task`);
+  }
+
+  return `${content.trimEnd()}\n\n---\n\n${section}`;
+}
+
 function normalizeTaskId(value) {
   const id = String(value ?? "").trim();
   if (!TASK_ID_PATTERN.test(id)) {
@@ -413,6 +601,13 @@ function normalizeRequiredText(value, fieldName) {
 function normalizeChoice(value, fallback) {
   const text = String(value ?? "").trim();
   return text || fallback;
+}
+
+function sanitizeStatusNote(value) {
+  return String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalizeEnum(value, fallback, allowedValues, fieldName, transform) {

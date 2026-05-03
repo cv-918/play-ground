@@ -169,6 +169,8 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Project_Profile_Schema.md",
     "- _Docs/AIWorkflow/Active_Project_Selector.md",
     "- _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md",
+    "- _Docs/AIWorkflow/Discord_Task_Management_Commands.md",
+    "- _Docs/AIWorkflow/Discord_Task_Status_Commands.md",
   ].join("\n");
 }
 
@@ -237,6 +239,17 @@ export function formatTaskSetActive(data) {
     `Title: ${task.item}`,
     `Status: in_progress`,
     "Backlog row status was not changed.",
+  ].join("\n");
+}
+
+export function formatTaskStatusUpdated(data) {
+  const task = data.task ?? {};
+  return [
+    "**Task Status Updated**",
+    `ID: ${task.id}`,
+    `Status: ${data.status}`,
+    `Note: ${data.note}`,
+    `ActiveTask.md updated: ${data.active_task_updated ? "yes" : "no"}`,
   ].join("\n");
 }
 

@@ -5,6 +5,7 @@
 This is the Discord adapter for the AIWorkflow system.
 
 The original v1 command set is read-only. Release B adds limited task management writes.
+Release C adds controlled task status note writes.
 
 It can read:
 
@@ -35,7 +36,7 @@ run Copilot
 run Codex write mode
 run build
 run game/runtime
-implement approval/block/done/run/codex/computer-use commands
+implement run/codex/computer-use/build/test/commit/push/release commands
 commit
 push
 release
@@ -84,6 +85,10 @@ Do not commit `_Local/`.
 /ai task list
 /ai task create
 /ai task set-active
+/ai task approve
+/ai task block
+/ai task defer
+/ai task done
 ```
 
 For project profile:
@@ -117,12 +122,17 @@ For task commands:
 /ai task list kind:automation
 /ai task create title:"Test Discord task management command" category:WF priority:P2 kind:automation reason:"Release B validation"
 /ai task set-active id:WF-20260503-231500
+/ai task approve id:WF-20260503-231500 note:"Approval note"
+/ai task block id:WF-20260503-231500 reason:"Block reason"
+/ai task defer id:WF-20260503-231500 reason:"Defer reason"
+/ai task done id:WF-20260503-231500 evidence:"Validation evidence"
 ```
 
 See:
 
 ```text
 _Docs/AIWorkflow/Discord_Task_Management_Commands.md
+_Docs/AIWorkflow/Discord_Task_Status_Commands.md
 ```
 
 ---
@@ -145,6 +155,11 @@ After starting the bot:
 [ ] /ai task list works.
 [ ] /ai task create appends one Backlog.md row and creates a backup.
 [ ] /ai task set-active updates ActiveTask.md and creates a backup.
+[ ] /ai task approve updates Backlog.md and creates a backup.
+[ ] /ai task block updates Backlog.md and creates a backup.
+[ ] /ai task defer updates Backlog.md and creates a backup.
+[ ] /ai task done updates Backlog.md and creates a backup.
+[ ] Status commands update ActiveTask.md when the target task is active.
 [ ] Git status remains unchanged after commands.
 ```
 

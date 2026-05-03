@@ -2,7 +2,16 @@ import { SlashCommandBuilder } from "discord.js";
 import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
-import { createTask, getCurrentTask, listBacklogTasks, setActiveTask } from "../services/taskService.js";
+import {
+  approveTask,
+  blockTask,
+  completeTask,
+  createTask,
+  deferTask,
+  getCurrentTask,
+  listBacklogTasks,
+  setActiveTask,
+} from "../services/taskService.js";
 import {
   formatActive,
   formatBacklog,
@@ -16,6 +25,7 @@ import {
   formatTaskCurrent,
   formatTaskList,
   formatTaskSetActive,
+  formatTaskStatusUpdated,
   truncateForDiscord,
 } from "../services/responseFormatter.js";
 
@@ -143,6 +153,74 @@ export function buildAiCommand() {
                 .setDescription("Backlog task id")
                 .setRequired(true),
             ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("approve")
+            .setDescription("Approve a task for implementation")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("note")
+                .setDescription("Approval note")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("block")
+            .setDescription("Mark a task blocked with a reason")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("reason")
+                .setDescription("Block reason")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("defer")
+            .setDescription("Defer a task")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("reason")
+                .setDescription("Defer reason")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("done")
+            .setDescription("Mark a task done with optional evidence")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("evidence")
+                .setDescription("Completion evidence")
+                .setRequired(false),
+            ),
         ),
     );
 }
@@ -232,12 +310,56 @@ async function handleTaskCommand(interaction, config, subcommand) {
       return;
     }
 
+    if (subcommand === "approve") {
+      await handleTaskStatusCommand(interaction, config, approveTask, {
+        id: interaction.options.getString("id"),
+        note: interaction.options.getString("note"),
+      });
+      return;
+    }
+
+    if (subcommand === "block") {
+      await handleTaskStatusCommand(interaction, config, blockTask, {
+        id: interaction.options.getString("id"),
+        reason: interaction.options.getString("reason"),
+      });
+      return;
+    }
+
+    if (subcommand === "defer") {
+      await handleTaskStatusCommand(interaction, config, deferTask, {
+        id: interaction.options.getString("id"),
+        reason: interaction.options.getString("reason"),
+      });
+      return;
+    }
+
+    if (subcommand === "done") {
+      await handleTaskStatusCommand(interaction, config, completeTask, {
+        id: interaction.options.getString("id"),
+        evidence: interaction.options.getString("evidence"),
+      });
+      return;
+    }
+
     await interaction.editReply({ content: "Unknown task command." });
   } catch (error) {
     await interaction.editReply({
       content: truncateForDiscord(`Task command failed: ${error.message}`, config.limits.maxDiscordChars),
     });
   }
+}
+
+async function handleTaskStatusCommand(interaction, config, action, input) {
+  const result = await action(config, input);
+  if (!result.ok) {
+    await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+    return;
+  }
+
+  await interaction.editReply({
+    content: truncateForDiscord(formatTaskStatusUpdated(result.data), config.limits.maxDiscordChars),
+  });
 }
 
 async function handleProjectCommand(interaction, config, subcommand) {
