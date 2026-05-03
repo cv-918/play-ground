@@ -115,6 +115,32 @@ After starting the bot:
 
 ---
 
+## Always-On Windows Operation
+
+For background local operation, use the wrapper commands:
+
+```bat
+start_bot.bat
+status_bot.bat
+restart_bot.bat
+stop_bot.bat
+```
+
+Optional Windows Scheduled Task install/uninstall wrappers are also available:
+
+```bat
+install_startup_task.bat
+uninstall_startup_task.bat
+```
+
+See:
+
+```text
+_Docs/AIWorkflow/Discord_Bot_Always_On_Guide.md
+```
+
+---
+
 ## Notes
 
 This bot runs local scripts:
