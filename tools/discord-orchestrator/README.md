@@ -1,12 +1,12 @@
-# Discord Read-Only Bot v1
+# Discord AIWorkflow Bot
 
 ## Purpose
 
-This is the first Discord adapter for the AIWorkflow system.
+This is the Discord adapter for the AIWorkflow system.
 
-v1 is read-only.
+The original v1 command set is read-only. Release B adds limited task management writes.
 
-It can:
+It can read:
 
 ```text
 read workflow status
@@ -16,16 +16,26 @@ read project profiles
 format Discord responses
 ```
 
+It can write only:
+
+```text
+_Docs/AIWorkflow/Backlog.md
+_Docs/AIWorkflow/ActiveTask.md
+_Temp/AIWorkflowDiscordBot/backups/
+```
+
 It must not:
 
 ```text
-write files
 edit source
-edit docs
+edit game source code
+edit _Local/
+edit node_modules/
 run Copilot
 run Codex write mode
 run build
 run game/runtime
+implement approval/block/done/run/codex/computer-use commands
 commit
 push
 release
@@ -70,6 +80,10 @@ Do not commit `_Local/`.
 /ai docs
 /ai project list
 /ai project profile
+/ai task current
+/ai task list
+/ai task create
+/ai task set-active
 ```
 
 For project profile:
@@ -94,6 +108,23 @@ _Docs/AIWorkflow/ActiveProject.json
 
 Explicit `id:` overrides the active project selector for that request only.
 
+For task commands:
+
+```text
+/ai task current
+/ai task list
+/ai task list status:todo
+/ai task list kind:automation
+/ai task create title:"Test Discord task management command" category:WF priority:P2 kind:automation reason:"Release B validation"
+/ai task set-active id:WF-20260503-231500
+```
+
+See:
+
+```text
+_Docs/AIWorkflow/Discord_Task_Management_Commands.md
+```
+
 ---
 
 ## Validation
@@ -110,6 +141,10 @@ After starting the bot:
 [ ] /ai project list works.
 [ ] /ai project profile shows Source: ActiveProject.json.
 [ ] /ai project profile id:unity_project_template shows Source: explicit project id.
+[ ] /ai task current works.
+[ ] /ai task list works.
+[ ] /ai task create appends one Backlog.md row and creates a backup.
+[ ] /ai task set-active updates ActiveTask.md and creates a backup.
 [ ] Git status remains unchanged after commands.
 ```
 

@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
+import { createTask, getCurrentTask, listBacklogTasks, setActiveTask } from "../services/taskService.js";
 import {
   formatActive,
   formatBacklog,
@@ -11,13 +12,26 @@ import {
   formatProjectList,
   formatProjectProfile,
   formatStatus,
+  formatTaskCreated,
+  formatTaskCurrent,
+  formatTaskList,
+  formatTaskSetActive,
   truncateForDiscord,
 } from "../services/responseFormatter.js";
+
+const CATEGORY_CHOICES = ["WF", "GAME", "DOC", "VAL", "UNITY"].map((value) => ({ name: value, value }));
+const PRIORITY_CHOICES = ["P0", "P1", "P2", "P3"].map((value) => ({ name: value, value }));
+const KIND_CHOICES = ["automation", "implementation", "documentation", "validation", "maintenance", "game"]
+  .map((value) => ({ name: value, value }));
+const BACKLOG_KIND_CHOICES = ["workflow", "architecture", "implementation", "refactoring", "validation", "data", "documentation", "automation", "unity", "release", "maintenance", "game"]
+  .map((value) => ({ name: value, value }));
+const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_implementation", "in_progress", "review", "validation", "blocked", "done", "deferred", "partial_done"]
+  .map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
   return new SlashCommandBuilder()
     .setName("ai")
-    .setDescription("Read-only AIWorkflow status commands")
+    .setDescription("AIWorkflow status and task commands")
     .addSubcommand((sub) =>
       sub.setName("status").setDescription("Show overall AIWorkflow status"),
     )
@@ -54,6 +68,82 @@ export function buildAiCommand() {
                 .setRequired(false),
             ),
         ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("task")
+        .setDescription("Workflow task management commands")
+        .addSubcommand((sub) =>
+          sub.setName("current").setDescription("Show current active task metadata"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("list")
+            .setDescription("Show top backlog tasks")
+            .addStringOption((option) =>
+              option
+                .setName("status")
+                .setDescription("Optional status filter")
+                .setRequired(false)
+                .addChoices(...STATUS_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("kind")
+                .setDescription("Optional kind filter")
+                .setRequired(false)
+                .addChoices(...BACKLOG_KIND_CHOICES),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("create")
+            .setDescription("Create a backlog task")
+            .addStringOption((option) =>
+              option
+                .setName("title")
+                .setDescription("Task title")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("category")
+                .setDescription("Task id category")
+                .setRequired(false)
+                .addChoices(...CATEGORY_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("priority")
+                .setDescription("Task priority")
+                .setRequired(false)
+                .addChoices(...PRIORITY_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("kind")
+                .setDescription("Task kind")
+                .setRequired(false)
+                .addChoices(...KIND_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("reason")
+                .setDescription("Task reason")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("set-active")
+            .setDescription("Set the active task from Backlog.md")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            ),
+        ),
     );
 }
 
@@ -73,6 +163,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "task") {
+    await handleTaskCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (subcommand === "docs") {
     await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
     return;
@@ -87,6 +182,62 @@ export async function handleAiCommand(interaction, config) {
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
   await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+}
+
+async function handleTaskCommand(interaction, config, subcommand) {
+  try {
+    if (subcommand === "current") {
+      const result = await getCurrentTask(config);
+      await interaction.editReply({
+        content: truncateForDiscord(formatTaskCurrent(result.data), config.limits.maxDiscordChars),
+      });
+      return;
+    }
+
+    if (subcommand === "list") {
+      const result = await listBacklogTasks(config, {
+        status: interaction.options.getString("status"),
+        kind: interaction.options.getString("kind"),
+      });
+      await interaction.editReply({
+        content: truncateForDiscord(formatTaskList(result.data), config.limits.maxDiscordChars),
+      });
+      return;
+    }
+
+    if (subcommand === "create") {
+      const result = await createTask(config, {
+        title: interaction.options.getString("title"),
+        category: interaction.options.getString("category"),
+        priority: interaction.options.getString("priority"),
+        kind: interaction.options.getString("kind"),
+        reason: interaction.options.getString("reason"),
+      });
+      await interaction.editReply({
+        content: truncateForDiscord(formatTaskCreated(result.data), config.limits.maxDiscordChars),
+      });
+      return;
+    }
+
+    if (subcommand === "set-active") {
+      const result = await setActiveTask(config, interaction.options.getString("id"));
+      if (!result.ok) {
+        await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+        return;
+      }
+
+      await interaction.editReply({
+        content: truncateForDiscord(formatTaskSetActive(result.data), config.limits.maxDiscordChars),
+      });
+      return;
+    }
+
+    await interaction.editReply({ content: "Unknown task command." });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(`Task command failed: ${error.message}`, config.limits.maxDiscordChars),
+    });
+  }
 }
 
 async function handleProjectCommand(interaction, config, subcommand) {

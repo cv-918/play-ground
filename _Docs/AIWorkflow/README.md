@@ -53,6 +53,7 @@ This README is the entry point for the document set.
 | `Discord_Bot_v1_Operation_Guide.md` | Daily operation guide for starting, using, shutting down, and safely operating Discord Read-Only Bot v1 |
 | `Discord_Bot_v1_Troubleshooting.md` | Troubleshooting reference for Discord Bot v1 token, command, local script, active project, and Git safety issues |
 | `Discord_Bot_Always_On_Guide.md` | Operation guide for Discord Bot always-on background start, stop, status, restart, logging, and local safety checks |
+| `Discord_Task_Management_Commands.md` | Defines Release B Discord task management commands, safety scope, validation commands, and acceptance criteria |
 
 ---
 

@@ -172,6 +172,74 @@ export function formatDocs() {
   ].join("\n");
 }
 
+export function formatTaskCurrent(data) {
+  const task = data.metadata ?? {};
+  const lines = [
+    "**Current Task**",
+    `ID: ${task.task_id ?? "unknown"}`,
+    `Title: ${task.title ?? "unknown"}`,
+    `Status: ${task.status ?? "unknown"}`,
+    `Priority/Risk: ${task.priority ?? "unknown"} / ${task.risk_level ?? "unknown"}`,
+    `Path: ${task.workflow_path ?? "unknown"}`,
+  ];
+
+  if (data.next_recommended_task) {
+    lines.push("");
+    lines.push("**Next Recommended Task**");
+    lines.push(cleanupBlock(data.next_recommended_task));
+  }
+
+  return lines.join("\n");
+}
+
+export function formatTaskList(data) {
+  const tasks = Array.isArray(data.tasks) ? data.tasks.slice(0, 10) : [];
+  const filters = data.filters ?? {};
+  const lines = ["**Task Backlog**"];
+
+  const activeFilters = [
+    filters.status ? `status=${filters.status}` : "",
+    filters.kind ? `kind=${filters.kind}` : "",
+  ].filter(Boolean);
+
+  if (activeFilters.length > 0) {
+    lines.push(`Filters: ${activeFilters.join(", ")}`);
+  } else {
+    lines.push("Top open tasks");
+  }
+
+  lines.push("");
+
+  if (tasks.length === 0) {
+    lines.push("(none)");
+  } else {
+    for (const task of tasks) {
+      lines.push(`- ${task.id} [${task.priority}/${task.status}/${task.kind}] ${task.item}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+export function formatTaskCreated(task) {
+  return [
+    "**Task Created**",
+    `ID: ${task.id}`,
+    `Title: ${task.item}`,
+  ].join("\n");
+}
+
+export function formatTaskSetActive(data) {
+  const task = data.task ?? {};
+  return [
+    "**Active Task Updated**",
+    `ID: ${task.id}`,
+    `Title: ${task.item}`,
+    `Status: in_progress`,
+    "Backlog row status was not changed.",
+  ].join("\n");
+}
+
 function cleanupBlock(text) {
   return String(text)
     .replaceAll("```text", "")
