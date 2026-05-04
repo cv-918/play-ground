@@ -13,6 +13,7 @@ void RunState::Ready()
 {
 	const _uint stage_progress = std::max(1u, _UserProfile.GetStageProgress());
 
+	kill_count_ = 0;
 	kill_count_for_clear_ = BASE_KILL_COUNT + ((stage_progress - 1) * KILL_GROWTH_PER_STAGE);
 }
 
