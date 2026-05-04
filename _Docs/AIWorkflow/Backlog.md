@@ -108,6 +108,8 @@ release
 | GAME-008 | P3 | todo | analysis | Audit unused schema fields | `facing`, `spawn_interval_`, `unlock_type_`, `grade_` unclear | ChatGPT -> Codex | Field usage table |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
 | DOC-001 | P1 | todo | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | Document review |
+| VAL-20260504-205258 | P2 | done | validation | VAL-002 Add run result semantics smoke validation | Automate part of the GAME-002 runtime validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, reward/save timing, stage_progress rules, and duplicate result application. | Discord -> human review | done: "Analysis-only validation planning completed. Codex confirmed that reduced-scope smoke validation should be split into a follow-up task. Recommended path is a focused dev-only or pure-helper smoke validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, reward/save timing, and stage_progress rules." |
+| VAL-20260504-214915 | P2 | done | validation | VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL | Add focused smoke validation for GAME-002 run result semantics without mutating save data or introducing a broad test framework. | Discord -> human review | done: run_result_semantics_check.bat passed: TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, result_apply_eligible behavior, stage_progress condition, reward/save eligibility rule. json_smoke_check passed: 11 OK, 0 failed. No UserData.json mutation. |
 
 ---
 

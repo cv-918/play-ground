@@ -11,11 +11,11 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: GAME-002
-title: Consolidate run clear semantics
+task_id: VAL-20260504-214915
+title: VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL
 status: done
 workflow_path: discord_task_management
-priority: P1
+priority: P2
 risk_level: low
 requested_by: human_director
 requested_at: 2026-05-04
@@ -26,7 +26,7 @@ last_updated: 2026-05-04
 
 ## Goal
 
-Consolidate run clear semantics
+VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL
 
 ---
 
@@ -36,7 +36,7 @@ Consolidate run clear semantics
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: Timer, death, kill condition, restart, return, save value
+validation: pending
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-Timer, death, kill condition, restart, return, save value
+pending
 ```
 
 ---
@@ -70,10 +70,12 @@ Timer, death, kill condition, restart, return, save value
 
 ```text
 status: done
-note: done: "Runtime validation passed: timer expired result, player death result, kill goal reached, stage progress action, result restart, and pause abandon were verified. Rewards and stage progress are applied only on confirming actions such as RESTART, EXIT, or explicit stage progress action. Kill goal reached alone does not increase stage_progress."
+note: done: run_result_semantics_check.bat passed: TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, result_apply_eligible behavior, stage_progress condition, reward/save eligibility rule. json_smoke_check passed: 11 OK, 0 failed. No UserData.json mutation.
 updated_at: 2026-05-04
 source: Discord task status command
 ```
+---
+
 ## Next Recommended Task
 
 ```text

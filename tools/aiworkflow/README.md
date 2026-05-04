@@ -20,6 +20,7 @@ They do not decide validation pass/fail.
 status.bat
 capture_diff.bat
 json_smoke_check.bat
+run_result_semantics_check.bat
 workflow_status.bat
 project_profile_status.bat
 active_project_status.bat
@@ -60,6 +61,18 @@ tools\aiworkflow\json_smoke_check.bat
 ```
 
 Reports are written under `_Temp\AIWorkflowReports\`.
+
+---
+
+## run_result_semantics_check.bat
+
+Validates reduced-scope GAME-002 run result semantics without booting the game runtime and without reading or writing `PlayGround\Data\UserData.json`.
+
+```bat
+tools\aiworkflow\run_result_semantics_check.bat
+```
+
+Expected output includes PASS lines for `TimeExpired`, `PlayerDied`, `StageProgressed`, `Abandoned`, duplicate apply guard, stage progression conditions, and reward/save eligibility.
 
 ---
 
@@ -166,6 +179,7 @@ tools\aiworkflow\project_profile_status.bat
 tools\aiworkflow\project_profile_status.bat --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
+tools\aiworkflow\run_result_semantics_check.bat
 ```
 
 Do not commit generated `_Temp` outputs.
