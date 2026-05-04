@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "Dust.h"
 
 #include "Actors/GameObjectBase.h"
@@ -113,7 +113,7 @@ void Dust::BeginBounce(GameObjectBase* _tracking_target)
 	tracking_transform_ = _tracking_target->GetTransform();
 	tracking_target_callback_id_ = tracking_target_->AddDestructionCallback([this]() {
 		_HandleTrackedTargetDestroyed();
-		});
+	});
 
 	if (tracking_transform_ == nullptr)
 	{

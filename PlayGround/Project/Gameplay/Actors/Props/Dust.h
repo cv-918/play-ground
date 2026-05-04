@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Props.h"
 
 class GameObjectBase;
@@ -9,7 +9,8 @@ class Dust final
 {
 public:
 	explicit Dust(const UnitCreationInfo& _creation_info, _float _spd, _uint _dust_amount)
-		: Props(PropsType::Dust, _creation_info), move_spd_(_spd), dust_amount_(_dust_amount) {}
+		: Props(PropsType::Dust, _creation_info), move_spd_(_spd), dust_amount_(_dust_amount) {
+	}
 
 public:
 	_bool Initialize() override;
