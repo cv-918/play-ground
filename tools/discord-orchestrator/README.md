@@ -6,7 +6,7 @@ This is the Discord adapter for the AIWorkflow system.
 
 The original v1 command set is read-only. Release B adds limited task management writes.
 Release C adds controlled task status note writes. Release D adds allowlisted workflow
-script execution commands.
+script execution commands. Release E adds Codex App prompt package generation.
 
 It can read:
 
@@ -26,6 +26,7 @@ _Docs/AIWorkflow/ActiveTask.md
 _Temp/AIWorkflowDiscordBot/backups/
 _Temp/AIWorkflowReports/
 _Temp/AIWorkflowDiffs/
+_Temp/AIWorkflowTaskRequests/
 ```
 
 It must not:
@@ -98,6 +99,7 @@ Do not commit `_Local/`.
 /ai run project-profile
 /ai run json-smoke
 /ai run capture-diff
+/ai prepare codex
 ```
 
 For project profile:
@@ -143,6 +145,7 @@ See:
 _Docs/AIWorkflow/Discord_Task_Management_Commands.md
 _Docs/AIWorkflow/Discord_Task_Status_Commands.md
 _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
+_Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
 ```
 
 For safe script execution:
@@ -159,6 +162,24 @@ For safe script execution:
 `/ai run capture-diff include-untracked:true` is available but should be used only
 when intentionally approved because the underlying script may mark untracked files
 with intent-to-add.
+
+For Codex prompt preparation:
+
+```text
+/ai prepare codex
+/ai prepare codex id:GAME-001 mode:analysis context:standard
+/ai prepare codex id:GAME-002 mode:implementation context:standard
+/ai prepare codex id:WF-021 mode:review context:compact
+```
+
+`/ai prepare codex` writes a manual Codex App prompt markdown file under:
+
+```text
+_Temp/AIWorkflowTaskRequests/
+```
+
+It does not execute Codex, Copilot, computer-use, build/test commands, commits,
+pushes, or releases.
 
 ---
 
@@ -191,6 +212,11 @@ After starting the bot:
 [ ] /ai run project-profile id:unity_project_template works.
 [ ] /ai run json-smoke works.
 [ ] /ai run capture-diff works.
+[ ] /ai prepare codex works with ActiveTask.md default.
+[ ] /ai prepare codex id:GAME-001 mode:analysis context:standard works.
+[ ] /ai prepare codex id:GAME-002 mode:implementation context:standard works.
+[ ] /ai prepare codex id:WF-021 mode:review context:compact works.
+[ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Git status remains unchanged after commands.
 ```
 

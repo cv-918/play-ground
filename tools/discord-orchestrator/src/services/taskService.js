@@ -48,6 +48,26 @@ export async function listBacklogTasks(config, filters = {}) {
   };
 }
 
+export async function getBacklogTaskById(config, taskId) {
+  const id = normalizeTaskId(taskId);
+  const filePath = resolveRepoPath(config, BACKLOG_RELATIVE_PATH);
+  const content = await fs.readFile(filePath, "utf8");
+  const table = parseBacklogTable(content);
+  const task = table.rows.map((row) => rowToTask(row)).find((item) => item.id === id);
+
+  if (!task) {
+    return {
+      ok: false,
+      error: `Task not found in Backlog.md: ${id}`,
+    };
+  }
+
+  return {
+    ok: true,
+    data: task,
+  };
+}
+
 export async function createTask(config, input) {
   const category = normalizeEnum(input.category, "WF", CATEGORY_VALUES, "category", (value) => value.toUpperCase());
   const priority = normalizeEnum(input.priority, "P2", PRIORITY_VALUES, "priority", (value) => value.toUpperCase());

@@ -215,6 +215,12 @@ services/responseFormatter.js
 
 No Discord command exposes arbitrary command strings, script paths, or raw args.
 
+Release E task routing prompt generation is documented separately:
+
+```text
+_Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
+```
+
 ---
 
 ## Validation Commands

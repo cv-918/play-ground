@@ -3,6 +3,7 @@ import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
+import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import {
   approveTask,
   blockTask,
@@ -17,6 +18,7 @@ import {
   formatActive,
   formatBacklog,
   formatBlockers,
+  formatCodexPrepareResult,
   formatDocs,
   formatNext,
   formatProjectList,
@@ -39,6 +41,8 @@ const BACKLOG_KIND_CHOICES = ["workflow", "architecture", "implementation", "ref
   .map((value) => ({ name: value, value }));
 const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_implementation", "in_progress", "review", "validation", "blocked", "done", "deferred", "partial_done"]
   .map((value) => ({ name: value, value }));
+const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
+const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
   return new SlashCommandBuilder()
@@ -114,6 +118,36 @@ export function buildAiCommand() {
                 .setName("include-untracked")
                 .setDescription("Include untracked files; default false")
                 .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("prepare")
+        .setDescription("Generate manual task routing prompt packages")
+        .addSubcommand((sub) =>
+          sub
+            .setName("codex")
+            .setDescription("Generate a Codex App prompt package")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Optional workflow task id; defaults to ActiveTask.md task_id")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("mode")
+                .setDescription("Prompt mode; default implementation")
+                .setRequired(false)
+                .addChoices(...CODEX_MODE_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("context")
+                .setDescription("Prompt context level; default standard")
+                .setRequired(false)
+                .addChoices(...CODEX_CONTEXT_CHOICES),
             ),
         ),
     )
@@ -289,6 +323,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "prepare") {
+    await handlePrepareCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (subcommand === "docs") {
     await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
     return;
@@ -303,6 +342,32 @@ export async function handleAiCommand(interaction, config) {
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
   await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+}
+
+async function handlePrepareCommand(interaction, config, subcommand) {
+  if (subcommand !== "codex") {
+    await interaction.editReply({ content: "Unknown prepare command." });
+    return;
+  }
+
+  try {
+    const result = await prepareCodexPrompt(config, {
+      id: interaction.options.getString("id"),
+      mode: interaction.options.getString("mode"),
+      context: interaction.options.getString("context"),
+    });
+
+    await interaction.editReply({
+      content: truncateForDiscord(formatCodexPrepareResult(result), config.limits.maxDiscordChars),
+    });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(formatCodexPrepareResult({
+        ok: false,
+        error: `Codex prompt preparation failed: ${error.message}`,
+      }), config.limits.maxDiscordChars),
+    });
+  }
 }
 
 async function handleRunCommand(interaction, config, subcommand) {

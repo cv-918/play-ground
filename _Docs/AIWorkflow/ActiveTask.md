@@ -11,10 +11,10 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-024
-title: Implement Discord safe script execution commands
+task_id: WF-025
+title: Implement Codex App task routing prompt generation
 status: done
-workflow_path: release_d_safe_script_execution
+workflow_path: release_e_codex_task_routing
 priority: P1
 risk_level: medium
 requested_by: human_director
@@ -26,7 +26,8 @@ last_updated: 2026-05-04
 
 ## Goal
 
-Finalize Release D Discord safe script execution commands after live Discord validation.
+Finalize Release E Discord Codex App task routing prompt generation after live
+Discord validation.
 
 ---
 
@@ -46,9 +47,9 @@ validation: completed by human Discord execution
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/ActiveTask.md
 _Docs/AIWorkflow/README.md
-_Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
-_Docs/AIWorkflow/Discord_Task_Management_Commands.md only if cross-reference is useful
-_DevLog/WorkLog/2026-05-04_Discord_Safe_Script_Execution_Commands.md
+_Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
+_Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md only if cross-reference is useful
+_DevLog/WorkLog/2026-05-04_Discord_Codex_Task_Routing_Commands.md
 ```
 
 ---
@@ -66,8 +67,9 @@ _DevLog/WorkLog/2026-05-04_Discord_Safe_Script_Execution_Commands.md
 
 ```text
 Review the retained Validation Evidence block below.
-Confirm WF-024 is marked done in Backlog.
-Confirm WF-025 remains deferred as the next automation task.
+Confirm WF-025 is marked done in Backlog.
+Confirm GAME-001B exists as the next gameplay validation task.
+Confirm generated _Temp outputs remain ignored by Git.
 ```
 
 ---
@@ -78,16 +80,13 @@ Confirm WF-025 remains deferred as the next automation task.
 npm run register: passed
 restart_bot.bat: passed
 status_bot.bat running: passed
-/ai run workflow-status: passed
-/ai run active-project: passed
-/ai run project-profile: passed
-/ai run project-profile id:unity_project_template: passed
-/ai run json-smoke: passed
-json-smoke Total 11 Failed 0: passed
-/ai run capture-diff: passed
-capture-diff default mode: passed
+/ai prepare codex: passed
+/ai prepare codex id:GAME-001 mode:analysis context:standard: passed
+/ai prepare codex id:GAME-002 mode:implementation context:standard: passed
+/ai prepare codex id:WF-021 mode:review context:compact: passed
 /ai status: passed
 /ai active: passed
+generated files under _Temp/AIWorkflowTaskRequests: passed
 git diff --check: passed
 private files not tracked: passed
 ```
@@ -97,13 +96,11 @@ private files not tracked: passed
 ## Known Notes
 
 ```text
-- Release D exposes only allowlisted script keys.
-- Arbitrary script paths, raw shell commands, Codex execution, Copilot execution, build/test execution, commit, push, release, and computer-use remain intentionally unsupported.
-- capture-diff default mode was validated.
-- capture-diff include-untracked:true was intentionally not validated because it may affect Git intent-to-add state.
-- _Temp outputs are runtime artifacts and must remain ignored by Git.
-- Codex/Copilot routing is intentionally deferred to WF-025 or later.
-- Actual game development should be resumed after this workflow MVP milestone unless further automation is explicitly prioritized.
+- Release E generates Codex App prompt files only.
+- Release E does not execute Codex, Copilot, build/test, game runtime, computer-use, commit, push, or release.
+- Generated prompt files are runtime artifacts under _Temp and must remain ignored by Git.
+- Manual bridge remains: the human opens the generated file and pastes/reviews it in Codex App.
+- Next recommended step is to apply the workflow to a real game task.
 ```
 
 ---
@@ -112,7 +109,7 @@ private files not tracked: passed
 
 ```text
 status: done
-note: Release D Discord safe script execution command validation passed
+note: Release E Discord Codex App task routing prompt generation validation passed
 updated_at: 2026-05-04
 source: Discord live validation
 ```
@@ -126,8 +123,8 @@ GAME-001B:
 Runtime validate GameDataLoader after JSON syntax smoke check.
 
 Alternative:
-WF-025:
-Implement Codex/Copilot task routing prompt generation.
+WF-021:
+Harden Discord bot Node warnings and commandRunner shell usage.
 ```
 
 ---

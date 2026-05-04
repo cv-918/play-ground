@@ -172,6 +172,7 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Discord_Task_Management_Commands.md",
     "- _Docs/AIWorkflow/Discord_Task_Status_Commands.md",
     "- _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md",
+    "- _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md",
   ].join("\n");
 }
 
@@ -198,6 +199,31 @@ export function formatRunCommandResult(result) {
     default:
       return "Unknown run command result.";
   }
+}
+
+export function formatCodexPrepareResult(result) {
+  if (!result.ok) {
+    return [
+      "**Codex Prompt Preparation Failed**",
+      cleanupBlock(result.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  return [
+    "**Codex Prompt Prepared**",
+    `Task: ${task.id ?? "unknown"} - ${task.item ?? "unknown"}`,
+    `Mode: ${data.mode ?? "unknown"} / Context: ${data.context_level ?? "unknown"}`,
+    `Model: ${data.recommended_model ?? "unknown"}`,
+    `Reasoning: ${data.recommended_reasoning ?? "unknown"}`,
+    `Path: ${formatInlineCode(data.generated_path || "unknown")}`,
+    "",
+    "Next manual steps:",
+    "1. Open the generated markdown file.",
+    "2. Paste/review it in Codex App.",
+    "3. Return Codex results to ChatGPT/Discord for review.",
+  ].join("\n");
 }
 
 function formatRunWorkflowStatus(data) {
