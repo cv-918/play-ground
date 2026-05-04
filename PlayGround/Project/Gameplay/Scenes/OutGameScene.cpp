@@ -149,9 +149,10 @@ void OutGameScene::OnEnter()
 	const auto& nav_mesh = background_->NavMesh();
 
 	// s, [ Temporary Town Player Setup for Testing ]
-	const auto player_spawn_data = _CharacterDagaMgr.GetDataByIndex(0);
+	const auto player_spawn_data = _CharacterDagaMgr.GetDefaultPlayableCharacterData();
 	if (player_spawn_data == nullptr)
 	{
+		_SYSTEM_LOG_ERROR(L"Default playable character data not found. id: %d", PlayableCharacterDataManager::DEFAULT_PLAYABLE_CHARACTER_ID);
 		_NULL_DETECTION_MSGBOX;
 		return;
 	}

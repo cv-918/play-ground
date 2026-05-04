@@ -11,14 +11,14 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: GAME-004
-title: Consume dialogue session result explicitly
-status: done
+task_id: GAME-005
+title: Replace `GetDataByIndex(0)` with deterministic character selection
+status: ready_for_implementation
 workflow_path: discord_task_management
 priority: P2
 risk_level: low
 requested_by: human_director
-requested_at: 2026-05-04
+requested_at: 2026-05-05
 last_updated: 2026-05-05
 ```
 
@@ -26,7 +26,7 @@ last_updated: 2026-05-05
 
 ## Goal
 
-Consume dialogue session result explicitly
+Replace `GetDataByIndex(0)` with deterministic character selection
 
 ---
 
@@ -36,7 +36,7 @@ Consume dialogue session result explicitly
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: Prologue/chapter flow, skip/end reason
+validation: Save/order changes, same character spawn
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-Prologue/chapter flow, skip/end reason
+Save/order changes, same character spawn
 ```
 
 ---
@@ -69,11 +69,12 @@ Prologue/chapter flow, skip/end reason
 ## Latest Status Note
 
 ```text
-status: done
-note: done: "Runtime validation passed: OutGame entry normal, normal dialogue completion preserved story/event flow, hold skip worked, required gameplay events executed during skip, no abnormal termination or duplicate handling observed, NPC Prologue4 callback dialogue start/end worked, result consumption preserved flow, scene exit/return did not treat running dialogue as normal completed."
+status: ready_for_implementation
+note: approved: "Approve reduced-scope implementation: replace GetDataByIndex(0)-based playable character selection with explicit default character ID lookup. Do not add selected character save schema, character selection UI, unlock policy changes, or JsonDataManager refactor."
 updated_at: 2026-05-05
 source: Discord task status command
 ```
+
 ---
 
 ## Next Recommended Task

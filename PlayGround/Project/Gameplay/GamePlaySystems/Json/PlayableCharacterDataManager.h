@@ -40,5 +40,9 @@ class PlayableCharacterDataManager
 	: public JsonDataManager<PlayableCharacterJsonInfo>
 	, public ISingleton<PlayableCharacterDataManager>
 {
+public:
+	static constexpr _uint DEFAULT_PLAYABLE_CHARACTER_ID = s_uint(PlayableCharacterId::Dusty);
+
+	const PlayableCharacterJsonInfo* GetDefaultPlayableCharacterData() const;
 };
 
