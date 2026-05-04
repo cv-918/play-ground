@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../DialogueTypes.h"
 
@@ -21,4 +21,9 @@ namespace DialogueSampleFactory
 	 * @brief 이벤트 테스트 세션 생성
 	 */
 	DialogueSessionData MakeEventSession();
+
+	/**
+	 * @brief 홀드 스킵 중 Gameplay 이벤트 실행 테스트 세션 생성
+	 */
+	DialogueSessionData MakeHoldSkipGameplayEventSession();
 }

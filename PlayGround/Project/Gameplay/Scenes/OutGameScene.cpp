@@ -83,45 +83,11 @@ _int OutGameScene::Update(_double _delta_time)
 			dialogue_system_.UpdateSkipHold(hold_seconds);
 		}
 
-		if (dialogue_system_.HasFinishedSession())
+		DialogueSessionResult dialogue_result;
+		// Consume clears the finished state so scene flow runs once per session result.
+		if (dialogue_system_.ConsumeLastSessionResult(dialogue_result))
 		{
-			const DialogueSessionResult& result = dialogue_system_.GetLastSessionResult();
-			const auto story_progress = _UserProfile.GetMainStoryProgress();
-
-			// TODO:
-			// 여기서 end_reason, choice_records 확인 가능
-			dialogue_system_.ClearFinishedState();
-
-			if (story_progress == MainStoryProgress::Prologue1)
-				_SceneMgr.ChangeScene(SceneType::InGame);
-
-			if (story_progress == MainStoryProgress::Prologue3)
-				_SceneMgr.ChangeScene(SceneType::OutGame, true);
-
-			if (story_progress == MainStoryProgress::Prologue4)
-				_SceneMgr.ChangeScene(SceneType::OutGame, true);
-
-			if (story_progress == MainStoryProgress::Prologue5)
-				_SceneMgr.ChangeScene(SceneType::OutGame, true);
-
-			if (story_progress == MainStoryProgress::Chapter1)
-			{
-				if (npcs_.size() >= 3)
-				{
-					// 어트리뷰트 상호작용 오픈
-					npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
-					npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
-				}
-				else
-				{
-					_SYSTEM_LOG_ERROR(L"Chapter1 interaction setup skipped: required TownNpc placements missing. spawned: %d", s_int(npcs_.size()));
-				}
-
-				// 더스티 어트리뷰트 획득
-				_UserProfile.NodeLevelUp(0);
-
-				// 안내 메시지 노출(정신이 깨어나는 기분이다. 물체에 가까이 다가가보자.)
-			}
+			_ConsumeDialogueSessionResult(dialogue_result);
 		}
 	}
 	// e, [ Dialogue System Test ]
@@ -366,6 +332,12 @@ void OutGameScene::OnEnter()
 
 void OutGameScene::OnExit()
 {
+	if (dialogue_system_.IsRunning())
+		dialogue_system_.AbortSession();
+
+	DialogueSessionResult discarded_result;
+	(void)dialogue_system_.ConsumeLastSessionResult(discarded_result);
+
 	hold_enter_black_ = false;
 	_CameraMgr.ClearFollowTarget();
 	_ColMgr.ClearAllColliders();
@@ -399,6 +371,54 @@ void OutGameScene::ProcessDialogueEvent(const std::wstring& _event_id)
 			npcs_[2]->Activate();
 		else
 			_SYSTEM_LOG_ERROR(L"ActiveRing event skipped: required TownNpc placements missing. spawned: %d", s_int(npcs_.size()));
+	}
+}
+
+void OutGameScene::_ConsumeDialogueSessionResult(const DialogueSessionResult& _result)
+{
+	switch (_result.end_reason)
+	{
+	case DialogueSessionEndReason::Completed:
+	case DialogueSessionEndReason::Skipped:
+		break;
+
+	case DialogueSessionEndReason::Aborted:
+	case DialogueSessionEndReason::InvalidData:
+		// Scene flow only treats completed/skipped sessions as normal dialogue completion.
+		return;
+
+	default:
+		return;
+	}
+
+	// Gameplay events have already been executed by DialogueRunner through the listener.
+	const auto story_progress = _UserProfile.GetMainStoryProgress();
+
+	if (story_progress == MainStoryProgress::Prologue1)
+		_SceneMgr.ChangeScene(SceneType::InGame);
+
+	if (story_progress == MainStoryProgress::Prologue3)
+		_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+	if (story_progress == MainStoryProgress::Prologue4)
+		_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+	if (story_progress == MainStoryProgress::Prologue5)
+		_SceneMgr.ChangeScene(SceneType::OutGame, true);
+
+	if (story_progress == MainStoryProgress::Chapter1)
+	{
+		if (npcs_.size() >= 3)
+		{
+			npcs_[2]->SetOnInteractCallback([this]() {_ChangeView(OutGameViewState::Attribute); });
+			npcs_[1]->SetOnInteractCallback([]() {_SceneMgr.ChangeScene(SceneType::InGame); });
+		}
+		else
+		{
+			_SYSTEM_LOG_ERROR(L"Chapter1 interaction setup skipped: required TownNpc placements missing. spawned: %d", s_int(npcs_.size()));
+		}
+
+		_UserProfile.NodeLevelUp(0);
 	}
 }
 

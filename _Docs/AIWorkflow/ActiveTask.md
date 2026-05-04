@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260504-214915
-title: VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL
+task_id: GAME-004
+title: Consume dialogue session result explicitly
 status: done
 workflow_path: discord_task_management
 priority: P2
 risk_level: low
 requested_by: human_director
 requested_at: 2026-05-04
-last_updated: 2026-05-04
+last_updated: 2026-05-05
 ```
 
 ---
 
 ## Goal
 
-VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL
+Consume dialogue session result explicitly
 
 ---
 
@@ -36,7 +36,7 @@ VAL-003 Implement reduced-scope run result semantics smoke validation category: 
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: pending
+validation: Prologue/chapter flow, skip/end reason
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-pending
+Prologue/chapter flow, skip/end reason
 ```
 
 ---
@@ -70,8 +70,8 @@ pending
 
 ```text
 status: done
-note: done: run_result_semantics_check.bat passed: TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, result_apply_eligible behavior, stage_progress condition, reward/save eligibility rule. json_smoke_check passed: 11 OK, 0 failed. No UserData.json mutation.
-updated_at: 2026-05-04
+note: done: "Runtime validation passed: OutGame entry normal, normal dialogue completion preserved story/event flow, hold skip worked, required gameplay events executed during skip, no abnormal termination or duplicate handling observed, NPC Prologue4 callback dialogue start/end worked, result consumption preserved flow, scene exit/return did not treat running dialogue as normal completed."
+updated_at: 2026-05-05
 source: Discord task status command
 ```
 ---
