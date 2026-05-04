@@ -60,6 +60,12 @@ void StageManager::ChangeState(StageState _new_state)
 	curr_state_ = _new_state;
 	_SYSTEM_LOG_INFO(_T("Stage state changed: %s -> %s"), _CommonGamePlayFunc::GetStageStateTypeName(prev_state_).c_str(), _CommonGamePlayFunc::GetStageStateTypeName(curr_state_).c_str());
 
+	if (curr_state_ == StageState::Exit && prev_state_ == StageState::Pause)
+	{
+		// Leaving from pause skips the result screen and is treated as an abandoned run.
+		_RunState.MarkEndReason(RunEndReason::Abandoned);
+	}
+
 	switch (curr_state_)
 	{
 	case StageState::Ready:
@@ -92,23 +98,49 @@ void StageManager::ChangeState(StageState _new_state)
 	_GameState.SetPause(!is_play_state);
 }
 
-void StageManager::ProgressRunSessionResult()
+RunSessionResult StageManager::CreateRunSessionResultSnapshot() const
 {
-	// 1. RunState로부터 이번 판의 최종 성적표를 받음
 	RunSessionResult result = _RunState.CreateResult();
+	result.play_time_ = GetStageElapsedTime();
+	return result;
+}
+
+void StageManager::ProgressRunSessionResult(_bool _apply_stage_progress)
+{
+	if (run_session_result_applied_)
+		return;
+
+	// 1. RunState로부터 이번 판의 최종 성적표를 받음
+	RunSessionResult result = CreateRunSessionResultSnapshot();
+
+	if (_apply_stage_progress && result.stage_clear_eligible_)
+	{
+		const auto curr_stage_lv = _UserProfile.GetStageProgress();
+		if (curr_stage_lv < _StageDataMgr.GetStageCount())
+		{
+			_UserProfile.IncreaseStageProgress();
+		}
+	}
 
 	// 2. 유저 프로필에 영구 반영
-	_UserProfile.ApplyRunSessionResult(result);
+	if (result.result_apply_eligible_)
+	{
+		_UserProfile.ApplyRunSessionResult(result);
 
-	// 3. 안전하게 저장 (아까 논의한 Atomic Save 적용 포인트)
-	_UserDataMgr.Save("Data/UserData.json");
+		// 3. 안전하게 저장 (아까 논의한 Atomic Save 적용 포인트)
+		_UserDataMgr.Save("Data/UserData.json");
+	}
 
 	// 4. 다음 판을 위해 비우기
+	run_session_result_applied_ = true;
 	_RunState.Clear();
 }
 
 void StageManager::MarkCanProgressNextStage()
 {
+	if (can_progress_next_stage_)
+		return;
+
 	can_progress_next_stage_ = true;
 }
 
@@ -135,6 +167,8 @@ void StageManager::HandleEnemyDeath(const EnemyJsonInfo* _info, const _Vector3& 
 	}
 
 	_RunState.GetEnemyKillReward(_info);
+	if (_RunState.IsStageClearEligible())
+		MarkCanProgressNextStage();
 
 	const auto dusty_node_lv = _UserProfile.GetNodeLevel(0);
 	if (_info->dust_resource_count_ <= 0 || object_manager_ == nullptr || dusty_node_lv <= 0)
@@ -187,16 +221,20 @@ void StageManager::SetPlayScene(InGameScene* _play_scene)
 		spawn_interval_ = 0.0;
 		can_progress_next_stage_ = false;
 		proceed_to_next_stage_timer_ = 0.0;
+		run_session_result_applied_ = false;
 		return;
 	}
 
 	play_scene_ = _play_scene;
 	object_manager_ = play_scene_->GetObjectManager();
 	ui_manager_ = play_scene_->GetUIManager();
+	run_session_result_applied_ = false;
 }
 
 void StageManager::_OnEnter()
 {
+	run_session_result_applied_ = false;
+
 	// 초기화 로직 처리
 	// 예시: 배경 연출, 타이머 시작, 초기 스폰 등
 	// 연출 처리 후 Ready 상태로 전환
@@ -300,6 +338,8 @@ void StageManager::_OnPlay(_double _delta_time)
 
 	if (stage_elapsed_time_ >= stage_duration_)
 	{
+		// Timer survival completes the run; it does not imply the kill-goal stage clear.
+		_RunState.MarkEndReason(RunEndReason::TimeExpired);
 		ChangeState(StageState::Result);
 		return;
 	}
@@ -488,22 +528,22 @@ _Point StageManager::_GeneratePosition(
 	_float _avoid_radius)
 {
 	const auto is_valid_position = [_avoid_center, _avoid_radius](const _Point& _position)
-		{
-			if (nullptr == _avoid_center || _avoid_radius <= 0.f)
-				return true;
+	{
+		if (nullptr == _avoid_center || _avoid_radius <= 0.f)
+			return true;
 
-			const auto dx = s_float(_position.x - _avoid_center->x);
-			const auto dy = s_float(_position.y - _avoid_center->y);
-			return dx * dx + dy * dy >= _avoid_radius * _avoid_radius;
-		};
+		const auto dx = s_float(_position.x - _avoid_center->x);
+		const auto dy = s_float(_position.y - _avoid_center->y);
+		return dx * dx + dy * dy >= _avoid_radius * _avoid_radius;
+	};
 
 	const auto generate_in_area = [](const _Rect& _area)
-		{
-			return _Point{
-				_Random.Range(_area.Left(), _area.Right()),
-				_Random.Range(_area.Top(), _area.Bottom())
-			};
+	{
+		return _Point{
+			_Random.Range(_area.Left(), _area.Right()),
+			_Random.Range(_area.Top(), _area.Bottom())
 		};
+	};
 
 	if (_in_screen)
 	{
@@ -666,14 +706,9 @@ void StageManager::_ProcessStageClear()
 	proceed_to_next_stage_timer_ = 0.0;
 	can_progress_next_stage_ = false;
 
-	const auto curr_stage_lv = _UserProfile.GetStageProgress();
-	if (curr_stage_lv < _StageDataMgr.GetStageCount())
-	{
-		_UserProfile.IncreaseStageProgress();
-	}
-
 	// 결과 적용 및 스테이지 재시작
-	ProgressRunSessionResult();
+	_RunState.MarkEndReason(RunEndReason::StageProgressed);
+	ProgressRunSessionResult(true);
 	_SceneMgr.ChangeScene(SceneType::InGame, true);
 
 	_SYSTEM_LOG_INFO(_T("Proceeding to next stage. Stage progress increased to %d"), _UserProfile.GetStageProgress());

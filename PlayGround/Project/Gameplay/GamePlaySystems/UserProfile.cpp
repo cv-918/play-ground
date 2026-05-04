@@ -310,8 +310,17 @@ _uint UserProfile::GetNodeLevel(const _uint node_id) const
 
 void UserProfile::ApplyRunSessionResult(const RunSessionResult& _result)
 {
+	if (!_result.result_apply_eligible_)
+		return;
+
 	const auto earned_coin_count = _result.earned_coin_count_;
-	IncreaseCoins(_result.is_cleared_ ? earned_coin_count : earned_coin_count >> 1);
+	auto applied_coin_count = earned_coin_count;
+	if (_result.end_reason_ == RunEndReason::PlayerDied)
+	{
+		applied_coin_count = earned_coin_count >> 1;
+		_SYSTEM_LOG_INFO(_T("Player died. Earned coins reduced by half. Original: %u, Applied: %u"), earned_coin_count, applied_coin_count);
+	}
+	IncreaseCoins(applied_coin_count);
 
 	experience_ += _result.gained_experience_;
 }

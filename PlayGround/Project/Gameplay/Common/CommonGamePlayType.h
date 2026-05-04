@@ -287,9 +287,22 @@ struct UnitCreationInfo
 	class GameObjectBase* owner_ = nullptr;
 };
 
+enum class RunEndReason
+{
+	Undefined = 0,
+	TimeExpired,
+	PlayerDied,
+	StageProgressed,
+	Abandoned,
+};
+
 struct RunSessionResult
 {
 	_bool is_cleared_ = false;
+	RunEndReason end_reason_ = RunEndReason::Undefined;
+	_bool kill_goal_reached_ = false;
+	_bool stage_clear_eligible_ = false;
+	_bool result_apply_eligible_ = false;
 	_uint earned_coin_count_ = 0;
 	_uint gained_experience_ = 0;
 	_double play_time_ = 0.0;

@@ -2,6 +2,8 @@
 #include "InGameResultView.h"
 #include "InGameViewRenderUtils.h"
 
+#include "GamePlaySystems/StageManager.h"
+
 #include "../Elements/Button.h"
 
 InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_callback, const std::function<void()>& _exit_btn_callback)
@@ -45,21 +47,46 @@ InGameResultView::InGameResultView(const std::function<void()>& _restart_btn_cal
 
 void InGameResultView::Render(_double _delta_time)
 {
-    InGameViewRenderUtils::DrawDimmedBackground();
+	InGameViewRenderUtils::DrawDimmedBackground();
 
 	__super::Render(_delta_time);
 
-	const auto result = _RunState.CreateResult();
-	
+	const auto result = _StageMgr.CreateRunSessionResultSnapshot();
+
 	_tchar buffer[MAX_PATH] = {};
 	const auto x = GAME_VIEW_WIDTH_H; auto y = GAME_VIEW_HEIGHT_H - 100; // 버튼이 화면 중앙에 위치하므로
 	auto index = 0;
 
-	result.is_cleared_ ? swprintf_s(buffer, L"=== Stage Clear! ===") : swprintf_s(buffer, L"=== Stage Failed ===");
+	if (result.end_reason_ == RunEndReason::PlayerDied)
+	{
+		swprintf_s(buffer, L"=== Stage Failed ===");
+	}
+	else if (result.stage_clear_eligible_)
+	{
+		swprintf_s(buffer, L"=== Stage Clear! ===");
+	}
+	else
+	{
+		switch (result.end_reason_)
+		{
+		case RunEndReason::TimeExpired:
+			swprintf_s(buffer, L"=== Run Complete ===");
+			break;
+		case RunEndReason::Abandoned:
+			swprintf_s(buffer, L"=== Run Abandoned ===");
+			break;
+		default:
+			swprintf_s(buffer, L"=== Result ===");
+			break;
+		}
+	}
 	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Palette::White, 18.f);
 
+	const auto displayed_coin_count = result.result_apply_eligible_
+		? ((result.end_reason_ == RunEndReason::PlayerDied) ? result.earned_coin_count_ >> 1 : result.earned_coin_count_)
+		: 0;
 	result.earned_coin_count_ > 0
-		? swprintf_s(buffer, L"Earned Coins: %d", result.is_cleared_ ? result.earned_coin_count_ : result.earned_coin_count_ >> 1)
+		? swprintf_s(buffer, L"Earned Coins: %d", displayed_coin_count)
 		: swprintf_s(buffer, L"No Coins Earned");
 	_DrawFunc::DrawString(_Point{ x, y + 20 * ++index }, buffer, Palette::White, 14.f);
 

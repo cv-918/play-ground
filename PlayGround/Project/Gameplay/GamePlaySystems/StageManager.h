@@ -17,7 +17,8 @@ public:
 
 public:
 	void ChangeState(StageState _new_state);
-	void ProgressRunSessionResult();
+	RunSessionResult CreateRunSessionResultSnapshot() const;
+	void ProgressRunSessionResult(_bool _apply_stage_progress = false);
 	void MarkCanProgressNextStage();
 	void HandlePlayerDeath();
 	void HandleEnemyDeath(const EnemyJsonInfo* _info, const _Vector3& _position);
@@ -88,6 +89,7 @@ private:
 
 	_bool can_progress_next_stage_ = false;
 	_double proceed_to_next_stage_timer_ = 0.0;
+	_bool run_session_result_applied_ = false;
 
 	// --- 스테이지 진행에 필요한 영역 정보 ---
 	const _Rect* stage_nav_mesh_ = nullptr;
