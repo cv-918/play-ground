@@ -55,6 +55,7 @@ This README is the entry point for the document set.
 | `Discord_Bot_Always_On_Guide.md` | Operation guide for Discord Bot always-on background start, stop, status, restart, logging, and local safety checks |
 | `Discord_Task_Management_Commands.md` | Defines Release B Discord task management commands, safety scope, validation commands, and acceptance criteria |
 | `Discord_Task_Status_Commands.md` | Defines Release C Discord approval and status note commands, write scope, backup behavior, and validation result |
+| `Discord_Safe_Script_Execution_Commands.md` | Defines Release D Discord safe script execution commands, allowlist-only execution, cautions, and validation result |
 
 ---
 

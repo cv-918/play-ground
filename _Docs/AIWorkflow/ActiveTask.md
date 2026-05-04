@@ -11,10 +11,10 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-023
-title: Implement Discord approval and status note commands
+task_id: WF-024
+title: Implement Discord safe script execution commands
 status: done
-workflow_path: release_c_task_status_commands
+workflow_path: release_d_safe_script_execution
 priority: P1
 risk_level: medium
 requested_by: human_director
@@ -26,7 +26,7 @@ last_updated: 2026-05-04
 
 ## Goal
 
-Finalize Release C Discord approval and status note commands after live Discord validation.
+Finalize Release D Discord safe script execution commands after live Discord validation.
 
 ---
 
@@ -46,9 +46,9 @@ validation: completed by human Discord execution
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/ActiveTask.md
 _Docs/AIWorkflow/README.md
-_Docs/AIWorkflow/Discord_Task_Management_Commands.md
-_Docs/AIWorkflow/Discord_Task_Status_Commands.md
-_DevLog/WorkLog/2026-05-04_Discord_Task_Status_Commands.md
+_Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
+_Docs/AIWorkflow/Discord_Task_Management_Commands.md only if cross-reference is useful
+_DevLog/WorkLog/2026-05-04_Discord_Safe_Script_Execution_Commands.md
 ```
 
 ---
@@ -57,7 +57,7 @@ _DevLog/WorkLog/2026-05-04_Discord_Task_Status_Commands.md
 
 ```text
 1. Review the final documentation diff.
-2. Do not commit until the unrelated Discord runtime file changes are intentionally reviewed.
+2. Do not commit until the Discord runtime implementation diff is intentionally reviewed.
 ```
 
 ---
@@ -66,8 +66,8 @@ _DevLog/WorkLog/2026-05-04_Discord_Task_Status_Commands.md
 
 ```text
 Review the retained Validation Evidence block below.
-Confirm duplicated validation lines were removed.
-Confirm Known Notes remain intact.
+Confirm WF-024 is marked done in Backlog.
+Confirm WF-025 remains deferred as the next automation task.
 ```
 
 ---
@@ -75,18 +75,17 @@ Confirm Known Notes remain intact.
 ## Validation Evidence
 
 ```text
-/ai task create: passed
-created validation task id WF-20260504-005850: passed
-/ai task set-active id:WF-20260504-005850: passed
-/ai task approve id:WF-20260504-005850: passed
-/ai task current after approve status ready_for_implementation: passed
-/ai task block id:WF-20260504-005850: passed
-/ai task current after block status blocked: passed
-/ai task defer id:WF-20260504-005850: passed
-/ai task current after defer status deferred: passed
-/ai task done id:WF-20260504-005850: passed
-/ai task current after done status done: passed
-/ai task list: passed
+npm run register: passed
+restart_bot.bat: passed
+status_bot.bat running: passed
+/ai run workflow-status: passed
+/ai run active-project: passed
+/ai run project-profile: passed
+/ai run project-profile id:unity_project_template: passed
+/ai run json-smoke: passed
+json-smoke Total 11 Failed 0: passed
+/ai run capture-diff: passed
+capture-diff default mode: passed
 /ai status: passed
 /ai active: passed
 git diff --check: passed
@@ -98,12 +97,13 @@ private files not tracked: passed
 ## Known Notes
 
 ```text
-- Validation task WF-20260504-005850 was removed from committed Backlog state.
-- Release C updates Backlog row Status and Validation columns only.
-- If the target task is the current ActiveTask, ActiveTask metadata status and Latest Status Note are updated.
-- Safe script execution is intentionally deferred to Release D / WF-024.
-- Codex/Copilot routing is intentionally deferred to a later release.
-- Computer-use integration is intentionally deferred to a later execution-engine stage.
+- Release D exposes only allowlisted script keys.
+- Arbitrary script paths, raw shell commands, Codex execution, Copilot execution, build/test execution, commit, push, release, and computer-use remain intentionally unsupported.
+- capture-diff default mode was validated.
+- capture-diff include-untracked:true was intentionally not validated because it may affect Git intent-to-add state.
+- _Temp outputs are runtime artifacts and must remain ignored by Git.
+- Codex/Copilot routing is intentionally deferred to WF-025 or later.
+- Actual game development should be resumed after this workflow MVP milestone unless further automation is explicitly prioritized.
 ```
 
 ---
@@ -112,7 +112,7 @@ private files not tracked: passed
 
 ```text
 status: done
-note: Release C Discord task status command validation passed
+note: Release D Discord safe script execution command validation passed
 updated_at: 2026-05-04
 source: Discord live validation
 ```
@@ -122,12 +122,12 @@ source: Discord live validation
 ## Next Recommended Task
 
 ```text
-Release D / WF-024:
-Implement Discord safe script execution commands.
+GAME-001B:
+Runtime validate GameDataLoader after JSON syntax smoke check.
 
 Alternative:
-WF-021:
-Harden Discord bot Node warnings and commandRunner shell usage.
+WF-025:
+Implement Codex/Copilot task routing prompt generation.
 ```
 
 ---

@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
+import { executeRunCommand } from "../services/scriptRunService.js";
 import {
   approveTask,
   blockTask,
@@ -20,6 +21,7 @@ import {
   formatNext,
   formatProjectList,
   formatProjectProfile,
+  formatRunCommandResult,
   formatStatus,
   formatTaskCreated,
   formatTaskCurrent,
@@ -75,6 +77,42 @@ export function buildAiCommand() {
               option
                 .setName("id")
                 .setDescription("Project profile id")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("run")
+        .setDescription("Run allowlisted local workflow scripts")
+        .addSubcommand((sub) =>
+          sub.setName("workflow-status").setDescription("Run workflow_status.bat --json"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("active-project").setDescription("Run active_project_status.bat --json"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("project-profile")
+            .setDescription("Run project_profile_status.bat")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Optional project profile id")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("json-smoke").setDescription("Run JSON syntax smoke validation"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("capture-diff")
+            .setDescription("Capture review diff files")
+            .addBooleanOption((option) =>
+              option
+                .setName("include-untracked")
+                .setDescription("Include untracked files; default false")
                 .setRequired(false),
             ),
         ),
@@ -246,6 +284,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "run") {
+    await handleRunCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (subcommand === "docs") {
     await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
     return;
@@ -260,6 +303,17 @@ export async function handleAiCommand(interaction, config) {
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
   await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+}
+
+async function handleRunCommand(interaction, config, subcommand) {
+  const result = await executeRunCommand(config, subcommand, {
+    id: interaction.options.getString("id"),
+    includeUntracked: interaction.options.getBoolean("include-untracked") === true,
+  });
+
+  await interaction.editReply({
+    content: truncateForDiscord(formatRunCommandResult(result), config.limits.maxDiscordChars),
+  });
 }
 
 async function handleTaskCommand(interaction, config, subcommand) {

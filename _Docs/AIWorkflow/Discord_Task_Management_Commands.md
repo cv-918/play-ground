@@ -18,6 +18,13 @@ For the dedicated Release C command reference, see:
 Discord_Task_Status_Commands.md
 ```
 
+Release D adds allowlisted workflow script execution commands under `/ai run`.
+For the dedicated Release D command reference, see:
+
+```text
+Discord_Safe_Script_Execution_Commands.md
+```
+
 ---
 
 ## Safety Scope

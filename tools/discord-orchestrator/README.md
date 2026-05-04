@@ -5,7 +5,8 @@
 This is the Discord adapter for the AIWorkflow system.
 
 The original v1 command set is read-only. Release B adds limited task management writes.
-Release C adds controlled task status note writes.
+Release C adds controlled task status note writes. Release D adds allowlisted workflow
+script execution commands.
 
 It can read:
 
@@ -23,6 +24,8 @@ It can write only:
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/ActiveTask.md
 _Temp/AIWorkflowDiscordBot/backups/
+_Temp/AIWorkflowReports/
+_Temp/AIWorkflowDiffs/
 ```
 
 It must not:
@@ -36,7 +39,8 @@ run Copilot
 run Codex write mode
 run build
 run game/runtime
-implement run/codex/computer-use/build/test/commit/push/release commands
+run arbitrary shell commands
+expose direct npm/git/codex/copilot/build/test/computer-use/commit/push/release commands
 commit
 push
 release
@@ -89,6 +93,11 @@ Do not commit `_Local/`.
 /ai task block
 /ai task defer
 /ai task done
+/ai run workflow-status
+/ai run active-project
+/ai run project-profile
+/ai run json-smoke
+/ai run capture-diff
 ```
 
 For project profile:
@@ -133,7 +142,23 @@ See:
 ```text
 _Docs/AIWorkflow/Discord_Task_Management_Commands.md
 _Docs/AIWorkflow/Discord_Task_Status_Commands.md
+_Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
 ```
+
+For safe script execution:
+
+```text
+/ai run workflow-status
+/ai run active-project
+/ai run project-profile
+/ai run project-profile id:unity_project_template
+/ai run json-smoke
+/ai run capture-diff
+```
+
+`/ai run capture-diff include-untracked:true` is available but should be used only
+when intentionally approved because the underlying script may mark untracked files
+with intent-to-add.
 
 ---
 
@@ -160,6 +185,12 @@ After starting the bot:
 [ ] /ai task defer updates Backlog.md and creates a backup.
 [ ] /ai task done updates Backlog.md and creates a backup.
 [ ] Status commands update ActiveTask.md when the target task is active.
+[ ] /ai run workflow-status works.
+[ ] /ai run active-project works.
+[ ] /ai run project-profile works.
+[ ] /ai run project-profile id:unity_project_template works.
+[ ] /ai run json-smoke works.
+[ ] /ai run capture-diff works.
 [ ] Git status remains unchanged after commands.
 ```
 
@@ -197,8 +228,11 @@ This bot runs local scripts:
 
 ```text
 tools/aiworkflow/workflow_status.bat --json
+tools/aiworkflow/active_project_status.bat --json
 tools/aiworkflow/project_profile_status.bat --json
 tools/aiworkflow/project_profile_status.bat --project <id> --json
+tools/aiworkflow/json_smoke_check.bat
+tools/aiworkflow/capture_diff.bat
 ```
 
 It does not execute arbitrary shell commands.

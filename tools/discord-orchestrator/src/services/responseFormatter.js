@@ -171,7 +171,142 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md",
     "- _Docs/AIWorkflow/Discord_Task_Management_Commands.md",
     "- _Docs/AIWorkflow/Discord_Task_Status_Commands.md",
+    "- _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md",
   ].join("\n");
+}
+
+export function formatRunCommandResult(result) {
+  const hasTextSummary = ["json-smoke", "capture-diff"].includes(result.key) && result.data && result.raw;
+  if (!result.ok && !hasTextSummary) {
+    return [
+      `**Run Command Failed: ${result.key ?? "unknown"}**`,
+      cleanupBlock(result.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  switch (result.key) {
+    case "workflow-status":
+      return formatRunWorkflowStatus(result.data);
+    case "active-project":
+      return formatRunActiveProject(result.data);
+    case "project-profile":
+      return formatRunProjectProfile(result.data);
+    case "json-smoke":
+      return formatRunJsonSmoke(result.data, result.raw);
+    case "capture-diff":
+      return formatRunCaptureDiff(result.data, result.raw);
+    default:
+      return "Unknown run command result.";
+  }
+}
+
+function formatRunWorkflowStatus(data) {
+  const task = data.active_task ?? {};
+  const backlog = data.backlog ?? {};
+
+  return [
+    "**Run: workflow-status**",
+    `Active: ${task.task_id ?? "unknown"} / ${task.status ?? "unknown"}`,
+    `Title: ${task.title ?? "unknown"}`,
+    `Backlog: open=${backlog.open_count ?? "?"}, blocked=${backlog.blocked_count ?? "?"}`,
+    `Git dirty: ${data.worktree_dirty ? "yes" : "no"}`,
+  ].join("\n");
+}
+
+function formatRunActiveProject(data) {
+  const active = data.active_project ?? {};
+  const validation = data.validation ?? {};
+  const issues = Array.isArray(validation.issues) ? validation.issues : [];
+  const lines = [
+    "**Run: active-project**",
+    `active_project_id: ${active.active_project_id ?? "unknown"}`,
+    `profile_path: ${formatInlineCode(active.profile_path || "unknown")}`,
+    `validation: ${validation.passed ? "passed" : "failed"}`,
+  ];
+
+  if (issues.length > 0) {
+    lines.push("Issues:");
+    for (const issue of issues.slice(0, 6)) {
+      lines.push(`- ${issue}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function formatRunProjectProfile(data) {
+  const project = data.project ?? {};
+  return [
+    "**Run: project-profile**",
+    `project_id: ${project.project_id ?? "unknown"}`,
+    `display_name: ${project.display_name ?? "unknown"}`,
+    `engine: ${project.engine ?? "unknown"}`,
+    `project_type: ${project.project_type ?? "unknown"}`,
+    `resolved_from_active_project: ${data.resolved_from_active_project === true ? "yes" : "no"}`,
+  ].join("\n");
+}
+
+function formatRunJsonSmoke(data, raw) {
+  const failed = data.failed;
+  const passed = raw.ok && (failed === 0 || failed === null);
+  const lines = [
+    "**Run: json-smoke**",
+    `Result: ${passed ? "pass" : "fail"}`,
+    `Total: ${data.total ?? "unknown"}`,
+    `Failed: ${data.failed ?? "unknown"}`,
+    `Report: ${formatInlineCode(data.reportPath || "unknown")}`,
+  ];
+
+  appendRelevantLines(lines, data.relevantLines);
+  return lines.join("\n");
+}
+
+function formatRunCaptureDiff(data, raw) {
+  const includeUntracked = raw.args?.includes("--include-untracked") === true;
+  const lines = [
+    "**Run: capture-diff**",
+    `Result: ${raw.ok ? "pass" : "fail"}`,
+    `Mode: ${data.mode || (includeUntracked ? "include-untracked" : "default")}`,
+    `Include untracked: ${includeUntracked ? "yes" : "no"}`,
+    `Status: ${formatInlineCode(data.statusPath || "unknown")}`,
+    `Diff: ${formatInlineCode(data.diffPath || "unknown")}`,
+    `Check: ${formatInlineCode(data.checkPath || "unknown")}`,
+  ];
+
+  appendRelevantLines(lines, data.relevantLines);
+  return lines.join("\n");
+}
+
+function appendRelevantLines(lines, relevantLines) {
+  if (!Array.isArray(relevantLines) || relevantLines.length === 0) {
+    return;
+  }
+
+  lines.push("");
+  lines.push("Last output:");
+  for (const line of relevantLines) {
+    lines.push(`- ${formatOutputLinePaths(line)}`);
+  }
+}
+
+function formatOutputLinePaths(line) {
+  return String(line).replace(
+    /^(Report|Status|Diff|Check):\s*(.+)$/i,
+    (_, label, value) => `${label}: ${formatInlineCode(value)}`,
+  );
+}
+
+function formatInlineCode(value) {
+  const text = String(value ?? "").trim();
+  if (!text || text === "unknown") {
+    return "unknown";
+  }
+
+  if (text.includes("`")) {
+    return `\`\` ${text} \`\``;
+  }
+
+  return `\`${text}\``;
 }
 
 export function formatTaskCurrent(data) {
