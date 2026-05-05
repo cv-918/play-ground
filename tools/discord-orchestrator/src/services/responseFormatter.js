@@ -173,6 +173,7 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Discord_Task_Status_Commands.md",
     "- _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md",
     "- _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md",
+    "- _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md",
   ].join("\n");
 }
 
@@ -223,6 +224,32 @@ export function formatCodexPrepareResult(result) {
     "1. Open the generated markdown file.",
     "2. Paste/review it in Codex App.",
     "3. Return Codex results to ChatGPT/Discord for review.",
+  ].join("\n");
+}
+
+export function formatGoalPrepareResult(result) {
+  if (!result.ok) {
+    return [
+      "**Goal Request Preparation Failed**",
+      cleanupBlock(result.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  return [
+    "**Goal Request Prepared**",
+    `Task ID: ${task.id ?? "unknown"}`,
+    `Task Title: ${task.item ?? "unknown"}`,
+    `Mode: ${data.mode ?? "unknown"}`,
+    `Context: ${data.context_level ?? "unknown"}`,
+    `Path: ${formatInlineCode(data.generated_path || "unknown")}`,
+    "",
+    "Next manual steps:",
+    "1. Open the generated markdown file.",
+    "2. Review the first-line `/goal` command and request body.",
+    "3. Paste the request into Codex CLI manually.",
+    "4. Return Codex results to ChatGPT/Discord for review.",
   ].join("\n");
 }
 

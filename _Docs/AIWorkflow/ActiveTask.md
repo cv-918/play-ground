@@ -11,11 +11,11 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-021
-title: Harden Discord bot Node warnings and commandRunner shell usage
+task_id: WF-20260505-225727
+title: WF-026 Add goal-oriented execution routing
 status: done
 workflow_path: discord_task_management
-priority: P2
+priority: P1
 risk_level: low
 requested_by: human_director
 requested_at: 2026-05-05
@@ -26,7 +26,7 @@ last_updated: 2026-05-05
 
 ## Goal
 
-Harden Discord bot Node warnings and commandRunner shell usage
+WF-026 Add goal-oriented execution routing
 
 ---
 
@@ -36,7 +36,7 @@ Harden Discord bot Node warnings and commandRunner shell usage
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: warning-free bot log check
+validation: pending
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-warning-free bot log check
+pending
 ```
 
 ---
@@ -70,7 +70,7 @@ warning-free bot log check
 
 ```text
 status: done
-note: done: "Verification passed after Release D commandRunner hardening: npm run register passed, restart_bot.bat passed, status_bot.bat showed running, Discord /ai status, /ai run workflow-status, and /ai run json-smoke worked, stderr log showed no deprecated ephemeral warning and no DEP0190 shell warning."
+note: done: "WF-026 validation passed: /ai prepare goal default, GAME-001 analysis, GAME-005 implementation, WF-021 review generated goal request files under _Temp/AIWorkflowTaskRequests. /ai status and /ai active passed. npm run register passed, bot restart/status passed, git diff --check passed with line-ending warnings only, and private/local files were not tracked."
 updated_at: 2026-05-05
 source: Discord task status command
 ```

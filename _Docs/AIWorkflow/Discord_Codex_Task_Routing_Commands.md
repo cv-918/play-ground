@@ -5,6 +5,12 @@
 Release E / WF-025 adds a Discord command for generating manual Codex App task
 request prompts from AIWorkflow tasks.
 
+For Codex CLI `/goal` request generation, see:
+
+```text
+_Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
+```
+
 This release prepares prompt packages only. It does not execute Codex, Copilot,
 computer-use, build/test commands, commits, pushes, or releases.
 

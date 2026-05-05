@@ -7,6 +7,7 @@ This is the Discord adapter for the AIWorkflow system.
 The original v1 command set is read-only. Release B adds limited task management writes.
 Release C adds controlled task status note writes. Release D adds allowlisted workflow
 script execution commands. Release E adds Codex App prompt package generation.
+Release F adds Codex CLI `/goal` request markdown generation.
 
 It can read:
 
@@ -38,9 +39,14 @@ edit _Local/
 edit node_modules/
 run Copilot
 run Codex write mode
+run Codex CLI `/goal`
+run OpenClaw
+run Claude
 run build
 run game/runtime
 run arbitrary shell commands
+implement subagents
+implement Unity AI
 expose direct npm/git/codex/copilot/build/test/computer-use/commit/push/release commands
 commit
 push
@@ -100,6 +106,7 @@ Do not commit `_Local/`.
 /ai run json-smoke
 /ai run capture-diff
 /ai prepare codex
+/ai prepare goal
 ```
 
 For project profile:
@@ -146,6 +153,7 @@ _Docs/AIWorkflow/Discord_Task_Management_Commands.md
 _Docs/AIWorkflow/Discord_Task_Status_Commands.md
 _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
 _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
+_Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
 ```
 
 For safe script execution:
@@ -180,6 +188,28 @@ _Temp/AIWorkflowTaskRequests/
 
 It does not execute Codex, Copilot, computer-use, build/test commands, commits,
 pushes, or releases.
+
+For Codex CLI goal request preparation:
+
+```text
+/ai prepare goal
+/ai prepare goal id:GAME-001 mode:analysis context:standard
+/ai prepare goal id:GAME-005 mode:implementation context:standard
+/ai prepare goal id:WF-021 mode:review context:compact
+```
+
+`/ai prepare goal` writes a manual Codex CLI `/goal` request markdown file under:
+
+```text
+_Temp/AIWorkflowTaskRequests/
+```
+
+The generated file starts with a usable `/goal` command and includes Objective,
+Context, Scope, Non-goals, Required safety constraints, Human decision gates,
+Validation plan, Stop conditions, and Required return format sections.
+
+It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
+computer-use, commits, pushes, or releases.
 
 ---
 
@@ -216,7 +246,12 @@ After starting the bot:
 [ ] /ai prepare codex id:GAME-001 mode:analysis context:standard works.
 [ ] /ai prepare codex id:GAME-002 mode:implementation context:standard works.
 [ ] /ai prepare codex id:WF-021 mode:review context:compact works.
+[ ] /ai prepare goal works with ActiveTask.md default.
+[ ] /ai prepare goal id:GAME-001 mode:analysis context:standard works.
+[ ] /ai prepare goal id:GAME-005 mode:implementation context:standard works.
+[ ] /ai prepare goal id:WF-021 mode:review context:compact works.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
+[ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Git status remains unchanged after commands.
 ```
 

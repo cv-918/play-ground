@@ -4,6 +4,7 @@ import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
+import { prepareGoalPrompt } from "../services/goalPromptService.js";
 import {
   approveTask,
   blockTask,
@@ -20,6 +21,7 @@ import {
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
+  formatGoalPrepareResult,
   formatNext,
   formatProjectList,
   formatProjectProfile,
@@ -42,6 +44,7 @@ const BACKLOG_KIND_CHOICES = ["workflow", "architecture", "implementation", "ref
 const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_implementation", "in_progress", "review", "validation", "blocked", "done", "deferred", "partial_done"]
   .map((value) => ({ name: value, value }));
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
+const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
@@ -146,6 +149,31 @@ export function buildAiCommand() {
               option
                 .setName("context")
                 .setDescription("Prompt context level; default standard")
+                .setRequired(false)
+                .addChoices(...CODEX_CONTEXT_CHOICES),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("goal")
+            .setDescription("Generate a Codex CLI /goal request markdown file")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Optional workflow task id; defaults to ActiveTask.md task_id")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("mode")
+                .setDescription("Goal mode; default implementation")
+                .setRequired(false)
+                .addChoices(...GOAL_MODE_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("context")
+                .setDescription("Goal context level; default standard")
                 .setRequired(false)
                 .addChoices(...CODEX_CONTEXT_CHOICES),
             ),
@@ -345,6 +373,11 @@ export async function handleAiCommand(interaction, config) {
 }
 
 async function handlePrepareCommand(interaction, config, subcommand) {
+  if (subcommand === "goal") {
+    await handlePrepareGoalCommand(interaction, config);
+    return;
+  }
+
   if (subcommand !== "codex") {
     await interaction.editReply({ content: "Unknown prepare command." });
     return;
@@ -365,6 +398,27 @@ async function handlePrepareCommand(interaction, config, subcommand) {
       content: truncateForDiscord(formatCodexPrepareResult({
         ok: false,
         error: `Codex prompt preparation failed: ${error.message}`,
+      }), config.limits.maxDiscordChars),
+    });
+  }
+}
+
+async function handlePrepareGoalCommand(interaction, config) {
+  try {
+    const result = await prepareGoalPrompt(config, {
+      id: interaction.options.getString("id"),
+      mode: interaction.options.getString("mode"),
+      context: interaction.options.getString("context"),
+    });
+
+    await interaction.editReply({
+      content: truncateForDiscord(formatGoalPrepareResult(result), config.limits.maxDiscordChars),
+    });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(formatGoalPrepareResult({
+        ok: false,
+        error: `Goal request preparation failed: ${error.message}`,
       }), config.limits.maxDiscordChars),
     });
   }
