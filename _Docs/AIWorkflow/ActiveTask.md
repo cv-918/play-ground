@@ -11,9 +11,9 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260505-225727
-title: WF-026 Add goal-oriented execution routing
-status: done
+task_id: WF-20260505-233013
+title: WF-028 AI Tool Radar and Integration Matrix
+status: ready_for_implementation
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
@@ -26,7 +26,7 @@ last_updated: 2026-05-05
 
 ## Goal
 
-WF-026 Add goal-oriented execution routing
+WF-028 AI Tool Radar and Integration Matrix
 
 ---
 
@@ -69,11 +69,12 @@ pending
 ## Latest Status Note
 
 ```text
-status: done
-note: done: "WF-026 validation passed: /ai prepare goal default, GAME-001 analysis, GAME-005 implementation, WF-021 review generated goal request files under _Temp/AIWorkflowTaskRequests. /ai status and /ai active passed. npm run register passed, bot restart/status passed, git diff --check passed with line-ending warnings only, and private/local files were not tracked."
+status: ready_for_implementation
+note: approved: Approve analysis-only scope. Build an AI tool radar and integration matrix for OpenClaw, Claude-Code-Game-Studios, Codex goal, Codex subagents, Unity AI, and Codex Computer Use. Do not install tools, execute external agents, modify source code, or change workflow automation yet.
 updated_at: 2026-05-05
 source: Discord task status command
 ```
+
 ---
 
 ## Next Recommended Task
