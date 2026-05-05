@@ -11,12 +11,12 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260505-233013
-title: WF-028 AI Tool Radar and Integration Matrix
-status: ready_for_implementation
+task_id: WF-20260505-234617
+title: WF-030 Codex Subagents Read-Only Pilot
+status: done
 workflow_path: discord_task_management
-priority: P1
-risk_level: low
+priority: P0
+risk_level: medium
 requested_by: human_director
 requested_at: 2026-05-05
 last_updated: 2026-05-05
@@ -26,7 +26,7 @@ last_updated: 2026-05-05
 
 ## Goal
 
-WF-028 AI Tool Radar and Integration Matrix
+WF-030 Codex Subagents Read-Only Pilot
 
 ---
 
@@ -69,12 +69,11 @@ pending
 ## Latest Status Note
 
 ```text
-status: ready_for_implementation
-note: approved: Approve analysis-only scope. Build an AI tool radar and integration matrix for OpenClaw, Claude-Code-Game-Studios, Codex goal, Codex subagents, Unity AI, and Codex Computer Use. Do not install tools, execute external agents, modify source code, or change workflow automation yet.
+status: done
+note: done: "Read-only Codex Subagents pilot passed. Explorer, Reviewer, and Validator subagents completed successfully. Findings were complementary: Explorer mapped GAME-001 data flow, Reviewer found semantic/runtime risks, Validator separated syntax checks from semantic/runtime validation gaps. Final judgment: Subagents are useful enough to become part of AIWorkflow as optional risk-based read-only analysis pattern. Repo source/data/docs were not modified by the pilot."
 updated_at: 2026-05-05
 source: Discord task status command
 ```
-
 ---
 
 ## Next Recommended Task
