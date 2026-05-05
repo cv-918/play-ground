@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-013135
-title: WF-029 Claude-Code-Game-Studios Role Mapping
+task_id: WF-20260506-014452
+title: WF-032 Agent Role Registry v1
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-029 Claude-Code-Game-Studios Role Mapping
+WF-032 Agent Role Registry v1
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: Read-only analysis completed. Claude-Code-Game-Studios should be adapted, not adopted. Useful concepts include role hierarchy, phase gates, story-readiness to implementation to review loop, agent delegation map, and verdict patterns. Recommended next step is WF-032 Agent Role Registry v1. No files were modified by Codex.
+note: done: Agent Role Registry v1 completed. Defined required roles: Orchestrator, Explorer, Technical Architect, Gameplay Implementer, Reviewer, Validator, Documentation Keeper, and Tool/Workflow Engineer. Added role handoff format, verdict format, routing rules v1, forbidden behaviors, and human decision gates. README linked the registry. No game source files were modified.
 updated_at: 2026-05-06
 source: Discord task status command
 ```
