@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-014452
-title: WF-032 Agent Role Registry v1
+task_id: WF-20260506-020557
+title: WF-033 Role Router Rules for ActiveTask
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-032 Agent Role Registry v1
+WF-033 Role Router Rules for ActiveTask
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: Agent Role Registry v1 completed. Defined required roles: Orchestrator, Explorer, Technical Architect, Gameplay Implementer, Reviewer, Validator, Documentation Keeper, and Tool/Workflow Engineer. Added role handoff format, verdict format, routing rules v1, forbidden behaviors, and human decision gates. README linked the registry. No game source files were modified.
+note: done: "Role Router Rules v1 completed. Defined routing inputs, base routing rules, category matrix, kind matrix, risk-based escalation, human decision gates, role handoff examples, and non-goals. README linked the new document. No PlayGround source files were modified."
 updated_at: 2026-05-06
 source: Discord task status command
 ```

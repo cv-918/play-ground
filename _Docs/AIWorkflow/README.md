@@ -30,6 +30,7 @@ This README is the entry point for the document set.
 | `02_Workflow_Scope.md` | Defines when to use full workflow, fast path, or direct work |
 | `03_Agent_Roles.md` | Defines AI/team roles such as Orchestrator, Architect, Reviewer, Validator |
 | `Agent_Role_Registry_v1.md` | Defines the minimal durable AI agent role registry, handoff format, verdicts, and routing rules for agent-driven AIWorkflow tasks |
+| `Role_Router_Rules_v1.md` | Defines deterministic ActiveTask metadata routing rules for activating AIWorkflow roles without executable routing behavior |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
