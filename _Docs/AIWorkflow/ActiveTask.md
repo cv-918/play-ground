@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-000345
-title: WF-031 Codex Goal Prompt Contract v2
+task_id: WF-20260506-013135
+title: WF-029 Claude-Code-Game-Studios Role Mapping
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-031 Codex Goal Prompt Contract v2
+WF-029 Claude-Code-Game-Studios Role Mapping
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-031 validation passed: Codex Goal Prompt Contract v2 implemented. /ai prepare goal generated Contract v2 goal request files for GAME-001 analysis, GAME-005 implementation, and WF-021 review. Generated files start with /goal and include Objective, Task Context, Project Context, Scope, Non-goals, Execution Mode, Safety Constraints, Human Decision Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and Required Return Format. npm register, bot restart/status, git diff --check, and private-file checks passed."
+note: done: Read-only analysis completed. Claude-Code-Game-Studios should be adapted, not adopted. Useful concepts include role hierarchy, phase gates, story-readiness to implementation to review loop, agent delegation map, and verdict patterns. Recommended next step is WF-032 Agent Role Registry v1. No files were modified by Codex.
 updated_at: 2026-05-06
 source: Discord task status command
 ```
