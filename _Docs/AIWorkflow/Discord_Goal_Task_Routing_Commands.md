@@ -3,7 +3,8 @@
 ## Purpose
 
 WF-026 adds a Discord command for generating manual Codex CLI `/goal` request
-markdown files from AIWorkflow tasks.
+markdown files from AIWorkflow tasks. WF-031 standardizes the generated file
+shape as Codex Goal Prompt Contract v2.
 
 This command prepares request files only. It does not execute Codex CLI,
 OpenClaw, Claude, subagents, Unity AI, computer-use, commits, pushes, releases,
@@ -80,18 +81,23 @@ goal_request_<task_id>_<YYYYMMDD_HHMMSS>.md
 
 The generated markdown file starts with a usable first-line `/goal` command.
 
-It then includes these sections:
+It then follows Codex Goal Prompt Contract v2:
 
 ```text
-1. Objective
-2. Context
-3. Scope
-4. Non-goals
-5. Required safety constraints
-6. Human decision gates
-7. Validation plan
-8. Stop conditions
-9. Required return format
+1. Goal Header
+2. Objective
+3. Task Context
+4. Project Context
+5. Scope
+6. Non-goals
+7. Execution Mode
+8. Safety Constraints
+9. Human Decision Gates
+10. Subagent Policy
+11. Validation Plan
+12. Stop Conditions
+13. Completion Audit
+14. Required Return Format
 ```
 
 The project context is read from:
@@ -109,22 +115,30 @@ _Docs/AIWorkflow/ProjectProfiles/<active-profile>.json
 
 The generated request asks Codex to analyze scope, architecture boundaries,
 risks, likely files, validation needs, and approval gates without editing files.
+The Contract v2 Scope and Execution Mode sections explicitly prohibit file
+modifications.
 
 ### implementation
 
 The generated request asks Codex to implement only the approved reduced-scope
 version of the selected task. It always includes `Do not commit.`
+The Contract v2 Scope section allows only bounded file changes inside the
+approved task scope.
 
 ### prototype
 
 The generated request asks Codex to create a reduced-scope proof of the
 final-form architecture. It must not create disposable architecture that implies
 a future rewrite.
+The Contract v2 Scope section allows isolated prototype work only when the task
+explicitly requests it.
 
 ### review
 
 The generated request asks Codex to review the current diff and report bugs,
 regressions, missing validation, and scope violations without editing files.
+The Contract v2 Scope and Execution Mode sections explicitly prohibit file
+modifications unless a human separately asks for fixes.
 
 ---
 
@@ -136,7 +150,7 @@ The Discord command must not:
 - Execute Codex CLI automatically.
 - Execute OpenClaw.
 - Execute Claude.
-- Implement subagents.
+- Execute external agents unless explicitly approved.
 - Implement Unity AI.
 - Implement computer-use.
 - Commit.
@@ -206,7 +220,9 @@ Expected:
 ```text
 - Each prepare command returns a generated file path under _Temp/AIWorkflowTaskRequests/.
 - Generated files start with a usable /goal command.
-- Generated files include Objective, Context, Scope, Non-goals, Required safety constraints, Human decision gates, Validation plan, Stop conditions, and Required return format.
+- Generated files include all Codex Goal Prompt Contract v2 sections.
+- Generated files include mode-aware Scope and Execution Mode sections.
+- Generated files include Human Decision Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and Required Return Format sections.
 - /ai status and /ai active still work.
 - No source files or workflow state docs are modified by running /ai prepare goal.
 - _Temp outputs are ignored by Git.

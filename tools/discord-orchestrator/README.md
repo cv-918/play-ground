@@ -7,7 +7,8 @@ This is the Discord adapter for the AIWorkflow system.
 The original v1 command set is read-only. Release B adds limited task management writes.
 Release C adds controlled task status note writes. Release D adds allowlisted workflow
 script execution commands. Release E adds Codex App prompt package generation.
-Release F adds Codex CLI `/goal` request markdown generation.
+Release F adds Codex CLI `/goal` request markdown generation. WF-031 updates
+that generation to Codex Goal Prompt Contract v2.
 
 It can read:
 
@@ -204,9 +205,11 @@ For Codex CLI goal request preparation:
 _Temp/AIWorkflowTaskRequests/
 ```
 
-The generated file starts with a usable `/goal` command and includes Objective,
-Context, Scope, Non-goals, Required safety constraints, Human decision gates,
-Validation plan, Stop conditions, and Required return format sections.
+The generated file starts with a usable `/goal` command and follows Codex Goal
+Prompt Contract v2. It includes Goal Header, Objective, Task Context, Project
+Context, Scope, Non-goals, Execution Mode, Safety Constraints, Human Decision
+Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and
+Required Return Format sections.
 
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
@@ -252,6 +255,8 @@ After starting the bot:
 [ ] /ai prepare goal id:WF-021 mode:review context:compact works.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
+[ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
+[ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
 [ ] Git status remains unchanged after commands.
 ```
 

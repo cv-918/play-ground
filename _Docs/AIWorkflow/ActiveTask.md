@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260505-234617
-title: WF-030 Codex Subagents Read-Only Pilot
+task_id: WF-20260506-000345
+title: WF-031 Codex Goal Prompt Contract v2
 status: done
 workflow_path: discord_task_management
-priority: P0
-risk_level: medium
+priority: P1
+risk_level: low
 requested_by: human_director
-requested_at: 2026-05-05
-last_updated: 2026-05-05
+requested_at: 2026-05-06
+last_updated: 2026-05-06
 ```
 
 ---
 
 ## Goal
 
-WF-030 Codex Subagents Read-Only Pilot
+WF-031 Codex Goal Prompt Contract v2
 
 ---
 
@@ -70,8 +70,8 @@ pending
 
 ```text
 status: done
-note: done: "Read-only Codex Subagents pilot passed. Explorer, Reviewer, and Validator subagents completed successfully. Findings were complementary: Explorer mapped GAME-001 data flow, Reviewer found semantic/runtime risks, Validator separated syntax checks from semantic/runtime validation gaps. Final judgment: Subagents are useful enough to become part of AIWorkflow as optional risk-based read-only analysis pattern. Repo source/data/docs were not modified by the pilot."
-updated_at: 2026-05-05
+note: done: "WF-031 validation passed: Codex Goal Prompt Contract v2 implemented. /ai prepare goal generated Contract v2 goal request files for GAME-001 analysis, GAME-005 implementation, and WF-021 review. Generated files start with /goal and include Objective, Task Context, Project Context, Scope, Non-goals, Execution Mode, Safety Constraints, Human Decision Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and Required Return Format. npm register, bot restart/status, git diff --check, and private-file checks passed."
+updated_at: 2026-05-06
 source: Discord task status command
 ```
 ---

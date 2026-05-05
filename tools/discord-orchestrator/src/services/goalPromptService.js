@@ -63,23 +63,33 @@ function buildGoalPrompt(input) {
   return [
     buildGoalCommand(input.task, input.mode),
     "",
-    "# Codex CLI Goal Task Request",
+    "# Codex Goal Prompt Contract v2",
+    "",
+    buildGoalHeaderSection(input),
     "",
     buildObjectiveSection(input),
     "",
-    buildContextSection(input),
+    buildTaskContextSection(input),
+    "",
+    buildProjectContextSection(input),
     "",
     buildScopeSection(input),
     "",
     buildNonGoalsSection(),
     "",
-    buildSafetySection(),
+    buildExecutionModeSection(input),
+    "",
+    buildSafetyConstraintsSection(),
     "",
     buildHumanDecisionGatesSection(input),
+    "",
+    buildSubagentPolicySection(input),
     "",
     buildValidationPlanSection(input),
     "",
     buildStopConditionsSection(),
+    "",
+    buildCompletionAuditSection(),
     "",
     buildRequiredReturnFormatSection(),
     "",
@@ -90,28 +100,65 @@ function buildGoalCommand(task, mode) {
   return `/goal ${goalVerb(mode)} ${oneLine(task.id)}: ${oneLine(task.item)}`;
 }
 
-function buildObjectiveSection({ task, mode }) {
+function buildGoalHeaderSection({ task, mode }) {
   return [
-    "## 1. Objective",
-    "- Task id: " + formatValue(task.id),
-    "- Task title: " + formatValue(task.item),
-    "- Mode: " + mode,
-    "- Objective: " + modeObjective(mode, task),
+    "## 1. Goal Header",
+    "- First-line command:",
+    "```text",
+    buildGoalCommand(task, mode),
+    "```",
+    "- The command above is the only Codex CLI command implied by this request.",
+    "- Review the full request before treating the first line as executable.",
   ].join("\n");
 }
 
-function buildContextSection({ config, projectContext, contextLevel, activeTask, task, selectedFromActive }) {
+function buildObjectiveSection({ task, mode }) {
+  return [
+    "## 2. Objective",
+    "- Achieve the selected task without vague or expanded goals.",
+    "- Task: " + formatValue(task.id) + " - " + formatValue(task.item),
+    "- Reason: " + formatTaskField(task.reason, "reason"),
+    "- Required outcome: " + modeObjective(mode, task),
+  ].join("\n");
+}
+
+function buildTaskContextSection({ contextLevel, activeTask, task, selectedFromActive }) {
+  const lines = [
+    "## 3. Task Context",
+    "- Task id: " + formatTaskField(task.id, "task id"),
+    "- Title: " + formatTaskField(task.item, "title"),
+    "- Status: " + formatTaskField(task.status, "status"),
+    "- Priority: " + formatTaskField(task.priority, "priority"),
+    "- Kind: " + formatTaskField(task.kind, "kind"),
+    "- Reason: " + formatTaskField(task.reason, "reason"),
+    "- Tool route: " + formatTaskField(task.tool_route, "tool route"),
+    "- Validation: " + formatTaskField(task.validation, "validation"),
+    "- Task source: " + (selectedFromActive ? "ActiveTask.md task_id resolved through Backlog.md" : "explicit Discord command id resolved through Backlog.md"),
+  ];
+
+  if (contextLevel === "full") {
+    lines.push("");
+    lines.push("### Active task metadata");
+    lines.push(jsonBlock(activeTask.metadata ?? {}));
+    lines.push("");
+    lines.push("### Backlog task row");
+    lines.push(jsonBlock(task));
+  }
+
+  return lines.join("\n");
+}
+
+function buildProjectContextSection({ config, projectContext, contextLevel }) {
   const activeProject = projectContext.activeProject;
   const profile = projectContext.profile;
   const lines = [
-    "## 2. Context",
-    "- Repository: " + formatValue(config.repoRoot),
-    "- Task source: " + (selectedFromActive ? "ActiveTask.md task_id resolved through Backlog.md" : "explicit Discord command id resolved through Backlog.md"),
-    "- Active project id: " + formatValue(activeProject.active_project_id),
-    "- Project profile path: " + formatValue(activeProject.profile_path),
-    "- Project name: " + formatValue(profile.display_name),
-    "- Engine: " + formatValue(profile.engine),
-    "- Project type: " + formatValue(profile.project_type),
+    "## 4. Project Context",
+    "- Repository root: " + formatValue(config.repoRoot),
+    "- Active project id: " + formatTaskField(activeProject.active_project_id, "active project id"),
+    "- Project profile path: " + formatTaskField(activeProject.profile_path, "project profile path"),
+    "- Project profile summary: " + formatProjectSummary(profile),
+    "- Docs path: " + formatTaskField(profile.docs_path, "docs path"),
+    "- Dev log path: " + formatTaskField(profile.devlog_path, "dev log path"),
   ];
 
   if (contextLevel === "compact") {
@@ -124,6 +171,10 @@ function buildContextSection({ config, projectContext, contextLevel, activeTask,
   appendList(lines, profile.source_roots);
   lines.push("- Data roots:");
   appendList(lines, profile.data_roots);
+  lines.push("- Asset roots:");
+  appendList(lines, profile.asset_roots);
+  lines.push("- Workflow state files:");
+  appendWorkflowStateFiles(lines, profile.workflow_state_files);
   lines.push("- Validation profiles:");
   appendValidationProfiles(lines, profile.validation_profiles);
 
@@ -137,12 +188,6 @@ function buildContextSection({ config, projectContext, contextLevel, activeTask,
     lines.push("");
     lines.push("### Relevant workflow docs");
     appendList(lines, RELEVANT_WORKFLOW_DOCS);
-    lines.push("");
-    lines.push("### Active task metadata");
-    lines.push(jsonBlock(activeTask.metadata ?? {}));
-    lines.push("");
-    lines.push("### Backlog task row");
-    lines.push(jsonBlock(task));
   }
 
   return lines.join("\n");
@@ -150,24 +195,29 @@ function buildContextSection({ config, projectContext, contextLevel, activeTask,
 
 function buildScopeSection({ task, mode }) {
   const lines = [
-    "## 3. Scope",
+    "## 5. Scope",
     "- Work only on task " + task.id + ": " + formatValue(task.item),
+    "- Treat the mode as binding for allowed behavior.",
   ];
 
   if (mode === "analysis") {
-    lines.push("- Analyze scope, architecture boundaries, risks, likely files, validation needs, and approval gates.");
-    lines.push("- Do not modify files.");
+    lines.push("- Allowed: inspect files, command output, architecture boundaries, risks, likely files, validation needs, and approval gates.");
+    lines.push("- Required: report findings and recommended next steps only.");
+    lines.push("- Forbidden in this mode: file modifications.");
   } else if (mode === "implementation") {
-    lines.push("- Implement only the approved reduced-scope version of this task.");
+    lines.push("- Allowed: modify only files required by the approved reduced-scope task.");
+    lines.push("- Required: keep changes bounded to the task and document validation evidence.");
     lines.push("- Keep command dispatch, loading/parsing, generation, formatting, and validation concerns separated.");
     lines.push("- Keep diffs small and reviewable.");
   } else if (mode === "prototype") {
-    lines.push("- Produce a reduced-scope proof of the final-form architecture, not a disposable rewrite path.");
+    lines.push("- Allowed: create an isolated prototype or experiment only if this request explicitly asks for one.");
+    lines.push("- Required: keep prototype work aligned with final-form architecture, not a disposable rewrite path.");
     lines.push("- Keep prototype changes explicitly bounded and easy to remove or promote.");
     lines.push("- Stop before broad runtime, schema, or architecture changes that need fresh approval.");
   } else if (mode === "review") {
-    lines.push("- Review the current diff for bugs, regressions, missing validation, and scope violations.");
-    lines.push("- Do not modify files unless the human explicitly asks for fixes.");
+    lines.push("- Allowed: inspect the current diff, changed files, risks, regressions, missing validation, and scope violations.");
+    lines.push("- Required: return review findings first, ordered by severity.");
+    lines.push("- Forbidden in this mode: file modifications unless the human explicitly asks for fixes.");
   }
 
   return lines.join("\n");
@@ -175,25 +225,59 @@ function buildScopeSection({ task, mode }) {
 
 function buildNonGoalsSection() {
   return [
-    "## 4. Non-goals",
+    "## 6. Non-goals",
+    "- Do not commit.",
+    "- Do not push.",
+    "- Do not release.",
+    "- Do not expose secrets, credentials, tokens, or local private configuration.",
+    "- Do not modify unrelated source files.",
+    "- Do not modify _Local/.",
+    "- Do not modify node_modules/.",
+    "- Do not execute external agents unless explicitly approved.",
     "- Do not execute Codex CLI automatically from Discord or scripts.",
     "- Do not execute OpenClaw.",
     "- Do not execute Claude.",
-    "- Do not implement subagents.",
     "- Do not implement Unity AI.",
     "- Do not implement computer-use.",
     "- Do not add release, deploy, commit, or push automation.",
-    "- Do not modify unrelated game source code.",
   ].join("\n");
 }
 
-function buildSafetySection() {
+function buildExecutionModeSection({ mode }) {
+  const lines = [
+    "## 7. Execution Mode",
+    "- Mode: " + mode,
+    "- Expected behavior: " + modeBehavior(mode),
+  ];
+
+  if (mode === "analysis" || mode === "review") {
+    lines.push("- No file modifications are allowed in this mode.");
+    lines.push("- Return evidence-based findings, risks, and next-step recommendations.");
+  } else if (mode === "implementation") {
+    lines.push("- Bounded file changes are allowed only within the approved task scope.");
+    lines.push("- Run or report validation evidence before declaring completion.");
+  } else if (mode === "prototype") {
+    lines.push("- Prototype work must remain isolated and explicitly labeled as prototype work.");
+    lines.push("- Stop before promoting prototype behavior into production paths without approval.");
+  }
+
+  return lines.join("\n");
+}
+
+function buildSafetyConstraintsSection() {
   return [
-    "## 5. Required safety constraints",
+    "## 8. Safety Constraints",
+    "- Follow repository AGENTS.md and AIWorkflow source-of-truth documents.",
+    "- Preserve final-form architecture first; use reduced scope only as a smaller version of that structure.",
+    "- Keep decision, execution, and data responsibilities separated.",
+    "- Avoid monolithic growth in actor, scene, manager, and data-manager classes.",
+    "- Preserve debuggability, traceability, explicit state names, ownership, validation points, and failure messages.",
+    "- Do not introduce GDI+ or rendering-policy changes without explicit approval.",
+    "- Keep gameplay state, animation playback, rendering, and data building as separate responsibilities.",
+    "- Request approval before source implementation, structural refactoring, schema/save changes, lifecycle changes, build setting changes, workflow rule changes, destructive commands, or tool execution that may modify files.",
     "- Do not execute Codex CLI automatically.",
     "- Do not execute OpenClaw.",
     "- Do not execute Claude.",
-    "- Do not implement subagents.",
     "- Do not implement Unity AI.",
     "- Do not implement computer-use.",
     "- Do not commit.",
@@ -209,7 +293,15 @@ function buildSafetySection() {
 
 function buildHumanDecisionGatesSection({ mode }) {
   const lines = [
-    "## 6. Human decision gates",
+    "## 9. Human Decision Gates",
+    "- Codex must not decide schema changes alone.",
+    "- Codex must not decide save format changes alone.",
+    "- Codex must not decide broad architecture changes alone.",
+    "- Codex must not install external tools alone.",
+    "- Codex must not perform computer-use actions alone.",
+    "- Codex must not perform credential, login, or subscription setup alone.",
+    "- Codex must not run destructive commands alone.",
+    "- Codex must not commit, push, or release alone.",
     "- Stop for human approval before source code implementation if this request is analysis or review mode.",
     "- Stop for human approval before any JSON schema, save/load, actor lifecycle, scene lifecycle, runtime behavior, build setting, or workflow rule change.",
     "- Stop for human approval if the implementation scope expands beyond the selected task.",
@@ -222,9 +314,30 @@ function buildHumanDecisionGatesSection({ mode }) {
   return lines.join("\n");
 }
 
+function buildSubagentPolicySection({ mode }) {
+  const lines = [
+    "## 10. Subagent Policy",
+    "- Subagents are optional and must materially help the task.",
+    "- If subagents are used, the final orchestrator must consolidate their findings before declaring completion.",
+  ];
+
+  if (mode === "analysis" || mode === "review") {
+    lines.push("- Analysis/review mode: read-only subagents are allowed if useful.");
+    lines.push("- Subagents must not modify files in this mode.");
+  } else if (mode === "implementation") {
+    lines.push("- Implementation mode: subagents may analyze or review, but must not modify files unless explicitly approved for a bounded write scope.");
+    lines.push("- The primary Codex run remains responsible for integrating and verifying any findings.");
+  } else if (mode === "prototype") {
+    lines.push("- Prototype mode: subagents are allowed for planning and review.");
+    lines.push("- Subagents must not expand prototype scope into production implementation without explicit approval.");
+  }
+
+  return lines.join("\n");
+}
+
 function buildValidationPlanSection({ task }) {
   const lines = [
-    "## 7. Validation plan",
+    "## 11. Validation Plan",
     "- Run `git status --short` before and after implementation.",
     "- Run `git diff --check`.",
     "- Run `git diff --stat`.",
@@ -242,7 +355,11 @@ function buildValidationPlanSection({ task }) {
   }
 
   if (isDataRelatedTask(task)) {
-    lines.push("- If JSON/data loading changes, run or request `tools\\aiworkflow\\json_smoke_check.bat` and relevant runtime loader validation.");
+    lines.push("- If JSON/data loading changes, run `tools\\aiworkflow\\json_smoke_check.bat` and relevant runtime loader validation.");
+  }
+
+  if (isGameRuntimeRelatedTask(task)) {
+    lines.push("- If game runtime behavior changes, request human runtime validation and report the user-provided evidence.");
   }
 
   lines.push("- Confirm `_Local/`, `node_modules/`, `.env`, `discord_bot.local.json`, and `_Temp/` artifacts are not tracked.");
@@ -251,9 +368,16 @@ function buildValidationPlanSection({ task }) {
 
 function buildStopConditionsSection() {
   return [
-    "## 8. Stop conditions",
+    "## 12. Stop Conditions",
     "- Required approval is missing.",
     "- Repository context is insufficient for file-level instructions.",
+    "- Scope becomes ambiguous.",
+    "- Schema or save format changes appear necessary.",
+    "- External credentials are needed.",
+    "- Destructive commands are needed.",
+    "- Validation fails repeatedly.",
+    "- Implementation requires a human design decision.",
+    "- Changes exceed reduced scope.",
     "- Scope mixes feature work with broad refactoring.",
     "- The task requires guessing about critical runtime behavior.",
     "- Validation criteria cannot be identified.",
@@ -263,16 +387,31 @@ function buildStopConditionsSection() {
   ].join("\n");
 }
 
+function buildCompletionAuditSection() {
+  return [
+    "## 13. Completion Audit",
+    "Before declaring complete, verify and report:",
+    "- Objective satisfied.",
+    "- Non-goals respected.",
+    "- Files changed are in scope.",
+    "- Validation commands were run, or explicitly not run with reasons.",
+    "- Risks are documented.",
+    "- No commit was performed.",
+    "- Final `git status --short` is reported.",
+  ].join("\n");
+}
+
 function buildRequiredReturnFormatSection() {
   return [
-    "## 9. Required return format",
+    "## 14. Required Return Format",
     "1. Implementation summary",
     "2. Files changed",
-    "3. Generated goal request behavior",
+    "3. Contract v2 behavior, or analysis/review summary if no implementation was done",
     "4. Validation commands run",
     "5. Validation results",
     "6. Known risks",
-    "7. Commit recommendation",
+    "7. Human decisions needed",
+    "8. Commit recommendation",
   ].join("\n");
 }
 
@@ -299,6 +438,19 @@ function modeObjective(mode, task) {
       return `Review the current work for ${task.id}, focusing on bugs, regressions, missing validation, and scope violations.`;
     default:
       return `Implement ${task.id} within the approved reduced scope and return validation evidence without committing.`;
+  }
+}
+
+function modeBehavior(mode) {
+  switch (mode) {
+    case "analysis":
+      return "inspect and report only; do not modify files.";
+    case "prototype":
+      return "create an isolated reduced-scope experiment only when explicitly requested.";
+    case "review":
+      return "inspect current diff and risks only; do not modify files.";
+    default:
+      return "implement bounded approved changes only, with validation evidence and no commit.";
   }
 }
 
@@ -410,6 +562,18 @@ function appendValidationProfiles(lines, profiles) {
   }
 }
 
+function appendWorkflowStateFiles(lines, files) {
+  const entries = Object.entries(files ?? {});
+  if (entries.length === 0) {
+    lines.push("  - (none)");
+    return;
+  }
+
+  for (const [key, value] of entries) {
+    lines.push(`  - ${key}: ${formatValue(value)}`);
+  }
+}
+
 function appendList(lines, values) {
   const items = Array.isArray(values) ? values : [];
   if (items.length === 0) {
@@ -432,6 +596,21 @@ function formatValue(value) {
   return text || "(none)";
 }
 
+function formatTaskField(value, fieldName) {
+  const text = String(value ?? "").trim();
+  return text || `(incomplete: ${fieldName} unavailable)`;
+}
+
+function formatProjectSummary(profile) {
+  const parts = [
+    profile.project_id ? `id=${profile.project_id}` : "id unavailable",
+    profile.display_name ? `name=${profile.display_name}` : "name unavailable",
+    profile.engine ? `engine=${profile.engine}` : "engine unavailable",
+    profile.project_type ? `type=${profile.project_type}` : "type unavailable",
+  ];
+  return parts.join(", ");
+}
+
 function oneLine(value) {
   return formatValue(value).replace(/\s+/g, " ");
 }
@@ -446,6 +625,10 @@ function isDataRelatedTask(task) {
 
 function isDiscordWorkflowTask(task) {
   return taskText(task).match(/\b(discord|bot|command|slash|orchestrator)\b/i) !== null;
+}
+
+function isGameRuntimeRelatedTask(task) {
+  return taskText(task).match(/\b(runtime|game|scene|actor|enemy|player|combat|reward|save|load|boot|outgame|ingame)\b/i) !== null;
 }
 
 function taskText(task) {
