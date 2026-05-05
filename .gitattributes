@@ -1,2 +1,27 @@
 # Normalize text in Git while checking out CRLF in the working tree.
 * text=auto eol=crlf
+
+# Binary files must never be line-ending normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.bmp binary
+*.tga binary
+*.psd binary
+
+*.wav binary
+*.mp3 binary
+*.ogg binary
+
+*.fbx binary
+*.ttf binary
+*.otf binary
+
+*.zip binary
+*.7z binary
+*.dll binary
+*.lib binary
+*.exe binary
