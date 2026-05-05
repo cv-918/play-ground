@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-020557
-title: WF-033 Role Router Rules for ActiveTask
+task_id: WF-20260506-021921
+title: WF-034 Review and Validation Verdict Format v1
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-033 Role Router Rules for ActiveTask
+WF-034 Review and Validation Verdict Format v1
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "Role Router Rules v1 completed. Defined routing inputs, base routing rules, category matrix, kind matrix, risk-based escalation, human decision gates, role handoff examples, and non-goals. README linked the new document. No PlayGround source files were modified."
+note: done: Review and Validation Verdict Format v1 completed. Defined PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL verdict levels; Review, Validation, Documentation, and Tool/Workflow output formats; Critical/Major/Minor/Optional severity model; commit recommendation rules; Human Director gates; and non-goals. README linked the new document. No PlayGround source files were modified.
 updated_at: 2026-05-06
 source: Discord task status command
 ```
