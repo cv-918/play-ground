@@ -6,7 +6,8 @@ WF-026 adds a Discord command for generating manual Codex CLI `/goal` request
 markdown files from AIWorkflow tasks. WF-031 standardizes the generated file
 shape as Codex Goal Prompt Contract v2. WF-038 adds selected-task role router
 recommendations to the generated request body. WF-039 adds concrete
-path-scoped rule checklist reminders selected from likely task scope.
+path-scoped rule checklist reminders selected from likely task scope. WF-046
+adds an execution readiness summary to the Discord response.
 
 This command prepares request files only. It does not execute Codex CLI,
 OpenClaw, Claude, subagents, Unity AI, computer-use, commits, pushes, releases,
@@ -213,22 +214,39 @@ _Temp/AIWorkflowTaskRequests/
 
 ## Discord Response
 
-The Discord response stays short and includes:
+The Discord response includes:
 
 ```text
-task id
-task title
-mode
-context level
-generated file path
-next manual steps for running Codex CLI /goal
+1. Goal Request Prepared
+2. Task Summary
+3. Execution Readiness
+4. Approval Status
+5. ActiveTask Status
+6. Included Guidance
+7. Human Decision Gates
+8. Required Validation
+9. Safety Note
+10. Next Manual Action
 ```
+
+Execution Readiness is one of:
+
+```text
+ready_for_manual_execution
+needs_human_review
+not_ready
+```
+
+Included Guidance confirms Contract v2, role-aware routing, path-scoped
+reminders, validation plan, and completion audit.
 
 The manual bridge remains:
 
 ```text
 Human opens the generated file, reviews it, and pastes the request into Codex CLI.
 ```
+
+The response never means Discord has executed Codex CLI.
 
 ---
 
@@ -248,17 +266,20 @@ Discord validation:
 ```text
 1. /ai prepare goal
 2. /ai prepare goal id:GAME-001 mode:analysis context:standard
-3. /ai prepare goal id:WF-037 mode:review context:compact
-4. /ai prepare goal id:WF-038 mode:review context:compact
-5. /ai role status
-6. /ai status
-7. /ai active
+3. /ai prepare goal id:WF-046 mode:analysis context:standard
+4. /ai prepare goal id:WF-046 mode:implementation context:standard
+5. /ai prepare goal id:WF-037 mode:review context:compact
+6. /ai prepare goal id:WF-038 mode:review context:compact
+7. /ai role status
+8. /ai status
+9. /ai active
 ```
 
 Expected:
 
 ```text
 - Each prepare command returns a generated file path under _Temp/AIWorkflowTaskRequests/.
+- Discord responses include Execution Readiness, Approval Status, ActiveTask Status, Included Guidance, Human Decision Gates, Required Validation, Safety Note, and Next Manual Action.
 - Generated files start with a usable /goal command.
 - Generated files include all Codex Goal Prompt Contract v2 sections.
 - Generated files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.

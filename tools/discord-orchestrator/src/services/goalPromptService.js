@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { evaluateGoalExecutionReadiness } from "./goalReadinessService.js";
 import { getPathRuleChecklistForTask } from "./pathRuleReminderService.js";
 import { getRoleRouterRecommendationForTask } from "./roleRouterService.js";
 import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
@@ -58,6 +59,13 @@ export async function prepareGoalPrompt(config, input = {}) {
     selectedFromActive,
   });
   const outputPath = await writePromptFile(config, task.id, prompt);
+  const readiness = evaluateGoalExecutionReadiness({
+    task,
+    activeTask: activeTask.data,
+    mode,
+    roleRecommendation,
+    pathRuleChecklist,
+  });
 
   return {
     ok: true,
@@ -67,6 +75,7 @@ export async function prepareGoalPrompt(config, input = {}) {
       context_level: contextLevel,
       generated_path: outputPath.relativePath,
       absolute_path: outputPath.absolutePath,
+      readiness,
     },
   };
 }

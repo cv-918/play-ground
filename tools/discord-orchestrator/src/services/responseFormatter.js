@@ -270,20 +270,42 @@ export function formatGoalPrepareResult(result) {
 
   const data = result.data ?? {};
   const task = data.task ?? {};
+  const readiness = data.readiness ?? {};
+  const execution = readiness.execution_readiness ?? {};
+  const approval = readiness.approval_status ?? {};
+  const active = readiness.active_task_status ?? {};
+  const included = readiness.included_guidance ?? {};
   return [
     "**Goal Request Prepared**",
-    `Task ID: ${task.id ?? "unknown"}`,
-    `Task Title: ${task.item ?? "unknown"}`,
-    `Mode: ${data.mode ?? "unknown"}`,
-    `Context: ${data.context_level ?? "unknown"}`,
-    "Contract: Codex Goal Prompt Contract v2 + role-aware routing guidance",
+    "",
+    "**1. Task Summary**",
+    `${task.id ?? "unknown"} [${task.priority ?? "?"}/${task.status ?? "?"}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
+    `Mode/Context: ${data.mode ?? "unknown"} / ${data.context_level ?? "unknown"}`,
     `Path: ${formatInlineCode(data.generated_path || "unknown")}`,
     "",
-    "Next manual steps:",
-    "1. Open the generated markdown file.",
-    "2. Review the first-line `/goal` command and request body.",
-    "3. Paste the request into Codex CLI manually.",
-    "4. Return Codex results to ChatGPT/Discord for review.",
+    "**2. Execution Readiness**",
+    `${execution.status ?? "needs_human_review"}: ${cleanupBlock(execution.reason || "Review generated request before manual Codex execution.")}`,
+    "",
+    "**3. Approval Status**",
+    `${approval.approved ? "approved" : "not approved"}: ${cleanupBlock(approval.summary || "")}`,
+    "",
+    "**4. ActiveTask Status**",
+    `selected task active: ${active.is_active_task ? "yes" : "no"}; active=${active.active_task_id ?? "unknown"} / ${active.active_task_status ?? "unknown"}`,
+    "",
+    "**5. Included Guidance**",
+    formatIncludedGuidance(included),
+    "",
+    "**6. Human Decision Gates**",
+    summarizeList(readiness.human_decision_gates, 2),
+    "",
+    "**7. Required Validation**",
+    summarizeList(readiness.required_validation, 2),
+    "",
+    "**8. Safety Note**",
+    cleanupBlock(readiness.safety_note || "Manual request only. No Codex CLI, agents, approval, task state, commit, or push was executed."),
+    "",
+    "**9. Next Manual Action**",
+    summarizeList(readiness.next_manual_action, 5),
   ].join("\n");
 }
 
@@ -559,6 +581,17 @@ function appendPathReminderSummary(lines, reminders) {
       : "Review path-scoped rules before implementation.";
     lines.push(`- ${item.path}: ${cleanupBlock(reminderText)}`);
   }
+}
+
+function formatIncludedGuidance(included) {
+  const labels = [
+    ["Contract v2", included.contract_v2_included],
+    ["role-aware routing", included.role_aware_routing_included],
+    ["path-scoped reminders", included.path_scoped_reminders_included],
+    ["validation plan", included.validation_plan_included],
+    ["completion audit", included.completion_audit_included],
+  ];
+  return labels.map(([label, value]) => `${label}: ${value ? "yes" : "no"}`).join("; ");
 }
 
 function compactItems(items, maxCount, label) {

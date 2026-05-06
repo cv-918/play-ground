@@ -18,6 +18,7 @@ WF-042 adds explicit human-invoked Backlog task creation from intake drafts.
 WF-043 adds read-only activation review for intake-created Backlog tasks.
 WF-044 adds activation safety guidance to `/ai task set-active` responses.
 WF-045 adds approval safety guidance to `/ai task approve` responses.
+WF-046 adds execution readiness guidance to `/ai prepare goal` responses.
 
 It can read:
 
@@ -32,6 +33,7 @@ create Backlog tasks from explicit intake-create requests
 review intake-created Backlog tasks before manual activation
 show activation safety guidance after task selection
 show approval safety guidance after task approval
+show goal request execution readiness before manual Codex CLI use
 format Discord responses
 ```
 
@@ -312,6 +314,11 @@ Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule
 Reminders. WF-039 also adds a dedicated Path-Scoped Rule Reminders section
 with concrete checklist items selected from the likely task scope.
 
+The Discord response also includes execution readiness, approval status,
+ActiveTask status, included guidance, human gates, validation expectations,
+safety note, and next manual action. This is advisory only; Discord does not
+execute Codex CLI or agents.
+
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
 
@@ -361,6 +368,8 @@ After starting the bot:
 [ ] /ai prepare codex id:WF-021 mode:review context:compact works.
 [ ] /ai prepare goal works with ActiveTask.md default.
 [ ] /ai prepare goal id:GAME-001 mode:analysis context:standard works.
+[ ] /ai prepare goal id:WF-046 mode:analysis context:standard works.
+[ ] /ai prepare goal id:WF-046 mode:implementation context:standard works.
 [ ] /ai prepare goal id:WF-037 mode:review context:compact works.
 [ ] /ai prepare goal id:WF-038 mode:review context:compact works.
 [ ] /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" works.
@@ -378,6 +387,8 @@ After starting the bot:
 [ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
 [ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
 [ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
+[ ] /ai prepare goal responses include Execution Readiness, Approval Status, ActiveTask Status, Included Guidance, Human Decision Gates, Required Validation, Safety Note, and Next Manual Action.
+[ ] /ai prepare goal does not execute Codex CLI or agents and does not modify task state.
 [ ] /ai intake does not modify Backlog.md or ActiveTask.md.
 [ ] /ai intake-create does not modify ActiveTask.md and does not approve the task.
 [ ] Git status changes only for explicitly approved write commands.
