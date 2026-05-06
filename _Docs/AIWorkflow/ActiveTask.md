@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-021921
-title: WF-034 Review and Validation Verdict Format v1
+task_id: WF-20260506-092131
+title: WF-035 Path-Scoped Rule Mapping for Dust Land
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-034 Review and Validation Verdict Format v1
+WF-035 Path-Scoped Rule Mapping for Dust Land
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: Review and Validation Verdict Format v1 completed. Defined PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL verdict levels; Review, Validation, Documentation, and Tool/Workflow output formats; Critical/Major/Minor/Optional severity model; commit recommendation rules; Human Director gates; and non-goals. README linked the new document. No PlayGround source files were modified.
+note: done: Path-Scoped Rule Mapping for Dust Land v1 completed. Covered Gameplay, EngineSystems, Core, Framework, Data, Resources, aiworkflow tools, Discord orchestrator, AIWorkflow docs, DevLog, .github, and root config paths. Added path-specific owner roles, risks, review roles, validation expectations, human gates, and validation matrix. README linked the document. No PlayGround source files were modified.
 updated_at: 2026-05-06
 source: Discord task status command
 ```
