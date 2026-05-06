@@ -16,6 +16,7 @@ WF-040 adds a read-only natural-language task intake suggestion command.
 WF-041 adds a Task Draft section to intake responses for manual review.
 WF-042 adds explicit human-invoked Backlog task creation from intake drafts.
 WF-043 adds read-only activation review for intake-created Backlog tasks.
+WF-044 adds activation safety guidance to `/ai task set-active` responses.
 
 It can read:
 
@@ -28,6 +29,7 @@ read ActiveTask role routing recommendation
 suggest structured task intake from natural-language text
 create Backlog tasks from explicit intake-create requests
 review intake-created Backlog tasks before manual activation
+show activation safety guidance after task selection
 format Discord responses
 ```
 
@@ -180,6 +182,12 @@ _Docs/AIWorkflow/Intake_Approval_Task_Creation_Flow.md
 _Docs/AIWorkflow/Intake_Created_Task_Review_Activation_Flow.md
 ```
 
+`/ai task set-active` writes ActiveTask.md and then returns an activation safety
+summary with recommended roles, human gates, required validation, suggested
+execution route, safety note, and suggested next manual commands. It does not
+approve the task, change the Backlog row status, execute Codex CLI, execute
+agents, mark the task done, commit, push, or modify source files.
+
 For role router recommendation:
 
 ```text
@@ -324,6 +332,8 @@ After starting the bot:
 [ ] /ai task review-intake id:<intake-created task id> works and is read-only.
 [ ] /ai task review-intake id:GAME-001 works as a generic activation review.
 [ ] /ai task set-active updates ActiveTask.md and creates a backup.
+[ ] /ai task set-active response includes roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task set-active does not approve tasks or execute agents/Codex CLI.
 [ ] /ai task approve updates Backlog.md and creates a backup.
 [ ] /ai task block updates Backlog.md and creates a backup.
 [ ] /ai task defer updates Backlog.md and creates a backup.

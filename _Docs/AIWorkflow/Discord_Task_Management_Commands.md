@@ -25,6 +25,8 @@ For the dedicated Release D command reference, see:
 Discord_Safe_Script_Execution_Commands.md
 ```
 
+WF-044 enhances `/ai task set-active` responses with activation safety guidance.
+
 ---
 
 ## Safety Scope
@@ -176,6 +178,32 @@ _Temp/AIWorkflowDiscordBot/backups/ActiveTask_YYYYMMDD_HHMMSS.md
 
 Release B does not automatically update the Backlog row status.
 
+WF-044 response contract:
+
+```text
+1. Active Task Updated
+2. Task Summary
+3. Recommended Roles
+4. Human Decision Gates
+5. Required Validation
+6. Suggested Execution Route
+7. Safety Note
+8. Next Recommended Commands
+```
+
+The next commands are suggestions only. The bot does not execute them:
+
+```text
+/ai task approve id:<task_id> note:"..."
+/ai role status
+/ai prepare goal id:<task_id> mode:analysis context:standard
+/ai status
+/ai active
+```
+
+`/ai task set-active` does not approve the task, execute Codex CLI, execute
+agents, mark the task done, commit, push, or modify game source code.
+
 ### `/ai task approve`
 
 Required option:
@@ -314,6 +342,9 @@ commands/ai.js
 services/taskService.js
   Backlog and ActiveTask read/write logic, backup creation, task ID validation, status transitions
 
+services/activeTaskActivationService.js
+  set-active orchestration plus activation safety summary assembly
+
 services/responseFormatter.js
   Discord response formatting
 ```
@@ -342,6 +373,7 @@ Discord validation:
 /ai task list
 /ai task set-active id:<created task id>
 /ai task current
+/ai role status
 /ai status
 /ai active
 ```
@@ -385,6 +417,8 @@ git diff --stat
 [ ] /ai task create creates a backup before writing.
 [ ] /ai task set-active updates ActiveTask.md.
 [ ] /ai task set-active creates a backup before writing.
+[ ] /ai task set-active response includes recommended roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task set-active does not approve tasks, execute Codex, execute agents, mark done, commit, push, or modify game source.
 [ ] /ai task approve updates Backlog status to ready_for_implementation.
 [ ] /ai task block updates Backlog status to blocked.
 [ ] /ai task defer updates Backlog status to deferred.

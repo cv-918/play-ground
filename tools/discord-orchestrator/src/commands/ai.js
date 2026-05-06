@@ -6,6 +6,7 @@ import { getRoleRouterStatus } from "../services/roleRouterService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
+import { setActiveTaskWithSafety } from "../services/activeTaskActivationService.js";
 import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
@@ -17,7 +18,6 @@ import {
   deferTask,
   getCurrentTask,
   listBacklogTasks,
-  setActiveTask,
 } from "../services/taskService.js";
 import {
   formatActive,
@@ -594,7 +594,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
     }
 
     if (subcommand === "set-active") {
-      const result = await setActiveTask(config, interaction.options.getString("id"));
+      const result = await setActiveTaskWithSafety(config, interaction.options.getString("id"));
       if (!result.ok) {
         await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
         return;

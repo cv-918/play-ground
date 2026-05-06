@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-151028
-title: WF-043 Intake-created task review and activation flow
+task_id: WF-20260506-153358
+title: WF-044 ActiveTask activation safety summary
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-043 Intake-created task review and activation flow
+WF-044 ActiveTask activation safety summary
 
 ---
 
@@ -36,7 +36,7 @@ WF-043 Intake-created task review and activation flow
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: pending
+validation: approved: Approve reduced-scope implementation. Enhance /ai task set-active response with role recommendations, human gates, validation expectations, safety notes, and next manual commands. Do not auto-approve, do not execute agents, do not execute Codex CLI, do not modify game source code, do not commit, and do not push.
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-pending
+approved: Approve reduced-scope implementation. Enhance /ai task set-active response with role recommendations, human gates, validation expectations, safety notes, and next manual commands. Do not auto-approve, do not execute agents, do not execute Codex CLI, do not modify game source code, do not commit, and do not push.
 ```
 
 ---
@@ -70,10 +70,11 @@ pending
 
 ```text
 status: done
-note: done: "WF-043 validation passed. /ai task review-intake reviewed both generic Backlog tasks and an intake-created task. The command reported activation readiness, recommended roles, human gates, required validation, suggested execution route, next manual commands, and safety status. Review command did not modify Backlog, ActiveTask, approval/status, and did not execute agents or Codex CLI. Validation-created intake task row was removed from committed Backlog state."
+note: done: "WF-044 validation passed. /ai task set-active now returns activation safety summary for GAME-001 and WF-044. The response includes task summary, recommended roles, human decision gates, required validation, suggested execution route, safety note, and next recommended commands. Backlog row status was not changed, task was not auto-approved, and Codex/agents were not executed. /ai role status, /ai status, and /ai active passed live Discord validation."
 updated_at: 2026-05-06
 source: Discord task status command
 ```
+
 ---
 
 ## Next Recommended Task

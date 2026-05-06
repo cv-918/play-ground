@@ -663,13 +663,37 @@ export function formatTaskCreated(task) {
 
 export function formatTaskSetActive(data) {
   const task = data.task ?? {};
-  return [
+  const safety = data.activation_safety ?? {};
+  const lines = [
     "**Active Task Updated**",
-    `ID: ${task.id}`,
-    `Title: ${task.item}`,
+    "",
+    "**1. Task Summary**",
+    `ID: ${task.id ?? "unknown"}`,
+    `Title: ${task.item ?? "unknown"}`,
+    `Priority/Status/Kind: ${task.priority ?? "?"} / in_progress / ${task.kind ?? "?"}`,
     `Status: in_progress`,
     "Backlog row status was not changed.",
-  ].join("\n");
+    "",
+    "**2. Recommended Roles**",
+    summarizeList(safety.recommended_roles, 4),
+    "",
+    "**3. Human Decision Gates**",
+    summarizeList(safety.human_decision_gates, 2),
+    "",
+    "**4. Required Validation**",
+    summarizeList(safety.required_validation, 2),
+    "",
+    "**5. Suggested Execution Route**",
+    summarizeList(safety.suggested_execution_route, 5),
+    "",
+    "**6. Safety Note**",
+    cleanupBlock(safety.safety_note || "Task selected only. No approval, Codex, agents, done status, commit, or push was performed."),
+    "",
+    "**7. Next Recommended Commands**",
+    summarizeList(safety.next_recommended_commands, 5),
+  ];
+
+  return lines.join("\n");
 }
 
 export function formatTaskStatusUpdated(data) {
