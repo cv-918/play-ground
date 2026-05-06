@@ -698,12 +698,47 @@ export function formatTaskSetActive(data) {
 
 export function formatTaskStatusUpdated(data) {
   const task = data.task ?? {};
+  const approval = data.approval_safety;
+
+  if (!approval) {
+    return [
+      "**Task Status Updated**",
+      `ID: ${task.id}`,
+      `Status: ${data.status}`,
+      `Note: ${data.note}`,
+      `ActiveTask.md updated: ${data.active_task_updated ? "yes" : "no"}`,
+    ].join("\n");
+  }
+
   return [
     "**Task Status Updated**",
-    `ID: ${task.id}`,
-    `Status: ${data.status}`,
-    `Note: ${data.note}`,
+    "",
+    "**1. Task Summary**",
+    `ID: ${task.id ?? "unknown"}`,
+    `Title: ${task.item ?? "unknown"}`,
+    `Priority/Status/Kind: ${task.priority ?? "?"} / ${data.status ?? task.status ?? "?"} / ${task.kind ?? "?"}`,
     `ActiveTask.md updated: ${data.active_task_updated ? "yes" : "no"}`,
+    "",
+    "**2. Approval Summary**",
+    cleanupBlock(approval.approval_summary || data.note || "approved"),
+    "",
+    "**3. Recommended Roles**",
+    summarizeList(approval.recommended_roles, 4),
+    "",
+    "**4. Human Decision Gates**",
+    summarizeList(approval.human_decision_gates, 2),
+    "",
+    "**5. Required Validation**",
+    summarizeList(approval.required_validation, 2),
+    "",
+    "**6. Suggested Execution Route**",
+    summarizeList(approval.suggested_execution_route, 5),
+    "",
+    "**7. Safety Note**",
+    cleanupBlock(approval.safety_note || "Approval only. No Codex, agents, done status, commit, or push was executed."),
+    "",
+    "**8. Next Recommended Commands**",
+    summarizeList(approval.next_recommended_commands, 5),
   ].join("\n");
 }
 

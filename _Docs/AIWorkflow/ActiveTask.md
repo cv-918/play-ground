@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-153358
-title: WF-044 ActiveTask activation safety summary
+task_id: WF-20260506-155058
+title: WF-045 Task approval safety summary
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-044 ActiveTask activation safety summary
+WF-045 Task approval safety summary
 
 ---
 
@@ -36,7 +36,7 @@ WF-044 ActiveTask activation safety summary
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: approved: Approve reduced-scope implementation. Enhance /ai task set-active response with role recommendations, human gates, validation expectations, safety notes, and next manual commands. Do not auto-approve, do not execute agents, do not execute Codex CLI, do not modify game source code, do not commit, and do not push.
+validation: pending
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: Approve reduced-scope implementation. Enhance /ai task set-active response with role recommendations, human gates, validation expectations, safety notes, and next manual commands. Do not auto-approve, do not execute agents, do not execute Codex CLI, do not modify game source code, do not commit, and do not push.
+pending
 ```
 
 ---
@@ -70,11 +70,10 @@ approved: Approve reduced-scope implementation. Enhance /ai task set-active resp
 
 ```text
 status: done
-note: done: "WF-044 validation passed. /ai task set-active now returns activation safety summary for GAME-001 and WF-044. The response includes task summary, recommended roles, human decision gates, required validation, suggested execution route, safety note, and next recommended commands. Backlog row status was not changed, task was not auto-approved, and Codex/agents were not executed. /ai role status, /ai status, and /ai active passed live Discord validation."
+note: done: "WF-045 validation passed. /ai task approve now returns approval safety summary. The response includes task summary, approval summary, recommended roles, human decision gates, required validation, suggested execution route, safety note, and next recommended commands. Discord validation passed for WF-045 approval, /ai role status, /ai status, and /ai active. Approval did not execute Codex CLI, agents, implementation, done status, commit, push, or game source modification."
 updated_at: 2026-05-06
 source: Discord task status command
 ```
-
 ---
 
 ## Next Recommended Task

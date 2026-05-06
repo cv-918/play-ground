@@ -17,6 +17,7 @@ WF-041 adds a Task Draft section to intake responses for manual review.
 WF-042 adds explicit human-invoked Backlog task creation from intake drafts.
 WF-043 adds read-only activation review for intake-created Backlog tasks.
 WF-044 adds activation safety guidance to `/ai task set-active` responses.
+WF-045 adds approval safety guidance to `/ai task approve` responses.
 
 It can read:
 
@@ -30,6 +31,7 @@ suggest structured task intake from natural-language text
 create Backlog tasks from explicit intake-create requests
 review intake-created Backlog tasks before manual activation
 show activation safety guidance after task selection
+show approval safety guidance after task approval
 format Discord responses
 ```
 
@@ -188,6 +190,12 @@ execution route, safety note, and suggested next manual commands. It does not
 approve the task, change the Backlog row status, execute Codex CLI, execute
 agents, mark the task done, commit, push, or modify source files.
 
+`/ai task approve` updates the task status to `ready_for_implementation` and
+then returns an approval safety summary with recommended roles, human gates,
+required validation, suggested execution route, safety note, and suggested next
+manual commands. It does not execute Codex CLI, execute agents, implement
+changes, mark the task done, commit, push, or modify source files.
+
 For role router recommendation:
 
 ```text
@@ -335,6 +343,8 @@ After starting the bot:
 [ ] /ai task set-active response includes roles, gates, validation, route, safety note, and next commands.
 [ ] /ai task set-active does not approve tasks or execute agents/Codex CLI.
 [ ] /ai task approve updates Backlog.md and creates a backup.
+[ ] /ai task approve response includes roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task approve does not mark done or execute agents/Codex CLI.
 [ ] /ai task block updates Backlog.md and creates a backup.
 [ ] /ai task defer updates Backlog.md and creates a backup.
 [ ] /ai task done updates Backlog.md and creates a backup.

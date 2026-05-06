@@ -9,9 +9,9 @@ import { prepareGoalPrompt } from "../services/goalPromptService.js";
 import { setActiveTaskWithSafety } from "../services/activeTaskActivationService.js";
 import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
+import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import {
-  approveTask,
   blockTask,
   completeTask,
   createTask,
@@ -607,7 +607,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
     }
 
     if (subcommand === "approve") {
-      await handleTaskStatusCommand(interaction, config, approveTask, {
+      await handleTaskStatusCommand(interaction, config, approveTaskWithSafety, {
         id: interaction.options.getString("id"),
         note: interaction.options.getString("note"),
       });

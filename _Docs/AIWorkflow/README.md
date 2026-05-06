@@ -40,6 +40,7 @@ This README is the entry point for the document set.
 | `Intake_Approval_Task_Creation_Flow.md` | Defines the explicit human-invoked intake task creation flow and Backlog safety boundaries |
 | `Intake_Created_Task_Review_Activation_Flow.md` | Defines the read-only activation review command for intake-created Backlog tasks |
 | `ActiveTask_Activation_Safety_Summary.md` | Defines the activation safety summary returned by `/ai task set-active` |
+| `Task_Approval_Safety_Summary.md` | Defines the approval safety summary returned by `/ai task approve` |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
