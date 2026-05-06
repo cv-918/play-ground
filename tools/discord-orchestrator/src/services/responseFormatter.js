@@ -353,6 +353,44 @@ export function formatIntakeSuggestion(result) {
   return lines.join("\n");
 }
 
+export function formatIntakeTaskCreated(result) {
+  if (!result?.ok) {
+    return [
+      "**Intake Task Creation Failed**",
+      cleanupBlock(result?.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  const draft = data.draft ?? {};
+  const safety = data.safety ?? {};
+
+  return [
+    "**Intake Task Created**",
+    `ID: ${task.id ?? "unknown"}`,
+    `Title: ${task.item ?? draft.title ?? "unknown"}`,
+    `Category: ${draft.category ?? "unknown"}`,
+    `Priority/Risk: ${task.priority ?? draft.priority ?? "unknown"} / ${draft.suggested_risk ?? "unknown"}`,
+    `Kind: ${task.kind ?? draft.kind ?? "unknown"}`,
+    `Workflow Path: ${draft.workflow_path ?? "unknown"}`,
+    "",
+    "**Task Draft Source**",
+    `Reason: ${cleanupBlock(draft.reason)}`,
+    `Recommended roles: ${summarizeList(draft.recommended_roles, 4)}`,
+    `Required validation: ${summarizeList(draft.required_validation, 1)}`,
+    "",
+    "**Manual Next Action**",
+    "Review the created Backlog task, edit it if needed, then approve or set active manually.",
+    "",
+    "**Safety**",
+    `Backlog.md updated: ${safety.backlog_updated ? "yes" : "no"}`,
+    `ActiveTask.md updated: ${safety.active_task_updated ? "yes" : "no"}`,
+    `Task approved: ${safety.approved ? "yes" : "no"}`,
+    "No agents or Codex CLI were executed.",
+  ].join("\n");
+}
+
 function formatRunWorkflowStatus(data) {
   const task = data.active_task ?? {};
   const backlog = data.backlog ?? {};

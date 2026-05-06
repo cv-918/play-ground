@@ -3,15 +3,19 @@
 ## 1. Purpose
 
 WF-040 adds a read-only Discord task intake prototype. WF-041 extends the same
-flow with a structured Task Draft section for manual review:
+flow with a structured Task Draft section for manual review. WF-042 adds an
+explicit human-invoked creation command that can append the draft as a Backlog
+task:
 
 ```text
 /ai intake
+/ai intake-create
 ```
 
 The command accepts a natural-language work request and returns a structured
-AIWorkflow task suggestion and task draft. It does not create, approve,
-activate, execute, or commit anything.
+AIWorkflow task suggestion and task draft. `/ai intake` does not create,
+approve, activate, execute, or commit anything. `/ai intake-create` is the
+explicit write command for creating a Backlog task from the same intake logic.
 
 ---
 
@@ -19,6 +23,7 @@ activate, execute, or commit anything.
 
 ```text
 /ai intake text:<natural-language work request>
+/ai intake-create text:<natural-language work request>
 ```
 
 Required input:
@@ -28,6 +33,13 @@ text
 ```
 
 `text` is a natural-language request from the human developer.
+
+Command distinction:
+
+- `/ai intake` is read-only and only returns the suggestion and Task Draft.
+- `/ai intake-create` creates one Backlog task after explicit invocation.
+- `/ai intake-create` does not set ActiveTask, approve the task, execute
+  agents, execute Codex CLI, commit, or push.
 
 ---
 
@@ -71,7 +83,7 @@ required validation
 suggested next manual action
 ```
 
-The response also states read-only safety:
+The read-only response also states safety:
 
 ```text
 No Backlog task was created.
@@ -158,6 +170,16 @@ expose secrets
 
 The command only formats a suggestion into the Discord response.
 
+`/ai intake-create` may write only:
+
+```text
+_Docs/AIWorkflow/Backlog.md
+_Temp/AIWorkflowDiscordBot/backups/
+```
+
+It must preserve the same restrictions for ActiveTask, approval, agents, Codex
+CLI, commits, pushes, game source, private files, and dependencies.
+
 ---
 
 ## 7. Task Draft Usage
@@ -167,9 +189,12 @@ into a later approved task creation step such as:
 
 ```text
 /ai task create title:<edited title> category:<category> priority:<priority> kind:<kind> reason:<edited reason>
+/ai intake-create text:<natural-language work request>
 ```
 
-The draft is not automatically written to Backlog.md or ActiveTask.md.
+The draft is not automatically written to Backlog.md or ActiveTask.md by
+`/ai intake`. `/ai intake-create` writes Backlog.md only because the user
+explicitly invoked the creation command.
 
 ---
 
@@ -179,7 +204,9 @@ Run from repository root:
 
 ```bat
 node --check tools\discord-orchestrator\src\commands\ai.js
+node --check tools\discord-orchestrator\src\services\intakeTaskCreationService.js
 node --check tools\discord-orchestrator\src\services\taskIntakeService.js
+node --check tools\discord-orchestrator\src\services\taskService.js
 node --check tools\discord-orchestrator\src\services\responseFormatter.js
 npm --prefix tools\discord-orchestrator run register
 tools\discord-orchestrator\restart_bot.bat
@@ -194,8 +221,10 @@ Discord smoke tests:
 
 ```text
 /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+/ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
 /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어"
 /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어"
+/ai task list
 /ai status
 /ai active
 ```
@@ -207,6 +236,11 @@ Expected:
 - `/ai intake` response includes a Task Draft section.
 - `/ai intake` does not create tasks automatically.
 - `/ai intake` does not modify Backlog.md or ActiveTask.md.
+- `/ai intake-create` creates one Backlog task only when explicitly invoked.
+- `/ai intake-create` creates a timestamped Backlog backup before writing.
+- `/ai intake-create` escapes markdown table pipes in generated Backlog cells.
+- `/ai intake-create` does not modify ActiveTask.md and does not approve the
+  created task.
 - Output includes category, kind, priority/risk, recommended roles, human
   gates, validation, and next manual action.
 - Task Draft includes title, category, priority, kind, reason, suggested risk,

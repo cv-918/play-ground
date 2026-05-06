@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-141532
-title: WF-041 Intake-to-task draft generation
+task_id: WF-20260506-144618
+title: WF-042 Intake approval and task creation flow
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-041 Intake-to-task draft generation
+WF-042 Intake approval and task creation flow
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-041 validation passed. /ai intake now outputs Task Draft fields for natural-language requests, including title, category, priority, kind, reason, suggested risk, workflow path, recommended roles, human decision gates, required validation, and suggested next manual action. Discord validation passed for UserData, Codex goal prompt, and Unity validation profile requests. The command remained read-only: no Backlog task was created automatically, ActiveTask was not changed by intake, no agents or Codex CLI were executed."
+note: done: "WF-042 validation passed. /ai intake remained read-only. /ai intake-create explicitly created Backlog tasks only when invoked. Discord validation confirmed created task id, Backlog update, ActiveTask unchanged, task not approved, and no agents or Codex CLI executed. Validation-created task rows GAME-20260506-145500 and GAME-20260506-145948 were removed from committed Backlog state."
 updated_at: 2026-05-06
 source: Discord task status command
 ```

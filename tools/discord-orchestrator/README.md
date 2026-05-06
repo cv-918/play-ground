@@ -14,6 +14,7 @@ guidance into generated `/ai prepare goal` request files. WF-039 injects
 concrete path-scoped rule checklist reminders into the same generated files.
 WF-040 adds a read-only natural-language task intake suggestion command.
 WF-041 adds a Task Draft section to intake responses for manual review.
+WF-042 adds explicit human-invoked Backlog task creation from intake drafts.
 
 It can read:
 
@@ -24,6 +25,7 @@ read backlog summary
 read project profiles
 read ActiveTask role routing recommendation
 suggest structured task intake from natural-language text
+create Backlog tasks from explicit intake-create requests
 format Discord responses
 ```
 
@@ -99,6 +101,7 @@ Do not commit `_Local/`.
 /ai blockers
 /ai docs
 /ai intake
+/ai intake-create
 /ai project list
 /ai project profile
 /ai role status
@@ -169,6 +172,7 @@ _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Intake_To_Task_Draft_Generation.md
+_Docs/AIWorkflow/Intake_Approval_Task_Creation_Flow.md
 ```
 
 For role router recommendation:
@@ -200,6 +204,19 @@ Draft section for manual review.
 
 It is read-only. It does not create Backlog tasks, update ActiveTask.md, approve
 tasks, execute agents, execute Codex CLI, commit, push, or modify source files.
+
+For explicit intake task creation:
+
+```text
+/ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+```
+
+`/ai intake-create` uses the same intake classification and Task Draft fields,
+then appends one `todo` row to `_Docs/AIWorkflow/Backlog.md`. It creates a
+timestamped Backlog backup before writing and returns the new task id.
+
+It does not update ActiveTask.md, approve the task, execute agents, execute
+Codex CLI, commit, push, or modify source files.
 
 For safe script execution:
 
@@ -276,6 +293,7 @@ After starting the bot:
 [ ] /ai backlog works.
 [ ] /ai next works.
 [ ] /ai intake returns a structured task suggestion.
+[ ] /ai intake-create creates one Backlog task only when explicitly invoked.
 [ ] /ai project list works.
 [ ] /ai project profile shows Source: ActiveProject.json.
 [ ] /ai project profile id:unity_project_template shows Source: explicit project id.
@@ -304,9 +322,12 @@ After starting the bot:
 [ ] /ai prepare goal id:WF-037 mode:review context:compact works.
 [ ] /ai prepare goal id:WF-038 mode:review context:compact works.
 [ ] /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" works.
+[ ] /ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" creates one Backlog task.
 [ ] /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어" works.
 [ ] /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어" works.
 [ ] /ai intake responses include a Task Draft section with title, category, priority, kind, reason, risk, workflow path, roles, gates, validation, and next manual action.
+[ ] /ai intake-create creates a timestamped Backlog backup before writing.
+[ ] /ai intake-create escapes markdown table pipes in generated Backlog cells.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
@@ -314,7 +335,8 @@ After starting the bot:
 [ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
 [ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
 [ ] /ai intake does not modify Backlog.md or ActiveTask.md.
-[ ] Git status remains unchanged after commands.
+[ ] /ai intake-create does not modify ActiveTask.md and does not approve the task.
+[ ] Git status changes only for explicitly approved write commands.
 ```
 
 ---

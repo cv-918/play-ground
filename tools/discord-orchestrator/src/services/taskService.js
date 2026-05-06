@@ -9,7 +9,21 @@ const BACKLOG_HEADER = ["ID", "Priority", "Status", "Kind", "Item", "Reason", "T
 const CLOSED_STATUSES = new Set(["done", "deferred"]);
 const CATEGORY_VALUES = new Set(["WF", "GAME", "DOC", "VAL", "UNITY"]);
 const PRIORITY_VALUES = new Set(["P0", "P1", "P2", "P3"]);
-const CREATE_KIND_VALUES = new Set(["automation", "implementation", "documentation", "validation", "maintenance", "game"]);
+const CREATE_KIND_VALUES = new Set([
+  "workflow",
+  "architecture",
+  "implementation",
+  "refactoring",
+  "validation",
+  "data",
+  "documentation",
+  "automation",
+  "unity",
+  "release",
+  "maintenance",
+  "game",
+  "prototype",
+]);
 
 export async function getCurrentTask(config) {
   const filePath = resolveRepoPath(config, ACTIVE_TASK_RELATIVE_PATH);
@@ -76,6 +90,8 @@ export async function createTask(config, input) {
   const kind = normalizeEnum(input.kind, "automation", CREATE_KIND_VALUES, "kind", (value) => value.toLowerCase());
   const title = normalizeRequiredText(input.title, "title");
   const reason = normalizeChoice(input.reason, "Created from Discord task command");
+  const toolRoute = normalizeChoice(input.toolRoute ?? input.tool_route, "Discord -> human review");
+  const validation = normalizeChoice(input.validation, "pending");
   const taskId = await generateUniqueTaskId(config, category);
 
   const task = {
@@ -85,8 +101,8 @@ export async function createTask(config, input) {
     kind,
     item: title,
     reason,
-    tool_route: "Discord -> human review",
-    validation: "pending",
+    tool_route: toolRoute,
+    validation,
   };
 
   const filePath = resolveRepoPath(config, BACKLOG_RELATIVE_PATH);

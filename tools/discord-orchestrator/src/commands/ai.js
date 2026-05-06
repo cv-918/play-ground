@@ -6,6 +6,7 @@ import { getRoleRouterStatus } from "../services/roleRouterService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
+import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import {
   approveTask,
@@ -24,6 +25,7 @@ import {
   formatCodexPrepareResult,
   formatDocs,
   formatGoalPrepareResult,
+  formatIntakeTaskCreated,
   formatIntakeSuggestion,
   formatNext,
   formatProjectList,
@@ -41,7 +43,7 @@ import {
 
 const CATEGORY_CHOICES = ["WF", "GAME", "DOC", "VAL", "UNITY"].map((value) => ({ name: value, value }));
 const PRIORITY_CHOICES = ["P0", "P1", "P2", "P3"].map((value) => ({ name: value, value }));
-const KIND_CHOICES = ["automation", "implementation", "documentation", "validation", "maintenance", "game"]
+const KIND_CHOICES = ["automation", "implementation", "documentation", "validation", "maintenance", "game", "data", "refactoring", "prototype"]
   .map((value) => ({ name: value, value }));
 const BACKLOG_KIND_CHOICES = ["workflow", "architecture", "implementation", "refactoring", "validation", "data", "documentation", "automation", "unity", "release", "maintenance", "game"]
   .map((value) => ({ name: value, value }));
@@ -77,6 +79,17 @@ export function buildAiCommand() {
       sub
         .setName("intake")
         .setDescription("Suggest a structured AIWorkflow task from natural language")
+        .addStringOption((option) =>
+          option
+            .setName("text")
+            .setDescription("Natural-language work request")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("intake-create")
+        .setDescription("Create a Backlog task from natural-language intake")
         .addStringOption((option) =>
           option
             .setName("text")
@@ -394,6 +407,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (subcommand === "intake-create") {
+    await handleIntakeCreateCommand(interaction, config);
+    return;
+  }
+
   const statusResult = await getWorkflowStatus(config);
   if (!statusResult.ok) {
     await interaction.editReply({ content: truncateForDiscord(statusResult.error, config.limits.maxDiscordChars) });
@@ -417,6 +435,22 @@ async function handleIntakeCommand(interaction, config) {
   } catch (error) {
     await interaction.editReply({
       content: truncateForDiscord(`Task intake failed: ${error.message}`, config.limits.maxDiscordChars),
+    });
+  }
+}
+
+async function handleIntakeCreateCommand(interaction, config) {
+  try {
+    const result = await createTaskFromIntake(config, {
+      text: interaction.options.getString("text"),
+    });
+
+    await interaction.editReply({
+      content: truncateForDiscord(formatIntakeTaskCreated(result), config.limits.maxDiscordChars),
+    });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(`Intake task creation failed: ${error.message}`, config.limits.maxDiscordChars),
     });
   }
 }
