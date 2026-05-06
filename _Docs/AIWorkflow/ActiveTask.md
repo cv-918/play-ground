@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-111530
-title: WF-038 Role-aware goal prompt injection
+task_id: WF-20260506-114758
+title: WF-039 Path rule checklist injection into goal prompts
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-038 Role-aware goal prompt injection
+WF-039 Path rule checklist injection into goal prompts
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-038 validation passed. /ai prepare goal generated role-aware goal request files for GAME-001 analysis and WF-037 review. Discord responses showed Codex Goal Prompt Contract v2 + role-aware routing guidance. /ai role status, /ai status, and /ai active passed live Discord validation. Command registration, bot restart/status, role_router_status text/json, git diff --check, and private/local tracking checks passed."
+note: done: WF-039 validation passed. /ai prepare goal now injects concrete Path-Scoped Rule Reminders. Discord validation passed for GAME-001, WF-037, and WF-038 goal requests. Generated files included correct path scopes: PlayGround/Data for GAME-001, tools/aiworkflow and tools/discord-orchestrator for WF-037, and tools/aiworkflow, tools/discord-orchestrator, and _Docs/AIWorkflow for WF-038. Role-aware routing guidance and Contract v2 sections remained present. node --check, npm register, bot restart/status, role_router_status text/json, git diff --check, and private/local tracking checks passed. No PlayGround source or data files were modified.
 updated_at: 2026-05-06
 source: Discord task status command
 ```

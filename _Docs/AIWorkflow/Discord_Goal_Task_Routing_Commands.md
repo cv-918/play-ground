@@ -5,7 +5,8 @@
 WF-026 adds a Discord command for generating manual Codex CLI `/goal` request
 markdown files from AIWorkflow tasks. WF-031 standardizes the generated file
 shape as Codex Goal Prompt Contract v2. WF-038 adds selected-task role router
-recommendations to the generated request body.
+recommendations to the generated request body. WF-039 adds concrete
+path-scoped rule checklist reminders selected from likely task scope.
 
 This command prepares request files only. It does not execute Codex CLI,
 OpenClaw, Claude, subagents, Unity AI, computer-use, commits, pushes, releases,
@@ -122,6 +123,22 @@ The role-aware block is advisory routing guidance for the selected task. It does
 not execute agents, approve tasks, mark tasks done, run Codex CLI, or change
 task state.
 
+WF-039 also injects a dedicated supplemental path-rule checklist section:
+
+```text
+Path-Scoped Rule Reminders
+  Source
+  Selection inputs
+  Matched path scopes
+  Concrete checklist items
+```
+
+The path-rule checklist is selected from task category, kind, workflow path,
+task title, task reason, tool route, validation text, and active task metadata.
+It covers the reduced-scope path mappings for gameplay source, engine systems,
+game data, resources, AIWorkflow tools, Discord orchestrator code,
+AIWorkflow docs, Dev Logs, and root config files.
+
 The project context is read from:
 
 ```text
@@ -231,10 +248,11 @@ Discord validation:
 ```text
 1. /ai prepare goal
 2. /ai prepare goal id:GAME-001 mode:analysis context:standard
-3. /ai prepare goal id:GAME-005 mode:implementation context:standard
-4. /ai prepare goal id:WF-021 mode:review context:compact
-5. /ai status
-6. /ai active
+3. /ai prepare goal id:WF-037 mode:review context:compact
+4. /ai prepare goal id:WF-038 mode:review context:compact
+5. /ai role status
+6. /ai status
+7. /ai active
 ```
 
 Expected:
@@ -244,6 +262,7 @@ Expected:
 - Generated files start with a usable /goal command.
 - Generated files include all Codex Goal Prompt Contract v2 sections.
 - Generated files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
+- Generated files include a dedicated Path-Scoped Rule Reminders section with concrete path-specific checklist items.
 - Generated files include mode-aware Scope and Execution Mode sections.
 - Generated files include Human Decision Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and Required Return Format sections.
 - /ai status and /ai active still work.

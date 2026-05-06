@@ -10,7 +10,8 @@ script execution commands. Release E adds Codex App prompt package generation.
 Release F adds Codex CLI `/goal` request markdown generation. WF-031 updates
 that generation to Codex Goal Prompt Contract v2. WF-037 adds a read-only
 role router recommendation command. WF-038 injects selected-task role routing
-guidance into generated `/ai prepare goal` request files.
+guidance into generated `/ai prepare goal` request files. WF-039 injects
+concrete path-scoped rule checklist reminders into the same generated files.
 
 It can read:
 
@@ -161,6 +162,7 @@ _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
+_Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
 ```
 
 For role router recommendation:
@@ -232,7 +234,8 @@ Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and
 Required Return Format sections. It also includes role router guidance:
 Recommended Roles, Role Rationale, Human Decision Gates, Required Validation,
 Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule
-Reminders.
+Reminders. WF-039 also adds a dedicated Path-Scoped Rule Reminders section
+with concrete checklist items selected from the likely task scope.
 
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
@@ -275,13 +278,14 @@ After starting the bot:
 [ ] /ai prepare codex id:WF-021 mode:review context:compact works.
 [ ] /ai prepare goal works with ActiveTask.md default.
 [ ] /ai prepare goal id:GAME-001 mode:analysis context:standard works.
-[ ] /ai prepare goal id:GAME-005 mode:implementation context:standard works.
-[ ] /ai prepare goal id:WF-021 mode:review context:compact works.
+[ ] /ai prepare goal id:WF-037 mode:review context:compact works.
+[ ] /ai prepare goal id:WF-038 mode:review context:compact works.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
 [ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
 [ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
+[ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
 [ ] Git status remains unchanged after commands.
 ```
 

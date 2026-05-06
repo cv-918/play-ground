@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getPathRuleChecklistForTask } from "./pathRuleReminderService.js";
 import { getRoleRouterRecommendationForTask } from "./roleRouterService.js";
 import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
 
@@ -41,12 +42,17 @@ export async function prepareGoalPrompt(config, input = {}) {
     task,
     activeTask: activeTask.data,
   });
+  const pathRuleChecklist = getPathRuleChecklistForTask({
+    task,
+    activeTask: activeTask.data,
+  });
   const prompt = buildGoalPrompt({
     config,
     task,
     activeTask: activeTask.data,
     projectContext,
     roleRecommendation,
+    pathRuleChecklist,
     mode,
     contextLevel,
     selectedFromActive,
@@ -89,6 +95,8 @@ function buildGoalPrompt(input) {
     "",
     buildRoleRouterRecommendationsSection(input),
     "",
+    buildPathScopedRuleRemindersSection(input),
+    "",
     buildHumanDecisionGatesSection(input),
     "",
     buildSubagentPolicySection(input),
@@ -127,6 +135,40 @@ function buildRoleRouterRecommendationsSection({ roleRecommendation }) {
   lines.push(formatValue(recommendation.verdict_format));
   lines.push("", "### Path-Scoped Rule Reminders");
   appendList(lines, recommendation.path_scoped_rule_reminders);
+
+  return lines.join("\n");
+}
+
+function buildPathScopedRuleRemindersSection({ pathRuleChecklist }) {
+  const checklist = pathRuleChecklist ?? {};
+  const lines = [
+    "## Path-Scoped Rule Reminders",
+    "- Source: " + formatValue(checklist.source),
+    "- Purpose: inject concrete review and validation reminders for the likely task scope. These reminders do not approve extra files or expand implementation scope.",
+    "- Selection inputs:",
+  ];
+
+  const selectionInputs = checklist.selection_inputs ?? {};
+  for (const [key, value] of Object.entries(selectionInputs)) {
+    lines.push(`  - ${key}: ${formatValue(value)}`);
+  }
+
+  const scopes = Array.isArray(checklist.matched_scopes) ? checklist.matched_scopes : [];
+  if (scopes.length === 0) {
+    lines.push("", "### No path-specific scope inferred");
+    lines.push("- [ ] Apply global repository safety, review, validation, and no-commit rules.");
+    return lines.join("\n");
+  }
+
+  for (const scope of scopes) {
+    lines.push("", "### " + formatValue(scope.path));
+    const displayPaths = Array.isArray(scope.display_paths) ? scope.display_paths : [];
+    if (displayPaths.length > 0) {
+      lines.push("- Applies to: " + displayPaths.map(formatValue).join(", "));
+    }
+
+    appendChecklist(lines, scope.checklist_items);
+  }
 
   return lines.join("\n");
 }
@@ -618,6 +660,18 @@ function appendList(lines, values) {
 
   for (const value of items) {
     lines.push("  - " + formatValue(value));
+  }
+}
+
+function appendChecklist(lines, values) {
+  const items = Array.isArray(values) ? values : [];
+  if (items.length === 0) {
+    lines.push("- [ ] (none)");
+    return;
+  }
+
+  for (const value of items) {
+    lines.push("- [ ] " + formatValue(value));
   }
 }
 
