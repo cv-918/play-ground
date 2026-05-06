@@ -15,6 +15,7 @@ concrete path-scoped rule checklist reminders into the same generated files.
 WF-040 adds a read-only natural-language task intake suggestion command.
 WF-041 adds a Task Draft section to intake responses for manual review.
 WF-042 adds explicit human-invoked Backlog task creation from intake drafts.
+WF-043 adds read-only activation review for intake-created Backlog tasks.
 
 It can read:
 
@@ -26,6 +27,7 @@ read project profiles
 read ActiveTask role routing recommendation
 suggest structured task intake from natural-language text
 create Backlog tasks from explicit intake-create requests
+review intake-created Backlog tasks before manual activation
 format Discord responses
 ```
 
@@ -108,6 +110,7 @@ Do not commit `_Local/`.
 /ai task current
 /ai task list
 /ai task create
+/ai task review-intake
 /ai task set-active
 /ai task approve
 /ai task block
@@ -152,6 +155,7 @@ For task commands:
 /ai task list status:todo
 /ai task list kind:automation
 /ai task create title:"Test Discord task management command" category:WF priority:P2 kind:automation reason:"Release B validation"
+/ai task review-intake id:GAME-20260506-145948
 /ai task set-active id:WF-20260503-231500
 /ai task approve id:WF-20260503-231500 note:"Approval note"
 /ai task block id:WF-20260503-231500 reason:"Block reason"
@@ -173,6 +177,7 @@ _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Intake_To_Task_Draft_Generation.md
 _Docs/AIWorkflow/Intake_Approval_Task_Creation_Flow.md
+_Docs/AIWorkflow/Intake_Created_Task_Review_Activation_Flow.md
 ```
 
 For role router recommendation:
@@ -217,6 +222,21 @@ timestamped Backlog backup before writing and returns the new task id.
 
 It does not update ActiveTask.md, approve the task, execute agents, execute
 Codex CLI, commit, push, or modify source files.
+
+For intake-created task review:
+
+```text
+/ai task review-intake id:<task_id>
+```
+
+`/ai task review-intake` reads the Backlog task, checks whether it appears to
+come from `/ai intake-create`, shows activation readiness, role routing, human
+gates, validation expectations, execution route, verdict guidance, and suggested
+manual next commands.
+
+It is read-only. It does not update Backlog.md, update ActiveTask.md, approve
+the task, change status, execute agents, execute Codex CLI, commit, push, or
+modify source files.
 
 For safe script execution:
 
@@ -301,6 +321,8 @@ After starting the bot:
 [ ] /ai task current works.
 [ ] /ai task list works.
 [ ] /ai task create appends one Backlog.md row and creates a backup.
+[ ] /ai task review-intake id:<intake-created task id> works and is read-only.
+[ ] /ai task review-intake id:GAME-001 works as a generic activation review.
 [ ] /ai task set-active updates ActiveTask.md and creates a backup.
 [ ] /ai task approve updates Backlog.md and creates a backup.
 [ ] /ai task block updates Backlog.md and creates a backup.
@@ -328,6 +350,8 @@ After starting the bot:
 [ ] /ai intake responses include a Task Draft section with title, category, priority, kind, reason, risk, workflow path, roles, gates, validation, and next manual action.
 [ ] /ai intake-create creates a timestamped Backlog backup before writing.
 [ ] /ai intake-create escapes markdown table pipes in generated Backlog cells.
+[ ] /ai task review-intake does not modify Backlog.md or ActiveTask.md.
+[ ] /ai task review-intake does not approve tasks or execute agents/Codex CLI.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.

@@ -391,6 +391,61 @@ export function formatIntakeTaskCreated(result) {
   ].join("\n");
 }
 
+export function formatIntakeTaskReview(result) {
+  if (!result?.ok) {
+    return [
+      "**Intake Task Review Failed**",
+      cleanupBlock(result?.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  const source = data.intake_source_check ?? {};
+  const readiness = data.activation_readiness ?? {};
+  const safety = data.safety ?? {};
+
+  return [
+    "**Intake Task Activation Review**",
+    "",
+    "**1. Task Summary**",
+    `${task.id ?? "unknown"} [${task.priority ?? "?"}/${task.status ?? "?"}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
+    `Reason: ${cleanupBlock(task.reason)}`,
+    "",
+    "**2. Intake Source Check**",
+    `${source.intake_created ? "intake-created" : "generic"} (${source.confidence ?? "unknown"} confidence)`,
+    cleanupBlock(source.source),
+    "",
+    "**3. Activation Readiness**",
+    `${readiness.verdict ?? "unknown"}: ${cleanupBlock(readiness.reason)}`,
+    `Recommended action: ${cleanupBlock(readiness.recommended_action)}`,
+    "",
+    "**4. Recommended Roles**",
+    summarizeList(data.recommended_roles, 4),
+    "",
+    "**5. Human Decision Gates**",
+    summarizeList(data.human_decision_gates, 2),
+    "",
+    "**6. Required Validation**",
+    summarizeList(data.required_validation, 2),
+    "",
+    "**7. Suggested Execution Route**",
+    summarizeList(data.suggested_execution_route, 5),
+    "",
+    "**8. Suggested Next Manual Commands**",
+    summarizeList(data.suggested_next_manual_commands, 3),
+    "",
+    "**9. Safety Status**",
+    `Backlog updated: ${safety.backlog_updated ? "yes" : "no"}`,
+    `ActiveTask updated: ${safety.active_task_updated ? "yes" : "no"}`,
+    `Task approved/status changed: ${safety.task_approved || safety.task_status_changed ? "yes" : "no"}`,
+    "No agents or Codex CLI executed.",
+    "",
+    "**Verdict Guidance**",
+    cleanupBlock(data.verdict_guidance || "Use Review_Validation_Verdict_Format_v1.md before accepting implementation or validation results."),
+  ].join("\n");
+}
+
 function formatRunWorkflowStatus(data) {
   const task = data.active_task ?? {};
   const backlog = data.backlog ?? {};

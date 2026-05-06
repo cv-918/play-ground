@@ -7,6 +7,7 @@ import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
 import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
+import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import {
   approveTask,
@@ -26,6 +27,7 @@ import {
   formatDocs,
   formatGoalPrepareResult,
   formatIntakeTaskCreated,
+  formatIntakeTaskReview,
   formatIntakeSuggestion,
   formatNext,
   formatProjectList,
@@ -277,6 +279,17 @@ export function buildAiCommand() {
                 .setName("reason")
                 .setDescription("Task reason")
                 .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("review-intake")
+            .setDescription("Review an intake-created Backlog task without changing state")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
             ),
         )
         .addSubcommand((sub) =>
@@ -566,6 +579,16 @@ async function handleTaskCommand(interaction, config, subcommand) {
       });
       await interaction.editReply({
         content: truncateForDiscord(formatTaskCreated(result.data), config.limits.maxDiscordChars),
+      });
+      return;
+    }
+
+    if (subcommand === "review-intake") {
+      const result = await reviewIntakeTask(config, {
+        id: interaction.options.getString("id"),
+      });
+      await interaction.editReply({
+        content: truncateForDiscord(formatIntakeTaskReview(result), config.limits.maxDiscordChars),
       });
       return;
     }

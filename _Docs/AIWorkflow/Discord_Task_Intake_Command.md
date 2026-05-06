@@ -5,11 +5,13 @@
 WF-040 adds a read-only Discord task intake prototype. WF-041 extends the same
 flow with a structured Task Draft section for manual review. WF-042 adds an
 explicit human-invoked creation command that can append the draft as a Backlog
-task:
+task. WF-043 adds a read-only review step for created Backlog tasks before the
+human decides whether to activate or approve them:
 
 ```text
 /ai intake
 /ai intake-create
+/ai task review-intake
 ```
 
 The command accepts a natural-language work request and returns a structured
@@ -24,6 +26,7 @@ explicit write command for creating a Backlog task from the same intake logic.
 ```text
 /ai intake text:<natural-language work request>
 /ai intake-create text:<natural-language work request>
+/ai task review-intake id:<task_id>
 ```
 
 Required input:
@@ -40,6 +43,8 @@ Command distinction:
 - `/ai intake-create` creates one Backlog task after explicit invocation.
 - `/ai intake-create` does not set ActiveTask, approve the task, execute
   agents, execute Codex CLI, commit, or push.
+- `/ai task review-intake` is read-only and only reviews activation readiness
+  plus suggested next manual commands.
 
 ---
 
@@ -180,6 +185,21 @@ _Temp/AIWorkflowDiscordBot/backups/
 It must preserve the same restrictions for ActiveTask, approval, agents, Codex
 CLI, commits, pushes, game source, private files, and dependencies.
 
+`/ai task review-intake` must not write any workflow state. It may read
+Backlog.md and return:
+
+```text
+Task Summary
+Intake Source Check
+Activation Readiness
+Recommended Roles
+Human Decision Gates
+Required Validation
+Suggested Execution Route
+Suggested Next Manual Commands
+Safety Status
+```
+
 ---
 
 ## 7. Task Draft Usage
@@ -190,6 +210,7 @@ into a later approved task creation step such as:
 ```text
 /ai task create title:<edited title> category:<category> priority:<priority> kind:<kind> reason:<edited reason>
 /ai intake-create text:<natural-language work request>
+/ai task review-intake id:<created task id>
 ```
 
 The draft is not automatically written to Backlog.md or ActiveTask.md by
@@ -205,6 +226,7 @@ Run from repository root:
 ```bat
 node --check tools\discord-orchestrator\src\commands\ai.js
 node --check tools\discord-orchestrator\src\services\intakeTaskCreationService.js
+node --check tools\discord-orchestrator\src\services\intakeTaskReviewService.js
 node --check tools\discord-orchestrator\src\services\taskIntakeService.js
 node --check tools\discord-orchestrator\src\services\taskService.js
 node --check tools\discord-orchestrator\src\services\responseFormatter.js
@@ -222,6 +244,8 @@ Discord smoke tests:
 ```text
 /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
 /ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+/ai task review-intake id:<intake-created task id>
+/ai task review-intake id:GAME-001
 /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어"
 /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어"
 /ai task list
@@ -241,6 +265,10 @@ Expected:
 - `/ai intake-create` escapes markdown table pipes in generated Backlog cells.
 - `/ai intake-create` does not modify ActiveTask.md and does not approve the
   created task.
+- `/ai task review-intake` outputs activation readiness and suggested next
+  manual commands.
+- `/ai task review-intake` does not modify Backlog.md, ActiveTask.md, approval
+  state, or task status.
 - Output includes category, kind, priority/risk, recommended roles, human
   gates, validation, and next manual action.
 - Task Draft includes title, category, priority, kind, reason, suggested risk,

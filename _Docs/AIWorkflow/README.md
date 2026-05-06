@@ -38,6 +38,7 @@ This README is the entry point for the document set.
 | `Path_Rule_Checklist_Goal_Prompt_Injection.md` | Defines how `/ai prepare goal` injects concrete path-scoped rule checklist reminders into generated Codex `/goal` request files |
 | `Intake_To_Task_Draft_Generation.md` | Defines how `/ai intake` adds a structured Task Draft for manual review and later task creation |
 | `Intake_Approval_Task_Creation_Flow.md` | Defines the explicit human-invoked intake task creation flow and Backlog safety boundaries |
+| `Intake_Created_Task_Review_Activation_Flow.md` | Defines the read-only activation review command for intake-created Backlog tasks |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
