@@ -9,7 +9,8 @@ Release C adds controlled task status note writes. Release D adds allowlisted wo
 script execution commands. Release E adds Codex App prompt package generation.
 Release F adds Codex CLI `/goal` request markdown generation. WF-031 updates
 that generation to Codex Goal Prompt Contract v2. WF-037 adds a read-only
-role router recommendation command.
+role router recommendation command. WF-038 injects selected-task role routing
+guidance into generated `/ai prepare goal` request files.
 
 It can read:
 
@@ -159,6 +160,7 @@ _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
 _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
+_Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 ```
 
 For role router recommendation:
@@ -227,7 +229,10 @@ The generated file starts with a usable `/goal` command and follows Codex Goal
 Prompt Contract v2. It includes Goal Header, Objective, Task Context, Project
 Context, Scope, Non-goals, Execution Mode, Safety Constraints, Human Decision
 Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and
-Required Return Format sections.
+Required Return Format sections. It also includes role router guidance:
+Recommended Roles, Role Rationale, Human Decision Gates, Required Validation,
+Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule
+Reminders.
 
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
@@ -276,6 +281,7 @@ After starting the bot:
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
 [ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
+[ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
 [ ] Git status remains unchanged after commands.
 ```
 

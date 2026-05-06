@@ -276,7 +276,7 @@ export function formatGoalPrepareResult(result) {
     `Task Title: ${task.item ?? "unknown"}`,
     `Mode: ${data.mode ?? "unknown"}`,
     `Context: ${data.context_level ?? "unknown"}`,
-    "Contract: Codex Goal Prompt Contract v2",
+    "Contract: Codex Goal Prompt Contract v2 + role-aware routing guidance",
     `Path: ${formatInlineCode(data.generated_path || "unknown")}`,
     "",
     "Next manual steps:",

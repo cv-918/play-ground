@@ -53,12 +53,14 @@ export async function getBacklogTaskById(config, taskId) {
   const filePath = resolveRepoPath(config, BACKLOG_RELATIVE_PATH);
   const content = await fs.readFile(filePath, "utf8");
   const table = parseBacklogTable(content);
-  const task = table.rows.map((row) => rowToTask(row)).find((item) => item.id === id);
+  const tasks = table.rows.map((row) => rowToTask(row));
+  const task = tasks.find((item) => item.id === id)
+    ?? tasks.find((item) => hasTaskTitleLabel(item, id));
 
   if (!task) {
     return {
       ok: false,
-      error: `Task not found in Backlog.md: ${id}`,
+      error: `Task not found in Backlog.md by id or title label: ${id}`,
     };
   }
 
@@ -414,6 +416,14 @@ function rowToTask(row) {
     tool_route: row[6] ?? "",
     validation: row[7] ?? "",
   };
+}
+
+function hasTaskTitleLabel(task, id) {
+  const title = String(task.item ?? "").trim();
+  return title === id
+    || title.startsWith(`${id} `)
+    || title.startsWith(`${id}:`)
+    || title.startsWith(`${id} -`);
 }
 
 function parseActiveTaskMetadata(content) {

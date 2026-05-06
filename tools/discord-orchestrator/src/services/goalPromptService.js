@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getRoleRouterRecommendationForTask } from "./roleRouterService.js";
 import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
 
 const ACTIVE_PROJECT_RELATIVE_PATH = "_Docs/AIWorkflow/ActiveProject.json";
@@ -36,11 +37,16 @@ export async function prepareGoalPrompt(config, input = {}) {
     ? mergeActiveTaskMetadata(backlogResult.data, activeTask.data.metadata)
     : backlogResult.data;
   const projectContext = await readProjectContext(config);
+  const roleRecommendation = getRoleRouterRecommendationForTask({
+    task,
+    activeTask: activeTask.data,
+  });
   const prompt = buildGoalPrompt({
     config,
     task,
     activeTask: activeTask.data,
     projectContext,
+    roleRecommendation,
     mode,
     contextLevel,
     selectedFromActive,
@@ -81,6 +87,8 @@ function buildGoalPrompt(input) {
     "",
     buildSafetyConstraintsSection(),
     "",
+    buildRoleRouterRecommendationsSection(input),
+    "",
     buildHumanDecisionGatesSection(input),
     "",
     buildSubagentPolicySection(input),
@@ -94,6 +102,33 @@ function buildGoalPrompt(input) {
     buildRequiredReturnFormatSection(),
     "",
   ].join("\n");
+}
+
+function buildRoleRouterRecommendationsSection({ roleRecommendation }) {
+  const recommendation = roleRecommendation ?? {};
+  const lines = [
+    "## Role Router Recommendations",
+    "- Source: roleRouterService recommendation for the selected task.",
+    "- Purpose: make this Codex /goal request role-aware without executing agents, approving tasks, or changing task state.",
+    "",
+    "### Recommended Roles",
+  ];
+
+  appendList(lines, recommendation.recommended_roles);
+  lines.push("", "### Role Rationale");
+  appendList(lines, recommendation.role_rationale);
+  lines.push("", "### Human Decision Gates");
+  appendList(lines, recommendation.human_gates);
+  lines.push("", "### Required Validation");
+  appendList(lines, recommendation.required_validation);
+  lines.push("", "### Suggested Execution Route");
+  appendList(lines, recommendation.execution_route);
+  lines.push("", "### Verdict Format Reminder");
+  lines.push(formatValue(recommendation.verdict_format));
+  lines.push("", "### Path-Scoped Rule Reminders");
+  appendList(lines, recommendation.path_scoped_rule_reminders);
+
+  return lines.join("\n");
 }
 
 function buildGoalCommand(task, mode) {

@@ -4,7 +4,8 @@
 
 WF-026 adds a Discord command for generating manual Codex CLI `/goal` request
 markdown files from AIWorkflow tasks. WF-031 standardizes the generated file
-shape as Codex Goal Prompt Contract v2.
+shape as Codex Goal Prompt Contract v2. WF-038 adds selected-task role router
+recommendations to the generated request body.
 
 This command prepares request files only. It does not execute Codex CLI,
 OpenClaw, Claude, subagents, Unity AI, computer-use, commits, pushes, releases,
@@ -57,6 +58,10 @@ The task is resolved from:
 _Docs/AIWorkflow/Backlog.md
 ```
 
+The resolver first matches the Backlog row ID. If no row ID matches, it may
+match a leading task label in the Backlog item text, such as `WF-037 Discord
+Role Recommendation Command`.
+
 ---
 
 ## Generated File Location
@@ -99,6 +104,23 @@ It then follows Codex Goal Prompt Contract v2:
 13. Completion Audit
 14. Required Return Format
 ```
+
+WF-038 also injects a supplemental role-aware routing block:
+
+```text
+Role Router Recommendations
+  Recommended Roles
+  Role Rationale
+  Human Decision Gates
+  Required Validation
+  Suggested Execution Route
+  Verdict Format Reminder
+  Path-Scoped Rule Reminders
+```
+
+The role-aware block is advisory routing guidance for the selected task. It does
+not execute agents, approve tasks, mark tasks done, run Codex CLI, or change
+task state.
 
 The project context is read from:
 
@@ -221,6 +243,7 @@ Expected:
 - Each prepare command returns a generated file path under _Temp/AIWorkflowTaskRequests/.
 - Generated files start with a usable /goal command.
 - Generated files include all Codex Goal Prompt Contract v2 sections.
+- Generated files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
 - Generated files include mode-aware Scope and Execution Mode sections.
 - Generated files include Human Decision Gates, Subagent Policy, Validation Plan, Stop Conditions, Completion Audit, and Required Return Format sections.
 - /ai status and /ai active still work.

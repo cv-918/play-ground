@@ -34,6 +34,7 @@ This README is the entry point for the document set.
 | `Review_Validation_Verdict_Format_v1.md` | Defines standardized verdict levels, role-specific verdict formats, severity effects, commit recommendation rules, and human decision gates |
 | `Path_Scoped_Rule_Mapping_DustLand_v1.md` | Defines which review, validation, and safety rules apply to major Dust Land repository paths without executable enforcement |
 | `Small_Role_Router_Prototype.md` | Defines the read-only local role router prototype command, inputs, output contract, safety limits, and validation expectations |
+| `Role_Aware_Goal_Prompt_Injection.md` | Defines how `/ai prepare goal` injects selected-task role router recommendations into generated Codex `/goal` request files |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-104145
-title: WF-037 Discord Role Recommendation Command
+task_id: WF-20260506-111530
+title: WF-038 Role-aware goal prompt injection
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-037 Discord Role Recommendation Command
+WF-038 Role-aware goal prompt injection
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "Discord Role Recommendation Command completed. /ai role status, /ai status, and /ai active passed live Discord validation. The command displays ActiveTask, recommended roles, role rationale, human decision gates, required validation, suggested execution route, verdict format, and next manual action. role_router_status text/json passed. No game source files, forbidden paths, or private/local tracked files were modified."
+note: done: "WF-038 validation passed. /ai prepare goal generated role-aware goal request files for GAME-001 analysis and WF-037 review. Discord responses showed Codex Goal Prompt Contract v2 + role-aware routing guidance. /ai role status, /ai status, and /ai active passed live Discord validation. Command registration, bot restart/status, role_router_status text/json, git diff --check, and private/local tracking checks passed."
 updated_at: 2026-05-06
 source: Discord task status command
 ```
