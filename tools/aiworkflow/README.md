@@ -22,6 +22,7 @@ capture_diff.bat
 json_smoke_check.bat
 run_result_semantics_check.bat
 workflow_status.bat
+role_router_status.bat
 project_profile_status.bat
 active_project_status.bat
 ```
@@ -101,6 +102,34 @@ tools\aiworkflow\workflow_status.bat --json
 
 ---
 
+## role_router_status.bat
+
+Reads `_Docs\AIWorkflow\ActiveTask.md`, the matching `Backlog.md` row when
+available, and the durable AIWorkflow policy documents. It prints a read-only
+role routing recommendation for the current active task.
+
+Human-readable output:
+
+```bat
+tools\aiworkflow\role_router_status.bat
+```
+
+JSON output for future Discord/manual integration:
+
+```bat
+tools\aiworkflow\role_router_status.bat --json
+```
+
+Output includes the active task summary, recommended roles, role rationale,
+human decision gates, required validation checks, suggested execution route,
+verdict format reminder, and next manual action.
+
+This command does not execute agents, approve tasks, mark tasks done, modify
+source files, change Discord command behavior, commit, push, or write local
+configuration.
+
+---
+
 ## project_profile_status.bat
 
 Reads project profile JSON files from:
@@ -173,6 +202,8 @@ From repository root:
 ```bat
 tools\aiworkflow\status.bat
 tools\aiworkflow\workflow_status.bat
+tools\aiworkflow\role_router_status.bat
+tools\aiworkflow\role_router_status.bat --json
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json
 tools\aiworkflow\project_profile_status.bat

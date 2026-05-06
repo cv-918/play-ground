@@ -33,6 +33,7 @@ This README is the entry point for the document set.
 | `Role_Router_Rules_v1.md` | Defines deterministic ActiveTask metadata routing rules for activating AIWorkflow roles without executable routing behavior |
 | `Review_Validation_Verdict_Format_v1.md` | Defines standardized verdict levels, role-specific verdict formats, severity effects, commit recommendation rules, and human decision gates |
 | `Path_Scoped_Rule_Mapping_DustLand_v1.md` | Defines which review, validation, and safety rules apply to major Dust Land repository paths without executable enforcement |
+| `Small_Role_Router_Prototype.md` | Defines the read-only local role router prototype command, inputs, output contract, safety limits, and validation expectations |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

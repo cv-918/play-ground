@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-092131
-title: WF-035 Path-Scoped Rule Mapping for Dust Land
+task_id: WF-20260506-100054
+title: WF-036 Small Role Router Prototype
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-035 Path-Scoped Rule Mapping for Dust Land
+WF-036 Small Role Router Prototype
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: Path-Scoped Rule Mapping for Dust Land v1 completed. Covered Gameplay, EngineSystems, Core, Framework, Data, Resources, aiworkflow tools, Discord orchestrator, AIWorkflow docs, DevLog, .github, and root config paths. Added path-specific owner roles, risks, review roles, validation expectations, human gates, and validation matrix. README linked the document. No PlayGround source files were modified.
+note: done: Small Role Router Prototype completed. Added read-only role_router_status.bat/ps1. The script reads ActiveTask and Backlog context, recommends roles, human gates, required validation, execution route, verdict format, and next manual action. Text and --json modes passed validation. JSON parsed successfully. No PlayGround source files or Discord command behavior were modified.
 updated_at: 2026-05-06
 source: Discord task status command
 ```
