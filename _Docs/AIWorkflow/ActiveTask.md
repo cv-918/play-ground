@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-114758
-title: WF-039 Path rule checklist injection into goal prompts
+task_id: WF-20260506-121548
+title: WF-040 Read-only Discord task intakeWF-040 Discord task intake prototype
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-039 Path rule checklist injection into goal prompts
+WF-040 Read-only Discord task intakeWF-040 Discord task intake prototype
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: WF-039 validation passed. /ai prepare goal now injects concrete Path-Scoped Rule Reminders. Discord validation passed for GAME-001, WF-037, and WF-038 goal requests. Generated files included correct path scopes: PlayGround/Data for GAME-001, tools/aiworkflow and tools/discord-orchestrator for WF-037, and tools/aiworkflow, tools/discord-orchestrator, and _Docs/AIWorkflow for WF-038. Role-aware routing guidance and Contract v2 sections remained present. node --check, npm register, bot restart/status, role_router_status text/json, git diff --check, and private/local tracking checks passed. No PlayGround source or data files were modified.
+note: done: "WF-040 Read-only Discord task intake completed. /ai intake accepts natural-language work requests and returns structured task suggestions with interpreted request, suggested title, category, kind, priority/risk, workflow path, recommended roles, human gates, required validation, execution route, and next manual action. Discord validation passed for UserData, Codex goal prompt, and Unity validation profile requests. The command does not create Backlog tasks, does not update ActiveTask, does not auto-approve, does not execute agents, and does not modify game source or data files."
 updated_at: 2026-05-06
 source: Discord task status command
 ```

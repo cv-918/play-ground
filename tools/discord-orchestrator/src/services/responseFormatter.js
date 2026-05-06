@@ -287,6 +287,54 @@ export function formatGoalPrepareResult(result) {
   ].join("\n");
 }
 
+export function formatIntakeSuggestion(result) {
+  if (!result?.ok) {
+    return [
+      "**Task Intake Failed**",
+      cleanupBlock(result?.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const lines = [
+    "**AI Task Intake Suggestion**",
+    "",
+    "**1. Interpreted Request**",
+    cleanupBlock(result.interpreted_request),
+    "",
+    "**2. Suggested Task Title**",
+    cleanupBlock(result.suggested_task_title),
+    "",
+    "**3. Suggested Category**",
+    cleanupBlock(result.suggested_category),
+    "",
+    "**4. Suggested Kind**",
+    cleanupBlock(result.suggested_kind),
+    "",
+    "**5. Suggested Priority/Risk**",
+    `${result.suggested_priority ?? "unknown"} / ${result.suggested_risk ?? "unknown"}`,
+    "",
+    "**6. Suggested Workflow Path**",
+    cleanupBlock(result.suggested_workflow_path),
+    "",
+    "**7. Recommended Roles**",
+  ];
+
+  appendList(lines, result.recommended_roles);
+  lines.push("", "**8. Human Decision Gates**");
+  appendList(lines, compactItems(result.human_decision_gates, 3, "decision gates"));
+  lines.push("", "**9. Required Validation**");
+  appendList(lines, compactItems(result.required_validation, 3, "validation reminders"));
+  appendPathReminderSummary(lines, result.path_scoped_reminders);
+  lines.push("", "**10. Suggested Execution Route**");
+  appendList(lines, result.suggested_execution_route);
+  lines.push("", "**11. Suggested Next Manual Action**");
+  lines.push(cleanupBlock(result.suggested_next_manual_action));
+  lines.push("", "**Read-only Safety**");
+  lines.push("No Backlog task was created. ActiveTask.md was not updated. No agents or Codex CLI were executed.");
+
+  return lines.join("\n");
+}
+
 function formatRunWorkflowStatus(data) {
   const task = data.active_task ?? {};
   const backlog = data.backlog ?? {};
@@ -385,6 +433,33 @@ function appendList(lines, items) {
   for (const item of items) {
     lines.push(`- ${cleanupBlock(item)}`);
   }
+}
+
+function appendPathReminderSummary(lines, reminders) {
+  const items = Array.isArray(reminders) ? reminders : [];
+  if (items.length === 0) {
+    return;
+  }
+
+  lines.push("", "Path reminders:");
+  for (const item of items.slice(0, 2)) {
+    const reminderText = Array.isArray(item.reminders) && item.reminders.length > 0
+      ? item.reminders[0]
+      : "Review path-scoped rules before implementation.";
+    lines.push(`- ${item.path}: ${cleanupBlock(reminderText)}`);
+  }
+}
+
+function compactItems(items, maxCount, label) {
+  const values = Array.isArray(items) ? items : [];
+  if (values.length <= maxCount) {
+    return values;
+  }
+
+  return [
+    ...values.slice(0, maxCount),
+    `... ${values.length - maxCount} more ${label} available in the intake service result.`,
+  ];
 }
 
 function formatOutputLinePaths(line) {

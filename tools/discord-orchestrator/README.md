@@ -12,6 +12,7 @@ that generation to Codex Goal Prompt Contract v2. WF-037 adds a read-only
 role router recommendation command. WF-038 injects selected-task role routing
 guidance into generated `/ai prepare goal` request files. WF-039 injects
 concrete path-scoped rule checklist reminders into the same generated files.
+WF-040 adds a read-only natural-language task intake suggestion command.
 
 It can read:
 
@@ -21,6 +22,7 @@ read active task
 read backlog summary
 read project profiles
 read ActiveTask role routing recommendation
+suggest structured task intake from natural-language text
 format Discord responses
 ```
 
@@ -95,6 +97,7 @@ Do not commit `_Local/`.
 /ai next
 /ai blockers
 /ai docs
+/ai intake
 /ai project list
 /ai project profile
 /ai role status
@@ -160,6 +163,7 @@ _Docs/AIWorkflow/Discord_Task_Status_Commands.md
 _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
 _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
+_Docs/AIWorkflow/Discord_Task_Intake_Command.md
 _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
@@ -178,6 +182,21 @@ Validation, Suggested Execution Route, Verdict Format, and Next Manual Action.
 
 It does not execute agents, approve tasks, mark tasks done, modify game source,
 modify `_Local/`, modify `node_modules/`, commit, push, or expose secrets.
+
+For read-only task intake:
+
+```text
+/ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+/ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어"
+/ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어"
+```
+
+`/ai intake` returns a structured task suggestion with interpreted request,
+suggested title, category, kind, priority/risk, workflow path, recommended
+roles, human gates, validation, execution route, and next manual action.
+
+It is read-only. It does not create Backlog tasks, update ActiveTask.md, approve
+tasks, execute agents, execute Codex CLI, commit, push, or modify source files.
 
 For safe script execution:
 
@@ -253,6 +272,7 @@ After starting the bot:
 [ ] /ai active works.
 [ ] /ai backlog works.
 [ ] /ai next works.
+[ ] /ai intake returns a structured task suggestion.
 [ ] /ai project list works.
 [ ] /ai project profile shows Source: ActiveProject.json.
 [ ] /ai project profile id:unity_project_template shows Source: explicit project id.
@@ -280,12 +300,16 @@ After starting the bot:
 [ ] /ai prepare goal id:GAME-001 mode:analysis context:standard works.
 [ ] /ai prepare goal id:WF-037 mode:review context:compact works.
 [ ] /ai prepare goal id:WF-038 mode:review context:compact works.
+[ ] /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" works.
+[ ] /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어" works.
+[ ] /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어" works.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
 [ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
 [ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
 [ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
+[ ] /ai intake does not modify Backlog.md or ActiveTask.md.
 [ ] Git status remains unchanged after commands.
 ```
 

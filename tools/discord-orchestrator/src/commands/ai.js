@@ -6,6 +6,7 @@ import { getRoleRouterStatus } from "../services/roleRouterService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
+import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import {
   approveTask,
   blockTask,
@@ -23,6 +24,7 @@ import {
   formatCodexPrepareResult,
   formatDocs,
   formatGoalPrepareResult,
+  formatIntakeSuggestion,
   formatNext,
   formatProjectList,
   formatProjectProfile,
@@ -70,6 +72,17 @@ export function buildAiCommand() {
     )
     .addSubcommand((sub) =>
       sub.setName("docs").setDescription("Show key workflow document paths"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("intake")
+        .setDescription("Suggest a structured AIWorkflow task from natural language")
+        .addStringOption((option) =>
+          option
+            .setName("text")
+            .setDescription("Natural-language work request")
+            .setRequired(true),
+        ),
     )
     .addSubcommandGroup((group) =>
       group
@@ -376,6 +389,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (subcommand === "intake") {
+    await handleIntakeCommand(interaction, config);
+    return;
+  }
+
   const statusResult = await getWorkflowStatus(config);
   if (!statusResult.ok) {
     await interaction.editReply({ content: truncateForDiscord(statusResult.error, config.limits.maxDiscordChars) });
@@ -385,6 +403,22 @@ export async function handleAiCommand(interaction, config) {
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
   await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+}
+
+async function handleIntakeCommand(interaction, config) {
+  try {
+    const result = suggestTaskFromIntake({
+      text: interaction.options.getString("text"),
+    });
+
+    await interaction.editReply({
+      content: truncateForDiscord(formatIntakeSuggestion(result), config.limits.maxDiscordChars),
+    });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(`Task intake failed: ${error.message}`, config.limits.maxDiscordChars),
+    });
+  }
 }
 
 async function handleRoleCommand(interaction, config, subcommand) {

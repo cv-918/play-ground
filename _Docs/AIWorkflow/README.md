@@ -64,6 +64,7 @@ This README is the entry point for the document set.
 | `Discord_Task_Status_Commands.md` | Defines Release C Discord approval and status note commands, write scope, backup behavior, and validation result |
 | `Discord_Safe_Script_Execution_Commands.md` | Defines Release D Discord safe script execution commands, allowlist-only execution, cautions, and validation result |
 | `Discord_Codex_Task_Routing_Commands.md` | Defines Release E Discord Codex App task routing prompt generation commands, safety scope, manual bridge, and validation result |
+| `Discord_Task_Intake_Command.md` | Defines the read-only `/ai intake` natural-language task suggestion command, classification rules, safety scope, and validation expectations |
 
 ---
 
