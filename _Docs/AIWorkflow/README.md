@@ -42,6 +42,7 @@ This README is the entry point for the document set.
 | `ActiveTask_Activation_Safety_Summary.md` | Defines the activation safety summary returned by `/ai task set-active` |
 | `Task_Approval_Safety_Summary.md` | Defines the approval safety summary returned by `/ai task approve` |
 | `Goal_Request_Execution_Readiness_Summary.md` | Defines execution readiness guidance returned by `/ai prepare goal` |
+| `Goal_Result_Intake_Completion_Audit.md` | Defines the read-only `/ai result audit` command for auditing pasted Codex goal result summaries before done or commit decisions |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

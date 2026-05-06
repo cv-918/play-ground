@@ -468,6 +468,63 @@ export function formatIntakeTaskReview(result) {
   ].join("\n");
 }
 
+export function formatResultAudit(result) {
+  if (!result?.ok) {
+    return [
+      "**Goal Result Audit Failed**",
+      cleanupBlock(result?.error || "Unknown failure."),
+    ].join("\n");
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  const intake = data.result_intake_summary ?? {};
+  const files = data.claimed_files_changed ?? {};
+  const safety = data.safety ?? {};
+
+  return [
+    "**Goal Result Completion Audit**",
+    "",
+    "**1. Task Summary**",
+    `${task.id ?? "unknown"} [${task.priority ?? "?"}/${task.status ?? "?"}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
+    `Reason: ${cleanupBlock(task.reason || "unknown")}`,
+    "",
+    "**2. Result Intake Summary**",
+    cleanupBlock(intake.summary || "No result summary classified."),
+    `Excerpt: ${cleanupBlock(intake.excerpt || "")}`,
+    "",
+    "**3. Claimed Files Changed**",
+    cleanupBlock(files.summary || "No changed-file summary available."),
+    summarizeList(files.files, 5),
+    "",
+    "**4. Validation Evidence**",
+    summarizeList(data.validation_evidence, 5),
+    "",
+    "**5. Missing Evidence**",
+    summarizeList(data.missing_evidence, 5),
+    "",
+    "**6. Risk Notes**",
+    summarizeList(data.risk_notes, 5),
+    "",
+    "**7. Completion Verdict**",
+    cleanupBlock(data.completion_verdict || "NEEDS_REVIEW"),
+    "",
+    "**8. Commit Recommendation**",
+    cleanupBlock(data.commit_recommendation || "DO_NOT_COMMIT_YET"),
+    "",
+    "**9. Suggested Next Manual Commands**",
+    summarizeList(data.suggested_next_manual_commands, 5),
+    "",
+    "**10. Safety Status**",
+    `Read-only: ${safety.read_only ? "yes" : "no"}`,
+    `Backlog updated: ${safety.backlog_updated ? "yes" : "no"}`,
+    `ActiveTask updated: ${safety.active_task_updated ? "yes" : "no"}`,
+    `Task marked done: ${safety.task_marked_done ? "yes" : "no"}`,
+    `Codex/agents executed: ${safety.codex_executed || safety.agents_executed ? "yes" : "no"}`,
+    `Commit/push performed: ${safety.committed || safety.pushed ? "yes" : "no"}`,
+  ].join("\n");
+}
+
 function formatRunWorkflowStatus(data) {
   const task = data.active_task ?? {};
   const backlog = data.backlog ?? {};

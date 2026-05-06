@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-160500
-title: WF-046 Goal request execution readiness summary
+task_id: WF-20260506-163355
+title: WF-047 Goal result intake and completion audit
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-046 Goal request execution readiness summary
+WF-047 Goal result intake and completion audit
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-046 validation passed. /ai prepare goal now returns execution readiness summary. Discord validation passed for WF-046 analysis, WF-046 implementation, and GAME-001 analysis. Responses included execution readiness, approval status, ActiveTask status, included guidance, human decision gates, required validation, safety note, and next manual action. WF-046 was classified ready_for_manual_execution and GAME-001 was classified needs_human_review. No Codex CLI, agents, approval, ActiveTask changes, done status, commit, push, or game source modifications were executed by prepare goal."
+note: done: "WF-047 validation passed. /ai result audit now performs read-only completion audit for Codex result summaries. Discord validation passed for WF-047 implementation result and GAME-001 missing-validation result. The command produced task summary, result intake summary, claimed files changed, validation evidence, missing evidence, risk notes, completion verdict, commit recommendation, suggested next manual commands, and safety status. WF-047 was classified NEEDS_REVIEW / COMMIT_AFTER_REVIEW, and GAME-001 was classified NEEDS_VALIDATION / NO_COMMIT_NEEDED. The command did not modify Backlog, ActiveTask, task status, approval, source files, or execute Codex/agents/commit/push."
 updated_at: 2026-05-06
 source: Discord task status command
 ```

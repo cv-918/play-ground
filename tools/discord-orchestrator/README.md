@@ -19,6 +19,7 @@ WF-043 adds read-only activation review for intake-created Backlog tasks.
 WF-044 adds activation safety guidance to `/ai task set-active` responses.
 WF-045 adds approval safety guidance to `/ai task approve` responses.
 WF-046 adds execution readiness guidance to `/ai prepare goal` responses.
+WF-047 adds read-only Codex goal result intake and completion audit.
 
 It can read:
 
@@ -34,6 +35,7 @@ review intake-created Backlog tasks before manual activation
 show activation safety guidance after task selection
 show approval safety guidance after task approval
 show goal request execution readiness before manual Codex CLI use
+audit pasted Codex goal result summaries for completion and commit readiness
 format Discord responses
 ```
 
@@ -129,6 +131,7 @@ Do not commit `_Local/`.
 /ai run capture-diff
 /ai prepare codex
 /ai prepare goal
+/ai result audit
 ```
 
 For project profile:
@@ -184,6 +187,7 @@ _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Intake_To_Task_Draft_Generation.md
 _Docs/AIWorkflow/Intake_Approval_Task_Creation_Flow.md
 _Docs/AIWorkflow/Intake_Created_Task_Review_Activation_Flow.md
+_Docs/AIWorkflow/Goal_Result_Intake_Completion_Audit.md
 ```
 
 `/ai task set-active` writes ActiveTask.md and then returns an activation safety
@@ -322,6 +326,27 @@ execute Codex CLI or agents.
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
 
+For Codex result audit:
+
+```text
+/ai result audit id:<task_id> result:"Implementation completed. Files changed: ... Validation passed: ... No commit."
+```
+
+`/ai result audit` reads the Backlog task and audits a pasted or summarized
+manual Codex result. It returns Task Summary, Result Intake Summary, Claimed
+Files Changed, Validation Evidence, Missing Evidence, Risk Notes, Completion
+Verdict, Commit Recommendation, Suggested Next Manual Commands, and Safety
+Status.
+
+Completion Verdict values are `READY_TO_MARK_DONE`, `NEEDS_REVIEW`,
+`NEEDS_VALIDATION`, `BLOCKED`, and `FAILED`. Commit Recommendation values are
+`COMMIT_RECOMMENDED`, `COMMIT_AFTER_REVIEW`, `DO_NOT_COMMIT_YET`, and
+`NO_COMMIT_NEEDED`.
+
+It is read-only. It does not mark tasks done, update Backlog.md, update
+ActiveTask.md, approve tasks, execute Codex CLI, execute agents, commit, push,
+or modify source files.
+
 ---
 
 ## Validation
@@ -389,6 +414,11 @@ After starting the bot:
 [ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
 [ ] /ai prepare goal responses include Execution Readiness, Approval Status, ActiveTask Status, Included Guidance, Human Decision Gates, Required Validation, Safety Note, and Next Manual Action.
 [ ] /ai prepare goal does not execute Codex CLI or agents and does not modify task state.
+[ ] /ai result audit id:<task_id> result:"..." returns a completion audit.
+[ ] /ai result audit identifies missing validation evidence.
+[ ] /ai result audit distinguishes completion verdict from commit recommendation.
+[ ] /ai result audit does not modify Backlog.md or ActiveTask.md.
+[ ] /ai result audit does not mark tasks done, execute agents/Codex CLI, commit, or push.
 [ ] /ai intake does not modify Backlog.md or ActiveTask.md.
 [ ] /ai intake-create does not modify ActiveTask.md and does not approve the task.
 [ ] Git status changes only for explicitly approved write commands.

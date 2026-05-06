@@ -6,6 +6,7 @@ import { getRoleRouterStatus } from "../services/roleRouterService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
+import { auditGoalResult } from "../services/resultAuditService.js";
 import { setActiveTaskWithSafety } from "../services/activeTaskActivationService.js";
 import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
@@ -32,6 +33,7 @@ import {
   formatNext,
   formatProjectList,
   formatProjectProfile,
+  formatResultAudit,
   formatRoleRouterStatus,
   formatRunCommandResult,
   formatStatus,
@@ -214,6 +216,29 @@ export function buildAiCommand() {
                 .setDescription("Goal context level; default standard")
                 .setRequired(false)
                 .addChoices(...CODEX_CONTEXT_CHOICES),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("result")
+        .setDescription("Manual Codex result intake commands")
+        .addSubcommand((sub) =>
+          sub
+            .setName("audit")
+            .setDescription("Audit a pasted Codex goal result summary")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog task id")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("result")
+                .setDescription("Pasted or summarized Codex result")
+                .setRequired(true)
+                .setMaxLength(3000),
             ),
         ),
     )
@@ -410,6 +435,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "result") {
+    await handleResultCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (subcommand === "docs") {
     await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
     return;
@@ -532,6 +562,31 @@ async function handlePrepareGoalCommand(interaction, config) {
       content: truncateForDiscord(formatGoalPrepareResult({
         ok: false,
         error: `Goal request preparation failed: ${error.message}`,
+      }), config.limits.maxDiscordChars),
+    });
+  }
+}
+
+async function handleResultCommand(interaction, config, subcommand) {
+  if (subcommand !== "audit") {
+    await interaction.editReply({ content: "Unknown result command." });
+    return;
+  }
+
+  try {
+    const result = await auditGoalResult(config, {
+      id: interaction.options.getString("id"),
+      result: interaction.options.getString("result"),
+    });
+
+    await interaction.editReply({
+      content: truncateForDiscord(formatResultAudit(result), config.limits.maxDiscordChars),
+    });
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(formatResultAudit({
+        ok: false,
+        error: `Result audit failed: ${error.message}`,
       }), config.limits.maxDiscordChars),
     });
   }
