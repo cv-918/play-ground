@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
+import { getRoleRouterStatus } from "../services/roleRouterService.js";
 import { executeRunCommand } from "../services/scriptRunService.js";
 import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
@@ -25,6 +26,7 @@ import {
   formatNext,
   formatProjectList,
   formatProjectProfile,
+  formatRoleRouterStatus,
   formatRunCommandResult,
   formatStatus,
   formatTaskCreated,
@@ -86,6 +88,14 @@ export function buildAiCommand() {
                 .setDescription("Project profile id")
                 .setRequired(false),
             ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("role")
+        .setDescription("Role router recommendation commands")
+        .addSubcommand((sub) =>
+          sub.setName("status").setDescription("Show current ActiveTask role routing recommendation"),
         ),
     )
     .addSubcommandGroup((group) =>
@@ -346,6 +356,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "role") {
+    await handleRoleCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (group === "run") {
     await handleRunCommand(interaction, config, subcommand);
     return;
@@ -370,6 +385,23 @@ export async function handleAiCommand(interaction, config) {
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
   await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+}
+
+async function handleRoleCommand(interaction, config, subcommand) {
+  if (subcommand !== "status") {
+    await interaction.editReply({ content: "Unknown role command." });
+    return;
+  }
+
+  const result = await getRoleRouterStatus(config);
+  if (!result.ok) {
+    await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+    return;
+  }
+
+  await interaction.editReply({
+    content: truncateForDiscord(formatRoleRouterStatus(result.data), config.limits.maxDiscordChars),
+  });
 }
 
 async function handlePrepareCommand(interaction, config, subcommand) {

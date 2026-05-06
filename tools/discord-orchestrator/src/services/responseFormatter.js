@@ -174,7 +174,40 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md",
     "- _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md",
     "- _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md",
+    "- _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md",
   ].join("\n");
+}
+
+export function formatRoleRouterStatus(data) {
+  const task = data?.task ?? {};
+  const lines = [
+    "**AI Role Router Status**",
+    "",
+    "**1. Active Task**",
+    `ID: ${task.task_id ?? "unknown"}`,
+    `Title: ${task.title ?? "unknown"}`,
+    `Status: ${task.status ?? "unknown"}`,
+    `Priority/Risk: ${task.priority ?? "unknown"} / ${task.risk_level ?? "unknown"}`,
+    `Path: ${task.workflow_path ?? "unknown"}`,
+    "",
+    "**2. Recommended Roles**",
+  ];
+
+  appendList(lines, data?.recommended_roles);
+  lines.push("", "**3. Role Rationale**");
+  appendList(lines, data?.role_rationale);
+  lines.push("", "**4. Human Decision Gates**");
+  appendList(lines, data?.human_gates);
+  lines.push("", "**5. Required Validation**");
+  appendList(lines, data?.required_validation);
+  lines.push("", "**6. Suggested Execution Route**");
+  appendList(lines, data?.execution_route);
+  lines.push("", "**7. Verdict Format**");
+  lines.push(cleanupBlock(data?.verdict_format || "(none found)"));
+  lines.push("", "**8. Next Manual Action**");
+  lines.push(cleanupBlock(data?.next_manual_action || "(none found)"));
+
+  return lines.join("\n");
 }
 
 export function formatRunCommandResult(result) {
@@ -340,6 +373,17 @@ function appendRelevantLines(lines, relevantLines) {
   lines.push("Last output:");
   for (const line of relevantLines) {
     lines.push(`- ${formatOutputLinePaths(line)}`);
+  }
+}
+
+function appendList(lines, items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    lines.push("- None.");
+    return;
+  }
+
+  for (const item of items) {
+    lines.push(`- ${cleanupBlock(item)}`);
   }
 }
 

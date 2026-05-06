@@ -8,7 +8,8 @@ The original v1 command set is read-only. Release B adds limited task management
 Release C adds controlled task status note writes. Release D adds allowlisted workflow
 script execution commands. Release E adds Codex App prompt package generation.
 Release F adds Codex CLI `/goal` request markdown generation. WF-031 updates
-that generation to Codex Goal Prompt Contract v2.
+that generation to Codex Goal Prompt Contract v2. WF-037 adds a read-only
+role router recommendation command.
 
 It can read:
 
@@ -17,6 +18,7 @@ read workflow status
 read active task
 read backlog summary
 read project profiles
+read ActiveTask role routing recommendation
 format Discord responses
 ```
 
@@ -93,6 +95,7 @@ Do not commit `_Local/`.
 /ai docs
 /ai project list
 /ai project profile
+/ai role status
 /ai task current
 /ai task list
 /ai task create
@@ -155,7 +158,22 @@ _Docs/AIWorkflow/Discord_Task_Status_Commands.md
 _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md
 _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md
 _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md
+_Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 ```
+
+For role router recommendation:
+
+```text
+/ai role status
+```
+
+`/ai role status` runs the existing read-only role router status script in JSON
+mode and displays the current ActiveTask recommendation. The response includes
+Active Task, Recommended Roles, Role Rationale, Human Decision Gates, Required
+Validation, Suggested Execution Route, Verdict Format, and Next Manual Action.
+
+It does not execute agents, approve tasks, mark tasks done, modify game source,
+modify `_Local/`, modify `node_modules/`, commit, push, or expose secrets.
 
 For safe script execution:
 
@@ -230,6 +248,7 @@ After starting the bot:
 [ ] /ai project list works.
 [ ] /ai project profile shows Source: ActiveProject.json.
 [ ] /ai project profile id:unity_project_template shows Source: explicit project id.
+[ ] /ai role status works.
 [ ] /ai task current works.
 [ ] /ai task list works.
 [ ] /ai task create appends one Backlog.md row and creates a backup.
@@ -297,6 +316,7 @@ tools/aiworkflow/workflow_status.bat --json
 tools/aiworkflow/active_project_status.bat --json
 tools/aiworkflow/project_profile_status.bat --json
 tools/aiworkflow/project_profile_status.bat --project <id> --json
+tools/aiworkflow/role_router_status.bat --json
 tools/aiworkflow/json_smoke_check.bat
 tools/aiworkflow/capture_diff.bat
 ```

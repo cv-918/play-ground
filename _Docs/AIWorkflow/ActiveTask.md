@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-100054
-title: WF-036 Small Role Router Prototype
+task_id: WF-20260506-104145
+title: WF-037 Discord Role Recommendation Command
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-06
 
 ## Goal
 
-WF-036 Small Role Router Prototype
+WF-037 Discord Role Recommendation Command
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: Small Role Router Prototype completed. Added read-only role_router_status.bat/ps1. The script reads ActiveTask and Backlog context, recommends roles, human gates, required validation, execution route, verdict format, and next manual action. Text and --json modes passed validation. JSON parsed successfully. No PlayGround source files or Discord command behavior were modified.
+note: done: "Discord Role Recommendation Command completed. /ai role status, /ai status, and /ai active passed live Discord validation. The command displays ActiveTask, recommended roles, role rationale, human decision gates, required validation, suggested execution route, verdict format, and next manual action. role_router_status text/json passed. No game source files, forbidden paths, or private/local tracked files were modified."
 updated_at: 2026-05-06
 source: Discord task status command
 ```
