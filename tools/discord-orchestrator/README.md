@@ -13,6 +13,7 @@ role router recommendation command. WF-038 injects selected-task role routing
 guidance into generated `/ai prepare goal` request files. WF-039 injects
 concrete path-scoped rule checklist reminders into the same generated files.
 WF-040 adds a read-only natural-language task intake suggestion command.
+WF-041 adds a Task Draft section to intake responses for manual review.
 
 It can read:
 
@@ -167,6 +168,7 @@ _Docs/AIWorkflow/Discord_Task_Intake_Command.md
 _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
+_Docs/AIWorkflow/Intake_To_Task_Draft_Generation.md
 ```
 
 For role router recommendation:
@@ -193,7 +195,8 @@ For read-only task intake:
 
 `/ai intake` returns a structured task suggestion with interpreted request,
 suggested title, category, kind, priority/risk, workflow path, recommended
-roles, human gates, validation, execution route, and next manual action.
+roles, human gates, validation, execution route, next manual action, and a Task
+Draft section for manual review.
 
 It is read-only. It does not create Backlog tasks, update ActiveTask.md, approve
 tasks, execute agents, execute Codex CLI, commit, push, or modify source files.
@@ -303,6 +306,7 @@ After starting the bot:
 [ ] /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" works.
 [ ] /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어" works.
 [ ] /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어" works.
+[ ] /ai intake responses include a Task Draft section with title, category, priority, kind, reason, risk, workflow path, roles, gates, validation, and next manual action.
 [ ] Generated Codex prompt files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.

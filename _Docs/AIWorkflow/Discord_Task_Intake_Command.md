@@ -2,15 +2,16 @@
 
 ## 1. Purpose
 
-WF-040 adds a read-only Discord task intake prototype:
+WF-040 adds a read-only Discord task intake prototype. WF-041 extends the same
+flow with a structured Task Draft section for manual review:
 
 ```text
 /ai intake
 ```
 
 The command accepts a natural-language work request and returns a structured
-AIWorkflow task suggestion. It does not create, approve, activate, execute, or
-commit anything.
+AIWorkflow task suggestion and task draft. It does not create, approve,
+activate, execute, or commit anything.
 
 ---
 
@@ -46,6 +47,28 @@ The Discord response includes:
 9. Required Validation
 10. Suggested Execution Route
 11. Suggested Next Manual Action
+```
+
+WF-041 also adds:
+
+```text
+Task Draft
+```
+
+Task Draft fields:
+
+```text
+title
+category
+priority
+kind
+reason
+suggested risk
+workflow path
+recommended roles
+human decision gates
+required validation
+suggested next manual action
 ```
 
 The response also states read-only safety:
@@ -137,7 +160,20 @@ The command only formats a suggestion into the Discord response.
 
 ---
 
-## 7. Validation
+## 7. Task Draft Usage
+
+The Task Draft is a manual review aid. The human may copy or adapt the draft
+into a later approved task creation step such as:
+
+```text
+/ai task create title:<edited title> category:<category> priority:<priority> kind:<kind> reason:<edited reason>
+```
+
+The draft is not automatically written to Backlog.md or ActiveTask.md.
+
+---
+
+## 8. Validation
 
 Run from repository root:
 
@@ -168,10 +204,13 @@ Expected:
 
 - `/ai intake` is registered.
 - `/ai intake` returns a structured task suggestion.
+- `/ai intake` response includes a Task Draft section.
 - `/ai intake` does not create tasks automatically.
 - `/ai intake` does not modify Backlog.md or ActiveTask.md.
 - Output includes category, kind, priority/risk, recommended roles, human
   gates, validation, and next manual action.
+- Task Draft includes title, category, priority, kind, reason, suggested risk,
+  workflow path, roles, gates, validation, and next manual action.
 - No agents are executed.
 - No game source files are modified.
 - No private/local files are tracked.

@@ -295,6 +295,7 @@ export function formatIntakeSuggestion(result) {
     ].join("\n");
   }
 
+  const draft = result.task_draft ?? {};
   const lines = [
     "**AI Task Intake Suggestion**",
     "",
@@ -317,20 +318,37 @@ export function formatIntakeSuggestion(result) {
     cleanupBlock(result.suggested_workflow_path),
     "",
     "**7. Recommended Roles**",
+    summarizeList(result.recommended_roles, 4),
+    "",
+    "**8. Human Decision Gates**",
+    summarizeList(result.human_decision_gates, 1),
+    "",
+    "**9. Required Validation**",
+    summarizeList(result.required_validation, 1),
+    "",
+    "**10. Suggested Execution Route**",
+    summarizeList(result.suggested_execution_route, 4),
+    "",
+    "**11. Suggested Next Manual Action**",
+    cleanupBlock(result.suggested_next_manual_action),
+    "",
+    "**Task Draft**",
+    `title: ${cleanupBlock(draft.title)}`,
+    `category: ${cleanupBlock(draft.category)}`,
+    `priority: ${cleanupBlock(draft.priority)}`,
+    `kind: ${cleanupBlock(draft.kind)}`,
+    `reason: ${cleanupBlock(draft.reason)}`,
+    `suggested risk: ${cleanupBlock(draft.suggested_risk)}`,
+    `workflow path: ${cleanupBlock(draft.workflow_path)}`,
+    `recommended roles: ${summarizeList(draft.recommended_roles, 4)}`,
+    `human decision gates: ${summarizeList(draft.human_decision_gates, 1)}`,
+    `required validation: ${summarizeList(draft.required_validation, 1)}`,
+    "suggested next manual action: manual review, then create task if accepted",
   ];
 
-  appendList(lines, result.recommended_roles);
-  lines.push("", "**8. Human Decision Gates**");
-  appendList(lines, compactItems(result.human_decision_gates, 3, "decision gates"));
-  lines.push("", "**9. Required Validation**");
-  appendList(lines, compactItems(result.required_validation, 3, "validation reminders"));
   appendPathReminderSummary(lines, result.path_scoped_reminders);
-  lines.push("", "**10. Suggested Execution Route**");
-  appendList(lines, result.suggested_execution_route);
-  lines.push("", "**11. Suggested Next Manual Action**");
-  lines.push(cleanupBlock(result.suggested_next_manual_action));
   lines.push("", "**Read-only Safety**");
-  lines.push("No Backlog task was created. ActiveTask.md was not updated. No agents or Codex CLI were executed.");
+  lines.push("No Backlog/ActiveTask changes. No agents or Codex CLI.");
 
   return lines.join("\n");
 }
@@ -442,7 +460,7 @@ function appendPathReminderSummary(lines, reminders) {
   }
 
   lines.push("", "Path reminders:");
-  for (const item of items.slice(0, 2)) {
+  for (const item of items.slice(0, 1)) {
     const reminderText = Array.isArray(item.reminders) && item.reminders.length > 0
       ? item.reminders[0]
       : "Review path-scoped rules before implementation.";
@@ -460,6 +478,17 @@ function compactItems(items, maxCount, label) {
     ...values.slice(0, maxCount),
     `... ${values.length - maxCount} more ${label} available in the intake service result.`,
   ];
+}
+
+function summarizeList(items, maxCount) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return "(none)";
+  }
+
+  const visible = values.slice(0, maxCount);
+  const suffix = values.length > maxCount ? `; +${values.length - maxCount} more` : "";
+  return `${visible.join("; ")}${suffix}`;
 }
 
 function formatOutputLinePaths(line) {
