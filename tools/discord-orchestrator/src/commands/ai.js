@@ -61,62 +61,62 @@ const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ 
 export function buildAiCommand() {
   return new SlashCommandBuilder()
     .setName("ai")
-    .setDescription("AIWorkflow status and task commands")
+    .setDescription("AIWorkflow 상태와 작업 명령을 실행합니다")
     .addSubcommand((sub) =>
-      sub.setName("status").setDescription("Show overall AIWorkflow status"),
+      sub.setName("status").setDescription("전체 AIWorkflow 상태를 표시합니다"),
     )
     .addSubcommand((sub) =>
-      sub.setName("active").setDescription("Show active task"),
+      sub.setName("active").setDescription("현재 active 작업을 표시합니다"),
     )
     .addSubcommand((sub) =>
-      sub.setName("backlog").setDescription("Show top backlog items"),
+      sub.setName("backlog").setDescription("상위 Backlog 항목을 표시합니다"),
     )
     .addSubcommand((sub) =>
-      sub.setName("next").setDescription("Show next recommended action"),
+      sub.setName("next").setDescription("다음 권장 조치를 표시합니다"),
     )
     .addSubcommand((sub) =>
-      sub.setName("blockers").setDescription("Show blocker summary"),
+      sub.setName("blockers").setDescription("blocker 요약을 표시합니다"),
     )
     .addSubcommand((sub) =>
-      sub.setName("docs").setDescription("Show key workflow document paths"),
+      sub.setName("docs").setDescription("주요 workflow 문서 경로를 표시합니다"),
     )
     .addSubcommand((sub) =>
       sub
         .setName("intake")
-        .setDescription("Suggest a structured AIWorkflow task from natural language")
+        .setDescription("자연어 요청을 구조화된 AIWorkflow 작업 초안으로 해석합니다")
         .addStringOption((option) =>
           option
             .setName("text")
-            .setDescription("Natural-language work request")
+            .setDescription("자연어 업무 요청")
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("intake-create")
-        .setDescription("Create a Backlog task from natural-language intake")
+        .setDescription("자연어 요청을 바탕으로 Backlog 작업을 명시적으로 생성합니다")
         .addStringOption((option) =>
           option
             .setName("text")
-            .setDescription("Natural-language work request")
+            .setDescription("자연어 업무 요청")
             .setRequired(true),
         ),
     )
     .addSubcommandGroup((group) =>
       group
         .setName("project")
-        .setDescription("Project profile commands")
+        .setDescription("Project profile 조회 명령입니다")
         .addSubcommand((sub) =>
-          sub.setName("list").setDescription("List available project profiles"),
+          sub.setName("list").setDescription("사용 가능한 project profile 목록을 표시합니다"),
         )
         .addSubcommand((sub) =>
           sub
             .setName("profile")
-            .setDescription("Show a project profile summary")
+            .setDescription("project profile 요약을 표시합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Project profile id")
+                .setDescription("project profile ID")
                 .setRequired(false),
             ),
         ),
@@ -124,43 +124,43 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("role")
-        .setDescription("Role router recommendation commands")
+        .setDescription("Role router 권장 정보를 조회합니다")
         .addSubcommand((sub) =>
-          sub.setName("status").setDescription("Show current ActiveTask role routing recommendation"),
+          sub.setName("status").setDescription("현재 ActiveTask의 role routing 권장을 표시합니다"),
         ),
     )
     .addSubcommandGroup((group) =>
       group
         .setName("run")
-        .setDescription("Run allowlisted local workflow scripts")
+        .setDescription("허용된 local workflow script를 실행합니다")
         .addSubcommand((sub) =>
-          sub.setName("workflow-status").setDescription("Run workflow_status.bat --json"),
+          sub.setName("workflow-status").setDescription("workflow_status.bat --json을 실행합니다"),
         )
         .addSubcommand((sub) =>
-          sub.setName("active-project").setDescription("Run active_project_status.bat --json"),
+          sub.setName("active-project").setDescription("active_project_status.bat --json을 실행합니다"),
         )
         .addSubcommand((sub) =>
           sub
             .setName("project-profile")
-            .setDescription("Run project_profile_status.bat")
+            .setDescription("project_profile_status.bat을 실행합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Optional project profile id")
+                .setDescription("선택 project profile ID")
                 .setRequired(false),
             ),
         )
         .addSubcommand((sub) =>
-          sub.setName("json-smoke").setDescription("Run JSON syntax smoke validation"),
+          sub.setName("json-smoke").setDescription("JSON 문법 smoke 검증을 실행합니다"),
         )
         .addSubcommand((sub) =>
           sub
             .setName("capture-diff")
-            .setDescription("Capture review diff files")
+            .setDescription("리뷰용 diff 파일을 캡처합니다")
             .addBooleanOption((option) =>
               option
                 .setName("include-untracked")
-                .setDescription("Include untracked files; default false")
+                .setDescription("untracked 파일 포함 여부, 기본값 false")
                 .setRequired(false),
             ),
         ),
@@ -168,28 +168,28 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("prepare")
-        .setDescription("Generate manual task routing prompt packages")
+        .setDescription("수동 실행용 작업 routing prompt 패키지를 생성합니다")
         .addSubcommand((sub) =>
           sub
             .setName("codex")
-            .setDescription("Generate a Codex App prompt package")
+            .setDescription("Codex App prompt 패키지를 생성합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Optional workflow task id; defaults to ActiveTask.md task_id")
+                .setDescription("선택 workflow 작업 ID, 기본값은 ActiveTask.md task_id")
                 .setRequired(false),
             )
             .addStringOption((option) =>
               option
                 .setName("mode")
-                .setDescription("Prompt mode; default implementation")
+                .setDescription("prompt mode, 기본값 implementation")
                 .setRequired(false)
                 .addChoices(...CODEX_MODE_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("context")
-                .setDescription("Prompt context level; default standard")
+                .setDescription("prompt context level, 기본값 standard")
                 .setRequired(false)
                 .addChoices(...CODEX_CONTEXT_CHOICES),
             ),
@@ -197,24 +197,24 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("goal")
-            .setDescription("Generate a Codex CLI /goal request markdown file")
+            .setDescription("Codex CLI /goal 요청 markdown 파일을 생성합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Optional workflow task id; defaults to ActiveTask.md task_id")
+                .setDescription("선택 workflow 작업 ID, 기본값은 ActiveTask.md task_id")
                 .setRequired(false),
             )
             .addStringOption((option) =>
               option
                 .setName("mode")
-                .setDescription("Goal mode; default implementation")
+                .setDescription("goal mode, 기본값 implementation")
                 .setRequired(false)
                 .addChoices(...GOAL_MODE_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("context")
-                .setDescription("Goal context level; default standard")
+                .setDescription("goal context level, 기본값 standard")
                 .setRequired(false)
                 .addChoices(...CODEX_CONTEXT_CHOICES),
             ),
@@ -223,21 +223,21 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("result")
-        .setDescription("Manual Codex result intake commands")
+        .setDescription("수동 Codex 결과 접수 명령입니다")
         .addSubcommand((sub) =>
           sub
             .setName("audit")
-            .setDescription("Audit a pasted Codex goal result summary")
+            .setDescription("붙여 넣은 Codex goal 결과 요약을 감사합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("result")
-                .setDescription("Pasted or summarized Codex result")
+                .setDescription("붙여 넣거나 요약한 Codex 결과")
                 .setRequired(true)
                 .setMaxLength(3000),
             ),
@@ -246,25 +246,25 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("task")
-        .setDescription("Workflow task management commands")
+        .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
-          sub.setName("current").setDescription("Show current active task metadata"),
+          sub.setName("current").setDescription("현재 active 작업 metadata를 표시합니다"),
         )
         .addSubcommand((sub) =>
           sub
             .setName("list")
-            .setDescription("Show top backlog tasks")
+            .setDescription("상위 Backlog 작업을 표시합니다")
             .addStringOption((option) =>
               option
                 .setName("status")
-                .setDescription("Optional status filter")
+                .setDescription("선택 status filter")
                 .setRequired(false)
                 .addChoices(...STATUS_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("kind")
-                .setDescription("Optional kind filter")
+                .setDescription("선택 kind filter")
                 .setRequired(false)
                 .addChoices(...BACKLOG_KIND_CHOICES),
             ),
@@ -272,128 +272,128 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("create")
-            .setDescription("Create a backlog task")
+            .setDescription("Backlog 작업을 생성합니다")
             .addStringOption((option) =>
               option
                 .setName("title")
-                .setDescription("Task title")
+                .setDescription("작업 제목")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("category")
-                .setDescription("Task id category")
+                .setDescription("작업 ID category")
                 .setRequired(false)
                 .addChoices(...CATEGORY_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("priority")
-                .setDescription("Task priority")
+                .setDescription("작업 priority")
                 .setRequired(false)
                 .addChoices(...PRIORITY_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("kind")
-                .setDescription("Task kind")
+                .setDescription("작업 kind")
                 .setRequired(false)
                 .addChoices(...KIND_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("reason")
-                .setDescription("Task reason")
+                .setDescription("작업 사유")
                 .setRequired(false),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("review-intake")
-            .setDescription("Review an intake-created Backlog task without changing state")
+            .setDescription("업무 접수로 생성된 Backlog 작업의 활성화 준비 상태를 검토합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("set-active")
-            .setDescription("Set the active task from Backlog.md")
+            .setDescription("Backlog.md의 작업을 active 작업으로 선택합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("approve")
-            .setDescription("Approve a task for implementation")
+            .setDescription("작업 구현 범위를 승인합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("note")
-                .setDescription("Approval note")
+                .setDescription("승인 메모")
                 .setRequired(false),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("block")
-            .setDescription("Mark a task blocked with a reason")
+            .setDescription("작업을 사유와 함께 blocked 상태로 표시합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("reason")
-                .setDescription("Block reason")
+                .setDescription("block 사유")
                 .setRequired(true),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("defer")
-            .setDescription("Defer a task")
+            .setDescription("작업을 deferred 상태로 보류합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("reason")
-                .setDescription("Defer reason")
+                .setDescription("defer 사유")
                 .setRequired(false),
             ),
         )
         .addSubcommand((sub) =>
           sub
             .setName("done")
-            .setDescription("Mark a task done with optional evidence")
+            .setDescription("작업을 done 상태로 표시하고 선택 근거를 기록합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
-                .setDescription("Backlog task id")
+                .setDescription("Backlog 작업 ID")
                 .setRequired(true),
             )
             .addStringOption((option) =>
               option
                 .setName("evidence")
-                .setDescription("Completion evidence")
+                .setDescription("완료 근거")
                 .setRequired(false),
             ),
         ),

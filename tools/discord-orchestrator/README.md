@@ -26,6 +26,8 @@ commands or generated request files.
 WF-050 localizes user-facing Discord response headings, safety notes, next
 actions, and common error wrappers into Korean while preserving command names,
 ids, paths, raw status values, and mode/context values.
+WF-051 localizes Discord slash command metadata descriptions into Korean while
+preserving command names, option names, choice raw values, schemas, and behavior.
 
 It can read:
 

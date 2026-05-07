@@ -1,0 +1,94 @@
+# Slash Command Metadata Korean Localization
+
+## Purpose
+
+WF-051 localizes Discord slash command metadata descriptions into Korean for
+real-use Human Director operation.
+
+This is metadata localization only. It does not add commands, remove commands,
+rename commands, rename options, change choices, change task state semantics,
+change Backlog/ActiveTask write behavior, execute Codex, execute agents,
+auto-approve, auto-done, auto-commit, or modify game source/data files.
+
+---
+
+## Localization Scope
+
+Translate user-facing Discord command UI metadata:
+
+- top-level `/ai` command description
+- subcommand group descriptions
+- subcommand descriptions
+- option descriptions
+
+Preserve raw schema values:
+
+- `/ai` command name
+- subcommand names
+- subcommand group names
+- option names such as `id`, `text`, `mode`, `context`, `note`, `result`
+- choice values such as `analysis`, `implementation`, `review`, `compact`, `standard`
+- task semantics and workflow behavior
+
+---
+
+## Implementation Shape
+
+Metadata is defined in:
+
+```text
+tools/discord-orchestrator/src/commands/ai.js
+```
+
+WF-051 changes only `.setDescription(...)` text. The command builder structure,
+names, choices, handlers, service calls, and state mutations remain unchanged.
+
+No full i18n framework is introduced. Fixed Korean metadata v1 is sufficient
+until runtime locale selection becomes useful.
+
+---
+
+## Expected Discord UI Behavior
+
+Discord slash command search should show Korean descriptions for:
+
+```text
+/ai intake
+/ai intake-create
+/ai task create
+/ai task review-intake
+/ai task approve
+/ai prepare goal
+/ai result audit
+/ai status
+/ai active
+```
+
+Command names and option names remain English/raw, while their visible
+descriptions are Korean.
+
+---
+
+## Validation Expectations
+
+Required local validation:
+
+```text
+node --check tools/discord-orchestrator/src/commands/ai.js
+npm --prefix tools/discord-orchestrator run register
+tools/discord-orchestrator/restart_bot.bat
+tools/discord-orchestrator/status_bot.bat
+git status --short
+git diff --check
+git diff --stat
+git ls-files | findstr /I "_Local node_modules .env discord_bot.local.json"
+```
+
+Discord UI smoke:
+
+```text
+Search /ai in Discord and confirm command descriptions are Korean.
+Confirm command names and option names remain unchanged.
+Confirm command behavior is unchanged.
+```
+

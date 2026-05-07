@@ -9,6 +9,9 @@ This is output localization only. It does not add commands, remove commands,
 change command schemas, change task state semantics, execute Codex, execute
 agents, auto-approve, auto-done, auto-commit, or modify game source/data files.
 
+Slash command search/autocomplete metadata is covered separately by
+`Slash_Command_Metadata_Korean_Localization.md`.
+
 ---
 
 ## Localization Scope
@@ -154,4 +157,3 @@ Expected:
 - no command behavior changes
 - no unexpected task state changes
 - no game source/data files changed
-

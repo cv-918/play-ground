@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260507-152332
-title: WF-050 Discord Korean output localization
+task_id: WF-20260507-224917
+title: WF-051 Slash command metadata Korean localization
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-07
 
 ## Goal
 
-WF-050 Discord Korean output localization
+WF-051 Slash command metadata Korean localization
 
 ---
 
@@ -36,7 +36,7 @@ WF-050 Discord Korean output localization
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: approved: "Human reviewed Korean output localization scope."
+validation: pending
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: "Human reviewed Korean output localization scope."
+pending
 ```
 
 ---
@@ -70,7 +70,7 @@ approved: "Human reviewed Korean output localization scope."
 
 ```text
 status: done
-note: done: "WF-050 validation passed. Live Discord output is localized into Korean for user-facing titles, section headers, safety notes, next actions, status/active messages, prepare goal, and result audit output. Remaining English is limited to preserved raw identifiers such as commands, ids, paths, raw status/mode/context values, role names, file names, Git/JSON/Codex/Backlog/ActiveTask terms, task titles, and pasted source excerpts. No new commands, command schema changes, workflow behavior changes, game source/data changes, Codex/agent execution, commit, or push were performed."
+note: done: "WF-051 validation passed. Discord slash command metadata descriptions are localized into Korean. Manual Discord UI confirmation passed for /ai command search. Command names, subcommand names, option names, and choice raw values remained unchanged. Command behavior, task semantics, Backlog/ActiveTask write behavior, game source/data files, and private/local tracked files were not changed. npm register and bot restart/status passed."
 updated_at: 2026-05-07
 source: Discord task status command
 ```
