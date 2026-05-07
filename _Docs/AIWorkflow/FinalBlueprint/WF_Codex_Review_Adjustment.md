@@ -45,7 +45,7 @@ Codex Web 검토 결과를 기준으로 WF 최종 설계 문서에 반영할 보
 
 ```text
 현재:
-prepare goal 생성 → 사용자가 Codex 수동 실행
+prepare goal 생성 → (레거시/예외) Manual Escalation으로만 Codex 수동 실행
 
 최종:
 Discord goal → PC Runner → 실행기 자동 선택 → Codex CLI/Local CLI 자동 실행
@@ -87,7 +87,7 @@ Codex App / Copilot / OpenClaw / Hermes는 adapter slot만 남기고 후순위�
 - default deny 유지
 - allowlist 기반 허용
 - worktree 격리 필수
-- L0~L2부터 실행 허용
+- L0~L2는 정책 조건을 만족할 때 자동 실행/자동 승인 후보로만 허용한다.
 - L3는 명시 승인 후 허용
 - L4 이상은 인간 승인 필수
 - commit은 최종 단계에서도 별도 승인 필요
