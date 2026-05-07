@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260507-144049
-title: WF-049 AIWorkflow Korean flow documentation
+task_id: WF-20260507-152332
+title: WF-050 Discord Korean output localization
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-07
 
 ## Goal
 
-WF-049 AIWorkflow Korean flow documentation
+WF-050 Discord Korean output localization
 
 ---
 
@@ -36,7 +36,7 @@ WF-049 AIWorkflow Korean flow documentation
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: pending
+validation: approved: "Human reviewed Korean output localization scope."
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-pending
+approved: "Human reviewed Korean output localization scope."
 ```
 
 ---
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-049 validation passed. Created Korean AIWorkflow overview, flowchart, and glossary/guide documents. README links were added near the document map entry points. Documents explain the Human Director flow, regular path, optional/debug path, read-only vs write commands, human decision gates, manual Codex execution, result audit, done, and commit decision flow. No Discord command behavior, workflow tool behavior, game source/data files, or private/local tracked files were modified."
+note: done: "WF-050 validation passed. Live Discord output is localized into Korean for user-facing titles, section headers, safety notes, next actions, status/active messages, prepare goal, and result audit output. Remaining English is limited to preserved raw identifiers such as commands, ids, paths, raw status/mode/context values, role names, file names, Git/JSON/Codex/Backlog/ActiveTask terms, task titles, and pasted source excerpts. No new commands, command schema changes, workflow behavior changes, game source/data changes, Codex/agent execution, commit, or push were performed."
 updated_at: 2026-05-07
 source: Discord task status command
 ```

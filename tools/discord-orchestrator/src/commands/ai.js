@@ -12,6 +12,7 @@ import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
+import { koText } from "../services/koreanOutput.js";
 import {
   blockTask,
   completeTask,
@@ -457,7 +458,7 @@ export async function handleAiCommand(interaction, config) {
 
   const statusResult = await getWorkflowStatus(config);
   if (!statusResult.ok) {
-    await interaction.editReply({ content: truncateForDiscord(statusResult.error, config.limits.maxDiscordChars) });
+    await interaction.editReply({ content: truncateForDiscord(koText(statusResult.error), config.limits.maxDiscordChars) });
     return;
   }
 
@@ -477,7 +478,7 @@ async function handleIntakeCommand(interaction, config) {
     });
   } catch (error) {
     await interaction.editReply({
-      content: truncateForDiscord(`Task intake failed: ${error.message}`, config.limits.maxDiscordChars),
+      content: truncateForDiscord(`task intake 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
     });
   }
 }
@@ -493,20 +494,20 @@ async function handleIntakeCreateCommand(interaction, config) {
     });
   } catch (error) {
     await interaction.editReply({
-      content: truncateForDiscord(`Intake task creation failed: ${error.message}`, config.limits.maxDiscordChars),
+      content: truncateForDiscord(`intake task 생성 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
     });
   }
 }
 
 async function handleRoleCommand(interaction, config, subcommand) {
   if (subcommand !== "status") {
-    await interaction.editReply({ content: "Unknown role command." });
+    await interaction.editReply({ content: "알 수 없는 role command입니다." });
     return;
   }
 
   const result = await getRoleRouterStatus(config);
   if (!result.ok) {
-    await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+    await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
     return;
   }
 
@@ -522,7 +523,7 @@ async function handlePrepareCommand(interaction, config, subcommand) {
   }
 
   if (subcommand !== "codex") {
-    await interaction.editReply({ content: "Unknown prepare command." });
+    await interaction.editReply({ content: "알 수 없는 prepare command입니다." });
     return;
   }
 
@@ -540,7 +541,7 @@ async function handlePrepareCommand(interaction, config, subcommand) {
     await interaction.editReply({
       content: truncateForDiscord(formatCodexPrepareResult({
         ok: false,
-        error: `Codex prompt preparation failed: ${error.message}`,
+        error: `Codex prompt 생성 실패: ${koText(error.message)}`,
       }), config.limits.maxDiscordChars),
     });
   }
@@ -561,7 +562,7 @@ async function handlePrepareGoalCommand(interaction, config) {
     await interaction.editReply({
       content: truncateForDiscord(formatGoalPrepareResult({
         ok: false,
-        error: `Goal request preparation failed: ${error.message}`,
+        error: `goal 요청서 생성 실패: ${koText(error.message)}`,
       }), config.limits.maxDiscordChars),
     });
   }
@@ -569,7 +570,7 @@ async function handlePrepareGoalCommand(interaction, config) {
 
 async function handleResultCommand(interaction, config, subcommand) {
   if (subcommand !== "audit") {
-    await interaction.editReply({ content: "Unknown result command." });
+    await interaction.editReply({ content: "알 수 없는 result command입니다." });
     return;
   }
 
@@ -586,7 +587,7 @@ async function handleResultCommand(interaction, config, subcommand) {
     await interaction.editReply({
       content: truncateForDiscord(formatResultAudit({
         ok: false,
-        error: `Result audit failed: ${error.message}`,
+        error: `result audit 실패: ${koText(error.message)}`,
       }), config.limits.maxDiscordChars),
     });
   }
@@ -651,7 +652,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
     if (subcommand === "set-active") {
       const result = await setActiveTaskWithSafety(config, interaction.options.getString("id"));
       if (!result.ok) {
-        await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+        await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
         return;
       }
 
@@ -693,10 +694,10 @@ async function handleTaskCommand(interaction, config, subcommand) {
       return;
     }
 
-    await interaction.editReply({ content: "Unknown task command." });
+    await interaction.editReply({ content: "알 수 없는 task command입니다." });
   } catch (error) {
     await interaction.editReply({
-      content: truncateForDiscord(`Task command failed: ${error.message}`, config.limits.maxDiscordChars),
+      content: truncateForDiscord(`task command 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
     });
   }
 }
@@ -704,7 +705,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
 async function handleTaskStatusCommand(interaction, config, action, input) {
   const result = await action(config, input);
   if (!result.ok) {
-    await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+    await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
     return;
   }
 
@@ -717,7 +718,7 @@ async function handleProjectCommand(interaction, config, subcommand) {
   if (subcommand === "list") {
     const result = await listProjectProfiles(config);
     if (!result.ok) {
-      await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+      await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
       return;
     }
 
@@ -736,7 +737,7 @@ async function handleProjectCommand(interaction, config, subcommand) {
     const result = await getProjectProfile(config, projectId);
 
     if (!result.ok) {
-      await interaction.editReply({ content: truncateForDiscord(result.error, config.limits.maxDiscordChars) });
+      await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
       return;
     }
 
@@ -746,7 +747,7 @@ async function handleProjectCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "Unknown project command." });
+  await interaction.editReply({ content: "알 수 없는 project command입니다." });
 }
 
 function formatBySubcommand(subcommand, status) {
@@ -762,6 +763,6 @@ function formatBySubcommand(subcommand, status) {
     case "blockers":
       return formatBlockers(status);
     default:
-      return "Unknown /ai subcommand.";
+      return "알 수 없는 /ai subcommand입니다.";
   }
 }

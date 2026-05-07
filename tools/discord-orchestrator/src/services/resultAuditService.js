@@ -11,7 +11,7 @@ const VALIDATION_PATTERNS = [
   ["git diff --stat", /git\s+diff\s+--stat/i],
   ["JSON smoke", /json\s+smoke|json\s+syntax|parseability/i],
   ["build/test", /build\s+passed|tests?\s+passed/i],
-  ["general validation pass", /validation\s+passed|smoke\s+passed/i],
+  ["일반 검증 통과", /validation\s+passed|smoke\s+passed/i],
   ["runtime validation", /runtime\s+validation|manual\s+runtime|debug\s+x64/i],
 ];
 

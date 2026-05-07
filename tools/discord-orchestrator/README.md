@@ -23,6 +23,9 @@ WF-047 adds read-only Codex goal result intake and completion audit.
 WF-048 consolidates Milestone 1 output so regular workflow responses stay
 compact and detailed routing/checklist output moves to optional debug/admin
 commands or generated request files.
+WF-050 localizes user-facing Discord response headings, safety notes, next
+actions, and common error wrappers into Korean while preserving command names,
+ids, paths, raw status values, and mode/context values.
 
 It can read:
 
