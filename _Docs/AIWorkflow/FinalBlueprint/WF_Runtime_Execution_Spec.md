@@ -18,6 +18,62 @@ PC Runner는 Discord 지시를 받아 작업을 자동 실행하고, 여러 실�
 | Browser-use / Playwright | 브라우저 자동화 후보 |
 | Manual Escalation | 자동 실행 실패 또는 고위험 예외 처리 |
 
+## Codex Web 검토 반영 실행 원칙
+
+### 1차 실행기 고정
+
+초기 자동 실행은 다음 두 실행기로 제한한다.
+
+```text
+1. Codex CLI Execution Adapter
+2. Local CLI Execution Adapter
+```
+
+Codex App, Copilot Agent, OpenClaw, Hermes는 구조상 실행 후보로 유지하되, 자동 제어 경로와 결과 수집 방식이 명확해진 뒤에 추가한다.
+
+### Phase 2 선행 순서
+
+실행 어댑터보다 먼저 다음을 구현한다.
+
+```text
+1. TaskRunState / SessionState 저장 포맷
+2. Task Workspace Manager
+3. Session Supervisor
+4. Evidence Collector
+5. Codex CLI Execution Adapter
+6. Local CLI Execution Adapter
+7. Runtime Control Adapter
+```
+
+이 순서를 지키지 않으면 실행은 되지만 추적, 중단, 검증, 복구가 불가능한 상태가 될 수 있다.
+
+### prepare goal migration
+
+기존 `/ai prepare goal` 흐름은 최종형에서 사용자 수동 실행 경로로 유지하지 않는다.
+
+역할을 다음처럼 바꾼다.
+
+```text
+기존:
+사용자가 Codex에 붙여넣을 프롬프트 파일 생성
+
+최종:
+PC Runner가 실행기에 전달할 ExecutionRequest 생성
+```
+
+### 실행 권한
+
+현재 금지되어 있는 Codex 실행/build 실행/runtime 실행 정책은 전면 해제가 아니라 allowlist 기반으로 전환한다.
+
+```text
+- default deny
+- approved task only
+- worktree required
+- executor allowlist required
+- L4 이상은 인간 승인 필수
+```
+
+
 ## 실행 라우팅 원칙
 
 1. WF Orchestrator가 실행 경로를 결정한다.

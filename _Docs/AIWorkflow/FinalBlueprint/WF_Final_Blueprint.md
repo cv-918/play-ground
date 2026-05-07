@@ -26,6 +26,57 @@ Discord 자연어 지시
 → 상태 및 감사 기록 자동 반영
 ```
 
+## Codex Web 검토 반영 사항
+
+Codex Web 검토 결과, 현재 저장소는 Discord 기반 WF 운영 보조 도구 단계까지는 구축되어 있으나, Final Blueprint가 요구하는 PC Runner 주도 자동 실행/감시/검증/완료 자동화에는 아직 도달하지 못한 것으로 본다.
+
+따라서 최종 설계는 유지하되, 구현 전환 원칙을 다음처럼 명시한다.
+
+```text
+현재 수동 prepare goal 흐름은 최종형이 아니다.
+prepare goal은 폐기하지 않고 내부 ExecutionRequest 생성기로 흡수한다.
+사용자는 최종형에서 Codex 프롬프트를 직접 복사하거나 붙여넣지 않는다.
+```
+
+### 상태 모델 분리
+
+WF는 상태를 두 계층으로 분리한다.
+
+```text
+Task Lifecycle State:
+- queued
+- planning
+- approval_waiting
+- active
+- completed
+- blocked
+- cancelled
+
+Execution Run State:
+- starting
+- running
+- idle
+- stalled
+- blocked
+- verifying
+- failed
+- finalized
+```
+
+두 상태는 `task_id`로 연결한다.
+
+### 1차 실행기 범위
+
+완성형은 여러 실행기 후보를 지원하지만, 1차 구현 범위는 다음으로 제한한다.
+
+```text
+- Codex CLI Execution Adapter
+- Local CLI Execution Adapter
+```
+
+Codex App, Copilot Agent, OpenClaw, Hermes는 최종 구조에 adapter slot을 남기되, 1차 구현의 필수 조건으로 삼지 않는다.
+
+
 ## 최종 구조
 
 ```text

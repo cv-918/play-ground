@@ -4,6 +4,66 @@
 
 작업 결과는 Codex/Copilot/Agent가 완료했다고 말하는 것으로 끝나지 않는다. WF 기준 완료는 결과 수집, 검증, 승인, 상태 반영까지 포함한다.
 
+## Codex Web 검토 반영: Evidence Collector와 Verification Gate 분리
+
+검증 자동화는 두 단계로 분리한다.
+
+```text
+Evidence Collector:
+- 사실 수집
+- 실행 로그
+- exit code
+- 변경 파일
+- diff
+- build output
+- test output
+- generated artifacts
+
+Verification Gate:
+- 수집된 증거를 기준으로 pass/warn/fail 판정
+- 승인 정책에 전달
+- CompletionReport에 반영
+```
+
+수집과 판정을 섞지 않는다.
+
+이 분리는 다음 원칙을 지키기 위해 필요하다.
+
+```text
+- 실행은 증거를 만든다.
+- 검증은 증거를 판정한다.
+- 승인은 판정 결과와 정책으로 결정한다.
+- 상태는 모든 과정을 기록한다.
+```
+
+## 최소 Evidence Set
+
+Phase 2에서 최소한 다음 증거를 수집해야 한다.
+
+```text
+- executor
+- command line
+- working directory
+- session id
+- exit code
+- stdout/stderr path
+- changed files
+- git diff snapshot
+- elapsed time
+- heartbeat timeline
+```
+
+Phase 3에서는 여기에 다음을 추가한다.
+
+```text
+- build result
+- test result
+- verification gate result
+- completion report
+- finalization log
+```
+
+
 ## 검증 게이트
 
 ```text

@@ -130,6 +130,76 @@ Codex Web의 검토 결과를 그대로 ChatGPT Web에 붙여넣고 다음을 �
 
 ---
 
+## Codex Web 검토 결과 반영 후 사용자 결정
+
+Codex Web 검토 결과에 따라 다음 결정을 기준값으로 채택한다.
+
+### 1. 정책 전환
+
+```text
+현재 README 또는 기존 정책의 Codex/build 실행 금지는 즉시 삭제하지 않는다.
+WF Permission Policy Engine으로 단계적 해제한다.
+```
+
+사용자 승인 기준:
+
+```text
+- worktree 격리된 작업만 실행 허용
+- Codex CLI + Local CLI부터 허용
+- L0~L2부터 자동 실행/자동 승인
+- L3는 인간 승인 후 제한 허용
+- L4 이상은 인간 승인 필수
+```
+
+### 2. 상태 모델
+
+```text
+기존 Task State는 유지한다.
+Runtime State를 별도 추가한다.
+둘은 task_id로 매핑한다.
+```
+
+### 3. 실행기 우선순위
+
+```text
+1차 실행기:
+- Codex CLI
+- Local CLI
+
+후순위:
+- Codex App
+- Copilot Agent
+- OpenClaw
+- Hermes
+```
+
+### 4. 자동 승인 초기 범위
+
+```text
+초기 자동 승인:
+- L0
+- L1
+- L2
+
+L3:
+- 충분한 검증과 성공 사례 이후 조건부 허용
+```
+
+### 5. 검증 게이트 최소 집합
+
+```text
+Phase 2:
+- compile/diff/log evidence 수집
+
+Phase 3:
+- Verification Gate 판정
+- Completion Card
+- FinalizationLog
+```
+
+즉, Phase 2에서는 증거를 모으고, Phase 3에서 완료 판정 자동화를 완성한다.
+
+
 ## 2. Codex Web 검토 후 해야 할 일
 
 Codex Web 검토 결과가 나오면, 사용자는 아래 항목을 판단해야 한다.

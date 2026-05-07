@@ -17,6 +17,37 @@ LLM은 자연어를 해석하고 위험 요소를 추정할 수 있지만, 자�
 | Permission Policy Engine | 도구, 파일, 외부 런타임 접근 권한 결정 |
 | Execution Route Planner | 실행기 후보 중 적절한 경로 선택 |
 
+## Codex Web 검토 반영 정책 전환
+
+현재 저장소의 안전 정책에는 Codex 실행, build 실행, runtime 실행, commit 금지가 포함될 수 있다. 이 정책은 최종형에서 무시하지 않고 단계적으로 완화한다.
+
+### 권한 전환 원칙
+
+```text
+1. 기본값은 금지(default deny)다.
+2. 허용은 allowlist로만 한다.
+3. 실행은 task workspace/worktree 안에서만 허용한다.
+4. Codex CLI와 Local CLI부터 허용한다.
+5. L0~L2 작업부터 허용한다.
+6. L3는 명시 승인 후 허용한다.
+7. L4 이상은 인간 승인 필수다.
+8. commit은 별도 승인 없이는 자동 수행하지 않는다.
+```
+
+### Permission Policy Engine 필수 판단
+
+Permission Policy Engine은 다음을 판단한다.
+
+```text
+- 이 작업이 실행 가능한 risk level인가
+- 이 실행기가 현재 허용되어 있는가
+- 이 작업이 허용 경로 안에서만 동작하는가
+- build/test 실행이 허용되는가
+- 외부 agent runtime 사용이 허용되는가
+- commit/push가 금지되어 있는가
+```
+
+
 ## 승인 레벨
 
 | 레벨 | 의미 | 자동 승인 |
