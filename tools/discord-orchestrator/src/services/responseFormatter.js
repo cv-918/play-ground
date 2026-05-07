@@ -15,18 +15,18 @@ export function formatStatus(status) {
 
   const lines = [
     "**AIWorkflow 상태**",
-    `현재 흐름(Workflow): ${workflow.actual ?? "unknown"} → ${workflow.target_next ?? "unknown"}`,
-    `ActiveTask: ${task.task_id ?? "unknown"} / ${koStatus(task.status)}`,
+    `AIWorkflow 운영 단계: ${workflow.actual ?? "unknown"} → ${workflow.target_next ?? "unknown"}`,
+    `현재 작업(ActiveTask): ${task.task_id ?? "unknown"} / ${koStatus(task.status)}`,
     `제목: ${task.title ?? "unknown"}`,
     `우선순위/위험도: ${task.priority ?? "unknown"} / ${task.risk_level ?? "unknown"}`,
-    `Backlog: open=${backlog.open_count ?? "?"}, blocked=${backlog.blocked_count ?? "?"}`,
-    `Git 변경 있음: ${koBool(status.worktree_dirty)}`,
+    `Backlog: open=${backlog.open_count ?? "?"} (미완료), blocked=${backlog.blocked_count ?? "?"} (차단)`,
+    `Git 변경사항 있음: ${koBool(status.worktree_dirty)}`,
   ];
 
   const top = Array.isArray(backlog.top_items) ? backlog.top_items.slice(0, 3) : [];
   if (top.length > 0) {
     lines.push("");
-    lines.push("상위 항목:");
+    lines.push("참고용 상위 Backlog 항목:");
     for (const item of top) {
       lines.push(`- ${item.id} [${item.priority}/${koStatus(item.status)}] ${item.item}`);
     }
