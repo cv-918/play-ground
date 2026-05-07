@@ -49,6 +49,7 @@ This README is the entry point for the document set.
 | `Goal_Request_Execution_Readiness_Summary.md` | Defines execution readiness guidance returned by `/ai prepare goal` |
 | `Goal_Result_Intake_Completion_Audit.md` | Defines the read-only `/ai result audit` command for auditing pasted Codex goal result summaries before done or commit decisions |
 | `AIWorkflow_Milestone_1_Output_Consolidation.md` | Defines WF-048 regular-path output consolidation, optional/debug/admin command separation, and compact `/ai prepare goal` behavior |
+| `FinalBlueprint/WF_Execution_State_Model.md` | Defines WF-201 runtime execution state model, task_id linkage, and draft TaskRunState/SessionState/ProgressEventLog/RuntimeControlHistory storage formats |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

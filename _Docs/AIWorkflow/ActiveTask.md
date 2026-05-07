@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260507-224917
-title: WF-051 Slash command metadata Korean localization
+task_id: WF-20260508-045640
+title: WF-201 Define execution state model
 status: done
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
 requested_by: human_director
-requested_at: 2026-05-07
-last_updated: 2026-05-07
+requested_at: 2026-05-08
+last_updated: 2026-05-08
 ```
 
 ---
 
 ## Goal
 
-WF-051 Slash command metadata Korean localization
+WF-201 Define execution state model
 
 ---
 
@@ -70,8 +70,8 @@ pending
 
 ```text
 status: done
-note: done: "WF-051 validation passed. Discord slash command metadata descriptions are localized into Korean. Manual Discord UI confirmation passed for /ai command search. Command names, subcommand names, option names, and choice raw values remained unchanged. Command behavior, task semantics, Backlog/ActiveTask write behavior, game source/data files, and private/local tracked files were not changed. npm register and bot restart/status passed."
-updated_at: 2026-05-07
+note: done: "WF-201 validation passed. Execution state model was defined as documentation/schema draft. Existing Task Lifecycle State remains the source of truth for task planning and approval. New Runtime Execution State was defined as a separate task_id-linked layer. Draft formats for TaskRunState, SessionState, ProgressEventLog, and RuntimeControlHistory were added. /tasks, /task, Session Supervisor, and Evidence Collector read/write responsibilities were documented. _Temp/AIWorkflowRuntime/tasks/<task_id>/ was accepted as the draft runtime state root. No Execution Adapter, Local CLI Adapter, build/test runner, migration, task command behavior change, or game source/data change was implemented. Pre-existing FinalBlueprint deletions were intentionally handled and committed separately."
+updated_at: 2026-05-08
 source: Discord task status command
 ```
 ---
