@@ -121,39 +121,38 @@ function buildGoalPrompt(input) {
   ].join("\n");
 }
 
-function buildRoleRouterRecommendationsSection({ roleRecommendation }) {
+function buildRoleRouterRecommendationsSection({ roleRecommendation, contextLevel }) {
   const recommendation = roleRecommendation ?? {};
   const lines = [
     "## Role Router Recommendations",
     "- Source: roleRouterService recommendation for the selected task.",
-    "- Purpose: make this Codex /goal request role-aware without executing agents, approving tasks, or changing task state.",
+    "- Purpose: keep this request role-aware without duplicating full workflow policy.",
     "",
-    "### Recommended Roles",
+    "### Routing Summary",
+    "- Roles: " + formatInlineList(recommendation.recommended_roles),
+    "- Route: " + formatInlineList(recommendation.execution_route),
   ];
 
-  appendList(lines, recommendation.recommended_roles);
   lines.push("", "### Role Rationale");
-  appendList(lines, recommendation.role_rationale);
+  appendLimitedList(lines, recommendation.role_rationale, contextLevel === "full" ? 8 : 2, "rationale item");
   lines.push("", "### Human Decision Gates");
-  appendList(lines, recommendation.human_gates);
+  appendLimitedList(lines, recommendation.human_gates, contextLevel === "full" ? 8 : 3, "gate");
   lines.push("", "### Required Validation");
-  appendList(lines, recommendation.required_validation);
-  lines.push("", "### Suggested Execution Route");
-  appendList(lines, recommendation.execution_route);
+  appendLimitedList(lines, recommendation.required_validation, contextLevel === "full" ? 10 : 5, "validation item");
   lines.push("", "### Verdict Format Reminder");
   lines.push(formatValue(recommendation.verdict_format));
   lines.push("", "### Path-Scoped Rule Reminders");
-  appendList(lines, recommendation.path_scoped_rule_reminders);
+  appendLimitedList(lines, recommendation.path_scoped_rule_reminders, contextLevel === "full" ? 8 : 3, "path reminder");
 
   return lines.join("\n");
 }
 
-function buildPathScopedRuleRemindersSection({ pathRuleChecklist }) {
+function buildPathScopedRuleRemindersSection({ pathRuleChecklist, contextLevel }) {
   const checklist = pathRuleChecklist ?? {};
   const lines = [
     "## Path-Scoped Rule Reminders",
     "- Source: " + formatValue(checklist.source),
-    "- Purpose: inject concrete review and validation reminders for the likely task scope. These reminders do not approve extra files or expand implementation scope.",
+    "- Purpose: include only reminders for likely affected paths. These reminders do not approve extra files or expand scope.",
     "- Selection inputs:",
   ];
 
@@ -176,7 +175,7 @@ function buildPathScopedRuleRemindersSection({ pathRuleChecklist }) {
       lines.push("- Applies to: " + displayPaths.map(formatValue).join(", "));
     }
 
-    appendChecklist(lines, scope.checklist_items);
+    appendLimitedChecklist(lines, scope.checklist_items, contextLevel === "full" ? 10 : 4, "checklist item");
   }
 
   return lines.join("\n");
@@ -312,20 +311,10 @@ function buildScopeSection({ task, mode }) {
 function buildNonGoalsSection() {
   return [
     "## 6. Non-goals",
-    "- Do not commit.",
-    "- Do not push.",
-    "- Do not release.",
+    "- Do not commit, push, release, or add automation for those actions.",
     "- Do not expose secrets, credentials, tokens, or local private configuration.",
-    "- Do not modify unrelated source files.",
-    "- Do not modify _Local/.",
-    "- Do not modify node_modules/.",
-    "- Do not execute external agents unless explicitly approved.",
-    "- Do not execute Codex CLI automatically from Discord or scripts.",
-    "- Do not execute OpenClaw.",
-    "- Do not execute Claude.",
-    "- Do not implement Unity AI.",
-    "- Do not implement computer-use.",
-    "- Do not add release, deploy, commit, or push automation.",
+    "- Do not modify unrelated files, `_Local/`, `node_modules/`, or tracked `_Temp/` artifacts.",
+    "- Do not execute external agents, Codex CLI, OpenClaw, Claude, Unity AI, or computer-use unless this request explicitly approves that behavior.",
   ].join("\n");
 }
 
@@ -354,43 +343,19 @@ function buildSafetyConstraintsSection() {
   return [
     "## 8. Safety Constraints",
     "- Follow repository AGENTS.md and AIWorkflow source-of-truth documents.",
-    "- Preserve final-form architecture first; use reduced scope only as a smaller version of that structure.",
-    "- Keep decision, execution, and data responsibilities separated.",
-    "- Avoid monolithic growth in actor, scene, manager, and data-manager classes.",
-    "- Preserve debuggability, traceability, explicit state names, ownership, validation points, and failure messages.",
-    "- Do not introduce GDI+ or rendering-policy changes without explicit approval.",
-    "- Keep gameplay state, animation playback, rendering, and data building as separate responsibilities.",
-    "- Request approval before source implementation, structural refactoring, schema/save changes, lifecycle changes, build setting changes, workflow rule changes, destructive commands, or tool execution that may modify files.",
-    "- Do not execute Codex CLI automatically.",
-    "- Do not execute OpenClaw.",
-    "- Do not execute Claude.",
-    "- Do not implement Unity AI.",
-    "- Do not implement computer-use.",
-    "- Do not commit.",
-    "- Do not push.",
-    "- Do not modify game source code except files required for the approved task.",
-    "- Do not modify Backlog.md or ActiveTask.md unless the approved task explicitly requires workflow task-state edits.",
-    "- Do not modify _Local/.",
-    "- Do not modify node_modules/.",
-    "- Do not expose secrets or local Discord configuration.",
-    "- Do not run release or deployment scripts.",
+    "- Keep work inside the selected task, approved mode, and allowed file scope.",
+    "- Preserve final-form architecture: separate decision, execution, data, animation, rendering, and validation responsibilities.",
+    "- Stop for explicit approval before source implementation, structural refactoring, schema/save/load, lifecycle, runtime, build setting, workflow rule, destructive, or external-tool changes outside this request.",
+    "- Do not commit, push, release, expose secrets, modify private/local/dependency folders, or execute agents/Codex CLI automatically.",
   ].join("\n");
 }
 
 function buildHumanDecisionGatesSection({ mode }) {
   const lines = [
     "## 9. Human Decision Gates",
-    "- Codex must not decide schema changes alone.",
-    "- Codex must not decide save format changes alone.",
-    "- Codex must not decide broad architecture changes alone.",
-    "- Codex must not install external tools alone.",
-    "- Codex must not perform computer-use actions alone.",
-    "- Codex must not perform credential, login, or subscription setup alone.",
-    "- Codex must not run destructive commands alone.",
-    "- Codex must not commit, push, or release alone.",
-    "- Stop for human approval before source code implementation if this request is analysis or review mode.",
-    "- Stop for human approval before any JSON schema, save/load, actor lifecycle, scene lifecycle, runtime behavior, build setting, or workflow rule change.",
-    "- Stop for human approval if the implementation scope expands beyond the selected task.",
+    "- Stop if approval is missing for the current mode or task scope.",
+    "- Stop before schema/save/load, broad architecture, lifecycle/runtime, build setting, workflow rule, external-tool, credential, computer-use, destructive, commit, push, or release decisions.",
+    "- Stop if scope expands beyond the selected task.",
   ];
 
   if (mode === "implementation" || mode === "prototype") {
@@ -455,21 +420,11 @@ function buildValidationPlanSection({ task }) {
 function buildStopConditionsSection() {
   return [
     "## 12. Stop Conditions",
-    "- Required approval is missing.",
-    "- Repository context is insufficient for file-level instructions.",
-    "- Scope becomes ambiguous.",
-    "- Schema or save format changes appear necessary.",
-    "- External credentials are needed.",
-    "- Destructive commands are needed.",
-    "- Validation fails repeatedly.",
-    "- Implementation requires a human design decision.",
-    "- Changes exceed reduced scope.",
-    "- Scope mixes feature work with broad refactoring.",
-    "- The task requires guessing about critical runtime behavior.",
-    "- Validation criteria cannot be identified.",
-    "- A requested change violates project architecture principles.",
-    "- Tool permissions or safety constraints are unclear.",
-    "- Unexpected dirty worktree changes affect files needed for this task.",
+    "- Required approval, repository context, validation criteria, or tool permissions are unclear.",
+    "- Scope expands, mixes feature work with broad refactoring, or requires guessing about critical runtime behavior.",
+    "- Schema/save/load, external credentials, destructive commands, or human design decisions become necessary.",
+    "- Validation fails repeatedly or unexpected dirty worktree changes affect task files.",
+    "- A requested change violates project architecture or safety constraints.",
   ].join("\n");
 }
 
@@ -672,15 +627,35 @@ function appendList(lines, values) {
   }
 }
 
-function appendChecklist(lines, values) {
+function appendLimitedList(lines, values, maxCount, label) {
+  const items = Array.isArray(values) ? values : [];
+  if (items.length === 0) {
+    lines.push("  - (none)");
+    return;
+  }
+
+  for (const value of items.slice(0, maxCount)) {
+    lines.push("  - " + formatValue(value));
+  }
+
+  if (items.length > maxCount) {
+    lines.push(`  - ... ${items.length - maxCount} more ${label}s omitted from compact request.`);
+  }
+}
+
+function appendLimitedChecklist(lines, values, maxCount, label) {
   const items = Array.isArray(values) ? values : [];
   if (items.length === 0) {
     lines.push("- [ ] (none)");
     return;
   }
 
-  for (const value of items) {
+  for (const value of items.slice(0, maxCount)) {
     lines.push("- [ ] " + formatValue(value));
+  }
+
+  if (items.length > maxCount) {
+    lines.push(`- [ ] ... ${items.length - maxCount} more ${label}s omitted from compact request.`);
   }
 }
 
@@ -726,7 +701,12 @@ function isDiscordWorkflowTask(task) {
 }
 
 function isGameRuntimeRelatedTask(task) {
-  return taskText(task).match(/\b(runtime|game|scene|actor|enemy|player|combat|reward|save|load|boot|outgame|ingame)\b/i) !== null;
+  const text = taskText(task);
+  if (/do not modify game source|no game source files|do not change game source|no game source\/data files/i.test(text)) {
+    return false;
+  }
+
+  return text.match(/\b(runtime|gameplay|scene|actor|enemy|player|combat|reward|save|load|boot|outgame|ingame)\b/i) !== null;
 }
 
 function taskText(task) {

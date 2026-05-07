@@ -43,6 +43,7 @@ This README is the entry point for the document set.
 | `Task_Approval_Safety_Summary.md` | Defines the approval safety summary returned by `/ai task approve` |
 | `Goal_Request_Execution_Readiness_Summary.md` | Defines execution readiness guidance returned by `/ai prepare goal` |
 | `Goal_Result_Intake_Completion_Audit.md` | Defines the read-only `/ai result audit` command for auditing pasted Codex goal result summaries before done or commit decisions |
+| `AIWorkflow_Milestone_1_Output_Consolidation.md` | Defines WF-048 regular-path output consolidation, optional/debug/admin command separation, and compact `/ai prepare goal` behavior |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
@@ -182,21 +183,27 @@ Start with orchestration, then route to Codex or Copilot only when appropriate.
 
 ## 8. Recommended Default Flow
 
-For meaningful implementation work:
+For regular Discord-assisted AIWorkflow task operation after WF-048:
 
 ```text
-1. ChatGPT: Orchestrator intake
-2. ChatGPT: Architecture and reduced scope
-3. Human: Approval
-4. Codex: Read-only repository analysis if needed
-5. ChatGPT: Implementation prompt generation
-6. Copilot: Bounded implementation
-7. Git: Full diff capture
-8. ChatGPT: Diff review
-9. Human: Build and runtime validation
-10. ChatGPT: Dev Log draft
-11. Human: Commit decision
+1. /ai intake
+2. /ai intake-create or /ai task create
+3. /ai task set-active
+4. /ai task approve
+5. /ai prepare goal
+6. Manual Codex execution outside Discord
+7. /ai result audit
+8. /ai task done
+9. Manual commit decision
 ```
+
+Optional/debug/admin commands such as `/ai role status`, `/ai task
+review-intake`, `/ai run workflow-status`, `/ai run active-project`, `/ai run
+project-profile`, and `/ai prepare codex` are not required in the regular path.
+
+For broader architecture or high-risk implementation work, the older Full Path
+still applies conceptually: intake, architecture/reduced scope, approval,
+bounded execution, review, validation, Dev Log, and manual commit decision.
 
 ---
 

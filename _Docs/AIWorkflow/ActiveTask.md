@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260506-163355
-title: WF-047 Goal result intake and completion audit
+task_id: WF-20260507-112255
+title: WF-048 AIWorkflow Milestone 1 output consolidation
 status: done
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
 requested_by: human_director
-requested_at: 2026-05-06
-last_updated: 2026-05-06
+requested_at: 2026-05-07
+last_updated: 2026-05-07
 ```
 
 ---
 
 ## Goal
 
-WF-047 Goal result intake and completion audit
+WF-048 AIWorkflow Milestone 1 output consolidation
 
 ---
 
@@ -36,7 +36,7 @@ WF-047 Goal result intake and completion audit
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: pending
+validation: approved: Human reviewed output consolidation scope.
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-pending
+approved: Human reviewed output consolidation scope.
 ```
 
 ---
@@ -70,8 +70,8 @@ pending
 
 ```text
 status: done
-note: done: "WF-047 validation passed. /ai result audit now performs read-only completion audit for Codex result summaries. Discord validation passed for WF-047 implementation result and GAME-001 missing-validation result. The command produced task summary, result intake summary, claimed files changed, validation evidence, missing evidence, risk notes, completion verdict, commit recommendation, suggested next manual commands, and safety status. WF-047 was classified NEEDS_REVIEW / COMMIT_AFTER_REVIEW, and GAME-001 was classified NEEDS_VALIDATION / NO_COMMIT_NEEDED. The command did not modify Backlog, ActiveTask, task status, approval, source files, or execute Codex/agents/commit/push."
-updated_at: 2026-05-06
+note: done: "WF-048 validation passed. Milestone 1 output consolidation is applied to live Discord output. /ai task set-active, /ai task approve, and /ai prepare goal now return compact regular-flow responses. Detailed roles, gates, validation, path rules, and completion guidance are deferred to /ai role status or generated goal request files. No new Discord commands were added, task state semantics and Backlog/ActiveTask write behavior were not changed, Codex/agents were not executed, and no game source/data files were modified."
+updated_at: 2026-05-07
 source: Discord task status command
 ```
 ---

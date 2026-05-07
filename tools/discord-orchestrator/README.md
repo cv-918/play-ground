@@ -20,6 +20,9 @@ WF-044 adds activation safety guidance to `/ai task set-active` responses.
 WF-045 adds approval safety guidance to `/ai task approve` responses.
 WF-046 adds execution readiness guidance to `/ai prepare goal` responses.
 WF-047 adds read-only Codex goal result intake and completion audit.
+WF-048 consolidates Milestone 1 output so regular workflow responses stay
+compact and detailed routing/checklist output moves to optional debug/admin
+commands or generated request files.
 
 It can read:
 
@@ -134,6 +137,40 @@ Do not commit `_Local/`.
 /ai result audit
 ```
 
+## Regular Workflow Path
+
+Use this path for normal task operation:
+
+```text
+1. /ai intake
+2. /ai intake-create or /ai task create
+3. /ai task set-active
+4. /ai task approve
+5. /ai prepare goal
+6. Run Codex manually outside Discord
+7. /ai result audit
+8. /ai task done
+9. Review and commit manually
+```
+
+Milestone 1 consolidation keeps regular responses short. Detailed role routing,
+path-rule reminders, validation expectations, and completion guidance remain in
+the generated `goal_request_*.md` files.
+
+## Optional / Debug / Admin Commands
+
+These commands are useful for inspection, troubleshooting, or fallback paths,
+but they are not required in the regular flow:
+
+```text
+/ai role status
+/ai task review-intake
+/ai run workflow-status
+/ai run active-project
+/ai run project-profile
+/ai prepare codex
+```
+
 For project profile:
 
 ```text
@@ -191,16 +228,19 @@ _Docs/AIWorkflow/Goal_Result_Intake_Completion_Audit.md
 ```
 
 `/ai task set-active` writes ActiveTask.md and then returns an activation safety
-summary with recommended roles, human gates, required validation, suggested
-execution route, safety note, and suggested next manual commands. It does not
-approve the task, change the Backlog row status, execute Codex CLI, execute
-agents, mark the task done, commit, push, or modify source files.
+summary with the selected task, a short safety note, and suggested next manual
+commands. Full routing detail is available through optional `/ai role status`;
+approval is handled by `/ai task approve`; final execution readiness is checked
+by `/ai prepare goal`. It does not approve the task, change the Backlog row
+status, execute Codex CLI, execute agents, mark the task done, commit, push, or
+modify source files.
 
 `/ai task approve` updates the task status to `ready_for_implementation` and
-then returns an approval safety summary with recommended roles, human gates,
-required validation, suggested execution route, safety note, and suggested next
-manual commands. It does not execute Codex CLI, execute agents, implement
-changes, mark the task done, commit, push, or modify source files.
+then returns a compact approval summary, short safety note, and suggested next
+manual commands. Use `/ai prepare goal` as the final execution readiness check
+and optional `/ai role status` for full routing details. It does not execute
+Codex CLI, execute agents, implement changes, mark the task done, commit, push,
+or modify source files.
 
 For role router recommendation:
 
@@ -318,10 +358,11 @@ Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule
 Reminders. WF-039 also adds a dedicated Path-Scoped Rule Reminders section
 with concrete checklist items selected from the likely task scope.
 
-The Discord response also includes execution readiness, approval status,
-ActiveTask status, included guidance, human gates, validation expectations,
-safety note, and next manual action. This is advisory only; Discord does not
-execute Codex CLI or agents.
+The Discord response is intentionally compact: generated path, task summary,
+mode/context, readiness verdict, next manual action, and a safety note. The
+generated markdown file carries the detailed Contract v2, role-aware,
+path-rule, validation, and completion guidance. This is advisory only; Discord
+does not execute Codex CLI or agents.
 
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
@@ -372,10 +413,10 @@ After starting the bot:
 [ ] /ai task review-intake id:<intake-created task id> works and is read-only.
 [ ] /ai task review-intake id:GAME-001 works as a generic activation review.
 [ ] /ai task set-active updates ActiveTask.md and creates a backup.
-[ ] /ai task set-active response includes roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task set-active response is compact and includes selected task, safety note, and next commands.
 [ ] /ai task set-active does not approve tasks or execute agents/Codex CLI.
 [ ] /ai task approve updates Backlog.md and creates a backup.
-[ ] /ai task approve response includes roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task approve response is compact and includes approval status, safety note, and next commands.
 [ ] /ai task approve does not mark done or execute agents/Codex CLI.
 [ ] /ai task block updates Backlog.md and creates a backup.
 [ ] /ai task defer updates Backlog.md and creates a backup.
@@ -410,9 +451,9 @@ After starting the bot:
 [ ] Generated goal request files are created under _Temp/AIWorkflowTaskRequests/.
 [ ] Generated goal request files start with `/goal` and include all Contract v2 sections.
 [ ] Generated goal request files include mode-aware scope, human decision gates, subagent policy, and completion audit.
-[ ] Generated goal request files include Recommended Roles, Role Rationale, Human Decision Gates, Required Validation, Suggested Execution Route, Verdict Format Reminder, and Path-Scoped Rule Reminders.
+[ ] Generated goal request files include compact role routing, role rationale, human gates, required validation, verdict reminder, and path-scoped reminders.
 [ ] Generated goal request files include concrete path-specific checklist items in the dedicated Path-Scoped Rule Reminders section.
-[ ] /ai prepare goal responses include Execution Readiness, Approval Status, ActiveTask Status, Included Guidance, Human Decision Gates, Required Validation, Safety Note, and Next Manual Action.
+[ ] /ai prepare goal responses are compact and include generated path, task, mode/context, readiness verdict, next manual action, and safety note.
 [ ] /ai prepare goal does not execute Codex CLI or agents and does not modify task state.
 [ ] /ai result audit id:<task_id> result:"..." returns a completion audit.
 [ ] /ai result audit identifies missing validation evidence.

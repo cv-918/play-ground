@@ -272,40 +272,22 @@ export function formatGoalPrepareResult(result) {
   const task = data.task ?? {};
   const readiness = data.readiness ?? {};
   const execution = readiness.execution_readiness ?? {};
-  const approval = readiness.approval_status ?? {};
-  const active = readiness.active_task_status ?? {};
-  const included = readiness.included_guidance ?? {};
   return [
     "**Goal Request Prepared**",
-    "",
-    "**1. Task Summary**",
-    `${task.id ?? "unknown"} [${task.priority ?? "?"}/${task.status ?? "?"}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
+    `Task: ${task.id ?? "unknown"} - ${task.item ?? "unknown"}`,
     `Mode/Context: ${data.mode ?? "unknown"} / ${data.context_level ?? "unknown"}`,
+    `Readiness: ${execution.status ?? "needs_human_review"}`,
     `Path: ${formatInlineCode(data.generated_path || "unknown")}`,
     "",
-    "**2. Execution Readiness**",
-    `${execution.status ?? "needs_human_review"}: ${cleanupBlock(execution.reason || "Review generated request before manual Codex execution.")}`,
+    "**Readiness Note**",
+    cleanupBlock(execution.reason || "Review generated request before manual Codex execution."),
     "",
-    "**3. Approval Status**",
-    `${approval.approved ? "approved" : "not approved"}: ${cleanupBlock(approval.summary || "")}`,
+    "**Next Manual Action**",
+    summarizeList(readiness.next_manual_action, 3),
     "",
-    "**4. ActiveTask Status**",
-    `selected task active: ${active.is_active_task ? "yes" : "no"}; active=${active.active_task_id ?? "unknown"} / ${active.active_task_status ?? "unknown"}`,
-    "",
-    "**5. Included Guidance**",
-    formatIncludedGuidance(included),
-    "",
-    "**6. Human Decision Gates**",
-    summarizeList(readiness.human_decision_gates, 2),
-    "",
-    "**7. Required Validation**",
-    summarizeList(readiness.required_validation, 2),
-    "",
-    "**8. Safety Note**",
-    cleanupBlock(readiness.safety_note || "Manual request only. No Codex CLI, agents, approval, task state, commit, or push was executed."),
-    "",
-    "**9. Next Manual Action**",
-    summarizeList(readiness.next_manual_action, 5),
+    "**Safety**",
+    cleanupBlock(readiness.safety_note || "Generated request only. Discord did not execute Codex CLI, agents, approval, task state changes, commit, or push."),
+    "Detailed role, path-rule, validation, and completion guidance is in the generated markdown file. Use `/ai role status` only when full routing detail is needed.",
   ].join("\n");
 }
 
@@ -640,29 +622,6 @@ function appendPathReminderSummary(lines, reminders) {
   }
 }
 
-function formatIncludedGuidance(included) {
-  const labels = [
-    ["Contract v2", included.contract_v2_included],
-    ["role-aware routing", included.role_aware_routing_included],
-    ["path-scoped reminders", included.path_scoped_reminders_included],
-    ["validation plan", included.validation_plan_included],
-    ["completion audit", included.completion_audit_included],
-  ];
-  return labels.map(([label, value]) => `${label}: ${value ? "yes" : "no"}`).join("; ");
-}
-
-function compactItems(items, maxCount, label) {
-  const values = Array.isArray(items) ? items : [];
-  if (values.length <= maxCount) {
-    return values;
-  }
-
-  return [
-    ...values.slice(0, maxCount),
-    `... ${values.length - maxCount} more ${label} available in the intake service result.`,
-  ];
-}
-
 function summarizeList(items, maxCount) {
   const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -756,31 +715,18 @@ export function formatTaskSetActive(data) {
   const safety = data.activation_safety ?? {};
   const lines = [
     "**Active Task Updated**",
-    "",
-    "**1. Task Summary**",
     `ID: ${task.id ?? "unknown"}`,
     `Title: ${task.item ?? "unknown"}`,
-    `Priority/Status/Kind: ${task.priority ?? "?"} / in_progress / ${task.kind ?? "?"}`,
     `Status: in_progress`,
     "Backlog row status was not changed.",
     "",
-    "**2. Recommended Roles**",
-    summarizeList(safety.recommended_roles, 4),
-    "",
-    "**3. Human Decision Gates**",
-    summarizeList(safety.human_decision_gates, 2),
-    "",
-    "**4. Required Validation**",
-    summarizeList(safety.required_validation, 2),
-    "",
-    "**5. Suggested Execution Route**",
-    summarizeList(safety.suggested_execution_route, 5),
-    "",
-    "**6. Safety Note**",
+    "**Safety Note**",
     cleanupBlock(safety.safety_note || "Task selected only. No approval, Codex, agents, done status, commit, or push was performed."),
     "",
-    "**7. Next Recommended Commands**",
-    summarizeList(safety.next_recommended_commands, 5),
+    "**Next Recommended Commands**",
+    summarizeList(safety.next_recommended_commands, 4),
+    "",
+    "For details: `/ai role status` shows full routing; `/ai task approve` records the approval gate; `/ai prepare goal` performs the final execution readiness check.",
   ];
 
   return lines.join("\n");
@@ -802,33 +748,21 @@ export function formatTaskStatusUpdated(data) {
 
   return [
     "**Task Status Updated**",
-    "",
-    "**1. Task Summary**",
     `ID: ${task.id ?? "unknown"}`,
     `Title: ${task.item ?? "unknown"}`,
-    `Priority/Status/Kind: ${task.priority ?? "?"} / ${data.status ?? task.status ?? "?"} / ${task.kind ?? "?"}`,
+    `Status: ${data.status ?? task.status ?? "unknown"}`,
     `ActiveTask.md updated: ${data.active_task_updated ? "yes" : "no"}`,
     "",
-    "**2. Approval Summary**",
+    "**Approval Summary**",
     cleanupBlock(approval.approval_summary || data.note || "approved"),
     "",
-    "**3. Recommended Roles**",
-    summarizeList(approval.recommended_roles, 4),
-    "",
-    "**4. Human Decision Gates**",
-    summarizeList(approval.human_decision_gates, 2),
-    "",
-    "**5. Required Validation**",
-    summarizeList(approval.required_validation, 2),
-    "",
-    "**6. Suggested Execution Route**",
-    summarizeList(approval.suggested_execution_route, 5),
-    "",
-    "**7. Safety Note**",
+    "**Safety Note**",
     cleanupBlock(approval.safety_note || "Approval only. No Codex, agents, done status, commit, or push was executed."),
     "",
-    "**8. Next Recommended Commands**",
-    summarizeList(approval.next_recommended_commands, 5),
+    "**Next Recommended Commands**",
+    summarizeList(approval.next_recommended_commands, 4),
+    "",
+    "Use `/ai prepare goal` as the final execution readiness check. Use `/ai role status` only when full routing detail is needed.",
   ].join("\n");
 }
 

@@ -103,18 +103,15 @@ Default note:
 approved from Discord
 ```
 
-WF-045 response contract:
+WF-048 consolidated response contract:
 
 ```text
 1. Task Status Updated
-2. Task Summary
+2. Task ID / title / status
 3. Approval Summary
-4. Recommended Roles
-5. Human Decision Gates
-6. Required Validation
-7. Suggested Execution Route
-8. Safety Note
-9. Next Recommended Commands
+4. Short Safety Note
+5. Next Recommended Commands
+6. Pointer to /ai prepare goal and optional /ai role status
 ```
 
 The next commands are suggestions only. The bot does not execute them:
@@ -130,6 +127,11 @@ The next commands are suggestions only. The bot does not execute them:
 Approval records Human Director scope acceptance only. It does not execute
 Codex CLI, execute agents, implement changes, mark the task done, commit, push,
 or modify game source code.
+
+Detailed roles, gates, validation expectations, and execution route are no
+longer repeated in the regular approval response. `/ai prepare goal` is the
+final execution readiness check before manual Codex use. Optional
+`/ai role status` remains available for full routing details.
 
 ### `/ai task block`
 
@@ -291,7 +293,7 @@ git diff --stat
 [x] Slash command registration succeeds.
 [x] Bot restarts successfully.
 [x] /ai task approve updates Backlog status to ready_for_implementation.
-[x] /ai task approve response includes approval safety guidance.
+[x] /ai task approve response includes compact approval safety guidance.
 [x] /ai task block updates Backlog status to blocked.
 [x] /ai task defer updates Backlog status to deferred.
 [x] /ai task done updates Backlog status to done.

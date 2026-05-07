@@ -178,17 +178,14 @@ _Temp/AIWorkflowDiscordBot/backups/ActiveTask_YYYYMMDD_HHMMSS.md
 
 Release B does not automatically update the Backlog row status.
 
-WF-044 response contract:
+WF-048 consolidated response contract:
 
 ```text
 1. Active Task Updated
-2. Task Summary
-3. Recommended Roles
-4. Human Decision Gates
-5. Required Validation
-6. Suggested Execution Route
-7. Safety Note
-8. Next Recommended Commands
+2. Task ID / title / status
+3. Short safety note
+4. Next recommended commands
+5. Pointer to optional routing and readiness checks
 ```
 
 The next commands are suggestions only. The bot does not execute them:
@@ -200,6 +197,11 @@ The next commands are suggestions only. The bot does not execute them:
 /ai status
 /ai active
 ```
+
+Detailed roles, gates, validation expectations, and execution route are no
+longer repeated in the regular `set-active` response. Use optional
+`/ai role status` for full routing detail, `/ai task approve` for the approval
+gate, and `/ai prepare goal` for the final execution readiness check.
 
 `/ai task set-active` does not approve the task, execute Codex CLI, execute
 agents, mark the task done, commit, push, or modify game source code.
@@ -417,7 +419,7 @@ git diff --stat
 [ ] /ai task create creates a backup before writing.
 [ ] /ai task set-active updates ActiveTask.md.
 [ ] /ai task set-active creates a backup before writing.
-[ ] /ai task set-active response includes recommended roles, gates, validation, route, safety note, and next commands.
+[ ] /ai task set-active response is compact and includes selected task, safety note, next commands, and pointers to detailed routing/readiness commands.
 [ ] /ai task set-active does not approve tasks, execute Codex, execute agents, mark done, commit, push, or modify game source.
 [ ] /ai task approve updates Backlog status to ready_for_implementation.
 [ ] /ai task block updates Backlog status to blocked.
