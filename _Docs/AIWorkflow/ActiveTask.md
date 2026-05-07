@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260507-112255
-title: WF-048 AIWorkflow Milestone 1 output consolidation
+task_id: WF-20260507-144049
+title: WF-049 AIWorkflow Korean flow documentation
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-07
 
 ## Goal
 
-WF-048 AIWorkflow Milestone 1 output consolidation
+WF-049 AIWorkflow Korean flow documentation
 
 ---
 
@@ -36,7 +36,7 @@ WF-048 AIWorkflow Milestone 1 output consolidation
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: approved: Human reviewed output consolidation scope.
+validation: pending
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: Human reviewed output consolidation scope.
+pending
 ```
 
 ---
@@ -70,7 +70,7 @@ approved: Human reviewed output consolidation scope.
 
 ```text
 status: done
-note: done: "WF-048 validation passed. Milestone 1 output consolidation is applied to live Discord output. /ai task set-active, /ai task approve, and /ai prepare goal now return compact regular-flow responses. Detailed roles, gates, validation, path rules, and completion guidance are deferred to /ai role status or generated goal request files. No new Discord commands were added, task state semantics and Backlog/ActiveTask write behavior were not changed, Codex/agents were not executed, and no game source/data files were modified."
+note: done: "WF-049 validation passed. Created Korean AIWorkflow overview, flowchart, and glossary/guide documents. README links were added near the document map entry points. Documents explain the Human Director flow, regular path, optional/debug path, read-only vs write commands, human decision gates, manual Codex execution, result audit, done, and commit decision flow. No Discord command behavior, workflow tool behavior, game source/data files, or private/local tracked files were modified."
 updated_at: 2026-05-07
 source: Discord task status command
 ```
