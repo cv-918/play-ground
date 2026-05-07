@@ -247,3 +247,73 @@ _worktrees/
 - 위험도 L5 이상
 - 외부 툴 조작 필요
 ```
+
+
+## Codex Web v4 정합성 보정
+
+### 1차 실행기
+
+초기 자동 실행은 다음으로 제한한다.
+
+```text
+- Codex CLI Execution Adapter
+- Local CLI Execution Adapter
+```
+
+Codex App, Copilot Agent, OpenClaw, Hermes는 자동 제어 경로와 결과 수집 방식이 명확해진 뒤 2차 후보로 올린다.
+
+### Phase 2 구현 순서
+
+```text
+1. TaskRunState / SessionState / ProgressEventLog 저장 포맷
+2. Task Workspace Manager
+3. Session Supervisor
+4. Evidence Collector
+5. Codex CLI Execution Adapter
+6. Local CLI Execution Adapter
+7. Progress Collector / Heartbeat Checker
+8. File Change Watcher / Diff Snapshotter
+9. Runtime Control Adapter
+10. pause / stop / retry / replan controls
+```
+
+### Manual Codex 실행 예외 정책
+
+Manual Codex 실행은 최종형의 정상 경로가 아니다. Manual Escalation으로만 허용한다.
+
+허용 조건:
+
+```text
+- 자동 실행 adapter 장애
+- 인증/session 만료
+- PC Runner 장애
+- worktree 충돌
+- 실행기 로그 수집 불가
+- 사용자가 명시적으로 수동 전환을 승인한 고위험 작업
+```
+
+기록 항목:
+
+```text
+- task_id
+- escalation reason
+- approved_by
+- manual action summary
+- result intake method
+- final state
+```
+
+### 실행기 확장 진입 조건
+
+Codex App, Copilot Agent, OpenClaw, Hermes는 다음 조건을 만족해야 2차 실행 후보가 된다.
+
+```text
+- 실행 시작/종료 감지 가능
+- session_id 기록 가능
+- 로그 수집 가능
+- changed files / diff 수집 가능
+- 실패/중단/timeout 구분 가능
+- 사용자 runtime control 반영 가능
+- VerificationReport evidence 제공 가능
+- WF 정책 우회 없음
+```

@@ -77,6 +77,45 @@ Execution Run State:
 Codex App, Copilot Agent, OpenClaw, Hermes는 최종 구조에 adapter slot을 남기되, 1차 구현의 필수 조건으로 삼지 않는다.
 
 
+## Codex Web v4 정합성 보정
+
+Codex Web v3 정합성 검토 결과를 반영하여 다음을 최종 기준으로 고정한다.
+
+```text
+- 현재 수동 prepare goal 흐름은 최종형이 아니다.
+- prepare goal은 폐기하지 않고 내부 ExecutionRequest 생성기로 흡수한다.
+- 기존 Task State와 새 Runtime State는 병행한다.
+- Codex CLI + Local CLI를 1차 실행기로 고정한다.
+- Phase 2는 state/workspace/session/evidence를 실행 adapter보다 먼저 구현한다.
+- Evidence Collector와 Verification Gate는 분리한다.
+- L2는 무조건 자동 승인이 아니라 조건부 자동 승인 후보이다.
+```
+
+### 상태 모델 분리
+
+```text
+Task Lifecycle State:
+- queued
+- planning
+- approval_waiting
+- active
+- completed
+- blocked
+- cancelled
+
+Execution Run State:
+- starting
+- running
+- idle
+- stalled
+- blocked
+- verifying
+- failed
+- finalized
+```
+
+두 상태는 `task_id`로 연결한다.
+
 ## 최종 구조
 
 ```text

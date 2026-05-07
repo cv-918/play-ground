@@ -4,7 +4,7 @@
 
 WF 하네스 완성형을 구현하기 위한 단계별 구현 계획을 정의한다.
 
-Codex Web 검토 결과를 반영하여, 전체 phase 수는 3단계로 유지하되 각 phase 내부 작업 순서를 더 엄격하게 정의한다.
+Codex Web v3 정합성 검토 결과를 반영하여, 전체 phase 수는 3단계로 유지하되 각 phase 내부 작업 순서를 더 엄격하게 정의한다.
 
 ```text
 Phase 1. Discord-controlled Foundation
@@ -30,29 +30,6 @@ Discord-only 입력, 승인, 상태 확인 기반을 완성한다.
 7. ActiveTask / Backlog / ProjectStatus 최소 갱신
 ```
 
-### 구현 항목
-
-```text
-- GoalIntent schema
-- RuntimeControlIntent schema 초안
-- RawRequest storage
-- Task Queue read model
-- Discord Task Card
-- Approval Card
-- /tasks
-- /task WF-XXX
-- goal_request generation
-- LLM-based Natural Language Interpreter
-```
-
-### 완료 기준
-
-```text
-사용자가 Discord에서 자연어로 작업을 넣고,
-하네스가 goal_request와 승인 카드를 만들며,
-작업 상태를 Discord에서 확인할 수 있다.
-```
-
 ### 권장 작업 단위
 
 ```text
@@ -72,10 +49,6 @@ WF-108 Integrate minimal state updates(최소 상태 갱신 연동)
 
 PC Runner가 실행기를 선택하고 자동 실행하며 진행 상황을 감시한다.
 
-### Codex Web 검토 반영 핵심
-
-Phase 2는 가장 위험한 구간이다. 실행 어댑터보다 상태, workspace, session, evidence 수집을 먼저 구현한다.
-
 ### 내부 구현 순서
 
 ```text
@@ -89,34 +62,6 @@ Phase 2는 가장 위험한 구간이다. 실행 어댑터보다 상태, workspa
 8. File Change Watcher / Diff Snapshotter
 9. Runtime Control Adapter
 10. pause / stop / retry / replan controls
-```
-
-### 구현 항목
-
-```text
-- TaskRunState
-- SessionState
-- ProgressEventLog
-- RuntimeControlHistory
-- Task Workspace Manager
-- Session Supervisor
-- Evidence Collector
-- Codex CLI Execution Adapter
-- Local CLI Execution Adapter
-- Progress Collector
-- Log Tailer
-- Heartbeat Checker
-- File Change Watcher
-- Diff Snapshotter
-- Runtime Control Adapter
-```
-
-### 완료 기준
-
-```text
-사용자는 Discord에서 작업을 지시하고,
-PC Runner가 Codex CLI 또는 Local CLI를 실행하며,
-사용자는 /tasks와 /task로 진행 상황을 확인하고 제어할 수 있다.
 ```
 
 ### 권장 작업 단위
@@ -140,18 +85,6 @@ WF-210 Implement pause stop retry replan controls(보류/중단/재시도/재계
 
 작업 완료 후 결과 수집, 검증, 승인, 상태 반영까지 자동화한다.
 
-### Codex Web 검토 반영 핵심
-
-Result Collector와 Verification Gate를 분리한다.
-
-```text
-Result Collector / Evidence Collector:
-- 사실 수집
-
-Verification Gate:
-- 수집된 증거 기반 판정
-```
-
 ### 내부 구현 순서
 
 ```text
@@ -165,29 +98,6 @@ Verification Gate:
 8. FinalizationLog
 9. Auto Approval Policy
 10. Follow-up Task Generator
-```
-
-### 구현 항목
-
-```text
-- Result Collector
-- Diff Analyzer
-- Build/Test Runner
-- VerificationReport
-- CompletionReport
-- Completion Card
-- Auto Approval Policy
-- ApprovalHistory
-- FinalizationLog
-- Follow-up Task Generator
-```
-
-### 완료 기준
-
-```text
-작업이 끝나면 하네스가 결과를 수집·검증하고,
-Discord 완료 카드로 사용자에게 보고하며,
-승인/수정/반려/후속작업 선택 후 상태 파일을 자동 갱신한다.
 ```
 
 ### 권장 작업 단위
@@ -206,14 +116,12 @@ WF-309 Implement Follow-up Task Generator(Follow-up Task Generator 구현)
 
 ## 1차 실행기 범위
 
-초기 자동 실행은 다음으로 제한한다.
-
 ```text
 - Codex CLI
 - Local CLI
 ```
 
-다음은 후순위다.
+후순위:
 
 ```text
 - Codex App
@@ -225,35 +133,39 @@ WF-309 Implement Follow-up Task Generator(Follow-up Task Generator 구현)
 
 ## 정책 전환 원칙
 
-현재 금지 정책을 전면 해제하지 않는다.
-
 ```text
 - default deny
 - allowlist 기반 허용
 - worktree 격리 필수
-- L0~L2부터 자동 실행/자동 승인
+- L0~L2는 조건 충족 시 자동 승인 후보
 - L3는 명시 승인 후 제한 허용
 - L4 이상은 인간 승인 필수
 - commit/push는 별도 승인 없이는 자동 금지
 ```
 
-## 구현 순서 원칙
-
-1. 문서와 상태 구조를 먼저 고정한다.
-2. Discord UX를 먼저 만든다.
-3. 실행 전 상태, workspace, session, evidence 수집을 먼저 만든다.
-4. 자동 실행은 Codex CLI와 Local CLI부터 시작한다.
-5. 수집과 판정을 분리한다.
-6. 자동 승인은 문서/상태/data/저위험 코드 순으로 확장한다.
-7. Manual Escalation은 항상 남겨둔다.
-8. 각 phase는 자체적으로 사용 가능한 상태여야 한다.
-
-## Codex Web 재검토 시점
+## 권장 첫 구현 작업
 
 ```text
-- Phase 1 완료 후
-- Phase 2 시작 전
-- Phase 2 완료 후
-- Phase 3 시작 전
-- 최종 완성 판정 전
+WF-201 Define execution state model(실행 상태 모델 정의)
+```
+
+이유:
+
+```text
+- Phase 2의 기준점이다.
+- 기존 Task State와 새 Runtime State의 충돌을 막는다.
+- Workspace Manager, Session Supervisor, Evidence Collector, Execution Adapter가 모두 이 모델에 의존한다.
+- 실행기를 먼저 붙이면 추적, 중단, 검증, 복구가 어려워진다.
+```
+
+WF-201에서 해야 할 일:
+
+```text
+- TaskRunState 정의
+- SessionState 정의
+- ProgressEventLog 정의
+- RuntimeControlHistory 정의
+- 기존 Task State와의 task_id 매핑 규칙 정의
+- /tasks, /task가 읽을 상태 소스 정의
+- 저장 파일 위치와 포맷 정의
 ```

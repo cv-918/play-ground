@@ -212,3 +212,49 @@ Git/WorktreeState
 5. 실패한 작업도 완료 알림처럼 보고되어야 한다.
 6. 사용자 승인/수정/반려 결정은 모두 감사 로그에 남긴다.
 7. 완료 후 상태 파일 갱신은 하네스가 수행한다.
+
+
+## Phase 2와 Phase 3의 검증 경계
+
+Phase 2는 검증 판정 자동화를 완성하는 단계가 아니다. Phase 2의 책임은 증거를 안정적으로 수집하는 것이다.
+
+Phase 2 허용 범위:
+
+```text
+- exit code 수집
+- stdout/stderr 저장
+- changed files 수집
+- git diff snapshot 저장
+- build command 실행 결과 수집
+- 단순 success/failure 표시
+```
+
+Phase 2에서 하지 않는 것:
+
+```text
+- architecture gate 최종 판정 자동화
+- no-ad-hoc-logic gate 최종 판정 자동화
+- 자동 완료 정책 확정
+- L3 code 자동 승인
+```
+
+Phase 3 책임:
+
+```text
+- VerificationReport 생성
+- CompletionReport 생성
+- gate pass/warn/fail 판정
+- completion readiness 판정
+- auto approval policy 적용
+- finalization log 기록
+```
+
+정리하면 다음과 같다.
+
+```text
+Phase 2:
+증거를 모은다.
+
+Phase 3:
+증거를 판정하고 완료 처리를 한다.
+```

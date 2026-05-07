@@ -9,7 +9,7 @@
 - 사용자는 Discord에서 지시, 감시, 관리, 승인만 한다.
 - PC Runner가 작업 접수, 자연어 해석, 계획, 실행기 선택, 자동 실행, 진행 감시, 검증, 완료 보고, 상태 반영을 처리한다.
 - 최종 완성 단계에서는 사용자가 Codex 프롬프트를 직접 복사하거나 붙여넣지 않는다.
-- 현재 시점의 다음 행동은 Codex Web에게 최종 설계도를 검토시키는 것이다.
+- 현재 시점의 다음 행동은 v4 문서 정합성을 확정한 뒤, WF-201 Define execution state model(실행 상태 모델 정의)부터 구현을 시작하는 것이다.
 
 ---
 
@@ -542,4 +542,38 @@ WF 하네스 완성까지의 핵심 기준은 하나다.
 사용자는 Discord에서 목표와 판단만 제공한다.
 하네스는 작업 운영, 실행, 감시, 검증, 기록을 담당한다.
 위험한 결정은 사용자에게 올라오고, 반복적인 운영은 자동화된다.
+```
+
+
+## Codex Web v3 정합성 검토 반영 후 사용자 결정
+
+다음 결정을 기준값으로 채택한다.
+
+```text
+1. 기존 Task State는 유지하고 Runtime State를 별도 추가한다.
+2. Runtime State는 task_id로 기존 Task State와 매핑한다.
+3. 1차 실행기는 Codex CLI + Local CLI로 고정한다.
+4. Phase 2는 TaskRunState / SessionState / ProgressEventLog 정의부터 시작한다.
+5. 실행 adapter는 Workspace Manager, Session Supervisor, Evidence Collector 이후에 구현한다.
+6. L2는 조건부 자동 승인 후보이지 무조건 자동 승인이 아니다.
+7. Manual Codex 실행은 정상 경로가 아니라 Manual Escalation으로만 허용한다.
+8. Codex App/Copilot/OpenClaw/Hermes는 2차 실행기 확장 조건을 만족한 뒤 allowlist에 올린다.
+```
+
+## WF-201 시작 기준
+
+다음 구현 작업은 아래로 고정한다.
+
+```text
+WF-201 Define execution state model(실행 상태 모델 정의)
+```
+
+사용자가 확인해야 할 것:
+
+```text
+- TaskRunState / SessionState / ProgressEventLog / RuntimeControlHistory의 책임이 분리되어 있는가
+- 기존 Task State를 깨지 않는가
+- task_id 매핑이 명확한가
+- /tasks와 /task가 어떤 상태를 읽는지 명확한가
+- 이후 Workspace Manager, Session Supervisor, Evidence Collector로 이어질 수 있는가
 ```

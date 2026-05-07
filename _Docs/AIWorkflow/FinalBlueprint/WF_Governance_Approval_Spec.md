@@ -206,3 +206,51 @@ Clarification Card 예시:
 - verification result
 - final user decision
 ```
+
+
+## L2 조건부 자동 승인 세부 조건
+
+L2는 자동 승인 가능 후보이지 무조건 자동 승인이 아니다.
+
+L2 자동 승인은 아래 조건을 모두 만족해야 한다.
+
+```text
+- 작업 유형이 data/config low-risk다.
+- 변경 파일 수가 정책 한도 이내다.
+- 변경 라인 수가 정책 한도 이내다.
+- 기존 key 삭제가 없다.
+- schema 변경이 없다.
+- validator 또는 smoke check가 통과했다.
+- diff gate가 통과했다.
+- core/runtime 경로를 건드리지 않았다.
+- ApprovalPolicy에서 허용된 경로 안의 파일만 변경했다.
+```
+
+권장 초기 임계값:
+
+```text
+max_changed_files: 3
+max_changed_lines: 120
+schema_change: false
+delete_existing_key: false
+core_path_changed: false
+build_required: false 또는 build_success
+```
+
+L2라도 아래 조건 중 하나라도 해당하면 인간 승인을 요구한다.
+
+```text
+- save/profile 영향 가능성
+- runtime spawn/scene lifecycle 영향 가능성
+- public interface 변경
+- 기존 데이터 삭제
+- validator 부재
+- diff 범위 초과
+```
+
+표현 원칙:
+
+```text
+"L0~L2 자동 승인"이라고 쓰지 않는다.
+"L0~L2는 정책 조건을 만족할 때 자동 승인 후보가 될 수 있다"라고 쓴다.
+```
