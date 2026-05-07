@@ -78,3 +78,33 @@ strict private/local tracked-path regex check: no matches
 - Discord UI metadata visibility must be confirmed in the private Discord
   server after command registration.
 - Discord may cache slash command metadata briefly after registration.
+
+## Minor Follow-up: Korean Intake Keywords
+
+After WF-051, Korean `/ai status` wording and `/ai intake` keyword coverage
+were polished without creating a new workflow task. The intake path remains a
+deterministic local keyword/rule classifier. No LLM/API calls, OpenAI calls,
+fetch-based model calls, dependencies, command schema changes, or task-state
+semantic changes were added.
+
+Updated keyword coverage includes Korean invalid-data/default recovery terms,
+goal prompt validation condition terms, and playtest/restart/collection terms.
+Ambiguous intake output still requires Human Director review before Backlog task
+creation or approval.
+
+Validation:
+
+```text
+node --check tools/discord-orchestrator/src/services/taskIntakeService.js: passed
+node --check tools/discord-orchestrator/src/services/responseFormatter.js: passed
+node --check tools/discord-orchestrator/src/services/koreanOutput.js: passed
+direct intake service smoke checks for four Korean examples: passed
+tools/discord-orchestrator/restart_bot.bat: first retry failed at PID 49460, elevated retry passed
+tools/discord-orchestrator/status_bot.bat: passed; bot state reported running at PID 46436
+git diff --check: passed with CRLF conversion warnings only
+git status --short PlayGround/Project PlayGround/Data: no changes
+git ls-files findstr check: returned `_Localization` documentation filename false positives
+strict private/local tracked-path regex check: no matches
+OpenAI/API/LLM pattern check in taskIntakeService.js and package.json: no matches
+package.json diff: no changes
+```

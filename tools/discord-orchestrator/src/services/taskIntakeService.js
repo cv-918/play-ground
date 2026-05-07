@@ -6,8 +6,9 @@ const TERMS = {
   wf: [
     "discord", "bot", "codex", "goal prompt", "role router", "automation",
     "script", "workflow", "backlog", "activetask", "orchestrator",
+    "goal", "prompt", "validation condition",
     "디스코드", "봇", "코덱스", "목표 프롬프트", "역할 라우터", "자동화",
-    "스크립트", "워크플로우", "오케스트레이터",
+    "스크립트", "워크플로우", "오케스트레이터", "검증 조건", "프롬프트",
   ],
   unity: [
     "unity", "steam", "google play", "build profile", "validation profile", "porting",
@@ -19,22 +20,27 @@ const TERMS = {
   ],
   val: [
     "validation", "smoke test", "qa", "runtime test", "semantic check", "regression check",
+    "playtest", "play test", "manual test",
     "검증", "스모크", "테스트", "런타임 테스트", "의미 검사", "회귀",
+    "플레이테스트", "수동 테스트", "재시작 테스트",
   ],
   game: [
     "gameplay", "runtime behavior", "combat", "stage", "skill", "enemy", "player",
     "scene", "dialogue", "reward", "save", "ui", "userdata",
     "게임플레이", "런타임", "전투", "스테이지", "스킬", "적", "플레이어",
-    "씬", "장면", "대화", "보상", "저장", "세이브", "유저데이터", "user data",
+    "씬", "장면", "대화", "보상", "보상 수집", "수집", "재시작",
+    "저장", "세이브", "유저데이터", "user data",
   ],
   data: [
     "json", "schema", "data integrity", "data", "userdata", "id/reference", "enum",
-    "데이터", "스키마", "무결성", "기본값", "참조", "열거형", "유저데이터",
+    "invalid data", "bad data", "fallback", "default value",
+    "데이터", "스키마", "무결성", "기본값", "기본 값", "참조", "열거형",
+    "유저데이터", "이상", "비정상", "잘못된 데이터", "복구",
   ],
   refactor: ["refactor", "structure cleanup", "architecture cleanup", "리팩터", "리팩토링", "구조 정리"],
   maintenance: ["cleanup", "warning", "line ending", "dependency", "upkeep", "maintenance", "정리", "경고", "줄바꿈", "의존성", "유지보수"],
   prototype: ["prototype", "experiment", "spike", "proof of concept", "프로토타입", "실험"],
-  implementation: ["implement", "feature", "behavior change", "fix", "recover", "fallback", "default", "구현", "기능", "수정", "복구", "기본값"],
+  implementation: ["implement", "feature", "behavior change", "fix", "recover", "fallback", "default", "구현", "기능", "수정", "복구", "기본값", "되게"],
   critical: ["critical", "blocker", "blocking", "corrupt", "save data", "data corruption", "치명", "블로커", "손상"],
   highRisk: ["schema", "save", "runtime", "external tool", "computer-use", "destructive", "migration", "userdata", "스키마", "저장", "세이브", "런타임", "마이그레이션", "유저데이터"],
 };

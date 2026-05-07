@@ -105,6 +105,11 @@ preserving mode/context, generated path, Codex, and `/ai role status`.
 - 커밋 권고
 - 안전 상태
 
+`/ai intake` is deterministic and local. It uses fixed keyword/rule matching,
+including Korean keywords, and does not call LLM APIs, OpenAI APIs, Codex,
+fetch-based model calls, or external model services. Ambiguous intake output
+remains subject to Human Director review before task creation or approval.
+
 ---
 
 ## Non-Goals

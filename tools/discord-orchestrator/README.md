@@ -274,6 +274,12 @@ suggested title, category, kind, priority/risk, workflow path, recommended
 roles, human gates, validation, execution route, next manual action, and a Task
 Draft section for manual review.
 
+`/ai intake` is a deterministic local keyword/rule classifier. It does not call
+LLM APIs, OpenAI APIs, Codex, fetch-based model calls, or external model
+services. Korean keywords are supported for common workflow, Unity, validation,
+gameplay, and data requests. Ambiguous intake results still require Human
+Director review before task creation or approval.
+
 It is read-only. It does not create Backlog tasks, update ActiveTask.md, approve
 tasks, execute agents, execute Codex CLI, commit, push, or modify source files.
 
