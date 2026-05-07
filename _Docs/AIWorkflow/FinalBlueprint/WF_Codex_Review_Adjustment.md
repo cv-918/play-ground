@@ -87,7 +87,7 @@ Codex App / Copilot / OpenClaw / Hermes는 adapter slot만 남기고 후순위�
 - default deny 유지
 - allowlist 기반 허용
 - worktree 격리 필수
-- L0~L2는 정책 조건을 만족할 때 자동 실행/자동 승인 후보로만 허용한다.
+- L0~L2는 정책 조건을 만족할 때 자동 실행/자동 승인 후보가 될 수 있다.
 - L3는 명시 승인 후 허용
 - L4 이상은 인간 승인 필수
 - commit은 최종 단계에서도 별도 승인 필요
@@ -145,7 +145,7 @@ L3 localized code 자동 승인은 충분한 성공 사례, 안정적인 build/d
 - 1차 실행기는 Codex CLI + Local CLI로 고정한다.
 
 자동 승인:
-- L0~L2는 정책 조건을 만족할 때만 자동 승인 후보한다.
+- L0~L2는 정책 조건을 만족할 때만 자동 승인 후보가 될 수 있다.
 - L3는 초기에는 인간 승인 또는 조건부 승인으로 둔다.
 
 검증 게이트:
