@@ -13,7 +13,7 @@ There should be only one active task represented here at a time.
 ```yaml
 task_id: WF-20260508-101245
 title: WF-203 Implement Session Supervisor
-status: ready_for_implementation
+status: done
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
@@ -69,12 +69,11 @@ pending
 ## Latest Status Note
 
 ```text
-status: ready_for_implementation
-note: approved: "WF-203 Session Supervisor 구현 범위를 승인합니다. task_id/workspace_id에 연결되는 SessionState 생성/조회/갱신과 heartbeat 갱신, idle/stalled 판단용 timestamp 기록까지만 구현합니다. Codex CLI 실행, Local CLI 실행, process spawn, build/test runner, Evidence Collector, Verification Gate, completion card, 자동 승인 정책은 금지합니다. 기존 Task State와 Runtime State 분리 원칙을 유지합니다."
+status: done
+note: done: "WF-203 validation passed. Session Supervisor was implemented on top of WF-202 task workspace. It supports SessionState status/create/read/update/heartbeat APIs linked to task_id and workspace_id. It validates task_id, workspace_id, session_id, duplicate sessions, invalid status, and missing workspace. It records started_at, last_heartbeat_at, last_activity, executor, workspace_path, active_session_id, session_ids, runtime status, and bounded progress events. Heartbeat updates were validated. WF-204 Evidence Collector handoff through session_id was documented. No Codex CLI execution, Local CLI execution, process spawn, build/test runner, Evidence Collector, Verification Gate, completion card, automatic approval policy, task migration, or game source/data change was implemented."
 updated_at: 2026-05-08
 source: Discord task status command
 ```
-
 ---
 
 ## Next Recommended Task
