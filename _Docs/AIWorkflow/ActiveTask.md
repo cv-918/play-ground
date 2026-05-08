@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-103845
-title: WF-204 Implement Evidence Collector
+task_id: WF-20260508-142029
+title: WF-205 Implement Codex CLI Execution Adapter
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-08
 
 ## Goal
 
-WF-204 Implement Evidence Collector
+WF-205 Implement Codex CLI Execution Adapter
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-204 validation passed. Evidence Collector was implemented as a session_id-linked evidence metadata storage layer. It supports EvidenceRecord status/create/read/update APIs, stores executor, command, working_directory, started_at, ended_at, exit_code, stdout/stderr log paths, changed_files references, and diff snapshot references. Evidence records are stored under _Temp/AIWorkflowRuntime/tasks/<task_id>/evidence/manifest.json and evidence/records/<evidence_id>.json. Evidence is linked to SessionState and TaskRunState by session_id. Invalid session ID, task/workspace/session mismatch, duplicate evidence, and storage errors are guarded. WF-205 Codex CLI Execution Adapter handoff was documented. No Codex CLI execution, Local CLI execution, process spawn, build/test runner, Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, task migration, or game source/data change was implemented."
+note: done: "WF-205 validation passed. Codex CLI Execution Adapter was implemented as a guarded execution adapter connected to WF-202 Task Workspace Manager, WF-203 Session Supervisor, and WF-204 Evidence Collector. It supports status, dry-run, and guarded run APIs. Actual execution requires explicit run --execute and local config enabled:true. The adapter checks approved Backlog task and workspace availability, records guard-rejected executions as SessionState and EvidenceRecord, stores stdout/stderr log references, exit_code, command/cwd/time metadata, changed_files, and diff snapshot references through Evidence Collector. Validation passed for PowerShell syntax, workspace create, status, dry-run, missing --execute rejection, disabled config rejection, guard-rejection session read, guard-rejection evidence read, git diff --check, forbidden path checks, and private/local tracked-file checks. No actual Codex CLI execution, Local CLI Execution Adapter, build/test runner, Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, task migration, commit/push, or game source/data change was implemented. The result audit displayed codex_cli_adapter.example.json as .js due to a result-audit filename parsing issue, but the actual file is codex_cli_adapter.example.json and no .js file exists."
 updated_at: 2026-05-08
 source: Discord task status command
 ```

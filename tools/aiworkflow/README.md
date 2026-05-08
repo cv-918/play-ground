@@ -12,6 +12,9 @@ They do not push.
 They do not run Copilot.
 They do not decide validation pass/fail.
 
+`codex_cli_adapter.bat` is the exception that can run Codex CLI when local
+config explicitly enables it and the operator passes `run --execute`.
+
 ---
 
 ## Scripts
@@ -28,6 +31,7 @@ active_project_status.bat
 task_workspace_manager.bat
 session_supervisor.bat
 evidence_collector.bat
+codex_cli_adapter.bat
 ```
 
 ---
@@ -264,6 +268,37 @@ tasks, mark tasks done, commit, or push.
 
 ---
 
+## codex_cli_adapter.bat
+
+Runs a configured Codex CLI command as a guarded runtime session.
+
+Tracked example config:
+
+```text
+tools\aiworkflow\codex_cli_adapter.example.json
+```
+
+Recommended local config:
+
+```text
+_Local\AIWorkflow\codex_cli_adapter.local.json
+```
+
+Commands:
+
+```bat
+tools\aiworkflow\codex_cli_adapter.bat status task_id [--config path] [--prompt-file path] [--json]
+tools\aiworkflow\codex_cli_adapter.bat dry-run task_id [--config path] [--prompt-file path] [--json]
+tools\aiworkflow\codex_cli_adapter.bat run task_id --execute [--config path] [--prompt-file path] [--session-id id] [--evidence-id id] [--json]
+```
+
+Real execution requires both `run --execute` and config `enabled: true`. The
+adapter records SessionState and EvidenceRecord runtime artifacts, but it does
+not verify results, decide pass/fail, approve tasks, mark tasks done, commit,
+or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -281,6 +316,7 @@ tools\aiworkflow\task_workspace_manager.bat status
 tools\aiworkflow\task_workspace_manager.bat status --json
 tools\aiworkflow\session_supervisor.bat status WF-20260508-101245 --json
 tools\aiworkflow\evidence_collector.bat status WF-20260508-103845 session-evidence-validation-001 --json
+tools\aiworkflow\codex_cli_adapter.bat dry-run WF-20260508-142029 --config tools\aiworkflow\codex_cli_adapter.example.json --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

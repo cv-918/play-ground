@@ -53,6 +53,7 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Task_Workspace_Manager.md` | Defines WF-202 Task Workspace Manager path rules, workspace metadata format, local create/read/status API, conflict handling, and WF-203/WF-204 handoff points |
 | `FinalBlueprint/WF_Session_Supervisor.md` | Defines WF-203 Session Supervisor session_id rules, SessionState create/read/update/heartbeat API, runtime session status recording, idle/stalled metadata, and WF-204 handoff points |
 | `FinalBlueprint/WF_Evidence_Collector.md` | Defines WF-204 Evidence Collector EvidenceRecord storage, manifest format, create/read/update/status API, changed-file and diff-snapshot reference interfaces, and WF-205 handoff points |
+| `FinalBlueprint/WF_Codex_CLI_Execution_Adapter.md` | Defines WF-205 Codex CLI Execution Adapter config, execution guards, Session Supervisor and Evidence Collector integration, failure evidence recording, and WF-206 handoff points |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

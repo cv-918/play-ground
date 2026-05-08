@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "command": "codex",
+  "args": [
+    "exec"
+  ],
+  "append_prompt_file": true,
+  "working_directory": ".",
+  "timeout_seconds": 0,
+  "allowed_task_statuses": [
+    "ready_for_implementation",
+    "in_progress"
+  ],
+  "require_backlog_approval": true,
+  "capture_changed_files": true,
+  "capture_diff_snapshot": true
+}
