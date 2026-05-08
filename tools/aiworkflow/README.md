@@ -25,6 +25,8 @@ workflow_status.bat
 role_router_status.bat
 project_profile_status.bat
 active_project_status.bat
+task_workspace_manager.bat
+session_supervisor.bat
 ```
 
 ---
@@ -195,6 +197,49 @@ This confirms whether the active project selector points to an existing project 
 
 ---
 
+## task_workspace_manager.bat
+
+Creates and inspects task-scoped runtime workspace records under:
+
+```text
+_Temp\AIWorkflowRuntime\tasks\<task_id>\
+```
+
+Commands:
+
+```bat
+tools\aiworkflow\task_workspace_manager.bat status [task_id] [--json]
+tools\aiworkflow\task_workspace_manager.bat create task_id [--json]
+tools\aiworkflow\task_workspace_manager.bat read task_id [--json]
+```
+
+The manager links runtime workspace state to the existing task lifecycle layer
+with `task_id`. It does not execute Codex, run build/test commands, migrate
+task state, approve tasks, mark tasks done, commit, or push.
+
+---
+
+## session_supervisor.bat
+
+Creates, reads, updates, and heartbeats SessionState records inside a WF-202
+task workspace.
+
+Commands:
+
+```bat
+tools\aiworkflow\session_supervisor.bat status task_id [session_id] [--json]
+tools\aiworkflow\session_supervisor.bat create task_id [session_id] [--executor value] [--activity text] [--json]
+tools\aiworkflow\session_supervisor.bat read task_id session_id [--json]
+tools\aiworkflow\session_supervisor.bat update task_id session_id --status value [--activity text] [--json]
+tools\aiworkflow\session_supervisor.bat heartbeat task_id session_id [--status value] [--activity text] [--json]
+```
+
+The supervisor records runtime session metadata only. It does not execute
+Codex, spawn processes, run build/test commands, collect evidence, verify
+results, approve tasks, mark tasks done, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -208,6 +253,9 @@ tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json
 tools\aiworkflow\project_profile_status.bat
 tools\aiworkflow\project_profile_status.bat --json
+tools\aiworkflow\task_workspace_manager.bat status
+tools\aiworkflow\task_workspace_manager.bat status --json
+tools\aiworkflow\session_supervisor.bat status WF-20260508-101245 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat
