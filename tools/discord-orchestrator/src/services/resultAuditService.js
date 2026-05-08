@@ -13,7 +13,16 @@ const VALIDATION_PATTERNS = [
   ["build/test", /build\s+passed|tests?\s+passed/i],
   ["일반 검증 통과", /validation\s+passed|smoke\s+passed/i],
   ["runtime validation", /runtime\s+validation|manual\s+runtime|debug\s+x64/i],
+  ["expected rejection evidence", /guard rejection|expected rejection|missing --execute rejection|disabled config guard|spawn rejection evidence|spawn-failure evidence|nonzero exit evidence|timeout evidence/i],
 ];
+
+const EXPECTED_REJECTION_EVIDENCE_PATTERN =
+  /guard rejection|expected rejection|missing --execute rejection|disabled config guard|spawn rejection evidence|spawn-failure evidence|nonzero exit evidence|timeout evidence|guard-rejected executions?|guard-rejection/i;
+
+const UNEXPECTED_FAILURE_PATTERN =
+  /implementation failed|unresolved error|blocker remains|validation failed unexpectedly|required validation could not run|syntax check failed|test failed without being an expected scenario|test failed|build failed/i;
+
+const GENERIC_FAILURE_PATTERN = /\bfailed\b|\bfailure\b|\berror\b|\bunresolved\b|\bregression\b/i;
 
 export async function auditGoalResult(config, input = {}) {
   const id = normalizeTaskIdInput(input.id);
@@ -84,7 +93,9 @@ function normalizeResultText(value) {
 
 function analyzeResultText(resultText) {
   const lower = resultText.toLowerCase();
-  const failed = /failed|failure|test failed|validation failed|error|unresolved|regression/i.test(resultText);
+  const expected_rejection_evidence = EXPECTED_REJECTION_EVIDENCE_PATTERN.test(resultText);
+  const unexpectedFailure = UNEXPECTED_FAILURE_PATTERN.test(resultText);
+  const failed = unexpectedFailure || (GENERIC_FAILURE_PATTERN.test(resultText) && !expected_rejection_evidence);
   const blocked = /blocked|blocker|cannot proceed|could not proceed|permission denied|missing approval/i.test(resultText);
   const implementationCompleted = /implementation completed|implemented|fixed|updated|changed|files changed/i.test(resultText);
   const analysisCompleted = /analysis completed|review completed|investigation completed|analyzed|no files changed/i.test(resultText);
@@ -101,6 +112,7 @@ function analyzeResultText(resultText) {
       failed,
       blocked,
       vague,
+      expected_rejection_evidence,
     }),
     implementation_completed: implementationCompleted,
     analysis_completed: analysisCompleted,
@@ -108,13 +120,17 @@ function analyzeResultText(resultText) {
     validation_missing_claimed: validationMissing,
     failed,
     blocked,
+    expected_rejection_evidence,
     too_vague: vague,
-    excerpt: resultText.slice(0, 220),
+    excerpt: resultText.slice(0, 140),
     contains_commit_claim: /\bcommitted\b|git commit|commit created/i.test(lower),
   };
 }
 
 function summarizeResultIntent(flags) {
+  if (flags.expected_rejection_evidence && !flags.failed && !flags.blocked) {
+    return "Result includes expected rejection/failure evidence for adapter validation.";
+  }
   if (flags.failed) {
     return "Result reports a failure or unresolved error.";
   }

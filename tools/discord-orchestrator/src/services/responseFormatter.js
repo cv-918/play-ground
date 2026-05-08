@@ -467,46 +467,71 @@ export function formatResultAudit(result) {
   const safety = data.safety ?? {};
 
   return [
-    "**goal 결과 완료 감사**",
+    "**결과 감사**",
     "",
-    "**1. 작업 요약**",
+    "**작업 요약**",
     `${task.id ?? "unknown"} [${task.priority ?? "?"}/${koStatus(task.status)}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
-    `이유: ${cleanKo(task.reason || "unknown")}`,
     "",
-    "**2. 결과 접수 요약**",
+    "**결과 요약**",
     cleanKo(intake.summary || "No result summary classified."),
-    `원문 발췌: ${cleanupBlock(intake.excerpt || "")}`,
+    `원문 발췌: ${truncateAuditText(cleanupBlock(intake.excerpt || ""), 120)}`,
     "",
-    "**3. 변경 주장 파일**",
-    cleanKo(files.summary || "No changed-file summary available."),
-    summarizeList(files.files, 5),
+    "**변경 파일**",
+    formatAuditFiles(files.files),
     "",
-    "**4. 검증 근거**",
-    summarizeList(data.validation_evidence, 5),
+    "**검증 요약**",
+    compactList(data.validation_evidence, 3),
     "",
-    "**5. 누락된 근거**",
-    summarizeList(data.missing_evidence, 5),
+    "**누락/위험**",
+    compactList([...(data.missing_evidence ?? []), ...(data.risk_notes ?? [])], 3),
     "",
-    "**6. 위험 메모**",
-    summarizeList(data.risk_notes, 5),
-    "",
-    "**7. 완료 판정**",
+    "**완료 판정**",
     koStatus(data.completion_verdict || "NEEDS_REVIEW"),
     "",
-    "**8. 커밋 권고**",
+    "**커밋 권고**",
     koStatus(data.commit_recommendation || "DO_NOT_COMMIT_YET"),
     "",
-    "**9. 다음 권장 수동 명령**",
-    summarizeList(data.suggested_next_manual_commands, 5),
+    "**다음 조치**",
+    compactList(data.suggested_next_manual_commands, 3),
     "",
-    "**10. 안전 상태**",
+    "**안전 상태**",
     `읽기 전용: ${koBool(safety.read_only)}`,
-    `Backlog 업데이트: ${koBool(safety.backlog_updated)}`,
-    `ActiveTask 업데이트: ${koBool(safety.active_task_updated)}`,
-    `작업 완료 처리: ${koBool(safety.task_marked_done)}`,
-    `Codex/agents 실행: ${koBool(safety.codex_executed || safety.agents_executed)}`,
-    `커밋/푸시 수행: ${koBool(safety.committed || safety.pushed)}`,
+    `상태 변경/실행/커밋 없음: ${koBool(!safety.backlog_updated && !safety.active_task_updated && !safety.task_marked_done && !safety.codex_executed && !safety.agents_executed && !safety.committed && !safety.pushed)}`,
   ].join("\n");
+}
+
+function formatAuditFiles(files) {
+  const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, 3).map((value) => `- ${formatInlineCode(value)}`);
+  if (values.length > 3) {
+    visible.push(`- +${values.length - 3}개 더 있음`);
+  }
+  return visible.join("\n");
+}
+
+function compactList(items, maxCount) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, maxCount).map((value) => `- ${koListValue(truncateAuditText(value, 120))}`);
+  if (values.length > maxCount) {
+    visible.push(`- +${values.length - maxCount}개 더 있음`);
+  }
+  return visible.join("\n");
+}
+
+function truncateAuditText(text, maxLength) {
+  const value = String(text ?? "").trim();
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, Math.max(0, maxLength - 1))}…`;
 }
 
 function formatRunWorkflowStatus(data) {

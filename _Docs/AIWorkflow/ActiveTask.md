@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-142029
-title: WF-205 Implement Codex CLI Execution Adapter
+task_id: WF-20260508-150424
+title: WF-206 Implement Local CLI Execution Adapter
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-08
 
 ## Goal
 
-WF-205 Implement Codex CLI Execution Adapter
+WF-206 Implement Local CLI Execution Adapter
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-205 validation passed. Codex CLI Execution Adapter was implemented as a guarded execution adapter connected to WF-202 Task Workspace Manager, WF-203 Session Supervisor, and WF-204 Evidence Collector. It supports status, dry-run, and guarded run APIs. Actual execution requires explicit run --execute and local config enabled:true. The adapter checks approved Backlog task and workspace availability, records guard-rejected executions as SessionState and EvidenceRecord, stores stdout/stderr log references, exit_code, command/cwd/time metadata, changed_files, and diff snapshot references through Evidence Collector. Validation passed for PowerShell syntax, workspace create, status, dry-run, missing --execute rejection, disabled config rejection, guard-rejection session read, guard-rejection evidence read, git diff --check, forbidden path checks, and private/local tracked-file checks. No actual Codex CLI execution, Local CLI Execution Adapter, build/test runner, Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, task migration, commit/push, or game source/data change was implemented. The result audit displayed codex_cli_adapter.example.json as .js due to a result-audit filename parsing issue, but the actual file is codex_cli_adapter.example.json and no .js file exists."
+note: done: "WF-206 validation passed. Local CLI Execution Adapter was implemented as an allowlisted command_id-based execution adapter connected to WF-202 Task Workspace Manager, WF-203 Session Supervisor, and WF-204 Evidence Collector. It supports status, dry-run, and guarded run APIs. Run requires --execute, existing runtime workspace, approved task status, enabled config, and enabled allowlisted command_id. Arbitrary user shell strings are rejected. The adapter records stdout/stderr logs, exit_code, command_id, command, cwd, started_at, ended_at, changed_files, and diff snapshot references through Evidence Collector. Guard rejection, spawn rejection, and nonzero exit scenarios were recorded as evidence as required. Validation passed for PowerShell syntax, JSON parse, workspace create, status, dry-run, missing --execute rejection, disabled config guard, allowlisted node_version execution, unknown command_id rejection, spawn rejection evidence, nonzero exit evidence, git diff --check, forbidden path checks, and private/local tracked-file checks. No Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, git commit/push, arbitrary shell execution, Codex App/Copilot/OpenClaw/Hermes adapter, task migration, or game source/data change was implemented."
 updated_at: 2026-05-08
 source: Discord task status command
 ```

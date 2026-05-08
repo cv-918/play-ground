@@ -14,6 +14,9 @@ They do not decide validation pass/fail.
 
 `codex_cli_adapter.bat` is the exception that can run Codex CLI when local
 config explicitly enables it and the operator passes `run --execute`.
+`local_cli_adapter.bat` is the exception that can run allowlisted local
+commands by `command_id` when local config explicitly enables it and the
+operator passes `run --execute`.
 
 ---
 
@@ -32,6 +35,7 @@ task_workspace_manager.bat
 session_supervisor.bat
 evidence_collector.bat
 codex_cli_adapter.bat
+local_cli_adapter.bat
 ```
 
 ---
@@ -299,6 +303,38 @@ or push.
 
 ---
 
+## local_cli_adapter.bat
+
+Runs a configured local command by allowlisted `command_id` as a guarded
+runtime session.
+
+Tracked example config:
+
+```text
+tools\aiworkflow\local_cli_adapter.example.json
+```
+
+Recommended local config:
+
+```text
+_Local\AIWorkflow\local_cli_adapter.local.json
+```
+
+Commands:
+
+```bat
+tools\aiworkflow\local_cli_adapter.bat status task_id command_id [--config path] [--json]
+tools\aiworkflow\local_cli_adapter.bat dry-run task_id command_id [--config path] [--json]
+tools\aiworkflow\local_cli_adapter.bat run task_id command_id --execute [--config path] [--session-id id] [--evidence-id id] [--json]
+```
+
+Real execution requires `run --execute`, config `enabled: true`, and an enabled
+allowlisted command entry. The adapter does not accept arbitrary shell command
+strings, verify results, decide pass/fail, approve tasks, mark tasks done,
+commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -317,6 +353,7 @@ tools\aiworkflow\task_workspace_manager.bat status --json
 tools\aiworkflow\session_supervisor.bat status WF-20260508-101245 --json
 tools\aiworkflow\evidence_collector.bat status WF-20260508-103845 session-evidence-validation-001 --json
 tools\aiworkflow\codex_cli_adapter.bat dry-run WF-20260508-142029 --config tools\aiworkflow\codex_cli_adapter.example.json --json
+tools\aiworkflow\local_cli_adapter.bat dry-run WF-20260508-150424 node_version --config tools\aiworkflow\local_cli_adapter.example.json --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

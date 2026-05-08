@@ -177,6 +177,14 @@ Type: read-only
 /ai result audit id:GAME-001 result:"Analysis completed. No files changed. Validation not run."
 ```
 
+운영 메모:
+
+- result audit 입력에는 요약만 붙입니다.
+- 긴 구현 보고서, 원문 로그, 세부 evidence는 WorkLog, runtime evidence, 또는
+  별도 검토 문서에 둡니다.
+- 예상된 guard rejection, missing `--execute` rejection, disabled config guard,
+  nonzero exit evidence 같은 항목은 실패가 아니라 검증 evidence일 수 있습니다.
+
 ### `/ai task done`
 
 Type: write
@@ -196,6 +204,33 @@ Type: write
 ```text
 /ai task done id:GAME-001 evidence:"Human reviewed result audit and validation evidence."
 ```
+
+---
+
+## Approval Note and Done Evidence Policy
+
+Discord task 상태 기록은 짧은 한국어 운영 문장으로 남깁니다.
+
+Approval note 권장 형식:
+
+```text
+범위 승인: <핵심 범위>. 금지: <핵심 금지 2~4개>.
+```
+
+Done evidence 권장 형식:
+
+```text
+완료: <핵심 구현>. 검증: <핵심 검증>. 금지사항 준수: <자동 승인/commit/game source 변경 없음>.
+```
+
+규칙:
+
+- command 이름, task id, file path, raw status 값, filename, Codex/Git/JSON은
+  그대로 둡니다.
+- approval note에는 긴 설계 설명을 붙이지 않습니다.
+- done evidence에는 전체 구현 요약을 붙이지 않습니다.
+- 세부 구현 내용과 긴 검증 목록은 WorkLog, runtime evidence, result audit 입력에
+  남기고, Backlog validation column에는 짧은 결론만 기록합니다.
 
 ---
 
@@ -306,4 +341,3 @@ git push
 - done은 commit이 아닙니다.
 - commit과 push는 사람이 직접 결정합니다.
 - validation을 안 했으면 안 했다고 기록합니다.
-
