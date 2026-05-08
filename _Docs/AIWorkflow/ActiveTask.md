@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-150424
-title: WF-206 Implement Local CLI Execution Adapter
+task_id: WF-20260508-155647
+title: WF-207 Implement progress and heartbeat collection
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-08
 
 ## Goal
 
-WF-206 Implement Local CLI Execution Adapter
+WF-207 Implement progress and heartbeat collection
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-206 validation passed. Local CLI Execution Adapter was implemented as an allowlisted command_id-based execution adapter connected to WF-202 Task Workspace Manager, WF-203 Session Supervisor, and WF-204 Evidence Collector. It supports status, dry-run, and guarded run APIs. Run requires --execute, existing runtime workspace, approved task status, enabled config, and enabled allowlisted command_id. Arbitrary user shell strings are rejected. The adapter records stdout/stderr logs, exit_code, command_id, command, cwd, started_at, ended_at, changed_files, and diff snapshot references through Evidence Collector. Guard rejection, spawn rejection, and nonzero exit scenarios were recorded as evidence as required. Validation passed for PowerShell syntax, JSON parse, workspace create, status, dry-run, missing --execute rejection, disabled config guard, allowlisted node_version execution, unknown command_id rejection, spawn rejection evidence, nonzero exit evidence, git diff --check, forbidden path checks, and private/local tracked-file checks. No Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, git commit/push, arbitrary shell execution, Codex App/Copilot/OpenClaw/Hermes adapter, task migration, or game source/data change was implemented."
+note: done: "완료: WF-207은 session_id 기준 heartbeat/progress 수집을 추가했고, status --json은 /tasks형 runtime_summary, read --json은 /task형 session_detail을 반환합니다. 검증: PowerShell syntax, workspace/session status/read, heartbeat/activity, stalled_candidate 표시, git diff check, forbidden path, private/local tracking 확인 통과. 금지사항 준수: file watcher, diff snapshotter, Runtime Control, Verification Gate, Completion Card, 자동 승인, executor routing 변경, commit/push, game source/data 변경 없음."
 updated_at: 2026-05-08
 source: Discord task status command
 ```

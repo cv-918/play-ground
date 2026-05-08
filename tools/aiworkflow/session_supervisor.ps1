@@ -228,6 +228,24 @@ function Set-ObjectProperty {
     }
 }
 
+function Get-ObjectPropertyValue {
+    param(
+        $Object,
+        [string]$Name
+    )
+
+    if ($null -eq $Object) {
+        return $null
+    }
+
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) {
+        return $null
+    }
+
+    return $property.Value
+}
+
 function Save-JsonFile {
     param(
         [string]$Path,
@@ -285,6 +303,149 @@ function Get-IdleInfo {
     }
 }
 
+function Read-ProgressEvents {
+    param(
+        [string]$Path,
+        [string]$SessionId = "",
+        [int]$MaxCount = 20
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return @()
+    }
+
+    $events = @()
+    foreach ($line in [System.IO.File]::ReadLines($Path, [System.Text.Encoding]::UTF8)) {
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
+
+        try {
+            $event = $line | ConvertFrom-Json
+        }
+        catch {
+            continue
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($SessionId) -and $event.session_id -ne $SessionId) {
+            continue
+        }
+
+        $events += $event
+    }
+
+    if ($events.Count -le $MaxCount) {
+        return @($events)
+    }
+
+    return @($events | Select-Object -Last $MaxCount)
+}
+
+function Get-SessionActivity {
+    param($Session)
+
+    $heartbeat = Get-ObjectPropertyValue -Object $Session -Name "heartbeat"
+    if ($null -eq $heartbeat) {
+        return [pscustomobject]@{
+            last_activity_at = Get-ObjectPropertyValue -Object $Session -Name "updated_at"
+            last_activity = $null
+            activity_summary = $null
+        }
+    }
+
+    $activitySummary = Get-ObjectPropertyValue -Object $heartbeat -Name "activity_summary"
+    $legacySummary = Get-ObjectPropertyValue -Object $heartbeat -Name "last_activity_summary"
+    $lastActivity = Get-ObjectPropertyValue -Object $heartbeat -Name "last_activity"
+    $lastActivityAt = Get-ObjectPropertyValue -Object $heartbeat -Name "last_activity_at"
+    $lastHeartbeatAt = Get-ObjectPropertyValue -Object $heartbeat -Name "last_heartbeat_at"
+
+    $summary = if (-not [string]::IsNullOrWhiteSpace($activitySummary)) {
+        [string]$activitySummary
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($legacySummary)) {
+        [string]$legacySummary
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($lastActivity)) {
+        [string]$lastActivity
+    }
+    else {
+        $null
+    }
+
+    $at = if (-not [string]::IsNullOrWhiteSpace($lastActivityAt)) {
+        [string]$lastActivityAt
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($lastHeartbeatAt)) {
+        [string]$lastHeartbeatAt
+    }
+    else {
+        Get-ObjectPropertyValue -Object $Session -Name "updated_at"
+    }
+
+    return [pscustomobject]@{
+        last_activity_at = $at
+        last_activity = if (-not [string]::IsNullOrWhiteSpace($lastActivity)) { [string]$lastActivity } else { $summary }
+        activity_summary = $summary
+    }
+}
+
+function New-SessionSummary {
+    param(
+        $Session,
+        [int]$ThresholdMinutes
+    )
+
+    $idle = Get-IdleInfo -Session $Session -ThresholdMinutes $ThresholdMinutes
+    $activity = Get-SessionActivity -Session $Session
+
+    return [pscustomobject]@{
+        session_id = $Session.session_id
+        status = $Session.status
+        executor_type = if ($null -eq $Session.executor) { $null } else { $Session.executor.executor_type }
+        idle_seconds = $idle.idle_seconds
+        idle_state = $idle.idle_state
+        idle_stalled_display_only = $true
+        last_heartbeat_at = if ($null -eq $Session.heartbeat) { $null } else { $Session.heartbeat.last_heartbeat_at }
+        last_activity_at = $activity.last_activity_at
+        last_activity = $activity.last_activity
+        activity_summary = $activity.activity_summary
+        updated_at = $Session.updated_at
+    }
+}
+
+function New-TaskRuntimeSummary {
+    param(
+        [string]$TaskId,
+        [string]$WorkspaceId,
+        $TaskRunState,
+        $Sessions,
+        [int]$ThresholdMinutes
+    )
+
+    $summaries = @($Sessions | ForEach-Object {
+        New-SessionSummary -Session $_ -ThresholdMinutes $ThresholdMinutes
+    })
+
+    $running = @($summaries | Where-Object { $_.status -in @("starting", "running", "waiting") })
+    $stalled = @($summaries | Where-Object { $_.idle_state -eq "stalled_candidate" })
+    $latest = @($summaries | Sort-Object updated_at -Descending | Select-Object -First 1)
+
+    return [pscustomobject]@{
+        task_id = $TaskId
+        workspace_id = $WorkspaceId
+        run_id = $TaskRunState.run_id
+        run_status = $TaskRunState.status
+        active_session_id = $TaskRunState.active_session_id
+        session_count = $summaries.Count
+        running_session_count = $running.Count
+        stalled_candidate_count = $stalled.Count
+        idle_stalled_display_only = $true
+        latest_activity = if ($latest.Count -eq 0) { $null } else { $latest[0].activity_summary }
+        latest_activity_at = if ($latest.Count -eq 0) { $null } else { $latest[0].last_activity_at }
+        sessions = @($summaries)
+    }
+}
+
 function Append-ProgressEvent {
     param(
         [string]$Path,
@@ -311,6 +472,7 @@ function Append-ProgressEvent {
     }
 
     Append-Utf8Line -Path $Path -Text ($event | ConvertTo-Json -Compress -Depth 8)
+    return $event.event_id
 }
 
 function Convert-SessionStatusToRunStatus {
@@ -338,6 +500,7 @@ function Update-TaskRunStateForSession {
         [string]$SessionId,
         [string]$Now,
         [string]$CurrentStep,
+        [string]$ActivitySummary = "",
         [string]$RunStatus = "",
         [switch]$Heartbeat
     )
@@ -363,6 +526,12 @@ function Update-TaskRunStateForSession {
 
     if ($Heartbeat) {
         Set-ObjectProperty -Object $TaskRunState.progress -Name "last_heartbeat_at" -Value $Now
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ActivitySummary)) {
+        Set-ObjectProperty -Object $TaskRunState.progress -Name "last_activity_at" -Value $Now
+        Set-ObjectProperty -Object $TaskRunState.progress -Name "last_activity" -Value $ActivitySummary
+        Set-ObjectProperty -Object $TaskRunState.progress -Name "activity_summary" -Value $ActivitySummary
     }
 
     if (-not [string]::IsNullOrWhiteSpace($RunStatus)) {
@@ -431,16 +600,27 @@ try {
     $workspaceId = [string]$metadata.workspace_id
 
     if ($Command -eq "status") {
+        $rawSessions = @(Get-ChildItem -LiteralPath $paths.sessions_dir -Filter "session-*.json" -File | Sort-Object Name | ForEach-Object {
+            Read-JsonFile -Path $_.FullName
+        })
         $sessions = @(Get-ChildItem -LiteralPath $paths.sessions_dir -Filter "session-*.json" -File | Sort-Object Name | ForEach-Object {
             $session = Read-JsonFile -Path $_.FullName
             $idle = Get-IdleInfo -Session $session -ThresholdMinutes $StalledAfterMinutes
+            $summary = New-SessionSummary -Session $session -ThresholdMinutes $StalledAfterMinutes
             [pscustomobject]@{
                 session_id = $session.session_id
                 status = $session.status
+                executor_type = if ($null -eq $session.executor) { $null } else { $session.executor.executor_type }
                 idle = $idle
+                last_heartbeat_at = $summary.last_heartbeat_at
+                last_activity_at = $summary.last_activity_at
+                last_activity = $summary.last_activity
+                activity_summary = $summary.activity_summary
+                idle_stalled_display_only = $true
                 path = ConvertTo-RepoRelativePath -Repo $repo -Path $_.FullName
             }
         })
+        $runtimeSummary = New-TaskRuntimeSummary -TaskId $safeTaskId -WorkspaceId $workspaceId -TaskRunState $taskRunState -Sessions $rawSessions -ThresholdMinutes $StalledAfterMinutes
 
         $specific = $null
         if (-not [string]::IsNullOrWhiteSpace($SessionId)) {
@@ -459,6 +639,7 @@ try {
             session_id = if ($null -eq $specific) { $null } else { $specific[0].session_id }
             status = if ($null -eq $specific) { $null } else { $specific[0].status }
             idle = if ($null -eq $specific) { $null } else { $specific[0].idle }
+            runtime_summary = $runtimeSummary
             session_count = $sessions.Count
             sessions = @($sessions)
         }
@@ -501,6 +682,9 @@ try {
             }
             heartbeat = [ordered]@{
                 last_heartbeat_at = $null
+                last_activity_at = if ([string]::IsNullOrWhiteSpace($Activity)) { $null } else { $now }
+                last_activity = if ([string]::IsNullOrWhiteSpace($Activity)) { $null } else { $Activity }
+                activity_summary = if ([string]::IsNullOrWhiteSpace($Activity)) { $null } else { $Activity }
                 last_activity_summary = if ([string]::IsNullOrWhiteSpace($Activity)) { $null } else { $Activity }
                 idle_seconds = 0
                 stalled_after_minutes = $StalledAfterMinutes
@@ -528,8 +712,8 @@ try {
         }
 
         Save-JsonFile -Path $sessionPath -Value $session
-        Update-TaskRunStateForSession -TaskRunState $taskRunState -TaskRunStatePath $paths.task_run_state_path -SessionId $safeSessionId -Now $now -CurrentStep "session_created" -RunStatus "idle"
-        Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeSessionId -EventType "session_created" -Message "SessionState created." -Data ([ordered]@{ status = "created"; executor_type = $ExecutorType })
+        Update-TaskRunStateForSession -TaskRunState $taskRunState -TaskRunStatePath $paths.task_run_state_path -SessionId $safeSessionId -Now $now -CurrentStep "session_created" -ActivitySummary $Activity -RunStatus "idle"
+        $eventId = Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeSessionId -EventType "session_created" -Message "SessionState created." -Data ([ordered]@{ status = "created"; executor_type = $ExecutorType; activity_summary = $Activity })
 
         $result = [pscustomobject]@{
             ok = $true
@@ -538,6 +722,7 @@ try {
             workspace_id = $workspaceId
             session_id = $safeSessionId
             status = "created"
+            latest_progress_event_id = $eventId
             session_path = ConvertTo-RepoRelativePath -Repo $repo -Path $sessionPath
             session = $session
         }
@@ -562,6 +747,22 @@ try {
 
     if ($Command -eq "read") {
         $idle = Get-IdleInfo -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
+        $summary = New-SessionSummary -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
+        $progressEvents = @(Read-ProgressEvents -Path $paths.progress_event_log_path -SessionId $safeExistingSessionId -MaxCount 10)
+        $sessionDetail = [pscustomobject]@{
+            task_id = $safeTaskId
+            workspace_id = $workspaceId
+            session_id = $safeExistingSessionId
+            status = $existingSession.status
+            executor_type = if ($null -eq $existingSession.executor) { $null } else { $existingSession.executor.executor_type }
+            idle = $idle
+            idle_stalled_display_only = $true
+            last_heartbeat_at = $summary.last_heartbeat_at
+            last_activity_at = $summary.last_activity_at
+            last_activity = $summary.last_activity
+            activity_summary = $summary.activity_summary
+            recent_progress_events = @($progressEvents)
+        }
         $result = [pscustomobject]@{
             ok = $true
             command = "read"
@@ -570,6 +771,7 @@ try {
             session_id = $safeExistingSessionId
             status = $existingSession.status
             idle = $idle
+            session_detail = $sessionDetail
             session_path = ConvertTo-RepoRelativePath -Repo $repo -Path $existingSessionPath
             session = $existingSession
         }
@@ -603,6 +805,9 @@ try {
         }
 
         if (-not [string]::IsNullOrWhiteSpace($Activity)) {
+            Set-ObjectProperty -Object $existingSession.heartbeat -Name "last_activity_at" -Value $now
+            Set-ObjectProperty -Object $existingSession.heartbeat -Name "last_activity" -Value $Activity
+            Set-ObjectProperty -Object $existingSession.heartbeat -Name "activity_summary" -Value $Activity
             Set-ObjectProperty -Object $existingSession.heartbeat -Name "last_activity_summary" -Value $Activity
         }
 
@@ -614,10 +819,11 @@ try {
         $step = if ([string]::IsNullOrWhiteSpace($Activity)) { $message } else { $Activity }
 
         $runStatus = Convert-SessionStatusToRunStatus -SessionStatus ([string]$existingSession.status)
-        Update-TaskRunStateForSession -TaskRunState $taskRunState -TaskRunStatePath $paths.task_run_state_path -SessionId $safeExistingSessionId -Now $now -CurrentStep $step -RunStatus $runStatus -Heartbeat:($Command -eq "heartbeat")
-        Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeExistingSessionId -EventType $eventType -Message $message -Data ([ordered]@{ old_status = $oldStatus; new_status = $existingSession.status; activity = $Activity })
+        Update-TaskRunStateForSession -TaskRunState $taskRunState -TaskRunStatePath $paths.task_run_state_path -SessionId $safeExistingSessionId -Now $now -CurrentStep $step -ActivitySummary $Activity -RunStatus $runStatus -Heartbeat:($Command -eq "heartbeat")
+        $eventId = Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeExistingSessionId -EventType $eventType -Message $message -Data ([ordered]@{ old_status = $oldStatus; new_status = $existingSession.status; activity = $Activity; activity_summary = $Activity; display_only = $true })
 
         $idle = Get-IdleInfo -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
+        $summary = New-SessionSummary -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
         $result = [pscustomobject]@{
             ok = $true
             command = $Command
@@ -626,6 +832,12 @@ try {
             session_id = $safeExistingSessionId
             status = $existingSession.status
             idle = $idle
+            latest_progress_event_id = $eventId
+            last_heartbeat_at = $summary.last_heartbeat_at
+            last_activity_at = $summary.last_activity_at
+            last_activity = $summary.last_activity
+            activity_summary = $summary.activity_summary
+            idle_stalled_display_only = $true
             session_path = ConvertTo-RepoRelativePath -Repo $repo -Path $existingSessionPath
             session = $existingSession
         }

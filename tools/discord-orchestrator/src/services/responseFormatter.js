@@ -280,6 +280,7 @@ export function formatGoalPrepareResult(result) {
     `모드/컨텍스트: ${data.mode ?? "unknown"} / ${data.context_level ?? "unknown"}`,
     `준비 상태: ${koStatus(execution.status)}`,
     `경로: ${formatInlineCode(data.generated_path || "unknown")}`,
+    data.prompt_length_warning ? `크기 경고: ${cleanKo(data.prompt_length_warning)}` : "",
     "",
     "**실행 준비 안내**",
     cleanKo(execution.reason || "Review generated request before manual Codex execution."),

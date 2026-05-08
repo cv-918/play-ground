@@ -164,6 +164,9 @@ task_run_state.session_ids
 task_run_state.progress.last_event_at
 task_run_state.progress.last_heartbeat_at
 task_run_state.progress.current_step
+task_run_state.progress.last_activity_at
+task_run_state.progress.last_activity
+task_run_state.progress.activity_summary
 task_run_state.updated_at
 ```
 
@@ -208,6 +211,40 @@ updated_at
 
 The default stalled candidate threshold is 30 minutes. This is reporting
 metadata only. WF-203 does not automatically change a session to `stalled`.
+
+---
+
+## WF-207 Progress and Heartbeat Extension
+
+WF-207 extends Session Supervisor output without adding process control.
+
+`status --json` exposes task-level `runtime_summary` for `/tasks`-style
+displays:
+
+```text
+run_status
+active_session_id
+running_session_count
+stalled_candidate_count
+latest_activity
+sessions[]
+```
+
+`read --json` exposes session-level `session_detail` for `/task`-style
+displays:
+
+```text
+last_heartbeat_at
+last_activity_at
+last_activity
+activity_summary
+recent_progress_events
+```
+
+`heartbeat` and `update --activity` write activity metadata under
+`SessionState.heartbeat` and append ProgressEventLog entries. Idle/stalled
+remains display-only and does not stop, pause, retry, replan, fail validation,
+or mark tasks done.
 
 ---
 

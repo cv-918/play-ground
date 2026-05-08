@@ -247,6 +247,11 @@ The supervisor records runtime session metadata only. It does not execute
 Codex, spawn processes, run build/test commands, collect evidence, verify
 results, approve tasks, mark tasks done, commit, or push.
 
+JSON `status` output includes task-level `runtime_summary` data for
+`/tasks`-style displays. JSON `read` output includes `session_detail` data and
+recent ProgressEventLog entries for `/task`-style displays. Idle/stalled state
+is computed for display only; it does not control execution.
+
 ---
 
 ## evidence_collector.bat

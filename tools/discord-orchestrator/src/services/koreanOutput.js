@@ -156,6 +156,7 @@ export function koText(value) {
     .replaceAll("Run Debug x64 build and manual runtime validation when gameplay/runtime behavior changes.", "gameplay/runtime behavior가 바뀐 경우 Debug x64 build와 manual runtime validation을 실행하세요.")
     .replaceAll("Review git diff and commit manually only after validation is accepted.", "검증이 받아들여진 뒤에만 git diff를 검토하고 수동 commit하세요.")
     .replaceAll("Run missing validation manually, then paste updated evidence into /ai result audit.", "누락된 검증을 수동으로 실행한 뒤 갱신된 근거를 `/ai result audit`에 붙여 넣으세요.")
+    .replace(/Compact goal request is (\d+) characters; target is below (\d+)\./g, "compact goal 요청서가 $1자입니다. 목표는 $2자 미만입니다.")
     .replace(/(\d+) claimed file\(s\) changed\./g, "$1개 변경 파일이 있다고 보고했습니다.");
 }
 

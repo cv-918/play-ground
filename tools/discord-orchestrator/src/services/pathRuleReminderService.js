@@ -108,6 +108,18 @@ const PATH_RULE_SCOPES = [
       /\bcapture-diff\b/i,
       /\bvalidation script\b/i,
       /\btool behavior\b/i,
+      /\bTask Workspace Manager\b/i,
+      /\bSession Supervisor\b/i,
+      /\bEvidence Collector\b/i,
+      /\bCLI Execution Adapter\b/i,
+      /\bProgressEventLog\b/i,
+      /\bheartbeat\b/i,
+      /\blast_activity\b/i,
+      /\bactivity_summary\b/i,
+      /\bruntime state\b/i,
+      /\bruntime harness\b/i,
+      /\/tasks-style/i,
+      /\/task-style/i,
     ],
     items: [
       "Keep workflow tool behavior explicit, auditable, and bounded to approved command side effects.",
@@ -225,8 +237,10 @@ export function getPathRuleChecklistForTask(input = {}) {
     }
   }
 
-  if (scopes.length === 0) {
-    scopes.push({
+  const normalizedScopes = normalizeMatchedScopes(scopes, contextText);
+
+  if (normalizedScopes.length === 0) {
+    normalizedScopes.push({
       path: "global path safety",
       display_paths: ["global path safety"],
       checklist_items: [
@@ -249,8 +263,49 @@ export function getPathRuleChecklistForTask(input = {}) {
       title: formatValue(task.item || activeMetadata.title),
       reason: formatValue(task.reason),
     },
-    matched_scopes: scopes,
+    matched_scopes: normalizedScopes,
   };
+}
+
+function normalizeMatchedScopes(scopes, contextText) {
+  let result = [...scopes];
+
+  if (isWorkflowRuntimeHarnessTask(contextText)) {
+    if (!isDiscordSpecificTask(contextText)) {
+      result = result.filter((scope) => scope.path !== "tools/discord-orchestrator/**");
+    }
+
+    for (const path of ["tools/aiworkflow/**", "_Docs/AIWorkflow/**", "_DevLog/**"]) {
+      if (!result.some((scope) => scope.path === path)) {
+        const definition = PATH_RULE_SCOPES.find((scope) => scope.path === path);
+        if (definition) {
+          result.push({
+            path: definition.path,
+            display_paths: definition.displayPaths ?? [definition.path],
+            checklist_items: definition.items,
+          });
+        }
+      }
+    }
+
+    const preferredOrder = new Map([
+      ["tools/aiworkflow/**", 0],
+      ["_Docs/AIWorkflow/**", 1],
+      ["_DevLog/**", 2],
+    ]);
+
+    result.sort((a, b) => (preferredOrder.get(a.path) ?? 99) - (preferredOrder.get(b.path) ?? 99));
+  }
+
+  return result;
+}
+
+function isWorkflowRuntimeHarnessTask(contextText) {
+  return /WF-20[1-9]|Task Workspace Manager|Session Supervisor|Evidence Collector|CLI Execution Adapter|ProgressEventLog|heartbeat|last_activity|activity_summary|runtime summary|runtime harness|\/tasks-style|\/task-style/i.test(contextText);
+}
+
+function isDiscordSpecificTask(contextText) {
+  return /Discord command|slash command|Discord formatter|responseFormatter|discord-orchestrator|bot response|\/ai output|command schema|registerCommands/i.test(contextText);
 }
 
 function matchesScope(scope, contextText) {

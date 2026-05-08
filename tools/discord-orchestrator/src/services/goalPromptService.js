@@ -10,6 +10,7 @@ const PROJECT_PROFILES_RELATIVE_DIR = "_Docs/AIWorkflow/ProjectProfiles";
 const OUTPUT_RELATIVE_DIR = "_Temp/AIWorkflowTaskRequests";
 const MODE_VALUES = new Set(["analysis", "implementation", "prototype", "review"]);
 const CONTEXT_VALUES = new Set(["compact", "standard", "full"]);
+const COMPACT_PROMPT_WARNING_LENGTH = 9000;
 
 const RELEVANT_WORKFLOW_DOCS = [
   "_Docs/AIWorkflow/README.md",
@@ -73,6 +74,10 @@ export async function prepareGoalPrompt(config, input = {}) {
       task,
       mode,
       context_level: contextLevel,
+      prompt_length: prompt.length,
+      prompt_length_warning: contextLevel === "compact" && prompt.length > COMPACT_PROMPT_WARNING_LENGTH
+        ? `Compact goal request is ${prompt.length} characters; target is below ${COMPACT_PROMPT_WARNING_LENGTH}.`
+        : "",
       generated_path: outputPath.relativePath,
       absolute_path: outputPath.absolutePath,
       readiness,
@@ -81,6 +86,10 @@ export async function prepareGoalPrompt(config, input = {}) {
 }
 
 function buildGoalPrompt(input) {
+  if (input.contextLevel === "compact") {
+    return buildCompactGoalPrompt(input);
+  }
+
   return [
     buildGoalCommand(input.task, input.mode),
     "",
@@ -315,6 +324,163 @@ function buildNonGoalsSection() {
     "- Do not expose secrets, credentials, tokens, or local private configuration.",
     "- Do not modify unrelated files, `_Local/`, `node_modules/`, or tracked `_Temp/` artifacts.",
     "- Do not execute external agents, Codex CLI, OpenClaw, Claude, Unity AI, or computer-use unless this request explicitly approves that behavior.",
+  ].join("\n");
+}
+
+function buildCompactGoalPrompt(input) {
+  return [
+    buildGoalCommand(input.task, input.mode),
+    "",
+    "# Compact Codex Goal Prompt Contract v2",
+    "",
+    buildCompactGoalHeaderSection(input),
+    "",
+    buildCompactTaskSummarySection(input),
+    "",
+    buildCompactApprovedScopeSection(input),
+    "",
+    buildCompactNonGoalsSection(),
+    "",
+    buildCompactTaskSpecificRequirementsSection(input.task),
+    "",
+    buildCompactAcceptanceCriteriaSection(input.task),
+    "",
+    buildCompactPathRemindersSection(input),
+    "",
+    buildCompactValidationPlanSection(input.task),
+    "",
+    buildCompactReturnFormatSection(),
+    "",
+  ].join("\n");
+}
+
+function buildCompactGoalHeaderSection({ task, mode }) {
+  return [
+    "## Goal Header",
+    "```text",
+    buildGoalCommand(task, mode),
+    "```",
+    "- This is the only Codex CLI command implied by this request.",
+    "- Read the full request before treating the first line as executable.",
+  ].join("\n");
+}
+
+function buildCompactTaskSummarySection({ config, projectContext, task, mode, selectedFromActive }) {
+  const profile = projectContext?.profile ?? {};
+  const activeProject = projectContext?.activeProject ?? {};
+  return [
+    "## Task Summary",
+    "- Task: " + formatValue(task.id) + " - " + formatValue(task.item),
+    "- Mode: " + mode,
+    "- Status/Priority/Kind: " + [task.status, task.priority, task.kind].map(formatValue).join(" / "),
+    "- Tool route: " + formatTaskField(task.tool_route, "tool route"),
+    "- Source: " + (selectedFromActive ? "ActiveTask.md task_id resolved through Backlog.md" : "explicit Discord command id resolved through Backlog.md"),
+    "- Repository root: " + formatValue(config?.repoRoot),
+    "- Active project: " + formatValue(activeProject.active_project_id),
+    "- Source roots: " + formatInlineList(profile.source_roots),
+    "- Data roots: " + formatInlineList(profile.data_roots),
+    "- Reason: " + formatTaskField(task.reason, "reason"),
+  ].join("\n");
+}
+
+function buildCompactApprovedScopeSection({ task }) {
+  const validation = String(task.validation ?? "").trim();
+  const lines = [
+    "## Approved Scope",
+    validation ? "- " + validation : "- Use the approved task scope in Backlog.md.",
+    "- Keep Task Lifecycle State separate from Runtime Execution State.",
+    "- Keep changes bounded to this task and report validation evidence.",
+  ];
+
+  return lines.join("\n");
+}
+
+function buildCompactNonGoalsSection() {
+  return [
+    "## Non-goals",
+    "- No commit, push, release, or deploy.",
+    "- No private/local/_Temp tracking or secret exposure.",
+    "- No Verification Gate or Completion Card.",
+    "- No automatic approval, auto-done, or pass/fail judgment.",
+    "- No Runtime Control, pause/stop/retry/replan control unless explicitly approved.",
+    "- No game source/data changes unless explicitly required.",
+  ].join("\n");
+}
+
+function buildCompactTaskSpecificRequirementsSection(task) {
+  const requirements = inferTaskSpecificRequirements(task);
+  return [
+    "## Task-specific Requirements",
+    ...requirements.map((item) => "- " + item),
+  ].join("\n");
+}
+
+function buildCompactAcceptanceCriteriaSection(task) {
+  const criteria = inferAcceptanceCriteria(task);
+  return [
+    "## Acceptance Criteria",
+    ...criteria.map((item) => "- " + item),
+  ].join("\n");
+}
+
+function buildCompactPathRemindersSection({ pathRuleChecklist }) {
+  const scopes = Array.isArray(pathRuleChecklist?.matched_scopes)
+    ? pathRuleChecklist.matched_scopes
+    : [];
+
+  const lines = [
+    "## Relevant Path Reminders",
+    "- Source: " + formatValue(pathRuleChecklist?.source),
+  ];
+
+  if (scopes.length === 0) {
+    lines.push("- Apply global repository safety: keep scope bounded, validate honestly, and do not commit.");
+    return lines.join("\n");
+  }
+
+  for (const scope of scopes.slice(0, 4)) {
+    lines.push("- " + formatValue(scope.path) + ":");
+    const items = Array.isArray(scope.checklist_items) ? scope.checklist_items.slice(0, 4) : [];
+    for (const item of items) {
+      lines.push("  - " + formatValue(item));
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function buildCompactValidationPlanSection(task) {
+  const lines = [
+    "## Validation Plan",
+    "- Run `git status --short` before and after implementation.",
+    "- Run `git diff --check`.",
+    "- Run `git diff --stat`.",
+    "- Run changed script syntax/check commands for modified local workflow scripts.",
+  ];
+
+  if (task.validation) {
+    lines.push("- Task-specific validation: " + summarizeText(task.validation, 360));
+  }
+
+  if (isDiscordWorkflowTask(task)) {
+    lines.push("- If Discord schema or bot behavior changes, run register/restart/status validation.");
+  }
+
+  lines.push("- Confirm no `PlayGround/Project` or `PlayGround/Data` changes unless explicitly approved.");
+  lines.push("- Confirm `_Local/`, `node_modules/`, `.env`, `discord_bot.local.json`, and `_Temp/` artifacts are not tracked.");
+  return lines.join("\n");
+}
+
+function buildCompactReturnFormatSection() {
+  return [
+    "## Return Format",
+    "1. Implementation summary",
+    "2. Files changed",
+    "3. Validation commands run",
+    "4. Validation results",
+    "5. Known risks",
+    "6. Human decisions needed",
+    "7. Commit recommendation",
   ].join("\n");
 }
 
@@ -718,6 +884,64 @@ function taskText(task) {
     task.tool_route,
     task.validation,
   ].filter(Boolean).join(" ");
+}
+
+function inferTaskSpecificRequirements(task) {
+  const text = taskText(task);
+
+  if (isProgressHeartbeatTask(text)) {
+    return [
+      "Implement session_id-based progress/heartbeat collection only.",
+      "Record last_heartbeat_at, last_activity, and activity_summary.",
+      "Use or extend ProgressEventLog for progress/activity events.",
+      "Expose task/session runtime summary data for /tasks-style and /task-style views.",
+      "Document WF-208 file watcher and diff snapshot handoff.",
+      "Do not implement execution control, verification judgment, or completion automation.",
+    ];
+  }
+
+  return [
+    "Implement only the approved reduced scope for this task.",
+    "Preserve existing task state semantics and source-of-truth documents.",
+    "Keep decision, execution, state, evidence, and formatting concerns separated.",
+  ];
+}
+
+function inferAcceptanceCriteria(task) {
+  const text = taskText(task);
+
+  if (isProgressHeartbeatTask(text)) {
+    return [
+      "session_id-based heartbeat update is possible.",
+      "last_heartbeat_at, last_activity, and activity_summary are recorded.",
+      "ProgressEventLog is updated or extended.",
+      "Codex CLI and Local CLI execution activity can be reflected as progress.",
+      "idle/stalled display state can be computed.",
+      "/tasks-style summary data is available.",
+      "/task-style session detail data is available.",
+      "idle/stalled is display-only and does not control execution.",
+      "WF-208 file watcher and diff snapshot handoff is documented.",
+    ];
+  }
+
+  return [
+    "Objective is satisfied within the approved scope.",
+    "Required validation is run or explicitly deferred with reason.",
+    "No forbidden automation, commit/push, private-file tracking, or unrelated game changes occur.",
+  ];
+}
+
+function isProgressHeartbeatTask(text) {
+  return /WF-207|progress|heartbeat|last_activity|activity_summary|idle\/stalled|ProgressEventLog/i.test(text);
+}
+
+function summarizeText(value, maxLength) {
+  const text = oneLine(value);
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, Math.max(0, maxLength - 1))}…`;
 }
 
 function normalizePathForDiscord(value) {
