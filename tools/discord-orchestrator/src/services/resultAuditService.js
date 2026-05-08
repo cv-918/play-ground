@@ -1,7 +1,7 @@
 import { getBacklogTaskById } from "./taskService.js";
 
 const MAX_RESULT_TEXT_LENGTH = 3000;
-const PATH_TOKEN_PATTERN = /(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:js|md|json|cpp|c|h|hpp|bat|ps1|txt|yml|yaml|cs|sln|vcxproj)/gi;
+const PATH_TOKEN_PATTERN = /(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:jsonl|json|ps1|bat|md|js|cpp|c|h|hpp|txt|yml|yaml|cs|sln|vcxproj)(?![A-Za-z0-9])/gi;
 const VALIDATION_PATTERNS = [
   ["node --check", /node\s+--check/i],
   ["npm register", /npm(?:\s+--prefix\s+\S+)?\s+run\s+register|npm\s+register/i],
@@ -148,7 +148,7 @@ function extractClaimedFiles(resultText) {
     files.add(normalizePathToken(match));
   }
 
-  const filesLine = resultText.match(/(?:files changed|changed files|modified files)\s*:\s*([^\n.]+)/i);
+  const filesLine = resultText.match(/(?:files changed|changed files|modified files)\s*:\s*([^\n]+)/i);
   if (filesLine) {
     for (const part of filesLine[1].split(/[,;]/)) {
       const value = normalizePathToken(part);
