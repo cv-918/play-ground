@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-101245
-title: WF-203 Implement Session Supervisor
+task_id: WF-20260508-103845
+title: WF-204 Implement Evidence Collector
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-08
 
 ## Goal
 
-WF-203 Implement Session Supervisor
+WF-204 Implement Evidence Collector
 
 ---
 
@@ -70,7 +70,7 @@ pending
 
 ```text
 status: done
-note: done: "WF-203 validation passed. Session Supervisor was implemented on top of WF-202 task workspace. It supports SessionState status/create/read/update/heartbeat APIs linked to task_id and workspace_id. It validates task_id, workspace_id, session_id, duplicate sessions, invalid status, and missing workspace. It records started_at, last_heartbeat_at, last_activity, executor, workspace_path, active_session_id, session_ids, runtime status, and bounded progress events. Heartbeat updates were validated. WF-204 Evidence Collector handoff through session_id was documented. No Codex CLI execution, Local CLI execution, process spawn, build/test runner, Evidence Collector, Verification Gate, completion card, automatic approval policy, task migration, or game source/data change was implemented."
+note: done: "WF-204 validation passed. Evidence Collector was implemented as a session_id-linked evidence metadata storage layer. It supports EvidenceRecord status/create/read/update APIs, stores executor, command, working_directory, started_at, ended_at, exit_code, stdout/stderr log paths, changed_files references, and diff snapshot references. Evidence records are stored under _Temp/AIWorkflowRuntime/tasks/<task_id>/evidence/manifest.json and evidence/records/<evidence_id>.json. Evidence is linked to SessionState and TaskRunState by session_id. Invalid session ID, task/workspace/session mismatch, duplicate evidence, and storage errors are guarded. WF-205 Codex CLI Execution Adapter handoff was documented. No Codex CLI execution, Local CLI execution, process spawn, build/test runner, Verification Gate, Completion Card, automatic approval policy, pass/fail judgment, task migration, or game source/data change was implemented."
 updated_at: 2026-05-08
 source: Discord task status command
 ```

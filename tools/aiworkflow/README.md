@@ -27,6 +27,7 @@ project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
 session_supervisor.bat
+evidence_collector.bat
 ```
 
 ---
@@ -240,6 +241,29 @@ results, approve tasks, mark tasks done, commit, or push.
 
 ---
 
+## evidence_collector.bat
+
+Creates, reads, updates, and lists EvidenceRecord runtime artifacts linked to a
+WF-203 session.
+
+Commands:
+
+```bat
+tools\aiworkflow\evidence_collector.bat status task_id session_id [--json]
+tools\aiworkflow\evidence_collector.bat create task_id session_id [evidence_id] [--executor value] [--command-line text] [--working-directory path] [--started-at iso] [--ended-at iso] [--exit-code n] [--stdout-log path] [--stderr-log path] [--changed-files "a;b"] [--diff-snapshot path] [--json]
+tools\aiworkflow\evidence_collector.bat read task_id session_id evidence_id [--json]
+tools\aiworkflow\evidence_collector.bat update task_id session_id evidence_id [--executor value] [--command-line text] [--working-directory path] [--started-at iso] [--ended-at iso] [--exit-code n] [--stdout-log path] [--stderr-log path] [--changed-files "a;b"] [--diff-snapshot path] [--json]
+```
+
+`--changed-files` accepts semicolon- or comma-separated repository-relative
+path references.
+
+The collector stores evidence metadata only. It does not execute Codex, spawn
+processes, run build/test commands, verify results, decide pass/fail, approve
+tasks, mark tasks done, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -256,6 +280,7 @@ tools\aiworkflow\project_profile_status.bat --json
 tools\aiworkflow\task_workspace_manager.bat status
 tools\aiworkflow\task_workspace_manager.bat status --json
 tools\aiworkflow\session_supervisor.bat status WF-20260508-101245 --json
+tools\aiworkflow\evidence_collector.bat status WF-20260508-103845 session-evidence-validation-001 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat
