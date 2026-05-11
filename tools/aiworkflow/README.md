@@ -37,6 +37,7 @@ evidence_collector.bat
 codex_cli_adapter.bat
 local_cli_adapter.bat
 file_watcher.bat
+runtime_control_adapter.bat
 ```
 
 ---
@@ -379,6 +380,52 @@ or push.
 
 ---
 
+## runtime_control_adapter.bat
+
+Records and applies human-approved runtime controls for task execution sessions.
+
+Commands:
+
+```bat
+tools\aiworkflow\runtime_control_adapter.bat status task_id [session_id] [--json]
+tools\aiworkflow\runtime_control_adapter.bat read task_id [control_id] [--json]
+tools\aiworkflow\runtime_control_adapter.bat request task_id action [session_id] --reason text [--json]
+tools\aiworkflow\runtime_control_adapter.bat approve task_id control_id [--note text] [--json]
+tools\aiworkflow\runtime_control_adapter.bat reject task_id control_id [--note text] [--json]
+tools\aiworkflow\runtime_control_adapter.bat apply task_id control_id [--note text] [--json]
+```
+
+Supported actions:
+
+```text
+pause
+resume
+stop
+retry
+replan
+scope_reduce
+executor_change
+manual_escalation
+```
+
+All actions follow:
+
+```text
+request -> approve/reject -> apply
+```
+
+`pause`, `resume`, and `stop` require a `session_id`. Process-level control is
+only attempted against a fresh PID recorded in SessionState by an execution
+adapter. Retry, replan, scope reduction, executor change, and manual escalation
+are recorded as handoff controls for a later PC Runner layer; they do not run a
+new command automatically.
+
+The adapter writes runtime history under `_Temp\AIWorkflowRuntime\`. It does
+not approve tasks, mark tasks done, verify results, run arbitrary shell
+commands, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -399,6 +446,7 @@ tools\aiworkflow\evidence_collector.bat status WF-20260508-103845 session-eviden
 tools\aiworkflow\codex_cli_adapter.bat dry-run WF-20260508-142029 --config tools\aiworkflow\codex_cli_adapter.example.json --json
 tools\aiworkflow\local_cli_adapter.bat dry-run WF-20260508-150424 node_version --config tools\aiworkflow\local_cli_adapter.example.json --json
 tools\aiworkflow\file_watcher.bat status WF-20260508-172728 --json
+tools\aiworkflow\runtime_control_adapter.bat status WF-20260511-182549 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

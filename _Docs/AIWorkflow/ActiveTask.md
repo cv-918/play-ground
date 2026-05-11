@@ -11,12 +11,12 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-172728
-title: WF-208 Implement file watcher and diff snapshots
-status: in_progress
+task_id: WF-20260511-182549
+title: WF-209/210 Implement Runtime Control Adapter and controls
+status: ready_to_commit
 workflow_path: discord_task_management
 priority: P1
-risk_level: low
+risk_level: medium
 requested_by: human_director
 requested_at: 2026-05-11
 last_updated: 2026-05-11
@@ -26,7 +26,7 @@ last_updated: 2026-05-11
 
 ## Goal
 
-WF-208 Implement file watcher and diff snapshots
+WF-209/210 Implement Runtime Control Adapter and controls
 
 ---
 
@@ -35,8 +35,8 @@ WF-208 Implement file watcher and diff snapshots
 ```yaml
 discord: task selection command
 human: review and approval
-codex: only after explicit approval for implementation
-validation: approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapshot 저장, EvidenceRecord/ProgressEventLog 연결, ignore 정책, /task 표시용 최근 변경 파일 요약까지만 구현합니다. 금지: diff 판정, Runtime Control, pause/stop/retry/replan, Completion Card, 자동 승인, commit/push."
+codex: approved for bounded workflow runtime implementation
+validation: approved: "범위 승인: Runtime Control Adapter, control history projection, process metadata support, safe session-scoped stop, pause/resume state changes, retry/replan/scope/executor/manual escalation control records, status/read/apply commands, docs and DevLog까지 구현합니다. 금지: 자동 task 승인, 자동 done, VerificationReport/Completion Card, auto approval policy, arbitrary shell execution, game source/data 변경, release/deploy."
 ```
 
 ---
@@ -44,7 +44,12 @@ validation: approved: "범위 승인: workspace 기준 changed_files 감지, git
 ## Files In Scope
 
 ```text
-Define during task intake before implementation.
+_Docs/AIWorkflow/Backlog.md
+_Docs/AIWorkflow/ActiveTask.md
+_Docs/AIWorkflow/README.md
+_Docs/AIWorkflow/FinalBlueprint/
+tools/aiworkflow/
+_DevLog/WorkLog/
 ```
 
 ---
@@ -52,8 +57,8 @@ Define during task intake before implementation.
 ## Human Action Required
 
 ```text
-1. Review the selected active task.
-2. Approve architecture and scope before implementation if source or runtime behavior will change.
+1. Review Runtime Control behavior after implementation.
+2. Decide whether to commit after validation.
 ```
 
 ---
@@ -61,7 +66,11 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapshot 저장, EvidenceRecord/ProgressEventLog 연결, ignore 정책, /task 표시용 최근 변경 파일 요약까지만 구현합니다. 금지: diff 판정, Runtime Control, pause/stop/retry/replan, Completion Card, 자동 승인, commit/push."
+Run PowerShell parser checks, JSON parse checks, workspace/session setup,
+runtime_control_adapter status/request/approve/reject/apply/read scenarios,
+pause/resume/stop/retry/replan/scope_reduce/executor_change/manual_escalation
+validation, safe stop rejection without matching session PID, git diff --check,
+forbidden path checks, and private/local tracking checks.
 ```
 
 ---
@@ -69,7 +78,7 @@ approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapsh
 ## Next Recommended Task
 
 ```text
-Review Backlog.md for the next highest-priority open task after this task is complete.
+After commit decision, continue to WF-301 Result Collector.
 ```
 
 ---
@@ -77,11 +86,11 @@ Review Backlog.md for the next highest-priority open task after this task is com
 ## Completion Criteria
 
 ```text
-[ ] Task scope reviewed
-[ ] Required approvals recorded
-[ ] Implementation completed within approved scope, if applicable
-[ ] Review completed, if applicable
-[ ] Validation completed or explicitly deferred
-[ ] Dev Log created for meaningful work
+[x] Task scope reviewed
+[x] Required approvals recorded
+[x] Implementation completed within approved scope, if applicable
+[x] Review completed, if applicable
+[x] Validation completed or explicitly deferred
+[x] Dev Log created for meaningful work
 [ ] User decides whether to commit
 ```

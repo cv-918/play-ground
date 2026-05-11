@@ -477,6 +477,8 @@ function Invoke-GitCapture {
 function Invoke-LocalProcess {
     param(
         [string]$Repo,
+        [string]$TaskId,
+        [string]$SessionId,
         $CommandEntry,
         [string]$StdoutPath,
         [string]$StderrPath
@@ -524,6 +526,7 @@ function Invoke-LocalProcess {
     $process.StartInfo = $psi
 
     [void]$process.Start()
+    Update-Session -Repo $Repo -TaskId $TaskId -SessionId $SessionId -Status "running" -Activity "Local CLI process started for command_id $([string]$CommandEntry.command_id)." -ProcessId ([string]$process.Id) -ProcessStartedAt $startedAt -CommandLine (($commandPath + " " + ($args -join " ")).Trim()) -WorkingDirectory $workingDir
     $stdoutTask = $process.StandardOutput.ReadToEndAsync()
     $stderrTask = $process.StandardError.ReadToEndAsync()
 
@@ -595,6 +598,26 @@ function Get-ConfiguredWorkingDirectory {
     return $workingDir
 }
 
+function Get-SessionStatusFromWorkspace {
+    param(
+        $Workspace,
+        [string]$SessionId
+    )
+
+    $path = Join-Path $Workspace.paths.sessions_dir ($SessionId + ".json")
+    if (-not (Test-Path -LiteralPath $path)) {
+        return ""
+    }
+
+    try {
+        $session = Read-JsonFile -Path $path
+        return ([string]$session.status)
+    }
+    catch {
+        return ""
+    }
+}
+
 function Record-Evidence {
     param(
         [string]$Repo,
@@ -659,7 +682,13 @@ function Update-Session {
         [string]$TaskId,
         [string]$SessionId,
         [string]$Status,
-        [string]$Activity
+        [string]$Activity,
+        [string]$ProcessId = "",
+        [string]$ProcessStartedAt = "",
+        [string]$ProcessEndedAt = "",
+        [string]$ProcessExitCode = "",
+        [string]$CommandLine = "",
+        [string]$WorkingDirectory = ""
     )
 
     $script = Join-Path $PSScriptRoot "session_supervisor.ps1"
@@ -672,6 +701,25 @@ function Update-Session {
         "-Activity", $Activity,
         "-Json"
     )
+
+    if (-not [string]::IsNullOrWhiteSpace($ProcessId)) {
+        $args += @("-ProcessId", $ProcessId)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessStartedAt)) {
+        $args += @("-ProcessStartedAt", $ProcessStartedAt)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessEndedAt)) {
+        $args += @("-ProcessEndedAt", $ProcessEndedAt)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessExitCode)) {
+        $args += @("-ProcessExitCode", $ProcessExitCode)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CommandLine)) {
+        $args += @("-CommandLine", $CommandLine)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory)) {
+        $args += @("-WorkingDirectory", $WorkingDirectory)
+    }
 
     Invoke-WorkflowScript -Script $script -ArgsList $args | Out-Null
 }
@@ -833,9 +881,8 @@ try {
             throw "Local CLI command_id is disabled."
         }
 
-        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status "running" -Activity "Local CLI process started for command_id $safeCommandId."
         try {
-            $processResult = Invoke-LocalProcess -Repo $repo -CommandEntry $entry -StdoutPath $stdoutPath -StderrPath $stderrPath
+            $processResult = Invoke-LocalProcess -Repo $repo -TaskId $safeTaskId -SessionId $session -CommandEntry $entry -StdoutPath $stdoutPath -StderrPath $stderrPath
         }
         catch {
             $now = Get-NowText
@@ -865,8 +912,9 @@ try {
             }
         }
 
-        $finalStatus = if ($processResult.exit_code -eq 0) { "completed" } else { "failed" }
-        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status $finalStatus -Activity "Local CLI command_id $safeCommandId exited with code $($processResult.exit_code)."
+        $currentSessionStatus = Get-SessionStatusFromWorkspace -Workspace $workspace -SessionId $session
+        $finalStatus = if ($currentSessionStatus -in @("cancelled", "stopping")) { "cancelled" } elseif ($processResult.exit_code -eq 0) { "completed" } else { "failed" }
+        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status $finalStatus -Activity "Local CLI command_id $safeCommandId exited with code $($processResult.exit_code)." -ProcessEndedAt $processResult.ended_at -ProcessExitCode ([string]$processResult.exit_code)
         Record-Evidence -Repo $repo -TaskId $safeTaskId -SessionId $session -EvidenceId $evidence -CommandLine $processResult.command_line -WorkingDirectory $processResult.working_directory -StartedAt $processResult.started_at -EndedAt $processResult.ended_at -ExitCode $processResult.exit_code -StdoutLog (ConvertTo-RepoRelativePath -Repo $repo -Path $stdoutPath) -StderrLog (ConvertTo-RepoRelativePath -Repo $repo -Path $stderrPath) -ChangedFiles @($changed) -DiffSnapshot $diffRef
 
         $result = [pscustomobject]@{

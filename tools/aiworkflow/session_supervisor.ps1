@@ -13,6 +13,18 @@ param(
 
     [string]$ExecutorType = "manual",
 
+    [string]$ProcessId = "",
+
+    [string]$ProcessStartedAt = "",
+
+    [string]$ProcessEndedAt = "",
+
+    [string]$ProcessExitCode = "",
+
+    [string]$CommandLine = "",
+
+    [string]$WorkingDirectory = "",
+
     [int]$StalledAfterMinutes = 30,
 
     [string]$RepoRoot = "",
@@ -89,6 +101,9 @@ function ConvertTo-RepoRelativePath {
 
     if ($full.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
         $relative = $full.Substring($root.Length).TrimStart("\", "/")
+        if ([string]::IsNullOrWhiteSpace($relative)) {
+            return "."
+        }
         return ($relative -replace "\\", "/")
     }
 
@@ -400,6 +415,22 @@ function Get-WorkspaceFileSummary {
     }
 }
 
+function Get-SessionProcessSummary {
+    param($Session)
+
+    $process = Get-ObjectPropertyValue -Object $Session -Name "process"
+    $executor = Get-ObjectPropertyValue -Object $Session -Name "executor"
+
+    return [pscustomobject]@{
+        pid = Get-ObjectPropertyValue -Object $process -Name "pid"
+        started_at = Get-ObjectPropertyValue -Object $process -Name "started_at"
+        ended_at = Get-ObjectPropertyValue -Object $process -Name "ended_at"
+        exit_code = Get-ObjectPropertyValue -Object $process -Name "exit_code"
+        command_line = Get-ObjectPropertyValue -Object $executor -Name "command_line"
+        working_directory = Get-ObjectPropertyValue -Object $executor -Name "working_directory"
+    }
+}
+
 function Get-RecentFileChangeSummary {
     param(
         $Events,
@@ -510,6 +541,7 @@ function New-SessionSummary {
     $idle = Get-IdleInfo -Session $Session -ThresholdMinutes $ThresholdMinutes
     $activity = Get-SessionActivity -Session $Session
     $fileSummary = Get-WorkspaceFileSummary -Session $Session
+    $processSummary = Get-SessionProcessSummary -Session $Session
 
     return [pscustomobject]@{
         session_id = $Session.session_id
@@ -526,6 +558,12 @@ function New-SessionSummary {
         recent_changed_files = @($fileSummary.recent_changed_files)
         latest_diff_snapshot_path = $fileSummary.latest_diff_snapshot_path
         last_file_change_at = $fileSummary.last_file_change_at
+        process_id = $processSummary.pid
+        process_started_at = $processSummary.started_at
+        process_ended_at = $processSummary.ended_at
+        process_exit_code = $processSummary.exit_code
+        command_line = $processSummary.command_line
+        working_directory = $processSummary.working_directory
         updated_at = $Session.updated_at
     }
 }
@@ -737,6 +775,10 @@ try {
                 recent_changed_files = @($summary.recent_changed_files)
                 latest_diff_snapshot_path = $summary.latest_diff_snapshot_path
                 last_file_change_at = $summary.last_file_change_at
+                process_id = $summary.process_id
+                process_started_at = $summary.process_started_at
+                process_ended_at = $summary.process_ended_at
+                process_exit_code = $summary.process_exit_code
                 idle_stalled_display_only = $true
                 path = ConvertTo-RepoRelativePath -Repo $repo -Path $_.FullName
             }
@@ -888,6 +930,7 @@ try {
             recent_changed_files = @($fileChangeSummary.recent_changed_files)
             latest_diff_snapshot_path = $fileChangeSummary.latest_diff_snapshot_path
             last_file_change_at = $fileChangeSummary.last_file_change_at
+            process = Get-SessionProcessSummary -Session $existingSession
             recent_progress_events = @($progressEvents)
         }
         $result = [pscustomobject]@{
@@ -919,6 +962,9 @@ try {
             if (-not ($AllowedSessionStatuses -contains $statusValue)) {
                 throw "Invalid session status: $statusValue"
             }
+            if ($oldStatus -in @("cancelled", "stopping") -and $statusValue -in @("completed", "failed")) {
+                $statusValue = "cancelled"
+            }
             Set-ObjectProperty -Object $existingSession -Name "status" -Value $statusValue
         }
 
@@ -938,6 +984,38 @@ try {
             Set-ObjectProperty -Object $existingSession.heartbeat -Name "last_activity_summary" -Value $Activity
         }
 
+        if ($null -eq $existingSession.process) {
+            Set-ObjectProperty -Object $existingSession -Name "process" -Value ([pscustomobject]@{})
+        }
+        if ($null -eq $existingSession.executor) {
+            Set-ObjectProperty -Object $existingSession -Name "executor" -Value ([pscustomobject]@{})
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($ProcessId)) {
+            if ($ProcessId -notmatch "^\d+$") {
+                throw "ProcessId must be a positive integer string."
+            }
+            Set-ObjectProperty -Object $existingSession.process -Name "pid" -Value ([int]$ProcessId)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($ProcessStartedAt)) {
+            Set-ObjectProperty -Object $existingSession.process -Name "started_at" -Value $ProcessStartedAt
+        }
+        if (-not [string]::IsNullOrWhiteSpace($ProcessEndedAt)) {
+            Set-ObjectProperty -Object $existingSession.process -Name "ended_at" -Value $ProcessEndedAt
+        }
+        if (-not [string]::IsNullOrWhiteSpace($ProcessExitCode)) {
+            if ($ProcessExitCode -notmatch "^-?\d+$") {
+                throw "ProcessExitCode must be an integer string."
+            }
+            Set-ObjectProperty -Object $existingSession.process -Name "exit_code" -Value ([int]$ProcessExitCode)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($CommandLine)) {
+            Set-ObjectProperty -Object $existingSession.executor -Name "command_line" -Value $CommandLine
+        }
+        if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory)) {
+            Set-ObjectProperty -Object $existingSession.executor -Name "working_directory" -Value (ConvertTo-RepoRelativePath -Repo $repo -Path $WorkingDirectory)
+        }
+
         Set-ObjectProperty -Object $existingSession -Name "updated_at" -Value $now
         Save-JsonFile -Path $existingSessionPath -Value $existingSession
 
@@ -947,7 +1025,8 @@ try {
 
         $runStatus = Convert-SessionStatusToRunStatus -SessionStatus ([string]$existingSession.status)
         Update-TaskRunStateForSession -TaskRunState $taskRunState -TaskRunStatePath $paths.task_run_state_path -SessionId $safeExistingSessionId -Now $now -CurrentStep $step -ActivitySummary $Activity -RunStatus $runStatus -Heartbeat:($Command -eq "heartbeat")
-        $eventId = Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeExistingSessionId -EventType $eventType -Message $message -Data ([ordered]@{ old_status = $oldStatus; new_status = $existingSession.status; activity = $Activity; activity_summary = $Activity; display_only = $true })
+        $processSummary = Get-SessionProcessSummary -Session $existingSession
+        $eventId = Append-ProgressEvent -Path $paths.progress_event_log_path -TaskId $safeTaskId -RunId $taskRunState.run_id -SessionId $safeExistingSessionId -EventType $eventType -Message $message -Data ([ordered]@{ old_status = $oldStatus; new_status = $existingSession.status; activity = $Activity; activity_summary = $Activity; process_id = $processSummary.pid; process_exit_code = $processSummary.exit_code; display_only = $true })
 
         $idle = Get-IdleInfo -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
         $summary = New-SessionSummary -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
@@ -968,6 +1047,10 @@ try {
             recent_changed_files = @($summary.recent_changed_files)
             latest_diff_snapshot_path = $summary.latest_diff_snapshot_path
             last_file_change_at = $summary.last_file_change_at
+            process_id = $summary.process_id
+            process_started_at = $summary.process_started_at
+            process_ended_at = $summary.process_ended_at
+            process_exit_code = $summary.process_exit_code
             idle_stalled_display_only = $true
             session_path = ConvertTo-RepoRelativePath -Repo $repo -Path $existingSessionPath
             session = $existingSession

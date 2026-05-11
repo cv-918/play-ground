@@ -369,6 +369,8 @@ function Invoke-GitCapture {
 function Invoke-CodexProcess {
     param(
         [string]$Repo,
+        [string]$TaskId,
+        [string]$SessionId,
         $Config,
         [string]$PromptPath,
         [string]$StdoutPath,
@@ -438,6 +440,7 @@ function Invoke-CodexProcess {
     $process.add_ErrorDataReceived($stderrHandler)
 
     [void]$process.Start()
+    Update-Session -Repo $Repo -TaskId $TaskId -SessionId $SessionId -Status "running" -Activity "Codex CLI process started." -ProcessId ([string]$process.Id) -ProcessStartedAt $startedAt -CommandLine (($commandPath + " " + ($args -join " ")).Trim()) -WorkingDirectory $workingDir
     $process.BeginOutputReadLine()
     $process.BeginErrorReadLine()
 
@@ -541,7 +544,13 @@ function Update-Session {
         [string]$TaskId,
         [string]$SessionId,
         [string]$Status,
-        [string]$Activity
+        [string]$Activity,
+        [string]$ProcessId = "",
+        [string]$ProcessStartedAt = "",
+        [string]$ProcessEndedAt = "",
+        [string]$ProcessExitCode = "",
+        [string]$CommandLine = "",
+        [string]$WorkingDirectory = ""
     )
 
     $script = Join-Path $PSScriptRoot "session_supervisor.ps1"
@@ -555,7 +564,46 @@ function Update-Session {
         "-Json"
     )
 
+    if (-not [string]::IsNullOrWhiteSpace($ProcessId)) {
+        $args += @("-ProcessId", $ProcessId)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessStartedAt)) {
+        $args += @("-ProcessStartedAt", $ProcessStartedAt)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessEndedAt)) {
+        $args += @("-ProcessEndedAt", $ProcessEndedAt)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ProcessExitCode)) {
+        $args += @("-ProcessExitCode", $ProcessExitCode)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CommandLine)) {
+        $args += @("-CommandLine", $CommandLine)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory)) {
+        $args += @("-WorkingDirectory", $WorkingDirectory)
+    }
+
     Invoke-WorkflowScript -Script $script -ArgsList $args | Out-Null
+}
+
+function Get-SessionStatusFromWorkspace {
+    param(
+        $Workspace,
+        [string]$SessionId
+    )
+
+    $path = Join-Path $Workspace.paths.sessions_dir ($SessionId + ".json")
+    if (-not (Test-Path -LiteralPath $path)) {
+        return ""
+    }
+
+    try {
+        $session = Read-JsonFile -Path $path
+        return ([string]$session.status)
+    }
+    catch {
+        return ""
+    }
 }
 
 function Create-Session {
@@ -705,8 +753,7 @@ try {
             throw "Codex CLI adapter config is disabled."
         }
 
-        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status "running" -Activity "Codex CLI process started."
-        $processResult = Invoke-CodexProcess -Repo $repo -Config $config -PromptPath $promptFullPath -StdoutPath $stdoutPath -StderrPath $stderrPath
+        $processResult = Invoke-CodexProcess -Repo $repo -TaskId $safeTaskId -SessionId $session -Config $config -PromptPath $promptFullPath -StdoutPath $stdoutPath -StderrPath $stderrPath
 
         $changed = @()
         $diffRef = ""
@@ -717,8 +764,9 @@ try {
             }
         }
 
-        $finalStatus = if ($processResult.exit_code -eq 0) { "completed" } else { "failed" }
-        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status $finalStatus -Activity "Codex CLI process exited with code $($processResult.exit_code)."
+        $currentSessionStatus = Get-SessionStatusFromWorkspace -Workspace $workspace -SessionId $session
+        $finalStatus = if ($currentSessionStatus -in @("cancelled", "stopping")) { "cancelled" } elseif ($processResult.exit_code -eq 0) { "completed" } else { "failed" }
+        Update-Session -Repo $repo -TaskId $safeTaskId -SessionId $session -Status $finalStatus -Activity "Codex CLI process exited with code $($processResult.exit_code)." -ProcessEndedAt $processResult.ended_at -ProcessExitCode ([string]$processResult.exit_code)
         Record-Evidence -Repo $repo -TaskId $safeTaskId -SessionId $session -EvidenceId $evidence -Executor "codex_cli" -CommandLine $processResult.command_line -WorkingDirectory $processResult.working_directory -StartedAt $processResult.started_at -EndedAt $processResult.ended_at -ExitCode $processResult.exit_code -StdoutLog (ConvertTo-RepoRelativePath -Repo $repo -Path $stdoutPath) -StderrLog (ConvertTo-RepoRelativePath -Repo $repo -Path $stderrPath) -ChangedFiles @($changed) -DiffSnapshot $diffRef
 
         $result = [pscustomobject]@{
