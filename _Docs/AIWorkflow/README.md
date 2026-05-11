@@ -61,6 +61,7 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Result_Collector.md` | Defines WF-301 Result Collector ExecutionResult aggregation, result manifest storage, session/evidence/control/progress summary fields, and WF-302/WF-304 handoff boundaries |
 | `FinalBlueprint/WF_Diff_Analyzer.md` | Defines WF-302 Diff Analyzer parsing of ExecutionResult diff snapshots into changed-file, line-count, category, and attention-signal observations for WF-304 handoff |
 | `FinalBlueprint/WF_Build_Test_Runner.md` | Defines WF-303 Build/Test Runner allowlisted command execution, stdout/stderr/exit-code observation, BuildTestResult storage, and WF-304 handoff boundaries |
+| `FinalBlueprint/WF_Verification_Report.md` | Defines WF-304 VerificationReport verdict generation from ExecutionResult, DiffAnalysis, and BuildTestResult evidence, including gate policy, runtime storage, and WF-305 handoff boundaries |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

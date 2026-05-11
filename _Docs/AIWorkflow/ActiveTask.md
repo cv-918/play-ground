@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-303
-title: WF-303 Implement Build/Test Runner integration
-status: ready_to_commit
+task_id: WF-304
+title: WF-304 Implement VerificationReport
+status: done
 workflow_path: discord_task_management
 priority: P1
 risk_level: medium
 requested_by: human_director
-requested_at: 2026-05-11
-last_updated: 2026-05-11
+requested_at: 2026-05-12
+last_updated: 2026-05-12
 ```
 
 ---
 
 ## Goal
 
-WF-303 Implement Build/Test Runner integration
+WF-304 Implement VerificationReport
 
 ---
 
@@ -36,7 +36,7 @@ WF-303 Implement Build/Test Runner integration
 discord: task selection command
 human: review and approval
 codex: approved for bounded workflow runtime implementation
-validation: approved: "Human Director approved continuing Phase 3 with WF-303 Build/Test Runner integration after WF-302 commit/push. Scope: implement allowlisted build/test command catalog, status/list/dry-run/run/read APIs, local config guard, approval-level guard, build/test result artifacts under _Temp, stdout/stderr capture, timeout/exit-code observation, deterministic JSON output, documentation, and DevLog. Non-goals: VerificationReport, CompletionReport, Completion Card, auto approval, task done, commit/push automation, arbitrary shell execution, game source/data changes."
+validation: approved: "Human Director approved the recommended WF-304 policy. Scope: implement VerificationReport generation from ExecutionResult, DiffAnalysis, and BuildTestResult; apply PASS/PASS_WITH_NOTES/CONCERNS/BLOCKED/FAIL verdict policy; record missing evidence, failures, concerns, warnings, blockers, and recommended user action; update TaskRunState verification projection; write artifacts under _Temp; document WF-305 handoff. Non-goals: CompletionReport, Completion Card, FinalizationLog, auto approval policy, task done, commit/push automation, arbitrary shell execution, game source/data changes."
 ```
 
 ---
@@ -57,8 +57,8 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Review Build/Test Runner behavior after implementation.
-2. Decide whether to commit after validation.
+1. Review VerificationReport behavior if validation finds CONCERNS, BLOCKED, or FAIL.
+2. Otherwise, Codex may commit and push this approved WF-304 change after review and validation.
 ```
 
 ---
@@ -66,12 +66,11 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Run PowerShell parser checks, build_test_runner status/list/dry-run/run/read
-scenarios, disabled config guard, approval-required guard, allowlisted smoke
-execution with a temporary local config, timeout/nonzero handling if practical,
-JSON parse checks for generated BuildTestResult records, invariant checks that
-no VerificationReport/completion judgment is written, git diff --check,
-forbidden path checks, and private/local tracking checks.
+Run PowerShell parser checks, verification_report status/generate/read
+scenarios, missing-evidence behavior, build/test FAIL behavior, generated JSON
+parse checks, invariant checks that no CompletionReport/completion/approval is
+written, git diff --check, forbidden path checks, and private/local tracking
+checks.
 ```
 
 ---
@@ -79,7 +78,7 @@ forbidden path checks, and private/local tracking checks.
 ## Next Recommended Task
 
 ```text
-After WF-303, continue to WF-304 VerificationReport.
+After WF-304, continue to WF-305 CompletionReport.
 ```
 
 ---
@@ -93,5 +92,5 @@ After WF-303, continue to WF-304 VerificationReport.
 [x] Review completed, if applicable
 [x] Validation completed or explicitly deferred
 [x] Dev Log created for meaningful work
-[ ] User decides whether to commit
+[x] Commit/push completed if validation does not require a new Human Director decision
 ```

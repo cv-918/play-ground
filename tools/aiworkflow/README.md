@@ -41,6 +41,7 @@ runtime_control_adapter.bat
 result_collector.bat
 diff_analyzer.bat
 build_test_runner.bat
+verification_report.bat
 ```
 
 ---
@@ -499,6 +500,30 @@ pass/fail, approve tasks, mark tasks done, commit, or push.
 
 ---
 
+## verification_report.bat
+
+Generates VerificationReport artifacts from existing ExecutionResult,
+DiffAnalysis, and BuildTestResult evidence.
+
+Commands:
+
+```bat
+tools\aiworkflow\verification_report.bat status task_id [--json]
+tools\aiworkflow\verification_report.bat generate task_id [--result-id id] [--analysis-id id] [--build-test-id id] [--report-id id] [--json]
+tools\aiworkflow\verification_report.bat read task_id [report_id] [--json]
+```
+
+`generate` uses the latest available WF-301/WF-302/WF-303 artifacts by default,
+or the explicitly provided source IDs. It writes reports under
+`_Temp\AIWorkflowRuntime\`, updates only the TaskRunState verification
+projection, and appends a display-only progress event.
+
+The report may produce `PASS`, `PASS_WITH_NOTES`, `CONCERNS`, `BLOCKED`, or
+`FAIL`. It does not create CompletionReport, approve tasks, mark tasks done,
+commit, push, release, deploy, or run shell commands.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -523,6 +548,7 @@ tools\aiworkflow\runtime_control_adapter.bat status WF-20260511-182549 --json
 tools\aiworkflow\result_collector.bat status WF-301 --json
 tools\aiworkflow\diff_analyzer.bat status WF-302 --json
 tools\aiworkflow\build_test_runner.bat status WF-303 --json
+tools\aiworkflow\verification_report.bat status WF-304 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat
