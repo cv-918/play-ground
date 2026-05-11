@@ -18,7 +18,7 @@
 
 ```mermaid
 flowchart TD
-    A["[RO] /ai intake"] --> B{"[HUMAN] task로 만들까?"}
+    A["[RO] rule-based /ai intake<br/>또는 ChatGPT/Codex App에서 작업 의도 정리"] --> B{"[HUMAN] task로 만들까?"}
     B -- 아니오 --> Z["종료 또는 나중에 다시 검토"]
     B -- 예 --> C["[WRITE] /ai intake-create<br/>또는 /ai task create"]
     C --> D["[WRITE] /ai task set-active"]
@@ -28,7 +28,7 @@ flowchart TD
     F --> G["[WRITE] /ai prepare goal<br/>request file 생성"]
     G --> H{"[HUMAN] request 검토"}
     H -- 보류 --> E2
-    H -- 실행 --> I["[MANUAL] Codex 실행"]
+    H -- 실행 --> I["[MANUAL] Codex App/CLI 실행"]
     I --> J["[RO] /ai result audit"]
     J --> K{"[HUMAN] done 가능?"}
     K -- 아니오 --> L["추가 review / validation / follow-up"]
@@ -44,6 +44,8 @@ flowchart TD
 - `/ai result audit`은 done 처리하지 않습니다.
 - `/ai task done`은 commit하지 않습니다.
 - commit은 사람이 diff와 validation을 보고 따로 결정합니다.
+- 현재 `/ai intake`는 LLM 호출이 아니라 keyword/rule-based task draft 생성입니다.
+- 향후 LLM-assisted intake가 추가되어도 Human Review와 task 생성/승인 단계를 건너뛰지 않습니다.
 
 ---
 
@@ -66,6 +68,25 @@ flowchart TD
 - role/gate/validation 세부 정보가 필요할 때
 - intake-created task가 바로 active로 가도 되는지 확인할 때
 - data 작업 전후 JSON syntax를 확인할 때
+
+---
+
+## LLM-assisted Intake Future Path
+
+```mermaid
+flowchart TD
+    A["[RO] natural-language request"] --> B["[RO] LLM TaskDraft 제안"]
+    B --> C["[RO] schema validation + rule-based cross-check"]
+    C --> D{"[HUMAN] draft 수락/수정?"}
+    D -- 보류 --> E["질문 보강 / draft 수정"]
+    D -- 수락 --> F["[WRITE] /ai intake-create<br/>또는 /ai task create"]
+    F --> G["[WRITE] /ai task set-active"]
+    G --> H["[WRITE] /ai task approve"]
+```
+
+LLM-assisted intake는 task draft를 더 잘 만들기 위한 보조 계층입니다.
+Backlog write, ActiveTask write, approval, execution, done, commit은 기존
+Human Director 게이트와 Discord 명령을 그대로 통과해야 합니다.
 
 ---
 
@@ -170,4 +191,3 @@ Commit recommendation은 자동 commit 명령이 아닙니다.
 /ai active
 /ai task list
 ```
-

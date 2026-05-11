@@ -29,20 +29,32 @@ Plan, approve, implement narrowly, review, validate, document, then commit.
 For meaningful code/data/runtime work:
 
 ```text
-1. Start with an orchestrator request.
-2. Classify task and risk.
-3. Define architecture and reduced scope.
-4. Get explicit approval.
-5. Use Codex read-only analysis if repository context is needed.
-6. Generate a bounded Copilot prompt or manual implementation plan.
-7. Implement.
+1. Capture the request through `/ai intake`, ChatGPT, or Codex App discussion.
+2. Create or edit a Backlog task with `/ai intake-create` or `/ai task create`.
+3. Select the active task with `/ai task set-active`.
+4. Define architecture, reduced scope, non-goals, and validation expectations.
+5. Record explicit scope approval with `/ai task approve`.
+6. Generate a request with `/ai prepare goal`.
+7. Execute manually in Codex App, Codex CLI, Copilot, or manual implementation as approved.
 8. Capture a full diff, including new untracked files.
 9. Review the diff.
 10. Fix review issues.
-11. Validate build/runtime/data behavior.
-12. Write Dev Log if required.
-13. Commit only after final user decision.
+11. Validate build/runtime/data/workflow behavior.
+12. Audit the result with `/ai result audit`.
+13. Write Dev Log if required.
+14. Mark done only with human evidence using `/ai task done`.
+15. Commit only after final user decision.
 ```
+
+Discord is the task-state, request-generation, and audit layer. Codex App is a
+manual execution surface. A Discord approval or generated goal request does not
+mean Codex has already run, validation has passed, the task is done, or a commit
+is allowed.
+
+Current `/ai intake` is useful as an early draft helper, but it is rule-based. It
+does not call an LLM or inspect repository context. If the request needs real
+intent interpretation, use ChatGPT or Codex App discussion first, then create a
+clear Backlog task manually.
 
 ---
 
@@ -133,6 +145,31 @@ Keep read-only.
 Return findings to ChatGPT.
 Do not allow patches unless explicitly approved.
 ```
+
+When using Codex App directly as the execution surface, include these fields in
+the prompt even if Discord was not used to generate it:
+
+```text
+ActiveTask:
+  task id, title, status, and Backlog row reference
+
+Approved scope:
+  what may be changed now
+
+Non-goals:
+  what must not be implemented, judged, automated, committed, or pushed
+
+Validation evidence:
+  commands run, results, skipped checks, and remaining unverified areas
+
+Return format:
+  implementation summary, files changed, validation results, risks, and commit recommendation
+```
+
+Codex App may inspect or modify files only in the approved mode. If approval is
+missing, use read-only analysis. If new runtime, data schema, workflow rule, or
+file-scope decisions become necessary, stop and return the decision to the Human
+Director before editing.
 
 ---
 

@@ -11,9 +11,9 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260508-155647
-title: WF-207 Implement progress and heartbeat collection
-status: done
+task_id: WF-20260508-172728
+title: WF-208 Implement file watcher and diff snapshots
+status: ready_for_implementation
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
@@ -26,7 +26,7 @@ last_updated: 2026-05-08
 
 ## Goal
 
-WF-207 Implement progress and heartbeat collection
+WF-208 Implement file watcher and diff snapshots
 
 ---
 
@@ -69,11 +69,12 @@ pending
 ## Latest Status Note
 
 ```text
-status: done
-note: done: "완료: WF-207은 session_id 기준 heartbeat/progress 수집을 추가했고, status --json은 /tasks형 runtime_summary, read --json은 /task형 session_detail을 반환합니다. 검증: PowerShell syntax, workspace/session status/read, heartbeat/activity, stalled_candidate 표시, git diff check, forbidden path, private/local tracking 확인 통과. 금지사항 준수: file watcher, diff snapshotter, Runtime Control, Verification Gate, Completion Card, 자동 승인, executor routing 변경, commit/push, game source/data 변경 없음."
+status: ready_for_implementation
+note: approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapshot 저장, EvidenceRecord/ProgressEventLog 연결, ignore 정책, /task 표시용 최근 변경 파일 요약까지만 구현합니다. 금지: diff 판정, Runtime Control, pause/stop/retry/replan, Completion Card, 자동 승인, commit/push."
 updated_at: 2026-05-08
 source: Discord task status command
 ```
+
 ---
 
 ## Next Recommended Task

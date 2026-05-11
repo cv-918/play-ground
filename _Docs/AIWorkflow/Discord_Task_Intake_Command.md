@@ -15,9 +15,11 @@ human decides whether to activate or approve them:
 ```
 
 The command accepts a natural-language work request and returns a structured
-AIWorkflow task suggestion and task draft. `/ai intake` does not create,
-approve, activate, execute, or commit anything. `/ai intake-create` is the
-explicit write command for creating a Backlog task from the same intake logic.
+AIWorkflow task suggestion and task draft. The current implementation is
+keyword/rule-based. It does not call an LLM and does not inspect repository
+context. `/ai intake` does not create, approve, activate, execute, or commit
+anything. `/ai intake-create` is the explicit write command for creating a
+Backlog task from the same intake logic.
 
 ---
 
@@ -99,6 +101,20 @@ No agents or Codex CLI were executed.
 ---
 
 ## 4. Classification Rules
+
+Current v1 classification is deterministic and local:
+
+```text
+input text
+-> keyword/rule matching
+-> category/kind/priority/risk suggestion
+-> role router recommendation
+-> path-scoped reminder selection
+-> Discord response formatting
+```
+
+It is not semantic LLM interpretation. Ambiguous or multi-part requests should
+be reviewed by the Human Director, ChatGPT, or Codex App before Backlog creation.
 
 Category selection:
 
@@ -219,7 +235,46 @@ explicitly invoked the creation command.
 
 ---
 
-## 8. Validation
+## 8. Future LLM-assisted Intake Boundary
+
+A future LLM-assisted intake path may be added to improve natural-language
+understanding, task splitting, missing-question detection, and validation
+planning.
+
+The intended boundary is:
+
+```text
+LLM:
+  returns a TaskDraft JSON candidate only
+
+Local harness:
+  validates the TaskDraft schema
+  compares the LLM draft with the current rule-based classifier
+  flags mismatches or high-risk scope for human review
+  formats the Discord response
+
+Human Director:
+  decides whether to create, edit, activate, approve, execute, mark done, or commit
+```
+
+LLM-assisted intake must not:
+
+```text
+write Backlog.md directly
+update ActiveTask.md
+approve a task
+execute Codex, agents, Copilot, or local commands
+mark a task done
+commit or push
+hide rule-based/LLM mismatches from the human
+```
+
+If an LLM call fails, is disabled, or returns invalid JSON, the command should
+fall back to the existing rule-based intake or return a clear read-only failure.
+
+---
+
+## 9. Validation
 
 Run from repository root:
 

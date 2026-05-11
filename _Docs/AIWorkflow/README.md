@@ -198,16 +198,32 @@ Start with orchestration, then route to Codex or Copilot only when appropriate.
 For regular Discord-assisted AIWorkflow task operation after WF-048:
 
 ```text
-1. /ai intake
-2. /ai intake-create or /ai task create
+1. /ai intake, or human-written task draft reviewed in ChatGPT/Codex App
+2. /ai intake-create or /ai task create after human review
 3. /ai task set-active
 4. /ai task approve
 5. /ai prepare goal
-6. Manual Codex execution outside Discord
+6. Manual Codex App or Codex CLI execution outside Discord
 7. /ai result audit
 8. /ai task done
 9. Manual commit decision
 ```
+
+Current responsibility split:
+
+```text
+Discord Orchestrator:
+  task state, approval records, goal request files, result audit, and command safety
+
+Codex App / Codex CLI:
+  manual repository-aware execution after the human reviews the generated request
+```
+
+Current `/ai intake` is a rule-based task draft helper. It accepts natural
+language text, but it does not call an LLM, inspect repository context, approve
+scope, update Backlog, update ActiveTask, or execute Codex. Future LLM-assisted
+intake may improve draft quality, but any generated draft must still pass human
+review before Backlog creation, activation, approval, or execution.
 
 Optional/debug/admin commands such as `/ai role status`, `/ai task
 review-intake`, `/ai run workflow-status`, `/ai run active-project`, `/ai run

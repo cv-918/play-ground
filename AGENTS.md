@@ -619,3 +619,86 @@ A task can be considered complete only when:
 - User decides whether to commit.
 
 AI-generated output alone does not complete a task.
+
+---
+
+## 19. AIWorkflow Goal Request Rule
+
+When a task is driven by AIWorkflow, assistants must treat the generated goal request as the task contract.
+
+Goal request files are usually created under `_Temp/AIWorkflowTaskRequests/`.
+
+The assistant must follow the goal request in this priority order:
+
+1. Scope
+2. Non-goals
+3. Acceptance Criteria
+4. Validation Plan
+5. Required Return Format
+
+Do not expand the task beyond the goal request.
+
+Do not treat the goal request as permission to perform unrelated cleanup, refactoring, migration, formatting, commit, push, release, or external-tool execution.
+
+If the goal request conflicts with this `AGENTS.md`, stop and report the conflict instead of guessing.
+
+---
+
+## 20. AIWorkflow Runtime Responsibility Rules
+
+AIWorkflow runtime systems must keep these responsibilities separated:
+
+- Task Lifecycle State: Backlog, ActiveTask, approval, blocked/deferred/done state
+- Runtime Workspace: task_id-based runtime working directory and metadata
+- Session Supervisor: session_id-based execution session state, heartbeat, activity, and progress
+- Evidence Collector: execution evidence metadata, logs, changed files, and diff snapshot references
+- Execution Adapter: controlled process execution only
+- Progress / Heartbeat Collection: observable runtime activity and idle/stalled display state only
+- Verification Gate: future pass/fail judgment layer
+- Runtime Control: future pause/stop/retry/replan control layer
+
+Execution adapters must not perform verification judgment.
+
+Evidence collection must not mark tasks passed or failed.
+
+Progress and heartbeat collection must not pause, stop, retry, or replan execution.
+
+Runtime control must not be implemented unless the task explicitly approves it.
+
+---
+
+## 21. AIWorkflow Execution Safety Rules
+
+AIWorkflow execution-related work must preserve these boundaries:
+
+- Do not execute arbitrary user-provided shell commands.
+- Use allowlisted `command_id` values for local command execution.
+- Keep local execution config under `_Local/` and never track it.
+- Keep runtime artifacts under `_Temp/` and never track them.
+- Do not expose secrets, tokens, credentials, or local machine configuration.
+- Do not automatically approve, mark done, commit, push, release, or deploy.
+- Do not implement Verification Gate, Completion Card, Runtime Control, or automatic approval unless the task explicitly says so.
+- Do not modify game source or data unless the task explicitly includes that scope.
+
+For execution adapter work, rejected execution attempts may be recorded as evidence, but they must not be treated as task failure by the adapter itself.
+
+---
+
+## 22. Codex App Result Format
+
+When Codex App performs an AIWorkflow task, the final response must use this format:
+
+1. Implementation summary
+2. Files changed
+3. Behavior or model summary
+4. Validation commands run
+5. Validation results
+6. Known risks
+7. Human decisions needed
+8. Commit recommendation
+
+The assistant must not commit automatically.
+
+The assistant must clearly state when validation was not run.
+
+The assistant must clearly state whether `_Temp`, `_Local`, `node_modules`, `.env`, or local config files were avoided.

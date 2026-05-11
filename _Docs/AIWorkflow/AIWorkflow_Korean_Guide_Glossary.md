@@ -27,6 +27,9 @@
 | required validation | 필수 검증 | 완료 전에 필요한 build/test/runtime/check 증거 | done/commit 판단 전 |
 | human decision gate | 사람 판단 게이트 | AI가 혼자 결정하면 안 되는 지점 | 승인, schema, runtime, commit 등 |
 | commit recommendation | commit 권고 | result audit이 제안하는 commit 가능성 | 최종 commit 전 참고 |
+| rule-based intake | 규칙 기반 intake | 키워드와 고정 규칙으로 task draft를 제안하는 현재 `/ai intake` 방식 | 빠른 초벌 분류가 필요할 때 |
+| LLM-assisted intake | LLM 보조 intake | LLM이 TaskDraft 후보를 제안하되 하네스가 검증하고 사람이 승인하는 향후 방식 | 복합 요청의 문맥 해석이 필요할 때 |
+| Codex App execution | Codex App 실행 | 사람이 승인된 요청서를 Codex App에 붙여 넣고 저장소 작업을 수행하는 수동 실행 | `/ai prepare goal` 이후 |
 
 ---
 
@@ -35,6 +38,15 @@
 ### `/ai intake`
 
 Type: read-only
+
+현재 구현 상태:
+
+- LLM을 호출하지 않습니다.
+- 저장소 파일을 분석하지 않습니다.
+- 입력 문장에 들어 있는 keyword와 규칙으로 category, kind, priority/risk,
+  validation hint를 추정합니다.
+- 그래서 복합 작업의 문맥 해석이 필요하면 ChatGPT 또는 Codex App에서 먼저
+  작업 의도와 범위를 정리한 뒤 `/ai task create`를 사용하는 편이 안전합니다.
 
 무엇을 하나:
 
@@ -53,6 +65,14 @@ Type: read-only
 
 ```text
 /ai intake text:"UserData 기본값 복구 작업을 정리하고 싶어"
+```
+
+분류 안정성을 높이려면 의도적으로 영어 식별자를 섞어 씁니다.
+
+```text
+/ai intake text:"WF task: Codex goal prompt compact output에서 WF-208 요구사항이 WF-207 heartbeat 조건으로 오염되는 문제를 수정하고 싶어."
+/ai intake text:"GAME data task: UserData.json의 level-0 AttributeNode 데이터를 정상 기본값으로 복구하고 loader validation 계획을 세우고 싶어."
+/ai intake text:"VAL task: run result semantics에 대한 manual runtime validation checklist를 만들고 싶어."
 ```
 
 ### `/ai intake-create`
@@ -142,12 +162,12 @@ Type: write to `_Temp`
 /ai prepare goal id:GAME-001 mode:analysis context:standard
 ```
 
-### Manual Codex execution
+### Manual Codex App / CLI execution
 
 Type: manual
 
-사람이 generated markdown file을 열고 내용을 검토한 뒤 Codex CLI에 직접
-붙여 넣습니다.
+사람이 generated markdown file을 열고 내용을 검토한 뒤 Codex App 또는
+Codex CLI에 직접 붙여 넣습니다.
 
 중요:
 

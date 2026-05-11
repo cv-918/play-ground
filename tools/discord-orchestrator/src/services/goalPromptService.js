@@ -345,6 +345,8 @@ function buildCompactGoalPrompt(input) {
     "",
     buildCompactAcceptanceCriteriaSection(input.task),
     "",
+    buildCompactScopeGuardSection(input.task),
+    "",
     buildCompactPathRemindersSection(input),
     "",
     buildCompactValidationPlanSection(input.task),
@@ -421,6 +423,19 @@ function buildCompactAcceptanceCriteriaSection(task) {
     "## Acceptance Criteria",
     ...criteria.map((item) => "- " + item),
   ].join("\n");
+}
+
+function buildCompactScopeGuardSection(task) {
+  const guards = inferTaskScopeGuards(task);
+  const lines = ["## Scope Guard"];
+
+  if (guards.length === 0) {
+    lines.push("- Treat generated requirements as bounded task scope only; do not infer extra implementation authority.");
+    return lines.join("\n");
+  }
+
+  lines.push(...guards.map((item) => "- " + item));
+  return lines.join("\n");
 }
 
 function buildCompactPathRemindersSection({ pathRuleChecklist }) {
@@ -889,6 +904,21 @@ function taskText(task) {
 function inferTaskSpecificRequirements(task) {
   const text = taskText(task);
 
+  if (isFileWatcherDiffSnapshotTask(text)) {
+    return [
+      "workspace_path 기준 파일 변경 감지 인터페이스.",
+      "session_id 기준 changed_files 기록.",
+      "git diff snapshot 파일 저장.",
+      "EvidenceRecord에 changed_files와 diff_snapshot_path 연결.",
+      "ProgressEventLog에 file change event 기록.",
+      "/task-style detail에서 최근 변경 파일 확인 가능.",
+      "ignore path policy.",
+      "workspace/session/git diff 오류 기록.",
+      "WF-209 Runtime Control handoff.",
+      "File watcher and diff snapshots는 변경 감지와 snapshot 저장만 담당하고, diff gate pass/fail 판정은 하지 않는다.",
+    ];
+  }
+
   if (isProgressHeartbeatTask(text)) {
     return [
       "Implement session_id-based progress/heartbeat collection only.",
@@ -909,6 +939,20 @@ function inferTaskSpecificRequirements(task) {
 
 function inferAcceptanceCriteria(task) {
   const text = taskText(task);
+
+  if (isFileWatcherDiffSnapshotTask(text)) {
+    return [
+      "workspace_path 기준 파일 변경 감시가 가능함.",
+      "session_id 기준 changed_files가 기록됨.",
+      "git diff snapshot이 파일로 저장됨.",
+      "EvidenceRecord에 changed_files와 diff_snapshot_path가 연결됨.",
+      "ProgressEventLog에 파일 변경 이벤트가 기록됨.",
+      "/task WF-XXX 스타일 상세에서 최근 변경 파일을 확인할 수 있음.",
+      "ignore path 정책이 설정으로 분리됨.",
+      "workspace/session/git diff 오류가 기록됨.",
+      "diff 해석이나 pass/fail 판정은 하지 않음.",
+    ];
+  }
 
   if (isProgressHeartbeatTask(text)) {
     return [
@@ -931,8 +975,30 @@ function inferAcceptanceCriteria(task) {
   ];
 }
 
+function inferTaskScopeGuards(task) {
+  const text = taskText(task);
+
+  if (isFileWatcherDiffSnapshotTask(text)) {
+    return [
+      "File watcher and diff snapshots는 변경 감지와 snapshot 저장만 담당하고, diff gate pass/fail 판정은 하지 않는다.",
+      "Treat changed_files, diff_snapshot_path, and file-change ProgressEventLog entries as evidence metadata only.",
+      "Do not use file change detection to approve, complete, reject, or change task state.",
+    ];
+  }
+
+  return [];
+}
+
+function isFileWatcherDiffSnapshotTask(text) {
+  const describesFileChangeCollection = /file watcher|detect file changes|file changes in a task workspace|file change events?/i.test(text);
+  const describesDiffSnapshots = /diff snapshot|diff_snapshot_path|git diff snapshots?/i.test(text);
+  return describesFileChangeCollection
+    && describesDiffSnapshots
+    && !/do not implement file watcher|do not implement.*diff snapshotter/i.test(text);
+}
+
 function isProgressHeartbeatTask(text) {
-  return /WF-207|progress|heartbeat|last_activity|activity_summary|idle\/stalled|ProgressEventLog/i.test(text);
+  return /WF-207|progress and heartbeat|progress\/heartbeat|heartbeat|last_activity|activity_summary|idle\/stalled/i.test(text);
 }
 
 function summarizeText(value, maxLength) {

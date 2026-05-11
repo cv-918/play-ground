@@ -19,6 +19,53 @@ Codex를 직접 실행하거나, commit하거나, game source를 고치는 구�
 
 ---
 
+## 현재 intake와 실행 방식
+
+현재 `/ai intake`는 자연어 입력을 받을 수 있지만, LLM을 호출해서 문맥을
+이해하는 기능은 아닙니다. 현재 구현은 키워드와 규칙을 기준으로 category,
+kind, priority, risk, validation hint를 추정하는 rule-based task draft
+helper입니다.
+
+따라서 `/ai intake`는 다음 용도로 사용합니다.
+
+```text
+아이디어를 Backlog 후보로 만들기 전 초벌 task draft를 얻는 용도
+```
+
+다음 용도로 사용하지 않습니다.
+
+```text
+복합 작업의 의도 해석
+아키텍처 판단
+저장소 문맥 분석
+자동 승인
+자동 실행
+```
+
+작업 의도가 복잡하거나 하네스의 intake 결과가 부족하면 ChatGPT 또는 Codex
+App에서 먼저 작업 의도, 범위, non-goals, validation 기준을 정리한 뒤
+`/ai task create` 또는 `/ai intake-create`로 Backlog에 기록합니다.
+
+향후 LLM-assisted intake가 도입되더라도 책임은 분리합니다.
+
+```text
+LLM:
+  TaskDraft JSON 제안, 누락 질문, 위험 후보, validation 후보 생성
+
+Workflow harness:
+  schema 검증, rule-based cross-check, Backlog write, ActiveTask write,
+  approval 기록, result audit, safety guard
+
+Human Director:
+  task 생성, 활성화, 승인, 실행, done, commit 최종 결정
+```
+
+LLM-assisted intake는 제안 품질을 높이는 계층일 뿐이며 Backlog 생성,
+ActiveTask 변경, approval, Codex 실행, done, commit을 자동으로 수행해서는
+안 됩니다.
+
+---
+
 ## 전체 구조
 
 ```mermaid
@@ -27,7 +74,7 @@ flowchart TD
     D --> T[Task State<br/>Backlog / ActiveTask]
     D --> R[Role Router]
     D --> G[Goal Prompt Generator]
-    G --> C[Manual Codex Execution]
+    G --> C[Manual Codex App / CLI Execution]
     C --> A[Result Audit]
     A --> L[Documents / Dev Logs / Commit Decision]
     H --> C
@@ -114,12 +161,12 @@ Role Router는 추천만 합니다. agent를 실행하지 않습니다.
 
 중요: Discord는 파일만 생성합니다. Codex 실행은 사람이 직접 합니다.
 
-### Codex Execution
+### Codex App / CLI Execution
 
-Codex 실행은 수동입니다.
+Codex App 또는 Codex CLI 실행은 수동입니다.
 
-사람이 generated `goal_request_*.md`를 열고 검토한 뒤 Codex CLI에 붙여
-넣습니다.
+사람이 generated `goal_request_*.md`를 열고 검토한 뒤 Codex App 또는
+Codex CLI에 붙여 넣습니다. Discord는 Codex를 직접 실행하지 않습니다.
 
 Codex가 작업을 끝내면 결과 요약을 다시 Discord나 ChatGPT에 가져옵니다.
 
@@ -174,7 +221,7 @@ Result Audit은 읽기 전용입니다. 자동으로 done 처리하거나 commit
 3. /ai task set-active
 4. /ai task approve
 5. /ai prepare goal
-6. 사람이 Codex를 수동 실행
+6. 사람이 Codex App 또는 Codex CLI를 수동 실행
 7. /ai result audit
 8. /ai task done
 9. 사람이 diff 검토 후 commit 결정
@@ -189,8 +236,7 @@ Result Audit은 읽기 전용입니다. 자동으로 done 처리하거나 commit
 - `/ai task set-active`는 ActiveTask에 씁니다.
 - `/ai task approve`는 approval 상태를 기록합니다.
 - `/ai prepare goal`은 request file만 만듭니다.
-- Codex 실행은 수동입니다.
+- Codex App/CLI 실행은 수동입니다.
 - `/ai result audit`은 읽기 전용입니다.
 - `/ai task done`은 사람이 evidence를 넣어 완료 처리합니다.
 - commit은 항상 수동 결정입니다.
-
