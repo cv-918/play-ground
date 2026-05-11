@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "include_untracked": true,
+  "capture_diff_snapshot": true,
+  "max_recent_changed_files": 12,
+  "ignore_paths": [
+    ".git/**",
+    "_Temp/**",
+    "_Local/**",
+    "node_modules/**",
+    ".env",
+    "*.log",
+    "*.tmp",
+    "*.local.json"
+  ]
+}

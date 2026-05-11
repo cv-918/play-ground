@@ -40,7 +40,7 @@ function Get-NowText {
 }
 
 function Get-EventId {
-    return ("event-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff"))
+    return ("event-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff") + "-" + ([Guid]::NewGuid().ToString("N").Substring(0, 8)))
 }
 
 function Write-Utf8Text {
@@ -341,6 +341,118 @@ function Read-ProgressEvents {
     return @($events | Select-Object -Last $MaxCount)
 }
 
+function ConvertTo-ArrayValue {
+    param($Value)
+
+    if ($null -eq $Value) {
+        return @()
+    }
+
+    if ($Value -is [System.Array]) {
+        return @($Value)
+    }
+
+    return @($Value)
+}
+
+function Get-EventDetails {
+    param($Event)
+
+    if ($null -eq $Event -or $null -eq $Event.data) {
+        return $null
+    }
+
+    if ($null -ne $Event.data.PSObject.Properties["details"]) {
+        return $Event.data.details
+    }
+
+    return $Event.data
+}
+
+function Get-WorkspaceFileSummary {
+    param($Session)
+
+    $workspace = Get-ObjectPropertyValue -Object $Session -Name "workspace"
+    $files = @()
+    $count = 0
+    $snapshotPath = $null
+    $lastAt = $null
+
+    if ($null -ne $workspace) {
+        $files = @(ConvertTo-ArrayValue -Value (Get-ObjectPropertyValue -Object $workspace -Name "recent_changed_files") | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        $countValue = Get-ObjectPropertyValue -Object $workspace -Name "changed_files_count"
+        if ($null -ne $countValue) {
+            $count = [int]$countValue
+        }
+        elseif ($files.Count -gt 0) {
+            $count = $files.Count
+        }
+        $snapshotPath = Get-ObjectPropertyValue -Object $workspace -Name "latest_diff_snapshot_path"
+        $lastAt = Get-ObjectPropertyValue -Object $workspace -Name "last_file_change_at"
+    }
+
+    return [pscustomobject]@{
+        changed_files_count = $count
+        recent_changed_files = @($files)
+        latest_diff_snapshot_path = $snapshotPath
+        recent_diff_snapshots = if ([string]::IsNullOrWhiteSpace($snapshotPath)) { @() } else { @($snapshotPath) }
+        last_file_change_at = $lastAt
+    }
+}
+
+function Get-RecentFileChangeSummary {
+    param(
+        $Events,
+        $Session
+    )
+
+    $files = @()
+    $snapshots = @()
+    $lastAt = $null
+
+    foreach ($event in @($Events)) {
+        $details = Get-EventDetails -Event $event
+        if ($null -eq $details) {
+            continue
+        }
+
+        if ($event.event_type -eq "file_change_detected") {
+            $files += @(ConvertTo-ArrayValue -Value $details.changed_files | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+            $lastAt = $event.created_at
+        }
+
+        if ($event.event_type -eq "diff_snapshot_created") {
+            $path = Get-ObjectPropertyValue -Object $details -Name "diff_snapshot_path"
+            if (-not [string]::IsNullOrWhiteSpace($path)) {
+                $snapshots += [string]$path
+                $lastAt = $event.created_at
+            }
+        }
+    }
+
+    $workspaceSummary = Get-WorkspaceFileSummary -Session $Session
+    if ($files.Count -eq 0 -and $workspaceSummary.recent_changed_files.Count -gt 0) {
+        $files = @($workspaceSummary.recent_changed_files)
+    }
+    if ($snapshots.Count -eq 0 -and $workspaceSummary.recent_diff_snapshots.Count -gt 0) {
+        $snapshots = @($workspaceSummary.recent_diff_snapshots)
+    }
+    if ([string]::IsNullOrWhiteSpace($lastAt)) {
+        $lastAt = $workspaceSummary.last_file_change_at
+    }
+
+    $uniqueFiles = @($files | Select-Object -Unique)
+    $uniqueSnapshots = @($snapshots | Select-Object -Unique)
+
+    return [pscustomobject]@{
+        changed_files_count = if ($workspaceSummary.changed_files_count -gt $uniqueFiles.Count) { $workspaceSummary.changed_files_count } else { $uniqueFiles.Count }
+        recent_changed_files = @($uniqueFiles)
+        latest_diff_snapshot_path = if ($uniqueSnapshots.Count -eq 0) { $null } else { $uniqueSnapshots[-1] }
+        recent_diff_snapshots = @($uniqueSnapshots)
+        last_file_change_at = $lastAt
+    }
+}
+
 function Get-SessionActivity {
     param($Session)
 
@@ -397,6 +509,7 @@ function New-SessionSummary {
 
     $idle = Get-IdleInfo -Session $Session -ThresholdMinutes $ThresholdMinutes
     $activity = Get-SessionActivity -Session $Session
+    $fileSummary = Get-WorkspaceFileSummary -Session $Session
 
     return [pscustomobject]@{
         session_id = $Session.session_id
@@ -409,6 +522,10 @@ function New-SessionSummary {
         last_activity_at = $activity.last_activity_at
         last_activity = $activity.last_activity
         activity_summary = $activity.activity_summary
+        changed_files_count = $fileSummary.changed_files_count
+        recent_changed_files = @($fileSummary.recent_changed_files)
+        latest_diff_snapshot_path = $fileSummary.latest_diff_snapshot_path
+        last_file_change_at = $fileSummary.last_file_change_at
         updated_at = $Session.updated_at
     }
 }
@@ -616,6 +733,10 @@ try {
                 last_activity_at = $summary.last_activity_at
                 last_activity = $summary.last_activity
                 activity_summary = $summary.activity_summary
+                changed_files_count = $summary.changed_files_count
+                recent_changed_files = @($summary.recent_changed_files)
+                latest_diff_snapshot_path = $summary.latest_diff_snapshot_path
+                last_file_change_at = $summary.last_file_change_at
                 idle_stalled_display_only = $true
                 path = ConvertTo-RepoRelativePath -Repo $repo -Path $_.FullName
             }
@@ -749,6 +870,7 @@ try {
         $idle = Get-IdleInfo -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
         $summary = New-SessionSummary -Session $existingSession -ThresholdMinutes $StalledAfterMinutes
         $progressEvents = @(Read-ProgressEvents -Path $paths.progress_event_log_path -SessionId $safeExistingSessionId -MaxCount 10)
+        $fileChangeSummary = Get-RecentFileChangeSummary -Events $progressEvents -Session $existingSession
         $sessionDetail = [pscustomobject]@{
             task_id = $safeTaskId
             workspace_id = $workspaceId
@@ -761,6 +883,11 @@ try {
             last_activity_at = $summary.last_activity_at
             last_activity = $summary.last_activity
             activity_summary = $summary.activity_summary
+            file_change_summary = $fileChangeSummary
+            changed_files_count = $fileChangeSummary.changed_files_count
+            recent_changed_files = @($fileChangeSummary.recent_changed_files)
+            latest_diff_snapshot_path = $fileChangeSummary.latest_diff_snapshot_path
+            last_file_change_at = $fileChangeSummary.last_file_change_at
             recent_progress_events = @($progressEvents)
         }
         $result = [pscustomobject]@{
@@ -837,6 +964,10 @@ try {
             last_activity_at = $summary.last_activity_at
             last_activity = $summary.last_activity
             activity_summary = $summary.activity_summary
+            changed_files_count = $summary.changed_files_count
+            recent_changed_files = @($summary.recent_changed_files)
+            latest_diff_snapshot_path = $summary.latest_diff_snapshot_path
+            last_file_change_at = $summary.last_file_change_at
             idle_stalled_display_only = $true
             session_path = ConvertTo-RepoRelativePath -Repo $repo -Path $existingSessionPath
             session = $existingSession

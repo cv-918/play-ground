@@ -36,6 +36,7 @@ session_supervisor.bat
 evidence_collector.bat
 codex_cli_adapter.bat
 local_cli_adapter.bat
+file_watcher.bat
 ```
 
 ---
@@ -340,6 +341,44 @@ commit, or push.
 
 ---
 
+## file_watcher.bat
+
+Observes changed files, writes git diff snapshots, and links the observation to
+EvidenceRecord and ProgressEventLog runtime artifacts.
+
+Tracked example config:
+
+```text
+tools\aiworkflow\file_watcher.example.json
+```
+
+Recommended local config:
+
+```text
+_Local\AIWorkflow\file_watcher.local.json
+```
+
+Commands:
+
+```bat
+tools\aiworkflow\file_watcher.bat status task_id [session_id] [--config path] [--json]
+tools\aiworkflow\file_watcher.bat snapshot task_id session_id [evidence_id] [--config path] [--json]
+tools\aiworkflow\file_watcher.bat watch task_id session_id [--config path] [--interval-seconds n] [--duration-seconds n] [--max-snapshots n] [--snapshot-on-start] [--json]
+```
+
+`snapshot` records changed files and a diff snapshot under
+`_Temp\AIWorkflowRuntime\`, then uses the Evidence Collector to store metadata.
+When `include_untracked` is enabled, small untracked text files are also copied
+into a separate snapshot section so new-file evidence is reviewable.
+`watch` is bounded polling and records snapshots when the changed-file set is
+present or changes.
+
+The watcher records observation/evidence only. It does not verify diffs, decide
+pass/fail, pause, stop, retry, replan, approve tasks, mark tasks done, commit,
+or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -359,6 +398,7 @@ tools\aiworkflow\session_supervisor.bat status WF-20260508-101245 --json
 tools\aiworkflow\evidence_collector.bat status WF-20260508-103845 session-evidence-validation-001 --json
 tools\aiworkflow\codex_cli_adapter.bat dry-run WF-20260508-142029 --config tools\aiworkflow\codex_cli_adapter.example.json --json
 tools\aiworkflow\local_cli_adapter.bat dry-run WF-20260508-150424 node_version --config tools\aiworkflow\local_cli_adapter.example.json --json
+tools\aiworkflow\file_watcher.bat status WF-20260508-172728 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

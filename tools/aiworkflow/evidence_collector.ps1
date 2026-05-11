@@ -41,7 +41,7 @@ function Get-NowText {
 }
 
 function Get-EventId {
-    return ("event-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff"))
+    return ("event-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff") + "-" + ([Guid]::NewGuid().ToString("N").Substring(0, 8)))
 }
 
 function Write-Utf8Text {
@@ -124,6 +124,9 @@ function ConvertTo-RepoRelativePath {
 
     if ($full.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
         $relative = $full.Substring($root.Length).TrimStart("\", "/")
+        if ([string]::IsNullOrWhiteSpace($relative)) {
+            return "."
+        }
         return ($relative -replace "\\", "/")
     }
 
@@ -485,7 +488,7 @@ function Add-DiffSnapshotReference {
     }
 
     $snapshots += [pscustomobject]@{
-        snapshot_id = "diff-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff")
+        snapshot_id = "diff-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff") + "-" + ([Guid]::NewGuid().ToString("N").Substring(0, 8))
         path = $relative
         capture_mode = "reference"
         captured_at = $Now

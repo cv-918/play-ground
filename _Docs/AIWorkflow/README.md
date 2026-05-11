@@ -56,6 +56,7 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Codex_CLI_Execution_Adapter.md` | Defines WF-205 Codex CLI Execution Adapter config, execution guards, Session Supervisor and Evidence Collector integration, failure evidence recording, and WF-206 handoff points |
 | `FinalBlueprint/WF_Local_CLI_Execution_Adapter.md` | Defines WF-206 Local CLI Execution Adapter command catalog, command_id allowlist execution, shell blocking, runtime session/evidence integration, failure evidence recording, and WF-207 handoff points |
 | `FinalBlueprint/WF_Progress_Heartbeat_Collection.md` | Defines WF-207 progress and heartbeat collection, activity summaries, runtime summary/detail output, display-only idle/stalled state, and WF-208 handoff points |
+| `FinalBlueprint/WF_File_Watcher_Diff_Snapshot.md` | Defines WF-208 file watcher and diff snapshot observation, EvidenceRecord/ProgressEventLog linkage, ignore policy, task-detail changed-file display fields, and WF-209 Runtime Control handoff boundaries |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
