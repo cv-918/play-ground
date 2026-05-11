@@ -34,7 +34,7 @@ For meaningful code/data/runtime work:
 3. Define architecture, reduced scope, non-goals, and validation expectations.
 4. Record explicit scope approval with `/ai task approve`.
 5. Generate a request with `/ai prepare goal`.
-6. Execute manually in Codex App, Codex CLI, Copilot, or manual implementation as approved.
+6. Execute through the approved current execution path.
 7. Capture a full diff, including new untracked files.
 8. Review the diff.
 9. Fix review issues.
@@ -46,9 +46,12 @@ For meaningful code/data/runtime work:
 ```
 
 Discord is the task-state, request-generation, and audit layer. Codex App is a
-manual execution surface. A Discord approval or generated goal request does not
-mean Codex has already run, validation has passed, the task is done, or a commit
-is allowed.
+manual execution surface only during bootstrap or approved manual escalation.
+The final architecture is PC Runner-owned execution with task workspaces,
+session supervision, evidence collection, verification reporting, and
+Discord-based control. A Discord approval or generated goal request does not
+mean execution has already run, validation has passed, the task is done, or a
+commit is allowed.
 
 Current `/ai intake` uses local `codex exec` as the LLM-assisted intake backend.
 It creates one Backlog task from a validated TaskDraft and then stops. The
@@ -115,6 +118,11 @@ Do not use Copilot before architecture, scope, and file boundaries are approved.
 ---
 
 ## 6. Codex Procedure
+
+This section describes the legacy/bootstrap or manual-escalation path. Do not
+treat manual Codex prompt copy/paste as the final architecture. Normal execution
+should move toward PC Runner-owned execution adapters when that path is
+available.
 
 Default Codex setup:
 

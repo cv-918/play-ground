@@ -11,9 +11,9 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260511-145547
-title: Validate Discord intake embed readability in Backlog creation response
-status: done
+task_id: WF-20260508-172728
+title: WF-208 Implement file watcher and diff snapshots
+status: in_progress
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
@@ -26,7 +26,7 @@ last_updated: 2026-05-11
 
 ## Goal
 
-Validate Discord intake embed readability in Backlog creation response
+WF-208 Implement file watcher and diff snapshots
 
 ---
 
@@ -36,7 +36,7 @@ Validate Discord intake embed readability in Backlog creation response
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: approved: Discord intake embed smoke scope accepted by Human Director.
+validation: approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapshot 저장, EvidenceRecord/ProgressEventLog 연결, ignore 정책, /task 표시용 최근 변경 파일 요약까지만 구현합니다. 금지: diff 판정, Runtime Control, pause/stop/retry/replan, Completion Card, 자동 승인, commit/push."
 ```
 
 ---
@@ -61,18 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: Discord intake embed smoke scope accepted by Human Director.
-```
-
----
-
-## Latest Status Note
-
-```text
-status: done
-note: done: Discord intake embed readability smoke accepted. Intake, intake-test, intake-engine status, and review-intake embed payload checks passed; bot restarted cleanly.
-updated_at: 2026-05-11
-source: Discord task status command
+approved: "범위 승인: workspace 기준 changed_files 감지, git diff snapshot 저장, EvidenceRecord/ProgressEventLog 연결, ignore 정책, /task 표시용 최근 변경 파일 요약까지만 구현합니다. 금지: diff 판정, Runtime Control, pause/stop/retry/replan, Completion Card, 자동 승인, commit/push."
 ```
 
 ---

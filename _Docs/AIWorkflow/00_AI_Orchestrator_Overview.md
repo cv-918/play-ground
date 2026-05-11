@@ -71,6 +71,41 @@ The orchestrator is responsible for controlling the development flow.
 The orchestrator does not blindly implement code.
 It determines what should be designed, what should be executed, what should be reviewed, and where human approval is required.
 
+### Current Target Definition
+
+The current target is a Discord-first PC Runner-based AI development workflow
+harness.
+
+Discord is the primary user interface. The human user gives natural-language
+goals, monitors progress, approves risky decisions, reviews completion, and
+decides whether to commit. The local PC Runner owns task intake, structured
+intent generation, task state, execution routing, session supervision, evidence
+collection, verification reporting, and audit logging.
+
+Natural language input must not be executed directly. Discord text is first
+converted into a structured `GoalIntent` or `RuntimeControlIntent`. Ambiguous
+input must trigger clarification or human review instead of execution.
+
+Manual Codex prompt copy/paste is a legacy/bootstrap path, not the final
+architecture. The final architecture moves normal execution toward PC
+Runner-owned task workspaces, execution adapters, session monitoring, evidence
+collection, and Discord-based control.
+
+Task Lifecycle State and Execution Run State must remain separate. Task state
+describes the workflow item; runtime state describes a specific execution
+session. They are connected through `task_id`.
+
+Session supervision, evidence collection, and verification judgment must also
+remain separate. The Session Supervisor tracks sessions and heartbeat. The
+Evidence Collector gathers logs, exit codes, changed files, and diff snapshots.
+Verification Gates judge collected evidence later. Evidence collection must not
+decide pass/fail.
+
+Phase 2 is limited to runtime execution, session tracking, heartbeat, file
+watching, diff snapshots, runtime control, and evidence collection. Phase 3 owns
+VerificationReport, CompletionReport, Completion Card, FinalizationLog,
+Follow-up Task generation, and Auto Approval Policy.
+
 ---
 
 ## 4. Initial Automation Level

@@ -195,14 +195,23 @@ Start with orchestration, then route to Codex or Copilot only when appropriate.
 
 ## 8. Recommended Default Flow
 
-For regular Discord-assisted AIWorkflow task operation after WF-048:
+The final target is a Discord-first PC Runner-based execution harness. Discord
+is the user-facing interface; the PC Runner owns execution, session supervision,
+evidence collection, verification reporting, and audit logging.
+
+Manual Codex App / Codex CLI prompt copy/paste is a legacy/bootstrap escalation
+path. It remains allowed while the PC Runner execution path is being built, but
+it is not the final architecture.
+
+For regular Discord-assisted AIWorkflow task operation during the current
+bootstrap stage:
 
 ```text
 1. /ai intake text:<request>
 2. /ai task set-active
 3. /ai task approve
 4. /ai prepare goal
-5. Manual Codex App or Codex CLI execution outside Discord
+5. Execute through the approved current path
 6. /ai result audit
 7. /ai task done
 8. Manual commit decision
@@ -226,8 +235,13 @@ Discord Orchestrator:
 Codex CLI intake backend:
   non-interactive TaskDraft JSON generation only
 
+PC Runner execution target:
+  final owner of task workspace execution, session supervision, evidence
+  collection, verification reporting, and Discord progress/completion reporting
+
 Codex App / Codex CLI manual execution:
-  repository-aware implementation after the human reviews the generated request
+  legacy/bootstrap or approved manual-escalation path until PC Runner execution
+  is complete
 ```
 
 Current `/ai intake` uses local `codex exec` through the signed-in Codex CLI as
@@ -243,7 +257,7 @@ The regular post-intake task flow remains:
 3. /ai task set-active
 4. /ai task approve
 5. /ai prepare goal
-6. Manual Codex App or Codex CLI execution outside Discord
+6. Execute through PC Runner when available; otherwise use approved manual escalation
 7. /ai result audit
 8. /ai task done
 9. Manual commit decision
