@@ -731,6 +731,146 @@ export function formatResultAudit(result) {
   ].join("\n");
 }
 
+export function formatCompletionStatusPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**완료 보고 상태 확인 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const report = result.data?.report_status ?? {};
+  const card = result.data?.card_status ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "완료 보고 상태",
+      color: 0x1565c0,
+      description: formatInlineCode(result.data?.task_id || "unknown"),
+      fields: [
+        embedField("CompletionReport", [
+          `개수: ${report.completion_report_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(report.latest_completion_report_id || "none")}`,
+          `경로: ${formatInlineCode(report.latest_completion_report_path || report.completion_manifest_path || "none")}`,
+        ]),
+        embedField("Completion Card", [
+          `개수: ${card.completion_card_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(card.latest_completion_card_id || "none")}`,
+          `경로: ${formatInlineCode(card.latest_completion_card_path || card.completion_card_manifest_path || "none")}`,
+        ]),
+        embedField("안전 상태", [
+          "Backlog/ActiveTask 변경 없음",
+          "승인, 완료 처리, finalization, commit, push 없음",
+        ], true),
+      ],
+    }],
+  };
+}
+
+export function formatCompletionReportPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**CompletionReport 생성 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const report = data.completion_report ?? {};
+  const task = report.task_context ?? {};
+  const readiness = report.completion_readiness ?? {};
+  const verification = report.verification_summary ?? {};
+  const risks = report.remaining_risks ?? {};
+
+  return {
+    content: "",
+    embeds: [{
+      title: "CompletionReport 생성 완료",
+      color: completionColor(report.completion_state),
+      description: [
+        `${formatInlineCode(data.completion_report_id || report.completion_report_id || "unknown")}`,
+        `${data.task_id ?? report.task_id ?? "unknown"} · ${task.priority ?? "?"} · ${completionStateKo(report.completion_state)}`,
+        compactText(task.title ?? "unknown", 180),
+      ].join("\n"),
+      fields: [
+        embedField("완료 준비", [
+          `상태: ${completionStateKo(report.completion_state)}`,
+          `판정: ${readinessKo(readiness.level)}`,
+          `수동 done 가능: ${koBool(readiness.can_mark_task_done_manually)}`,
+          `사람 결정 필요: ${koBool(readiness.human_decision_required)}`,
+        ]),
+        embedField("검증 요약", [
+          `VerificationReport: ${formatInlineCode(report.sources?.verification_report?.verification_report_id || "none")}`,
+          `verdict: ${verification.verdict ?? "unknown"}`,
+          `warnings/concerns/blockers/failed: ${verification.warning_count ?? 0}/${verification.concern_count ?? 0}/${verification.blocker_count ?? 0}/${verification.failed_check_count ?? 0}`,
+        ]),
+        embedField("남은 이슈", summarizeCompletionRisks(risks)),
+        embedField("다음 명령", summarizeCompactList(report.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          "Backlog/ActiveTask 변경 없음",
+          "승인, 완료 처리, finalization, auto approval, commit/push 없음",
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.completion_report_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
+export function formatCompletionCardPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**완료 카드 생성 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const card = data.completion_card ?? {};
+  const presentation = card.presentation ?? {};
+  const generatedReport = result.generated_report?.completion_report_id;
+  const generatedLine = generatedReport
+    ? `새 CompletionReport 생성: ${formatInlineCode(generatedReport)}`
+    : "기존 CompletionReport 사용";
+
+  return {
+    content: "",
+    embeds: [{
+      title: "작업 완료 검토 카드",
+      color: completionColor(presentation.state),
+      description: [
+        `${formatInlineCode(data.completion_card_id || card.completion_card_id || "unknown")}`,
+        `${card.task_id ?? data.task_id ?? "unknown"} · ${readinessKo(presentation.readiness_level)} · ${presentation.verdict ?? "unknown"}`,
+        compactText(presentation.task_line ?? "unknown", 180),
+      ].join("\n"),
+      fields: [
+        embedField("요약", [
+          completionStateKo(presentation.state),
+          compactText(cleanKo(presentation.summary), 260),
+          generatedLine,
+        ]),
+        embedField("남은 이슈", summarizeCompletionCardIssues(presentation)),
+        embedField("다음 명령", summarizeCompactList(presentation.next_manual_commands, 3)),
+        embedField("안전 상태", [
+          `수동 done 가능: ${koBool(presentation.can_mark_task_done_manually)}`,
+          `커밋 검토 가능: ${koBool(presentation.can_commit_after_review)}`,
+          "표시용 artifact만 생성. 승인/완료/finalization/commit/push 없음",
+        ], true),
+      ],
+      footer: {
+        text: `report: ${card.sources?.completion_report_id || "unknown"} · path: ${data.completion_card_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
 function formatAuditFiles(files) {
   const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -742,6 +882,94 @@ function formatAuditFiles(files) {
     visible.push(`- +${values.length - 3}개 더 있음`);
   }
   return visible.join("\n");
+}
+
+function completionColor(state) {
+  switch (state) {
+    case "ready_for_human_completion_review":
+      return 0x2e7d32;
+    case "ready_for_human_completion_review_with_notes":
+      return 0xf9a825;
+    case "needs_human_decision":
+      return 0xef6c00;
+    case "failed_verification":
+      return 0xc62828;
+    default:
+      return 0x607d8b;
+  }
+}
+
+function completionStateKo(state) {
+  switch (state) {
+    case "ready_for_human_completion_review":
+      return "완료 검토 가능";
+    case "ready_for_human_completion_review_with_notes":
+      return "메모 검토 후 완료 가능";
+    case "needs_human_decision":
+      return "사람 결정 필요";
+    case "failed_verification":
+      return "검증 실패";
+    case "blocked_by_missing_verification":
+      return "VerificationReport 없음";
+    case "blocked_by_verification":
+      return "검증 근거 부족";
+    default:
+      return state || "unknown";
+  }
+}
+
+function readinessKo(level) {
+  switch (level) {
+    case "READY":
+      return "준비 완료";
+    case "READY_WITH_NOTES":
+      return "메모 있음";
+    case "NEEDS_DECISION":
+      return "결정 필요";
+    case "FAILED":
+      return "실패";
+    case "BLOCKED":
+      return "차단";
+    default:
+      return level || "unknown";
+  }
+}
+
+function summarizeCompletionRisks(risks) {
+  const values = [
+    ...prefixItems("warning", risks?.warnings),
+    ...prefixItems("concern", risks?.concerns),
+    ...prefixItems("blocker", risks?.blockers),
+    ...prefixItems("failed", risks?.failed_checks),
+  ];
+  if (values.length === 0) {
+    return "없음";
+  }
+  return summarizeCompactList(values, 3);
+}
+
+function summarizeCompletionCardIssues(presentation) {
+  const values = [
+    ...prefixItems("warning", presentation?.warnings),
+    ...prefixItems("concern", presentation?.concerns),
+    ...prefixItems("blocker", presentation?.blockers),
+    ...prefixItems("failed", presentation?.failed_checks),
+    ...prefixItems("decision", presentation?.human_decisions),
+  ];
+  if (values.length === 0) {
+    return "없음";
+  }
+  return summarizeCompactList(values, 3);
+}
+
+function prefixItems(prefix, values) {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+  return values
+    .map((value) => cleanKo(value))
+    .filter(Boolean)
+    .map((value) => `${prefix}: ${value}`);
 }
 
 function compactList(items, maxCount) {

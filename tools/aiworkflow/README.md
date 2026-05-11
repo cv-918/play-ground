@@ -42,6 +42,8 @@ result_collector.bat
 diff_analyzer.bat
 build_test_runner.bat
 verification_report.bat
+completion_report.bat
+completion_card.bat
 ```
 
 ---
@@ -524,6 +526,49 @@ commit, push, release, deploy, or run shell commands.
 
 ---
 
+## completion_report.bat
+
+Generates CompletionReport artifacts from an existing VerificationReport.
+
+Commands:
+
+```bat
+tools\aiworkflow\completion_report.bat status task_id [--json]
+tools\aiworkflow\completion_report.bat generate task_id [verification_report_id] [completion_report_id] [--json]
+tools\aiworkflow\completion_report.bat read task_id [completion_report_id] [--json]
+```
+
+`generate` uses the latest VerificationReport by default. The report summarizes
+completion readiness, verification verdict, remaining risks, required human
+decisions, and next manual commands. It writes artifacts under `_Temp`, updates
+only the TaskRunState completion-report projection, and appends a display-only
+progress event.
+
+It does not approve tasks, mark tasks done, write FinalizationLog, create an
+Auto Approval Policy result, commit, push, release, deploy, or run shell
+commands.
+
+---
+
+## completion_card.bat
+
+Generates compact Completion Card artifacts from an existing CompletionReport.
+
+Commands:
+
+```bat
+tools\aiworkflow\completion_card.bat status task_id [--json]
+tools\aiworkflow\completion_card.bat generate task_id [completion_report_id] [completion_card_id] [--json]
+tools\aiworkflow\completion_card.bat read task_id [completion_card_id] [--json]
+```
+
+`generate` uses the latest CompletionReport by default. The card is a
+presentation artifact for Discord-style review. It keeps the completion
+decision human-owned and does not change Backlog, ActiveTask, approval,
+done/finalization, commit, push, release, or deploy state.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -549,6 +594,8 @@ tools\aiworkflow\result_collector.bat status WF-301 --json
 tools\aiworkflow\diff_analyzer.bat status WF-302 --json
 tools\aiworkflow\build_test_runner.bat status WF-303 --json
 tools\aiworkflow\verification_report.bat status WF-304 --json
+tools\aiworkflow\completion_report.bat status WF-305-306 --json
+tools\aiworkflow\completion_card.bat status WF-305-306 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

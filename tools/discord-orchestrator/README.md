@@ -148,6 +148,9 @@ Do not commit `_Local/`.
 /ai prepare codex
 /ai prepare goal
 /ai result audit
+/ai completion status
+/ai completion report
+/ai completion card
 ```
 
 ## Regular Workflow Path
@@ -162,13 +165,19 @@ Use this path for normal task operation:
 5. /ai prepare goal
 6. Run Codex manually outside Discord
 7. /ai result audit
-8. /ai task done
-9. Review and commit manually
+8. /ai completion report
+9. /ai completion card
+10. /ai task done
+11. Review and commit manually
 ```
 
 Milestone 1 consolidation keeps regular responses short. Detailed role routing,
 path-rule reminders, validation expectations, and completion guidance remain in
 the generated `goal_request_*.md` files.
+
+WF-305/306 completion commands are Phase 3 runtime review helpers. They read
+VerificationReport and CompletionReport artifacts, then show a Discord-facing
+completion card. They do not approve, mark done, finalize, commit, or push.
 
 ## Optional / Debug / Admin Commands
 

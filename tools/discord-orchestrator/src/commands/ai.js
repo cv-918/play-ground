@@ -13,6 +13,7 @@ import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js";
 import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js";
+import { generateCompletionCard, generateCompletionReport, getCompletionStatus } from "../services/completionService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -27,6 +28,9 @@ import {
   formatActive,
   formatBacklog,
   formatBotControlResult,
+  formatCompletionCardPayload,
+  formatCompletionReportPayload,
+  formatCompletionStatusPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -292,6 +296,56 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("completion")
+        .setDescription("완료 보고서와 완료 카드를 생성/확인합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("status")
+            .setDescription("작업의 CompletionReport와 완료 카드 상태를 확인합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("report")
+            .setDescription("VerificationReport를 바탕으로 CompletionReport를 생성합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("verification-report-id")
+                .setDescription("사용할 VerificationReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("card")
+            .setDescription("CompletionReport를 Discord 완료 검토 카드로 표시합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("사용할 CompletionReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -465,6 +519,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "task") {
     await handleTaskCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "completion") {
+    await handleCompletionCommand(interaction, config, subcommand);
     return;
   }
 
@@ -743,6 +802,36 @@ async function handleResultCommand(interaction, config, subcommand) {
       }), config.limits.maxDiscordChars),
     });
   }
+}
+
+async function handleCompletionCommand(interaction, config, subcommand) {
+  const id = interaction.options.getString("id");
+
+  if (subcommand === "status") {
+    const result = await getCompletionStatus(config, { id });
+    await interaction.editReply(formatCompletionStatusPayload(result));
+    return;
+  }
+
+  if (subcommand === "report") {
+    const result = await generateCompletionReport(config, {
+      id,
+      verificationReportId: interaction.options.getString("verification-report-id"),
+    });
+    await interaction.editReply(formatCompletionReportPayload(result));
+    return;
+  }
+
+  if (subcommand === "card") {
+    const result = await generateCompletionCard(config, {
+      id,
+      completionReportId: interaction.options.getString("completion-report-id"),
+    });
+    await interaction.editReply(formatCompletionCardPayload(result));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 completion 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {
