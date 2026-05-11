@@ -36,6 +36,18 @@ export function loadConfig() {
     defaultProjectId: raw.default_project_id || "dustland_custom_cpp_prototype",
     allowedUserIds: Array.isArray(raw.allowed_user_ids) ? raw.allowed_user_ids : [],
     allowedChannelIds: Array.isArray(raw.allowed_channel_ids) ? raw.allowed_channel_ids : [],
+    llmIntake: {
+      enabled: raw?.llm_intake?.enabled !== false,
+      provider: raw?.llm_intake?.provider || "codex_cli",
+      command: raw?.llm_intake?.command || "codex",
+      args: Array.isArray(raw?.llm_intake?.args) ? raw.llm_intake.args.map(String) : [],
+      model: raw?.llm_intake?.model || "gpt-5.5",
+      sandbox: raw?.llm_intake?.sandbox || "read-only",
+      approvalPolicy: raw?.llm_intake?.approval_policy || "never",
+      timeoutMs: raw?.llm_intake?.timeout_ms ?? 60000,
+      fallbackOnError: raw?.llm_intake?.fallback_on_error === true,
+      outputDir: raw?.llm_intake?.output_dir || "_Temp/AIWorkflowDiscordBot/intake",
+    },
     limits: {
       scriptTimeoutMs: raw?.limits?.script_timeout_ms ?? 15000,
       maxDiscordChars: raw?.limits?.max_discord_chars ?? 1800,

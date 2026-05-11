@@ -297,14 +297,14 @@ export function formatGoalPrepareResult(result) {
 export function formatIntakeSuggestion(result) {
   if (!result?.ok) {
     return [
-      "**task intake 실패**",
-      cleanKo(result?.error || "Unknown failure."),
+      "**작업 접수 실패**",
+      koText(result?.error || "Unknown failure."),
     ].join("\n");
   }
 
   const draft = result.task_draft ?? {};
   const lines = [
-    "**AI task intake 제안**",
+    "**AI 작업 접수 제안**",
     "",
     "**1. 해석된 요청**",
     cleanKo(result.interpreted_request),
@@ -331,7 +331,7 @@ export function formatIntakeSuggestion(result) {
     summarizeList(result.human_decision_gates, 1),
     "",
     "**9. 필수 검증**",
-    summarizeList(result.required_validation, 1),
+    summarizeIntakeValidation(result.required_validation),
     "",
     "**10. 권장 실행 경로**",
     summarizeList(result.suggested_execution_route, 4),
@@ -349,32 +349,77 @@ export function formatIntakeSuggestion(result) {
     `workflow 경로: ${cleanKo(draft.workflow_path)}`,
     `권장 역할: ${summarizeList(draft.recommended_roles, 4)}`,
     `사람 결정 필요 항목: ${summarizeList(draft.human_decision_gates, 1)}`,
-    `필수 검증: ${summarizeList(draft.required_validation, 1)}`,
+    `필수 검증: ${summarizeIntakeValidation(draft.required_validation)}`,
     "다음 수동 조치 제안: 사람이 검토한 뒤 받아들일 경우 task를 생성하세요.",
   ];
 
+  appendLlmIntakeSummary(lines, result);
+  appendClarifyingQuestions(lines, draft.clarifying_questions);
+  appendRuleBasedCrossCheck(lines, result.rule_based_cross_check);
   appendPathReminderSummary(lines, result.path_scoped_reminders);
   lines.push("", "**읽기 전용 안전 상태**");
-  lines.push(koText("No Backlog/ActiveTask changes. No agents or Codex CLI."));
+  lines.push(koText("No Backlog/ActiveTask changes. No agents or implementation Codex run."));
 
   return lines.join("\n");
+}
+
+export function formatIntakeSuggestionPayload(result) {
+  if (!result?.ok) {
+    return { content: formatIntakeSuggestion(result) };
+  }
+
+  const draft = result.task_draft ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "작업 접수 미리보기",
+      color: 0x1565c0,
+      description: [
+        `${result.suggested_category ?? "unknown"} · ${result.suggested_priority ?? "unknown"}/${result.suggested_risk ?? "unknown"} · ${result.suggested_kind ?? "unknown"}`,
+        compactText(result.suggested_task_title ?? draft.title ?? "unknown", 160),
+        "읽기 전용 미리보기입니다. Backlog와 ActiveTask는 변경하지 않았습니다.",
+      ].join("\n"),
+      fields: [
+        embedField("해석된 요청", compactText(cleanKo(result.interpreted_request), 260)),
+        embedField("초안 요약", [
+          `이유: ${compactText(cleanKo(draft.reason), 220)}`,
+          `역할: ${summarizeCompactList(draft.recommended_roles, 4)}`,
+          `LLM 접수: ${formatLlmIntakeStatus(result)}`,
+        ]),
+        embedField("필수 검증", summarizeValidationLines(draft.required_validation ?? result.required_validation).join("\n")),
+        embedField("다음 조치", "제안 내용을 검토한 뒤 받아들일 경우 `/ai intake`로 Backlog task를 생성하세요."),
+        embedField("안전 상태", [
+          "Backlog: no (아니오)",
+          "ActiveTask: no (아니오)",
+          "승인: no (아니오)",
+          "agents/구현용 Codex 실행 없음",
+        ], true),
+      ],
+      footer: {
+        text: `workflow: ${draft.workflow_path ?? result.suggested_workflow_path ?? "unknown"}`,
+      },
+    }],
+  };
 }
 
 export function formatIntakeTaskCreated(result) {
   if (!result?.ok) {
     return [
-      "**intake task 생성 실패**",
-      cleanKo(result?.error || "Unknown failure."),
+      "**작업 접수 task 생성 실패**",
+      koText(result?.error || "Unknown failure."),
     ].join("\n");
   }
 
   const data = result.data ?? {};
   const task = data.task ?? {};
   const draft = data.draft ?? {};
+  const suggestion = data.suggestion ?? {};
   const safety = data.safety ?? {};
+  const testMode = data.test_mode === true;
 
   return [
-    "**intake task 생성 완료**",
+    testMode ? "**작업 접수 생성 완료 양식 테스트**" : "**작업 접수 task 생성 완료**",
+    testMode ? "이 메시지는 표시 양식 테스트입니다. Backlog, ActiveTask, Codex 실행은 발생하지 않았습니다." : "",
     `ID: ${task.id ?? "unknown"}`,
     `제목: ${task.item ?? draft.title ?? "unknown"}`,
     `분류(category): ${draft.category ?? "unknown"}`,
@@ -385,7 +430,8 @@ export function formatIntakeTaskCreated(result) {
     "**작업 초안 출처**",
     `이유: ${cleanKo(draft.reason)}`,
     `권장 역할: ${summarizeList(draft.recommended_roles, 4)}`,
-    `필수 검증: ${summarizeList(draft.required_validation, 1)}`,
+    `필수 검증: ${summarizeIntakeValidation(draft.required_validation)}`,
+    `LLM 접수: ${formatLlmIntakeStatus(suggestion)}`,
     "",
     "**다음 수동 조치**",
     koText("Review the created Backlog task, edit it if needed, then approve or set active manually."),
@@ -394,15 +440,143 @@ export function formatIntakeTaskCreated(result) {
     `Backlog.md 업데이트: ${koBool(safety.backlog_updated)}`,
     `ActiveTask.md 업데이트: ${koBool(safety.active_task_updated)}`,
     `task 승인: ${koBool(safety.approved)}`,
-    koText("No agents or Codex CLI were executed."),
-  ].join("\n");
+    `Codex 접수 실행: ${koBool(safety.codex_intake_executed)}`,
+    koText("No agents or implementation Codex run was executed."),
+  ].filter((line) => line !== "").join("\n");
+}
+
+export function formatIntakeTaskCreatedPayload(result) {
+  if (!result?.ok) {
+    return { content: formatIntakeTaskCreated(result) };
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  const draft = data.draft ?? {};
+  const suggestion = data.suggestion ?? {};
+  const safety = data.safety ?? {};
+  const testMode = data.test_mode === true;
+  const taskId = task.id ?? "unknown";
+  const title = task.item ?? draft.title ?? "unknown";
+  const priority = task.priority ?? draft.priority ?? "unknown";
+  const risk = draft.suggested_risk ?? "unknown";
+  const category = draft.category ?? "unknown";
+  const kind = task.kind ?? draft.kind ?? "unknown";
+
+  return {
+    content: "",
+    embeds: [{
+      title: testMode ? "작업 접수 양식 테스트" : "작업 접수 완료",
+      color: testMode ? 0x607d8b : 0x2e7d32,
+      description: [
+        `\`${taskId}\` · ${category} · ${priority}/${risk} · ${kind}`,
+        compactText(title, 160),
+        testMode ? "표시 양식 테스트입니다. workflow 상태는 변경하지 않았습니다." : "",
+      ].filter(Boolean).join("\n"),
+      fields: [
+        embedField("초안 요약", [
+          `이유: ${compactText(cleanKo(draft.reason), 220)}`,
+          `역할: ${summarizeCompactList(draft.recommended_roles, 4)}`,
+          `LLM 접수: ${formatLlmIntakeStatus(suggestion)}`,
+        ]),
+        embedField("필수 검증", summarizeValidationLines(draft.required_validation).join("\n")),
+        embedField("다음 조치", testMode
+          ? "이 화면의 가독성만 확인하세요. Backlog task는 생성되지 않았습니다."
+          : "생성된 Backlog task를 검토하고 필요하면 수정한 뒤, 수동으로 approve 또는 set-active 하세요."),
+        embedField("안전 상태", [
+          `Backlog: ${koBool(safety.backlog_updated)}`,
+          `ActiveTask: ${koBool(safety.active_task_updated)}`,
+          `승인: ${koBool(safety.approved)}`,
+          `Codex 접수 실행: ${koBool(safety.codex_intake_executed)}`,
+          "agents/구현용 Codex 실행 없음",
+        ], true),
+      ],
+      footer: {
+        text: `workflow: ${draft.workflow_path ?? "unknown"}`,
+      },
+    }],
+  };
+}
+
+export function formatIntakeEngineStatus(result) {
+  const data = result?.data ?? {};
+  return [
+    result?.ok ? "**Codex 접수 엔진 준비 완료**" : "**Codex 접수 엔진 준비 안 됨**",
+    `활성화: ${koBool(data.enabled)}`,
+    `제공자: ${data.provider ?? "unknown"}`,
+    `명령: ${data.command ?? "unknown"}`,
+    `모델: ${data.model ?? "unknown"}`,
+    `격리 모드: ${data.sandbox ?? "unknown"}`,
+    `승인 정책: ${data.approval_policy ?? "unknown"}`,
+    `제한 시간(ms): ${data.timeout_ms ?? "unknown"}`,
+    `출력 경로: ${formatInlineCode(data.output_dir || "unknown")}`,
+    `실행 파일 확인: ${koBool(data.executable_ok)}`,
+    data.version ? `버전: ${cleanKo(data.version)}` : "",
+    data.error ? `오류: ${koText(data.error)}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+export function formatIntakeEngineStatusPayload(result) {
+  const data = result?.data ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: result?.ok ? "Codex 접수 엔진 준비 완료" : "Codex 접수 엔진 준비 안 됨",
+      color: result?.ok ? 0x2e7d32 : 0xc62828,
+      fields: [
+        embedField("실행 설정", [
+          `활성화: ${koBool(data.enabled)}`,
+          `제공자: ${data.provider ?? "unknown"}`,
+          `모델: ${data.model ?? "unknown"}`,
+          `명령: ${compactText(data.command ?? "unknown", 180)}`,
+        ]),
+        embedField("실행 정책", [
+          `격리 모드: ${data.sandbox ?? "unknown"}`,
+          `승인 정책: ${data.approval_policy ?? "unknown"}`,
+          `제한 시간: ${data.timeout_ms ?? "unknown"}ms`,
+          `실행 파일 확인: ${koBool(data.executable_ok)}`,
+        ], true),
+        embedField("출력", [
+          `경로: ${formatInlineCode(data.output_dir || "unknown")}`,
+          data.version ? `버전: ${compactText(cleanKo(data.version), 220)}` : "",
+          data.error ? `오류: ${compactText(koText(data.error), 220)}` : "",
+        ].filter(Boolean)),
+      ],
+    }],
+  };
+}
+
+export function formatBotControlResult(result) {
+  if (!result?.ok) {
+    return [
+      "**봇 제어 실패**",
+      cleanKo(result?.error || "Unknown failure."),
+      result?.data?.state_file ? `state_file: ${formatInlineCode(result.data.state_file)}` : "",
+    ].filter(Boolean).join("\n");
+  }
+
+  const data = result.data ?? {};
+  const lines = [
+    data.delay_ms ? "**봇 재시작 예약됨**" : "**봇 제어 상태**",
+    `관리 스크립트로 실행 중: ${koBool(data.managed)}`,
+    `현재 PID: ${data.current_pid ?? "unknown"}`,
+    data.recorded_pid !== undefined ? `기록된 PID: ${data.recorded_pid ?? "none"}` : "",
+    data.restart_script ? `재시작 스크립트: ${formatInlineCode(data.restart_script)}` : "",
+    data.delay_ms ? `재시작 대기 시간(ms): ${data.delay_ms}` : "",
+  ].filter(Boolean);
+
+  if (data.delay_ms) {
+    lines.push("기존 로컬 재시작 스크립트로 봇을 다시 시작합니다. workflow task 상태, source file, commit, push는 변경하지 않습니다.");
+  }
+
+  return lines.join("\n");
 }
 
 export function formatIntakeTaskReview(result) {
   if (!result?.ok) {
     return [
-      "**intake task 검토 실패**",
-      cleanKo(result?.error || "Unknown failure."),
+      "**작업 접수 task 검토 실패**",
+      koText(result?.error || "Unknown failure."),
     ].join("\n");
   }
 
@@ -413,14 +587,14 @@ export function formatIntakeTaskReview(result) {
   const safety = data.safety ?? {};
 
   return [
-    "**intake task 활성화 검토**",
+    "**작업 접수 task 활성화 검토**",
     "",
     "**1. 작업 요약**",
     `${task.id ?? "unknown"} [${task.priority ?? "?"}/${koStatus(task.status)}/${task.kind ?? "?"}] ${task.item ?? "unknown"}`,
     `이유: ${cleanKo(task.reason)}`,
     "",
-    "**2. intake 출처 확인**",
-    `${source.intake_created ? "intake-created" : "generic"} (${source.confidence ?? "unknown"} confidence)`,
+    "**2. 작업 접수 출처 확인**",
+    `${source.intake_created ? "intake 생성 작업" : "일반 작업"} (신뢰도 ${source.confidence ?? "unknown"})`,
     cleanKo(source.source),
     "",
     "**3. 활성화 준비 상태**",
@@ -451,6 +625,62 @@ export function formatIntakeTaskReview(result) {
     "**판정 안내**",
     cleanKo(data.verdict_guidance || "Use Review_Validation_Verdict_Format_v1.md before accepting implementation or validation results."),
   ].join("\n");
+}
+
+export function formatIntakeTaskReviewPayload(result) {
+  if (!result?.ok) {
+    return { content: formatIntakeTaskReview(result) };
+  }
+
+  const data = result.data ?? {};
+  const task = data.task ?? {};
+  const source = data.intake_source_check ?? {};
+  const readiness = data.activation_readiness ?? {};
+  const safety = data.safety ?? {};
+  const title = task.item ?? "unknown";
+  const taskId = task.id ?? "unknown";
+  const priority = task.priority ?? "?";
+  const kind = task.kind ?? "?";
+  const status = koStatus(task.status);
+  const ready = ["ready", "ready_for_manual_activation_review", "generic_review_ready"].includes(String(readiness.verdict ?? ""));
+
+  return {
+    content: "",
+    embeds: [{
+      title: "작업 접수 활성화 검토",
+      color: ready ? 0x1565c0 : 0xf9a825,
+      description: [
+        `\`${taskId}\` · ${priority} · ${status} · ${kind}`,
+        compactText(title, 180),
+      ].join("\n"),
+      fields: [
+        embedField("요약", [
+          `이유: ${compactText(cleanKo(task.reason), 260)}`,
+          `출처: ${source.intake_created ? "intake 계열 명령 생성" : "일반 Backlog 작업"} (신뢰도 ${source.confidence ?? "unknown"})`,
+          compactText(koText(source.source), 180),
+        ]),
+        embedField("활성화 준비", [
+          `${koStatusLabel(readiness.verdict)}: ${compactText(koText(readiness.reason), 260)}`,
+          `권장 조치: ${compactText(koText(readiness.recommended_action), 220)}`,
+        ]),
+        embedField("권장 역할", summarizeCompactList(data.recommended_roles, 5), true),
+        embedField("사람 결정", summarizeCompactList(data.human_decision_gates, 2), true),
+        embedField("필수 검증", summarizeValidationLines(data.required_validation).join("\n")),
+        embedField("다음 명령", summarizeCommandLines(data.suggested_next_manual_commands).join("\n")),
+        embedField("안전 상태", [
+          `현재 ActiveTask: ${koBool(data.active_task_match)}`,
+          `Backlog: ${koBool(safety.backlog_updated)}`,
+          `ActiveTask: ${koBool(safety.active_task_updated)}`,
+          `승인/상태 변경: ${koBool(safety.task_approved || safety.task_status_changed)}`,
+          "agents/Codex CLI 실행 없음",
+        ], true),
+        embedField("판정 안내", compactText(koText(data.verdict_guidance || "Use Review_Validation_Verdict_Format_v1.md before accepting implementation or validation results."), 300)),
+      ],
+      footer: {
+        text: "읽기 전용 검토입니다. Backlog/ActiveTask는 변경하지 않았습니다.",
+      },
+    }],
+  };
 }
 
 export function formatResultAudit(result) {
@@ -635,6 +865,72 @@ function appendList(lines, items) {
   }
 }
 
+function appendLlmIntakeSummary(lines, result) {
+  const llmText = formatLlmIntakeStatus(result);
+  lines.push("", "**LLM 접수 상태**");
+  lines.push(llmText);
+}
+
+function appendClarifyingQuestions(lines, questions) {
+  const values = Array.isArray(questions) ? questions.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return;
+  }
+
+  lines.push("", "**확인 질문 후보**");
+  for (const question of values.slice(0, 3)) {
+    lines.push(`- ${cleanKo(question)}`);
+  }
+}
+
+function appendRuleBasedCrossCheck(lines, crossCheck) {
+  if (!crossCheck) {
+    return;
+  }
+
+  lines.push("", "**rule-based 교차 확인**");
+  lines.push(koText(crossCheck.summary || "No cross-check summary."));
+  if (Array.isArray(crossCheck.mismatches) && crossCheck.mismatches.length > 0) {
+    for (const mismatch of crossCheck.mismatches.slice(0, 4)) {
+      lines.push(`- ${formatCrossCheckMismatch(mismatch)}`);
+    }
+  }
+}
+
+function formatCrossCheckMismatch(value) {
+  return koText(value)
+    .replace(/^category:/, "분류:")
+    .replace(/^kind:/, "종류:")
+    .replace(/^priority:/, "우선순위:")
+    .replace(/^suggested_risk:/, "제안 위험도:")
+    .replaceAll("rule=", "rule 기준=")
+    .replaceAll("llm=", "LLM=");
+}
+
+function formatLlmIntakeStatus(result) {
+  const llm = result?.llm ?? {};
+  if (llm.used) {
+    return [
+      `사용=${koBool(true)}`,
+      `제공자=${llm.provider ?? "codex_cli"}`,
+      `모델=${llm.model ?? "unknown"}`,
+      `신뢰도=${result?.task_draft?.confidence ?? "unknown"}`,
+      llm.run?.output_file ? `출력=${llm.run.output_file}` : "",
+    ].filter(Boolean).join("; ");
+  }
+
+  if (llm.fallback_used) {
+    return [
+      `사용=${koBool(false)}`,
+      "대체=rule-based",
+      `상태=${llm.status ?? "unknown"}`,
+      llm.reason ? `이유=${koText(llm.reason)}` : "",
+    ].filter(Boolean).join("; ");
+  }
+
+  return `사용=${koBool(false)}; 상태=${llm.status ?? "not_requested"}`;
+}
+
 function appendPathReminderSummary(lines, reminders) {
   const items = Array.isArray(reminders) ? reminders : [];
   if (items.length === 0) {
@@ -659,6 +955,75 @@ function summarizeList(items, maxCount) {
   const visible = values.slice(0, maxCount).map(koListValue);
   const suffix = values.length > maxCount ? `; +${values.length - maxCount}개 더 있음` : "";
   return `${visible.join("; ")}${suffix}`;
+}
+
+function summarizeCompactList(items, maxCount) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, maxCount).map(koListValue);
+  const suffix = values.length > maxCount ? ` 외 ${values.length - maxCount}개` : "";
+  return `${visible.join(", ")}${suffix}`;
+}
+
+function summarizeValidationLines(items) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return ["(없음)"];
+  }
+
+  const lines = values.slice(0, 3).map((item, index) => `${index + 1}. ${compactText(koListValue(item), 180)}`);
+  if (values.length > lines.length) {
+    lines.push("상세 검증 항목은 TaskDraft 출력 파일 또는 생성된 Backlog task에서 확인하세요.");
+  }
+  return lines;
+}
+
+function summarizeCommandLines(items) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return ["(없음)"];
+  }
+
+  return values.slice(0, 3).map((item) => formatInlineCode(compactText(item, 220)));
+}
+
+function summarizeIntakeValidation(items) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, 3).map(koListValue);
+  if (values.length > visible.length) {
+    visible.push("상세 검증 항목은 TaskDraft 출력 파일 또는 생성된 Backlog task에서 확인하세요.");
+  }
+  return visible.join("; ");
+}
+
+function embedField(name, value, inline = false) {
+  const raw = Array.isArray(value) ? value.filter(Boolean).join("\n") : String(value ?? "");
+  return {
+    name,
+    value: compactText(raw || "(없음)", 1024),
+    inline,
+  };
+}
+
+function koStatusLabel(value) {
+  const status = koStatus(value);
+  const match = status.match(/^[^(]+\(([^)]+)\)$/);
+  return match ? match[1].trim() : status;
+}
+
+function compactText(value, maxLength) {
+  const text = cleanupBlock(value);
+  if (text.length <= maxLength) {
+    return text || "(없음)";
+  }
+  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
 
 function formatOutputLinePaths(line) {

@@ -11,7 +11,11 @@ const STATUS_LABELS = new Map([
   ["deferred", "보류됨"],
   ["partial_done", "부분 완료"],
   ["needs_human_review", "사람 검토 필요"],
+  ["needs_human_approval", "사람 승인 필요"],
   ["ready_for_manual_execution", "수동 실행 준비 완료"],
+  ["ready_for_manual_activation_review", "수동 활성화 검토 가능"],
+  ["generic_review_ready", "일반 검토 가능"],
+  ["ready", "준비됨"],
   ["not_ready", "준비 안 됨"],
   ["READY_TO_MARK_DONE", "done 처리 검토 가능"],
   ["NEEDS_REVIEW", "리뷰 필요"],
@@ -28,6 +32,9 @@ const TEXT_REPLACEMENTS = new Map([
   ["(none found)", "(없음)"],
   ["(none)", "(없음)"],
   ["None.", "없음."],
+  ["Unknown failure.", "알 수 없는 실패입니다."],
+  ["No cross-check summary.", "교차 확인 요약이 없습니다."],
+  ["No runtime config was provided.", "런타임 설정이 제공되지 않았습니다."],
   ["unknown", "unknown"],
   ["Review generated request before manual Codex execution.", "수동 Codex 실행 전에 생성된 요청서를 검토하세요."],
   ["Generated request only. Discord did not execute Codex CLI, agents, approval, task state changes, commit, or push.", "요청서만 생성했습니다. Discord는 Codex CLI, agents, 승인, 작업 상태 변경, commit, push를 실행하지 않았습니다."],
@@ -37,13 +44,17 @@ const TEXT_REPLACEMENTS = new Map([
   ["Task is not approved for implementation yet.", "작업이 아직 구현을 위해 승인되지 않았습니다."],
   ["Task status is not a clear execution-ready state; review before using the generated goal request.", "작업 상태가 명확한 실행 준비 상태가 아닙니다. 생성된 goal 요청서를 사용하기 전에 검토하세요."],
   ["Human Director review is required for high-risk or runtime/schema-related gates.", "고위험 작업 또는 런타임/스키마 관련 게이트가 있는 경우 Human Director 검토가 필요합니다."],
+  ["Human Director Gate: P0/P1 or high-risk task requires explicit approval before implementation and before accepting validation deferral.", "사람 결정 gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다."],
+  ["Human Director Gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다.", "사람 결정 gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다."],
   ["Backlog row appears to come from explicit intake-create.", "Backlog row가 명시적 intake-create에서 생성된 것으로 보입니다."],
   ["No intake-create marker found; using generic activation review.", "intake-create marker를 찾지 못했습니다. 일반 activation review를 사용합니다."],
+  ["Backlog row appears to come from an intake-family command.", "Backlog row가 intake 계열 명령에서 생성된 것으로 보입니다."],
+  ["No intake-family marker found; using generic activation review.", "intake 계열 marker를 찾지 못했습니다. 일반 activation review를 사용합니다."],
   ["Task is closed and should not be activated without reopening or creating a new task.", "닫힌 작업입니다. 다시 열거나 새 작업을 만들지 않고 활성화하면 안 됩니다."],
   ["Review history before creating a replacement task.", "대체 task를 만들기 전에 이력을 검토하세요."],
   ["Task is blocked and should not be activated until the blocker is resolved.", "작업이 blocked 상태입니다. blocker가 해결되기 전에는 활성화하면 안 됩니다."],
   ["Resolve or update the blocker before setting active.", "set-active 전에 blocker를 해결하거나 업데이트하세요."],
-  ["Task is already marked ready_for_implementation.", "작업이 이미 ready_for_implementation 상태입니다."],
+  ["Task is already marked ready_for_implementation.", "작업이 이미 구현 준비 완료 상태입니다."],
   ["Human Director may set active manually if this is the next task.", "이 작업이 다음 작업이라면 Human Director가 수동으로 set-active 할 수 있습니다."],
   ["Task can be reviewed for activation, but priority/risk requires explicit Human Director approval before implementation.", "활성화 검토는 가능하지만 우선순위/위험도상 구현 전 명시적 Human Director approval이 필요합니다."],
   ["Approve manually before implementation, then set active if selected.", "구현 전에 수동 approve하고, 선택된 작업이면 set-active 하세요."],
@@ -58,7 +69,15 @@ const TEXT_REPLACEMENTS = new Map([
   ["For details: `/ai role status` shows full routing; `/ai task approve` records the approval gate; `/ai prepare goal` performs the final execution readiness check.", "상세 확인: `/ai role status`는 전체 routing을 보여주고, `/ai task approve`는 승인 게이트를 기록하며, `/ai prepare goal`은 최종 실행 준비 상태를 확인합니다."],
   ["Use `/ai prepare goal` as the final execution readiness check. Use `/ai role status` only when full routing detail is needed.", "`/ai prepare goal`을 최종 실행 준비 확인으로 사용하세요. 전체 routing 세부 정보가 필요할 때만 `/ai role status`를 사용하세요."],
   ["Review the created Backlog task, edit it if needed, then approve or set active manually.", "생성된 Backlog task를 검토하고 필요하면 수정한 뒤, 수동으로 approve 또는 set-active 하세요."],
+  ["No Backlog/ActiveTask changes. No agents or implementation Codex run.", "Backlog/ActiveTask 변경 없음. agents 또는 구현용 Codex 실행 없음."],
+  ["No agents or implementation Codex run was executed.", "agents 또는 구현용 Codex 실행을 수행하지 않았습니다."],
+  ["Codex CLI intake did not produce a validated TaskDraft. Backlog was not updated.", "Codex CLI 접수가 검증된 TaskDraft를 만들지 못했습니다. Backlog는 업데이트하지 않았습니다."],
+  ["Using rule-based fallback; human review is required before task creation or approval.", "rule-based fallback을 사용했습니다. task 생성 또는 승인 전에 사람 검토가 필요합니다."],
+  ["No rule-based baseline comparison was needed.", "rule-based 기준 비교가 필요하지 않았습니다."],
+  ["LLM draft differs from the local rule-based baseline; review before creating or approving.", "LLM 초안이 로컬 rule-based 기준과 다릅니다. 생성 또는 승인 전에 검토하세요."],
+  ["LLM draft matches the main rule-based category, kind, priority, and risk signals.", "LLM 초안이 주요 rule-based 분류, 종류, 우선순위, 위험도 신호와 일치합니다."],
   ["Use Review_Validation_Verdict_Format_v1.md before accepting implementation or validation results.", "구현 또는 검증 결과를 받아들이기 전에 Review_Validation_Verdict_Format_v1.md를 사용하세요."],
+  ["Use Review_Validation_Verdict_Format_v1.md with PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, or FAIL. Do not use PASS when required validation was skipped.", "Review_Validation_Verdict_Format_v1.md의 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL 중 하나로 판정하세요. 필수 검증을 건너뛴 경우 PASS를 사용하지 마세요."],
   ["No result summary classified.", "분류된 결과 요약이 없습니다."],
   ["No changed-file summary available.", "변경 파일 요약이 없습니다."],
   ["No blocked backlog items reported by workflow_status.", "workflow_status가 보고한 blocked Backlog 항목이 없습니다."],
@@ -135,6 +154,15 @@ export function koText(value) {
     .replaceAll("Human Director review is required for high-risk or runtime/schema-related gates.", "고위험 작업 또는 런타임/스키마 관련 게이트가 있는 경우 Human Director 검토가 필요합니다.")
     .replaceAll("Approval records Human Director scope acceptance only.", "승인은 Human Director가 범위를 받아들였다는 기록만 의미합니다.")
     .replaceAll("No Codex CLI, agents, implementation, done status, commit, push, or game source modification was executed.", "Codex CLI, agents, 구현, done 상태, commit, push, game source 수정은 실행하지 않았습니다.")
+    .replaceAll("Codex CLI intake is disabled by config.", "설정에서 Codex CLI 접수가 비활성화되어 있습니다.")
+    .replaceAll("Unsupported intake provider:", "지원하지 않는 접수 provider:")
+    .replaceAll("Codex CLI intake failed with exit code", "Codex CLI 접수가 다음 exit code로 실패했습니다:")
+    .replaceAll("stderr log:", "stderr 로그:")
+    .replaceAll("Codex CLI returned an empty TaskDraft response.", "Codex CLI가 빈 TaskDraft 응답을 반환했습니다.")
+    .replaceAll("stdout log:", "stdout 로그:")
+    .replaceAll("Codex CLI TaskDraft was not valid JSON:", "Codex CLI TaskDraft가 유효한 JSON이 아닙니다:")
+    .replaceAll("Codex CLI TaskDraft failed schema validation:", "Codex CLI TaskDraft schema validation 실패:")
+    .replaceAll("Codex CLI intake timed out after", "Codex CLI 접수가 제한 시간을 초과했습니다:")
     .replaceAll("Status set to", "상태 설정:")
     .replaceAll("Approval note recorded:", "승인 메모 기록:")
     .replaceAll("ActiveTask.md updated:", "ActiveTask.md 업데이트:")

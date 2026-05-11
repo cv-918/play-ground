@@ -28,6 +28,9 @@ actions, and common error wrappers into Korean while preserving command names,
 ids, paths, raw status values, and mode/context values.
 WF-051 localizes Discord slash command metadata descriptions into Korean while
 preserving command names, option names, choice raw values, schemas, and behavior.
+WF-20260511-000002 adds Codex CLI assisted TaskDraft generation for
+`/ai intake`, with local schema validation, rule-based cross-checks, and direct
+Backlog task creation without ChatGPT Web/Codex App paste steps.
 
 It can read:
 
@@ -37,8 +40,8 @@ read active task
 read backlog summary
 read project profiles
 read ActiveTask role routing recommendation
-suggest structured task intake from natural-language text
-create Backlog tasks from explicit intake-create requests
+create Backlog tasks from natural-language intake through Codex CLI
+preview structured task intake without writing Backlog
 review intake-created Backlog tasks before manual activation
 show activation safety guidance after task selection
 show approval safety guidance after task approval
@@ -119,7 +122,12 @@ Do not commit `_Local/`.
 /ai blockers
 /ai docs
 /ai intake
+/ai intake-preview
 /ai intake-create
+/ai intake-test
+/ai intake-engine status
+/ai bot status
+/ai bot restart
 /ai project list
 /ai project profile
 /ai role status
@@ -261,7 +269,19 @@ Validation, Suggested Execution Route, Verdict Format, and Next Manual Action.
 It does not execute agents, approve tasks, mark tasks done, modify game source,
 modify `_Local/`, modify `node_modules/`, commit, push, or expose secrets.
 
-For read-only task intake:
+For automated task intake:
+
+```text
+/ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+```
+
+`/ai intake` calls local `codex exec`, receives a TaskDraft JSON candidate,
+validates it, cross-checks it against the rule-based baseline, and creates one
+Backlog task. The default model is `gpt-5.5`. It does not update ActiveTask.md,
+approve tasks, execute agents, run implementation Codex, commit, push, or modify
+source files.
+
+For read-only task intake preview:
 
 ```text
 /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
@@ -269,32 +289,62 @@ For read-only task intake:
 /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어"
 ```
 
-`/ai intake` returns a structured task suggestion with interpreted request,
+`/ai intake-preview` returns a structured task suggestion with interpreted request,
 suggested title, category, kind, priority/risk, workflow path, recommended
 roles, human gates, validation, execution route, next manual action, and a Task
 Draft section for manual review.
 
-`/ai intake` is a deterministic local keyword/rule classifier. It does not call
-LLM APIs, OpenAI APIs, Codex, fetch-based model calls, or external model
-services. Korean keywords are supported for common workflow, Unity, validation,
-gameplay, and data requests. Ambiguous intake results still require Human
-Director review before task creation or approval.
+`/ai intake-preview` is the read-only path. The deterministic local keyword/rule
+classifier is kept as a baseline and mismatch detector. Korean keywords are
+supported for common workflow, Unity, validation, gameplay, and data requests.
+Ambiguous intake results still require Human Director review before activation
+or approval.
 
-It is read-only. It does not create Backlog tasks, update ActiveTask.md, approve
-tasks, execute agents, execute Codex CLI, commit, push, or modify source files.
+`/ai intake-preview` is read-only. It does not create Backlog tasks, update
+ActiveTask.md, approve tasks, execute agents, run implementation Codex, commit,
+push, or modify source files.
 
-For explicit intake task creation:
+For intake response format smoke testing:
+
+```text
+/ai intake-test
+/ai intake-test validation-count:31
+```
+
+`/ai intake-test` renders the intake task-created response shape with sample
+data only. It does not call Codex CLI, write Backlog, update ActiveTask, approve
+tasks, execute agents, commit, push, or modify source files.
+
+For compatibility intake task creation:
 
 ```text
 /ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
 ```
 
-`/ai intake-create` uses the same intake classification and Task Draft fields,
-then appends one `todo` row to `_Docs/AIWorkflow/Backlog.md`. It creates a
-timestamped Backlog backup before writing and returns the new task id.
+`/ai intake-create` is a compatibility alias for `/ai intake`. It uses the same
+Codex CLI intake path, appends one `todo` row to `_Docs/AIWorkflow/Backlog.md`,
+creates a timestamped Backlog backup before writing, and returns the new task id.
 
-It does not update ActiveTask.md, approve the task, execute agents, execute
-Codex CLI, commit, push, or modify source files.
+It does not update ActiveTask.md, approve the task, execute agents, run
+implementation Codex, commit, push, or modify source files.
+
+For engine diagnostics:
+
+```text
+/ai intake-engine status
+```
+
+For managed bot control:
+
+```text
+/ai bot status
+/ai bot restart
+```
+
+`/ai bot restart` schedules the existing local `restart_bot.ps1` script after
+the Discord reply is sent. It works only when the currently running bot process
+matches the managed state file created by `start_bot.bat`; otherwise it refuses
+to restart so it cannot stop the wrong process or create duplicate bot sessions.
 
 For intake-created task review:
 
@@ -453,7 +503,9 @@ After starting the bot:
 [ ] /ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" creates one Backlog task.
 [ ] /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어" works.
 [ ] /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어" works.
+[ ] /ai intake-test renders the intake task-created response format without Backlog or Codex execution.
 [ ] /ai intake responses include a Task Draft section with title, category, priority, kind, reason, risk, workflow path, roles, gates, validation, and next manual action.
+[ ] /ai intake responses show LLM intake status, fallback status when used, confidence, and rule-based cross-check mismatches.
 [ ] /ai intake-create creates a timestamped Backlog backup before writing.
 [ ] /ai intake-create escapes markdown table pipes in generated Backlog cells.
 [ ] /ai task review-intake does not modify Backlog.md or ActiveTask.md.
@@ -488,6 +540,10 @@ status_bot.bat
 restart_bot.bat
 stop_bot.bat
 ```
+
+After this change, Discord can request a managed restart through `/ai bot
+restart`, but the first run after updating command schema still requires the
+existing local register/restart flow so Discord receives the new command.
 
 Optional Windows Scheduled Task install/uninstall wrappers are also available:
 

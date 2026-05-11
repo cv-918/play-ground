@@ -2,7 +2,17 @@ import { suggestTaskFromIntake } from "./taskIntakeService.js";
 import { createTask } from "./taskService.js";
 
 export async function createTaskFromIntake(config, input = {}) {
-  const suggestion = suggestTaskFromIntake({ text: input.text });
+  const suggestion = await suggestTaskFromIntake(config, { text: input.text });
+  if (!suggestion.ok) {
+    return suggestion;
+  }
+  if (suggestion.llm?.used !== true) {
+    return {
+      ok: false,
+      error: "Codex CLI intake did not produce a validated TaskDraft. Backlog was not updated.",
+      suggestion,
+    };
+  }
   const draft = suggestion.task_draft ?? {};
 
   const taskResult = await createTask(config, {
@@ -11,8 +21,8 @@ export async function createTaskFromIntake(config, input = {}) {
     priority: draft.priority,
     kind: draft.kind,
     reason: draft.reason,
-    toolRoute: "Discord intake-create -> human review",
-    validation: buildValidationNote(draft),
+    toolRoute: "Discord intake -> Codex CLI TaskDraft -> human review",
+    validation: buildValidationNote(draft, suggestion),
   });
 
   if (!taskResult.ok) {
@@ -31,13 +41,24 @@ export async function createTaskFromIntake(config, input = {}) {
         approved: false,
         agents_executed: false,
         codex_executed: false,
+        codex_intake_executed: true,
+        implementation_codex_executed: false,
       },
     },
   };
 }
 
-function buildValidationNote(draft) {
+function buildValidationNote(draft, suggestion) {
   const risk = String(draft.suggested_risk ?? "unknown").trim();
   const path = String(draft.workflow_path ?? "unknown").trim();
-  return `intake draft: risk=${risk}; workflow_path=${path}; validation pending human approval`;
+  const validationCount = Array.isArray(draft.required_validation)
+    ? draft.required_validation.length
+    : 0;
+  const outputFile = String(suggestion.llm?.run?.output_file ?? "").trim();
+  const outputRef = outputFile ? `; taskdraft_output=${outputFile}` : "";
+  const review = suggestion.rule_based_cross_check?.requires_human_review ? "; needs review" : "";
+  const questions = Array.isArray(draft.clarifying_questions) && draft.clarifying_questions.length > 0
+    ? "; has clarifying questions"
+    : "";
+  return `codex intake draft: risk=${risk}; workflow_path=${path}; required_validation_count=${validationCount}${outputRef}${review}${questions}; validation pending human approval`;
 }

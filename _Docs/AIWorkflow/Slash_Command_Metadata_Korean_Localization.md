@@ -46,6 +46,12 @@ names, choices, handlers, service calls, and state mutations remain unchanged.
 No full i18n framework is introduced. Fixed Korean metadata v1 is sufficient
 until runtime locale selection becomes useful.
 
+When adding new Discord slash commands, subcommand groups, subcommands, or
+options, write their `.setDescription(...)` text in Korean in the same change.
+Preserve raw command names, option names, and choice values, but do not leave
+new Discord search/help descriptions in English unless the user explicitly asks
+for English metadata.
+
 ---
 
 ## Expected Discord UI Behavior
@@ -54,7 +60,12 @@ Discord slash command search should show Korean descriptions for:
 
 ```text
 /ai intake
+/ai intake-preview
 /ai intake-create
+/ai intake-test
+/ai intake-engine status
+/ai bot status
+/ai bot restart
 /ai task create
 /ai task review-intake
 /ai task approve
@@ -91,4 +102,3 @@ Search /ai in Discord and confirm command descriptions are Korean.
 Confirm command names and option names remain unchanged.
 Confirm command behavior is unchanged.
 ```
-

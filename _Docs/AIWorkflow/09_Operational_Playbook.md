@@ -29,21 +29,20 @@ Plan, approve, implement narrowly, review, validate, document, then commit.
 For meaningful code/data/runtime work:
 
 ```text
-1. Capture the request through `/ai intake`, ChatGPT, or Codex App discussion.
-2. Create or edit a Backlog task with `/ai intake-create` or `/ai task create`.
-3. Select the active task with `/ai task set-active`.
-4. Define architecture, reduced scope, non-goals, and validation expectations.
-5. Record explicit scope approval with `/ai task approve`.
-6. Generate a request with `/ai prepare goal`.
-7. Execute manually in Codex App, Codex CLI, Copilot, or manual implementation as approved.
-8. Capture a full diff, including new untracked files.
-9. Review the diff.
-10. Fix review issues.
-11. Validate build/runtime/data/workflow behavior.
-12. Audit the result with `/ai result audit`.
-13. Write Dev Log if required.
-14. Mark done only with human evidence using `/ai task done`.
-15. Commit only after final user decision.
+1. Capture and create the Backlog task with `/ai intake text:<request>`.
+2. Select the active task with `/ai task set-active`.
+3. Define architecture, reduced scope, non-goals, and validation expectations.
+4. Record explicit scope approval with `/ai task approve`.
+5. Generate a request with `/ai prepare goal`.
+6. Execute manually in Codex App, Codex CLI, Copilot, or manual implementation as approved.
+7. Capture a full diff, including new untracked files.
+8. Review the diff.
+9. Fix review issues.
+10. Validate build/runtime/data/workflow behavior.
+11. Audit the result with `/ai result audit`.
+12. Write Dev Log if required.
+13. Mark done only with human evidence using `/ai task done`.
+14. Commit only after final user decision.
 ```
 
 Discord is the task-state, request-generation, and audit layer. Codex App is a
@@ -51,10 +50,11 @@ manual execution surface. A Discord approval or generated goal request does not
 mean Codex has already run, validation has passed, the task is done, or a commit
 is allowed.
 
-Current `/ai intake` is useful as an early draft helper, but it is rule-based. It
-does not call an LLM or inspect repository context. If the request needs real
-intent interpretation, use ChatGPT or Codex App discussion first, then create a
-clear Backlog task manually.
+Current `/ai intake` uses local `codex exec` as the LLM-assisted intake backend.
+It creates one Backlog task from a validated TaskDraft and then stops. The
+rule-based classifier remains as a cross-check layer. `/ai intake-preview` is
+the read-only draft path. Intake still does not approve scope, activate tasks,
+execute implementation, mark done, or commit.
 
 ---
 

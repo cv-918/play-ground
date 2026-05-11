@@ -18,7 +18,7 @@
 
 ```mermaid
 flowchart TD
-    A["[RO] rule-based /ai intake<br/>또는 ChatGPT/Codex App에서 작업 의도 정리"] --> B{"[HUMAN] task로 만들까?"}
+    A["[RO] LLM-assisted /ai intake<br/>또는 ChatGPT/Codex App에서 작업 의도 정리"] --> B{"[HUMAN] task로 만들까?"}
     B -- 아니오 --> Z["종료 또는 나중에 다시 검토"]
     B -- 예 --> C["[WRITE] /ai intake-create<br/>또는 /ai task create"]
     C --> D["[WRITE] /ai task set-active"]
@@ -44,8 +44,9 @@ flowchart TD
 - `/ai result audit`은 done 처리하지 않습니다.
 - `/ai task done`은 commit하지 않습니다.
 - commit은 사람이 diff와 validation을 보고 따로 결정합니다.
-- 현재 `/ai intake`는 LLM 호출이 아니라 keyword/rule-based task draft 생성입니다.
-- 향후 LLM-assisted intake가 추가되어도 Human Review와 task 생성/승인 단계를 건너뛰지 않습니다.
+- 현재 `/ai intake`는 Codex CLI `codex exec` 기반 LLM-assisted TaskDraft 생성과 Backlog task 생성을 수행합니다.
+- rule-based intake는 fallback과 cross-check로 유지됩니다.
+- LLM-assisted intake도 Human Review와 task 생성/승인 단계를 건너뛰지 않습니다.
 
 ---
 
@@ -71,7 +72,7 @@ flowchart TD
 
 ---
 
-## LLM-assisted Intake Future Path
+## LLM-assisted Intake Path
 
 ```mermaid
 flowchart TD
@@ -191,3 +192,13 @@ Commit recommendation은 자동 commit 명령이 아닙니다.
 /ai active
 /ai task list
 ```
+# 2026-05-11 intake automation update
+
+Main happy path now starts with `/ai intake text:<request>`, which uses local
+`codex exec` to generate and validate a TaskDraft, then writes one Backlog task.
+`/ai intake-preview` is the read-only draft path. `/ai intake-create` is a
+compatibility alias for `/ai intake`.
+
+The intake Codex CLI call is not an implementation execution path. The workflow
+still requires separate set-active, approval, execution, result audit, done, and
+manual commit decisions.

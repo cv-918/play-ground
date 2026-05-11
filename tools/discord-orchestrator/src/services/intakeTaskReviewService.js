@@ -1,5 +1,5 @@
 import { getRoleRouterRecommendationForTask } from "./roleRouterService.js";
-import { getBacklogTaskById } from "./taskService.js";
+import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
 
 export async function reviewIntakeTask(config, input = {}) {
   const taskId = normalizeTaskIdInput(input.id);
@@ -13,6 +13,9 @@ export async function reviewIntakeTask(config, input = {}) {
   }
 
   const task = taskResult.data;
+  const currentTaskResult = await getCurrentTask(config);
+  const activeTaskId = currentTaskResult.ok ? currentTaskResult.data?.metadata?.task_id : "";
+  const isActiveTask = activeTaskId === task.id;
   const intakeSource = inspectIntakeSource(task);
   const workflowPath = extractWorkflowPath(task) || inferWorkflowPath(task);
   const riskLevel = extractRisk(task) || inferRisk(task);
@@ -43,7 +46,8 @@ export async function reviewIntakeTask(config, input = {}) {
       suggested_execution_route: roleRecommendation.execution_route ?? [],
       verdict_guidance: roleRecommendation.verdict_format,
       path_scoped_rule_reminders: roleRecommendation.path_scoped_rule_reminders ?? [],
-      suggested_next_manual_commands: buildNextManualCommands(task.id),
+      active_task_match: isActiveTask,
+      suggested_next_manual_commands: buildNextManualCommands(task, isActiveTask),
       safety: {
         read_only: true,
         backlog_updated: false,
@@ -70,6 +74,7 @@ function inspectIntakeSource(task) {
   const validation = String(task.validation ?? "");
   const reason = String(task.reason ?? "");
   const isIntakeCreated = /intake-create/i.test(toolRoute)
+    || /Discord intake/i.test(toolRoute)
     || /intake draft/i.test(validation)
     || /natural-language intake/i.test(reason);
 
@@ -77,8 +82,8 @@ function inspectIntakeSource(task) {
     intake_created: isIntakeCreated,
     confidence: isIntakeCreated ? "high" : "low",
     source: isIntakeCreated
-      ? "Backlog row appears to come from explicit intake-create."
-      : "No intake-create marker found; using generic activation review.",
+      ? "Backlog row appears to come from an intake-family command."
+      : "No intake-family marker found; using generic activation review.",
     tool_route: toolRoute || "unknown",
     validation_note: validation || "unknown",
   };
@@ -128,12 +133,17 @@ function assessActivationReadiness(task, intakeSource, riskLevel) {
   };
 }
 
-function buildNextManualCommands(taskId) {
-  return [
-    `/ai task set-active id:${taskId}`,
-    `/ai task approve id:${taskId} note:"Human reviewed intake task and approves implementation scope."`,
-    `/ai prepare goal id:${taskId} mode:analysis context:standard`,
-  ];
+function buildNextManualCommands(task, isActiveTask) {
+  const taskId = task.id;
+  const status = String(task.status ?? "").toLowerCase();
+  const commands = [`/ai prepare goal id:${taskId} mode:analysis context:standard`];
+  if (!isActiveTask) {
+    commands.unshift(`/ai task set-active id:${taskId}`);
+  }
+  if (status !== "ready_for_implementation") {
+    commands.splice(isActiveTask ? 0 : 1, 0, `/ai task approve id:${taskId} note:"Human Director가 intake task 범위와 검증 목적을 확인하고 승인함."`);
+  }
+  return commands;
 }
 
 function extractRisk(task) {

@@ -27,8 +27,8 @@
 | required validation | 필수 검증 | 완료 전에 필요한 build/test/runtime/check 증거 | done/commit 판단 전 |
 | human decision gate | 사람 판단 게이트 | AI가 혼자 결정하면 안 되는 지점 | 승인, schema, runtime, commit 등 |
 | commit recommendation | commit 권고 | result audit이 제안하는 commit 가능성 | 최종 commit 전 참고 |
-| rule-based intake | 규칙 기반 intake | 키워드와 고정 규칙으로 task draft를 제안하는 현재 `/ai intake` 방식 | 빠른 초벌 분류가 필요할 때 |
-| LLM-assisted intake | LLM 보조 intake | LLM이 TaskDraft 후보를 제안하되 하네스가 검증하고 사람이 승인하는 향후 방식 | 복합 요청의 문맥 해석이 필요할 때 |
+| rule-based intake | 규칙 기반 intake | 키워드와 고정 규칙으로 task draft를 제안하는 fallback/cross-check 방식 | LLM 실패 또는 mismatch 확인이 필요할 때 |
+| LLM-assisted intake | LLM 보조 intake | LLM이 TaskDraft 후보를 제안하되 하네스가 검증하고 사람이 승인하는 현재 `/ai intake` 방식 | 복합 요청의 문맥 해석이 필요할 때 |
 | Codex App execution | Codex App 실행 | 사람이 승인된 요청서를 Codex App에 붙여 넣고 저장소 작업을 수행하는 수동 실행 | `/ai prepare goal` 이후 |
 
 ---
@@ -37,16 +37,26 @@
 
 ### `/ai intake`
 
-Type: read-only
+Type: Backlog write
+
+Current behavior:
+
+- Uses local Codex CLI `codex exec` to produce a TaskDraft JSON candidate.
+- Validates the TaskDraft locally and cross-checks it against the rule-based
+  baseline.
+- Creates one Backlog task.
+- Does not update ActiveTask, approve, execute implementation, mark done,
+  commit, or push.
+
+For read-only preview, use `/ai intake-preview`.
 
 현재 구현 상태:
 
-- LLM을 호출하지 않습니다.
-- 저장소 파일을 분석하지 않습니다.
-- 입력 문장에 들어 있는 keyword와 규칙으로 category, kind, priority/risk,
-  validation hint를 추정합니다.
-- 그래서 복합 작업의 문맥 해석이 필요하면 ChatGPT 또는 Codex App에서 먼저
-  작업 의도와 범위를 정리한 뒤 `/ai task create`를 사용하는 편이 안전합니다.
+- Codex CLI `codex exec`로 TaskDraft JSON 후보를 생성합니다.
+- 기본 모델은 `gpt-5.5`입니다.
+- 로컬 rule-based classifier는 baseline, mismatch 감지, fallback으로 유지됩니다.
+- 저장소 파일 전체를 분석하지는 않습니다.
+- 복합 작업은 확인 질문과 cross-check mismatch를 참고하되, 최종 범위는 사람이 결정합니다.
 
 무엇을 하나:
 
@@ -361,3 +371,14 @@ git push
 - done은 commit이 아닙니다.
 - commit과 push는 사람이 직접 결정합니다.
 - validation을 안 했으면 안 했다고 기록합니다.
+# 2026-05-11 intake automation update
+
+- `intake`: `/ai intake text:<request>` 하나로 Codex CLI TaskDraft 생성, 로컬
+  schema 검증, rule-based cross-check, Backlog task 생성을 수행하는 접수 단계.
+- `intake-preview`: Backlog를 쓰지 않고 TaskDraft만 확인하는 read-only 단계.
+- `Codex CLI intake`: 구현 실행이 아니라 TaskDraft JSON을 얻기 위한
+  non-interactive `codex exec` 호출.
+- `intake-create`: 기존 호환용 alias. 현재 기본 경로는 `/ai intake`.
+
+`/ai intake` 이후에도 ActiveTask 선택, 승인, 구현 실행, 결과 감사, done,
+commit은 자동으로 진행하지 않습니다.

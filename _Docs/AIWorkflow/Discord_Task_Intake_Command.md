@@ -2,24 +2,31 @@
 
 ## 1. Purpose
 
-WF-040 adds a read-only Discord task intake prototype. WF-041 extends the same
-flow with a structured Task Draft section for manual review. WF-042 adds an
+WF-040 added a read-only Discord task intake prototype. WF-041 extended the same
+flow with a structured Task Draft section for manual review. WF-042 added an
 explicit human-invoked creation command that can append the draft as a Backlog
-task. WF-043 adds a read-only review step for created Backlog tasks before the
-human decides whether to activate or approve them:
+task. WF-043 added a read-only review step for created Backlog tasks before the
+human decides whether to activate or approve them. WF-20260511-000002 upgrades
+the intake layer to Codex CLI-backed LLM-assisted TaskDraft generation with
+local schema validation, rule-based cross-check, and direct Backlog task
+creation from `/ai intake`:
 
 ```text
 /ai intake
+/ai intake-preview
 /ai intake-create
+/ai intake-test
+/ai intake-engine status
 /ai task review-intake
 ```
 
-The command accepts a natural-language work request and returns a structured
-AIWorkflow task suggestion and task draft. The current implementation is
-keyword/rule-based. It does not call an LLM and does not inspect repository
-context. `/ai intake` does not create, approve, activate, execute, or commit
-anything. `/ai intake-create` is the explicit write command for creating a
-Backlog task from the same intake logic.
+The command accepts a natural-language work request, asks local `codex exec` for
+a structured TaskDraft JSON object, validates it locally, cross-checks it against
+the deterministic rule-based baseline, and creates one Backlog task. `/ai
+intake` is now the no-paste automation path. `/ai intake-preview` keeps the old
+read-only preview behavior. `/ai intake-create` is retained as a compatibility
+alias for `/ai intake`. `/ai intake-test` renders the task-created response
+shape with sample data only.
 
 ---
 
@@ -27,7 +34,10 @@ Backlog task from the same intake logic.
 
 ```text
 /ai intake text:<natural-language work request>
+/ai intake-preview text:<natural-language work request>
 /ai intake-create text:<natural-language work request>
+/ai intake-test validation-count:<optional sample count>
+/ai intake-engine status
 /ai task review-intake id:<task_id>
 ```
 
@@ -41,10 +51,13 @@ text
 
 Command distinction:
 
-- `/ai intake` is read-only and only returns the suggestion and Task Draft.
-- `/ai intake-create` creates one Backlog task after explicit invocation.
-- `/ai intake-create` does not set ActiveTask, approve the task, execute
-  agents, execute Codex CLI, commit, or push.
+- `/ai intake` creates one Backlog task from a validated Codex CLI TaskDraft.
+- `/ai intake-preview` is read-only and only returns the suggestion and TaskDraft.
+- `/ai intake-create` is a compatibility alias for `/ai intake`.
+- `/ai intake-test` is read-only and only renders the intake task-created
+  response format with sample data.
+- `/ai intake` does not set ActiveTask, approve the task, execute implementation
+  agents, run implementation Codex, commit, or push.
 - `/ai task review-intake` is read-only and only reviews activation readiness
   plus suggested next manual commands.
 
@@ -88,33 +101,46 @@ recommended roles
 human decision gates
 required validation
 suggested next manual action
+clarifying questions
+confidence
 ```
 
-The read-only response also states safety:
+The `/ai intake` creation response also states safety:
 
 ```text
-No Backlog task was created.
+Backlog task was created.
 ActiveTask.md was not updated.
-No agents or Codex CLI were executed.
+No agents or implementation Codex run was executed.
+```
+
+It also shows:
+
+```text
+LLM intake status
+rule-based cross-check summary
+clarifying questions when the request is ambiguous
 ```
 
 ---
 
 ## 4. Classification Rules
 
-Current v1 classification is deterministic and local:
+Current classification is LLM-assisted when configured:
 
 ```text
 input text
--> keyword/rule matching
--> category/kind/priority/risk suggestion
--> role router recommendation
--> path-scoped reminder selection
--> Discord response formatting
+-> local keyword/rule baseline
+-> Codex CLI `codex exec` TaskDraft JSON candidate
+-> local TaskDraft schema validation
+-> rule-based baseline cross-check
+-> role router recommendation and path-scoped reminders
+-> Backlog task creation for /ai intake or Discord response formatting for /ai intake-preview
 ```
 
-It is not semantic LLM interpretation. Ambiguous or multi-part requests should
-be reviewed by the Human Director, ChatGPT, or Codex App before Backlog creation.
+If Codex CLI is disabled, unavailable, unauthenticated, times out, refuses, or
+returns invalid schema/JSON, `/ai intake` fails clearly and does not write
+Backlog. The deterministic rule-based draft is still used as a baseline and
+cross-check. It is not used as a silent write fallback by default.
 
 Category selection:
 
@@ -174,12 +200,10 @@ _Docs/AIWorkflow/**
 `/ai intake` must not:
 
 ```text
-create Backlog tasks automatically
 update ActiveTask.md
-update Backlog.md
 approve tasks automatically
 execute agents
-execute Codex CLI
+execute implementation Codex runs
 commit
 push
 modify game source code
@@ -189,17 +213,29 @@ modify node_modules/
 expose secrets
 ```
 
-The command only formats a suggestion into the Discord response.
-
-`/ai intake-create` may write only:
+The command may write only:
 
 ```text
 _Docs/AIWorkflow/Backlog.md
 _Temp/AIWorkflowDiscordBot/backups/
+_Temp/AIWorkflowDiscordBot/intake/
 ```
 
-It must preserve the same restrictions for ActiveTask, approval, agents, Codex
-CLI, commits, pushes, game source, private files, and dependencies.
+The Codex CLI call used by `/ai intake` is limited to TaskDraft generation. It is
+not an implementation execution path.
+
+`/ai intake-preview` must not write workflow state. It may write only temporary
+intake diagnostics under:
+
+```text
+_Temp/AIWorkflowDiscordBot/intake/
+```
+
+`/ai intake-create` is a compatibility alias for `/ai intake`.
+
+`/ai intake-test` must not call Codex CLI, write Backlog, update ActiveTask,
+approve tasks, execute agents, commit, push, or modify source files. It exists
+only to verify the Discord response layout with sample data.
 
 `/ai task review-intake` must not write any workflow state. It may read
 Backlog.md and return:
@@ -220,28 +256,29 @@ Safety Status
 
 ## 7. Task Draft Usage
 
-The Task Draft is a manual review aid. The human may copy or adapt the draft
-into a later approved task creation step such as:
+The TaskDraft is generated by Codex CLI and validated locally. `/ai intake`
+turns the validated draft into a Backlog task immediately so the user's only
+intake action is the original Discord command.
 
 ```text
-/ai task create title:<edited title> category:<category> priority:<priority> kind:<kind> reason:<edited reason>
-/ai intake-create text:<natural-language work request>
+/ai intake text:<natural-language work request>
 /ai task review-intake id:<created task id>
 ```
 
-The draft is not automatically written to Backlog.md or ActiveTask.md by
-`/ai intake`. `/ai intake-create` writes Backlog.md only because the user
-explicitly invoked the creation command.
+For read-only inspection, use:
+
+```text
+/ai intake-preview text:<natural-language work request>
+```
 
 ---
 
-## 8. Future LLM-assisted Intake Boundary
+## 8. LLM-assisted Intake Boundary
 
-A future LLM-assisted intake path may be added to improve natural-language
-understanding, task splitting, missing-question detection, and validation
-planning.
+The LLM-assisted intake path improves natural-language understanding, task
+splitting hints, missing-question detection, and validation planning.
 
-The intended boundary is:
+The boundary is:
 
 ```text
 LLM:
@@ -249,28 +286,30 @@ LLM:
 
 Local harness:
   validates the TaskDraft schema
-  compares the LLM draft with the current rule-based classifier
+  compares the LLM draft with the rule-based classifier
   flags mismatches or high-risk scope for human review
+  creates one Backlog task for /ai intake
   formats the Discord response
 
 Human Director:
-  decides whether to create, edit, activate, approve, execute, mark done, or commit
+  decides whether to edit, activate, approve, execute, mark done, or commit
 ```
 
 LLM-assisted intake must not:
 
 ```text
-write Backlog.md directly
 update ActiveTask.md
 approve a task
-execute Codex, agents, Copilot, or local commands
+execute implementation Codex, agents, Copilot, or local commands
 mark a task done
 commit or push
 hide rule-based/LLM mismatches from the human
 ```
 
-If an LLM call fails, is disabled, or returns invalid JSON, the command should
-fall back to the existing rule-based intake or return a clear read-only failure.
+If the Codex CLI intake call fails, is disabled, or returns invalid JSON/schema,
+`/ai intake` returns a clear failure and does not write Backlog. Rule-based
+fallback may be enabled for preview/debug use, but it is not the default write
+path.
 
 ---
 
@@ -303,6 +342,7 @@ Discord smoke tests:
 /ai task review-intake id:GAME-001
 /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어"
 /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어"
+/ai intake-test validation-count:31
 /ai task list
 /ai status
 /ai active
@@ -311,15 +351,17 @@ Discord smoke tests:
 Expected:
 
 - `/ai intake` is registered.
-- `/ai intake` returns a structured task suggestion.
-- `/ai intake` response includes a Task Draft section.
-- `/ai intake` does not create tasks automatically.
-- `/ai intake` does not modify Backlog.md or ActiveTask.md.
-- `/ai intake-create` creates one Backlog task only when explicitly invoked.
-- `/ai intake-create` creates a timestamped Backlog backup before writing.
-- `/ai intake-create` escapes markdown table pipes in generated Backlog cells.
-- `/ai intake-create` does not modify ActiveTask.md and does not approve the
+- `/ai intake` creates one Backlog task from a validated Codex CLI TaskDraft.
+- `/ai intake` response includes a TaskDraft summary and LLM status.
+- `/ai intake-preview` returns a structured task suggestion without Backlog or
+  ActiveTask changes.
+- `/ai intake-test` renders the intake task-created response format without
+  Backlog changes or Codex CLI execution.
+- `/ai intake` creates a timestamped Backlog backup before writing.
+- `/ai intake` escapes markdown table pipes in generated Backlog cells.
+- `/ai intake` does not modify ActiveTask.md and does not approve the
   created task.
+- `/ai intake-engine status` reports Codex CLI intake readiness.
 - `/ai task review-intake` outputs activation readiness and suggested next
   manual commands.
 - `/ai task review-intake` does not modify Backlog.md, ActiveTask.md, approval

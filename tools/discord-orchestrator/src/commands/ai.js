@@ -8,9 +8,11 @@ import { prepareCodexPrompt } from "../services/codexPromptService.js";
 import { prepareGoalPrompt } from "../services/goalPromptService.js";
 import { auditGoalResult } from "../services/resultAuditService.js";
 import { setActiveTaskWithSafety } from "../services/activeTaskActivationService.js";
+import { getManagedBotStatus, prepareBotRestart, scheduleBotRestart } from "../services/botControlService.js";
 import { createTaskFromIntake } from "../services/intakeTaskCreationService.js";
 import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js";
+import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -24,13 +26,15 @@ import {
 import {
   formatActive,
   formatBacklog,
+  formatBotControlResult,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
   formatGoalPrepareResult,
-  formatIntakeTaskCreated,
-  formatIntakeTaskReview,
-  formatIntakeSuggestion,
+  formatIntakeEngineStatusPayload,
+  formatIntakeTaskCreatedPayload,
+  formatIntakeTaskReviewPayload,
+  formatIntakeSuggestionPayload,
   formatNext,
   formatProjectList,
   formatProjectProfile,
@@ -83,23 +87,66 @@ export function buildAiCommand() {
     .addSubcommand((sub) =>
       sub
         .setName("intake")
-        .setDescription("자연어 요청을 구조화된 AIWorkflow 작업 초안으로 해석합니다")
+        .setDescription("자연어 요청을 Codex CLI로 해석해 Backlog 작업을 생성합니다")
         .addStringOption((option) =>
           option
             .setName("text")
-            .setDescription("자연어 업무 요청")
+            .setDescription("자연어 작업 요청")
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("intake-create")
-        .setDescription("자연어 요청을 바탕으로 Backlog 작업을 명시적으로 생성합니다")
+        .setDescription("/ai intake와 같은 방식으로 Backlog 작업을 생성합니다")
         .addStringOption((option) =>
           option
             .setName("text")
-            .setDescription("자연어 업무 요청")
+            .setDescription("자연어 작업 요청")
             .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("intake-preview")
+        .setDescription("Backlog를 쓰지 않고 자연어 요청을 TaskDraft로 미리 확인합니다")
+        .addStringOption((option) =>
+          option
+            .setName("text")
+            .setDescription("자연어 작업 요청")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("intake-test")
+        .setDescription("Backlog나 Codex 실행 없이 작업 접수 생성 완료 응답 양식을 테스트합니다")
+        .addIntegerOption((option) =>
+          option
+            .setName("validation-count")
+            .setDescription("샘플 필수 검증 항목 수, 기본값 31")
+            .setMinValue(1)
+            .setMaxValue(50)
+            .setRequired(false),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("intake-engine")
+        .setDescription("Codex CLI intake 엔진 상태를 점검합니다")
+        .addSubcommand((sub) =>
+          sub.setName("status").setDescription("Codex CLI intake 엔진 설정과 실행 가능 여부를 확인합니다"),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("bot")
+        .setDescription("Discord 봇 프로세스를 확인하거나 재시작합니다")
+        .addSubcommand((sub) =>
+          sub.setName("status").setDescription("현재 봇이 start_bot.bat 관리 상태인지 확인합니다"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("restart").setDescription("관리 중인 봇 프로세스를 재시작합니다"),
         ),
     )
     .addSubcommandGroup((group) =>
@@ -406,7 +453,7 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 });
 
   const group = interaction.options.getSubcommandGroup(false);
   const subcommand = interaction.options.getSubcommand();
@@ -441,6 +488,16 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (group === "intake-engine") {
+    await handleIntakeEngineCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "bot") {
+    await handleBotCommand(interaction, config, subcommand);
+    return;
+  }
+
   if (subcommand === "docs") {
     await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
     return;
@@ -451,8 +508,18 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (subcommand === "intake-preview") {
+    await handleIntakePreviewCommand(interaction, config);
+    return;
+  }
+
+  if (subcommand === "intake-test") {
+    await handleIntakeTestCommand(interaction, config);
+    return;
+  }
+
   if (subcommand === "intake-create") {
-    await handleIntakeCreateCommand(interaction, config);
+    await handleIntakeCommand(interaction, config);
     return;
   }
 
@@ -469,34 +536,119 @@ export async function handleAiCommand(interaction, config) {
 
 async function handleIntakeCommand(interaction, config) {
   try {
-    const result = suggestTaskFromIntake({
-      text: interaction.options.getString("text"),
-    });
-
-    await interaction.editReply({
-      content: truncateForDiscord(formatIntakeSuggestion(result), config.limits.maxDiscordChars),
-    });
-  } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(`task intake 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
-    });
-  }
-}
-
-async function handleIntakeCreateCommand(interaction, config) {
-  try {
     const result = await createTaskFromIntake(config, {
       text: interaction.options.getString("text"),
     });
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatIntakeTaskCreated(result), config.limits.maxDiscordChars),
-    });
+    await interaction.editReply(formatIntakeTaskCreatedPayload(result));
   } catch (error) {
     await interaction.editReply({
-      content: truncateForDiscord(`intake task 생성 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
+      content: truncateForDiscord(`작업 접수 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
     });
   }
+}
+
+async function handleIntakePreviewCommand(interaction, config) {
+  try {
+    const result = await suggestTaskFromIntake(config, {
+      text: interaction.options.getString("text"),
+    });
+
+    await interaction.editReply(formatIntakeSuggestionPayload(result));
+  } catch (error) {
+    await interaction.editReply({
+      content: truncateForDiscord(`작업 접수 task 생성 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
+    });
+  }
+}
+
+async function handleIntakeTestCommand(interaction, config) {
+  const validationCount = interaction.options.getInteger("validation-count") ?? 31;
+  const result = buildIntakeFormatTestResult(validationCount);
+
+  await interaction.editReply(formatIntakeTaskCreatedPayload(result));
+}
+
+function buildIntakeFormatTestResult(validationCount) {
+  const requiredValidation = Array.from(
+    { length: validationCount },
+    (_, index) => `샘플 검증 항목 ${index + 1}: 실제 작업 없이 응답 표시만 확인합니다.`,
+  );
+  const taskDraft = {
+    title: "Workflow task: intake 응답 양식 스모크 테스트",
+    category: "WF",
+    priority: "P2",
+    kind: "automation",
+    suggested_risk: "low",
+    workflow_path: "discord_task_management",
+    reason: "Backlog를 쓰지 않고 Discord intake 생성 완료 응답 양식만 확인하기 위한 샘플입니다.",
+    recommended_roles: ["Orchestrator", "Tool/Workflow Engineer", "Reviewer", "Validator"],
+    required_validation: requiredValidation,
+    confidence: 1,
+  };
+
+  return {
+    ok: true,
+    data: {
+      test_mode: true,
+      task: {
+        id: "WF-FORMAT-TEST",
+        item: taskDraft.title,
+        priority: taskDraft.priority,
+        kind: taskDraft.kind,
+      },
+      draft: taskDraft,
+      suggestion: {
+        task_draft: taskDraft,
+        llm: {
+          used: false,
+          fallback_used: false,
+          status: "format_test",
+          provider: "none",
+          model: "none",
+        },
+      },
+      safety: {
+        backlog_updated: false,
+        active_task_updated: false,
+        approved: false,
+        codex_intake_executed: false,
+      },
+    },
+  };
+}
+
+async function handleIntakeEngineCommand(interaction, config, subcommand) {
+  if (subcommand !== "status") {
+    await interaction.editReply({ content: "알 수 없는 intake-engine 명령입니다." });
+    return;
+  }
+
+  const result = await getCodexIntakeEngineStatus(config);
+  await interaction.editReply(formatIntakeEngineStatusPayload(result));
+}
+
+async function handleBotCommand(interaction, config, subcommand) {
+  if (subcommand === "status") {
+    const result = await getManagedBotStatus(config);
+    await interaction.editReply({
+      content: truncateForDiscord(formatBotControlResult(result), config.limits.maxDiscordChars),
+    });
+    return;
+  }
+
+  if (subcommand === "restart") {
+    const result = await prepareBotRestart(config);
+    await interaction.editReply({
+      content: truncateForDiscord(formatBotControlResult(result), config.limits.maxDiscordChars),
+    });
+    if (result.ok) {
+      scheduleBotRestart(config);
+    }
+    return;
+  }
+
+  await interaction.editReply({ content: "Unknown bot command." });
 }
 
 async function handleRoleCommand(interaction, config, subcommand) {
@@ -643,9 +795,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
       const result = await reviewIntakeTask(config, {
         id: interaction.options.getString("id"),
       });
-      await interaction.editReply({
-        content: truncateForDiscord(formatIntakeTaskReview(result), config.limits.maxDiscordChars),
-      });
+      await interaction.editReply(formatIntakeTaskReviewPayload(result));
       return;
     }
 

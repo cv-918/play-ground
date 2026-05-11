@@ -1,3 +1,4 @@
+import { generateTaskDraftWithCodexCli } from "./codexCliIntakeService.js";
 import { getRoleRouterRecommendationForTask } from "./roleRouterService.js";
 
 const MAX_INTAKE_TEXT_LENGTH = 1200;
@@ -6,9 +7,9 @@ const TERMS = {
   wf: [
     "discord", "bot", "codex", "goal prompt", "role router", "automation",
     "script", "workflow", "backlog", "activetask", "orchestrator",
-    "goal", "prompt", "validation condition",
-    "디스코드", "봇", "코덱스", "목표 프롬프트", "역할 라우터", "자동화",
-    "스크립트", "워크플로우", "오케스트레이터", "검증 조건", "프롬프트",
+    "goal", "prompt", "validation condition", "slash command", "/ai",
+    "디스코드", "봇", "코덱스", "목표 프롬프트", "역할 라우터",
+    "자동화", "스크립트", "워크플로우", "백로그", "액티브태스크", "검증 조건",
   ],
   unity: [
     "unity", "steam", "google play", "build profile", "validation profile", "porting",
@@ -19,28 +20,25 @@ const TERMS = {
     "문서", "가이드", "정책", "지침", "설명서", "원천",
   ],
   val: [
-    "validation", "smoke test", "qa", "runtime test", "semantic check", "regression check",
-    "playtest", "play test", "manual test",
-    "검증", "스모크", "테스트", "런타임 테스트", "의미 검사", "회귀",
-    "플레이테스트", "수동 테스트", "재시작 테스트",
+    "validation", "smoke test", "qa", "runtime test", "semantic check",
+    "regression check", "playtest", "play test", "manual test",
+    "검증", "스모크", "테스트", "회귀", "플레이테스트", "수동 테스트",
   ],
   game: [
     "gameplay", "runtime behavior", "combat", "stage", "skill", "enemy", "player",
-    "scene", "dialogue", "reward", "save", "ui", "userdata",
+    "scene", "dialogue", "reward", "save", "ui", "userdata", "user data",
     "게임플레이", "런타임", "전투", "스테이지", "스킬", "적", "플레이어",
-    "씬", "장면", "대화", "보상", "보상 수집", "수집", "재시작",
-    "저장", "세이브", "유저데이터", "user data",
+    "씬", "장면", "대화", "보상", "저장", "세이브", "유저데이터",
   ],
   data: [
     "json", "schema", "data integrity", "data", "userdata", "id/reference", "enum",
     "invalid data", "bad data", "fallback", "default value",
-    "데이터", "스키마", "무결성", "기본값", "기본 값", "참조", "열거형",
-    "유저데이터", "이상", "비정상", "잘못된 데이터", "복구",
+    "데이터", "스키마", "무결성", "기본값", "참조", "열거형", "복구",
   ],
   refactor: ["refactor", "structure cleanup", "architecture cleanup", "리팩터", "리팩토링", "구조 정리"],
-  maintenance: ["cleanup", "warning", "line ending", "dependency", "upkeep", "maintenance", "정리", "경고", "줄바꿈", "의존성", "유지보수"],
+  maintenance: ["cleanup", "warning", "line ending", "dependency", "upkeep", "maintenance", "정리", "경고", "유지보수"],
   prototype: ["prototype", "experiment", "spike", "proof of concept", "프로토타입", "실험"],
-  implementation: ["implement", "feature", "behavior change", "fix", "recover", "fallback", "default", "구현", "기능", "수정", "복구", "기본값", "되게"],
+  implementation: ["implement", "feature", "behavior change", "fix", "recover", "fallback", "default", "구현", "기능", "수정", "복구", "기본값"],
   critical: ["critical", "blocker", "blocking", "corrupt", "save data", "data corruption", "치명", "블로커", "손상"],
   highRisk: ["schema", "save", "runtime", "external tool", "computer-use", "destructive", "migration", "userdata", "스키마", "저장", "세이브", "런타임", "마이그레이션", "유저데이터"],
 };
@@ -66,7 +64,7 @@ const PATH_HINT_RULES = [
   },
   {
     path: "tools/discord-orchestrator/**",
-    terms: ["discord", "bot", "slash command", "/ai", "goal prompt", "codex", "orchestrator", "디스코드", "봇", "명령", "목표 프롬프트", "코덱스", "오케스트레이터"],
+    terms: ["discord", "bot", "slash command", "/ai", "goal prompt", "codex", "orchestrator", "디스코드", "봇", "명령", "코덱스"],
     reminders: [
       "Run `npm --prefix tools\\discord-orchestrator run register` when command schema changes.",
       "Run bot restart/status validation when command runtime behavior changes.",
@@ -75,7 +73,7 @@ const PATH_HINT_RULES = [
   },
   {
     path: "tools/aiworkflow/**",
-    terms: ["tools/aiworkflow", "workflow script", "role_router_status", "json_smoke_check", "script", "automation", "워크플로우", "스크립트", "자동화", "역할 라우터"],
+    terms: ["tools/aiworkflow", "workflow script", "role_router_status", "json_smoke_check", "script", "automation", "워크플로우", "스크립트", "자동화"],
     reminders: [
       "Run changed script validation in text mode and JSON mode when affected.",
       "Verify read-only versus write behavior and output locations.",
@@ -84,7 +82,7 @@ const PATH_HINT_RULES = [
   },
   {
     path: "_Docs/AIWorkflow/**",
-    terms: ["_Docs/AIWorkflow", "doc", "docs", "readme", "guide", "policy", "instruction", "source of truth", "workflow", "문서", "가이드", "정책", "지침", "원천", "워크플로우"],
+    terms: ["_Docs/AIWorkflow", "doc", "docs", "readme", "guide", "policy", "instruction", "source of truth", "workflow", "문서", "가이드", "정책", "지침", "워크플로우"],
     reminders: [
       "Check document map updates when adding durable workflow docs.",
       "Review source-of-truth consistency across related workflow documents.",
@@ -93,7 +91,70 @@ const PATH_HINT_RULES = [
   },
 ];
 
-export function suggestTaskFromIntake(input = {}) {
+export async function suggestTaskFromIntake(configOrInput = {}, maybeInput = null) {
+  const hasConfig = maybeInput !== null || Boolean(configOrInput?.llmIntake);
+  const config = hasConfig ? configOrInput : null;
+  const input = hasConfig ? maybeInput ?? {} : configOrInput;
+  const ruleBased = suggestTaskFromIntakeRuleBased(input);
+
+  if (!config) {
+    return withLlmStatus(ruleBased, {
+      used: false,
+      fallback_used: true,
+      status: "rule_based_only",
+      reason: "No runtime config was provided.",
+    });
+  }
+
+  const llmResult = await generateTaskDraftWithCodexCli(config, {
+    text: ruleBased.interpreted_request,
+    ruleBasedSuggestion: ruleBased,
+  });
+
+  if (!llmResult.ok) {
+    if (config?.llmIntake?.fallbackOnError === false) {
+      return {
+        ok: false,
+        error: llmResult.error,
+        llm: {
+          used: false,
+          fallback_used: false,
+          status: llmResult.code,
+          provider: config?.llmIntake?.provider || "codex_cli",
+          model: config?.llmIntake?.model || "gpt-5.5",
+          run: llmResult.run,
+        },
+        safety: ruleBased.safety,
+      };
+    }
+
+    return withLlmStatus(ruleBased, {
+      used: false,
+      fallback_used: true,
+      status: llmResult.code,
+      reason: llmResult.error,
+      provider: config?.llmIntake?.provider || "codex_cli",
+      model: config?.llmIntake?.model || "gpt-5.5",
+      run: llmResult.run,
+    });
+  }
+
+  return buildSuggestionFromDraft({
+    interpretedRequest: ruleBased.interpreted_request,
+    draft: llmResult.draft,
+    ruleBased,
+    llm: {
+      used: true,
+      fallback_used: false,
+      status: "ok",
+      provider: llmResult.provider,
+      model: llmResult.model,
+      run: llmResult.run,
+    },
+  });
+}
+
+export function suggestTaskFromIntakeRuleBased(input = {}) {
   const interpretedRequest = normalizeIntakeText(input.text);
   const category = classifyCategory(interpretedRequest);
   const kind = classifyKind(interpretedRequest, category);
@@ -101,71 +162,158 @@ export function suggestTaskFromIntake(input = {}) {
   const risk = classifyRisk(interpretedRequest, kind, category);
   const workflowPath = classifyWorkflowPath(category);
   const suggestedTitle = buildSuggestedTitle(interpretedRequest, category, kind);
-  const pathReminders = getPathScopedReminders(interpretedRequest, category, kind);
-
-  const task = {
-    id: `${category}-INTAKE`,
-    item: suggestedTitle,
-    status: "intake_suggestion",
+  const draft = {
+    title: suggestedTitle,
+    category,
     priority,
     kind,
     reason: interpretedRequest,
-    tool_route: "Discord intake -> human review",
+    suggested_risk: risk,
+    workflow_path: workflowPath,
+    recommended_roles: [],
+    human_decision_gates: [],
+    required_validation: [],
+    suggested_next_manual_action: "Review the generated Backlog task, then set active or approve manually if accepted.",
+    clarifying_questions: [],
+    confidence: 0.55,
+  };
+
+  return buildSuggestionFromDraft({
+    interpretedRequest,
+    draft,
+    ruleBased: null,
+    llm: {
+      used: false,
+      fallback_used: false,
+      status: "not_requested",
+    },
+  });
+}
+
+function buildSuggestionFromDraft({ interpretedRequest, draft, ruleBased, llm }) {
+  const pathReminders = getPathScopedReminders(
+    [interpretedRequest, draft.title, draft.reason, draft.workflow_path].join(" "),
+    draft.category,
+    draft.kind,
+  );
+  const task = {
+    id: `${draft.category}-INTAKE`,
+    item: draft.title,
+    status: "intake_suggestion",
+    priority: draft.priority,
+    kind: draft.kind,
+    reason: draft.reason,
+    tool_route: llm?.used ? "Discord LLM-assisted intake -> human review" : "Discord rule-based intake -> human review",
     validation: "Define exact validation after human accepts or edits the suggested task.",
   };
   const activeTask = {
     metadata: {
       task_id: task.id,
-      title: suggestedTitle,
+      title: draft.title,
       status: "intake_suggestion",
-      priority,
-      risk_level: risk,
-      workflow_path: workflowPath,
+      priority: draft.priority,
+      risk_level: draft.suggested_risk,
+      workflow_path: draft.workflow_path,
     },
   };
   const roleRecommendation = getRoleRouterRecommendationForTask({ task, activeTask });
-  const recommendedRoles = normalizeRoles(roleRecommendation.recommended_roles, category, kind);
-  const humanDecisionGates = normalizeGates(roleRecommendation.human_gates, interpretedRequest, risk);
-  const requiredValidation = normalizeValidation(roleRecommendation.required_validation, interpretedRequest, category, kind, pathReminders);
-  const executionRoute = normalizeRoute(roleRecommendation.execution_route, category, kind);
-  const nextManualAction = "Review/edit the draft, then create a Backlog task manually if accepted. No task was created automatically.";
+  const recommendedRoles = mergeUnique(draft.recommended_roles, roleRecommendation.recommended_roles, ["Orchestrator", "Reviewer", "Validator"]);
+  const humanDecisionGates = normalizeGates(
+    mergeUnique(draft.human_decision_gates, roleRecommendation.human_gates),
+    interpretedRequest,
+    draft.suggested_risk,
+  );
+  const requiredValidation = normalizeValidation(
+    mergeUnique(draft.required_validation, roleRecommendation.required_validation),
+    interpretedRequest,
+    draft.category,
+    draft.kind,
+    pathReminders,
+  );
+  const executionRoute = normalizeRoute(roleRecommendation.execution_route, draft.category, draft.kind);
+  const taskDraft = {
+    ...draft,
+    recommended_roles: recommendedRoles,
+    human_decision_gates: humanDecisionGates,
+    required_validation: requiredValidation,
+    suggested_next_manual_action: draft.suggested_next_manual_action || "Review the generated Backlog task, then set active or approve manually if accepted.",
+  };
+  const crossCheck = buildCrossCheck(ruleBased, taskDraft);
 
   return {
     ok: true,
     interpreted_request: interpretedRequest,
-    suggested_task_title: suggestedTitle,
-    suggested_category: category,
-    suggested_kind: kind,
-    suggested_priority: priority,
-    suggested_risk: risk,
-    suggested_workflow_path: workflowPath,
+    suggested_task_title: taskDraft.title,
+    suggested_category: taskDraft.category,
+    suggested_kind: taskDraft.kind,
+    suggested_priority: taskDraft.priority,
+    suggested_risk: taskDraft.suggested_risk,
+    suggested_workflow_path: taskDraft.workflow_path,
     recommended_roles: recommendedRoles,
     human_decision_gates: humanDecisionGates,
     required_validation: requiredValidation,
     suggested_execution_route: executionRoute,
-    suggested_next_manual_action: nextManualAction,
-    task_draft: {
-      title: suggestedTitle,
-      category,
-      priority,
-      kind,
-      reason: interpretedRequest,
-      suggested_risk: risk,
-      workflow_path: workflowPath,
-      recommended_roles: recommendedRoles,
-      human_decision_gates: humanDecisionGates,
-      required_validation: requiredValidation,
-      suggested_next_manual_action: nextManualAction,
-    },
+    suggested_next_manual_action: taskDraft.suggested_next_manual_action,
+    task_draft: taskDraft,
     path_scoped_reminders: pathReminders,
+    llm: llm ?? { used: false, fallback_used: false, status: "not_requested" },
+    rule_based_cross_check: crossCheck,
     safety: {
       read_only: true,
       backlog_updated: false,
       active_task_updated: false,
       agents_executed: false,
       codex_executed: false,
+      codex_intake_executed: llm?.used === true,
+      implementation_codex_executed: false,
+      approved: false,
+      committed: false,
+      pushed: false,
     },
   };
+}
+
+function withLlmStatus(ruleBased, llmStatus) {
+  return {
+    ...ruleBased,
+    llm: llmStatus,
+    rule_based_cross_check: {
+      mismatches: [],
+      requires_human_review: true,
+      summary: "Using rule-based fallback; human review is required before task creation or approval.",
+    },
+  };
+}
+
+function buildCrossCheck(ruleBased, draft) {
+  if (!ruleBased?.task_draft) {
+    return {
+      mismatches: [],
+      requires_human_review: false,
+      summary: "No rule-based baseline comparison was needed.",
+    };
+  }
+
+  const baseline = ruleBased.task_draft;
+  const mismatches = [];
+  compareField(mismatches, "category", baseline.category, draft.category);
+  compareField(mismatches, "kind", baseline.kind, draft.kind);
+  compareField(mismatches, "priority", baseline.priority, draft.priority);
+  compareField(mismatches, "suggested_risk", baseline.suggested_risk, draft.suggested_risk);
+
+  return {
+    mismatches,
+    requires_human_review: mismatches.length > 0 || draft.suggested_risk === "high" || draft.clarifying_questions.length > 0,
+    summary: mismatches.length > 0
+      ? "LLM draft differs from the local rule-based baseline; review before creating or approving."
+      : "LLM draft matches the main rule-based category, kind, priority, and risk signals.",
+  };
+}
+
+function compareField(mismatches, field, baseline, candidate) {
+  if (String(baseline ?? "") !== String(candidate ?? "")) {
+    mismatches.push(`${field}: rule=${baseline || "unknown"}; llm=${candidate || "unknown"}`);
+  }
 }
 
 function normalizeIntakeText(value) {
@@ -173,11 +321,9 @@ function normalizeIntakeText(value) {
   if (!text) {
     throw new Error("Intake text is required.");
   }
-
   if (text.length > MAX_INTAKE_TEXT_LENGTH) {
     throw new Error(`Intake text is too long. Maximum length is ${MAX_INTAKE_TEXT_LENGTH} characters.`);
   }
-
   return text;
 }
 
@@ -190,100 +336,50 @@ function stripWrappingQuotes(value) {
 }
 
 function classifyCategory(text) {
-  if (hasAny(text, TERMS.wf)) {
-    return "WF";
-  }
-  if (hasAny(text, TERMS.unity)) {
-    return "UNITY";
-  }
-  if (hasAny(text, TERMS.doc)) {
-    return "DOC";
-  }
-  if (hasAny(text, TERMS.val)) {
-    return "VAL";
-  }
-  if (hasAny(text, TERMS.game)) {
-    return "GAME";
-  }
+  if (hasAny(text, TERMS.wf)) return "WF";
+  if (hasAny(text, TERMS.unity)) return "UNITY";
+  if (hasAny(text, TERMS.doc)) return "DOC";
+  if (hasAny(text, TERMS.val)) return "VAL";
+  if (hasAny(text, TERMS.game)) return "GAME";
   return "GAME";
 }
 
 function classifyWorkflowPath(category) {
   switch (category) {
-    case "WF":
-      return "discord_task_management";
-    case "UNITY":
-      return "unity_workflow";
-    case "DOC":
-      return "documentation";
-    case "VAL":
-      return "validation";
-    default:
-      return "gameplay";
+    case "WF": return "discord_task_management";
+    case "UNITY": return "unity_workflow";
+    case "DOC": return "documentation";
+    case "VAL": return "validation";
+    default: return "gameplay";
   }
 }
 
 function classifyKind(text, category) {
-  if (category === "UNITY" && hasAny(text, ["validation profile", "build profile", "검증 프로필", "빌드 프로필"])) {
-    return "validation";
-  }
-  if (hasAny(text, TERMS.prototype)) {
-    return "prototype";
-  }
-  if (hasAny(text, TERMS.doc)) {
-    return "documentation";
-  }
-  if (hasAny(text, TERMS.wf)) {
-    return "automation";
-  }
-  if (hasAny(text, TERMS.val)) {
-    return "validation";
-  }
-  if (hasAny(text, TERMS.data)) {
-    return "data";
-  }
-  if (hasAny(text, TERMS.refactor)) {
-    return "refactoring";
-  }
-  if (hasAny(text, TERMS.maintenance)) {
-    return "maintenance";
-  }
-  if (hasAny(text, TERMS.implementation)) {
-    return "implementation";
-  }
-
-  if (category === "WF") {
-    return "automation";
-  }
-  if (category === "DOC") {
-    return "documentation";
-  }
-  if (category === "VAL") {
-    return "validation";
-  }
+  if (category === "UNITY" && hasAny(text, ["validation profile", "build profile", "검증 프로필", "빌드 프로필"])) return "validation";
+  if (hasAny(text, TERMS.prototype)) return "prototype";
+  if (hasAny(text, TERMS.doc)) return "documentation";
+  if (hasAny(text, TERMS.wf)) return "automation";
+  if (hasAny(text, TERMS.val)) return "validation";
+  if (hasAny(text, TERMS.data)) return "data";
+  if (hasAny(text, TERMS.refactor)) return "refactoring";
+  if (hasAny(text, TERMS.maintenance)) return "maintenance";
+  if (hasAny(text, TERMS.implementation)) return "implementation";
+  if (category === "WF") return "automation";
+  if (category === "DOC") return "documentation";
+  if (category === "VAL") return "validation";
   return "implementation";
 }
 
 function classifyPriority(text, category) {
-  if (hasAny(text, TERMS.critical)) {
-    return "P0";
-  }
-  if (["WF", "UNITY"].includes(category) || hasAny(text, ["infrastructure", "high leverage", "important", "runtime", "save", "userdata", "중요", "런타임", "저장", "세이브", "유저데이터"])) {
-    return "P1";
-  }
-  if (hasAny(text, ["optional", "later", "cleanup", "선택", "나중", "정리"])) {
-    return "P3";
-  }
+  if (hasAny(text, TERMS.critical)) return "P0";
+  if (["WF", "UNITY"].includes(category) || hasAny(text, ["infrastructure", "high leverage", "important", "runtime", "save", "userdata", "중요", "런타임", "저장", "세이브", "유저데이터"])) return "P1";
+  if (hasAny(text, ["optional", "later", "cleanup", "선택", "나중", "정리"])) return "P3";
   return "P2";
 }
 
 function classifyRisk(text, kind, category) {
-  if (hasAny(text, TERMS.highRisk)) {
-    return "high";
-  }
-  if (kind === "implementation" || category === "WF" || hasAny(text, ["source behavior", "command behavior", "bot behavior", "workflow command", "소스 동작", "명령 동작", "봇 동작"])) {
-    return "medium";
-  }
+  if (hasAny(text, TERMS.highRisk)) return "high";
+  if (kind === "implementation" || category === "WF" || hasAny(text, ["source behavior", "command behavior", "bot behavior", "workflow command", "소스 동작", "명령 동작", "봇 동작"])) return "medium";
   return "low";
 }
 
@@ -293,21 +389,11 @@ function buildSuggestedTitle(text, category, kind) {
 }
 
 function titlePrefix(category, kind) {
-  if (category === "WF") {
-    return "Workflow task";
-  }
-  if (category === "UNITY") {
-    return "Unity workflow task";
-  }
-  if (category === "DOC") {
-    return "Documentation task";
-  }
-  if (category === "VAL") {
-    return "Validation task";
-  }
-  if (kind === "data") {
-    return "Game data task";
-  }
+  if (category === "WF") return "Workflow task";
+  if (category === "UNITY") return "Unity workflow task";
+  if (category === "DOC") return "Documentation task";
+  if (category === "VAL") return "Validation task";
+  if (kind === "data") return "Game data task";
   return "Gameplay task";
 }
 
@@ -315,37 +401,16 @@ function getPathScopedReminders(text, category, kind) {
   const matches = [];
   for (const rule of PATH_HINT_RULES) {
     if (hasAny(text, rule.terms)) {
-      matches.push({
-        path: rule.path,
-        reminders: rule.reminders,
-      });
+      matches.push({ path: rule.path, reminders: rule.reminders });
     }
   }
-
   if (matches.length === 0 && category === "GAME") {
     matches.push(PATH_HINT_RULES.find((rule) => rule.path === "PlayGround/Project/Gameplay/**"));
   }
   if (matches.length === 0 && kind === "documentation") {
     matches.push(PATH_HINT_RULES.find((rule) => rule.path === "_Docs/AIWorkflow/**"));
   }
-
   return matches.filter(Boolean);
-}
-
-function normalizeRoles(values, category, kind) {
-  const roles = [...arrayValues(values)];
-  addUnique(roles, "Orchestrator");
-  if (category === "UNITY") {
-    addManyUnique(roles, ["Technical Architect", "Validator", "Documentation Keeper"]);
-  }
-  if (kind === "data") {
-    addManyUnique(roles, ["Technical Architect", "Reviewer", "Validator"]);
-  }
-  if (kind === "documentation") {
-    addManyUnique(roles, ["Documentation Keeper", "Reviewer"]);
-  }
-  addManyUnique(roles, ["Reviewer", "Validator"]);
-  return roles;
 }
 
 function normalizeGates(values, text, risk) {
@@ -368,7 +433,6 @@ function normalizeValidation(values, text, category, kind, pathReminders) {
     "Run git diff --stat.",
     "Verify no forbidden paths were modified.",
   ]);
-
   if (category === "WF") {
     addManyUnique(validation, [
       "Run npm --prefix tools\\discord-orchestrator run register when Discord command schema changes.",
@@ -381,28 +445,20 @@ function normalizeValidation(values, text, category, kind, pathReminders) {
   if (category === "GAME") {
     addUnique(validation, "Run Debug x64 build and manual runtime validation when gameplay/runtime behavior changes.");
   }
-
   for (const item of pathReminders) {
     for (const reminder of item.reminders) {
       addUnique(validation, reminder);
     }
   }
-
   return validation;
 }
 
 function normalizeRoute(values, category, kind) {
   const route = arrayValues(values).filter((value) => !/commit decision/i.test(value));
   addUnique(route, "Orchestrator");
-  if (category === "WF") {
-    addUnique(route, "Tool/Workflow Engineer");
-  }
-  if (category === "UNITY" || category === "GAME" || kind === "data") {
-    addUnique(route, "Technical Architect");
-  }
-  if (kind === "documentation") {
-    addUnique(route, "Documentation Keeper");
-  }
+  if (category === "WF") addUnique(route, "Tool/Workflow Engineer");
+  if (category === "UNITY" || category === "GAME" || kind === "data") addUnique(route, "Technical Architect");
+  if (kind === "documentation") addUnique(route, "Documentation Keeper");
   addManyUnique(route, ["Reviewer", "Validator", "Human Director task creation decision"]);
   return route;
 }
@@ -414,6 +470,14 @@ function hasAny(text, terms) {
 
 function arrayValues(values) {
   return Array.isArray(values) ? values.filter(Boolean) : [];
+}
+
+function mergeUnique(...groups) {
+  const list = [];
+  for (const group of groups) {
+    addManyUnique(list, arrayValues(group));
+  }
+  return list;
 }
 
 function addUnique(list, value) {

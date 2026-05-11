@@ -21,32 +21,34 @@ Codex를 직접 실행하거나, commit하거나, game source를 고치는 구�
 
 ## 현재 intake와 실행 방식
 
-현재 `/ai intake`는 자연어 입력을 받을 수 있지만, LLM을 호출해서 문맥을
-이해하는 기능은 아닙니다. 현재 구현은 키워드와 규칙을 기준으로 category,
-kind, priority, risk, validation hint를 추정하는 rule-based task draft
-helper입니다.
+현재 `/ai intake`는 로컬 Codex CLI `codex exec`를 사용해 TaskDraft JSON
+후보를 생성하고, 로컬 검증 후 Backlog task를 생성하는 LLM-assisted intake
+entry point입니다. 기본 모델은 `gpt-5.5`이며, API key 환경 변수는 필요하지
+않습니다. 기존 키워드/rule-based 분류기는 baseline과 mismatch 감지 역할로
+유지됩니다.
 
 따라서 `/ai intake`는 다음 용도로 사용합니다.
 
 ```text
-아이디어를 Backlog 후보로 만들기 전 초벌 task draft를 얻는 용도
+아이디어를 Backlog 후보로 만들기 전 LLM-assisted task draft를 얻는 용도
+LLM 실패/비활성/API key 누락 시 rule-based fallback draft를 얻는 용도
 ```
 
 다음 용도로 사용하지 않습니다.
 
 ```text
-복합 작업의 의도 해석
 아키텍처 판단
 저장소 문맥 분석
 자동 승인
 자동 실행
 ```
 
-작업 의도가 복잡하거나 하네스의 intake 결과가 부족하면 ChatGPT 또는 Codex
-App에서 먼저 작업 의도, 범위, non-goals, validation 기준을 정리한 뒤
-`/ai task create` 또는 `/ai intake-create`로 Backlog에 기록합니다.
+복합 작업의 경우 `/ai intake`가 확인 질문과 cross-check mismatch를 표시할 수
+있지만, 최종 범위와 승인 여부는 Human Director가 결정합니다. 필요한 경우
+ChatGPT 또는 Codex App에서 먼저 작업 의도, 범위, non-goals, validation 기준을
+정리한 뒤 `/ai task create` 또는 `/ai intake-create`로 Backlog에 기록합니다.
 
-향후 LLM-assisted intake가 도입되더라도 책임은 분리합니다.
+LLM-assisted intake가 도입된 현재도 책임은 분리합니다.
 
 ```text
 LLM:
@@ -240,3 +242,18 @@ Result Audit은 읽기 전용입니다. 자동으로 done 처리하거나 commit
 - `/ai result audit`은 읽기 전용입니다.
 - `/ai task done`은 사람이 evidence를 넣어 완료 처리합니다.
 - commit은 항상 수동 결정입니다.
+# 2026-05-11 intake automation update
+
+`/ai intake text:<request>` is the current no-paste intake entry point. It calls
+local `codex exec` through the signed-in Codex CLI, receives a TaskDraft JSON
+candidate, validates it locally, cross-checks it against the deterministic
+rule-based baseline, and creates one Backlog task.
+
+This replaces the earlier OpenAI API-key based intake plan. The current default
+path does not require `OPENAI_API_KEY` and does not require the user to paste the
+request into ChatGPT Web or Codex App. `/ai intake-preview` is the read-only
+draft path.
+
+The automation stops after Backlog creation. ActiveTask selection, approval,
+implementation execution, result audit, done, and commit remain separate human
+gated workflow steps.

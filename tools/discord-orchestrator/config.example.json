@@ -10,6 +10,18 @@
   "allowed_channel_ids": [
     "PUT_ALLOWED_CHANNEL_ID_HERE"
   ],
+  "llm_intake": {
+    "enabled": true,
+    "provider": "codex_cli",
+    "command": "codex",
+    "args": [],
+    "model": "gpt-5.5",
+    "sandbox": "read-only",
+    "approval_policy": "never",
+    "timeout_ms": 60000,
+    "fallback_on_error": false,
+    "output_dir": "_Temp/AIWorkflowDiscordBot/intake"
+  },
   "limits": {
     "script_timeout_ms": 15000,
     "max_discord_chars": 1800

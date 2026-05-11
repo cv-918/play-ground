@@ -198,8 +198,48 @@ Start with orchestration, then route to Codex or Copilot only when appropriate.
 For regular Discord-assisted AIWorkflow task operation after WF-048:
 
 ```text
-1. /ai intake, or human-written task draft reviewed in ChatGPT/Codex App
-2. /ai intake-create or /ai task create after human review
+1. /ai intake text:<request>
+2. /ai task set-active
+3. /ai task approve
+4. /ai prepare goal
+5. Manual Codex App or Codex CLI execution outside Discord
+6. /ai result audit
+7. /ai task done
+8. Manual commit decision
+```
+
+Compatibility and preview options:
+
+```text
+/ai intake-preview text:<request>
+/ai intake-create text:<request>  # compatibility alias for /ai intake
+/ai task create                   # manual Backlog task creation
+```
+
+Current responsibility split:
+
+```text
+Discord Orchestrator:
+  task state, approval records, goal request files, result audit, command safety,
+  and Codex CLI-backed intake-to-Backlog automation
+
+Codex CLI intake backend:
+  non-interactive TaskDraft JSON generation only
+
+Codex App / Codex CLI manual execution:
+  repository-aware implementation after the human reviews the generated request
+```
+
+Current `/ai intake` uses local `codex exec` through the signed-in Codex CLI as
+the LLM-assisted intake backend. It creates one Backlog task from a validated
+TaskDraft and stops there. The local rule-based classifier remains as the
+baseline and cross-check layer. `/ai intake` does not update ActiveTask, approve
+scope, run implementation, mark done, commit, or push. `/ai intake-preview` is
+the read-only draft path.
+
+The regular post-intake task flow remains:
+
+```text
 3. /ai task set-active
 4. /ai task approve
 5. /ai prepare goal
@@ -208,22 +248,6 @@ For regular Discord-assisted AIWorkflow task operation after WF-048:
 8. /ai task done
 9. Manual commit decision
 ```
-
-Current responsibility split:
-
-```text
-Discord Orchestrator:
-  task state, approval records, goal request files, result audit, and command safety
-
-Codex App / Codex CLI:
-  manual repository-aware execution after the human reviews the generated request
-```
-
-Current `/ai intake` is a rule-based task draft helper. It accepts natural
-language text, but it does not call an LLM, inspect repository context, approve
-scope, update Backlog, update ActiveTask, or execute Codex. Future LLM-assisted
-intake may improve draft quality, but any generated draft must still pass human
-review before Backlog creation, activation, approval, or execution.
 
 Optional/debug/admin commands such as `/ai role status`, `/ai task
 review-intake`, `/ai run workflow-status`, `/ai run active-project`, `/ai run

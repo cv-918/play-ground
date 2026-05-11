@@ -160,7 +160,7 @@ export function getRoleRouterRecommendationForTask(input = {}) {
   }
 
   if (/^P[01]$/i.test(priority) || /high/i.test(risk)) {
-    addUnique(humanGates, "Human Director Gate: P0/P1 or high-risk task requires explicit approval before implementation and before accepting validation deferral.");
+    addUnique(humanGates, "사람 결정 gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다.");
   }
 
   if (testTerm(contextText, [/schema/i, /save\/load/i, /runtime behavior/i, /external tool/i, /computer-use/i, /destructive command/i])) {
