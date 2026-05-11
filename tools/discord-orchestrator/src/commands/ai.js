@@ -14,6 +14,7 @@ import { reviewIntakeTask } from "../services/intakeTaskReviewService.js";
 import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js";
 import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js";
 import { generateCompletionCard, generateCompletionReport, getCompletionStatus } from "../services/completionService.js";
+import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -31,6 +32,9 @@ import {
   formatCompletionCardPayload,
   formatCompletionReportPayload,
   formatCompletionStatusPayload,
+  formatFinalizationReadPayload,
+  formatFinalizationRecordPayload,
+  formatFinalizationStatusPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -346,6 +350,107 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("finalization")
+        .setDescription("완료 승인 이력과 최종화 기록을 생성/확인합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("status")
+            .setDescription("작업의 ApprovalHistory와 FinalizationLog 상태를 확인합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("accept")
+            .setDescription("CompletionReport를 사람이 검토하고 완료 수락으로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("사용할 CompletionReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("request-changes")
+            .setDescription("완료 검토 결과 수정 필요로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("참조할 CompletionReport ID")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("reject")
+            .setDescription("완료 검토 결과 반려로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("참조할 CompletionReport ID")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("defer")
+            .setDescription("완료 검토를 보류로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("참조할 CompletionReport ID")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("read")
+            .setDescription("FinalizationLog 상세를 읽습니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("finalization-log-id")
+                .setDescription("읽을 FinalizationLog ID, 없으면 최신 기록")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -524,6 +629,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "completion") {
     await handleCompletionCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "finalization") {
+    await handleFinalizationCommand(interaction, config, subcommand);
     return;
   }
 
@@ -832,6 +942,38 @@ async function handleCompletionCommand(interaction, config, subcommand) {
   }
 
   await interaction.editReply({ content: "알 수 없는 completion 명령입니다." });
+}
+
+async function handleFinalizationCommand(interaction, config, subcommand) {
+  const id = interaction.options.getString("id");
+
+  if (subcommand === "status") {
+    const result = await getFinalizationStatus(config, { id });
+    await interaction.editReply(formatFinalizationStatusPayload(result));
+    return;
+  }
+
+  if (subcommand === "read") {
+    const result = await readFinalizationLog(config, {
+      id,
+      finalizationLogId: interaction.options.getString("finalization-log-id"),
+    });
+    await interaction.editReply(formatFinalizationReadPayload(result));
+    return;
+  }
+
+  if (["accept", "reject", "request-changes", "defer"].includes(subcommand)) {
+    const result = await recordFinalizationDecision(config, {
+      id,
+      command: subcommand,
+      completionReportId: interaction.options.getString("completion-report-id"),
+      actor: interaction.user?.id,
+    });
+    await interaction.editReply(formatFinalizationRecordPayload(result));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 finalization 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {

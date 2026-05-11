@@ -151,6 +151,12 @@ Do not commit `_Local/`.
 /ai completion status
 /ai completion report
 /ai completion card
+/ai finalization status
+/ai finalization accept
+/ai finalization request-changes
+/ai finalization reject
+/ai finalization defer
+/ai finalization read
 ```
 
 ## Regular Workflow Path
@@ -167,8 +173,9 @@ Use this path for normal task operation:
 7. /ai result audit
 8. /ai completion report
 9. /ai completion card
-10. /ai task done
-11. Review and commit manually
+10. /ai finalization accept or /ai finalization request-changes
+11. /ai task done
+12. Review and commit manually
 ```
 
 Milestone 1 consolidation keeps regular responses short. Detailed role routing,
@@ -178,6 +185,10 @@ the generated `goal_request_*.md` files.
 WF-305/306 completion commands are Phase 3 runtime review helpers. They read
 VerificationReport and CompletionReport artifacts, then show a Discord-facing
 completion card. They do not approve, mark done, finalize, commit, or push.
+
+WF-307 finalization commands record explicit Human Director completion
+decisions into ApprovalHistory and FinalizationLog artifacts. They do not mark
+tasks done, apply auto approval, commit, or push.
 
 ## Optional / Debug / Admin Commands
 

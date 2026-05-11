@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-305-306
-title: WF-305/306 Implement CompletionReport and Completion Card
+task_id: WF-307
+title: WF-307 Implement ApprovalHistory and FinalizationLog
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-12
 
 ## Goal
 
-WF-305/306 Implement CompletionReport and Completion Card
+WF-307 Implement ApprovalHistory and FinalizationLog
 
 ---
 
@@ -36,7 +36,7 @@ WF-305/306 Implement CompletionReport and Completion Card
 discord: task selection command
 human: review and approval
 codex: approved for bounded workflow runtime implementation
-validation: approved: "Human Director approved bundling WF-305 CompletionReport and WF-306 Completion Card. Scope: implement CompletionReport generation from VerificationReport, compact Discord-facing Completion Card payloads, local status/generate/read APIs, Discord completion status/report/card commands, documentation, DevLog, and validation. Non-goals: ApprovalHistory, FinalizationLog, Auto Approval Policy, Follow-up Task Generator, automatic task done, commit/push automation, arbitrary shell execution, game source/data changes."
+validation: approved: "Human Director approved proceeding to WF-307. Scope: implement ApprovalHistory and FinalizationLog runtime artifacts from CompletionReport/Completion Card review, local status/record/read APIs, Discord finalization status/accept/reject/request-changes/defer commands, documentation, DevLog, and validation. Non-goals: Auto Approval Policy, Follow-up Task Generator, automatic task done, automatic Backlog/ActiveTask lifecycle transitions, commit/push automation, arbitrary shell execution, game source/data changes."
 ```
 
 ---
@@ -58,7 +58,7 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Review CompletionReport/Card behavior if validation finds CONCERNS, BLOCKED, or FAIL.
+1. Review ApprovalHistory/FinalizationLog behavior if validation finds CONCERNS, BLOCKED, or FAIL.
 2. Otherwise, Codex may commit and attempt push after review and validation.
 ```
 
@@ -67,10 +67,10 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Run PowerShell parser checks, completion_report status/generate/read scenarios,
-completion_card status/generate/read scenarios, Discord command registration or
-node syntax checks, response formatting checks, generated JSON parse checks,
-invariant checks that no task done/finalization/auto-approval is written, git
+Run PowerShell parser checks, finalization_log status/record/read scenarios,
+accept/reject/request-changes/defer decision scenarios, Discord command
+registration or node syntax checks, response formatting checks, generated JSON
+parse checks, invariant checks that no task done/auto-approval is written, git
 diff --check, forbidden path checks, and private/local tracking checks.
 ```
 
@@ -79,7 +79,7 @@ diff --check, forbidden path checks, and private/local tracking checks.
 ## Next Recommended Task
 
 ```text
-After WF-305/306, continue to WF-307 ApprovalHistory and FinalizationLog.
+After WF-307, continue to WF-308 Auto Approval Policy.
 ```
 
 ---
@@ -93,5 +93,5 @@ After WF-305/306, continue to WF-307 ApprovalHistory and FinalizationLog.
 [x] Review completed, if applicable
 [x] Validation completed or explicitly deferred
 [x] Dev Log created for meaningful work
-[x] Commit/push completed if validation does not require a new Human Director decision
+[ ] Commit/push completed if validation does not require a new Human Director decision
 ```

@@ -871,6 +871,128 @@ export function formatCompletionCardPayload(result) {
   };
 }
 
+export function formatFinalizationStatusPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**최종화 상태 확인 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "최종화 기록 상태",
+      color: 0x1565c0,
+      description: formatInlineCode(data.task_id || "unknown"),
+      fields: [
+        embedField("ApprovalHistory", [
+          `개수: ${data.approval_record_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(data.latest_approval_record_id || "none")}`,
+          `manifest: ${formatInlineCode(data.approval_history_manifest_path || "none")}`,
+        ]),
+        embedField("FinalizationLog", [
+          `개수: ${data.finalization_log_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(data.latest_finalization_log_id || "none")}`,
+          `manifest: ${formatInlineCode(data.finalization_manifest_path || "none")}`,
+        ]),
+        embedField("안전 상태", [
+          "Backlog/ActiveTask lifecycle 변경 없음",
+          "task done, auto approval, commit/push 없음",
+        ], true),
+      ],
+    }],
+  };
+}
+
+export function formatFinalizationRecordPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**최종화 기록 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const log = data.finalization_log ?? {};
+  const approval = data.approval_record ?? {};
+  const source = log.sources?.completion_report ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "최종화 기록 완료",
+      color: finalizationColor(log.finalization_state),
+      description: [
+        `${formatInlineCode(data.finalization_log_id || log.finalization_log_id || "unknown")}`,
+        `${data.task_id ?? log.task_id ?? "unknown"} · ${finalizationStateKo(log.finalization_state)}`,
+        `decision: ${approval.decision ?? log.final_decision ?? "unknown"}`,
+      ].join("\n"),
+      fields: [
+        embedField("기록", [
+          `ApprovalHistory: ${formatInlineCode(data.approval_record_id || approval.approval_record_id || "unknown")}`,
+          `CompletionReport: ${formatInlineCode(source.completion_report_id || "none")}`,
+          `결정자: ${approval.decision_by ?? log.final_decision_by ?? "unknown"}`,
+        ]),
+        embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          "task done 처리 안 함",
+          "auto approval 생성 안 함",
+          "commit/push 안 함",
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.finalization_log_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
+export function formatFinalizationReadPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**최종화 기록 읽기 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const log = data.finalization_log ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "FinalizationLog",
+      color: finalizationColor(log.finalization_state),
+      description: [
+        `${formatInlineCode(data.finalization_log_id || log.finalization_log_id || "unknown")}`,
+        `${data.task_id ?? log.task_id ?? "unknown"} · ${finalizationStateKo(log.finalization_state)}`,
+      ].join("\n"),
+      fields: [
+        embedField("결정", [
+          `decision: ${log.final_decision ?? "unknown"}`,
+          `by: ${log.final_decision_by ?? "unknown"}`,
+          `time: ${log.decision_time ?? "unknown"}`,
+        ]),
+        embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          `state files updated: ${koBool(log.state_files_updated)}`,
+          `task done 없음: ${koBool(log.invariants?.no_task_done)}`,
+          `commit/push 없음: ${koBool(log.invariants?.no_commit_or_push)}`,
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.finalization_log_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
 function formatAuditFiles(files) {
   const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -970,6 +1092,36 @@ function prefixItems(prefix, values) {
     .map((value) => cleanKo(value))
     .filter(Boolean)
     .map((value) => `${prefix}: ${value}`);
+}
+
+function finalizationColor(state) {
+  switch (state) {
+    case "completion_accepted_pending_task_done":
+      return 0x2e7d32;
+    case "changes_requested":
+      return 0xef6c00;
+    case "completion_rejected":
+      return 0xc62828;
+    case "completion_deferred":
+      return 0x607d8b;
+    default:
+      return 0x1565c0;
+  }
+}
+
+function finalizationStateKo(state) {
+  switch (state) {
+    case "completion_accepted_pending_task_done":
+      return "완료 수락됨, task done 대기";
+    case "changes_requested":
+      return "수정 요청됨";
+    case "completion_rejected":
+      return "완료 반려됨";
+    case "completion_deferred":
+      return "완료 검토 보류";
+    default:
+      return state || "unknown";
+  }
 }
 
 function compactList(items, maxCount) {

@@ -44,6 +44,7 @@ build_test_runner.bat
 verification_report.bat
 completion_report.bat
 completion_card.bat
+finalization_log.bat
 ```
 
 ---
@@ -569,6 +570,40 @@ done/finalization, commit, push, release, or deploy state.
 
 ---
 
+## finalization_log.bat
+
+Records ApprovalHistory and FinalizationLog artifacts from explicit Human
+Director completion decisions.
+
+Commands:
+
+```bat
+tools\aiworkflow\finalization_log.bat status task_id [--json]
+tools\aiworkflow\finalization_log.bat record task_id decision [completion_report_id] [approval_record_id] [finalization_log_id] [actor] [--json]
+tools\aiworkflow\finalization_log.bat read task_id [finalization_log_id] [--json]
+```
+
+Allowed decisions:
+
+```text
+accept_completion
+reject_completion
+request_changes
+defer_completion
+```
+
+`accept_completion` requires a CompletionReport that is ready for manual done
+review. Other decisions can be recorded against blocked or incomplete evidence
+so the rejection, requested changes, or deferral remains auditable.
+
+The command writes runtime artifacts under `_Temp`, updates only TaskRunState
+approval/finalization projection fields, and appends a display-only progress
+event. It does not mark tasks done, update Backlog/ActiveTask lifecycle state,
+apply Auto Approval Policy, create follow-up tasks, commit, push, release, or
+deploy.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -596,6 +631,7 @@ tools\aiworkflow\build_test_runner.bat status WF-303 --json
 tools\aiworkflow\verification_report.bat status WF-304 --json
 tools\aiworkflow\completion_report.bat status WF-305-306 --json
 tools\aiworkflow\completion_card.bat status WF-305-306 --json
+tools\aiworkflow\finalization_log.bat status WF-307 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

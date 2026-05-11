@@ -90,7 +90,7 @@ export async function generateCompletionCard(config, input = {}) {
 
     const args = ["generate", taskId, completionReportId];
     if (completionCardId) {
-      args.push("--completion-card-id", completionCardId);
+      args.push(completionCardId);
     }
     args.push("--json");
 
