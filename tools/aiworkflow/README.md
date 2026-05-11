@@ -38,6 +38,7 @@ codex_cli_adapter.bat
 local_cli_adapter.bat
 file_watcher.bat
 runtime_control_adapter.bat
+result_collector.bat
 ```
 
 ---
@@ -426,6 +427,32 @@ commands, commit, or push.
 
 ---
 
+## result_collector.bat
+
+Aggregates existing task runtime artifacts into ExecutionResult records.
+
+Commands:
+
+```bat
+tools\aiworkflow\result_collector.bat status task_id [--json]
+tools\aiworkflow\result_collector.bat collect task_id [session_id] [result_id] [--json]
+tools\aiworkflow\result_collector.bat read task_id [result_id] [--json]
+```
+
+`collect` reads SessionState, EvidenceRecord, ProgressEventLog, and
+RuntimeControlHistory artifacts and writes a result under:
+
+```text
+_Temp\AIWorkflowRuntime\tasks\<task_id>\evidence\reports\results\
+```
+
+The collector summarizes observed exit codes, changed-file references, diff
+snapshot references, logs, runtime controls, and recent progress events. It
+does not run commands, verify results, decide pass/fail, create
+CompletionReport, approve tasks, mark tasks done, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -447,6 +474,7 @@ tools\aiworkflow\codex_cli_adapter.bat dry-run WF-20260508-142029 --config tools
 tools\aiworkflow\local_cli_adapter.bat dry-run WF-20260508-150424 node_version --config tools\aiworkflow\local_cli_adapter.example.json --json
 tools\aiworkflow\file_watcher.bat status WF-20260508-172728 --json
 tools\aiworkflow\runtime_control_adapter.bat status WF-20260511-182549 --json
+tools\aiworkflow\result_collector.bat status WF-301 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

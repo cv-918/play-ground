@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-20260511-182549
-title: WF-209/210 Implement Runtime Control Adapter and controls
+task_id: WF-301
+title: WF-301 Implement Result Collector
 status: ready_to_commit
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-11
 
 ## Goal
 
-WF-209/210 Implement Runtime Control Adapter and controls
+WF-301 Implement Result Collector
 
 ---
 
@@ -36,7 +36,7 @@ WF-209/210 Implement Runtime Control Adapter and controls
 discord: task selection command
 human: review and approval
 codex: approved for bounded workflow runtime implementation
-validation: approved: "범위 승인: Runtime Control Adapter, control history projection, process metadata support, safe session-scoped stop, pause/resume state changes, retry/replan/scope/executor/manual escalation control records, status/read/apply commands, docs and DevLog까지 구현합니다. 금지: 자동 task 승인, 자동 done, VerificationReport/Completion Card, auto approval policy, arbitrary shell execution, game source/data 변경, release/deploy."
+validation: approved: "Human Director approved WF-301 Result Collector implementation. Scope: read existing runtime artifacts and aggregate ExecutionResult records/summaries under _Temp. Non-goals: VerificationReport, CompletionReport, Completion Card, auto approval, task done, commit/push automation, arbitrary shell execution, game source/data changes."
 ```
 
 ---
@@ -57,7 +57,7 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Review Runtime Control behavior after implementation.
+1. Review Result Collector behavior after implementation.
 2. Decide whether to commit after validation.
 ```
 
@@ -66,11 +66,10 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Run PowerShell parser checks, JSON parse checks, workspace/session setup,
-runtime_control_adapter status/request/approve/reject/apply/read scenarios,
-pause/resume/stop/retry/replan/scope_reduce/executor_change/manual_escalation
-validation, safe stop rejection without matching session PID, git diff --check,
-forbidden path checks, and private/local tracking checks.
+Run PowerShell parser checks, result_collector status/read/collect scenarios,
+collection from existing WF runtime artifacts, missing workspace/session/evidence
+guards, JSON parse checks for generated ExecutionResult records, git diff
+--check, forbidden path checks, and private/local tracking checks.
 ```
 
 ---
@@ -78,7 +77,7 @@ forbidden path checks, and private/local tracking checks.
 ## Next Recommended Task
 
 ```text
-After commit decision, continue to WF-301 Result Collector.
+After WF-301, continue to WF-302 Diff Analyzer.
 ```
 
 ---
