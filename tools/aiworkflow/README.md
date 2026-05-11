@@ -39,6 +39,7 @@ local_cli_adapter.bat
 file_watcher.bat
 runtime_control_adapter.bat
 result_collector.bat
+diff_analyzer.bat
 ```
 
 ---
@@ -453,6 +454,27 @@ CompletionReport, approve tasks, mark tasks done, commit, or push.
 
 ---
 
+## diff_analyzer.bat
+
+Analyzes existing ExecutionResult diff snapshot references into DiffAnalysis
+records for later VerificationReport use.
+
+Commands:
+
+```bat
+tools\aiworkflow\diff_analyzer.bat status task_id [--json]
+tools\aiworkflow\diff_analyzer.bat analyze task_id [result_id] [analysis_id] [--json]
+tools\aiworkflow\diff_analyzer.bat read task_id [analysis_id] [--json]
+```
+
+`analyze` reads the latest ExecutionResult by default, or the provided
+`result_id`, then parses referenced unified diff snapshot files. It summarizes
+changed files, additions, deletions, change types, categories, and attention
+signals. It does not run commands, verify results, decide pass/fail, create
+CompletionReport, approve tasks, mark tasks done, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -475,6 +497,7 @@ tools\aiworkflow\local_cli_adapter.bat dry-run WF-20260508-150424 node_version -
 tools\aiworkflow\file_watcher.bat status WF-20260508-172728 --json
 tools\aiworkflow\runtime_control_adapter.bat status WF-20260511-182549 --json
 tools\aiworkflow\result_collector.bat status WF-301 --json
+tools\aiworkflow\diff_analyzer.bat status WF-302 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat

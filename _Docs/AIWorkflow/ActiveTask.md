@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-301
-title: WF-301 Implement Result Collector
+task_id: WF-302
+title: WF-302 Implement Diff Analyzer
 status: ready_to_commit
 workflow_path: discord_task_management
 priority: P1
@@ -26,7 +26,7 @@ last_updated: 2026-05-11
 
 ## Goal
 
-WF-301 Implement Result Collector
+WF-302 Implement Diff Analyzer
 
 ---
 
@@ -36,7 +36,7 @@ WF-301 Implement Result Collector
 discord: task selection command
 human: review and approval
 codex: approved for bounded workflow runtime implementation
-validation: approved: "Human Director approved WF-301 Result Collector implementation. Scope: read existing runtime artifacts and aggregate ExecutionResult records/summaries under _Temp. Non-goals: VerificationReport, CompletionReport, Completion Card, auto approval, task done, commit/push automation, arbitrary shell execution, game source/data changes."
+validation: approved: "Human Director approved continuing Phase 3 with WF-302 Diff Analyzer after WF-301 commit/push. Scope: read existing ExecutionResult records and referenced diff snapshots, produce DiffAnalysis records/summaries under _Temp, expose changed-file/category/line-count/attention-signal observations for later VerificationReport. Non-goals: pass/fail judgment, VerificationReport, CompletionReport, Completion Card, auto approval, task done, commit/push automation, arbitrary shell execution, game source/data changes."
 ```
 
 ---
@@ -57,7 +57,7 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Review Result Collector behavior after implementation.
+1. Review Diff Analyzer behavior after implementation.
 2. Decide whether to commit after validation.
 ```
 
@@ -66,10 +66,12 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Run PowerShell parser checks, result_collector status/read/collect scenarios,
-collection from existing WF runtime artifacts, missing workspace/session/evidence
-guards, JSON parse checks for generated ExecutionResult records, git diff
---check, forbidden path checks, and private/local tracking checks.
+Run PowerShell parser checks, diff_analyzer status/read/analyze scenarios,
+analysis from an existing ExecutionResult with diff snapshots, missing workspace,
+missing ExecutionResult, missing diff snapshot, duplicate analysis guards, JSON
+parse checks for generated DiffAnalysis records, invariant checks that no
+verification/completion judgment is written, git diff --check, forbidden path
+checks, and private/local tracking checks.
 ```
 
 ---
@@ -77,7 +79,7 @@ guards, JSON parse checks for generated ExecutionResult records, git diff
 ## Next Recommended Task
 
 ```text
-After WF-301, continue to WF-302 Diff Analyzer.
+After WF-302, continue to WF-303 Build/Test Runner integration.
 ```
 
 ---

@@ -59,6 +59,7 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_File_Watcher_Diff_Snapshot.md` | Defines WF-208 file watcher and diff snapshot observation, EvidenceRecord/ProgressEventLog linkage, ignore policy, task-detail changed-file display fields, and WF-209 Runtime Control handoff boundaries |
 | `FinalBlueprint/WF_Runtime_Control_Adapter.md` | Defines WF-209/210 Runtime Control Adapter, human-approved pause/resume/stop/retry/replan/scope/executor/manual-escalation control records, safe session process control, and WF-301 handoff boundaries |
 | `FinalBlueprint/WF_Result_Collector.md` | Defines WF-301 Result Collector ExecutionResult aggregation, result manifest storage, session/evidence/control/progress summary fields, and WF-302/WF-304 handoff boundaries |
+| `FinalBlueprint/WF_Diff_Analyzer.md` | Defines WF-302 Diff Analyzer parsing of ExecutionResult diff snapshots into changed-file, line-count, category, and attention-signal observations for WF-304 handoff |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
