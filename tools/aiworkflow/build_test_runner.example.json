@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "allowed_task_statuses": [
+    "ready_for_implementation",
+    "in_progress"
+  ],
+  "require_backlog_approval": true,
+  "commands": [
+    {
+      "command_id": "json_smoke",
+      "kind": "test",
+      "label": "JSON syntax smoke check",
+      "enabled": true,
+      "approval_level": "auto_allowed",
+      "command": "tools\\aiworkflow\\json_smoke_check.bat",
+      "args": [],
+      "working_directory": ".",
+      "timeout_seconds": 60,
+      "env": {}
+    },
+    {
+      "command_id": "debug_visual_studio_build",
+      "kind": "build",
+      "label": "Debug Visual Studio build",
+      "enabled": false,
+      "approval_level": "approval_required",
+      "command": "MSBuild.exe",
+      "args": [
+        "PlayGround\\PlayGround.sln",
+        "/p:Configuration=Debug",
+        "/p:Platform=x64"
+      ],
+      "working_directory": ".",
+      "timeout_seconds": 600,
+      "env": {}
+    }
+  ]
+}

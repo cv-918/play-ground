@@ -40,6 +40,7 @@ file_watcher.bat
 runtime_control_adapter.bat
 result_collector.bat
 diff_analyzer.bat
+build_test_runner.bat
 ```
 
 ---
@@ -475,6 +476,29 @@ CompletionReport, approve tasks, mark tasks done, commit, or push.
 
 ---
 
+## build_test_runner.bat
+
+Runs only allowlisted build/test/validation command entries from a local config
+and records BuildTestResult artifacts.
+
+Commands:
+
+```bat
+tools\aiworkflow\build_test_runner.bat status task_id [--config path] [--json]
+tools\aiworkflow\build_test_runner.bat list task_id [--config path] [--json]
+tools\aiworkflow\build_test_runner.bat dry-run task_id command_id [--config path] [--json]
+tools\aiworkflow\build_test_runner.bat run task_id command_id --execute [--approved] [--build-test-id id] [--config path] [--json]
+tools\aiworkflow\build_test_runner.bat read task_id [build_test_id] [--config path] [--json]
+```
+
+Real execution is default-deny. It requires an enabled config, an allowlisted
+`command_id`, `--execute`, an allowed task status, and `--approved` when the
+command has `approval_level: approval_required`. It records stdout, stderr,
+timing, timeout, spawn, and exit-code observations, but it does not decide
+pass/fail, approve tasks, mark tasks done, commit, or push.
+
+---
+
 ## Recommended Check
 
 From repository root:
@@ -498,6 +522,7 @@ tools\aiworkflow\file_watcher.bat status WF-20260508-172728 --json
 tools\aiworkflow\runtime_control_adapter.bat status WF-20260511-182549 --json
 tools\aiworkflow\result_collector.bat status WF-301 --json
 tools\aiworkflow\diff_analyzer.bat status WF-302 --json
+tools\aiworkflow\build_test_runner.bat status WF-303 --json
 tools\aiworkflow\capture_diff.bat --include-untracked
 tools\aiworkflow\json_smoke_check.bat
 tools\aiworkflow\run_result_semantics_check.bat
