@@ -66,6 +66,8 @@ Non-goals unless a later task explicitly approves them:
 | WF-406 | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain the existing primitives while preserving approval gates, runtime state boundaries, and evidence/report handoffs. | Approve the orchestration authority model. |
 | WF-407 | Implement unified PC Runner orchestration entrypoint | Implement the approved orchestration command and Discord surface that advances a task through safe automated substeps and stops at human gates. | Approve any policy-sensitive behavior before enabling it. |
 | WF-408 | Apply approved workflow cleanup | Remove, hide, rename, or deprecate obsolete steps and commands according to the approved audit and command-surface plan. | Approve destructive command removal or behavior changes. |
+| WF-409 | Implement controlled runner implementation profile | Connect approved tasks to the guarded Codex CLI adapter through `/ai runner profile:implementation`, collect execution evidence and reports, and stop at completion review. | Enable local Codex adapter config only after reviewing local execution settings. |
+| WF-410 | Exercise controlled implementation runner on a small approved workflow task | Run one low-risk real task through the implementation runner profile and record workflow friction before using it for game work. | Review completion evidence and decide whether the workflow is ready for normal use. |
 
 ## Recommended Order
 
@@ -79,6 +81,8 @@ WF-400 done
 -> WF-406 orchestration entrypoint design done
 -> WF-407 orchestration entrypoint implementation done
 -> WF-408 approved cleanup done
+-> WF-409 controlled implementation runner profile done
+-> WF-410 controlled implementation runner smoke
 ```
 
 WF-401 and WF-402 come before cleanup because command removal or workflow
@@ -96,4 +100,5 @@ Phase 4 is complete when:
 - the Human Director operation guide exists
 - at least one representative end-to-end smoke scenario has evidence
 - the PC Runner has a unified orchestration path for normal work
+- the PC Runner can route approved implementation work through the guarded Codex CLI adapter
 - deprecated command cleanup is either completed or explicitly deferred with a reason

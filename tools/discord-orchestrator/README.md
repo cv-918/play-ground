@@ -503,8 +503,10 @@ For the regular PC Runner path:
 ```
 
 `/ai runner` calls the local PC Runner entrypoint and stops at Human Director
-gates. It does not approve tasks, mark tasks done, create Backlog tasks, commit,
-push, or run arbitrary shell commands.
+gates. `profile:validation` runs the safe validation chain. `profile:implementation`
+routes through the guarded Codex CLI adapter and stops if the local Codex adapter
+config is missing or disabled. It does not approve tasks, mark tasks done,
+create Backlog tasks, commit, push, or run arbitrary shell commands.
 
 ---
 

@@ -443,8 +443,8 @@ Commands:
 
 ```bat
 tools\aiworkflow\pc_runner.bat status task_id [--json]
-tools\aiworkflow\pc_runner.bat plan task_id [--profile validation] [--executor local_cli] [--json]
-tools\aiworkflow\pc_runner.bat start task_id [--profile validation] [--executor local_cli] [--json]
+tools\aiworkflow\pc_runner.bat plan task_id [--profile validation|implementation] [--executor local_cli|codex_cli] [--json]
+tools\aiworkflow\pc_runner.bat start task_id [--profile validation|implementation] [--executor local_cli|codex_cli] [--json]
 tools\aiworkflow\pc_runner.bat continue task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat stop task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat read task_id [--runner-run-id id] [--json]
@@ -457,8 +457,11 @@ _Temp\AIWorkflowRuntime\tasks\<task_id>\runner\
 ```
 
 It can advance approved work through safe automated substeps and stops at
-Human Director gates. It does not approve tasks, mark tasks done, create
-Backlog tasks, run arbitrary shell commands, commit, or push.
+Human Director gates. The `validation` profile uses allowlisted local workflow
+commands. The `implementation` profile uses `codex_cli_adapter.bat` and will
+not execute unless `_Local\AIWorkflow\codex_cli_adapter.local.json` exists and
+is explicitly enabled. The runner does not approve tasks, mark tasks done,
+create Backlog tasks, run arbitrary shell commands, commit, or push.
 
 ---
 

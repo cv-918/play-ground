@@ -146,6 +146,8 @@ WF-405 Run end-to-end workflow smoke and validation pack (done)
 WF-406 Design unified PC Runner orchestration entrypoint (done)
 WF-407 Implement unified PC Runner orchestration entrypoint (done)
 WF-408 Apply approved workflow cleanup (done)
+WF-409 Implement controlled runner implementation profile (done)
+WF-410 Exercise controlled implementation runner on a small approved workflow task
 ```
 
 Phase 4 cleanup must not remove commands or workflow paths before WF-401 and

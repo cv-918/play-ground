@@ -161,6 +161,7 @@ release
 | WF-406 | P1 | done | automation | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain existing primitives while preserving approval gates, task/runtime state boundaries, evidence/report handoffs, runtime controls, and Human Director authority. | Discord -> Codex App -> human review | done: Created WF_Unified_PC_Runner_Orchestration_Entrypoint.md and Korean companion. The design defines pc_runner.bat status/plan/start/continue/stop/read, runner authority boundaries, runner runtime artifacts, execution phases, human gates, runtime control integration, executor selection, central ID policy, WF-405 smoke findings, and WF-407 acceptance criteria. No implementation, command removal, behavior change, automatic approval/done/commit/push, or game source/data change was performed. |
 | WF-407 | P1 | done | automation | Implement unified PC Runner orchestration entrypoint | Implement the approved orchestration entrypoint and Discord surface that advances a task through safe automated substeps and stops at human gates. Do not bypass approval, finalization, or commit authority. | Discord -> PC Runner -> human review | done: "WF-407 validation passed. Added tools/aiworkflow/pc_runner.bat and pc_runner.ps1 with status/plan/start/continue/stop/read, runner artifacts under _Temp/AIWorkflowRuntime/tasks/<task_id>/runner, safe validation profile orchestration, finalization-gated continue, approval-gate refusal for unapproved P1 tasks, and Discord /ai runner status/plan/start/continue/stop/read. Node syntax checks, PowerShell parser check, runner status/plan/start/read/continue smokes, unapproved WF-408 refusal smoke, generated JSON parse check, service smoke, command schema smoke, git diff --check, and forbidden path checks passed. No automatic approval, task done, Backlog task creation, commit/push automation, arbitrary shell execution, or game source/data change was implemented." |
 | WF-408 | P1 | done | maintenance | Apply approved workflow cleanup | Remove, hide, rename, or deprecate obsolete steps and commands according to the approved audit and command-surface plan. Update docs, command metadata, and validation evidence. | Discord -> Codex App -> human review | done: "WF-408 validation passed. Applied non-destructive workflow cleanup by making /ai runner the regular documented workflow surface, relabeling prepare/result commands as manual escalation, relabeling run helpers as diagnostic/recovery, keeping intake-create as a compatibility alias, hiding unsupported runner profiles from Discord choices, updating English/Korean workflow docs, and recording cleanup reports. No command removal, command rename, automatic approval, task done, Backlog task creation, commit/push automation, arbitrary shell execution, or game source/data change was implemented." |
+| WF-409 | P1 | done | automation | Implement controlled runner implementation profile | Connect the regular `/ai runner` path to a controlled implementation profile that can route approved tasks through Codex CLI without manual prompt copy/paste while preserving approval, completion review, task done, and commit/push gates. | Discord -> PC Runner -> Codex CLI -> human review | done: "WF-409 validation passed. PC Runner implementation profile now writes a task-scoped implementation prompt, checks Codex CLI adapter readiness, only runs through codex_cli when local adapter config exists and is enabled, collects file watcher, result, diff, build/test, verification, completion report, and completion card artifacts, exposes implementation in Discord runner profile choices, and stops at Human Director completion review. Validation covered PowerShell parser, Node syntax, command schema smoke, implementation plan output, unsupported executor refusal, adapter-not-ready safe stop, git diff --check, forbidden path checks, and private/local tracking checks. No automatic approval, task done, Backlog creation, finalization, arbitrary shell execution, game source/data change, or runner commit/push automation was implemented." |
 | WF-20260511-142009 | P1 | todo | automation | Workflow task: Verify /ai intake creates TaskDraft via Codex CLI and Backlog task | The request is to confirm the Discord AIWorkflow `/ai intake` flow invokes Codex CLI to produce a valid TaskDraft and then creates a Backlog task without automatic approval or unrelated execution. | Discord intake -> Codex CLI TaskDraft -> human review | codex intake draft: risk=medium; workflow_path=discord_task_management; needs review; has clarifying questions; validation pending human approval |
 | WF-20260511-145547 | P1 | done | validation | Validate Discord intake embed readability in Backlog creation response | Discord intake embed 출력 양식이 실제 Backlog 생성 응답에서도 읽기 좋은지 검증하는 WF 검증 작업이다. 구현 변경 없이 생성된 task의 LLM 접수 상태, 필수 검증 요약, 안전 상태 표시가 사람이 읽고 판단하기 충분한지 확인해야 한다. | Discord intake -> Codex CLI TaskDraft -> human review | done: Discord intake embed readability smoke accepted. Intake, intake-test, intake-engine status, and review-intake embed payload checks passed; bot restarted cleanly. |
 
@@ -172,16 +173,16 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-WF-408: Apply approved workflow cleanup
+WF-410: Exercise controlled implementation runner on a small approved workflow task
 ```
 
 Reason:
 
 ```text
-WF-407 implemented the unified PC Runner entrypoint and Discord runner command
-surface. The next useful step is to apply the already reviewed cleanup plan so
-the normal user-facing workflow is centered on the runner while bootstrap and
-manual-escalation commands remain available only where they are still needed.
+WF-409 connected the regular PC Runner path to the guarded Codex CLI
+implementation profile. The next useful step is a real low-risk smoke task that
+uses `/ai runner start profile:implementation`, reviews the completion card, and
+records any workflow friction before game project work depends on it.
 ```
 
 ---
@@ -226,15 +227,15 @@ WF-201 through WF-309 done
 -> WF-406 PC Runner orchestration design done
 -> WF-407 PC Runner orchestration implementation done
 -> WF-408 approved workflow cleanup done
+-> WF-409 controlled implementation runner profile done
 ```
 
 Current target:
 
 ```text
-Controlled runner implementation profile
+Controlled implementation runner smoke
 ```
 
 Discord integration is active. The regular surface is now runner-centered. The
-next automation work is to connect an implementation runner profile to a
-controlled executor while preserving approval, finalization, done, and
-commit/push gates.
+next automation work is to exercise the controlled implementation profile with a
+small approved task and record any gaps before relying on it for game work.
