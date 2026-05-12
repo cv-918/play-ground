@@ -1,0 +1,198 @@
+# Human Director용 AIWorkflow 운영 가이드
+
+## 목적
+
+이 문서는 사용자가 실제로 워크플로우를 운영할 때 읽는 한국어 가이드입니다.
+
+기술 문서 전체를 매번 읽을 필요는 없습니다. 평소에는 이 문서를 기준으로
+작업하고, 세부 판단이 필요할 때 companion 문서를 확인하면 됩니다.
+
+## 먼저 읽을 문서
+
+직접 읽을 가치가 있는 문서는 다음입니다.
+
+1. `WF_Human_Director_Operation_Guide_KR.md`
+   - 평소 작업할 때 보는 문서입니다.
+2. `WF_Post_309_Workflow_Stabilization_Roadmap_KR.md`
+   - 앞으로 어떤 순서로 자동화가 안정화되는지 보는 문서입니다.
+3. `WF_Command_Surface_Consolidation_Plan_KR.md`
+   - 어떤 명령이 정규 경로이고 어떤 명령이 진단/수동 승격인지 보는 문서입니다.
+4. `WF_End_To_End_Workflow_Technical_Spec_KR.md`
+   - 전체 구조가 궁금하거나 승인 경계가 헷갈릴 때 보는 문서입니다.
+5. `WF_Workflow_Audit_And_Pruning_Report_KR.md`
+   - 나중에 명령어 제거/숨김을 결정할 때 보는 문서입니다.
+
+DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 읽을 필요는
+적습니다.
+
+## 사용자의 역할
+
+사용자가 맡는 일은 아래로 줄이는 것이 목표입니다.
+
+```text
+1. 작업을 지시한다.
+2. 승인이 필요한 작업만 승인한다.
+3. 필요할 때 진행 상황을 확인한다.
+4. 완료 결과를 리뷰한다.
+5. 필요한 경우 커밋/푸시를 승인한다.
+```
+
+하네스가 맡아야 하는 일은 작업 구조화, 상태 관리, 실행 감시, 증거 수집,
+검증 보고, 완료 카드, 최종화 기록, 후속 작업 후보 생성입니다.
+
+## 현재 정규 흐름
+
+PC Runner 통합 진입점이 완성되기 전까지는 아래 흐름이 현재 기준입니다.
+
+```text
+1. /ai intake text:<작업 요청>
+2. /ai task set-active id:<task_id>
+3. /ai task approve id:<task_id> note:<승인 범위>
+4. /ai prepare goal id:<task_id> mode:<mode> context:<context>
+5. 승인된 실행 경로로 작업 수행
+6. /ai result audit id:<task_id> result:<결과 요약>
+7. /ai completion card id:<task_id>
+8. /ai finalization accept 또는 request-changes/reject/defer
+9. /ai task done id:<task_id> evidence:<완료 근거>
+10. 커밋/푸시 결정
+```
+
+단, 4번과 6번은 최종 구조의 정규 경로가 아니라 현재 bridge입니다.
+WF-406/WF-407 이후에는 PC Runner가 이 사이를 더 많이 자동화해야 합니다.
+
+## 최종 목표 흐름
+
+최종 목표는 아래에 가깝습니다.
+
+```text
+1. /ai intake text:<작업 요청>
+2. 승인 필요 시에만 승인
+3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
+4. 사용자는 completion card를 리뷰
+5. accept/request changes/reject/defer 결정
+6. 필요한 경우 커밋/푸시 승인
+```
+
+## 명령어를 어떻게 보면 되는가
+
+### 평소에 쓰는 명령
+
+- `/ai intake`
+- `/ai task set-active`
+- `/ai task approve`
+- `/ai completion card`
+- `/ai finalization accept`
+- `/ai finalization request-changes`
+- `/ai finalization reject`
+- `/ai finalization defer`
+- `/ai task done`
+
+### 지금은 bridge로 쓰는 명령
+
+- `/ai prepare goal`
+- `/ai result audit`
+
+이 둘은 현재는 필요하지만, 최종 목표에서는 수동 승격 경로로 내려가는 것이
+맞습니다.
+
+### 필요할 때만 보는 명령
+
+- `/ai status`
+- `/ai active`
+- `/ai backlog`
+- `/ai next`
+- `/ai blockers`
+- `/ai role status`
+- `/ai task list`
+- `/ai task review-intake`
+- `/ai intake-engine status`
+- `/ai bot status`
+- `/ai bot restart`
+
+### 수동 승격 또는 호환 명령
+
+- `/ai prepare codex`
+- `/ai intake-preview`
+- `/ai intake-test`
+- `/ai task create`
+- `/ai intake-create`
+
+이 명령들은 정규 경로라기보다 예외 상황, 디버깅, 호환을 위한 명령입니다.
+
+## 승인해야 하는 경우
+
+아래는 사용자 승인이 필요합니다.
+
+- P0/P1 또는 high-risk 작업
+- 게임 소스 구현
+- 구조 변경
+- data schema 변경
+- runtime lifecycle 변경
+- workflow rule 또는 approval policy 변경
+- 명령어 제거, 숨김, 이름 변경, 동작 변경
+- 중단, 재시도, 재계획, 범위 축소, executor 변경
+- 완료 accept/reject/request changes/defer
+- commit/push
+
+## 승인하지 않아도 되는 방향
+
+미래에는 아래 작업은 하네스가 자동으로 처리하는 것이 목표입니다.
+
+- TaskDraft 생성
+- Backlog task 생성
+- workspace 준비
+- 실행 session 생성
+- heartbeat/progress 기록
+- file watcher와 diff snapshot
+- evidence 수집
+- result/diff/build-test report 생성
+- VerificationReport 생성
+- CompletionReport/Card 생성
+- Follow-up 후보 생성
+
+단, 자동으로 approval, done, commit, push를 해서는 안 됩니다.
+
+## 완료 리뷰 방법
+
+완료 리뷰 때는 아래만 보면 됩니다.
+
+```text
+1. Completion Card가 READY인지
+2. VerificationReport verdict가 PASS 또는 PASS_WITH_NOTES인지
+3. 남은 risk나 blocker가 있는지
+4. 변경 파일이 승인 범위 안인지
+5. validation evidence가 있는지
+6. DevLog가 필요한 작업이면 기록됐는지
+```
+
+판정은 보통 네 가지입니다.
+
+```text
+accept: 완료 인정
+request-changes: 수정 요청
+reject: 결과 반려
+defer: 지금 판단 보류
+```
+
+## 커밋 결정
+
+커밋은 자동화의 마지막 gate입니다.
+
+커밋 전에 확인할 것:
+
+- diff가 예상 범위인지
+- 새 파일이 diff에 포함됐는지
+- validation이 실제로 수행됐는지
+- DevLog가 필요한 경우 작성됐는지
+- unrelated change가 섞이지 않았는지
+
+커밋/푸시는 사용자가 직접 하거나 명시적으로 승인된 Git 경로를 통해서만
+진행합니다.
+
+## 다음 작업
+
+이 가이드 이후의 다음 단계는 WF-405입니다.
+
+WF-405에서는 대표적인 낮은 위험도 작업 하나를 실제 workflow로 통과시켜서
+intake, 승인, workspace, 실행, evidence, result, verification, completion,
+finalization, follow-up이 서로 잘 이어지는지 smoke 검증합니다.

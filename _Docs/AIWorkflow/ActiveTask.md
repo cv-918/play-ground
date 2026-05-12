@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-402
-title: Define command surface consolidation and deprecation plan
+task_id: WF-404
+title: Write Human Director workflow operation guide
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,9 +26,10 @@ last_updated: 2026-05-12
 
 ## Goal
 
-Define command surface categories, compatibility/manual-escalation boundaries,
-deprecation candidates, removal rules, and human approval decisions before any
-workflow command cleanup is implemented.
+Provide Korean Human Director-facing versions of the direct-read Phase 4
+documents and write a practical operation guide for requesting work, approving
+work, monitoring progress, reviewing completion, handling follow-ups, and
+deciding commits.
 
 ---
 
@@ -36,8 +37,8 @@ workflow command cleanup is implemented.
 
 ```yaml
 discord: user direction and workflow context
-human: approve any later command removal, metadata change, or behavior change
-codex: approved for bounded command-surface planning documentation and Backlog/ActiveTask updates
+human: review Korean guide usability
+codex: approved for bounded Korean documentation and Backlog/ActiveTask updates
 validation: documentation diff review, git diff --check, and status review
 ```
 
@@ -49,7 +50,9 @@ validation: documentation diff review, git diff --check, and status review
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/ActiveTask.md
 _Docs/AIWorkflow/README.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Command_Surface_Consolidation_Plan.md
+_Docs/AIWorkflow/FinalBlueprint/*_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md
 _DevLog/WorkLog/
 ```
 
@@ -58,8 +61,8 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Review the command surface categories and deprecation candidates.
-2. Decide later whether compatibility/manual-escalation commands should be hidden, relabeled, or removed.
+1. Read WF_Human_Director_Operation_Guide_KR.md first.
+2. Review the KR companion docs only when deciding command cleanup, approval boundaries, or runner behavior.
 ```
 
 ---
@@ -67,8 +70,8 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Review the consolidation plan diff, verify that the task is plan-only, run
-git diff --check, and confirm that the next recommended task is WF-403.
+Review the Korean documentation diff, verify that the task is documentation-only,
+run git diff --check, and confirm that the next recommended task is WF-405.
 ```
 
 ---
@@ -76,7 +79,7 @@ git diff --check, and confirm that the next recommended task is WF-403.
 ## Next Recommended Task
 
 ```text
-WF-403 Write end-to-end workflow technical specification
+WF-405 Run end-to-end workflow smoke and validation pack
 ```
 
 ---
@@ -86,9 +89,9 @@ WF-403 Write end-to-end workflow technical specification
 ```text
 [x] Task scope reviewed
 [x] Required approvals recorded
-[x] Command categories recorded
-[x] Deprecation candidates recorded
-[x] Removal rules recorded
+[x] Korean direct-read companion documents created
+[x] Human Director operation guide created
+[x] README document map updated
 [x] Review completed
 [x] Validation completed or explicitly deferred
 [ ] Commit/push completed if validation does not require a new Human Director decision

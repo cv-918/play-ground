@@ -155,8 +155,8 @@ release
 | WF-400 | P1 | done | documentation | Define post-WF-309 workflow stabilization roadmap | Define the Phase 4 sequence that turns the completed WF-201 through WF-309 runtime primitives into a practical Discord-first workflow. Include full workflow audit, command pruning plan, end-to-end technical documentation, Human Director operation guide, smoke validation, PC Runner orchestration, and approved cleanup. | Codex App -> human review | done: "Created the post-WF-309 Phase 4 stabilization roadmap, updated Backlog/ActiveTask, added README map entry, updated the implementation roadmap, and recorded a WorkLog. No command removal, workflow behavior change, automatic approval/done/commit/push, PC Runner orchestration implementation, or game source/data change was implemented." |
 | WF-401 | P1 | done | documentation | Audit full workflow and pruning candidates | Inventory the current workflow paths, required steps, stale steps, unnecessary steps, command surface, deprecated commands, and improvement candidates. Output a reviewed audit report before any command removal or workflow behavior change. | Discord -> Codex App -> human review | done: "Created WF_Workflow_Audit_And_Pruning_Report.md. The audit classified primary task commands, future runtime primitives, optional/admin diagnostics, bootstrap/manual-escalation commands, pruning candidates, documentation drift, user intervention points, and workflow paths to document next. No command removal, behavior change, automatic approval/done/commit/push, or game source/data change was implemented." |
 | WF-402 | P1 | done | documentation | Define command surface consolidation and deprecation plan | Classify Discord and local commands as primary, admin, diagnostic, bootstrap/manual escalation, deprecated, or removal candidates. Produce a deprecation/removal plan that requires Human Director approval before implementation. | Discord -> Codex App -> human review | done: "Created WF_Command_Surface_Consolidation_Plan.md. Commands were classified into regular Human Director path, future runner-owned path, diagnostic/admin surface, and compatibility/manual-escalation surface. Deprecation candidates and removal rules were recorded. No command removal, command rename, slash metadata change, behavior change, automatic approval/done/commit/push, or game source/data change was implemented." |
-| WF-403 | P1 | todo | documentation | Write end-to-end workflow technical specification | Write the source-of-truth technical workflow document with visualization, step-by-step flow, user intervention markers, state paths, runtime paths, evidence/report paths, and workflow path variants. | Discord -> Codex App -> human review | pending workflow audit context |
-| WF-404 | P1 | todo | documentation | Write Human Director workflow operation guide | Write a practical Korean operation guide for requesting work, approving work, monitoring progress, reviewing completion, handling follow-ups, and deciding commits through the workflow. | Discord -> Codex App -> human review | pending technical workflow specification |
+| WF-403 | P1 | done | documentation | Write end-to-end workflow technical specification | Write the source-of-truth technical workflow document with visualization, step-by-step flow, user intervention markers, state paths, runtime paths, evidence/report paths, and workflow path variants. | Discord -> Codex App -> human review | done: "Created WF_End_To_End_Workflow_Technical_Spec.md. The document defines the Discord-first PC Runner workflow, responsibility boundaries, Mermaid happy path, bootstrap path, target runner path, user intervention matrix, durable/runtime/report paths, workflow variants, approval stop rules, final-form reduction rule, and WF-404 handoff. No command removal, behavior change, runner implementation, automatic approval/done/commit/push, or game source/data change was implemented." |
+| WF-404 | P1 | done | documentation | Write Human Director workflow operation guide | Write a practical Korean operation guide for requesting work, approving work, monitoring progress, reviewing completion, handling follow-ups, and deciding commits through the workflow. | Discord -> Codex App -> human review | done: "Created Korean Human Director companion documents for the direct-read Phase 4 docs and added WF_Human_Director_Operation_Guide_KR.md. The Korean docs cover the post-WF-309 roadmap, workflow audit, command surface plan, end-to-end technical spec, and practical operating guide. No command removal, metadata change, behavior change, PC Runner implementation, automatic approval/done/commit/push, or game source/data change was implemented." |
 | WF-405 | P1 | todo | validation | Run end-to-end workflow smoke and validation pack | Exercise a representative low-risk workflow through intake, approval, workspace, execution, evidence, result collection, verification, completion, finalization, and follow-up reporting. Record evidence and gaps. | Discord -> PC Runner -> human review | pending WF-403/WF-404 guidance |
 | WF-406 | P1 | todo | automation | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain existing primitives while preserving approval gates, task/runtime state boundaries, evidence/report handoffs, runtime controls, and Human Director authority. | Discord -> Codex App -> human review | pending smoke findings and command surface plan |
 | WF-407 | P1 | todo | automation | Implement unified PC Runner orchestration entrypoint | Implement the approved orchestration entrypoint and Discord surface that advances a task through safe automated substeps and stops at human gates. Do not bypass approval, finalization, or commit authority. | Discord -> PC Runner -> human review | pending WF-406 approval |
@@ -172,16 +172,16 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-WF-403: Write end-to-end workflow technical specification
+WF-405: Run end-to-end workflow smoke and validation pack
 ```
 
 Reason:
 
 ```text
-WF-401 and WF-402 identified the command categories, bootstrap/manual-escalation
-paths, documentation drift, pruning candidates, and removal rules. The next
-useful step is to write the technical source-of-truth workflow specification
-with visualization and user intervention markers.
+WF-404 created Korean direct-read documents and a practical Human Director
+operation guide. The next useful step is to run a representative end-to-end
+smoke workflow and record evidence before designing the unified PC Runner
+orchestration entrypoint.
 ```
 
 ---
@@ -218,10 +218,10 @@ Recommended workflow automation progression:
 
 ```text
 WF-201 through WF-309 done
--> WF-401 audit workflow and pruning candidates
--> WF-402 command surface consolidation plan
--> WF-403 technical workflow specification
--> WF-404 Human Director operation guide
+-> WF-401 audit workflow and pruning candidates done
+-> WF-402 command surface consolidation plan done
+-> WF-403 technical workflow specification done
+-> WF-404 Human Director operation guide done
 -> WF-405 end-to-end smoke validation
 -> WF-406 PC Runner orchestration design
 -> WF-407 PC Runner orchestration implementation

@@ -67,8 +67,14 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Auto_Approval_Policy.md` | Defines WF-308 deterministic Auto Approval Policy evaluation artifacts, Discord status/evaluate/read commands, strict eligibility rules, and no-apply safety boundary |
 | `FinalBlueprint/WF_Follow_Up_Task_Generator.md` | Defines WF-309 Follow-up Task Generator candidate plans, Discord status/generate/read commands, candidate sources, and no-task-create safety boundary |
 | `FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md` | Defines Phase 4 post-WF-309 workflow stabilization tasks for audit, command pruning, technical documentation, Human Director guide, end-to-end smoke, PC Runner orchestration, and approved cleanup |
+| `FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap_KR.md` | Korean Human Director companion for the post-WF-309 Phase 4 stabilization roadmap |
 | `FinalBlueprint/WF_Workflow_Audit_And_Pruning_Report.md` | Audits the post-WF-309 workflow surface, user intervention points, documentation drift, and command pruning/consolidation candidates for WF-401 |
+| `FinalBlueprint/WF_Workflow_Audit_And_Pruning_Report_KR.md` | Korean Human Director companion for the workflow audit and pruning report |
 | `FinalBlueprint/WF_Command_Surface_Consolidation_Plan.md` | Defines WF-402 command categories, compatibility/manual-escalation boundaries, deprecation plan, removal rules, and approval decisions before cleanup |
+| `FinalBlueprint/WF_Command_Surface_Consolidation_Plan_KR.md` | Korean Human Director companion for command categories, manual escalation boundaries, and cleanup decisions |
+| `FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec.md` | Defines WF-403 end-to-end technical workflow specification, visualization, user intervention matrix, state/artifact paths, workflow variants, approval stops, and WF-404 handoff |
+| `FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec_KR.md` | Korean Human Director companion for the end-to-end technical workflow specification |
+| `FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md` | Practical Korean Human Director guide for requesting work, approving work, monitoring progress, reviewing completion, and deciding commits |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

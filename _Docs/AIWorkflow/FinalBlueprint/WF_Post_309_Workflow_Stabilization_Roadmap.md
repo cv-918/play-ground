@@ -73,8 +73,8 @@ Non-goals unless a later task explicitly approves them:
 WF-400 done
 -> WF-401 audit done
 -> WF-402 command surface plan done
--> WF-403 technical workflow specification
--> WF-404 Human Director operation guide
+-> WF-403 technical workflow specification done
+-> WF-404 Human Director operation guide done
 -> WF-405 end-to-end smoke validation
 -> WF-406 orchestration entrypoint design
 -> WF-407 orchestration entrypoint implementation
