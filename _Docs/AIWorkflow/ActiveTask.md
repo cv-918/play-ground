@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260513-023813
-title: Validation task: PC Runner 워크플로우로 안전한 GAME 데이터 로더 검증을 실행한다
+task_id: VAL-20260513-032120
+title: Validation task: Verify Discord git command visibility and next-command prompts
 status: done
 workflow_path: discord_task_management
 priority: P2
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-Validation task: PC Runner 워크플로우로 안전한 GAME 데이터 로더 검증을 실행한다
+Validation task: Verify Discord git command visibility and next-command prompts
 
 ---
 
@@ -36,7 +36,7 @@ Validation task: PC Runner 워크플로우로 안전한 GAME 데이터 로더 �
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=16; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_023806_777.output.json; validation pending human approval
+validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_032111_918.output.json; needs review; has clarifying questions; validation pending human approval
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-codex intake draft: risk=low; workflow_path=validation; required_validation_count=16; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_023806_777.output.json; validation pending human approval
+codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_032111_918.output.json; needs review; has clarifying questions; validation pending human approval
 ```
 
 ---
@@ -70,7 +70,7 @@ codex intake draft: risk=low; workflow_path=validation; required_validation_coun
 
 ```text
 status: done
-note: done: "PC Runner validation completed, completion was accepted, and runner reached done_or_commit_decision. FinalizationLog: finalization-20260513-025001-533-a32ccc0b"
+note: done: "Discord next-command prompts passed. completion_review_required showed runner accept-completion command, and done_or_commit_decision showed task done plus git commit-push command."
 updated_at: 2026-05-13
 source: Discord task status command
 ```
