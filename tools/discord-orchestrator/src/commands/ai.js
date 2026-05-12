@@ -17,6 +17,7 @@ import { generateCompletionCard, generateCompletionReport, getCompletionStatus }
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
+import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, stopPcRunner } from "../services/pcRunnerService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -43,6 +44,7 @@ import {
   formatFollowUpGeneratePayload,
   formatFollowUpReadPayload,
   formatFollowUpStatusPayload,
+  formatPcRunnerPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -77,6 +79,8 @@ const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_impl
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
 const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
+const RUNNER_PROFILE_CHOICES = ["validation", "analysis", "implementation", "documentation"].map((value) => ({ name: value, value }));
+const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
   return new SlashCommandBuilder()
@@ -577,6 +581,123 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("runner")
+        .setDescription("PC Runner가 승인된 작업을 안전한 실행 흐름으로 진행합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("status")
+            .setDescription("PC Runner 상태와 최신 실행 기록을 확인합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("plan")
+            .setDescription("실행 전 Runner 단계 계획과 중단 gate를 생성합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("profile")
+                .setDescription("Runner profile, 기본값 validation")
+                .setRequired(false)
+                .addChoices(...RUNNER_PROFILE_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("executor")
+                .setDescription("Runner executor, 기본값 profile 기준 자동 선택")
+                .setRequired(false)
+                .addChoices(...RUNNER_EXECUTOR_CHOICES),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("start")
+            .setDescription("승인된 작업을 Runner로 시작하고 완료 검토에서 멈춥니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("profile")
+                .setDescription("Runner profile, 기본값 validation")
+                .setRequired(false)
+                .addChoices(...RUNNER_PROFILE_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("executor")
+                .setDescription("Runner executor, 기본값 profile 기준 자동 선택")
+                .setRequired(false)
+                .addChoices(...RUNNER_EXECUTOR_CHOICES),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("continue")
+            .setDescription("finalization 이후 Runner 후속 산출물을 생성합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("runner-run-id")
+                .setDescription("RunnerRun ID, 없으면 최신 run")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("stop")
+            .setDescription("Runner run을 명시적으로 중단 상태로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("runner-run-id")
+                .setDescription("RunnerRun ID, 없으면 최신 run")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("read")
+            .setDescription("Runner run 상세 기록을 읽습니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("runner-run-id")
+                .setDescription("RunnerRun ID, 없으면 최신 run")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -770,6 +891,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "follow-up") {
     await handleFollowUpCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "runner") {
+    await handlePcRunnerCommand(interaction, config, subcommand);
     return;
   }
 
@@ -1173,6 +1299,47 @@ async function handleFollowUpCommand(interaction, config, subcommand) {
   }
 
   await interaction.editReply({ content: "알 수 없는 follow-up 명령입니다." });
+}
+
+async function handlePcRunnerCommand(interaction, config, subcommand) {
+  const input = {
+    id: interaction.options.getString("id"),
+    profile: interaction.options.getString("profile"),
+    executor: interaction.options.getString("executor"),
+    runnerRunId: interaction.options.getString("runner-run-id"),
+  };
+
+  if (subcommand === "status") {
+    await interaction.editReply(formatPcRunnerPayload(await getPcRunnerStatus(config, input)));
+    return;
+  }
+
+  if (subcommand === "plan") {
+    await interaction.editReply(formatPcRunnerPayload(await planPcRunner(config, input)));
+    return;
+  }
+
+  if (subcommand === "start") {
+    await interaction.editReply(formatPcRunnerPayload(await startPcRunner(config, input)));
+    return;
+  }
+
+  if (subcommand === "continue") {
+    await interaction.editReply(formatPcRunnerPayload(await continuePcRunner(config, input)));
+    return;
+  }
+
+  if (subcommand === "stop") {
+    await interaction.editReply(formatPcRunnerPayload(await stopPcRunner(config, input)));
+    return;
+  }
+
+  if (subcommand === "read") {
+    await interaction.editReply(formatPcRunnerPayload(await readPcRunner(config, input)));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 runner 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {

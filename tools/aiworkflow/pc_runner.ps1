@@ -1,0 +1,1104 @@
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("status", "plan", "start", "continue", "stop", "read")]
+    [string]$Command,
+
+    [string]$TaskId = "",
+
+    [string]$Profile = "",
+
+    [string]$Executor = "",
+
+    [string]$RunnerRunId = "",
+
+    [string]$RepoRoot = "",
+
+    [switch]$Json
+)
+
+$ErrorActionPreference = "Stop"
+
+function Get-NowText { return (Get-Date -Format "yyyy-MM-ddTHH:mm:sszzz") }
+function Get-Stamp { return (Get-Date -Format "yyyyMMdd-HHmmss-fff") }
+function New-ShortGuid { return ([Guid]::NewGuid().ToString("N").Substring(0, 8)) }
+function New-EventId { return ("event-" + (Get-Stamp) + "-" + (New-ShortGuid)) }
+
+function Write-Utf8Text {
+    param([string]$Path, [string]$Text)
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            [System.IO.File]::WriteAllText($Path, $Text, $encoding)
+            return
+        }
+        catch {
+            if ($attempt -eq 5) { throw }
+            Start-Sleep -Milliseconds (100 * $attempt)
+        }
+    }
+}
+
+function Append-Utf8Line {
+    param([string]$Path, [string]$Text)
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            [System.IO.File]::AppendAllText($Path, $Text + [Environment]::NewLine, $encoding)
+            return
+        }
+        catch {
+            if ($attempt -eq 5) { throw }
+            Start-Sleep -Milliseconds (100 * $attempt)
+        }
+    }
+}
+
+function Read-Utf8Text {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return "" }
+    return [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8)
+}
+
+function Read-JsonFile {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { throw "JSON file not found: $Path" }
+    $raw = Read-Utf8Text -Path $Path
+    if ([string]::IsNullOrWhiteSpace($raw)) { throw "JSON file is empty: $Path" }
+    return ($raw | ConvertFrom-Json)
+}
+
+function Read-JsonFileOrNull {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+    $raw = Read-Utf8Text -Path $Path
+    if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
+    return ($raw | ConvertFrom-Json)
+}
+
+function Save-JsonFile {
+    param([string]$Path, $Value)
+    Write-Utf8Text -Path $Path -Text (($Value | ConvertTo-Json -Depth 40) + "`n")
+}
+
+function ConvertTo-RepoRelativePath {
+    param([string]$Repo, [string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $null }
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        $full = [System.IO.Path]::GetFullPath($Path)
+    }
+    else {
+        $full = [System.IO.Path]::GetFullPath((Join-Path $Repo $Path))
+    }
+    $root = [System.IO.Path]::GetFullPath($Repo).TrimEnd("\", "/")
+    if ($full.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $relative = $full.Substring($root.Length).TrimStart("\", "/")
+        if ([string]::IsNullOrWhiteSpace($relative)) { return "." }
+        return ($relative -replace "\\", "/")
+    }
+    return ($full -replace "\\", "/")
+}
+
+function Get-SafeTaskId {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { throw "Task id is required." }
+    $trimmed = $Value.Trim()
+    if ($trimmed -notmatch "^[A-Za-z][A-Za-z0-9_-]*-[A-Za-z0-9][A-Za-z0-9_.-]*$") {
+        throw "Invalid task id. Use a plain task id without path separators, spaces, or shell metacharacters."
+    }
+    if ($trimmed.Contains("..")) { throw "Invalid task id. Parent path traversal is not allowed." }
+    return $trimmed
+}
+
+function Get-SafeRunnerRunIdOrEmpty {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { return "" }
+    $trimmed = $Value.Trim()
+    if ($trimmed -notmatch "^runner-run-[A-Za-z0-9][A-Za-z0-9_.-]*$") {
+        throw "Invalid runner_run_id."
+    }
+    if ($trimmed.Contains("..")) { throw "Invalid runner_run_id. Parent path traversal is not allowed." }
+    return $trimmed
+}
+
+function Get-SafeProfile {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { return "validation" }
+    $trimmed = $Value.Trim().ToLowerInvariant()
+    if (@("analysis", "implementation", "validation", "documentation") -notcontains $trimmed) {
+        throw "Invalid profile. Use analysis, implementation, validation, or documentation."
+    }
+    return $trimmed
+}
+
+function Get-SafeExecutor {
+    param([string]$Value, [string]$ProfileValue)
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        if ($ProfileValue -eq "validation") { return "local_cli" }
+        return "codex_cli"
+    }
+    $trimmed = $Value.Trim().ToLowerInvariant()
+    if (@("codex_cli", "local_cli") -notcontains $trimmed) {
+        throw "Invalid executor. Use codex_cli or local_cli."
+    }
+    return $trimmed
+}
+
+function As-Array {
+    param($Value)
+    if ($null -eq $Value) { return @() }
+    if ($Value -is [System.Array]) { return @($Value) }
+    return @($Value)
+}
+
+function Set-ObjectProperty {
+    param($Object, [string]$Name, $Value)
+    if ($null -ne $Object.PSObject.Properties[$Name]) { $Object.$Name = $Value }
+    else { $Object | Add-Member -MemberType NoteProperty -Name $Name -Value $Value }
+}
+
+function Get-WorkspacePaths {
+    param([string]$Repo, [string]$TaskId)
+    $workspacePath = Join-Path (Join-Path (Join-Path $Repo "_Temp\AIWorkflowRuntime") "tasks") $TaskId
+    $runnerDir = Join-Path $workspacePath "runner"
+    return [pscustomobject]@{
+        workspace_path = $workspacePath
+        metadata_path = Join-Path $workspacePath "workspace_metadata.json"
+        task_run_state_path = Join-Path $workspacePath "task_run_state.json"
+        progress_event_log_path = Join-Path $workspacePath "progress_events.jsonl"
+        runtime_control_history_path = Join-Path $workspacePath "runtime_control_history.jsonl"
+        runner_dir = $runnerDir
+        runner_manifest_path = Join-Path $runnerDir "runner_manifest.json"
+        plans_dir = Join-Path $runnerDir "plans"
+        runs_dir = Join-Path $runnerDir "runs"
+        checkpoints_dir = Join-Path $runnerDir "checkpoints"
+        config_dir = Join-Path $runnerDir "config"
+    }
+}
+
+function Ensure-RunnerDirs {
+    param($Paths)
+    New-Item -ItemType Directory -Path $Paths.plans_dir -Force | Out-Null
+    New-Item -ItemType Directory -Path $Paths.runs_dir -Force | Out-Null
+    New-Item -ItemType Directory -Path $Paths.checkpoints_dir -Force | Out-Null
+    New-Item -ItemType Directory -Path $Paths.config_dir -Force | Out-Null
+}
+
+function Parse-BacklogRows {
+    param([string]$Text)
+    $rows = @()
+    foreach ($lineObj in ($Text -split "`r?`n")) {
+        $line = ([string]$lineObj).Trim()
+        if (-not $line.StartsWith("|")) { continue }
+        $cells = @($line.Trim("|".ToCharArray()).Split("|".ToCharArray()) | ForEach-Object { ([string]$_).Trim() })
+        if ($cells.Count -lt 8) { continue }
+        if ($cells[0] -notmatch "^(WF|GAME|VAL|DOC|UNITY)-") { continue }
+        $rows += [pscustomobject]@{
+            id = $cells[0]
+            priority = $cells[1]
+            status = $cells[2]
+            kind = $cells[3]
+            title = $cells[4]
+            reason = $cells[5]
+            tool_route = $cells[6]
+            validation = $cells[7]
+        }
+    }
+    return @($rows)
+}
+
+function Get-BacklogTask {
+    param([string]$Repo, [string]$TaskId)
+    $backlogPath = Join-Path $Repo "_Docs\AIWorkflow\Backlog.md"
+    $rows = @(Parse-BacklogRows -Text (Read-Utf8Text -Path $backlogPath) | Where-Object { $_.id -eq $TaskId })
+    if ($rows.Count -gt 1) { throw "Duplicate task_id found in Backlog.md: $TaskId" }
+    if ($rows.Count -eq 0) { return $null }
+    return $rows[0]
+}
+
+function Get-ActiveTaskId {
+    param([string]$Repo)
+    $activePath = Join-Path $Repo "_Docs\AIWorkflow\ActiveTask.md"
+    $text = Read-Utf8Text -Path $activePath
+    $match = [regex]::Match($text, "(?m)^task_id:\s*(\S+)\s*$")
+    if ($match.Success) { return $match.Groups[1].Value.Trim() }
+    return ""
+}
+
+function Get-GitStatusShort {
+    param([string]$Repo)
+    $output = & git -C $Repo status --short 2>$null
+    if ($null -eq $output) { return @() }
+    return @($output | ForEach-Object { [string]$_ })
+}
+
+function Invoke-ToolJson {
+    param(
+        [string]$Repo,
+        [string]$RelativeScriptPath,
+        [string[]]$Arguments,
+        [bool]$AllowFailure = $false
+    )
+    $scriptPath = Join-Path $Repo $RelativeScriptPath
+    if (-not (Test-Path -LiteralPath $scriptPath)) {
+        throw "Tool script not found: $RelativeScriptPath"
+    }
+    $outputLines = & $scriptPath @Arguments 2>&1
+    $exitCode = $LASTEXITCODE
+    $stdout = (($outputLines | ForEach-Object { [string]$_ }) -join [Environment]::NewLine).Trim()
+    $parsed = $null
+    $parseError = $null
+    if (-not [string]::IsNullOrWhiteSpace($stdout)) {
+        try { $parsed = ($stdout | ConvertFrom-Json) }
+        catch { $parseError = $_.Exception.Message }
+    }
+    $ok = ($exitCode -eq 0) -and ($null -ne $parsed) -and ($parsed.ok -ne $false)
+    if (-not $ok -and -not $AllowFailure) {
+        $message = if ($null -ne $parsed -and $parsed.error) { $parsed.error } elseif ($parseError) { $parseError } else { $stdout }
+        throw "Tool failed: $RelativeScriptPath $($Arguments -join ' ') :: $message"
+    }
+    return [pscustomobject]@{
+        ok = $ok
+        exit_code = $exitCode
+        script = $RelativeScriptPath
+        args = @($Arguments)
+        data = $parsed
+        stdout = $stdout
+        parse_error = $parseError
+    }
+}
+
+function Invoke-PowerShellToolJson {
+    param(
+        [string]$Repo,
+        [string]$RelativeScriptPath,
+        [hashtable]$Parameters
+    )
+    $scriptPath = Join-Path $Repo $RelativeScriptPath
+    if (-not (Test-Path -LiteralPath $scriptPath)) {
+        throw "Tool script not found: $RelativeScriptPath"
+    }
+    $arguments = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $scriptPath)
+    foreach ($key in $Parameters.Keys) {
+        $value = $Parameters[$key]
+        if ($null -eq $value) { continue }
+        $arguments += "-$key"
+        if ($value -is [bool]) {
+            if (-not $value) {
+                $arguments = $arguments[0..($arguments.Count - 2)]
+            }
+        }
+        else {
+            $arguments += [string]$value
+        }
+    }
+    $outputLines = & powershell.exe @arguments 2>&1
+    $exitCode = $LASTEXITCODE
+    $stdout = (($outputLines | ForEach-Object { [string]$_ }) -join [Environment]::NewLine).Trim()
+    $parsed = $null
+    $parseError = $null
+    if (-not [string]::IsNullOrWhiteSpace($stdout)) {
+        try { $parsed = ($stdout | ConvertFrom-Json) }
+        catch { $parseError = $_.Exception.Message }
+    }
+    $ok = ($exitCode -eq 0) -and ($null -ne $parsed) -and ($parsed.ok -ne $false)
+    if (-not $ok) {
+        $message = if ($null -ne $parsed -and $parsed.error) { $parsed.error } elseif ($parseError) { $parseError } else { $stdout }
+        throw "Tool failed: $RelativeScriptPath :: $message"
+    }
+    return [pscustomobject]@{
+        ok = $ok
+        exit_code = $exitCode
+        script = $RelativeScriptPath
+        data = $parsed
+        stdout = $stdout
+        parse_error = $parseError
+    }
+}
+
+function Write-ProgressEvent {
+    param(
+        [string]$Path,
+        [string]$TaskId,
+        [string]$RunId,
+        [string]$RunnerRunId,
+        [string]$EventType,
+        [string]$Message,
+        $Data = $null
+    )
+    $event = [ordered]@{
+        schema_version = 1
+        event_id = New-EventId
+        task_id = $TaskId
+        run_id = $RunId
+        runner_run_id = $RunnerRunId
+        event_type = $EventType
+        severity = "info"
+        message = $Message
+        source = "pc_runner"
+        data = $Data
+        created_at = Get-NowText
+    }
+    Append-Utf8Line -Path $Path -Text ($event | ConvertTo-Json -Depth 24 -Compress)
+    return $event.event_id
+}
+
+function Load-RunnerManifest {
+    param($Paths)
+    $manifest = Read-JsonFileOrNull -Path $Paths.runner_manifest_path
+    if ($null -ne $manifest) { return $manifest }
+    return [pscustomobject]@{
+        schema_version = 1
+        runner = "pc_runner"
+        runner_plan_count = 0
+        runner_run_count = 0
+        latest_runner_plan_id = $null
+        latest_runner_run_id = $null
+        plans = @()
+        runs = @()
+        updated_at = $null
+    }
+}
+
+function Save-RunnerManifest {
+    param($Paths, $Manifest)
+    Save-JsonFile -Path $Paths.runner_manifest_path -Value $Manifest
+}
+
+function Add-ManifestEntry {
+    param($Manifest, [string]$Kind, [string]$Id, [string]$Path)
+    $entry = [pscustomobject]@{ id = $Id; path = $Path; updated_at = Get-NowText }
+    if ($Kind -eq "plan") {
+        $items = @(As-Array -Value $Manifest.plans)
+        $items = @($items | Where-Object { $_.id -ne $Id })
+        $items += $entry
+        Set-ObjectProperty -Object $Manifest -Name "plans" -Value @($items)
+        Set-ObjectProperty -Object $Manifest -Name "runner_plan_count" -Value $items.Count
+        Set-ObjectProperty -Object $Manifest -Name "latest_runner_plan_id" -Value $Id
+    }
+    if ($Kind -eq "run") {
+        $items = @(As-Array -Value $Manifest.runs)
+        $items = @($items | Where-Object { $_.id -ne $Id })
+        $items += $entry
+        Set-ObjectProperty -Object $Manifest -Name "runs" -Value @($items)
+        Set-ObjectProperty -Object $Manifest -Name "runner_run_count" -Value $items.Count
+        Set-ObjectProperty -Object $Manifest -Name "latest_runner_run_id" -Value $Id
+    }
+    Set-ObjectProperty -Object $Manifest -Name "updated_at" -Value (Get-NowText)
+}
+
+function New-IdSet {
+    param([string]$TaskId)
+    $stamp = Get-Stamp
+    $safeTask = ($TaskId -replace "[^A-Za-z0-9_.-]", "-").ToLowerInvariant()
+    return [pscustomobject]@{
+        stamp = $stamp
+        runner_plan_id = "runner-plan-$safeTask-$stamp"
+        runner_run_id = "runner-run-$safeTask-$stamp"
+        checkpoint_prefix = "checkpoint-$safeTask"
+        session_id = "session-$safeTask-local-cli-$stamp"
+        local_evidence_id = "evidence-$safeTask-local-cli-$stamp"
+        filewatch_evidence_id = "evidence-$safeTask-filewatch-$stamp"
+        result_id = "result-$safeTask-$stamp"
+        analysis_id = "analysis-$safeTask-$stamp"
+        build_test_id = "bt-$safeTask-json-smoke-$stamp"
+        verification_id = "verification-$safeTask-$stamp"
+        completion_id = "completion-$safeTask-$stamp"
+        card_id = "card-$safeTask-$stamp"
+        autoeval_id = "autoeval-$safeTask-$stamp"
+        followup_id = "followup-$safeTask-$stamp"
+    }
+}
+
+function New-Preflight {
+    param([string]$Repo, [string]$TaskId, [string]$ProfileValue, [string]$ExecutorValue)
+    $task = Get-BacklogTask -Repo $Repo -TaskId $TaskId
+    $activeTaskId = Get-ActiveTaskId -Repo $Repo
+    $statusShort = Get-GitStatusShort -Repo $Repo
+    $approvalOk = $false
+    $stopReason = $null
+    $humanGate = $null
+    if ($null -eq $task) {
+        $stopReason = "task_not_found"
+        $humanGate = "Create or select a valid Backlog task before running PC Runner."
+    }
+    else {
+        $approvalOk = @("ready_for_implementation", "in_progress") -contains $task.status
+        if (-not $approvalOk) {
+            $stopReason = "approval_required"
+            $humanGate = "Approve the task scope before PC Runner start."
+        }
+        elseif ($activeTaskId -ne $TaskId) {
+            $stopReason = "active_task_mismatch"
+            $humanGate = "Set ActiveTask to this task or run a read-only plan only."
+        }
+    }
+    $profileSupportedForStart = $ProfileValue -eq "validation"
+    if ($approvalOk -and $activeTaskId -eq $TaskId -and -not $profileSupportedForStart) {
+        $stopReason = "profile_not_executable_yet"
+        $humanGate = "This profile needs an explicit runner profile approval before automated execution. Use manual escalation for this request."
+    }
+    return [pscustomobject]@{
+        task_found = $null -ne $task
+        task = $task
+        active_task_id = $activeTaskId
+        active_task_matches = $activeTaskId -eq $TaskId
+        approval_ok = $approvalOk
+        profile = $ProfileValue
+        executor = $ExecutorValue
+        profile_supported_for_start = $profileSupportedForStart
+        stop_reason = $stopReason
+        human_gate = $humanGate
+        git_status_short = @($statusShort)
+        checked_at = Get-NowText
+    }
+}
+
+function New-RunnerPlan {
+    param(
+        [string]$TaskId,
+        [string]$ProfileValue,
+        [string]$ExecutorValue,
+        $Preflight,
+        $Ids
+    )
+    return [ordered]@{
+        schema_version = 1
+        task_id = $TaskId
+        runner_plan_id = $Ids.runner_plan_id
+        profile = $ProfileValue
+        executor = $ExecutorValue
+        approval_state = if ($Preflight.approval_ok) { "approved" } else { "approval_required" }
+        preflight_result = $Preflight
+        planned_steps = @(
+            "task_workspace_manager.create_or_read",
+            "local_cli_adapter.run.node_version",
+            "file_watcher.snapshot",
+            "result_collector.collect",
+            "diff_analyzer.analyze",
+            "build_test_runner.run.json_smoke",
+            "verification_report.generate",
+            "completion_report.generate",
+            "completion_card.generate",
+            "stop.completion_review_required"
+        )
+        human_gates = @(
+            "approval_required",
+            "runtime_control_pending",
+            "verification_review_required",
+            "completion_review_required",
+            "done_or_commit_decision"
+        )
+        stop_conditions = @(
+            "task_not_found",
+            "approval_required",
+            "active_task_mismatch",
+            "profile_not_executable_yet",
+            "executor_not_ready",
+            "primitive_call_failed",
+            "completion_review_required"
+        )
+        expected_artifacts = [ordered]@{
+            runner_run_id = $Ids.runner_run_id
+            session_id = $Ids.session_id
+            evidence_ids = @($Ids.local_evidence_id, $Ids.filewatch_evidence_id)
+            result_id = $Ids.result_id
+            analysis_id = $Ids.analysis_id
+            build_test_id = $Ids.build_test_id
+            verification_report_id = $Ids.verification_id
+            completion_report_id = $Ids.completion_id
+            completion_card_id = $Ids.card_id
+        }
+        created_at = Get-NowText
+    }
+}
+
+function Save-RunnerPlan {
+    param($Paths, $Plan)
+    Ensure-RunnerDirs -Paths $Paths
+    $path = Join-Path $Paths.plans_dir "$($Plan.runner_plan_id).json"
+    Save-JsonFile -Path $path -Value $Plan
+    $manifest = Load-RunnerManifest -Paths $Paths
+    Add-ManifestEntry -Manifest $manifest -Kind "plan" -Id $Plan.runner_plan_id -Path (ConvertTo-RepoRelativePath -Repo $repo -Path $path)
+    Save-RunnerManifest -Paths $Paths -Manifest $manifest
+    return $path
+}
+
+function New-Checkpoint {
+    param(
+        $Paths,
+        [string]$TaskId,
+        [string]$RunnerRunId,
+        [string]$RunId,
+        [string]$Phase,
+        [string]$Step,
+        [string]$Status,
+        $Inputs,
+        $Outputs,
+        [string]$NextStep = "",
+        [string]$StopReason = ""
+    )
+    $checkpointId = "checkpoint-$($TaskId.ToLowerInvariant())-$Phase-$(Get-Stamp)"
+    $checkpoint = [ordered]@{
+        schema_version = 1
+        task_id = $TaskId
+        run_id = $RunId
+        runner_run_id = $RunnerRunId
+        checkpoint_id = $checkpointId
+        phase = $Phase
+        step = $Step
+        status = $Status
+        inputs = $Inputs
+        outputs = $Outputs
+        next_step = $NextStep
+        stop_reason = $StopReason
+        created_at = Get-NowText
+    }
+    $path = Join-Path $Paths.checkpoints_dir "$checkpointId.json"
+    Save-JsonFile -Path $path -Value $checkpoint
+    return [pscustomobject]@{ id = $checkpointId; path = ConvertTo-RepoRelativePath -Repo $repo -Path $path; checkpoint = $checkpoint }
+}
+
+function Save-RunnerRun {
+    param($Paths, $RunState)
+    Ensure-RunnerDirs -Paths $Paths
+    $path = Join-Path $Paths.runs_dir "$($RunState.runner_run_id).json"
+    Save-JsonFile -Path $path -Value $RunState
+    $manifest = Load-RunnerManifest -Paths $Paths
+    Add-ManifestEntry -Manifest $manifest -Kind "run" -Id $RunState.runner_run_id -Path (ConvertTo-RepoRelativePath -Repo $repo -Path $path)
+    Save-RunnerManifest -Paths $Paths -Manifest $manifest
+    return $path
+}
+
+function Set-ReportId {
+    param($RunState, [string]$Name, [string]$Value)
+    if ($null -eq $RunState.report_ids) {
+        Set-ObjectProperty -Object $RunState -Name "report_ids" -Value ([pscustomobject]@{})
+    }
+    if ($RunState.report_ids -is [System.Collections.IDictionary]) {
+        $RunState.report_ids[$Name] = $Value
+    }
+    else {
+        Set-ObjectProperty -Object $RunState.report_ids -Name $Name -Value $Value
+    }
+}
+
+function Write-ValidationConfigs {
+    param($Paths)
+    Ensure-RunnerDirs -Paths $Paths
+    $localCliConfigPath = Join-Path $Paths.config_dir "local_cli_adapter.pc_runner.json"
+    $buildTestConfigPath = Join-Path $Paths.config_dir "build_test_runner.pc_runner.json"
+    $fileWatcherConfigPath = Join-Path $Paths.config_dir "file_watcher.pc_runner.json"
+
+    $localCliConfig = [ordered]@{
+        schema_version = 1
+        enabled = $true
+        allowed_task_statuses = @("ready_for_implementation", "in_progress")
+        require_backlog_approval = $true
+        commands = @(
+            [ordered]@{
+                command_id = "node_version"
+                enabled = $true
+                description = "Print Node.js version for PC Runner validation profile smoke."
+                command = "node"
+                args = @("--version")
+                working_directory = "."
+                timeout_seconds = 10
+                env = @{}
+                capture_changed_files = $true
+                capture_diff_snapshot = $true
+            }
+        )
+    }
+
+    $buildTestConfig = [ordered]@{
+        schema_version = 1
+        enabled = $true
+        allowed_task_statuses = @("ready_for_implementation", "in_progress")
+        require_backlog_approval = $true
+        commands = @(
+            [ordered]@{
+                command_id = "json_smoke"
+                kind = "test"
+                label = "JSON syntax smoke check"
+                enabled = $true
+                approval_level = "auto_allowed"
+                command = "tools\aiworkflow\json_smoke_check.bat"
+                args = @()
+                working_directory = "."
+                timeout_seconds = 60
+                env = @{}
+            }
+        )
+    }
+
+    $fileWatcherConfig = [ordered]@{
+        schema_version = 1
+        include_untracked = $false
+        capture_diff_snapshot = $true
+        max_recent_changed_files = 12
+        ignore_paths = @(".git/**", "_Temp/**", "_Local/**", "node_modules/**", ".env", "*.log", "*.tmp", "*.local.json")
+    }
+
+    Save-JsonFile -Path $localCliConfigPath -Value $localCliConfig
+    Save-JsonFile -Path $buildTestConfigPath -Value $buildTestConfig
+    Save-JsonFile -Path $fileWatcherConfigPath -Value $fileWatcherConfig
+
+    return [pscustomobject]@{
+        local_cli = ConvertTo-RepoRelativePath -Repo $repo -Path $localCliConfigPath
+        build_test = ConvertTo-RepoRelativePath -Repo $repo -Path $buildTestConfigPath
+        file_watcher = ConvertTo-RepoRelativePath -Repo $repo -Path $fileWatcherConfigPath
+    }
+}
+
+function Ensure-Workspace {
+    param([string]$Repo, [string]$TaskId)
+    $status = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\task_workspace_manager.bat" -Arguments @("status", $TaskId, "--json") -AllowFailure $true
+    if ($status.ok -and $status.data.exists -eq $true) {
+        return Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\task_workspace_manager.bat" -Arguments @("read", $TaskId, "--json")
+    }
+    return Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\task_workspace_manager.bat" -Arguments @("create", $TaskId, "--json")
+}
+
+function Get-RunIdFromWorkspace {
+    param($Paths)
+    $state = Read-JsonFile -Path $Paths.task_run_state_path
+    return $state.run_id
+}
+
+function Get-LatestRunnerRun {
+    param($Paths)
+    $manifest = Load-RunnerManifest -Paths $Paths
+    if ([string]::IsNullOrWhiteSpace($manifest.latest_runner_run_id)) { return $null }
+    $path = Join-Path $Paths.runs_dir "$($manifest.latest_runner_run_id).json"
+    return Read-JsonFileOrNull -Path $path
+}
+
+function Get-RunnerRunById {
+    param($Paths, [string]$RunnerRunId)
+    if ([string]::IsNullOrWhiteSpace($RunnerRunId)) { return Get-LatestRunnerRun -Paths $Paths }
+    $path = Join-Path $Paths.runs_dir "$RunnerRunId.json"
+    return Read-JsonFileOrNull -Path $path
+}
+
+function Invoke-Plan {
+    param([string]$Repo, [string]$TaskId, [string]$ProfileValue, [string]$ExecutorValue)
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    Ensure-Workspace -Repo $Repo -TaskId $TaskId | Out-Null
+    Ensure-RunnerDirs -Paths $paths
+    $ids = New-IdSet -TaskId $TaskId
+    $preflight = New-Preflight -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue
+    $plan = New-RunnerPlan -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue -Preflight $preflight -Ids $ids
+    $path = Save-RunnerPlan -Paths $paths -Plan $plan
+    return [pscustomobject]@{
+        ok = $true
+        command = "plan"
+        task_id = $TaskId
+        runner_plan_id = $plan.runner_plan_id
+        runner_plan_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $path
+        stop_reason = $preflight.stop_reason
+        human_gate = $preflight.human_gate
+        can_start = [bool]($preflight.approval_ok -and $preflight.active_task_matches -and $preflight.profile_supported_for_start)
+        runner_plan = $plan
+        task_lifecycle_unchanged = $true
+    }
+}
+
+function Invoke-Start {
+    param([string]$Repo, [string]$TaskId, [string]$ProfileValue, [string]$ExecutorValue)
+    $planResult = Invoke-Plan -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    $runId = Get-RunIdFromWorkspace -Paths $paths
+    $plan = $planResult.runner_plan
+    $runnerRunId = $plan.expected_artifacts.runner_run_id
+    $runState = [ordered]@{
+        schema_version = 1
+        task_id = $TaskId
+        run_id = $runId
+        runner_run_id = $runnerRunId
+        runner_plan_id = $plan.runner_plan_id
+        status = "starting"
+        current_phase = "preflight"
+        current_step = "preflight"
+        last_checkpoint_id = $null
+        session_ids = @()
+        evidence_ids = @()
+        report_ids = [ordered]@{}
+        human_gate_state = [ordered]@{
+            stop_reason = $planResult.stop_reason
+            human_gate = $planResult.human_gate
+        }
+        runtime_control_state = [ordered]@{
+            checked = $false
+            pending = $false
+        }
+        started_at = Get-NowText
+        updated_at = Get-NowText
+        ended_at = $null
+    }
+
+    if (-not $planResult.can_start) {
+        $runState.status = "stopped"
+        $runState.current_phase = "preflight"
+        $runState.current_step = "human_gate"
+        $runState.ended_at = Get-NowText
+        $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+        return [pscustomobject]@{
+            ok = $false
+            command = "start"
+            task_id = $TaskId
+            runner_run_id = $runnerRunId
+            runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+            stop_reason = $planResult.stop_reason
+            human_gate = $planResult.human_gate
+            runner_run = $runState
+            task_lifecycle_unchanged = $true
+            no_task_done = $true
+            no_commit_or_push = $true
+        }
+    }
+
+    $configPaths = Write-ValidationConfigs -Paths $paths
+    $runState.status = "running"
+    $runState.current_phase = "execution"
+    $runState.current_step = "local_cli_adapter.run.node_version"
+    $runState.updated_at = Get-NowText
+    Write-ProgressEvent -Path $paths.progress_event_log_path -TaskId $TaskId -RunId $runId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner validation profile started." -Data @{ profile = $ProfileValue; executor = $ExecutorValue } | Out-Null
+
+    $localCli = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\local_cli_adapter.bat" -Arguments @(
+        "run", $TaskId, "node_version", "--execute", "--config", $configPaths.local_cli,
+        "--session-id", $plan.expected_artifacts.session_id,
+        "--evidence-id", $plan.expected_artifacts.evidence_ids[0],
+        "--json"
+    )
+    $runState.session_ids = @($plan.expected_artifacts.session_id)
+    $runState.evidence_ids = @($plan.expected_artifacts.evidence_ids[0])
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "execution" -Step "local_cli_adapter.run.node_version" -Status "completed" -Inputs @{ config = $configPaths.local_cli } -Outputs @{ session_id = $plan.expected_artifacts.session_id; evidence_id = $plan.expected_artifacts.evidence_ids[0]; exit_code = $localCli.data.exit_code } -NextStep "file_watcher.snapshot"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "evidence"
+    $runState.current_step = "file_watcher.snapshot"
+    $fileWatch = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\file_watcher.bat" -Arguments @(
+        "snapshot", $TaskId, $plan.expected_artifacts.session_id, $plan.expected_artifacts.evidence_ids[1],
+        "--config", $configPaths.file_watcher, "--json"
+    )
+    $runState.evidence_ids = @($plan.expected_artifacts.evidence_ids)
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "evidence" -Step "file_watcher.snapshot" -Status "completed" -Inputs @{ config = $configPaths.file_watcher } -Outputs @{ evidence_id = $plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count } -NextStep "result_collector.collect"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "result"
+    $runState.current_step = "result_collector.collect"
+    $result = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\result_collector.bat" -Arguments @("collect", $TaskId, $plan.expected_artifacts.session_id, $plan.expected_artifacts.result_id, "--json")
+    Set-ReportId -RunState $runState -Name "result_id" -Value $plan.expected_artifacts.result_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "result" -Step "result_collector.collect" -Status "completed" -Inputs @{ session_id = $plan.expected_artifacts.session_id } -Outputs @{ result_id = $plan.expected_artifacts.result_id; summary = $result.data.summary } -NextStep "diff_analyzer.analyze"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "analysis"
+    $runState.current_step = "diff_analyzer.analyze"
+    $analysis = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\diff_analyzer.bat" -Arguments @("analyze", $TaskId, $plan.expected_artifacts.result_id, $plan.expected_artifacts.analysis_id, "--json")
+    Set-ReportId -RunState $runState -Name "analysis_id" -Value $plan.expected_artifacts.analysis_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "analysis" -Step "diff_analyzer.analyze" -Status "completed" -Inputs @{ result_id = $plan.expected_artifacts.result_id } -Outputs @{ analysis_id = $plan.expected_artifacts.analysis_id; summary = $analysis.data.summary } -NextStep "build_test_runner.run.json_smoke"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "build_test"
+    $runState.current_step = "build_test_runner.run.json_smoke"
+    $buildTest = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\build_test_runner.bat" -Arguments @(
+        "run", $TaskId, "json_smoke", "--execute", "--build-test-id", $plan.expected_artifacts.build_test_id,
+        "--config", $configPaths.build_test, "--json"
+    )
+    Set-ReportId -RunState $runState -Name "build_test_id" -Value $plan.expected_artifacts.build_test_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "build_test" -Step "build_test_runner.run.json_smoke" -Status "completed" -Inputs @{ config = $configPaths.build_test } -Outputs @{ build_test_id = $plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "verification_report.generate"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "verification"
+    $runState.current_step = "verification_report.generate"
+    $verification = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\verification_report.bat" -Arguments @(
+        "generate", $TaskId, "--result-id", $plan.expected_artifacts.result_id,
+        "--analysis-id", $plan.expected_artifacts.analysis_id,
+        "--build-test-id", $plan.expected_artifacts.build_test_id,
+        "--report-id", $plan.expected_artifacts.verification_report_id,
+        "--json"
+    )
+    Set-ReportId -RunState $runState -Name "verification_report_id" -Value $plan.expected_artifacts.verification_report_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "verification" -Step "verification_report.generate" -Status "completed" -Inputs @{ result_id = $plan.expected_artifacts.result_id; analysis_id = $plan.expected_artifacts.analysis_id; build_test_id = $plan.expected_artifacts.build_test_id } -Outputs @{ verification_report_id = $plan.expected_artifacts.verification_report_id; verdict = $verification.data.verdict } -NextStep "completion_report.generate"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_phase = "completion"
+    $runState.current_step = "completion_report.generate"
+    $completion = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_report.bat" -Arguments @("generate", $TaskId, $plan.expected_artifacts.verification_report_id, $plan.expected_artifacts.completion_report_id, "--json")
+    Set-ReportId -RunState $runState -Name "completion_report_id" -Value $plan.expected_artifacts.completion_report_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "completion" -Step "completion_report.generate" -Status "completed" -Inputs @{ verification_report_id = $plan.expected_artifacts.verification_report_id } -Outputs @{ completion_report_id = $plan.expected_artifacts.completion_report_id; readiness_level = $completion.data.readiness_level } -NextStep "completion_card.generate"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_step = "completion_card.generate"
+    $card = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_card.bat" -Arguments @("generate", $TaskId, $plan.expected_artifacts.completion_report_id, $plan.expected_artifacts.completion_card_id, "--json")
+    Set-ReportId -RunState $runState -Name "completion_card_id" -Value $plan.expected_artifacts.completion_card_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "completion" -Step "completion_card.generate" -Status "stopped" -Inputs @{ completion_report_id = $plan.expected_artifacts.completion_report_id } -Outputs @{ completion_card_id = $plan.expected_artifacts.completion_card_id; readiness_level = $card.data.readiness_level } -StopReason "completion_review_required"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.status = "stopped"
+    $runState.current_phase = "human_gate"
+    $runState.current_step = "completion_review_required"
+    $runState.human_gate_state = [ordered]@{
+        stop_reason = "completion_review_required"
+        human_gate = "Review Completion Card, then record finalization decision before pc_runner continue."
+        completion_report_id = $plan.expected_artifacts.completion_report_id
+        completion_card_id = $plan.expected_artifacts.completion_card_id
+    }
+    $runState.updated_at = Get-NowText
+    $runState.ended_at = Get-NowText
+    Write-ProgressEvent -Path $paths.progress_event_log_path -TaskId $TaskId -RunId $runId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner stopped at completion review gate." -Data $runState.human_gate_state | Out-Null
+    $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+
+    return [pscustomobject]@{
+        ok = $true
+        command = "start"
+        task_id = $TaskId
+        runner_run_id = $runnerRunId
+        runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+        status = $runState.status
+        stop_reason = "completion_review_required"
+        human_gate = $runState.human_gate_state.human_gate
+        report_ids = $runState.report_ids
+        runner_run = $runState
+        verification_verdict = $verification.data.verdict
+        completion_readiness = $completion.data.readiness_level
+        task_lifecycle_unchanged = $true
+        no_task_approval = $true
+        no_task_done = $true
+        no_commit_or_push = $true
+    }
+}
+
+function Invoke-Continue {
+    param([string]$Repo, [string]$TaskId, [string]$RunnerRunIdValue)
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    Ensure-RunnerDirs -Paths $paths
+    $runState = Get-RunnerRunById -Paths $paths -RunnerRunId $RunnerRunIdValue
+    if ($null -eq $runState) {
+        throw "Runner run not found. Run pc_runner start first."
+    }
+    $runId = Get-RunIdFromWorkspace -Paths $paths
+    $completionReportId = $runState.report_ids.completion_report_id
+    if ([string]::IsNullOrWhiteSpace($completionReportId)) {
+        throw "Runner run has no completion_report_id."
+    }
+
+    $finalizationStatus = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\finalization_log.bat" -Arguments @("status", $TaskId, "--json") -AllowFailure $true
+    $finalizationLogId = $finalizationStatus.data.latest_finalization_log_id
+    if ([string]::IsNullOrWhiteSpace($finalizationLogId)) {
+        $runState.status = "stopped"
+        $runState.current_phase = "human_gate"
+        $runState.current_step = "finalization_required"
+        $runState.human_gate_state = [ordered]@{
+            stop_reason = "finalization_required"
+            human_gate = "Record finalization decision before continuing."
+            completion_report_id = $completionReportId
+        }
+        $runState.updated_at = Get-NowText
+        $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+        return [pscustomobject]@{
+            ok = $false
+            command = "continue"
+            task_id = $TaskId
+            runner_run_id = $runState.runner_run_id
+            runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+            stop_reason = "finalization_required"
+            human_gate = $runState.human_gate_state.human_gate
+            task_lifecycle_unchanged = $true
+            no_task_done = $true
+            no_commit_or_push = $true
+        }
+    }
+
+    $ids = New-IdSet -TaskId $TaskId
+    $runState.status = "running"
+    $runState.current_phase = "post_finalization"
+    $runState.current_step = "auto_approval_policy.evaluate"
+    $autoEval = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\auto_approval_policy.bat" -Arguments @("evaluate", $TaskId, $completionReportId, $finalizationLogId, $ids.autoeval_id, "--json")
+    Set-ReportId -RunState $runState -Name "auto_approval_evaluation_id" -Value $ids.autoeval_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runState.runner_run_id -RunId $runId -Phase "post_finalization" -Step "auto_approval_policy.evaluate" -Status "completed" -Inputs @{ completion_report_id = $completionReportId; finalization_log_id = $finalizationLogId } -Outputs @{ policy_evaluation_id = $ids.autoeval_id; decision = $autoEval.data.decision } -NextStep "follow_up_task_generator.generate"
+    $runState.last_checkpoint_id = $checkpoint.id
+
+    $runState.current_step = "follow_up_task_generator.generate"
+    $followUp = Invoke-PowerShellToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\follow_up_task_generator.ps1" -Parameters @{
+        Command = "generate"
+        TaskId = $TaskId
+        CompletionReportId = $completionReportId
+        FinalizationLogId = $finalizationLogId
+        PolicyEvaluationId = $ids.autoeval_id
+        FollowUpPlanId = $ids.followup_id
+        RepoRoot = $Repo
+        Json = $true
+    }
+    Set-ReportId -RunState $runState -Name "follow_up_plan_id" -Value $ids.followup_id
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runState.runner_run_id -RunId $runId -Phase "post_finalization" -Step "follow_up_task_generator.generate" -Status "stopped" -Inputs @{ completion_report_id = $completionReportId; finalization_log_id = $finalizationLogId; policy_evaluation_id = $ids.autoeval_id } -Outputs @{ follow_up_plan_id = $ids.followup_id; candidate_count = $followUp.data.candidate_count } -StopReason "done_or_commit_decision"
+    $runState.last_checkpoint_id = $checkpoint.id
+    $runState.status = "stopped"
+    $runState.current_phase = "human_gate"
+    $runState.current_step = "done_or_commit_decision"
+    $runState.human_gate_state = [ordered]@{
+        stop_reason = "done_or_commit_decision"
+        human_gate = "Review finalization/follow-up artifacts, then decide task done and commit/push manually."
+        finalization_log_id = $finalizationLogId
+        policy_evaluation_id = $ids.autoeval_id
+        follow_up_plan_id = $ids.followup_id
+    }
+    $runState.updated_at = Get-NowText
+    $runState.ended_at = Get-NowText
+    Write-ProgressEvent -Path $paths.progress_event_log_path -TaskId $TaskId -RunId $runId -RunnerRunId $runState.runner_run_id -EventType "runner_stopped" -Message "PC Runner stopped at done/commit decision gate." -Data $runState.human_gate_state | Out-Null
+    $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+    return [pscustomobject]@{
+        ok = $true
+        command = "continue"
+        task_id = $TaskId
+        runner_run_id = $runState.runner_run_id
+        runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+        status = $runState.status
+        stop_reason = "done_or_commit_decision"
+        human_gate = $runState.human_gate_state.human_gate
+        report_ids = $runState.report_ids
+        auto_approval_decision = $autoEval.data.decision
+        follow_up_candidate_count = $followUp.data.candidate_count
+        task_lifecycle_unchanged = $true
+        no_task_done = $true
+        no_commit_or_push = $true
+    }
+}
+
+function Invoke-Stop {
+    param([string]$Repo, [string]$TaskId, [string]$RunnerRunIdValue)
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    Ensure-RunnerDirs -Paths $paths
+    $runState = Get-RunnerRunById -Paths $paths -RunnerRunId $RunnerRunIdValue
+    if ($null -eq $runState) {
+        throw "Runner run not found."
+    }
+    $runState.status = "stopped"
+    $runState.current_phase = "human_gate"
+    $runState.current_step = "manual_stop"
+    $runState.human_gate_state = [ordered]@{
+        stop_reason = "manual_stop"
+        human_gate = "Runner stopped by explicit command."
+    }
+    $runState.updated_at = Get-NowText
+    $runState.ended_at = Get-NowText
+    $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+    return [pscustomobject]@{
+        ok = $true
+        command = "stop"
+        task_id = $TaskId
+        runner_run_id = $runState.runner_run_id
+        runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+        stop_reason = "manual_stop"
+        task_lifecycle_unchanged = $true
+    }
+}
+
+function Invoke-Status {
+    param([string]$Repo, [string]$TaskId)
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    $task = Get-BacklogTask -Repo $Repo -TaskId $TaskId
+    $manifest = Load-RunnerManifest -Paths $paths
+    $latestRun = Get-LatestRunnerRun -Paths $paths
+    return [pscustomobject]@{
+        ok = $true
+        command = "status"
+        task_id = $TaskId
+        task_found = $null -ne $task
+        task_status = if ($null -ne $task) { $task.status } else { $null }
+        active_task_id = Get-ActiveTaskId -Repo $Repo
+        workspace_exists = Test-Path -LiteralPath $paths.workspace_path
+        runner_manifest_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $paths.runner_manifest_path
+        runner_plan_count = $manifest.runner_plan_count
+        runner_run_count = $manifest.runner_run_count
+        latest_runner_plan_id = $manifest.latest_runner_plan_id
+        latest_runner_run_id = $manifest.latest_runner_run_id
+        latest_runner_run = $latestRun
+        task_lifecycle_unchanged = $true
+    }
+}
+
+function Invoke-Read {
+    param([string]$Repo, [string]$TaskId, [string]$RunnerRunIdValue)
+    $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
+    $runState = Get-RunnerRunById -Paths $paths -RunnerRunId $RunnerRunIdValue
+    if ($null -eq $runState) {
+        throw "Runner run not found."
+    }
+    return [pscustomobject]@{
+        ok = $true
+        command = "read"
+        task_id = $TaskId
+        runner_run_id = $runState.runner_run_id
+        runner_run = $runState
+        task_lifecycle_unchanged = $true
+    }
+}
+
+function Write-Result {
+    param($Result, [int]$ExitCode = 0)
+    if ($Json) {
+        $Result | ConvertTo-Json -Depth 40
+        exit $ExitCode
+    }
+    if ($Result.ok -eq $false) {
+        $message = $Result.stop_reason
+        if ([string]::IsNullOrWhiteSpace($message)) {
+            $message = $Result.error
+        }
+        Write-Host "[ERROR] $message"
+        if ($Result.human_gate) { Write-Host "Human gate: $($Result.human_gate)" }
+        exit $ExitCode
+    }
+    Write-Host "AIWorkflow PC Runner"
+    Write-Host "command: $($Result.command)"
+    Write-Host "task: $($Result.task_id)"
+    if ($Result.runner_run_id) { Write-Host "runner_run: $($Result.runner_run_id)" }
+    if ($Result.status) { Write-Host "status: $($Result.status)" }
+    if ($Result.stop_reason) { Write-Host "stop_reason: $($Result.stop_reason)" }
+    if ($Result.human_gate) { Write-Host "human_gate: $($Result.human_gate)" }
+}
+
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+    $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+}
+$repo = [System.IO.Path]::GetFullPath($RepoRoot)
+$safeTaskId = Get-SafeTaskId -Value $TaskId
+$safeProfile = Get-SafeProfile -Value $Profile
+$safeExecutor = Get-SafeExecutor -Value $Executor -ProfileValue $safeProfile
+$safeRunnerRunId = Get-SafeRunnerRunIdOrEmpty -Value $RunnerRunId
+
+try {
+    if ($Command -eq "status") {
+        Write-Result -Result (Invoke-Status -Repo $repo -TaskId $safeTaskId)
+    }
+    elseif ($Command -eq "plan") {
+        Write-Result -Result (Invoke-Plan -Repo $repo -TaskId $safeTaskId -ProfileValue $safeProfile -ExecutorValue $safeExecutor)
+    }
+    elseif ($Command -eq "start") {
+        $result = Invoke-Start -Repo $repo -TaskId $safeTaskId -ProfileValue $safeProfile -ExecutorValue $safeExecutor
+        Write-Result -Result $result -ExitCode ($(if ($result.ok) { 0 } else { 2 }))
+    }
+    elseif ($Command -eq "continue") {
+        $result = Invoke-Continue -Repo $repo -TaskId $safeTaskId -RunnerRunIdValue $safeRunnerRunId
+        Write-Result -Result $result -ExitCode ($(if ($result.ok) { 0 } else { 2 }))
+    }
+    elseif ($Command -eq "stop") {
+        Write-Result -Result (Invoke-Stop -Repo $repo -TaskId $safeTaskId -RunnerRunIdValue $safeRunnerRunId)
+    }
+    elseif ($Command -eq "read") {
+        Write-Result -Result (Invoke-Read -Repo $repo -TaskId $safeTaskId -RunnerRunIdValue $safeRunnerRunId)
+    }
+}
+catch {
+    $failure = [pscustomobject]@{
+        ok = $false
+        command = $Command
+        task_id = $safeTaskId
+        error = $_.Exception.Message
+        task_lifecycle_unchanged = $true
+        no_task_done = $true
+        no_commit_or_push = $true
+    }
+    Write-Result -Result $failure -ExitCode 1
+}

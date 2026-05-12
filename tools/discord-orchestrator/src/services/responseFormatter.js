@@ -1231,6 +1231,71 @@ export function formatFollowUpReadPayload(result) {
   };
 }
 
+export function formatPcRunnerPayload(result) {
+  if (!result?.ok) {
+    const data = result?.data ?? {};
+    return {
+      content: "",
+      embeds: [{
+        title: "PC Runner 중단 또는 실패",
+        color: 0xc62828,
+        description: [
+          `${formatInlineCode(data.task_id || "unknown")}`,
+          cleanKo(result?.error || data.stop_reason || "Unknown failure."),
+        ].join("\n"),
+        fields: [
+          embedField("Human gate", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
+          embedField("안전 상태", [
+            `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
+            `task done 없음: ${koBool(data.no_task_done !== false)}`,
+            `commit/push 없음: ${koBool(data.no_commit_or_push !== false)}`,
+          ], true),
+        ],
+      }],
+    };
+  }
+
+  const data = result.data ?? {};
+  const run = data.runner_run ?? data.latest_runner_run ?? {};
+  const gate = data.human_gate || run.human_gate_state?.human_gate || "(none)";
+  const reports = data.report_ids ?? run.report_ids ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: pcRunnerTitle(result.command, data),
+      color: pcRunnerColor(data.status || run.status || data.stop_reason),
+      description: [
+        `${formatInlineCode(data.task_id || run.task_id || "unknown")}`,
+        data.runner_run_id || run.runner_run_id ? `runner: ${formatInlineCode(data.runner_run_id || run.runner_run_id)}` : "",
+        data.stop_reason || run.human_gate_state?.stop_reason ? `stop: ${formatInlineCode(data.stop_reason || run.human_gate_state?.stop_reason)}` : "",
+      ].filter(Boolean).join("\n"),
+      fields: [
+        embedField("상태", [
+          `workspace: ${koBool(data.workspace_exists ?? true)}`,
+          `run status: ${run.status || data.status || "unknown"}`,
+          `phase/step: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
+        ]),
+        embedField("Human gate", gate),
+        embedField("Reports", [
+          reports.verification_report_id ? `Verification: ${formatInlineCode(reports.verification_report_id)}` : "",
+          reports.completion_report_id ? `Completion: ${formatInlineCode(reports.completion_report_id)}` : "",
+          reports.completion_card_id ? `Card: ${formatInlineCode(reports.completion_card_id)}` : "",
+          reports.auto_approval_evaluation_id ? `AutoApproval: ${formatInlineCode(reports.auto_approval_evaluation_id)}` : "",
+          reports.follow_up_plan_id ? `Follow-up: ${formatInlineCode(reports.follow_up_plan_id)}` : "",
+        ].filter(Boolean)),
+        embedField("안전 상태", [
+          `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
+          `task done 없음: ${koBool(data.no_task_done !== false)}`,
+          `commit/push 없음: ${koBool(data.no_commit_or_push !== false)}`,
+        ], true),
+      ],
+      footer: {
+        text: data.runner_run_path || data.runner_manifest_path || data.runner_plan_path || "PC Runner artifact",
+      },
+    }],
+  };
+}
+
 function formatAuditFiles(files) {
   const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -1242,6 +1307,37 @@ function formatAuditFiles(files) {
     visible.push(`- +${values.length - 3}개 더 있음`);
   }
   return visible.join("\n");
+}
+
+function pcRunnerTitle(command, data) {
+  const labels = {
+    status: "PC Runner 상태",
+    plan: "PC Runner 계획 생성 완료",
+    start: "PC Runner 실행 결과",
+    continue: "PC Runner 이어서 실행 결과",
+    stop: "PC Runner 중단 기록",
+    read: "PC Runner 실행 기록",
+  };
+  if (command === "plan" && data?.can_start === false) {
+    return "PC Runner 계획 생성 완료: 시작 전 확인 필요";
+  }
+  return labels[command] || "PC Runner";
+}
+
+function pcRunnerColor(state) {
+  switch (state) {
+    case "stopped":
+    case "completion_review_required":
+    case "done_or_commit_decision":
+      return 0xf9a825;
+    case "completed":
+    case "ready":
+      return 0x2e7d32;
+    case "running":
+      return 0x1565c0;
+    default:
+      return 0x607d8b;
+  }
 }
 
 function completionColor(state) {

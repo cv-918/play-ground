@@ -45,6 +45,7 @@ verification_report.bat
 completion_report.bat
 completion_card.bat
 finalization_log.bat
+pc_runner.bat
 ```
 
 ---
@@ -430,6 +431,34 @@ new command automatically.
 The adapter writes runtime history under `_Temp\AIWorkflowRuntime\`. It does
 not approve tasks, mark tasks done, verify results, run arbitrary shell
 commands, commit, or push.
+
+---
+
+## pc_runner.bat
+
+Coordinates existing AIWorkflow primitives through one controlled runner
+entrypoint.
+
+Commands:
+
+```bat
+tools\aiworkflow\pc_runner.bat status task_id [--json]
+tools\aiworkflow\pc_runner.bat plan task_id [--profile validation] [--executor local_cli] [--json]
+tools\aiworkflow\pc_runner.bat start task_id [--profile validation] [--executor local_cli] [--json]
+tools\aiworkflow\pc_runner.bat continue task_id [--runner-run-id id] [--json]
+tools\aiworkflow\pc_runner.bat stop task_id [--runner-run-id id] [--json]
+tools\aiworkflow\pc_runner.bat read task_id [--runner-run-id id] [--json]
+```
+
+The runner writes plan, run, and checkpoint artifacts under:
+
+```text
+_Temp\AIWorkflowRuntime\tasks\<task_id>\runner\
+```
+
+It can advance approved work through safe automated substeps and stops at
+Human Director gates. It does not approve tasks, mark tasks done, create
+Backlog tasks, run arbitrary shell commands, commit, or push.
 
 ---
 
