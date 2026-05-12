@@ -105,7 +105,6 @@ export async function suggestTaskFromIntake(configOrInput = {}, maybeInput = nul
       reason: "No runtime config was provided.",
     });
   }
-
   const llmResult = await generateTaskDraftWithCodexCli(config, {
     text: ruleBased.interpreted_request,
     ruleBasedSuggestion: ruleBased,
@@ -159,7 +158,7 @@ export function suggestTaskFromIntakeRuleBased(input = {}) {
   const interpretedRequest = normalizeIntakeText(input.text);
   const category = classifyCategory(interpretedRequest);
   const kind = classifyKind(interpretedRequest, category);
-  const priority = classifyPriority(interpretedRequest, category);
+  const priority = classifyPriority(interpretedRequest, category, kind);
   const risk = classifyRisk(interpretedRequest, kind, category);
   const workflowPath = classifyWorkflowPath(category);
   const suggestedTitle = buildSuggestedTitle(interpretedRequest, category, kind);
@@ -223,6 +222,8 @@ function buildSuggestionFromDraft({ interpretedRequest, draft, ruleBased, llm })
     mergeUnique(draft.human_decision_gates, roleRecommendation.human_gates),
     interpretedRequest,
     draft.suggested_risk,
+    draft.category,
+    draft.kind,
   );
   const requiredValidation = normalizeValidation(
     mergeUnique(draft.required_validation, roleRecommendation.required_validation),
@@ -383,6 +384,8 @@ function classifyWorkflowPath(category) {
 function classifyKind(text, category) {
   if (category === "VAL") return "validation";
   if (category === "DOC") return "documentation";
+  if (category === "WF" && hasAny(text, TERMS.doc)) return "documentation";
+  if (category === "WF" && hasAny(text, TERMS.maintenance)) return "maintenance";
   if (category === "WF") return "automation";
   if (category === "UNITY" && hasAny(text, ["validation profile", "build profile", "검증 프로필", "빌드 프로필"])) return "validation";
   if (hasAny(text, TERMS.prototype)) return "prototype";
@@ -399,8 +402,9 @@ function classifyKind(text, category) {
   return "implementation";
 }
 
-function classifyPriority(text, category) {
+function classifyPriority(text, category, kind) {
   if (hasAny(text, TERMS.critical)) return "P0";
+  if (category === "WF" && ["documentation", "maintenance"].includes(kind)) return "P2";
   if (["WF", "UNITY"].includes(category) || hasAny(text, ["infrastructure", "high leverage", "important", "runtime", "save", "userdata", "중요", "런타임", "저장", "세이브", "유저데이터"])) return "P1";
   if (hasAny(text, ["optional", "later", "cleanup", "선택", "나중", "정리"])) return "P3";
   return "P2";
@@ -408,6 +412,13 @@ function classifyPriority(text, category) {
 
 function classifyRisk(text, kind, category) {
   if (hasAny(text, TERMS.highRisk)) return "high";
+  if (
+    category === "WF"
+    && ["documentation", "maintenance"].includes(kind)
+    && !hasAny(text, ["source behavior", "command behavior", "bot behavior", "workflow command", "discord command", "prompt generation", "/ai"])
+  ) {
+    return "low";
+  }
   if (kind === "implementation" || category === "WF" || hasAny(text, ["source behavior", "command behavior", "bot behavior", "workflow command", "소스 동작", "명령 동작", "봇 동작"])) return "medium";
   return "low";
 }
@@ -442,10 +453,18 @@ function getPathScopedReminders(text, category, kind) {
   return matches.filter(Boolean);
 }
 
-function normalizeGates(values, text, risk) {
+function normalizeGates(values, text, risk, category, kind) {
   const gates = [...arrayValues(values)];
   if (risk === "high") {
     addUnique(gates, "Human Decision Gate: high-risk schema/save/runtime/external-tool/destructive scope must be explicitly approved before implementation.");
+  }
+  if (
+    category === "WF"
+    && ["documentation", "maintenance"].includes(kind)
+    && !hasAny(text, ["command", "workflow command", "bot behavior", "discord command", "prompt generation"])
+  ) {
+    addUnique(gates, "Human Director must manually decide whether to create a Backlog task from this suggestion.");
+    return gates;
   }
   if (hasAny(text, [...TERMS.wf, "command", "명령"])) {
     addUnique(gates, "Human Decision Gate: workflow or Discord command behavior changes require explicit approval.");

@@ -6,6 +6,7 @@ const AUTO_PRIORITY_VALUES = new Set(["P2", "P3"]);
 const AUTO_RISK_VALUES = new Set(["low"]);
 const AUTO_CATEGORY_VALUES = new Set(["DOC", "VAL"]);
 const AUTO_KIND_VALUES = new Set(["documentation", "validation"]);
+const AUTO_WF_KIND_VALUES = new Set(["documentation", "maintenance"]);
 
 export async function runIntakeAutoHandoff(config, input = {}) {
   const policy = evaluateIntakeAutoHandoffPolicy(config, input);
@@ -86,7 +87,7 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
   if (!autoStartLowRisk) blockers.push("low_risk_auto_start_disabled");
   if (!AUTO_PRIORITY_VALUES.has(priority)) blockers.push("priority_requires_human_approval");
   if (!AUTO_RISK_VALUES.has(risk)) blockers.push("risk_requires_human_approval");
-  if (!AUTO_CATEGORY_VALUES.has(category) && !AUTO_KIND_VALUES.has(kind)) blockers.push("category_or_kind_requires_human_approval");
+  if (!isAutoHandoffClassAllowed(category, kind)) blockers.push("category_or_kind_requires_human_approval");
   if (clarifyingQuestions.length > 0) blockers.push("clarification_required");
   if (crossCheck.requires_human_review === true) blockers.push("rule_based_cross_check_requires_review");
   if (!execution.profile || !execution.executor) blockers.push("no_supported_runner_profile");
@@ -95,7 +96,7 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
     decision: blockers.length === 0 ? "auto_start_allowed" : "needs_human_approval",
     eligible: blockers.length === 0,
     reason: blockers.length === 0
-      ? "Deterministic policy allows low-risk documentation/validation intake handoff."
+      ? "Deterministic policy allows low-risk documentation/validation/WF-maintenance intake handoff."
       : blockers.join(", "),
     blockers,
     priority,
@@ -122,10 +123,23 @@ function chooseExecution(category, kind) {
     };
   }
 
+  if (category === "WF" && kind === "maintenance") {
+    return {
+      profile: "implementation",
+      executor: "codex_cli",
+    };
+  }
+
   return {
     profile: "",
     executor: "",
   };
+}
+
+function isAutoHandoffClassAllowed(category, kind) {
+  return AUTO_CATEGORY_VALUES.has(category)
+    || AUTO_KIND_VALUES.has(kind)
+    || (category === "WF" && AUTO_WF_KIND_VALUES.has(kind));
 }
 
 function buildApprovalNote(policy) {

@@ -31,7 +31,8 @@ A task is eligible only when all conditions are true:
 
 - priority is `P2` or `P3`
 - suggested risk is `low`
-- category is `DOC` or `VAL`, or kind is `documentation` or `validation`
+- category is `DOC` or `VAL`, kind is `documentation` or `validation`, or
+  category is `WF` with kind `documentation` or `maintenance`
 - the TaskDraft has no clarifying questions
 - the rule-based cross-check does not require human review
 - a supported PC Runner profile/executor can be selected
@@ -44,6 +45,9 @@ Current profile mapping:
 |---|---|---|
 | `DOC` or `documentation` | `documentation` | `codex_cli` |
 | `VAL` or `validation` | `validation` | `local_cli` |
+| `WF` + `maintenance` | `implementation` | `codex_cli` |
+
+`WF` + `documentation` follows the `documentation/codex_cli` route.
 
 For stable classification, intake text may start with an explicit category
 marker such as `DOC task:`, `VAL task:`, `WF task:`, `GAME task:`, or
@@ -60,9 +64,10 @@ The task must remain in human approval flow when any condition is true:
 
 - priority is `P0` or `P1`
 - suggested risk is `medium` or `high`
-- category is `WF`, `GAME`, `UNITY`, or another non-allowlisted category
-- kind is source implementation, game data, refactoring, maintenance, release,
-  or another non-allowlisted kind
+- category is `GAME`, `UNITY`, or another non-allowlisted category
+- category is `WF` with any kind other than `documentation` or `maintenance`
+- kind is source implementation, game data, refactoring, release, or another
+  non-allowlisted kind
 - clarifying questions exist
 - rule-based cross-check asks for human review
 - the selected runner profile/executor is unavailable
@@ -80,6 +85,8 @@ Auto-handoff must not:
 - approve P0/P1 or medium/high-risk work
 - approve game source, game data, schema, lifecycle, save/load, build setting,
   or workflow command behavior changes
+- approve workflow command behavior changes even when the request is otherwise
+  classified as WF maintenance
 - mark a task done
 - record finalization
 - apply auto approval
@@ -143,10 +150,14 @@ Required validation:
 - `node --check tools/discord-orchestrator/src/services/responseFormatter.js`
 - policy smoke: explicit `VAL task:` stays `VAL/validation` even when the text
   says no source or document changes
-- policy smoke: low-risk DOC is eligible and P1/WF is blocked
+- policy smoke: low-risk DOC is eligible
+- policy smoke: low-risk WF documentation and WF maintenance are eligible
+- policy smoke: P1/WF automation and workflow command behavior changes are
+  blocked
 - formatter smoke: runner stop reasons produce next commands
-- Discord smoke: `/ai intake` creates a low-risk DOC or VAL task and reaches
-  PC Runner without manual `set-active`, `approve`, or `runner start`
+- Discord smoke: `/ai intake` creates a low-risk DOC, VAL, or allowlisted WF
+  task and reaches PC Runner without manual `set-active`, `approve`, or
+  `runner start`
 
 Discord smoke may be performed by the Human Director because it uses the live
 Discord bot.
@@ -157,7 +168,8 @@ Discord bot.
 
 This layer is complete when:
 
-- low-risk DOC/VAL intake can auto-handoff to PC Runner
+- low-risk DOC/VAL and allowlisted low-risk WF intake can auto-handoff to PC
+  Runner
 - higher-risk tasks remain behind human approval
 - Discord response explains automatic actions and next review point
 - PC Runner response includes next commands for common stop reasons
