@@ -23,7 +23,7 @@ The current practical path is:
 7. Review/validate evidence
 8. /ai completion report
 9. /ai completion card
-10. /ai finalization accept/request-changes/reject/defer
+10. /ai finalization accept/accept-concerns/request-changes/reject/defer
 11. /ai task done id:<task_id> evidence:<evidence>
 12. Manual commit decision
 ```
@@ -53,6 +53,7 @@ These commands are part of normal task state operation:
 - `/ai completion report`
 - `/ai completion card`
 - `/ai finalization accept`
+- `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`

@@ -538,6 +538,7 @@ function New-RunnerPlan {
             "executor_not_ready",
             "text_encoding_guard_failed",
             "primitive_call_failed",
+            "finalization_not_accepted",
             "completion_review_required"
         )
         expected_artifacts = [ordered]@{
@@ -1484,6 +1485,13 @@ function Invoke-Start {
     }
 }
 
+function Test-AcceptedFinalizationState {
+    param([string]$State, [string]$Decision)
+    if ($State -eq "completion_accepted_pending_task_done" -and $Decision -eq "accept_completion") { return $true }
+    if ($State -eq "completion_accepted_with_concerns_pending_task_done" -and $Decision -eq "accept_with_concerns") { return $true }
+    return $false
+}
+
 function Invoke-Continue {
     param([string]$Repo, [string]$TaskId, [string]$RunnerRunIdValue)
     $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
@@ -1519,6 +1527,41 @@ function Invoke-Continue {
             runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
             stop_reason = "finalization_required"
             human_gate = $runState.human_gate_state.human_gate
+            task_lifecycle_unchanged = $true
+            no_task_done = $true
+            no_commit_or_push = $true
+        }
+    }
+
+    $finalizationRead = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\finalization_log.bat" -Arguments @("read", $TaskId, $finalizationLogId, "--json") -AllowFailure $true
+    $finalizationLog = $finalizationRead.data.finalization_log
+    $finalizationState = [string]$finalizationLog.finalization_state
+    $finalDecision = [string]$finalizationLog.final_decision
+    if (-not $finalizationRead.ok -or -not (Test-AcceptedFinalizationState -State $finalizationState -Decision $finalDecision)) {
+        $runState.status = "stopped"
+        $runState.current_phase = "human_gate"
+        $runState.current_step = "finalization_not_accepted"
+        $runState.human_gate_state = [ordered]@{
+            stop_reason = "finalization_not_accepted"
+            human_gate = "Record accept_completion or accept_with_concerns before continuing post-finalization runner steps."
+            completion_report_id = $completionReportId
+            finalization_log_id = $finalizationLogId
+            finalization_state = $finalizationState
+            final_decision = $finalDecision
+        }
+        $runState.updated_at = Get-NowText
+        $runPath = Save-RunnerRun -Paths $paths -RunState $runState
+        return [pscustomobject]@{
+            ok = $false
+            command = "continue"
+            task_id = $TaskId
+            runner_run_id = $runState.runner_run_id
+            runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+            stop_reason = "finalization_not_accepted"
+            human_gate = $runState.human_gate_state.human_gate
+            finalization_log_id = $finalizationLogId
+            finalization_state = $finalizationState
+            final_decision = $finalDecision
             task_lifecycle_unchanged = $true
             no_task_done = $true
             no_commit_or_push = $true

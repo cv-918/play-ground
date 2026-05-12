@@ -29,7 +29,7 @@ WF-408에서는 PC Runner가 생긴 뒤의 명령어 표면을 정리했습니�
 4. /ai runner plan
 5. /ai runner start
 6. 완료 카드 확인
-7. /ai finalization accept 또는 request-changes/reject/defer
+7. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
 8. /ai runner continue
 9. /ai task done 여부 결정
 10. 커밋/푸시 결정

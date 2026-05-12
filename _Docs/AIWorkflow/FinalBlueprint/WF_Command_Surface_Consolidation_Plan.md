@@ -23,6 +23,7 @@ unified PC Runner entrypoint is available:
 - `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
+- `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`

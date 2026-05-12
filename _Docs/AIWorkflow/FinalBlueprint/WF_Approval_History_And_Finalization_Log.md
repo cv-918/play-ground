@@ -17,8 +17,8 @@ ApprovalHistory records a human decision.
 
 It may:
 
-- Record `accept_completion`, `reject_completion`, `request_changes`, or
-  `defer_completion`.
+- Record `accept_completion`, `accept_with_concerns`, `reject_completion`,
+  `request_changes`, or `defer_completion`.
 - Reference the latest or selected CompletionReport.
 - Record the actor, decision time, source report state, and task context.
 - Update TaskRunState runtime projection fields.
@@ -81,14 +81,18 @@ Allowed decisions:
 
 ```text
 accept_completion
+accept_with_concerns
 reject_completion
 request_changes
 defer_completion
 ```
 
 `accept_completion` requires a CompletionReport whose readiness allows manual
-done review. Rejection, request-changes, and defer decisions may be recorded
-against blocked or incomplete evidence so the user decision remains auditable.
+done review. `accept_with_concerns` is allowed only for a `CONCERNS`
+CompletionReport in `needs_human_decision` state when blockers and failed
+checks are absent. Rejection, request-changes, and defer decisions may be
+recorded against blocked or incomplete evidence so the user decision remains
+auditable.
 
 ---
 
@@ -97,6 +101,7 @@ against blocked or incomplete evidence so the user decision remains auditable.
 ```text
 /ai finalization status id:<task_id>
 /ai finalization accept id:<task_id> [completion-report-id:<id>]
+/ai finalization accept-concerns id:<task_id> [completion-report-id:<id>]
 /ai finalization request-changes id:<task_id> [completion-report-id:<id>]
 /ai finalization reject id:<task_id> [completion-report-id:<id>]
 /ai finalization defer id:<task_id> [completion-report-id:<id>]
@@ -113,6 +118,7 @@ These commands record or display finalization artifacts only. They do not run
 | Decision | Finalization state | Next manual action |
 |---|---|---|
 | accept_completion | completion_accepted_pending_task_done | Human may run `/ai task done` if accepted |
+| accept_with_concerns | completion_accepted_with_concerns_pending_task_done | Human may run `/ai task done` after reviewing recorded concerns |
 | reject_completion | completion_rejected | Keep task open or block with a reason |
 | request_changes | changes_requested | Create or approve a focused fix task |
 | defer_completion | completion_deferred | Resume review after more evidence |

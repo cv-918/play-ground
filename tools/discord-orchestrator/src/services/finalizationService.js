@@ -7,6 +7,7 @@ const FINALIZATION_LOG_ID_PATTERN = /^finalization-[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 
 const DECISION_BY_COMMAND = Object.freeze({
   accept: "accept_completion",
+  "accept-concerns": "accept_with_concerns",
   reject: "reject_completion",
   "request-changes": "request_changes",
   defer: "defer_completion",

@@ -139,9 +139,9 @@ function Get-SafeTaskId {
 function Get-SafeDecision {
     param([string]$Value)
     $trimmed = $Value.Trim()
-    $allowed = @("accept_completion", "reject_completion", "request_changes", "defer_completion")
+    $allowed = @("accept_completion", "accept_with_concerns", "reject_completion", "request_changes", "defer_completion")
     if (-not ($allowed -contains $trimmed)) {
-        throw "Invalid decision. Use accept_completion, reject_completion, request_changes, or defer_completion."
+        throw "Invalid decision. Use accept_completion, accept_with_concerns, reject_completion, request_changes, or defer_completion."
     }
     return $trimmed
 }
@@ -318,11 +318,39 @@ function Resolve-CompletionReport {
 
 function Assert-DecisionAllowed {
     param([string]$Decision, $CompletionSource)
-    if ($Decision -ne "accept_completion") { return }
-    if (-not $CompletionSource.present) { throw "accept_completion requires a CompletionReport that can be reviewed." }
-    $readiness = $CompletionSource.report.completion_readiness
-    if ($readiness.can_mark_task_done_manually -ne $true) {
-        throw "CompletionReport is not ready for accept_completion. Current state: $($CompletionSource.report.completion_state)"
+
+    if ($Decision -eq "accept_completion") {
+        if (-not $CompletionSource.present) { throw "accept_completion requires a CompletionReport that can be reviewed." }
+        $readiness = $CompletionSource.report.completion_readiness
+        if ($readiness.can_mark_task_done_manually -ne $true) {
+            throw "CompletionReport is not ready for accept_completion. Current state: $($CompletionSource.report.completion_state)"
+        }
+        return
+    }
+
+    if ($Decision -eq "accept_with_concerns") {
+        if (-not $CompletionSource.present) { throw "accept_with_concerns requires a CompletionReport that can be reviewed." }
+        $report = $CompletionSource.report
+        $readiness = $report.completion_readiness
+        $summary = $report.verification_summary
+        $remainingRisks = $report.remaining_risks
+        $blockers = @(As-Array $remainingRisks.blockers)
+        $failedChecks = @(As-Array $remainingRisks.failed_checks)
+        $concerns = @(As-Array $remainingRisks.concerns)
+
+        if ([string]$summary.verdict -ne "CONCERNS" -or [string]$report.completion_state -ne "needs_human_decision") {
+            throw "accept_with_concerns requires a CONCERNS CompletionReport in needs_human_decision state."
+        }
+        if ($blockers.Count -gt 0 -or $failedChecks.Count -gt 0) {
+            throw "accept_with_concerns is not allowed when blockers or failed checks exist."
+        }
+        if ($concerns.Count -eq 0) {
+            throw "accept_with_concerns requires at least one reviewed concern."
+        }
+        if ($readiness.human_decision_required -ne $true) {
+            throw "accept_with_concerns requires a CompletionReport that explicitly requires a human decision."
+        }
+        return
     }
 }
 
@@ -330,6 +358,7 @@ function Get-FinalizationState {
     param([string]$Decision)
     switch ($Decision) {
         "accept_completion" { return "completion_accepted_pending_task_done" }
+        "accept_with_concerns" { return "completion_accepted_with_concerns_pending_task_done" }
         "reject_completion" { return "completion_rejected" }
         "request_changes" { return "changes_requested" }
         "defer_completion" { return "completion_deferred" }
@@ -344,6 +373,13 @@ function Get-NextCommands {
                 "/ai task done id:$TaskId evidence:FinalizationLog $FinalizationId accepted completion.",
                 "Review git status/diff before manual commit.",
                 "Proceed to WF-308 Auto Approval Policy after this workflow layer is committed."
+            )
+        }
+        "accept_with_concerns" {
+            return @(
+                "/ai task done id:$TaskId evidence:FinalizationLog $FinalizationId accepted reviewed concerns.",
+                "Review git status/diff and recorded concerns before manual commit.",
+                "Proceed to Auto Approval Policy and Follow-up Task generation; remaining concerns may become follow-up candidates."
             )
         }
         "request_changes" {
@@ -369,6 +405,19 @@ function Get-GitObservation {
         dirty = ($status.Count -gt 0)
         status_short = @($status | Select-Object -First 80)
         observed_at = Get-NowText
+    }
+}
+
+function Get-ReviewedConcernAcceptance {
+    param($CompletionSource, [string]$Decision)
+    if ($Decision -ne "accept_with_concerns" -or -not $CompletionSource.present) { return $null }
+    $risks = $CompletionSource.report.remaining_risks
+    return [ordered]@{
+        accepted_with_concerns = $true
+        accepted_concerns = @(As-Array $risks.concerns)
+        blocker_count = @(As-Array $risks.blockers).Count
+        failed_check_count = @(As-Array $risks.failed_checks).Count
+        guardrail = "Allowed only for CONCERNS reports with no blockers and no failed checks."
     }
 }
 
@@ -401,6 +450,7 @@ function New-ApprovalRecord {
                 missing_reason = $CompletionSource.missing_reason
             }
         }
+        reviewed_concern_acceptance = Get-ReviewedConcernAcceptance -CompletionSource $CompletionSource -Decision $Decision
         invariants = [ordered]@{
             task_lifecycle_unchanged = $true
             no_task_done = $true
@@ -439,6 +489,7 @@ function New-FinalizationLog {
         }
         state_files_updated = $false
         task_lifecycle_updates_applied = $false
+        reviewed_concern_acceptance = Get-ReviewedConcernAcceptance -CompletionSource $CompletionSource -Decision $decision
         backlog_changes = @()
         active_task_changes = @()
         project_status_changes = @()

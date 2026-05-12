@@ -1431,6 +1431,7 @@ function prefixItems(prefix, values) {
 function finalizationColor(state) {
   switch (state) {
     case "completion_accepted_pending_task_done":
+    case "completion_accepted_with_concerns_pending_task_done":
       return 0x2e7d32;
     case "changes_requested":
       return 0xef6c00;
@@ -1447,6 +1448,8 @@ function finalizationStateKo(state) {
   switch (state) {
     case "completion_accepted_pending_task_done":
       return "완료 수락됨, task done 대기";
+    case "completion_accepted_with_concerns_pending_task_done":
+      return "우려 수락됨, task done 대기";
     case "changes_requested":
       return "수정 요청됨";
     case "completion_rejected":

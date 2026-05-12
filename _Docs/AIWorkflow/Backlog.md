@@ -164,7 +164,7 @@ release
 | WF-409 | P1 | done | automation | Implement controlled runner implementation profile | Connect the regular `/ai runner` path to a controlled implementation profile that can route approved tasks through Codex CLI without manual prompt copy/paste while preserving approval, completion review, task done, and commit/push gates. | Discord -> PC Runner -> Codex CLI -> human review | done: "WF-409 validation passed. PC Runner implementation profile now writes a task-scoped implementation prompt, checks Codex CLI adapter readiness, only runs through codex_cli when local adapter config exists and is enabled, collects file watcher, result, diff, build/test, verification, completion report, and completion card artifacts, exposes implementation in Discord runner profile choices, and stops at Human Director completion review. Validation covered PowerShell parser, Node syntax, command schema smoke, implementation plan output, unsupported executor refusal, adapter-not-ready safe stop, git diff --check, forbidden path checks, and private/local tracking checks. No automatic approval, task done, Backlog creation, finalization, arbitrary shell execution, game source/data change, or runner commit/push automation was implemented." |
 | WF-410 | P1 | done | validation | Exercise controlled implementation runner on a small approved workflow task | Run a small approved workflow/documentation task through `/ai runner start profile:implementation` so the controlled Codex CLI execution path is proven end to end. Include any adapter fixes needed for real `codex exec` prompt delivery, local config smoke, runtime evidence collection, completion card review, and documented friction. | Discord -> PC Runner -> Codex CLI -> human review | done: "WF-410 validation passed with notes. The guarded Codex CLI adapter now supports stdin prompt delivery for `codex exec -`, Windows PowerShell-safe process argument handling, separated stdout/stderr capture, git diff capture that avoids line-ending warning pollution, and truthful external execution reporting. PC Runner implementation profile executed Codex CLI end-to-end, collected Codex/filewatch evidence, generated VerificationReport PASS_WITH_NOTES and Completion Card READY_WITH_NOTES, recorded FinalizationLog acceptance, continued through Auto Approval Policy evaluation and Follow-up Task Generator, and stopped at the manual done/commit gate. Notes: nested Codex executor prompt boundaries and Windows Korean/UTF-8 output should be hardened next. No automatic task approval, task done, Backlog follow-up creation, commit/push, release, deploy, or game source/data change was performed by runner automation." |
 | WF-411 | P1 | done | automation | Harden implementation runner prompt boundaries and UTF-8 output guard | Clarify executor-facing implementation prompts so nested Codex handles only tracked executor work while PC Runner owns runtime validation, and add guardrails/checks to prevent Korean companion documents or CLI stdout from being recorded as mojibake on Windows. | Discord -> PC Runner -> Codex CLI -> human review | done: "WF-411 validation passed with notes. PC Runner implementation prompts now separate executor-owned tracked edits from runner-owned runtime validation, include UTF-8/readable Korean requirements, and insert runner.text_encoding_guard after Codex CLI execution. The guard scans executor stdout/stderr, adapter-reported changed text files, and tracked Git worktree changed text files; stdout/changed-file findings block, while stderr findings are warning-only evidence. Full implementation runner execution reached completion_review_required with executor_ok=true, text_encoding_guard passed_with_warnings, blocking_finding_count=0, and VerificationReport CONCERNS only because of an expected large-file diff attention signal. Current finalization policy rejected accept_completion for needs_human_decision, so reviewed-concern acceptance is tracked as WF-412. No automatic task approval, task done command, Backlog follow-up creation by runner automation, release, deploy, or game source/data change was performed." |
-| WF-412 | P1 | todo | automation | Implement reviewed-concern finalization path | Add an explicit audited path for accepting or resolving CompletionReport CONCERNS when the concern has been reviewed and is expected, such as large-file diff in an approved workflow-tool task. Preserve Human Director authority and do not allow blocked or failed verification to be accepted silently. | Discord -> PC Runner -> FinalizationLog -> human review | proposed: WF-411 showed that the current finalization tool cannot record accept_completion for needs_human_decision even when the only concern is an expected reviewed attention signal. |
+| WF-412 | P1 | done | automation | Implement reviewed-concern finalization path | Add an explicit audited path for accepting or resolving CompletionReport CONCERNS when the concern has been reviewed and is expected, such as large-file diff in an approved workflow-tool task. Preserve Human Director authority and do not allow blocked or failed verification to be accepted silently. | Discord -> PC Runner -> FinalizationLog -> human review | done: "WF-412 validation passed. Added accept_with_concerns as an explicit audited FinalizationLog decision for CONCERNS CompletionReports in needs_human_decision state when blockers and failed checks are absent. PC Runner continue now refuses request_changes/reject/defer/missing finalization and proceeds only after accept_completion or accept_with_concerns. Discord /ai finalization accept-concerns was added, command schema registered, and the managed bot restarted cleanly. WF-411 runtime smoke confirmed accept_completion still rejects needs_human_decision, request_changes stops runner continue at finalization_not_accepted, accept_with_concerns records reviewed concerns, and runner continue reaches done_or_commit_decision. No task done automation, automatic commit/push, release, deploy, or game source/data change was implemented." |
 | WF-20260511-142009 | P1 | todo | automation | Workflow task: Verify /ai intake creates TaskDraft via Codex CLI and Backlog task | The request is to confirm the Discord AIWorkflow `/ai intake` flow invokes Codex CLI to produce a valid TaskDraft and then creates a Backlog task without automatic approval or unrelated execution. | Discord intake -> Codex CLI TaskDraft -> human review | codex intake draft: risk=medium; workflow_path=discord_task_management; needs review; has clarifying questions; validation pending human approval |
 | WF-20260511-145547 | P1 | done | validation | Validate Discord intake embed readability in Backlog creation response | Discord intake embed 출력 양식이 실제 Backlog 생성 응답에서도 읽기 좋은지 검증하는 WF 검증 작업이다. 구현 변경 없이 생성된 task의 LLM 접수 상태, 필수 검증 요약, 안전 상태 표시가 사람이 읽고 판단하기 충분한지 확인해야 한다. | Discord intake -> Codex CLI TaskDraft -> human review | done: Discord intake embed readability smoke accepted. Intake, intake-test, intake-engine status, and review-intake embed payload checks passed; bot restarted cleanly. |
 
@@ -176,17 +176,16 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-WF-412: Implement reviewed-concern finalization path
+GAME-001: Runtime validate GameDataLoader after JSON syntax smoke check
 ```
 
 Reason:
 
 ```text
-WF-411 hardened the implementation runner prompt and text encoding guard, but
-the full runner smoke exposed the next practical bottleneck: reviewed
-CompletionReport concerns cannot currently be accepted through FinalizationLog.
-The next useful step is to add an explicit audited reviewed-concern path without
-weakening blocker/failed-check protections.
+The regular runner path now supports controlled implementation, text encoding
+guarding, completion review, reviewed-concern finalization, auto-approval
+evaluation, and follow-up generation. The next useful step is to use this path
+on a real but bounded game validation task.
 ```
 
 ---
@@ -234,15 +233,15 @@ WF-201 through WF-309 done
 -> WF-409 controlled implementation runner profile done
 -> WF-410 controlled implementation runner smoke done
 -> WF-411 implementation runner prompt boundary and UTF-8 output guard done
+-> WF-412 reviewed-concern finalization path done
 ```
 
 Current target:
 
 ```text
-Reviewed-concern finalization path
+First real game-task pilot through the regular runner workflow
 ```
 
 Discord integration is active. The regular surface is now runner-centered. The
-next automation work is to allow explicit audited acceptance of reviewed
-completion concerns while preserving hard stops for blockers, failed checks, and
-unreviewed risk.
+next step is to exercise the regular path on a bounded game validation task so
+the workflow can stabilize under real game-project evidence.

@@ -51,7 +51,7 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 4. /ai runner plan id:<task_id>
 5. /ai runner start id:<task_id>
 6. 완료 카드와 runner 결과 확인
-7. /ai finalization accept 또는 request-changes/reject/defer
+7. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
 8. /ai runner continue id:<task_id>
 9. /ai task done id:<task_id> evidence:<완료 근거>
 10. 커밋/푸시 결정
@@ -85,6 +85,7 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 - `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
+- `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`

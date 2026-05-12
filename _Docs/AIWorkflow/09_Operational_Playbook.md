@@ -36,8 +36,8 @@ For meaningful code/data/runtime work:
 5. Review the PC Runner plan with `/ai runner plan`.
 6. Execute the regular runner path with `/ai runner start`.
 7. Review the Completion Card and runner artifacts.
-8. Record finalization with `/ai finalization accept`, `request-changes`,
-   `reject`, or `defer`.
+8. Record finalization with `/ai finalization accept`, `accept-concerns`,
+   `request-changes`, `reject`, or `defer`.
 9. Continue post-finalization runner steps with `/ai runner continue` when
    follow-up and policy artifacts are needed.
 10. Fix review issues or create follow-up tasks when required.

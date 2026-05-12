@@ -421,8 +421,9 @@ WF-407 implementation should be considered complete only when:
 5. Runner generates stable IDs for all child artifacts.
 6. Runner produces VerificationReport and Completion Card for a successful smoke.
 7. Runner stops before Human Director completion decision.
-8. Runner can continue after a recorded finalization decision to produce
-   auto-approval evaluation and follow-up plan.
+8. Runner can continue only after an accepted finalization decision
+   (`accept_completion` or `accept_with_concerns`) to produce auto-approval
+   evaluation and follow-up plan.
 9. Runner never marks task done, commits, pushes, or creates Backlog tasks
    automatically.
 10. Local config stays under `_Local/`; runtime artifacts stay under `_Temp/`;

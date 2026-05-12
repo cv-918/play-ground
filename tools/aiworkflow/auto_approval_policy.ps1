@@ -387,7 +387,8 @@ function Build-PolicyEvaluation {
     $finalization = $FinalizationSource.log
     $completionReady = $CompletionSource.present -and $completion.completion_readiness.can_mark_task_done_manually -eq $true
     $completionReadyWithoutNotes = $CompletionSource.present -and [string]$completion.completion_readiness.level -eq "READY"
-    $finalizationAccepted = $FinalizationSource.present -and [string]$finalization.final_decision -eq "accept_completion"
+    $acceptedDecisions = @("accept_completion", "accept_with_concerns")
+    $finalizationAccepted = $FinalizationSource.present -and ($acceptedDecisions -contains [string]$finalization.final_decision)
     $approvalPresent = $FinalizationSource.present -and $null -ne $FinalizationSource.approval
     $lowRiskPriority = @("P2", "P3") -contains $priority
     $safeKind = Test-LowRiskKind -Kind $kind

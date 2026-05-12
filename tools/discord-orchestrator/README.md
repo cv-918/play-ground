@@ -159,6 +159,7 @@ Do not commit `_Local/`.
 /ai completion card
 /ai finalization status
 /ai finalization accept
+/ai finalization accept-concerns
 /ai finalization request-changes
 /ai finalization reject
 /ai finalization defer
@@ -182,7 +183,7 @@ Use this path for normal task operation:
 4. /ai runner plan
 5. /ai runner start
 6. Review the Completion Card
-7. /ai finalization accept or /ai finalization request-changes
+7. /ai finalization accept, accept-concerns, or request-changes
 8. /ai runner continue
 9. /ai task done, only after human completion decision
 10. Review and commit manually

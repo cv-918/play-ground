@@ -21,6 +21,7 @@ WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니
 - `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
+- `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`

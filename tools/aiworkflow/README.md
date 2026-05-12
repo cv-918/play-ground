@@ -633,14 +633,18 @@ Allowed decisions:
 
 ```text
 accept_completion
+accept_with_concerns
 reject_completion
 request_changes
 defer_completion
 ```
 
 `accept_completion` requires a CompletionReport that is ready for manual done
-review. Other decisions can be recorded against blocked or incomplete evidence
-so the rejection, requested changes, or deferral remains auditable.
+review. `accept_with_concerns` is an explicit reviewed-concern acceptance for a
+`CONCERNS` CompletionReport in `needs_human_decision` state, and is allowed only
+when blockers and failed checks are absent. Other decisions can be recorded
+against blocked or incomplete evidence so the rejection, requested changes, or
+deferral remains auditable.
 
 The command writes runtime artifacts under `_Temp`, updates only TaskRunState
 approval/finalization projection fields, and appends a display-only progress

@@ -164,7 +164,7 @@ WF-407 구현은 최소한 다음을 만족해야 합니다.
 - 모든 하위 산출물 ID를 Runner가 직접 생성
 - 성공 smoke에서 VerificationReport와 Completion Card 생성
 - Completion Card 이후 사용자 완료 판단 지점에서 정지
-- finalization 이후 continue로 auto approval evaluation과 follow-up plan 생성 가능
+- `accept_completion` 또는 `accept_with_concerns` finalization 이후에만 continue로 auto approval evaluation과 follow-up plan 생성 가능
 - task done, commit, push, Backlog task 생성은 자동으로 하지 않음
 - `_Temp`, `_Local`, `node_modules`, `.env`, local config가 추적되지 않음
 

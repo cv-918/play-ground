@@ -98,7 +98,7 @@ warning rules fail:
 | not_blocked_status | status is not blocked or deferred |
 | completion_report_ready | CompletionReport allows manual done review |
 | completion_without_notes | CompletionReport readiness is READY without notes |
-| human_finalization_recorded | FinalizationLog records `accept_completion` |
+| human_finalization_recorded | FinalizationLog records `accept_completion` or `accept_with_concerns` |
 | approval_history_present | FinalizationLog links to an ApprovalHistory record |
 
 If blocking rules pass but `completion_without_notes` fails, the decision is

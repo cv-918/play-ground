@@ -30,7 +30,7 @@
 7. 리뷰와 검증
 8. /ai completion report
 9. /ai completion card
-10. /ai finalization accept/request-changes/reject/defer
+10. /ai finalization accept/accept-concerns/request-changes/reject/defer
 11. /ai task done id:<task_id> evidence:<evidence>
 12. 수동 커밋 결정
 ```
@@ -60,6 +60,7 @@
 - `/ai completion report`
 - `/ai completion card`
 - `/ai finalization accept`
+- `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`

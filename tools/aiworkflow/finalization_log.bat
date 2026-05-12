@@ -104,5 +104,5 @@ echo Usage:
 echo   tools\aiworkflow\finalization_log.bat status task_id [--json]
 echo   tools\aiworkflow\finalization_log.bat record task_id decision [completion_report_id] [approval_record_id] [finalization_log_id] [actor] [--json]
 echo   tools\aiworkflow\finalization_log.bat read task_id [finalization_log_id] [--json]
-echo Decisions: accept_completion, reject_completion, request_changes, defer_completion
+echo Decisions: accept_completion, accept_with_concerns, reject_completion, request_changes, defer_completion
 exit /b 1

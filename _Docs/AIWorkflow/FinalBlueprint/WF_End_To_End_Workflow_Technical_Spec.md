@@ -77,7 +77,7 @@ flowchart TD
   K --> L["VerificationReport produces verdict"]
   L --> M["CompletionReport and Completion Card summarize readiness"]
   M --> N{"Human completion decision"}
-  N -->|Accept| O["FinalizationLog records accept_completion"]
+  N -->|Accept| O["FinalizationLog records accept_completion or accept_with_concerns"]
   N -->|Request changes| P["FinalizationLog records request_changes"]
   N -->|Reject or defer| Q["FinalizationLog records reject/defer"]
   O --> R["/ai task done records lifecycle completion"]
@@ -102,7 +102,7 @@ steps remained manual or semi-manual:
 6. /ai result audit id:<task_id> result:<summary>
 7. Generate or inspect verification/completion artifacts when available
 8. /ai completion card id:<task_id>
-9. /ai finalization accept/request-changes/reject/defer
+9. /ai finalization accept/accept-concerns/request-changes/reject/defer
 10. /ai task done id:<task_id> evidence:<evidence>
 11. Human commit/push decision
 ```
@@ -121,7 +121,7 @@ After WF-407, the normal Human Director path is:
 4. /ai runner plan
 5. /ai runner start
 6. review Completion Card
-7. /ai finalization accept/request-changes/reject/defer
+7. /ai finalization accept/accept-concerns/request-changes/reject/defer
 8. /ai runner continue
 9. approve task done and commit/push only if needed
 ```

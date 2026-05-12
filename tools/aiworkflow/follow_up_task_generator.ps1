@@ -381,7 +381,8 @@ function Build-FollowUpPlan {
     }
 
     $candidateCount = $candidates.Count
-    $planState = if ($candidateCount -gt 0) { "follow_up_recommended" } elseif ($CompletionSource.present -and $FinalizationSource.present -and [string]$finalization.final_decision -eq "accept_completion") { "no_follow_up_recommended" } else { "insufficient_follow_up_signal" }
+    $acceptedDecisions = @("accept_completion", "accept_with_concerns")
+    $planState = if ($candidateCount -gt 0) { "follow_up_recommended" } elseif ($CompletionSource.present -and $FinalizationSource.present -and ($acceptedDecisions -contains [string]$finalization.final_decision)) { "no_follow_up_recommended" } else { "insufficient_follow_up_signal" }
     $priority = if (@($candidates | Where-Object { $_.suggested_priority -eq "P1" }).Count -gt 0) { "P1" } elseif ($candidateCount -gt 0) { "P2" } else { "P3" }
 
     return [ordered]@{

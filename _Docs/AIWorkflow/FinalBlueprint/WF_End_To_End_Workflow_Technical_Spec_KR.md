@@ -74,7 +74,7 @@ flowchart TD
   K --> L["VerificationReport가 verdict 생성"]
   L --> M["CompletionReport/Card가 완료 준비 상태 요약"]
   M --> N{"사용자 완료 결정"}
-  N -->|수락| O["FinalizationLog에 accept_completion 기록"]
+  N -->|수락| O["FinalizationLog에 accept_completion 또는 accept_with_concerns 기록"]
   N -->|수정 요청| P["FinalizationLog에 request_changes 기록"]
   N -->|반려 또는 보류| Q["FinalizationLog에 reject/defer 기록"]
   O --> R["/ai task done으로 lifecycle 완료 기록"]
@@ -99,7 +99,7 @@ WF-407에서 통합 PC Runner 진입점이 구현되기 전에는 일부 단계�
 6. /ai result audit id:<task_id> result:<summary>
 7. 가능한 경우 verification/completion artifact 생성 또는 확인
 8. /ai completion card id:<task_id>
-9. /ai finalization accept/request-changes/reject/defer
+9. /ai finalization accept/accept-concerns/request-changes/reject/defer
 10. /ai task done id:<task_id> evidence:<evidence>
 11. 사용자 커밋/푸시 결정
 ```
@@ -117,7 +117,7 @@ WF-407 이후 정규 목표 경로는 다음입니다.
 4. /ai runner plan
 5. /ai runner start
 6. Completion Card 리뷰
-7. /ai finalization accept/request-changes/reject/defer
+7. /ai finalization accept/accept-concerns/request-changes/reject/defer
 8. /ai runner continue
 9. 필요한 경우 task done과 커밋/푸시 승인
 ```

@@ -394,6 +394,23 @@ export function buildAiCommand() {
         )
         .addSubcommand((sub) =>
           sub
+            .setName("accept-concerns")
+            .setDescription("검토한 CONCERNS 완료 보고서를 우려 수락으로 기록합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("사용할 CompletionReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
             .setName("request-changes")
             .setDescription("완료 검토 결과 수정 필요로 기록합니다")
             .addStringOption((option) =>
@@ -1224,7 +1241,7 @@ async function handleFinalizationCommand(interaction, config, subcommand) {
     return;
   }
 
-  if (["accept", "reject", "request-changes", "defer"].includes(subcommand)) {
+  if (["accept", "accept-concerns", "reject", "request-changes", "defer"].includes(subcommand)) {
     const result = await recordFinalizationDecision(config, {
       id,
       command: subcommand,
