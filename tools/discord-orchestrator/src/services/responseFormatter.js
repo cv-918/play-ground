@@ -1386,6 +1386,80 @@ export function formatPcRunnerPayload(result) {
   };
 }
 
+export function formatRunnerAcceptCompletionPayload(result) {
+  const data = result?.data ?? {};
+  const runnerResult = data.runner_continue ?? {};
+  const runnerData = runnerResult.data ?? {};
+  const run = runnerData.runner_run ?? {};
+  const reports = runnerData.report_ids ?? run.report_ids ?? data.report_ids ?? {};
+  const stopReason = runnerData.stop_reason || run.human_gate_state?.stop_reason;
+  const taskId = data.task_id || runnerData.task_id || run.task_id;
+  const runnerRunId = data.runner_run_id || runnerData.runner_run_id || run.runner_run_id;
+  const nextCommands = buildPcRunnerNextCommands({
+    taskId,
+    command: "continue",
+    stopReason,
+    reports,
+    runnerRunId,
+  });
+
+  if (!result?.ok) {
+    return {
+      content: "",
+      embeds: [{
+        title: "Completion 승인/Runner 계속 진행 실패",
+        color: 0xc62828,
+        description: [
+          `${formatInlineCode(taskId || "unknown")}`,
+          cleanKo(result?.error || "Unknown failure."),
+        ].join("\n"),
+        fields: [
+          embedField("진행 단계", result?.stage || "unknown"),
+          embedField("FinalizationLog", data.finalization_log_id ? formatInlineCode(data.finalization_log_id) : "(none)"),
+          embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
+          embedField("안전 상태", [
+            "task done 없음",
+            "commit/push 없음",
+          ], true),
+        ],
+      }],
+    };
+  }
+
+  return {
+    content: "",
+    embeds: [{
+      title: "Completion 승인 후 Runner 계속 진행 완료",
+      color: pcRunnerColor(runnerData.status || run.status || stopReason),
+      description: [
+        `${formatInlineCode(taskId || "unknown")}`,
+        runnerRunId ? `Runner: ${formatInlineCode(runnerRunId)}` : "",
+        stopReason ? `중단 이유: ${formatInlineCode(stopReason)}` : "",
+      ].filter(Boolean).join("\n"),
+      fields: [
+        embedField("처리 내용", [
+          `FinalizationLog: ${formatInlineCode(data.finalization_log_id || "unknown")}`,
+          `decision: ${data.decision || "accept"}`,
+          `runner continue: ${koBool(runnerResult.ok === true)}`,
+        ]),
+        embedField("현재 위치", [
+          `run 상태: ${run.status || runnerData.status || "unknown"}`,
+          `단계: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
+        ]),
+        embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
+        embedField("안전 상태", [
+          `task lifecycle 변경 없음: ${koBool(runnerData.task_lifecycle_unchanged !== false)}`,
+          `task done 없음: ${koBool(runnerData.no_task_done !== false)}`,
+          `commit/push 없음: ${koBool(runnerData.no_commit_or_push !== false)}`,
+        ], true),
+      ],
+      footer: {
+        text: runnerData.runner_run_path || "PC Runner artifact",
+      },
+    }],
+  };
+}
+
 function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runnerRunId, canStart }) {
   const id = String(taskId ?? "").trim() || "<task_id>";
   const completionReportId = reports?.completion_report_id;
@@ -1416,9 +1490,8 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
           ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
           : `/ai completion card id:${id}`,
         completionReportId
-          ? `/ai finalization accept id:${id} completion-report-id:${completionReportId}`
-          : `/ai finalization accept id:${id}`,
-        `/ai runner continue id:${id}${runArg}`,
+          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg}`
+          : `/ai runner accept-completion id:${id}${runArg}`,
       ];
     case "finalization_required":
       return [
@@ -1426,9 +1499,8 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
           ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
           : `/ai completion card id:${id}`,
         completionReportId
-          ? `/ai finalization accept id:${id} completion-report-id:${completionReportId}`
-          : `/ai finalization accept id:${id}`,
-        `/ai runner continue id:${id}${runArg}`,
+          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg}`
+          : `/ai runner accept-completion id:${id}${runArg}`,
       ];
     case "finalization_not_accepted":
       return [

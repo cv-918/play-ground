@@ -18,6 +18,7 @@ import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision 
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
 import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, stopPcRunner } from "../services/pcRunnerService.js";
+import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -45,6 +46,7 @@ import {
   formatFollowUpReadPayload,
   formatFollowUpStatusPayload,
   formatPcRunnerPayload,
+  formatRunnerAcceptCompletionPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -81,6 +83,7 @@ const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
 const RUNNER_PROFILE_CHOICES = ["validation", "implementation", "documentation"].map((value) => ({ name: value, value }));
 const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
+const RUNNER_COMPLETION_DECISION_CHOICES = ["accept", "accept-concerns"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
   return new SlashCommandBuilder()
@@ -676,6 +679,36 @@ export function buildAiCommand() {
                 .setName("runner-run-id")
                 .setDescription("RunnerRun ID, 없으면 최신 run")
                 .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("accept-completion")
+            .setDescription("완료 검토 승인과 Runner 계속 진행을 한 번에 처리합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("CompletionReport ID, 없으면 최신 report")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("runner-run-id")
+                .setDescription("RunnerRun ID, 없으면 최신 run")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("decision")
+                .setDescription("완료 승인 방식, 기본값 accept")
+                .setRequired(false)
+                .addChoices(...RUNNER_COMPLETION_DECISION_CHOICES),
             ),
         )
         .addSubcommand((sub) =>
@@ -1324,6 +1357,9 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
     profile: interaction.options.getString("profile"),
     executor: interaction.options.getString("executor"),
     runnerRunId: interaction.options.getString("runner-run-id"),
+    completionReportId: interaction.options.getString("completion-report-id"),
+    decision: interaction.options.getString("decision"),
+    actor: interaction.user?.id,
   };
 
   if (subcommand === "status") {
@@ -1343,6 +1379,11 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
 
   if (subcommand === "continue") {
     await interaction.editReply(formatPcRunnerPayload(await continuePcRunner(config, input)));
+    return;
+  }
+
+  if (subcommand === "accept-completion") {
+    await interaction.editReply(formatRunnerAcceptCompletionPayload(await acceptCompletionAndContinueRunner(config, input)));
     return;
   }
 

@@ -162,6 +162,25 @@ The `documentation` profile uses the same guarded Codex CLI adapter path as
 documentation-only changes unless the approved task says otherwise. It lets
 low-risk DOC auto-handoff avoid pretending it is general implementation work.
 
+## Completion Review Shortcut
+
+When a runner stops at:
+
+```text
+completion_review_required
+```
+
+the normal safe shortcut is:
+
+```text
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
+```
+
+This command records the accepted FinalizationLog first and then calls runner
+continue. It does not mark the task done, commit, push, or bypass the completion
+review decision; it only combines the two approved post-review steps into one
+Discord command.
+
 ## Validation Evidence
 
 WF-409 validation covered:

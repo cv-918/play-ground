@@ -271,6 +271,22 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 ### Completion Card 확인
 
+### Completion review 단축
+
+Runner가 `completion_review_required`에서 멈추면 완료 카드를 확인한 뒤
+아래 명령 하나로 FinalizationLog 기록과 runner continue를 같이 처리할 수
+있습니다.
+
+```text
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
+```
+
+concern을 남기고 승인하려면:
+
+```text
+/ai runner accept-completion id:<task_id> decision:accept-concerns completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
+```
+
 ```text
 /ai completion card id:<task_id>
 ```
