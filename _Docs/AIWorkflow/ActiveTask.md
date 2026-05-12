@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-404
-title: Write Human Director workflow operation guide
+task_id: WF-405
+title: Run end-to-end workflow smoke and validation pack
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,20 +26,17 @@ last_updated: 2026-05-12
 
 ## Goal
 
-Provide Korean Human Director-facing versions of the direct-read Phase 4
-documents and write a practical operation guide for requesting work, approving
-work, monitoring progress, reviewing completion, handling follow-ups, and
-deciding commits.
+Run end-to-end workflow smoke and validation pack
 
 ---
 
 ## Tool Route
 
 ```yaml
-discord: user direction and workflow context
-human: review Korean guide usability
-codex: approved for bounded Korean documentation and Backlog/ActiveTask updates
-validation: documentation diff review, git diff --check, and status review
+discord: task selection command
+human: review and approval
+codex: only after explicit approval for implementation
+validation: pending WF-403/WF-404 guidance
 ```
 
 ---
@@ -47,13 +44,14 @@ validation: documentation diff review, git diff --check, and status review
 ## Files In Scope
 
 ```text
+_Docs/AIWorkflow/FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report.md
+_Docs/AIWorkflow/FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report_KR.md
+_DevLog/WorkLog/2026-05-12_WF-405_End_To_End_Workflow_Smoke.md
 _Docs/AIWorkflow/Backlog.md
-_Docs/AIWorkflow/ActiveTask.md
 _Docs/AIWorkflow/README.md
-_Docs/AIWorkflow/FinalBlueprint/*_KR.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md
-_DevLog/WorkLog/
+_Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Implementation_Roadmap.md
 ```
 
 ---
@@ -61,8 +59,7 @@ _DevLog/WorkLog/
 ## Human Action Required
 
 ```text
-1. Read WF_Human_Director_Operation_Guide_KR.md first.
-2. Review the KR companion docs only when deciding command cleanup, approval boundaries, or runner behavior.
+Review WF-405 PASS_WITH_NOTES evidence if needed. No blocking human decision remains for WF-405.
 ```
 
 ---
@@ -70,8 +67,24 @@ _DevLog/WorkLog/
 ## Validation Plan
 
 ```text
-Review the Korean documentation diff, verify that the task is documentation-only,
-run git diff --check, and confirm that the next recommended task is WF-405.
+Completed:
+- Local CLI node_version execution exited 0 and recorded stdout v24.15.0.
+- JSON smoke check parsed 11 files and failed 0.
+- Result Collector gathered 1 session, 2 evidence records, 2 changed files, and 2 diff snapshots.
+- VerificationReport verdict: PASS_WITH_NOTES.
+- Auto Approval Policy decision: human_approval_required for P1 task.
+- Follow-up Task Generator produced a reviewable candidate without creating a Backlog task.
+```
+
+---
+
+## Latest Status Note
+
+```text
+status: done
+note: WF-405 smoke validation completed with PASS_WITH_NOTES. The current runtime primitives connect end-to-end. Gaps found: build/test IDs require bt- prefix, follow_up_task_generator.bat positional generate rejected finalization id while .ps1 named parameters succeeded, and progress/heartbeat is currently surfaced through Session Supervisor/Result Collector rather than a standalone wrapper.
+updated_at: 2026-05-12
+source: Codex App WF-405 smoke validation
 ```
 
 ---
@@ -79,7 +92,7 @@ run git diff --check, and confirm that the next recommended task is WF-405.
 ## Next Recommended Task
 
 ```text
-WF-405 Run end-to-end workflow smoke and validation pack
+WF-406 Design unified PC Runner orchestration entrypoint
 ```
 
 ---
@@ -89,10 +102,9 @@ WF-405 Run end-to-end workflow smoke and validation pack
 ```text
 [x] Task scope reviewed
 [x] Required approvals recorded
-[x] Korean direct-read companion documents created
-[x] Human Director operation guide created
-[x] README document map updated
-[x] Review completed
+[x] Implementation completed within approved scope, if applicable
+[x] Review completed, if applicable
 [x] Validation completed or explicitly deferred
-[ ] Commit/push completed if validation does not require a new Human Director decision
+[x] Dev Log created for meaningful work
+[x] User decides whether to commit
 ```

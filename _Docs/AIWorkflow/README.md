@@ -75,6 +75,8 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec.md` | Defines WF-403 end-to-end technical workflow specification, visualization, user intervention matrix, state/artifact paths, workflow variants, approval stops, and WF-404 handoff |
 | `FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec_KR.md` | Korean Human Director companion for the end-to-end technical workflow specification |
 | `FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md` | Practical Korean Human Director guide for requesting work, approving work, monitoring progress, reviewing completion, and deciding commits |
+| `FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report.md` | Records WF-405 end-to-end smoke validation evidence, verdict, gaps, and WF-406 handoff |
+| `FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report_KR.md` | Korean Human Director companion for the WF-405 smoke validation report |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |
