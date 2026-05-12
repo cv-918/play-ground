@@ -415,6 +415,7 @@ export function formatIntakeTaskCreated(result) {
   const draft = data.draft ?? {};
   const suggestion = data.suggestion ?? {};
   const safety = data.safety ?? {};
+  const autoHandoff = data.auto_handoff ?? {};
   const testMode = data.test_mode === true;
 
   return [
@@ -432,16 +433,20 @@ export function formatIntakeTaskCreated(result) {
     `권장 역할: ${summarizeList(draft.recommended_roles, 4)}`,
     `필수 검증: ${summarizeIntakeValidation(draft.required_validation)}`,
     `LLM 접수: ${formatLlmIntakeStatus(suggestion)}`,
+    `자동 진행: ${formatAutoHandoffInline(autoHandoff)}`,
     "",
-    "**다음 수동 조치**",
-    koText("Review the created Backlog task, edit it if needed, then approve or set active manually."),
+    autoHandoff.eligible ? "**다음 확인 지점**" : "**다음 수동 조치**",
+    formatAutoHandoffNextAction(autoHandoff),
     "",
     "**안전 상태**",
     `Backlog.md 업데이트: ${koBool(safety.backlog_updated)}`,
     `ActiveTask.md 업데이트: ${koBool(safety.active_task_updated)}`,
     `task 승인: ${koBool(safety.approved)}`,
+    `PC Runner 시작: ${koBool(safety.pc_runner_started)}`,
     `Codex 접수 실행: ${koBool(safety.codex_intake_executed)}`,
-    koText("No agents or implementation Codex run was executed."),
+    safety.implementation_codex_executed
+      ? "PC Runner를 통해 구현용 Codex handoff가 시작되었습니다."
+      : koText("No agents or implementation Codex run was executed."),
   ].filter((line) => line !== "").join("\n");
 }
 
@@ -455,6 +460,7 @@ export function formatIntakeTaskCreatedPayload(result) {
   const draft = data.draft ?? {};
   const suggestion = data.suggestion ?? {};
   const safety = data.safety ?? {};
+  const autoHandoff = data.auto_handoff ?? {};
   const testMode = data.test_mode === true;
   const taskId = task.id ?? "unknown";
   const title = task.item ?? draft.title ?? "unknown";
@@ -482,13 +488,17 @@ export function formatIntakeTaskCreatedPayload(result) {
         embedField("필수 검증", summarizeValidationLines(draft.required_validation).join("\n")),
         embedField("다음 조치", testMode
           ? "이 화면의 가독성만 확인하세요. Backlog task는 생성되지 않았습니다."
-          : "생성된 Backlog task를 검토하고 필요하면 수정한 뒤, 수동으로 approve 또는 set-active 하세요."),
+          : formatAutoHandoffNextAction(autoHandoff)),
+        embedField("자동 진행", formatAutoHandoffDetails(autoHandoff)),
         embedField("안전 상태", [
           `Backlog: ${koBool(safety.backlog_updated)}`,
           `ActiveTask: ${koBool(safety.active_task_updated)}`,
           `승인: ${koBool(safety.approved)}`,
+          `PC Runner: ${koBool(safety.pc_runner_started)}`,
           `Codex 접수 실행: ${koBool(safety.codex_intake_executed)}`,
-          "agents/구현용 Codex 실행 없음",
+          safety.implementation_codex_executed
+            ? "PC Runner를 통해 구현용 Codex handoff 시작"
+            : "agents/구현용 Codex 실행 없음",
         ], true),
       ],
       footer: {
@@ -496,6 +506,58 @@ export function formatIntakeTaskCreatedPayload(result) {
       },
     }],
   };
+}
+
+function formatAutoHandoffInline(autoHandoff) {
+  if (!autoHandoff || Object.keys(autoHandoff).length === 0) {
+    return "not evaluated";
+  }
+  return `${autoHandoff.decision ?? "unknown"}; ${autoHandoff.profile ?? "none"}/${autoHandoff.executor ?? "none"}`;
+}
+
+function formatAutoHandoffNextAction(autoHandoff) {
+  const decision = autoHandoff?.decision ?? "";
+  const runner = autoHandoff?.runner_start ?? {};
+  if (decision === "runner_started") {
+    return [
+      "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 시작까지 자동 진행했습니다.",
+      runner.human_gate ? `다음 확인: ${cleanKo(runner.human_gate)}` : "완료 카드 또는 Runner 결과를 확인하세요.",
+    ].join("\n");
+  }
+  if (decision === "runner_blocked" || decision === "blocked") {
+    return [
+      "자동 handoff를 시도했지만 중간에서 멈췄습니다.",
+      `이유: ${cleanKo(autoHandoff?.reason || runner.error || "unknown")}`,
+    ].join("\n");
+  }
+  return "승인이 필요한 작업입니다. 생성된 Backlog task를 검토한 뒤 approve/set-active/runner start를 진행하세요.";
+}
+
+function formatAutoHandoffDetails(autoHandoff) {
+  if (!autoHandoff || Object.keys(autoHandoff).length === 0) {
+    return "자동 handoff 평가 없음";
+  }
+
+  const lines = [
+    `판정: ${autoHandoff.decision ?? "unknown"}`,
+    `대상: ${(autoHandoff.profile || "none")}/${(autoHandoff.executor || "none")}`,
+    `이유: ${cleanKo(autoHandoff.reason || "none")}`,
+  ];
+
+  const actions = Array.isArray(autoHandoff.actions) ? autoHandoff.actions : [];
+  if (actions.length > 0) {
+    lines.push(`실행: ${actions.map((item) => `${item.name}=${item.ok ? "ok" : "fail"}`).join(", ")}`);
+  }
+
+  const runner = autoHandoff.runner_start ?? {};
+  if (runner.runner_run_id) {
+    lines.push(`Runner: ${formatInlineCode(runner.runner_run_id)}`);
+  }
+  if (runner.stop_reason) {
+    lines.push(`중단 이유: ${formatInlineCode(runner.stop_reason)}`);
+  }
+
+  return compactText(lines.join("\n"), 900);
 }
 
 export function formatIntakeEngineStatus(result) {
@@ -1234,6 +1296,15 @@ export function formatFollowUpReadPayload(result) {
 export function formatPcRunnerPayload(result) {
   if (!result?.ok) {
     const data = result?.data ?? {};
+    const run = data.runner_run ?? data.latest_runner_run ?? {};
+    const reports = data.report_ids ?? run.report_ids ?? {};
+    const nextCommands = buildPcRunnerNextCommands({
+      taskId: data.task_id || run.task_id,
+      command: result?.command,
+      stopReason: data.stop_reason || run.human_gate_state?.stop_reason,
+      reports,
+      runnerRunId: data.runner_run_id || run.runner_run_id,
+    });
     return {
       content: "",
       embeds: [{
@@ -1245,6 +1316,7 @@ export function formatPcRunnerPayload(result) {
         ].join("\n"),
         fields: [
           embedField("사람 확인 지점", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
+          embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
           embedField("안전 상태", [
             `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
             `task done 없음: ${koBool(data.no_task_done !== false)}`,
@@ -1259,15 +1331,26 @@ export function formatPcRunnerPayload(result) {
   const run = data.runner_run ?? data.latest_runner_run ?? {};
   const gate = data.human_gate || run.human_gate_state?.human_gate || "(none)";
   const reports = data.report_ids ?? run.report_ids ?? {};
+  const stopReason = data.stop_reason || run.human_gate_state?.stop_reason;
+  const taskId = data.task_id || run.task_id;
+  const runnerRunId = data.runner_run_id || run.runner_run_id;
+  const nextCommands = buildPcRunnerNextCommands({
+    taskId,
+    command: result.command,
+    stopReason,
+    reports,
+    runnerRunId,
+    canStart: data.can_start,
+  });
   return {
     content: "",
     embeds: [{
       title: pcRunnerTitle(result.command, data),
       color: pcRunnerColor(data.status || run.status || data.stop_reason),
       description: [
-        `${formatInlineCode(data.task_id || run.task_id || "unknown")}`,
-        data.runner_run_id || run.runner_run_id ? `Runner: ${formatInlineCode(data.runner_run_id || run.runner_run_id)}` : "",
-        data.stop_reason || run.human_gate_state?.stop_reason ? `중단 이유: ${formatInlineCode(data.stop_reason || run.human_gate_state?.stop_reason)}` : "",
+        `${formatInlineCode(taskId || "unknown")}`,
+        runnerRunId ? `Runner: ${formatInlineCode(runnerRunId)}` : "",
+        stopReason ? `중단 이유: ${formatInlineCode(stopReason)}` : "",
       ].filter(Boolean).join("\n"),
       fields: [
         embedField("상태", [
@@ -1276,6 +1359,7 @@ export function formatPcRunnerPayload(result) {
           `단계: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
         ]),
         embedField("사람 확인 지점", gate),
+        embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
         embedField("보고서", [
           reports.verification_report_id ? `검증: ${formatInlineCode(reports.verification_report_id)}` : "",
           reports.completion_report_id ? `완료 보고서: ${formatInlineCode(reports.completion_report_id)}` : "",
@@ -1294,6 +1378,78 @@ export function formatPcRunnerPayload(result) {
       },
     }],
   };
+}
+
+function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runnerRunId, canStart }) {
+  const id = String(taskId ?? "").trim() || "<task_id>";
+  const completionReportId = reports?.completion_report_id;
+  const autoApprovalId = reports?.auto_approval_evaluation_id;
+  const followUpPlanId = reports?.follow_up_plan_id;
+  const runArg = runnerRunId ? ` runner-run-id:${runnerRunId}` : "";
+
+  if (command === "plan" && canStart !== false) {
+    return [`/ai runner start id:${id}`];
+  }
+
+  switch (stopReason) {
+    case "approval_required":
+      return [
+        `/ai task set-active id:${id}`,
+        `/ai task approve id:${id} note:<승인 범위>`,
+        `/ai runner start id:${id}`,
+      ];
+    case "active_task_mismatch":
+      return [
+        `/ai task set-active id:${id}`,
+        `/ai runner start id:${id}`,
+      ];
+    case "completion_review_required":
+      return [
+        `/ai runner read id:${id}${runArg}`,
+        completionReportId
+          ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
+          : `/ai completion card id:${id}`,
+        completionReportId
+          ? `/ai finalization accept id:${id} completion-report-id:${completionReportId}`
+          : `/ai finalization accept id:${id}`,
+        `/ai runner continue id:${id}${runArg}`,
+      ];
+    case "finalization_required":
+      return [
+        completionReportId
+          ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
+          : `/ai completion card id:${id}`,
+        completionReportId
+          ? `/ai finalization accept id:${id} completion-report-id:${completionReportId}`
+          : `/ai finalization accept id:${id}`,
+        `/ai runner continue id:${id}${runArg}`,
+      ];
+    case "finalization_not_accepted":
+      return [
+        `/ai finalization status id:${id}`,
+        completionReportId
+          ? `/ai finalization accept-concerns id:${id} completion-report-id:${completionReportId}`
+          : `/ai finalization accept-concerns id:${id}`,
+        `/ai runner continue id:${id}${runArg}`,
+      ];
+    case "done_or_commit_decision":
+      return [
+        `/ai runner read id:${id}${runArg}`,
+        autoApprovalId ? `/ai auto-approval read id:${id} policy-evaluation-id:${autoApprovalId}` : `/ai auto-approval status id:${id}`,
+        followUpPlanId ? `/ai follow-up read id:${id} follow-up-plan-id:${followUpPlanId}` : `/ai follow-up status id:${id}`,
+        `/ai task done id:${id} evidence:<완료 근거>`,
+      ];
+    case "executor_not_ready":
+      return [
+        `/ai runner plan id:${id}`,
+        "/ai intake-engine status",
+      ];
+    default:
+      return [
+        `/ai runner status id:${id}`,
+        `/ai runner read id:${id}${runArg}`,
+      ];
+  }
 }
 
 function formatAuditFiles(files) {
@@ -1790,7 +1946,7 @@ function summarizeCommandLines(items) {
     return ["(없음)"];
   }
 
-  return values.slice(0, 3).map((item) => formatInlineCode(compactText(item, 220)));
+  return values.slice(0, 4).map((item) => formatInlineCode(compactText(item, 220)));
 }
 
 function summarizeIntakeValidation(items) {

@@ -178,16 +178,22 @@ Use this path for normal task operation:
 
 ```text
 1. /ai intake
-2. /ai task set-active
-3. /ai task approve, only when policy requires explicit approval
-4. /ai runner plan
-5. /ai runner start
-6. Review the Completion Card
-7. /ai finalization accept, accept-concerns, or request-changes
-8. /ai runner continue
-9. /ai task done, only after human completion decision
-10. Review and commit manually
+2. low-risk DOC/VAL tasks may auto-handoff to set-active, approve, and runner start
+3. /ai task set-active, only when auto-handoff does not apply
+4. /ai task approve, only when policy requires explicit approval
+5. /ai runner plan, when a plan preview is needed
+6. /ai runner start, when auto-handoff did not start the runner
+7. Review the Completion Card
+8. /ai finalization accept, accept-concerns, or request-changes
+9. /ai runner continue
+10. /ai task done, only after human completion decision
+11. Review and commit manually
 ```
+
+Intake auto-handoff is limited to P2/P3, low-risk documentation or validation
+tasks with no clarification or cross-check blocker. P0/P1, medium/high-risk,
+WF/GAME/UNITY, source/data/refactor, and command-behavior tasks remain behind
+manual Human Director approval.
 
 Milestone 1 consolidation keeps regular responses short. Detailed role routing,
 path-rule reminders, validation expectations, and completion guidance remain in

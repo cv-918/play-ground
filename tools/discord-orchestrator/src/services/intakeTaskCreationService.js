@@ -1,4 +1,5 @@
 import { suggestTaskFromIntake } from "./taskIntakeService.js";
+import { runIntakeAutoHandoff } from "./intakeAutoHandoffService.js";
 import { createTask } from "./taskService.js";
 
 export async function createTaskFromIntake(config, input = {}) {
@@ -29,23 +30,37 @@ export async function createTaskFromIntake(config, input = {}) {
     return taskResult;
   }
 
+  const autoHandoff = await runIntakeAutoHandoff(config, {
+    task: taskResult.data,
+    draft,
+    suggestion,
+  });
+
   return {
     ok: true,
     data: {
       task: taskResult.data,
       draft,
       suggestion,
+      auto_handoff: autoHandoff,
       safety: {
         backlog_updated: true,
-        active_task_updated: false,
-        approved: false,
+        active_task_updated: autoHandoff.active_task_updated === true,
+        approved: autoHandoff.approved === true,
         agents_executed: false,
-        codex_executed: false,
+        codex_executed: didRunImplementationCodex(autoHandoff),
         codex_intake_executed: true,
-        implementation_codex_executed: false,
+        implementation_codex_executed: didRunImplementationCodex(autoHandoff),
+        pc_runner_started: autoHandoff.runner_started === true,
       },
     },
   };
+}
+
+function didRunImplementationCodex(autoHandoff) {
+  return autoHandoff?.runner_started === true
+    && autoHandoff?.profile === "implementation"
+    && autoHandoff?.executor === "codex_cli";
 }
 
 function buildValidationNote(draft, suggestion) {

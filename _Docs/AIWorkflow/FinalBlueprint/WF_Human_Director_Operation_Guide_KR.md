@@ -46,19 +46,24 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 
 ```text
 1. /ai intake text:<작업 요청>
-2. /ai task set-active id:<task_id>
-3. 필요한 경우 /ai task approve id:<task_id> note:<승인 범위>
-4. /ai runner plan id:<task_id>
-5. /ai runner start id:<task_id>
-6. 완료 카드와 runner 결과 확인
-7. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
-8. /ai runner continue id:<task_id>
-9. /ai task done id:<task_id> evidence:<완료 근거>
-10. 커밋/푸시 결정
+2. 저위험 DOC/VAL이면 하네스가 set-active, approve, runner start를 자동 진행
+3. 승인 필요 작업이면 /ai task set-active id:<task_id>
+4. 승인 필요 작업이면 /ai task approve id:<task_id> note:<승인 범위>
+5. 필요하면 /ai runner plan id:<task_id>
+6. 자동 시작되지 않은 작업은 /ai runner start id:<task_id>
+7. 완료 카드와 runner 결과 확인
+8. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
+9. /ai runner continue id:<task_id>
+10. /ai task done id:<task_id> evidence:<완료 근거>
+11. 커밋/푸시 결정
 ```
 
 `/ai prepare goal`과 `/ai result audit`은 이제 정규 경로가 아니라 runner가
 막혔을 때 쓰는 수동 승격 경로입니다.
+
+`/ai intake` auto-handoff는 P2/P3, low-risk, DOC/VAL 또는 documentation/
+validation 작업에만 적용됩니다. P0/P1, medium/high-risk, GAME/WF/UNITY,
+소스/데이터/리팩터링/명령 동작 변경 작업은 사람 승인에서 멈춥니다.
 
 ## 최종 목표 흐름
 

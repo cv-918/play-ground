@@ -336,12 +336,22 @@ function stripWrappingQuotes(value) {
 }
 
 function classifyCategory(text) {
+  const explicitCategory = classifyExplicitCategory(text);
+  if (explicitCategory) return explicitCategory;
+
   if (hasAny(text, TERMS.wf)) return "WF";
   if (hasAny(text, TERMS.unity)) return "UNITY";
-  if (hasAny(text, TERMS.doc)) return "DOC";
   if (hasAny(text, TERMS.val)) return "VAL";
+  if (hasAny(text, TERMS.doc)) return "DOC";
   if (hasAny(text, TERMS.game)) return "GAME";
   return "GAME";
+}
+
+function classifyExplicitCategory(text) {
+  const match = String(text ?? "")
+    .trim()
+    .match(/^(WF|DOC|VAL|GAME|UNITY)\s*(?:task|작업)?\s*:/i);
+  return match ? match[1].toUpperCase() : "";
 }
 
 function classifyWorkflowPath(category) {
@@ -355,6 +365,9 @@ function classifyWorkflowPath(category) {
 }
 
 function classifyKind(text, category) {
+  if (category === "VAL") return "validation";
+  if (category === "DOC") return "documentation";
+  if (category === "WF") return "automation";
   if (category === "UNITY" && hasAny(text, ["validation profile", "build profile", "검증 프로필", "빌드 프로필"])) return "validation";
   if (hasAny(text, TERMS.prototype)) return "prototype";
   if (hasAny(text, TERMS.doc)) return "documentation";

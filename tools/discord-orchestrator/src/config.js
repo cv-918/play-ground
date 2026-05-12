@@ -48,6 +48,10 @@ export function loadConfig() {
       fallbackOnError: raw?.llm_intake?.fallback_on_error === true,
       outputDir: raw?.llm_intake?.output_dir || "_Temp/AIWorkflowDiscordBot/intake",
     },
+    intakeAutoHandoff: {
+      enabled: raw?.intake_auto_handoff?.enabled !== false,
+      autoStartLowRisk: raw?.intake_auto_handoff?.auto_start_low_risk !== false,
+    },
     limits: {
       scriptTimeoutMs: raw?.limits?.script_timeout_ms ?? 15000,
       maxDiscordChars: raw?.limits?.max_discord_chars ?? 1800,

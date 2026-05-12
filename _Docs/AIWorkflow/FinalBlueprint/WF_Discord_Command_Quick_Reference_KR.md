@@ -9,6 +9,7 @@
 
 - `WF_Human_Director_Operation_Guide_KR.md`
 - `WF_Unified_PC_Runner_Orchestration_Entrypoint_KR.md`
+- `WF_Intake_Auto_Handoff_KR.md`
 - `WF_Completion_Report_And_Card.md`
 - `WF_Approval_History_And_Finalization_Log.md`
 
@@ -22,6 +23,24 @@ PC Runner 시작까지 진행될 수 있습니다.
 ```text
 /ai intake text:<작업 요청>
 ```
+
+분류를 안정시키려면 앞에 짧은 식별자를 붙입니다.
+
+```text
+/ai intake text:"VAL task: Run a safe local validation smoke for intake auto-handoff. No source or document changes."
+/ai intake text:"DOC task: Update the Human Director guide."
+```
+
+자동 진행 조건:
+
+```text
+P2/P3 + low risk + DOC/VAL 또는 documentation/validation
+clarifying question 없음
+rule-based cross-check 문제 없음
+```
+
+자동 진행이 되면 `set-active`, `approve`, `runner start`를 따로 입력하지
+않아도 됩니다.
 
 Runner가 완료 리뷰 지점에서 멈추면:
 
@@ -63,6 +82,8 @@ Git 경로에서만 수행합니다.
 
 P0/P1, medium/high risk, 게임 소스/데이터 변경, workflow 명령 변경은 보통
 여기서 멈춥니다.
+
+`/ai intake` auto-handoff가 적용되지 않은 작업도 여기서 멈춥니다.
 
 ---
 

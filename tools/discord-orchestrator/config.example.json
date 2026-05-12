@@ -22,6 +22,10 @@
     "fallback_on_error": false,
     "output_dir": "_Temp/AIWorkflowDiscordBot/intake"
   },
+  "intake_auto_handoff": {
+    "enabled": true,
+    "auto_start_low_risk": true
+  },
   "limits": {
     "script_timeout_ms": 15000,
     "max_discord_chars": 1800
