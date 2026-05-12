@@ -74,6 +74,9 @@ Non-goals unless a later task explicitly approves them:
 | WF-425 | Expand intake auto-handoff targets | Allow low-risk WF documentation/maintenance in addition to DOC/VAL. | Only approve when policy blocks the task. |
 | WF-426 | Polish runner next-action responses | Show stop-reason summaries and next commands directly in runner Discord responses. | Follow the response card before opening docs. |
 | WF-427 | Route Codex runner profiles by model | Let documentation profile use faster Codex settings while implementation keeps stronger defaults. | Review local config only when changing model policy. |
+| WF-428 | Refresh workflow stability docs | Update guides and roadmap after WF-424 through WF-427 changed normal operation. | Review only if the guide no longer matches actual Discord behavior. |
+| WF-429 | Prune stale Discord commands and cardify replies | Remove the obsolete `/ai intake-create` alias, cardify remaining plain-text command replies, and update command docs. | Command removal was approved as part of the cleanup request. |
+| WF-430 | Run real game-task runner pilot | Exercise a no-source-change GAME validation task through the regular PC Runner workflow. | Review completion evidence before marking the workflow ready for game work. |
 
 ## Recommended Order
 
@@ -95,6 +98,9 @@ WF-400 done
 -> WF-425 auto-handoff target expansion done
 -> WF-426 runner next-action response polish done
 -> WF-427 runner profile model routing done
+-> WF-428 workflow stability docs done
+-> WF-429 command cleanup/card output done
+-> WF-430 real game-task runner pilot done
 ```
 
 WF-401 and WF-402 come before cleanup because command removal or workflow
@@ -114,3 +120,9 @@ Phase 4 is complete when:
 - the PC Runner has a unified orchestration path for normal work
 - the PC Runner can route approved implementation work through the guarded Codex CLI adapter
 - deprecated command cleanup is either completed or explicitly deferred with a reason
+- at least one no-source-change real game validation task has passed through the runner path
+
+WF-430 completed this final condition with runner run
+`runner-run-wf-430-20260513-040359-458`: JSON smoke passed 11/11,
+VerificationReport was `PASS_WITH_NOTES`, CompletionCard was
+`READY_WITH_NOTES`, and finalization reached `done_or_commit_decision`.

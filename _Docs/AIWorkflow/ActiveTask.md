@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260513-032120
-title: Validation task: Verify Discord git command visibility and next-command prompts
+task_id: WF-430
+title: Run real game-task pilot through PC Runner workflow
 status: done
 workflow_path: discord_task_management
 priority: P2
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-Validation task: Verify Discord git command visibility and next-command prompts
+Run real game-task pilot through PC Runner workflow
 
 ---
 
@@ -35,8 +35,8 @@ Validation task: Verify Discord git command visibility and next-command prompts
 ```yaml
 discord: task selection command
 human: review and approval
-codex: only after explicit approval for implementation
-validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_032111_918.output.json; needs review; has clarifying questions; validation pending human approval
+pc_runner: validation/local_cli
+validation: completed
 ```
 
 ---
@@ -52,8 +52,7 @@ Define during task intake before implementation.
 ## Human Action Required
 
 ```text
-1. Review the selected active task.
-2. Approve architecture and scope before implementation if source or runtime behavior will change.
+No immediate human action required. WF-430 is done.
 ```
 
 ---
@@ -61,7 +60,14 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_032111_918.output.json; needs review; has clarifying questions; validation pending human approval
+PC Runner validation/local_cli completed.
+
+Evidence:
+- runner_run_id: runner-run-wf-430-20260513-040359-458
+- JSON smoke: 11 files checked, 0 failures
+- VerificationReport: PASS_WITH_NOTES
+- CompletionCard: READY_WITH_NOTES
+- FinalizationLog: finalization-20260513-040454-617-e0367da2
 ```
 
 ---
@@ -70,7 +76,7 @@ codex intake draft: risk=low; workflow_path=validation; required_validation_coun
 
 ```text
 status: done
-note: done: "Discord next-command prompts passed. completion_review_required showed runner accept-completion command, and done_or_commit_decision showed task done plus git commit-push command."
+note: done: PC Runner real game-task pilot passed: JSON smoke 11/11, VerificationReport PASS_WITH_NOTES, CompletionCard READY_WITH_NOTES, FinalizationLog finalization-20260513-040454-617-e0367da2 accepted completion, runner stopped at done_or_commit_decision.
 updated_at: 2026-05-13
 source: Discord task status command
 ```

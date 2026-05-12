@@ -67,6 +67,9 @@ Phase 4는 다음 내용을 포함합니다.
 | WF-425 | auto-handoff 대상 확장 | DOC/VAL 외에 저위험 WF 문서/유지보수까지 자동 착수 대상으로 넓힌다. | 정책이 막은 작업만 승인 |
 | WF-426 | runner 응답 개선 | stop_reason별 쉬운 설명과 다음 명령을 Discord 응답에 바로 표시한다. | 응답 카드만 보고 다음 행동 |
 | WF-427 | runner profile별 모델 라우팅 | 문서 profile은 빠른 모델, 구현 profile은 강한 기본 설정으로 분리한다. | 모델 정책 변경 시만 설정 검토 |
+| WF-428 | 워크플로우 안정화 문서 갱신 | WF-424~WF-427 이후 실제 동작에 맞게 가이드와 로드맵을 갱신한다. | 가이드가 실제 Discord 동작과 다를 때만 리뷰 |
+| WF-429 | 오래된 명령 제거와 카드 응답 일괄화 | `/ai intake-create` alias를 제거하고 일반 텍스트 응답을 카드 출력으로 바꾼다. | 명령 제거는 이번 정리 요청으로 승인됨 |
+| WF-430 | 실제 게임 작업 runner 파일럿 | source/data 변경 없이 GAME 검증 작업을 PC Runner 정규 경로로 통과시킨다. | 완료 증거 검토 |
 
 ## 추천 순서
 
@@ -88,7 +91,15 @@ WF-400 완료
 -> WF-425 done
 -> WF-426 done
 -> WF-427 done
+-> WF-428 done
+-> WF-429 done
+-> WF-430 done
 ```
+
+WF-430은 `runner-run-wf-430-20260513-040359-458`로 완료했습니다.
+JSON smoke는 11/11 통과했고, VerificationReport는 `PASS_WITH_NOTES`,
+CompletionCard는 `READY_WITH_NOTES`, runner는 `done_or_commit_decision`까지
+도달했습니다.
 
 ## 완료 기준
 
