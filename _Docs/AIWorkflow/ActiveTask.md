@@ -11,22 +11,22 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: DOC-20260512-161418
-title: Documentation task: 남아 있는 Human Director 가이드/HTML 변경 검토 후 커밋
+task_id: VAL-20260513-023813
+title: Validation task: PC Runner 워크플로우로 안전한 GAME 데이터 로더 검증을 실행한다
 status: done
 workflow_path: discord_task_management
 priority: P2
 risk_level: low
 requested_by: human_director
-requested_at: 2026-05-12
-last_updated: 2026-05-12
+requested_at: 2026-05-13
+last_updated: 2026-05-13
 ```
 
 ---
 
 ## Goal
 
-Documentation task: 남아 있는 Human Director 가이드/HTML 변경 검토 후 커밋
+Validation task: PC Runner 워크플로우로 안전한 GAME 데이터 로더 검증을 실행한다
 
 ---
 
@@ -36,7 +36,7 @@ Documentation task: 남아 있는 Human Director 가이드/HTML 변경 검토 �
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: approved: 남아 있는 Human Director 가이드/HTML 문서 변경 검토와 커밋 정리를 승인함.
+validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=16; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_023806_777.output.json; validation pending human approval
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-approved: 남아 있는 Human Director 가이드/HTML 문서 변경 검토와 커밋 정리를 승인함.
+codex intake draft: risk=low; workflow_path=validation; required_validation_count=16; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_023806_777.output.json; validation pending human approval
 ```
 
 ---
@@ -70,11 +70,10 @@ approved: 남아 있는 Human Director 가이드/HTML 문서 변경 검토와 �
 
 ```text
 status: done
-note: done: FinalizationLog finalization-20260512-172307-174-52bdbb24 accepted completion., Review git status/diff before manual commit., Proceed to WF-308 Auto Approval Policy after this workflow layer is committed.
-updated_at: 2026-05-12
+note: done: "PC Runner validation completed, completion was accepted, and runner reached done_or_commit_decision. FinalizationLog: finalization-20260513-025001-533-a32ccc0b"
+updated_at: 2026-05-13
 source: Discord task status command
 ```
-
 ---
 
 ## Next Recommended Task
