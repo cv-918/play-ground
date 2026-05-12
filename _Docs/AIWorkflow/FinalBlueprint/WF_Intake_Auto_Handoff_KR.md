@@ -51,7 +51,7 @@
 
 | 작업 유형 | Runner profile | Executor |
 |---|---|---|
-| `DOC` 또는 `documentation` | `implementation` | `codex_cli` |
+| `DOC` 또는 `documentation` | `documentation` | `codex_cli` |
 | `VAL` 또는 `validation` | `validation` | `local_cli` |
 
 분류를 안정시키려면 요청 앞에 `DOC task:`, `VAL task:`, `WF task:`,

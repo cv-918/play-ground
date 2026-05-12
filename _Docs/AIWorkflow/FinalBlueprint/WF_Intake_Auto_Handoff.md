@@ -42,7 +42,7 @@ Current profile mapping:
 
 | Task type | Runner profile | Executor |
 |---|---|---|
-| `DOC` or `documentation` | `implementation` | `codex_cli` |
+| `DOC` or `documentation` | `documentation` | `codex_cli` |
 | `VAL` or `validation` | `validation` | `local_cli` |
 
 For stable classification, intake text may start with an explicit category

@@ -35,9 +35,9 @@ approved ActiveTask
 -> codex_cli_adapter dry-run readiness check
 -> codex_cli_adapter run
 -> file watcher snapshot
+   and build/test runner json_smoke in parallel
 -> result collector
 -> diff analyzer
--> build/test runner json_smoke
 -> verification report
 -> completion report
 -> completion card
@@ -151,10 +151,16 @@ The implementation runner profile must not:
 ```text
 profile: validation
 profile: implementation
+profile: documentation
 ```
 
 Unsupported profile/executor pairings are still rejected by the local runner
 before execution.
+
+The `documentation` profile uses the same guarded Codex CLI adapter path as
+`implementation`, but the generated prompt explicitly constrains the executor to
+documentation-only changes unless the approved task says otherwise. It lets
+low-risk DOC auto-handoff avoid pretending it is general implementation work.
 
 ## Validation Evidence
 

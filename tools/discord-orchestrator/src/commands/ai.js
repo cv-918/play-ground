@@ -79,7 +79,7 @@ const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_impl
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
 const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
-const RUNNER_PROFILE_CHOICES = ["validation", "implementation"].map((value) => ({ name: value, value }));
+const RUNNER_PROFILE_CHOICES = ["validation", "implementation", "documentation"].map((value) => ({ name: value, value }));
 const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
@@ -624,7 +624,7 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, validation 또는 implementation")
+                .setDescription("Runner profile, validation/implementation/documentation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )
@@ -649,7 +649,7 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, validation 또는 implementation")
+                .setDescription("Runner profile, validation/implementation/documentation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )

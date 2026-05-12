@@ -258,25 +258,91 @@ function Invoke-ToolJson {
     $outputLines = & $scriptPath @Arguments 2>&1
     $exitCode = $LASTEXITCODE
     $stdout = (($outputLines | ForEach-Object { [string]$_ }) -join [Environment]::NewLine).Trim()
-    $parsed = $null
-    $parseError = $null
-    if (-not [string]::IsNullOrWhiteSpace($stdout)) {
-        try { $parsed = ($stdout | ConvertFrom-Json) }
-        catch { $parseError = $_.Exception.Message }
-    }
-    $ok = ($exitCode -eq 0) -and ($null -ne $parsed) -and ($parsed.ok -ne $false)
+    $result = ConvertTo-ToolJsonResult -RelativeScriptPath $RelativeScriptPath -Arguments $Arguments -ExitCode $exitCode -Stdout $stdout
+    $ok = $result.ok
     if (-not $ok -and -not $AllowFailure) {
-        $message = if ($null -ne $parsed -and $parsed.error) { $parsed.error } elseif ($parseError) { $parseError } else { $stdout }
+        $message = if ($null -ne $result.data -and $result.data.error) { $result.data.error } elseif ($result.parse_error) { $result.parse_error } else { $stdout }
         throw "Tool failed: $RelativeScriptPath $($Arguments -join ' ') :: $message"
     }
+    return $result
+}
+
+function ConvertTo-ToolJsonResult {
+    param(
+        [string]$RelativeScriptPath,
+        [string[]]$Arguments,
+        [int]$ExitCode,
+        [string]$Stdout
+    )
+    $parsed = $null
+    $parseError = $null
+    if (-not [string]::IsNullOrWhiteSpace($Stdout)) {
+        try { $parsed = ($Stdout | ConvertFrom-Json) }
+        catch { $parseError = $_.Exception.Message }
+    }
+    $ok = ($ExitCode -eq 0) -and ($null -ne $parsed) -and ($parsed.ok -ne $false)
     return [pscustomobject]@{
         ok = $ok
-        exit_code = $exitCode
+        exit_code = $ExitCode
         script = $RelativeScriptPath
         args = @($Arguments)
         data = $parsed
-        stdout = $stdout
+        stdout = $Stdout
         parse_error = $parseError
+    }
+}
+
+function Invoke-ToolJsonBatch {
+    param(
+        [string]$Repo,
+        [object[]]$Specs
+    )
+    $jobs = @()
+    foreach ($spec in @($Specs)) {
+        $scriptPath = Join-Path $Repo $spec.relative_script_path
+        if (-not (Test-Path -LiteralPath $scriptPath)) {
+            throw "Tool script not found: $($spec.relative_script_path)"
+        }
+        $job = Start-Job -ScriptBlock {
+            param([string]$ScriptPath, [string[]]$ToolArguments)
+            $outputLines = & $ScriptPath @ToolArguments 2>&1
+            $exitCode = $LASTEXITCODE
+            $stdout = (($outputLines | ForEach-Object { [string]$_ }) -join [Environment]::NewLine).Trim()
+            return [pscustomobject]@{
+                exit_code = $exitCode
+                stdout = $stdout
+            }
+        } -ArgumentList $scriptPath, @($spec.arguments)
+        $jobs += [pscustomobject]@{
+            name = [string]$spec.name
+            relative_script_path = [string]$spec.relative_script_path
+            arguments = @($spec.arguments)
+            allow_failure = [bool]$spec.allow_failure
+            job = $job
+        }
+    }
+
+    try {
+        Wait-Job -Job @($jobs.job) | Out-Null
+        $results = [ordered]@{}
+        foreach ($entry in $jobs) {
+            $received = Receive-Job -Job $entry.job
+            if ($null -eq $received) {
+                throw "Parallel tool produced no output: $($entry.relative_script_path)"
+            }
+            $result = ConvertTo-ToolJsonResult -RelativeScriptPath $entry.relative_script_path -Arguments $entry.arguments -ExitCode ([int]$received.exit_code) -Stdout ([string]$received.stdout)
+            if (-not $result.ok -and -not $entry.allow_failure) {
+                $message = if ($null -ne $result.data -and $result.data.error) { $result.data.error } elseif ($result.parse_error) { $result.parse_error } else { $result.stdout }
+                throw "Tool failed: $($entry.relative_script_path) $($entry.arguments -join ' ') :: $message"
+            }
+            $results[$entry.name] = $result
+        }
+        return [pscustomobject]$results
+    }
+    finally {
+        foreach ($entry in $jobs) {
+            Remove-Job -Job $entry.job -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
@@ -449,10 +515,10 @@ function New-Preflight {
             $humanGate = "Set ActiveTask to this task or run a read-only plan only."
         }
     }
-    $profileSupportedForStart = ($ProfileValue -eq "validation") -or (($ProfileValue -eq "implementation") -and ($ExecutorValue -eq "codex_cli"))
+    $profileSupportedForStart = (($ProfileValue -eq "validation") -and ($ExecutorValue -eq "local_cli")) -or ((@("implementation", "documentation") -contains $ProfileValue) -and ($ExecutorValue -eq "codex_cli"))
     if ($approvalOk -and $activeTaskId -eq $TaskId -and -not $profileSupportedForStart) {
         $stopReason = "executor_not_ready"
-        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli or implementation/codex_cli."
+        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli, implementation/codex_cli, or documentation/codex_cli."
     }
     return [pscustomobject]@{
         task_found = $null -ne $task
@@ -478,17 +544,16 @@ function New-RunnerPlan {
         $Preflight,
         $Ids
     )
-    if ($ProfileValue -eq "implementation") {
+    if (@("implementation", "documentation") -contains $ProfileValue) {
         $plannedSteps = @(
             "task_workspace_manager.create_or_read",
-            "runner.write_implementation_prompt",
+            $(if ($ProfileValue -eq "documentation") { "runner.write_documentation_prompt" } else { "runner.write_implementation_prompt" }),
             "codex_cli_adapter.dry-run",
             "codex_cli_adapter.run",
             "runner.text_encoding_guard",
-            "file_watcher.snapshot",
+            "parallel_validation.file_watcher_snapshot_and_json_smoke",
             "result_collector.collect",
             "diff_analyzer.analyze",
-            "build_test_runner.run.json_smoke",
             "verification_report.generate",
             "completion_report.generate",
             "completion_card.generate",
@@ -501,10 +566,9 @@ function New-RunnerPlan {
         $plannedSteps = @(
             "task_workspace_manager.create_or_read",
             "local_cli_adapter.run.node_version",
-            "file_watcher.snapshot",
+            "parallel_validation.file_watcher_snapshot_and_json_smoke",
             "result_collector.collect",
             "diff_analyzer.analyze",
-            "build_test_runner.run.json_smoke",
             "verification_report.generate",
             "completion_report.generate",
             "completion_card.generate",
@@ -545,8 +609,8 @@ function New-RunnerPlan {
             runner_run_id = $Ids.runner_run_id
             session_id = $sessionId
             evidence_ids = @($evidenceIds)
-            prompt_id = $(if ($ProfileValue -eq "implementation") { $Ids.prompt_id } else { $null })
-            text_encoding_guard_id = $(if ($ProfileValue -eq "implementation") { $Ids.text_encoding_guard_id } else { $null })
+            prompt_id = $(if (@("implementation", "documentation") -contains $ProfileValue) { $Ids.prompt_id } else { $null })
+            text_encoding_guard_id = $(if (@("implementation", "documentation") -contains $ProfileValue) { $Ids.text_encoding_guard_id } else { $null })
             result_id = $Ids.result_id
             analysis_id = $Ids.analysis_id
             build_test_id = $Ids.build_test_id
@@ -975,15 +1039,24 @@ function Invoke-TextEncodingGuard {
 }
 
 function Write-ImplementationPrompt {
-    param($Paths, [string]$Repo, [string]$TaskId, $Task, [string]$PromptId)
+    param($Paths, [string]$Repo, [string]$TaskId, $Task, [string]$PromptId, [string]$ProfileValue = "implementation")
     Ensure-RunnerDirs -Paths $Paths
     $path = Join-Path $Paths.prompts_dir "$PromptId.md"
     $repoLabel = ConvertTo-RepoRelativePath -Repo $Repo -Path $Repo
+    $isDocumentationProfile = $ProfileValue -eq "documentation"
+    $title = if ($isDocumentationProfile) { "# PC Runner Documentation Request" } else { "# PC Runner Implementation Request" }
+    $profileScopeLine = if ($isDocumentationProfile) {
+        "- This is the documentation runner profile: keep changes documentation-only unless the approved task explicitly says otherwise."
+    }
+    else {
+        "- This is the implementation runner profile: make only the approved tracked repository changes required by the task."
+    }
     $lines = @(
-        "# PC Runner Implementation Request",
+        $title,
         "",
         "## Task",
         "- task_id: $TaskId",
+        "- runner_profile: $ProfileValue",
         "- title: $($Task.title)",
         "- priority: $($Task.priority)",
         "- status: $($Task.status)",
@@ -997,6 +1070,7 @@ function Write-ImplementationPrompt {
         "- Treat the approved ActiveTask and Backlog row as the task contract.",
         "",
         "## Required Scope",
+        $profileScopeLine,
         "- Implement only the approved task scope recorded in Backlog and ActiveTask.",
         "- Do not expand into unrelated cleanup, refactors, game/data changes, releases, deploys, commits, or pushes.",
         "- If the task requires a new approval decision, stop and report the decision needed.",
@@ -1034,6 +1108,101 @@ function Write-ImplementationPrompt {
     )
     Write-Utf8Text -Path $path -Text (($lines -join "`n") + "`n")
     return (ConvertTo-RepoRelativePath -Repo $Repo -Path $path)
+}
+
+function Invoke-PostExecutionValidationPipeline {
+    param(
+        [string]$Repo,
+        $Paths,
+        [string]$TaskId,
+        $Plan,
+        $RunState,
+        [string]$RunId,
+        [string]$RunnerRunId,
+        $ConfigPaths
+    )
+
+    $RunState.current_phase = "parallel_validation"
+    $RunState.current_step = "parallel_validation.file_watcher_snapshot_and_json_smoke"
+    $RunState.updated_at = Get-NowText
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $RunnerRunId -EventType "runner_parallel_validation_started" -Message "PC Runner started independent file watcher and JSON smoke validation steps." -Data @{ file_watcher = $ConfigPaths.file_watcher; build_test = $ConfigPaths.build_test } | Out-Null
+
+    $parallel = Invoke-ToolJsonBatch -Repo $Repo -Specs @(
+        [pscustomobject]@{
+            name = "file_watcher"
+            relative_script_path = "tools\aiworkflow\file_watcher.bat"
+            arguments = @(
+                "snapshot", $TaskId, $Plan.expected_artifacts.session_id, $Plan.expected_artifacts.evidence_ids[1],
+                "--config", $ConfigPaths.file_watcher, "--json"
+            )
+            allow_failure = $false
+        },
+        [pscustomobject]@{
+            name = "build_test"
+            relative_script_path = "tools\aiworkflow\build_test_runner.bat"
+            arguments = @(
+                "run", $TaskId, "json_smoke", "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
+                "--config", $ConfigPaths.build_test, "--json"
+            )
+            allow_failure = $false
+        }
+    )
+    $fileWatch = $parallel.file_watcher
+    $buildTest = $parallel.build_test
+    $RunState.evidence_ids = @($Plan.expected_artifacts.evidence_ids)
+    Set-ReportId -RunState $RunState -Name "build_test_id" -Value $Plan.expected_artifacts.build_test_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "parallel_validation" -Step "parallel_validation.file_watcher_snapshot_and_json_smoke" -Status "completed" -Inputs @{ file_watcher_config = $ConfigPaths.file_watcher; build_test_config = $ConfigPaths.build_test } -Outputs @{ evidence_id = $Plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count; build_test_id = $Plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "result_collector.collect"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_phase = "result"
+    $RunState.current_step = "result_collector.collect"
+    $result = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\result_collector.bat" -Arguments @("collect", $TaskId, $Plan.expected_artifacts.session_id, $Plan.expected_artifacts.result_id, "--json")
+    Set-ReportId -RunState $RunState -Name "result_id" -Value $Plan.expected_artifacts.result_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "result" -Step "result_collector.collect" -Status "completed" -Inputs @{ session_id = $Plan.expected_artifacts.session_id } -Outputs @{ result_id = $Plan.expected_artifacts.result_id; summary = $result.data.summary } -NextStep "diff_analyzer.analyze"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_phase = "analysis"
+    $RunState.current_step = "diff_analyzer.analyze"
+    $analysis = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\diff_analyzer.bat" -Arguments @("analyze", $TaskId, $Plan.expected_artifacts.result_id, $Plan.expected_artifacts.analysis_id, "--json")
+    Set-ReportId -RunState $RunState -Name "analysis_id" -Value $Plan.expected_artifacts.analysis_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "analysis" -Step "diff_analyzer.analyze" -Status "completed" -Inputs @{ result_id = $Plan.expected_artifacts.result_id } -Outputs @{ analysis_id = $Plan.expected_artifacts.analysis_id; summary = $analysis.data.summary } -NextStep "verification_report.generate"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_phase = "verification"
+    $RunState.current_step = "verification_report.generate"
+    $verification = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\verification_report.bat" -Arguments @(
+        "generate", $TaskId, "--result-id", $Plan.expected_artifacts.result_id,
+        "--analysis-id", $Plan.expected_artifacts.analysis_id,
+        "--build-test-id", $Plan.expected_artifacts.build_test_id,
+        "--report-id", $Plan.expected_artifacts.verification_report_id,
+        "--json"
+    )
+    Set-ReportId -RunState $RunState -Name "verification_report_id" -Value $Plan.expected_artifacts.verification_report_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "verification" -Step "verification_report.generate" -Status "completed" -Inputs @{ result_id = $Plan.expected_artifacts.result_id; analysis_id = $Plan.expected_artifacts.analysis_id; build_test_id = $Plan.expected_artifacts.build_test_id } -Outputs @{ verification_report_id = $Plan.expected_artifacts.verification_report_id; verdict = $verification.data.verdict } -NextStep "completion_report.generate"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_phase = "completion"
+    $RunState.current_step = "completion_report.generate"
+    $completion = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_report.bat" -Arguments @("generate", $TaskId, $Plan.expected_artifacts.verification_report_id, $Plan.expected_artifacts.completion_report_id, "--json")
+    Set-ReportId -RunState $RunState -Name "completion_report_id" -Value $Plan.expected_artifacts.completion_report_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "completion" -Step "completion_report.generate" -Status "completed" -Inputs @{ verification_report_id = $Plan.expected_artifacts.verification_report_id } -Outputs @{ completion_report_id = $Plan.expected_artifacts.completion_report_id; readiness_level = $completion.data.readiness_level } -NextStep "completion_card.generate"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_step = "completion_card.generate"
+    $card = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_card.bat" -Arguments @("generate", $TaskId, $Plan.expected_artifacts.completion_report_id, $Plan.expected_artifacts.completion_card_id, "--json")
+    Set-ReportId -RunState $RunState -Name "completion_card_id" -Value $Plan.expected_artifacts.completion_card_id
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "completion" -Step "completion_card.generate" -Status "stopped" -Inputs @{ completion_report_id = $Plan.expected_artifacts.completion_report_id } -Outputs @{ completion_card_id = $Plan.expected_artifacts.completion_card_id; readiness_level = $card.data.readiness_level } -StopReason "completion_review_required"
+    $RunState.last_checkpoint_id = $checkpoint.id
+
+    return [pscustomobject]@{
+        file_watch = $fileWatch
+        build_test = $buildTest
+        result = $result
+        analysis = $analysis
+        verification = $verification
+        completion = $completion
+        card = $card
+    }
 }
 
 function Ensure-Workspace {
@@ -1090,16 +1259,16 @@ function Invoke-Plan {
 }
 
 function Invoke-ImplementationStart {
-    param([string]$Repo, [string]$TaskId, [string]$ExecutorValue, $Paths, $Plan, $RunState, [string]$RunId)
+    param([string]$Repo, [string]$TaskId, [string]$ProfileValue, [string]$ExecutorValue, $Paths, $Plan, $RunState, [string]$RunId)
     $runnerRunId = $Plan.expected_artifacts.runner_run_id
-    $promptPath = Write-ImplementationPrompt -Paths $Paths -Repo $Repo -TaskId $TaskId -Task $Plan.preflight_result.task -PromptId $Plan.expected_artifacts.prompt_id
+    $promptPath = Write-ImplementationPrompt -Paths $Paths -Repo $Repo -TaskId $TaskId -Task $Plan.preflight_result.task -PromptId $Plan.expected_artifacts.prompt_id -ProfileValue $ProfileValue
     Set-ReportId -RunState $RunState -Name "implementation_prompt_path" -Value $promptPath
 
     $RunState.status = "starting"
     $RunState.current_phase = "executor_preflight"
     $RunState.current_step = "codex_cli_adapter.dry-run"
     $RunState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_executor_preflight" -Message "PC Runner implementation profile checking Codex CLI adapter readiness." -Data @{ executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_executor_preflight" -Message "PC Runner Codex profile checking Codex CLI adapter readiness." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
 
     $dryRun = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\codex_cli_adapter.bat" -Arguments @(
         "dry-run", $TaskId, "--prompt-file", $promptPath, "--json"
@@ -1121,7 +1290,7 @@ function Invoke-ImplementationStart {
         $RunState.ended_at = Get-NowText
         $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "executor_preflight" -Step "codex_cli_adapter.dry-run" -Status "stopped" -Inputs @{ prompt_file = $promptPath } -Outputs @{ config_exists = $dryRun.data.config_exists; config_enabled = $dryRun.data.config_enabled; error = $dryRun.data.error } -StopReason "executor_not_ready"
         $RunState.last_checkpoint_id = $checkpoint.id
-        Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner implementation profile stopped because Codex CLI adapter is not ready." -Data $RunState.human_gate_state | Out-Null
+        Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner Codex profile stopped because Codex CLI adapter is not ready." -Data $RunState.human_gate_state | Out-Null
         $runPath = Save-RunnerRun -Paths $Paths -RunState $RunState
         return [pscustomobject]@{
             ok = $false
@@ -1148,7 +1317,7 @@ function Invoke-ImplementationStart {
     $RunState.current_phase = "execution"
     $RunState.current_step = "codex_cli_adapter.run"
     $RunState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner implementation profile started Codex CLI adapter." -Data @{ executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner Codex profile started Codex CLI adapter." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
 
     $codex = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\codex_cli_adapter.bat" -Arguments @(
         "run", $TaskId, "--execute", "--prompt-file", $promptPath,
@@ -1175,7 +1344,7 @@ function Invoke-ImplementationStart {
     Set-ReportId -RunState $RunState -Name "text_encoding_guard_id" -Value $Plan.expected_artifacts.text_encoding_guard_id
     Set-ReportId -RunState $RunState -Name "text_encoding_guard_path" -Value $encodingGuard.path
     $guardCheckpointStatus = if ($encodingGuard.ok) { "completed" } else { "stopped" }
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "runner.text_encoding_guard" -Status $guardCheckpointStatus -Inputs @{ stdout_log = $stdoutLog; stderr_log = $stderrLog; changed_files_count = $changedFiles.Count } -Outputs @{ text_encoding_guard_id = $encodingGuard.text_encoding_guard_id; status = $encodingGuard.status; finding_count = $encodingGuard.finding_count; path = $encodingGuard.path } -NextStep "file_watcher.snapshot"
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "runner.text_encoding_guard" -Status $guardCheckpointStatus -Inputs @{ stdout_log = $stdoutLog; stderr_log = $stderrLog; changed_files_count = $changedFiles.Count } -Outputs @{ text_encoding_guard_id = $encodingGuard.text_encoding_guard_id; status = $encodingGuard.status; finding_count = $encodingGuard.finding_count; path = $encodingGuard.path } -NextStep "parallel_validation.file_watcher_snapshot_and_json_smoke"
     $RunState.last_checkpoint_id = $checkpoint.id
     if (-not $encodingGuard.ok) {
         $RunState.status = "stopped"
@@ -1214,65 +1383,7 @@ function Invoke-ImplementationStart {
         }
     }
 
-    $RunState.current_phase = "evidence"
-    $RunState.current_step = "file_watcher.snapshot"
-    $fileWatch = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\file_watcher.bat" -Arguments @(
-        "snapshot", $TaskId, $Plan.expected_artifacts.session_id, $Plan.expected_artifacts.evidence_ids[1],
-        "--config", $configPaths.file_watcher, "--json"
-    )
-    $RunState.evidence_ids = @($Plan.expected_artifacts.evidence_ids)
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "evidence" -Step "file_watcher.snapshot" -Status "completed" -Inputs @{ session_id = $Plan.expected_artifacts.session_id } -Outputs @{ evidence_id = $Plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count } -NextStep "result_collector.collect"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_phase = "result"
-    $RunState.current_step = "result_collector.collect"
-    $result = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\result_collector.bat" -Arguments @("collect", $TaskId, $Plan.expected_artifacts.session_id, $Plan.expected_artifacts.result_id, "--json")
-    Set-ReportId -RunState $RunState -Name "result_id" -Value $Plan.expected_artifacts.result_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "result" -Step "result_collector.collect" -Status "completed" -Inputs @{ session_id = $Plan.expected_artifacts.session_id } -Outputs @{ result_id = $Plan.expected_artifacts.result_id; summary = $result.data.summary } -NextStep "diff_analyzer.analyze"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_phase = "analysis"
-    $RunState.current_step = "diff_analyzer.analyze"
-    $analysis = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\diff_analyzer.bat" -Arguments @("analyze", $TaskId, $Plan.expected_artifacts.result_id, $Plan.expected_artifacts.analysis_id, "--json")
-    Set-ReportId -RunState $RunState -Name "analysis_id" -Value $Plan.expected_artifacts.analysis_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "analysis" -Step "diff_analyzer.analyze" -Status "completed" -Inputs @{ result_id = $Plan.expected_artifacts.result_id } -Outputs @{ analysis_id = $Plan.expected_artifacts.analysis_id; summary = $analysis.data.summary } -NextStep "build_test_runner.run.json_smoke"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_phase = "build_test"
-    $RunState.current_step = "build_test_runner.run.json_smoke"
-    $buildTest = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\build_test_runner.bat" -Arguments @(
-        "run", $TaskId, "json_smoke", "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
-        "--config", $configPaths.build_test, "--json"
-    )
-    Set-ReportId -RunState $RunState -Name "build_test_id" -Value $Plan.expected_artifacts.build_test_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "build_test" -Step "build_test_runner.run.json_smoke" -Status "completed" -Inputs @{ config = $configPaths.build_test } -Outputs @{ build_test_id = $Plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "verification_report.generate"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_phase = "verification"
-    $RunState.current_step = "verification_report.generate"
-    $verification = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\verification_report.bat" -Arguments @(
-        "generate", $TaskId, "--result-id", $Plan.expected_artifacts.result_id,
-        "--analysis-id", $Plan.expected_artifacts.analysis_id,
-        "--build-test-id", $Plan.expected_artifacts.build_test_id,
-        "--report-id", $Plan.expected_artifacts.verification_report_id,
-        "--json"
-    )
-    Set-ReportId -RunState $RunState -Name "verification_report_id" -Value $Plan.expected_artifacts.verification_report_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "verification" -Step "verification_report.generate" -Status "completed" -Inputs @{ result_id = $Plan.expected_artifacts.result_id; analysis_id = $Plan.expected_artifacts.analysis_id; build_test_id = $Plan.expected_artifacts.build_test_id } -Outputs @{ verification_report_id = $Plan.expected_artifacts.verification_report_id; verdict = $verification.data.verdict } -NextStep "completion_report.generate"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_phase = "completion"
-    $RunState.current_step = "completion_report.generate"
-    $completion = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_report.bat" -Arguments @("generate", $TaskId, $Plan.expected_artifacts.verification_report_id, $Plan.expected_artifacts.completion_report_id, "--json")
-    Set-ReportId -RunState $RunState -Name "completion_report_id" -Value $Plan.expected_artifacts.completion_report_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "completion" -Step "completion_report.generate" -Status "completed" -Inputs @{ verification_report_id = $Plan.expected_artifacts.verification_report_id } -Outputs @{ completion_report_id = $Plan.expected_artifacts.completion_report_id; readiness_level = $completion.data.readiness_level } -NextStep "completion_card.generate"
-    $RunState.last_checkpoint_id = $checkpoint.id
-
-    $RunState.current_step = "completion_card.generate"
-    $card = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_card.bat" -Arguments @("generate", $TaskId, $Plan.expected_artifacts.completion_report_id, $Plan.expected_artifacts.completion_card_id, "--json")
-    Set-ReportId -RunState $RunState -Name "completion_card_id" -Value $Plan.expected_artifacts.completion_card_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "completion" -Step "completion_card.generate" -Status "stopped" -Inputs @{ completion_report_id = $Plan.expected_artifacts.completion_report_id } -Outputs @{ completion_card_id = $Plan.expected_artifacts.completion_card_id; readiness_level = $card.data.readiness_level } -StopReason "completion_review_required"
-    $RunState.last_checkpoint_id = $checkpoint.id
+    $pipeline = Invoke-PostExecutionValidationPipeline -Repo $Repo -Paths $Paths -TaskId $TaskId -Plan $Plan -RunState $RunState -RunId $RunId -RunnerRunId $runnerRunId -ConfigPaths $configPaths
 
     $RunState.status = "stopped"
     $RunState.current_phase = "human_gate"
@@ -1287,7 +1398,7 @@ function Invoke-ImplementationStart {
     }
     $RunState.updated_at = Get-NowText
     $RunState.ended_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner implementation profile stopped at completion review gate." -Data $RunState.human_gate_state | Out-Null
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner Codex profile stopped at completion review gate." -Data $RunState.human_gate_state | Out-Null
     $runPath = Save-RunnerRun -Paths $Paths -RunState $RunState
 
     return [pscustomobject]@{
@@ -1303,8 +1414,8 @@ function Invoke-ImplementationStart {
         report_ids = $RunState.report_ids
         runner_run = $RunState
         executor_ok = $codex.ok
-        verification_verdict = $verification.data.verdict
-        completion_readiness = $completion.data.readiness_level
+        verification_verdict = $pipeline.verification.data.verdict
+        completion_readiness = $pipeline.completion.data.readiness_level
         task_lifecycle_unchanged = $true
         no_task_approval = $true
         no_task_done = $true
@@ -1369,8 +1480,8 @@ function Invoke-Start {
         }
     }
 
-    if ($ProfileValue -eq "implementation") {
-        return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ExecutorValue $ExecutorValue -Paths $paths -Plan $plan -RunState $runState -RunId $runId
+    if (@("implementation", "documentation") -contains $ProfileValue) {
+        return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue -Paths $paths -Plan $plan -RunState $runState -RunId $runId
     }
 
     $configPaths = Write-ValidationConfigs -Paths $paths
@@ -1388,68 +1499,10 @@ function Invoke-Start {
     )
     $runState.session_ids = @($plan.expected_artifacts.session_id)
     $runState.evidence_ids = @($plan.expected_artifacts.evidence_ids[0])
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "execution" -Step "local_cli_adapter.run.node_version" -Status "completed" -Inputs @{ config = $configPaths.local_cli } -Outputs @{ session_id = $plan.expected_artifacts.session_id; evidence_id = $plan.expected_artifacts.evidence_ids[0]; exit_code = $localCli.data.exit_code } -NextStep "file_watcher.snapshot"
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "execution" -Step "local_cli_adapter.run.node_version" -Status "completed" -Inputs @{ config = $configPaths.local_cli } -Outputs @{ session_id = $plan.expected_artifacts.session_id; evidence_id = $plan.expected_artifacts.evidence_ids[0]; exit_code = $localCli.data.exit_code } -NextStep "parallel_validation.file_watcher_snapshot_and_json_smoke"
     $runState.last_checkpoint_id = $checkpoint.id
 
-    $runState.current_phase = "evidence"
-    $runState.current_step = "file_watcher.snapshot"
-    $fileWatch = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\file_watcher.bat" -Arguments @(
-        "snapshot", $TaskId, $plan.expected_artifacts.session_id, $plan.expected_artifacts.evidence_ids[1],
-        "--config", $configPaths.file_watcher, "--json"
-    )
-    $runState.evidence_ids = @($plan.expected_artifacts.evidence_ids)
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "evidence" -Step "file_watcher.snapshot" -Status "completed" -Inputs @{ config = $configPaths.file_watcher } -Outputs @{ evidence_id = $plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count } -NextStep "result_collector.collect"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_phase = "result"
-    $runState.current_step = "result_collector.collect"
-    $result = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\result_collector.bat" -Arguments @("collect", $TaskId, $plan.expected_artifacts.session_id, $plan.expected_artifacts.result_id, "--json")
-    Set-ReportId -RunState $runState -Name "result_id" -Value $plan.expected_artifacts.result_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "result" -Step "result_collector.collect" -Status "completed" -Inputs @{ session_id = $plan.expected_artifacts.session_id } -Outputs @{ result_id = $plan.expected_artifacts.result_id; summary = $result.data.summary } -NextStep "diff_analyzer.analyze"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_phase = "analysis"
-    $runState.current_step = "diff_analyzer.analyze"
-    $analysis = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\diff_analyzer.bat" -Arguments @("analyze", $TaskId, $plan.expected_artifacts.result_id, $plan.expected_artifacts.analysis_id, "--json")
-    Set-ReportId -RunState $runState -Name "analysis_id" -Value $plan.expected_artifacts.analysis_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "analysis" -Step "diff_analyzer.analyze" -Status "completed" -Inputs @{ result_id = $plan.expected_artifacts.result_id } -Outputs @{ analysis_id = $plan.expected_artifacts.analysis_id; summary = $analysis.data.summary } -NextStep "build_test_runner.run.json_smoke"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_phase = "build_test"
-    $runState.current_step = "build_test_runner.run.json_smoke"
-    $buildTest = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\build_test_runner.bat" -Arguments @(
-        "run", $TaskId, "json_smoke", "--execute", "--build-test-id", $plan.expected_artifacts.build_test_id,
-        "--config", $configPaths.build_test, "--json"
-    )
-    Set-ReportId -RunState $runState -Name "build_test_id" -Value $plan.expected_artifacts.build_test_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "build_test" -Step "build_test_runner.run.json_smoke" -Status "completed" -Inputs @{ config = $configPaths.build_test } -Outputs @{ build_test_id = $plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "verification_report.generate"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_phase = "verification"
-    $runState.current_step = "verification_report.generate"
-    $verification = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\verification_report.bat" -Arguments @(
-        "generate", $TaskId, "--result-id", $plan.expected_artifacts.result_id,
-        "--analysis-id", $plan.expected_artifacts.analysis_id,
-        "--build-test-id", $plan.expected_artifacts.build_test_id,
-        "--report-id", $plan.expected_artifacts.verification_report_id,
-        "--json"
-    )
-    Set-ReportId -RunState $runState -Name "verification_report_id" -Value $plan.expected_artifacts.verification_report_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "verification" -Step "verification_report.generate" -Status "completed" -Inputs @{ result_id = $plan.expected_artifacts.result_id; analysis_id = $plan.expected_artifacts.analysis_id; build_test_id = $plan.expected_artifacts.build_test_id } -Outputs @{ verification_report_id = $plan.expected_artifacts.verification_report_id; verdict = $verification.data.verdict } -NextStep "completion_report.generate"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_phase = "completion"
-    $runState.current_step = "completion_report.generate"
-    $completion = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_report.bat" -Arguments @("generate", $TaskId, $plan.expected_artifacts.verification_report_id, $plan.expected_artifacts.completion_report_id, "--json")
-    Set-ReportId -RunState $runState -Name "completion_report_id" -Value $plan.expected_artifacts.completion_report_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "completion" -Step "completion_report.generate" -Status "completed" -Inputs @{ verification_report_id = $plan.expected_artifacts.verification_report_id } -Outputs @{ completion_report_id = $plan.expected_artifacts.completion_report_id; readiness_level = $completion.data.readiness_level } -NextStep "completion_card.generate"
-    $runState.last_checkpoint_id = $checkpoint.id
-
-    $runState.current_step = "completion_card.generate"
-    $card = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\completion_card.bat" -Arguments @("generate", $TaskId, $plan.expected_artifacts.completion_report_id, $plan.expected_artifacts.completion_card_id, "--json")
-    Set-ReportId -RunState $runState -Name "completion_card_id" -Value $plan.expected_artifacts.completion_card_id
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "completion" -Step "completion_card.generate" -Status "stopped" -Inputs @{ completion_report_id = $plan.expected_artifacts.completion_report_id } -Outputs @{ completion_card_id = $plan.expected_artifacts.completion_card_id; readiness_level = $card.data.readiness_level } -StopReason "completion_review_required"
-    $runState.last_checkpoint_id = $checkpoint.id
+    $pipeline = Invoke-PostExecutionValidationPipeline -Repo $Repo -Paths $paths -TaskId $TaskId -Plan $plan -RunState $runState -RunId $runId -RunnerRunId $runnerRunId -ConfigPaths $configPaths
 
     $runState.status = "stopped"
     $runState.current_phase = "human_gate"
@@ -1476,8 +1529,8 @@ function Invoke-Start {
         human_gate = $runState.human_gate_state.human_gate
         report_ids = $runState.report_ids
         runner_run = $runState
-        verification_verdict = $verification.data.verdict
-        completion_readiness = $completion.data.readiness_level
+        verification_verdict = $pipeline.verification.data.verdict
+        completion_readiness = $pipeline.completion.data.readiness_level
         task_lifecycle_unchanged = $true
         no_task_approval = $true
         no_task_done = $true

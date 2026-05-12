@@ -117,7 +117,7 @@ function chooseExecution(category, kind) {
 
   if (category === "DOC" || kind === "documentation") {
     return {
-      profile: "implementation",
+      profile: "documentation",
       executor: "codex_cli",
     };
   }

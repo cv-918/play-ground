@@ -265,6 +265,7 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 ```text
 /ai runner start id:<task_id> profile:implementation executor:codex_cli
+/ai runner start id:<task_id> profile:documentation executor:codex_cli
 /ai runner start id:<task_id> profile:validation executor:local_cli
 ```
 
