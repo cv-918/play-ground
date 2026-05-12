@@ -156,12 +156,16 @@ The local validator rejects:
 - non-array role/gate/validation/question fields
 - empty required role/gate/validation arrays
 - non-string or blank array items
+- duplicate array items
 - non-numeric confidence values
 - category, priority, risk, or kind values outside the allowlist
 
 Schema validation is intentionally stricter than friendly response formatting.
 If the LLM returns a plausible-looking but structurally loose draft, `/ai
 intake` must fail clearly instead of silently repairing it into workflow state.
+The Codex CLI `--output-schema` contract only contains keywords supported by the
+current Codex structured-output API; stricter duplicate checks are enforced by
+the local validator after JSON is returned.
 
 Category selection:
 

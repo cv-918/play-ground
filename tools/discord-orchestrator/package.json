@@ -7,6 +7,7 @@
   "main": "src/index.js",
   "scripts": {
     "register": "node src/registerCommands.js",
+    "smoke:auto-workflow": "node scripts/smokeAutoWorkflowE2E.js",
     "start": "node src/index.js"
   },
   "dependencies": {

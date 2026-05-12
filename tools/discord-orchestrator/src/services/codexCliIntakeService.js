@@ -128,6 +128,10 @@ function buildCodexArgs(config, schemaPath, outputPath, runtime) {
     "--json",
   ];
 
+  if (llmConfig.skipGitRepoCheck === true) {
+    args.push("--skip-git-repo-check");
+  }
+
   if (runtime.ephemeral) {
     args.push("--ephemeral");
   }

@@ -63,25 +63,21 @@ export const TASK_DRAFT_JSON_SCHEMA = Object.freeze({
     recommended_roles: {
       type: "array",
       minItems: 1,
-      uniqueItems: true,
       items: { type: "string", minLength: 1 },
     },
     human_decision_gates: {
       type: "array",
       minItems: 1,
-      uniqueItems: true,
       items: { type: "string", minLength: 1 },
     },
     required_validation: {
       type: "array",
       minItems: 1,
-      uniqueItems: true,
       items: { type: "string", minLength: 1 },
     },
     suggested_next_manual_action: { type: "string", minLength: 1 },
     clarifying_questions: {
       type: "array",
-      uniqueItems: true,
       items: { type: "string", minLength: 1 },
     },
     confidence: {
@@ -174,6 +170,18 @@ function requireStringArray(value, fieldName, errors, options = {}) {
   if (invalidItems.length > 0) {
     const indexes = invalidItems.map(({ index }) => index).join(", ");
     errors.push(`${fieldName} must contain only non-empty strings. Invalid index(es): ${indexes}`);
+  }
+  const seen = new Set();
+  const duplicates = [];
+  for (const item of value.map(normalizeText).filter(Boolean)) {
+    const key = item.toLowerCase();
+    if (seen.has(key)) {
+      duplicates.push(item);
+    }
+    seen.add(key);
+  }
+  if (duplicates.length > 0) {
+    errors.push(`${fieldName} must not contain duplicate items: ${duplicates.join(", ")}`);
   }
 }
 
