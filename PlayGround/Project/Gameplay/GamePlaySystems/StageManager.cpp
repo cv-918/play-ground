@@ -17,6 +17,8 @@ namespace
 {
 	constexpr _float INITIAL_ENEMY_SPAWN_SAFE_RADIUS = 180.f;
 	constexpr _uint SPAWN_POSITION_RETRY_COUNT = 16;
+
+	constexpr _uint PROLOGUE1_DURATION = DEFAULT_STAGE_DURATION + 2;
 }
 
 _int StageManager::Update(_double _delta_time)
@@ -297,8 +299,18 @@ void StageManager::_OnEnter()
 	// 스테이지 타이머 설정
 	stage_elapsed_time_ = 0.0;
 
-	const auto time_stat = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime).GetTotalIncrease(DEFAULT_STAGE_DURATION);
-	stage_duration_ = time_stat;
+	// 스테이지 길이 설정
+	const auto story_progress = _UserProfile.GetMainStoryProgress();
+
+	if (story_progress == MainStoryProgress::Prologue1)
+	{
+		stage_duration_ = PROLOGUE1_DURATION;
+	}
+	else
+	{
+		const auto time_stat_applied_duration = _UserProfile.GetAttributeStat().GetStat(AttributeType::Runtime).GetTotalIncrease(DEFAULT_STAGE_DURATION);
+		stage_duration_ = time_stat_applied_duration;
+	}
 
 	proceed_to_next_stage_timer_ = 0.0;
 	can_progress_next_stage_ = false;
