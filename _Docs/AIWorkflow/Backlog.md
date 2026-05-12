@@ -158,7 +158,7 @@ release
 | WF-403 | P1 | done | documentation | Write end-to-end workflow technical specification | Write the source-of-truth technical workflow document with visualization, step-by-step flow, user intervention markers, state paths, runtime paths, evidence/report paths, and workflow path variants. | Discord -> Codex App -> human review | done: "Created WF_End_To_End_Workflow_Technical_Spec.md. The document defines the Discord-first PC Runner workflow, responsibility boundaries, Mermaid happy path, bootstrap path, target runner path, user intervention matrix, durable/runtime/report paths, workflow variants, approval stop rules, final-form reduction rule, and WF-404 handoff. No command removal, behavior change, runner implementation, automatic approval/done/commit/push, or game source/data change was implemented." |
 | WF-404 | P1 | done | documentation | Write Human Director workflow operation guide | Write a practical Korean operation guide for requesting work, approving work, monitoring progress, reviewing completion, handling follow-ups, and deciding commits through the workflow. | Discord -> Codex App -> human review | done: "Created Korean Human Director companion documents for the direct-read Phase 4 docs and added WF_Human_Director_Operation_Guide_KR.md. The Korean docs cover the post-WF-309 roadmap, workflow audit, command surface plan, end-to-end technical spec, and practical operating guide. No command removal, metadata change, behavior change, PC Runner implementation, automatic approval/done/commit/push, or game source/data change was implemented." |
 | WF-405 | P1 | done | validation | Run end-to-end workflow smoke and validation pack | Exercise a representative low-risk workflow through intake, approval, workspace, execution, evidence, result collection, verification, completion, finalization, and follow-up reporting. Record evidence and gaps. | Discord -> PC Runner -> human review | done: WF-405 smoke validation completed with PASS_WITH_NOTES. Runtime workspace, Local CLI execution, session/evidence collection, file watcher snapshot, result collection, diff analysis, JSON smoke build/test, VerificationReport, CompletionReport/Card, FinalizationLog, AutoApprovalPolicy, and FollowUpPlan were exercised. JSON smoke passed 11 files, failed 0. Notes: build/test IDs require bt- prefix; follow_up_task_generator.bat positional generate rejected finalization id while .ps1 named parameters succeeded; progress/heartbeat is observable through Session Supervisor and Result Collector rather than a standalone wrapper. |
-| WF-406 | P1 | todo | automation | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain existing primitives while preserving approval gates, task/runtime state boundaries, evidence/report handoffs, runtime controls, and Human Director authority. | Discord -> Codex App -> human review | pending smoke findings and command surface plan |
+| WF-406 | P1 | done | automation | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain existing primitives while preserving approval gates, task/runtime state boundaries, evidence/report handoffs, runtime controls, and Human Director authority. | Discord -> Codex App -> human review | done: Created WF_Unified_PC_Runner_Orchestration_Entrypoint.md and Korean companion. The design defines pc_runner.bat status/plan/start/continue/stop/read, runner authority boundaries, runner runtime artifacts, execution phases, human gates, runtime control integration, executor selection, central ID policy, WF-405 smoke findings, and WF-407 acceptance criteria. No implementation, command removal, behavior change, automatic approval/done/commit/push, or game source/data change was performed. |
 | WF-407 | P1 | todo | automation | Implement unified PC Runner orchestration entrypoint | Implement the approved orchestration entrypoint and Discord surface that advances a task through safe automated substeps and stops at human gates. Do not bypass approval, finalization, or commit authority. | Discord -> PC Runner -> human review | pending WF-406 approval |
 | WF-408 | P1 | todo | maintenance | Apply approved workflow cleanup | Remove, hide, rename, or deprecate obsolete steps and commands according to the approved audit and command-surface plan. Update docs, command metadata, and validation evidence. | Discord -> Codex App -> human review | pending WF-401/WF-402 approval |
 | WF-20260511-142009 | P1 | todo | automation | Workflow task: Verify /ai intake creates TaskDraft via Codex CLI and Backlog task | The request is to confirm the Discord AIWorkflow `/ai intake` flow invokes Codex CLI to produce a valid TaskDraft and then creates a Backlog task without automatic approval or unrelated execution. | Discord intake -> Codex CLI TaskDraft -> human review | codex intake draft: risk=medium; workflow_path=discord_task_management; needs review; has clarifying questions; validation pending human approval |
@@ -172,15 +172,15 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-WF-406: Design unified PC Runner orchestration entrypoint
+WF-407: Implement unified PC Runner orchestration entrypoint
 ```
 
 Reason:
 
 ```text
-WF-405 confirmed that the current primitives connect end-to-end, but the path is
-still too manual. The next useful step is to design one controlled PC Runner
-entrypoint that chains safe substeps and stops at human approval gates.
+WF-406 defined the unified PC Runner command surface, authority model, runtime
+artifacts, execution phases, human gates, and WF-407 acceptance criteria. The
+next useful step is to implement the approved runner entrypoint.
 ```
 
 ---
@@ -222,7 +222,7 @@ WF-201 through WF-309 done
 -> WF-403 technical workflow specification done
 -> WF-404 Human Director operation guide done
 -> WF-405 end-to-end smoke validation done
--> WF-406 PC Runner orchestration design
+-> WF-406 PC Runner orchestration design done
 -> WF-407 PC Runner orchestration implementation
 -> WF-408 approved workflow cleanup
 ```

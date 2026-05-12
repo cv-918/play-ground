@@ -76,7 +76,7 @@ WF-400 done
 -> WF-403 technical workflow specification done
 -> WF-404 Human Director operation guide done
 -> WF-405 end-to-end smoke validation done
--> WF-406 orchestration entrypoint design
+-> WF-406 orchestration entrypoint design done
 -> WF-407 orchestration entrypoint implementation
 -> WF-408 approved cleanup
 ```

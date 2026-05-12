@@ -143,7 +143,7 @@ WF-402 Define command surface consolidation and deprecation plan
 WF-403 Write end-to-end workflow technical specification
 WF-404 Write Human Director workflow operation guide
 WF-405 Run end-to-end workflow smoke and validation pack (done)
-WF-406 Design unified PC Runner orchestration entrypoint
+WF-406 Design unified PC Runner orchestration entrypoint (done)
 WF-407 Implement unified PC Runner orchestration entrypoint
 WF-408 Apply approved workflow cleanup
 ```
