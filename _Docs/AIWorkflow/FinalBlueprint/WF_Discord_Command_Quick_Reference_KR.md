@@ -393,3 +393,19 @@ done_or_commit_decision
 - `_Temp/`, `_Local/`, `node_modules/`, `.env`, `*.local.json` 경로가 Git 변경분에 있으면 차단합니다.
 - 임의 shell 명령은 실행하지 않고 `git`만 직접 실행합니다.
 - commit/push는 `/ai intake`나 Runner가 자동으로 수행하지 않으며, 명시적인 `/ai git ...` 명령이 있을 때만 수행합니다.
+
+---
+
+## 봇 재시작 필요 확인
+
+코드를 수정하거나 pull한 뒤 Discord bot이 예전 프로세스로 떠 있으면 새 코드가 반영되지 않을 수 있습니다.
+
+```text
+/ai bot status
+```
+
+`Git HEAD`의 `running`과 `current`가 다르거나 `재시작 권장: yes`가 나오면 아래 명령을 실행합니다.
+
+```text
+/ai bot restart
+```

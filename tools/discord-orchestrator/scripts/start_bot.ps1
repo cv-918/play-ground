@@ -113,6 +113,20 @@ $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $stdoutLog = Join-Path $paths.LogsDir "discord_bot_$timestamp.stdout.log"
 $stderrLog = Join-Path $paths.LogsDir "discord_bot_$timestamp.stderr.log"
 
+$gitBranch = ""
+$gitHead = ""
+$gitHeadShort = ""
+$gitHeadCommittedAt = ""
+try {
+    $gitBranch = (& git -C $paths.RepoRoot branch --show-current 2>$null).Trim()
+    $gitHead = (& git -C $paths.RepoRoot rev-parse HEAD 2>$null).Trim()
+    $gitHeadShort = (& git -C $paths.RepoRoot rev-parse --short HEAD 2>$null).Trim()
+    $gitHeadCommittedAt = (& git -C $paths.RepoRoot log -1 --format=%cI 2>$null).Trim()
+}
+catch {
+    Write-Warning "Could not record Git HEAD in bot state: $($_.Exception.Message)"
+}
+
 $process = Start-Process `
     -FilePath $nodeCommand.Source `
     -ArgumentList @("src/index.js") `
@@ -128,6 +142,10 @@ $state = [PSCustomObject]@{
     process_started_at = $process.StartTime.ToString("o")
     command = "node src/index.js"
     working_directory = $paths.BotRoot
+    git_branch = $gitBranch
+    git_head = $gitHead
+    git_head_short = $gitHeadShort
+    git_head_committed_at = $gitHeadCommittedAt
     stdout_log = $stdoutLog
     stderr_log = $stderrLog
 }

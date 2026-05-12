@@ -657,6 +657,7 @@ export function formatBotControlResult(result) {
   }
 
   const data = result.data ?? {};
+  const botVersionLines = buildBotVersionLines(data);
   const lines = [
     data.delay_ms ? "**봇 재시작 예약됨**" : "**봇 제어 상태**",
     `관리 스크립트로 실행 중: ${koBool(data.managed)}`,
@@ -666,11 +667,37 @@ export function formatBotControlResult(result) {
     data.delay_ms ? `재시작 대기 시간(ms): ${data.delay_ms}` : "",
   ].filter(Boolean);
 
+  lines.push(...botVersionLines);
+
+  if (data.restart_recommended) {
+    lines.push(`다음 명령: ${formatInlineCode("/ai bot restart")}`);
+  }
+
   if (data.delay_ms) {
     lines.push("기존 로컬 재시작 스크립트로 봇을 다시 시작합니다. workflow task 상태, source file, commit, push는 변경하지 않습니다.");
   }
 
   return lines.join("\n");
+}
+
+function buildBotVersionLines(data) {
+  const lines = [];
+  if (data.started_at) {
+    lines.push(`시작 시각: ${data.started_at}`);
+  }
+  if (data.current_git_head_short || data.state_git_head_short) {
+    lines.push(`Git HEAD: running=${data.state_git_head_short || "unknown"}, current=${data.current_git_head_short || "unknown"}`);
+  }
+  if (data.current_git_branch || data.state_git_branch) {
+    lines.push(`branch: running=${data.state_git_branch || "unknown"}, current=${data.current_git_branch || "unknown"}`);
+  }
+  if (data.restart_recommended !== undefined) {
+    lines.push(`재시작 권장: ${koBool(data.restart_recommended)}`);
+  }
+  if (data.restart_reason) {
+    lines.push(`이유: ${cleanKo(data.restart_reason)}`);
+  }
+  return lines;
 }
 
 export function formatIntakeTaskReview(result) {

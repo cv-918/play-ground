@@ -397,6 +397,11 @@ the Discord reply is sent. It works only when the currently running bot process
 matches the managed state file created by `start_bot.bat`; otherwise it refuses
 to restart so it cannot stop the wrong process or create duplicate bot sessions.
 
+`/ai bot status` also compares the Git HEAD recorded when the bot was started
+with the current repository HEAD. If the repository changed after the bot was
+started, the response marks restart as recommended so old-process bugs are
+easier to spot.
+
 For intake-created task review:
 
 ```text

@@ -1,8 +1,11 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
+import { execFile } from "node:child_process";
 
 const RESTART_DELAY_MS = 1000;
+const execFileAsync = promisify(execFile);
 
 export async function prepareBotRestart(config) {
   const paths = getBotControlPaths(config);
@@ -62,15 +65,91 @@ export function scheduleBotRestart(config) {
 export async function getManagedBotStatus(config) {
   const paths = getBotControlPaths(config);
   const state = await readState(paths.stateFile);
+  const currentGit = await readCurrentGitState(config);
+  const freshness = evaluateRuntimeFreshness(state, currentGit);
   return {
     ok: true,
     data: {
       managed: Number(state?.pid) === process.pid,
       current_pid: process.pid,
       recorded_pid: state?.pid ?? null,
+      started_at: state?.started_at ?? "",
+      process_started_at: state?.process_started_at ?? "",
+      state_git_branch: state?.git_branch ?? "",
+      state_git_head: state?.git_head ?? "",
+      state_git_head_short: state?.git_head_short ?? "",
+      state_git_head_committed_at: state?.git_head_committed_at ?? "",
+      current_git_branch: currentGit.branch,
+      current_git_head: currentGit.head,
+      current_git_head_short: currentGit.headShort,
+      current_git_head_committed_at: currentGit.committedAt,
+      restart_recommended: freshness.restartRecommended,
+      restart_reason: freshness.reason,
       state_file: toRepoRelative(config, paths.stateFile),
       restart_script: toRepoRelative(config, paths.restartScript),
     },
+  };
+}
+
+async function readCurrentGitState(config) {
+  const [branch, head, headShort, committedAt] = await Promise.all([
+    runGit(config, ["branch", "--show-current"]),
+    runGit(config, ["rev-parse", "HEAD"]),
+    runGit(config, ["rev-parse", "--short", "HEAD"]),
+    runGit(config, ["log", "-1", "--format=%cI"]),
+  ]);
+
+  return {
+    branch: branch.ok ? branch.stdout : "",
+    head: head.ok ? head.stdout : "",
+    headShort: headShort.ok ? headShort.stdout : "",
+    committedAt: committedAt.ok ? committedAt.stdout : "",
+  };
+}
+
+async function runGit(config, args) {
+  try {
+    const result = await execFileAsync("git", args, {
+      cwd: config.repoRoot,
+      windowsHide: true,
+      timeout: 10000,
+    });
+    return { ok: true, stdout: result.stdout.trim() };
+  } catch {
+    return { ok: false, stdout: "" };
+  }
+}
+
+function evaluateRuntimeFreshness(state, currentGit) {
+  if (!state) {
+    return {
+      restartRecommended: true,
+      reason: "bot state file is missing or unreadable",
+    };
+  }
+
+  const stateHead = String(state.git_head ?? "").trim();
+  if (stateHead && currentGit.head && stateHead !== currentGit.head) {
+    return {
+      restartRecommended: true,
+      reason: "bot started from an older Git HEAD",
+    };
+  }
+
+  if (!stateHead && state.process_started_at && currentGit.committedAt) {
+    const processStartedAt = Date.parse(state.process_started_at);
+    const headCommittedAt = Date.parse(currentGit.committedAt);
+    if (Number.isFinite(processStartedAt) && Number.isFinite(headCommittedAt) && headCommittedAt > processStartedAt) {
+      return {
+        restartRecommended: true,
+        reason: "current Git HEAD is newer than the running bot process",
+      };
+    }
+  }
+
+  return {
+    restartRecommended: false,
+    reason: "running bot matches current Git HEAD",
   };
 }
 
