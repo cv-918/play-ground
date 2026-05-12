@@ -1319,6 +1319,7 @@ export function formatPcRunnerPayload(result) {
         description: [
           `${formatInlineCode(data.task_id || "unknown")}`,
           cleanKo(result?.error || data.stop_reason || "Unknown failure."),
+          `지금 할 일: ${pcRunnerNextActionSummary(data.stop_reason || run.human_gate_state?.stop_reason, result?.command)}`,
         ].join("\n"),
         fields: [
           embedField("사람 확인 지점", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
@@ -1356,6 +1357,7 @@ export function formatPcRunnerPayload(result) {
       description: [
         `${formatInlineCode(taskId || "unknown")}`,
         runnerRunId ? `Runner: ${formatInlineCode(runnerRunId)}` : "",
+        `지금 할 일: ${pcRunnerNextActionSummary(stopReason, result.command)}`,
         stopReason ? `중단 이유: ${formatInlineCode(stopReason)}` : "",
       ].filter(Boolean).join("\n"),
       fields: [
@@ -1412,6 +1414,7 @@ export function formatRunnerAcceptCompletionPayload(result) {
         description: [
           `${formatInlineCode(taskId || "unknown")}`,
           cleanKo(result?.error || "Unknown failure."),
+          `지금 할 일: ${pcRunnerNextActionSummary(stopReason, "continue")}`,
         ].join("\n"),
         fields: [
           embedField("진행 단계", result?.stage || "unknown"),
@@ -1458,6 +1461,35 @@ export function formatRunnerAcceptCompletionPayload(result) {
       },
     }],
   };
+}
+
+function pcRunnerNextActionSummary(stopReason, command) {
+  if (command === "plan") {
+    return "계획을 확인한 뒤 실행 가능하면 `/ai runner start`를 누르세요.";
+  }
+
+  switch (stopReason) {
+    case "approval_required":
+      return "작업을 선택하고 승인한 뒤 Runner를 시작하세요.";
+    case "active_task_mismatch":
+      return "ActiveTask를 이 작업으로 맞춘 뒤 Runner를 다시 시작하세요.";
+    case "completion_review_required":
+      return "완료 카드와 검증 결과를 보고, 문제가 없으면 `accept-completion`으로 마무리 검토를 통과시키세요.";
+    case "finalization_required":
+      return "완료 카드를 확인하고 최종 결정을 기록하세요.";
+    case "finalization_not_accepted":
+      return "최종 결정이 accept 계열이 아닙니다. 수정 요청/반려/보류를 처리하거나 결정을 바꾸세요.";
+    case "done_or_commit_decision":
+      return "작업 완료 처리와 commit/push 여부만 남았습니다.";
+    case "executor_not_ready":
+      return "실행기 상태를 확인하고 설정 또는 경로 문제를 먼저 해결하세요.";
+    case "":
+    case undefined:
+    case null:
+      return "Runner 상태와 기록을 확인하세요.";
+    default:
+      return `Runner가 ${stopReason} 상태에서 멈췄습니다. 아래 명령으로 상태를 확인하세요.`;
+  }
 }
 
 function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runnerRunId, canStart }) {
