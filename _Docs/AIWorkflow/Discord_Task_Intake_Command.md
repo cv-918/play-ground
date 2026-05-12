@@ -132,6 +132,7 @@ input text
 -> local keyword/rule baseline
 -> Codex CLI `codex exec` TaskDraft JSON candidate
 -> local TaskDraft schema validation
+-> strict local structural validation
 -> rule-based baseline cross-check
 -> role router recommendation and path-scoped reminders
 -> Backlog task creation for /ai intake or Discord response formatting for /ai intake-preview
@@ -141,6 +142,26 @@ If Codex CLI is disabled, unavailable, unauthenticated, times out, refuses, or
 returns invalid schema/JSON, `/ai intake` fails clearly and does not write
 Backlog. The deterministic rule-based draft is still used as a baseline and
 cross-check. It is not used as a silent write fallback by default.
+
+The TaskDraft schema is enforced twice:
+
+- Codex CLI receives the JSON schema through `--output-schema`.
+- The local harness validates the returned object again before any Backlog write.
+
+The local validator rejects:
+
+- fields outside the TaskDraft contract
+- missing required fields
+- empty required text fields
+- non-array role/gate/validation/question fields
+- empty required role/gate/validation arrays
+- non-string or blank array items
+- non-numeric confidence values
+- category, priority, risk, or kind values outside the allowlist
+
+Schema validation is intentionally stricter than friendly response formatting.
+If the LLM returns a plausible-looking but structurally loose draft, `/ai
+intake` must fail clearly instead of silently repairing it into workflow state.
 
 Category selection:
 
