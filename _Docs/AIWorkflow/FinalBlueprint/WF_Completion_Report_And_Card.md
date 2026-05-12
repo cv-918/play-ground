@@ -105,7 +105,7 @@ done, finalize, commit, or push anything.
 |---|---|---|
 | PASS | ready_for_human_completion_review | Review, then manual done/commit decision may proceed |
 | PASS_WITH_NOTES | ready_for_human_completion_review_with_notes | Review notes, then manual done/commit decision may proceed |
-| CONCERNS | needs_human_decision | Human Director decision required |
+| CONCERNS | needs_human_decision | Human Director may request changes or record reviewed concern acceptance when no blockers or failed checks exist |
 | BLOCKED | blocked_by_verification | Missing evidence must be resolved |
 | FAIL | failed_verification | Fix or recovery task required |
 | Missing VerificationReport | blocked_by_missing_verification | Generate VerificationReport first |

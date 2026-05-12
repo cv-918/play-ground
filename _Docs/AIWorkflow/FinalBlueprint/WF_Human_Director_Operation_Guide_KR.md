@@ -69,7 +69,7 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 2. 승인 필요 시에만 승인
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
 4. 사용자는 completion card를 리뷰
-5. accept/request changes/reject/defer 결정
+5. accept/accept-concerns/request changes/reject/defer 결정
 6. 필요한 경우 커밋/푸시 승인
 ```
 
@@ -169,10 +169,11 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 6. DevLog가 필요한 작업이면 기록됐는지
 ```
 
-판정은 보통 네 가지입니다.
+판정은 보통 다섯 가지입니다.
 
 ```text
 accept: 완료 인정
+accept-concerns: 우려를 검토했고 받아들임
 request-changes: 수정 요청
 reject: 결과 반려
 defer: 지금 판단 보류
@@ -195,8 +196,8 @@ defer: 지금 판단 보류
 
 ## 다음 작업
 
-이 가이드 이후의 다음 단계는 WF-405입니다.
+WF-412까지 완료된 현재 기준으로 다음 단계는 GAME-001입니다.
 
-WF-405에서는 대표적인 낮은 위험도 작업 하나를 실제 workflow로 통과시켜서
-intake, 승인, workspace, 실행, evidence, result, verification, completion,
-finalization, follow-up이 서로 잘 이어지는지 smoke 검증합니다.
+GAME-001에서는 기존 게임 데이터 로더 검증 작업을 실제 runner workflow로
+통과시켜서, 자동화가 workflow 문서 작업뿐 아니라 실제 게임 프로젝트 작업에도
+쓸 수 있는지 확인합니다.

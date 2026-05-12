@@ -22,7 +22,7 @@
 5. Runner가 workspace 준비, 실행, 증거 수집, 검증, 완료 카드 생성을 수행한다.
 6. 사용자는 필요하면 진행 상황을 본다.
 7. 사용자는 Completion Card를 보고 완료 여부를 판단한다.
-8. 사용자는 accept/request changes/reject/defer 중 하나를 선택한다.
+8. 사용자는 accept/accept-concerns/request changes/reject/defer 중 하나를 선택한다.
 9. Runner는 최종 결정 이후 필요한 후속 산출물을 만든다.
 10. 사용자가 task done과 commit/push 여부를 결정한다.
 ```
@@ -135,7 +135,7 @@ Runner는 이 흐름을 자동으로 이어가되, 사용자 권한이 필요한
 | 실행기 준비 안 됨 | Codex CLI 또는 Local CLI 설정 문제 | 설정 수정/실행기 변경/수동 승격 |
 | Runtime Control 요청 | 중단/재시도/재계획 등 요청 있음 | 승인/반려/적용 |
 | 검증 결과 문제 | CONCERNS/BLOCKED/FAIL | 수정 요청/재시도/리스크 수락 |
-| Completion Card 준비 | 완료 판단 필요 | accept/request changes/reject/defer |
+| Completion Card 준비 | 완료 판단 필요 | accept/accept-concerns/request changes/reject/defer |
 | Finalization 이후 | lifecycle 완료와 git 결정 필요 | task done, commit/push 여부 결정 |
 | Auto approval 후보 | 정책 변경은 사용자 권한 | 정책 승인 또는 무시 |
 

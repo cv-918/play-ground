@@ -318,8 +318,8 @@ The runner must stop at these gates:
 | Executor unavailable | `executor_not_ready` | fix config, switch executor, or manual escalation |
 | Runtime control requested | `runtime_control_pending` | approve/reject/apply control |
 | Verification CONCERNS/BLOCKED/FAIL | `verification_review_required` | accept risk, request changes, or retry/replan |
-| Completion card ready | `completion_review_required` | accept, request changes, reject, or defer |
-| Finalization recorded | `done_or_commit_decision` | mark task done and decide commit/push |
+| Completion card ready | `completion_review_required` | accept, accept reviewed concerns, request changes, reject, or defer |
+| Accepted finalization recorded | `done_or_commit_decision` | mark task done and decide commit/push |
 | Auto approval candidate only | `auto_approval_candidate_review` | explicitly approve future policy change or ignore |
 
 ## Runtime Control Integration

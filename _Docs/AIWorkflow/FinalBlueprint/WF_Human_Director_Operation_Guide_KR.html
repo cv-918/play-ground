@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human Director용 AIWorkflow 운영 가이드</title>
+  <style>
+    :root { color-scheme: light; --bg: #f6f7f9; --paper: #ffffff; --ink: #1f2933; --muted: #607080; --line: #d7dde4; --accent: #1d5f8f; --accent-soft: #e6f1f8; --code-bg: #f0f4f8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif; line-height: 1.65; }
+    .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 56px; }
+    header { margin-bottom: 24px; padding: 28px 0 18px; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: 0; }
+    .meta { margin: 0; color: var(--muted); font-size: 14px; }
+    .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+    nav { position: sticky; top: 18px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+    nav h2 { margin: 0 0 10px; font-size: 16px; }
+    nav ol { margin: 0; padding-left: 18px; }
+    nav li { margin: 6px 0; }
+    nav .toc-level-1 { font-weight: 700; }
+    nav .toc-level-2 { margin-left: 10px; font-size: 14px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    main { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 30px; }
+    main h1, main h2, main h3 { line-height: 1.3; letter-spacing: 0; }
+    main h1 { margin-top: 0; font-size: 30px; }
+    main h2 { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 24px; }
+    main h3 { margin-top: 24px; font-size: 19px; }
+    p, li { font-size: 16px; }
+    ul, ol { padding-left: 24px; }
+    code { background: var(--code-bg); border: 1px solid #dbe4ec; border-radius: 5px; padding: 1px 5px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.92em; }
+    pre { overflow-x: auto; background: #17202a; color: #f7fbff; border-radius: 8px; padding: 16px; line-height: 1.55; }
+    pre code { background: transparent; border: 0; padding: 0; color: inherit; font-size: 14px; }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+    .note { margin: 0 0 22px; padding: 12px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 6px; color: #24435c; font-size: 14px; }
+    @media (max-width: 860px) { .page { width: min(100% - 24px, 1120px); padding-top: 20px; } .layout { grid-template-columns: 1fr; } nav { position: static; } main { padding: 22px; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Human Director용 AIWorkflow 운영 가이드</h1>
+      <p class="meta">Generated from _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md on 2026-05-12</p>
+    </header>
+    <div class="layout">
+      <nav aria-label="목차">
+        <h2>목차</h2>
+        <ol>
+<li class="toc-level-1"><a href="#human-director용-aiworkflow-운영-가이드">Human Director용 AIWorkflow 운영 가이드</a></li>
+<li class="toc-level-2"><a href="#목적">목적</a></li>
+<li class="toc-level-2"><a href="#먼저-읽을-문서">먼저 읽을 문서</a></li>
+<li class="toc-level-2"><a href="#사용자의-역할">사용자의 역할</a></li>
+<li class="toc-level-2"><a href="#현재-정규-흐름">현재 정규 흐름</a></li>
+<li class="toc-level-2"><a href="#최종-목표-흐름">최종 목표 흐름</a></li>
+<li class="toc-level-2"><a href="#명령어를-어떻게-보면-되는가">명령어를 어떻게 보면 되는가</a></li>
+<li class="toc-level-2"><a href="#승인해야-하는-경우">승인해야 하는 경우</a></li>
+<li class="toc-level-2"><a href="#승인하지-않아도-되는-방향">승인하지 않아도 되는 방향</a></li>
+<li class="toc-level-2"><a href="#완료-리뷰-방법">완료 리뷰 방법</a></li>
+<li class="toc-level-2"><a href="#커밋-결정">커밋 결정</a></li>
+<li class="toc-level-2"><a href="#다음-작업">다음 작업</a></li>
+        </ol>
+      </nav>
+      <main>
+        <p class="note">이 HTML은 Markdown 원본을 브라우저에서 읽기 쉽도록 변환한 문서입니다. 운영 기준은 같은 폴더의 Markdown 원본과 함께 관리합니다.</p>
+<h1 id="human-director용-aiworkflow-운영-가이드">Human Director용 AIWorkflow 운영 가이드</h1>
+<h2 id="목적">목적</h2>
+<p>이 문서는 사용자가 실제로 워크플로우를 운영할 때 읽는 한국어 가이드입니다.</p>
+<p>기술 문서 전체를 매번 읽을 필요는 없습니다. 평소에는 이 문서를 기준으로 작업하고, 세부 판단이 필요할 때 companion 문서를 확인하면 됩니다.</p>
+<h2 id="먼저-읽을-문서">먼저 읽을 문서</h2>
+<p>직접 읽을 가치가 있는 문서는 다음입니다.</p>
+<ol>
+<li><code>WF_Human_Director_Operation_Guide_KR.md</code></li>
+<p>- 평소 작업할 때 보는 문서입니다.</p>
+<li><code>WF_Post_309_Workflow_Stabilization_Roadmap_KR.md</code></li>
+<p>- 앞으로 어떤 순서로 자동화가 안정화되는지 보는 문서입니다.</p>
+<li><code>WF_Command_Surface_Consolidation_Plan_KR.md</code></li>
+<p>- 어떤 명령이 정규 경로이고 어떤 명령이 진단/수동 승격인지 보는 문서입니다.</p>
+<li><code>WF_End_To_End_Workflow_Technical_Spec_KR.md</code></li>
+<p>- 전체 구조가 궁금하거나 승인 경계가 헷갈릴 때 보는 문서입니다.</p>
+<li><code>WF_Workflow_Audit_And_Pruning_Report_KR.md</code></li>
+<p>- 나중에 명령어 제거/숨김을 결정할 때 보는 문서입니다.</p>
+</ol>
+<p>DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 읽을 필요는 적습니다.</p>
+<h2 id="사용자의-역할">사용자의 역할</h2>
+<p>사용자가 맡는 일은 아래로 줄이는 것이 목표입니다.</p>
+<pre><code class="language-text">1. 작업을 지시한다.
+2. 승인이 필요한 작업만 승인한다.
+3. 필요할 때 진행 상황을 확인한다.
+4. 완료 결과를 리뷰한다.
+5. 필요한 경우 커밋/푸시를 승인한다.</code></pre>
+<p>하네스가 맡아야 하는 일은 작업 구조화, 상태 관리, 실행 감시, 증거 수집, 검증 보고, 완료 카드, 최종화 기록, 후속 작업 후보 생성입니다.</p>
+<h2 id="현재-정규-흐름">현재 정규 흐름</h2>
+<p>WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.</p>
+<pre><code class="language-text">1. /ai intake text:&lt;작업 요청&gt;
+2. /ai task set-active id:&lt;task_id&gt;
+3. 필요한 경우 /ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;
+4. /ai runner plan id:&lt;task_id&gt;
+5. /ai runner start id:&lt;task_id&gt;
+6. 완료 카드와 runner 결과 확인
+7. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
+8. /ai runner continue id:&lt;task_id&gt;
+9. /ai task done id:&lt;task_id&gt; evidence:&lt;완료 근거&gt;
+10. 커밋/푸시 결정</code></pre>
+<p><code>/ai prepare goal</code>과 <code>/ai result audit</code>은 이제 정규 경로가 아니라 runner가 막혔을 때 쓰는 수동 승격 경로입니다.</p>
+<h2 id="최종-목표-흐름">최종 목표 흐름</h2>
+<p>최종 목표는 아래에 가깝습니다.</p>
+<pre><code class="language-text">1. /ai intake text:&lt;작업 요청&gt;
+2. 승인 필요 시에만 승인
+3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
+4. 사용자는 completion card를 리뷰
+5. accept/accept-concerns/request changes/reject/defer 결정
+6. 필요한 경우 커밋/푸시 승인</code></pre>
+<h2 id="명령어를-어떻게-보면-되는가">명령어를 어떻게 보면 되는가</h2>
+<h3 id="평소에-쓰는-명령">평소에 쓰는 명령</h3>
+<ul>
+<li><code>/ai intake</code></li>
+<li><code>/ai task set-active</code></li>
+<li><code>/ai task approve</code></li>
+<li><code>/ai runner plan</code></li>
+<li><code>/ai runner start</code></li>
+<li><code>/ai runner continue</code></li>
+<li><code>/ai completion card</code></li>
+<li><code>/ai finalization accept</code></li>
+<li><code>/ai finalization accept-concerns</code></li>
+<li><code>/ai finalization request-changes</code></li>
+<li><code>/ai finalization reject</code></li>
+<li><code>/ai finalization defer</code></li>
+<li><code>/ai task done</code></li>
+</ul>
+<h3 id="수동-승격으로-쓰는-명령">수동 승격으로 쓰는 명령</h3>
+<ul>
+<li><code>/ai prepare goal</code></li>
+<li><code>/ai result audit</code></li>
+</ul>
+<p>정규 runner 경로가 막혔거나 사람이 직접 Codex App/CLI를 사용해야 할 때만 사용합니다.</p>
+<h3 id="필요할-때만-보는-명령">필요할 때만 보는 명령</h3>
+<ul>
+<li><code>/ai status</code></li>
+<li><code>/ai active</code></li>
+<li><code>/ai backlog</code></li>
+<li><code>/ai next</code></li>
+<li><code>/ai blockers</code></li>
+<li><code>/ai role status</code></li>
+<li><code>/ai task list</code></li>
+<li><code>/ai task review-intake</code></li>
+<li><code>/ai intake-engine status</code></li>
+<li><code>/ai bot status</code></li>
+<li><code>/ai bot restart</code></li>
+</ul>
+<h3 id="수동-승격-또는-호환-명령">수동 승격 또는 호환 명령</h3>
+<ul>
+<li><code>/ai prepare codex</code></li>
+<li><code>/ai intake-preview</code></li>
+<li><code>/ai intake-test</code></li>
+<li><code>/ai task create</code></li>
+<li><code>/ai intake-create</code></li>
+</ul>
+<p>이 명령들은 정규 경로라기보다 예외 상황, 디버깅, 호환을 위한 명령입니다.</p>
+<h2 id="승인해야-하는-경우">승인해야 하는 경우</h2>
+<p>아래는 사용자 승인이 필요합니다.</p>
+<ul>
+<li>P0/P1 또는 high-risk 작업</li>
+<li>게임 소스 구현</li>
+<li>구조 변경</li>
+<li>data schema 변경</li>
+<li>runtime lifecycle 변경</li>
+<li>workflow rule 또는 approval policy 변경</li>
+<li>명령어 제거, 숨김, 이름 변경, 동작 변경</li>
+<li>중단, 재시도, 재계획, 범위 축소, executor 변경</li>
+<li>완료 accept/reject/request changes/defer</li>
+<li>commit/push</li>
+</ul>
+<h2 id="승인하지-않아도-되는-방향">승인하지 않아도 되는 방향</h2>
+<p>미래에는 아래 작업은 하네스가 자동으로 처리하는 것이 목표입니다.</p>
+<ul>
+<li>TaskDraft 생성</li>
+<li>Backlog task 생성</li>
+<li>workspace 준비</li>
+<li>실행 session 생성</li>
+<li>heartbeat/progress 기록</li>
+<li>file watcher와 diff snapshot</li>
+<li>evidence 수집</li>
+<li>result/diff/build-test report 생성</li>
+<li>VerificationReport 생성</li>
+<li>CompletionReport/Card 생성</li>
+<li>Follow-up 후보 생성</li>
+</ul>
+<p>단, 자동으로 approval, done, commit, push를 해서는 안 됩니다.</p>
+<h2 id="완료-리뷰-방법">완료 리뷰 방법</h2>
+<p>완료 리뷰 때는 아래만 보면 됩니다.</p>
+<pre><code class="language-text">1. Completion Card가 READY인지
+2. VerificationReport verdict가 PASS 또는 PASS_WITH_NOTES인지
+3. 남은 risk나 blocker가 있는지
+4. 변경 파일이 승인 범위 안인지
+5. validation evidence가 있는지
+6. DevLog가 필요한 작업이면 기록됐는지</code></pre>
+<p>판정은 보통 다섯 가지입니다.</p>
+<pre><code class="language-text">accept: 완료 인정
+accept-concerns: 우려를 검토했고 받아들임
+request-changes: 수정 요청
+reject: 결과 반려
+defer: 지금 판단 보류</code></pre>
+<h2 id="커밋-결정">커밋 결정</h2>
+<p>커밋은 자동화의 마지막 gate입니다.</p>
+<p>커밋 전에 확인할 것:</p>
+<ul>
+<li>diff가 예상 범위인지</li>
+<li>새 파일이 diff에 포함됐는지</li>
+<li>validation이 실제로 수행됐는지</li>
+<li>DevLog가 필요한 경우 작성됐는지</li>
+<li>unrelated change가 섞이지 않았는지</li>
+</ul>
+<p>커밋/푸시는 사용자가 직접 하거나 명시적으로 승인된 Git 경로를 통해서만 진행합니다.</p>
+<h2 id="다음-작업">다음 작업</h2>
+<p>WF-412까지 완료된 현재 기준으로 다음 단계는 GAME-001입니다.</p>
+<p>GAME-001에서는 기존 게임 데이터 로더 검증 작업을 실제 runner workflow로 통과시켜서, 자동화가 workflow 문서 작업뿐 아니라 실제 게임 프로젝트 작업에도 쓸 수 있는지 확인합니다.</p>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

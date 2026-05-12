@@ -1,0 +1,335 @@
+# Discord 명령어 빠른 참조
+
+## 목적
+
+이 문서는 Discord에서 AIWorkflow가 멈췄을 때 다음에 어떤 명령을 써야
+하는지 빠르게 확인하기 위한 한글 치트시트입니다.
+
+자세한 설계 설명은 아래 문서를 봅니다.
+
+- `WF_Human_Director_Operation_Guide_KR.md`
+- `WF_Unified_PC_Runner_Orchestration_Entrypoint_KR.md`
+- `WF_Completion_Report_And_Card.md`
+- `WF_Approval_History_And_Finalization_Log.md`
+
+---
+
+## 가장 짧은 정규 흐름
+
+저위험 문서/검증 작업은 `/ai intake` 이후 자동으로 ActiveTask 선택, 승인,
+PC Runner 시작까지 진행될 수 있습니다.
+
+```text
+/ai intake text:<작업 요청>
+```
+
+Runner가 완료 리뷰 지점에서 멈추면:
+
+```text
+/ai runner read id:<task_id>
+/ai completion card id:<task_id> completion-report-id:<completion_report_id>
+/ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
+/ai runner continue id:<task_id>
+```
+
+마지막으로 done/commit 판단 지점에서 멈추면:
+
+```text
+/ai task done id:<task_id> evidence:<완료 근거>
+```
+
+커밋/푸시는 자동으로 하지 않습니다. 사용자가 직접 하거나 명시적으로 승인된
+Git 경로에서만 수행합니다.
+
+---
+
+## 멈춘 이유별 다음 명령
+
+### `approval_required`
+
+뜻:
+
+```text
+이 작업은 자동 착수하면 안 되고 사람 승인이 필요합니다.
+```
+
+다음 명령:
+
+```text
+/ai task set-active id:<task_id>
+/ai task approve id:<task_id> note:<승인 범위>
+/ai runner start id:<task_id>
+```
+
+P0/P1, medium/high risk, 게임 소스/데이터 변경, workflow 명령 변경은 보통
+여기서 멈춥니다.
+
+---
+
+### `active_task_mismatch`
+
+뜻:
+
+```text
+Backlog task와 ActiveTask가 서로 다릅니다.
+```
+
+다음 명령:
+
+```text
+/ai task set-active id:<task_id>
+/ai runner start id:<task_id>
+```
+
+작업이 아직 승인되지 않았다면 먼저 승인합니다.
+
+```text
+/ai task approve id:<task_id> note:<승인 범위>
+```
+
+---
+
+### `completion_review_required`
+
+뜻:
+
+```text
+Runner가 실행, 증거 수집, 검증 보고, 완료 보고, 완료 카드 생성까지 끝냈습니다.
+이제 사람이 완료 결과를 확인해야 합니다.
+```
+
+다음 명령:
+
+```text
+/ai runner read id:<task_id>
+/ai completion card id:<task_id> completion-report-id:<completion_report_id>
+```
+
+완료 결과가 문제 없으면:
+
+```text
+/ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
+/ai runner continue id:<task_id>
+```
+
+우려는 있지만 검토 후 받아들일 수 있으면:
+
+```text
+/ai finalization accept-concerns id:<task_id> completion-report-id:<completion_report_id>
+/ai runner continue id:<task_id>
+```
+
+수정이 필요하면:
+
+```text
+/ai finalization request-changes id:<task_id> completion-report-id:<completion_report_id>
+```
+
+반려하거나 보류하려면:
+
+```text
+/ai finalization reject id:<task_id> completion-report-id:<completion_report_id>
+/ai finalization defer id:<task_id> completion-report-id:<completion_report_id>
+```
+
+---
+
+### `finalization_required`
+
+뜻:
+
+```text
+CompletionReport는 있지만 최종 결정 기록이 없습니다.
+```
+
+다음 명령:
+
+```text
+/ai completion card id:<task_id>
+/ai finalization accept id:<task_id>
+/ai runner continue id:<task_id>
+```
+
+`completion-report-id`를 생략하면 최신 CompletionReport를 사용합니다.
+
+---
+
+### `finalization_not_accepted`
+
+뜻:
+
+```text
+최종 결정 기록은 있지만 accept 또는 accept-concerns가 아닙니다.
+```
+
+보통 `request-changes`, `reject`, `defer` 이후에 발생합니다.
+
+다음 행동:
+
+```text
+수정 요청이면 새 작업 또는 후속 작업으로 이어갑니다.
+반려/보류면 runner continue를 하지 않습니다.
+```
+
+정말 받아들이기로 결정이 바뀌었다면 새 finalization을 기록합니다.
+
+```text
+/ai finalization accept id:<task_id>
+/ai runner continue id:<task_id>
+```
+
+---
+
+### `done_or_commit_decision`
+
+뜻:
+
+```text
+최종화 이후 Auto Approval 평가와 Follow-up 후보 생성까지 끝났습니다.
+이제 task done과 commit/push 판단만 남았습니다.
+```
+
+다음 확인:
+
+```text
+/ai runner read id:<task_id>
+/ai auto-approval read id:<task_id>
+/ai follow-up read id:<task_id>
+```
+
+완료 처리:
+
+```text
+/ai task done id:<task_id> evidence:<완료 근거>
+```
+
+그 다음 Git commit/push는 사람이 결정합니다.
+
+---
+
+## 자주 쓰는 명령 묶음
+
+### intake 상태 확인
+
+```text
+/ai intake-engine status
+```
+
+### 작업 접수
+
+```text
+/ai intake text:<작업 요청>
+```
+
+### 접수 결과만 미리보기
+
+```text
+/ai intake-preview text:<작업 요청>
+```
+
+### Runner 상태 확인
+
+```text
+/ai runner status id:<task_id>
+/ai runner read id:<task_id>
+```
+
+### Runner 시작
+
+```text
+/ai runner start id:<task_id>
+```
+
+필요하면 profile/executor를 명시합니다.
+
+```text
+/ai runner start id:<task_id> profile:implementation executor:codex_cli
+/ai runner start id:<task_id> profile:validation executor:local_cli
+```
+
+### Completion Card 확인
+
+```text
+/ai completion card id:<task_id>
+```
+
+특정 CompletionReport를 볼 때:
+
+```text
+/ai completion card id:<task_id> completion-report-id:<completion_report_id>
+```
+
+### 최종 결정 기록
+
+```text
+/ai finalization accept id:<task_id>
+/ai finalization accept-concerns id:<task_id>
+/ai finalization request-changes id:<task_id>
+/ai finalization reject id:<task_id>
+/ai finalization defer id:<task_id>
+```
+
+특정 CompletionReport에 대해 결정할 때:
+
+```text
+/ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
+```
+
+### 최종 결정 이후 이어가기
+
+```text
+/ai runner continue id:<task_id>
+```
+
+### 후속 산출물 확인
+
+```text
+/ai auto-approval status id:<task_id>
+/ai auto-approval read id:<task_id>
+/ai follow-up status id:<task_id>
+/ai follow-up read id:<task_id>
+```
+
+---
+
+## 빠른 판단 기준
+
+### 내가 승인해야 하는 경우
+
+- P0/P1 작업
+- medium/high risk 작업
+- 게임 소스/데이터 변경
+- workflow 명령 동작 변경
+- schema/save/load/lifecycle/build 설정 변경
+- CompletionReport가 `CONCERNS`, `BLOCKED`, `FAIL`인 경우
+
+### 내가 승인하지 않아도 되는 방향
+
+- P2/P3 low-risk 문서 작업
+- P2/P3 low-risk 검증 작업
+- 이미 allowlist된 local validation 실행
+- 상태 조회, 카드 조회, report read
+
+단, 하네스가 자동으로 `done`, `commit`, `push`를 해서는 안 됩니다.
+
+---
+
+## 헷갈릴 때
+
+아래 순서로 보면 됩니다.
+
+```text
+1. /ai runner status id:<task_id>
+2. /ai runner read id:<task_id>
+3. 화면의 stop_reason 확인
+4. 이 문서의 "멈춘 이유별 다음 명령"으로 이동
+```
+
+가장 많이 나오는 정상 정지는 아래 두 개입니다.
+
+```text
+completion_review_required
+done_or_commit_decision
+```
+
+둘 다 실패가 아니라 사람 결정이 필요한 정상 게이트입니다.
