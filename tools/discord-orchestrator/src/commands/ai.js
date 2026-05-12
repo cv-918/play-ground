@@ -15,6 +15,7 @@ import { approveTaskWithSafety } from "../services/taskApprovalSafetyService.js"
 import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js";
 import { generateCompletionCard, generateCompletionReport, getCompletionStatus } from "../services/completionService.js";
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
+import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -35,6 +36,9 @@ import {
   formatFinalizationReadPayload,
   formatFinalizationRecordPayload,
   formatFinalizationStatusPayload,
+  formatAutoApprovalEvaluatePayload,
+  formatAutoApprovalReadPayload,
+  formatAutoApprovalStatusPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -451,6 +455,62 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("auto-approval")
+        .setDescription("자동 승인 정책 후보 여부를 평가하고 기록합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("status")
+            .setDescription("작업의 Auto Approval Policy 평가 상태를 확인합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("evaluate")
+            .setDescription("완료/최종화 근거로 자동 승인 후보 여부를 평가합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("참조할 CompletionReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("finalization-log-id")
+                .setDescription("참조할 FinalizationLog ID, 없으면 최신 기록")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("read")
+            .setDescription("Auto Approval Policy 평가 상세를 읽습니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("policy-evaluation-id")
+                .setDescription("읽을 Auto Approval 평가 ID, 없으면 최신 평가")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -634,6 +694,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "finalization") {
     await handleFinalizationCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "auto-approval") {
+    await handleAutoApprovalCommand(interaction, config, subcommand);
     return;
   }
 
@@ -974,6 +1039,37 @@ async function handleFinalizationCommand(interaction, config, subcommand) {
   }
 
   await interaction.editReply({ content: "알 수 없는 finalization 명령입니다." });
+}
+
+async function handleAutoApprovalCommand(interaction, config, subcommand) {
+  const id = interaction.options.getString("id");
+
+  if (subcommand === "status") {
+    const result = await getAutoApprovalStatus(config, { id });
+    await interaction.editReply(formatAutoApprovalStatusPayload(result));
+    return;
+  }
+
+  if (subcommand === "evaluate") {
+    const result = await evaluateAutoApprovalPolicy(config, {
+      id,
+      completionReportId: interaction.options.getString("completion-report-id"),
+      finalizationLogId: interaction.options.getString("finalization-log-id"),
+    });
+    await interaction.editReply(formatAutoApprovalEvaluatePayload(result));
+    return;
+  }
+
+  if (subcommand === "read") {
+    const result = await readAutoApprovalPolicy(config, {
+      id,
+      policyEvaluationId: interaction.options.getString("policy-evaluation-id"),
+    });
+    await interaction.editReply(formatAutoApprovalReadPayload(result));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 auto-approval 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {

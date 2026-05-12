@@ -993,6 +993,132 @@ export function formatFinalizationReadPayload(result) {
   };
 }
 
+export function formatAutoApprovalStatusPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**자동 승인 정책 상태 확인 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "자동 승인 정책 상태",
+      color: 0x1565c0,
+      description: formatInlineCode(data.task_id || "unknown"),
+      fields: [
+        embedField("평가 기록", [
+          `개수: ${data.policy_evaluation_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(data.latest_policy_evaluation_id || "none")}`,
+          `manifest: ${formatInlineCode(data.auto_approval_policy_manifest_path || "none")}`,
+        ]),
+        embedField("안전 상태", [
+          "Backlog/ActiveTask lifecycle 변경 없음",
+          "task approve/done, finalization, follow-up, commit/push 없음",
+        ], true),
+      ],
+    }],
+  };
+}
+
+export function formatAutoApprovalEvaluatePayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**자동 승인 정책 평가 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const policy = data.policy_evaluation ?? {};
+  const evaluation = policy.evaluation ?? {};
+  const sources = policy.sources ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "자동 승인 정책 평가 완료",
+      color: autoApprovalColor(evaluation.decision),
+      description: [
+        `${formatInlineCode(data.policy_evaluation_id || policy.policy_evaluation_id || "unknown")}`,
+        `${data.task_id ?? policy.task_id ?? "unknown"} · ${autoApprovalDecisionKo(evaluation.decision)}`,
+        compactText(evaluation.recommended_action ?? "No recommendation.", 180),
+      ].join("\n"),
+      fields: [
+        embedField("판정", [
+          `후보 적합: ${koBool(evaluation.eligible_for_conditional_auto_approval)}`,
+          `지금 자동 승인 가능: ${koBool(evaluation.can_auto_approve_now)}`,
+          `신뢰도: ${evaluation.confidence ?? "unknown"}`,
+        ]),
+        embedField("근거", summarizePolicyRules(evaluation.rule_results)),
+        embedField("참조", [
+          `CompletionReport: ${formatInlineCode(sources.completion_report?.completion_report_id || "none")}`,
+          `FinalizationLog: ${formatInlineCode(sources.finalization_log?.finalization_log_id || "none")}`,
+          `ApprovalHistory: ${formatInlineCode(sources.approval_history?.approval_record_id || "none")}`,
+        ]),
+        embedField("사람 결정 필요", summarizeCompactList(evaluation.human_decisions_required, 3)),
+        embedField("다음 명령", summarizeCompactList(policy.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          "정책 평가만 수행",
+          "task approve/done 처리 없음",
+          "commit/push 없음",
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.policy_evaluation_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
+export function formatAutoApprovalReadPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**자동 승인 정책 평가 읽기 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const policy = data.policy_evaluation ?? {};
+  const evaluation = policy.evaluation ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "AutoApprovalPolicy",
+      color: autoApprovalColor(evaluation.decision),
+      description: [
+        `${formatInlineCode(data.policy_evaluation_id || policy.policy_evaluation_id || "unknown")}`,
+        `${data.task_id ?? policy.task_id ?? "unknown"} · ${autoApprovalDecisionKo(evaluation.decision)}`,
+      ].join("\n"),
+      fields: [
+        embedField("판정", [
+          `decision: ${evaluation.decision ?? "unknown"}`,
+          `eligible: ${koBool(evaluation.eligible_for_conditional_auto_approval)}`,
+          `can_auto_approve_now: ${koBool(evaluation.can_auto_approve_now)}`,
+        ]),
+        embedField("차단 사유", summarizeCompactList(evaluation.blockers, 4)),
+        embedField("규칙 결과", summarizePolicyRules(evaluation.rule_results)),
+        embedField("안전 상태", [
+          `lifecycle 변경 없음: ${koBool(policy.invariants?.task_lifecycle_unchanged)}`,
+          `task approve 없음: ${koBool(policy.invariants?.no_task_approval)}`,
+          `commit/push 없음: ${koBool(policy.invariants?.no_commit_or_push)}`,
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.policy_evaluation_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
 function formatAuditFiles(files) {
   const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -1122,6 +1248,48 @@ function finalizationStateKo(state) {
     default:
       return state || "unknown";
   }
+}
+
+function autoApprovalColor(decision) {
+  switch (decision) {
+    case "eligible_candidate":
+      return 0x2e7d32;
+    case "needs_human_review":
+      return 0xf9a825;
+    case "human_approval_required":
+      return 0xef6c00;
+    default:
+      return 0x607d8b;
+  }
+}
+
+function autoApprovalDecisionKo(decision) {
+  switch (decision) {
+    case "eligible_candidate":
+      return "조건부 자동 승인 후보";
+    case "needs_human_review":
+      return "사람 검토 필요";
+    case "human_approval_required":
+      return "사람 승인 필요";
+    default:
+      return decision || "unknown";
+  }
+}
+
+function summarizePolicyRules(rules) {
+  const values = Array.isArray(rules) ? rules : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, 5).map((rule) => {
+    const mark = rule.status === "pass" ? "PASS" : "FAIL";
+    return `${mark} ${rule.id}: ${compactText(cleanKo(rule.summary), 140)}`;
+  });
+  if (values.length > visible.length) {
+    visible.push(`+${values.length - visible.length}개 더 있음`);
+  }
+  return visible.join("\n");
 }
 
 function compactList(items, maxCount) {
