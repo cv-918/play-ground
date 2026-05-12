@@ -79,6 +79,16 @@ The prompt includes:
 
 The prompt artifact is runtime data and must not be committed.
 
+For Codex CLI execution, the recommended adapter config uses:
+
+```text
+codex exec ... -
+prompt_input_mode: stdin_text
+```
+
+That sends the prompt file contents to Codex through stdin instead of passing
+the file path as the prompt text.
+
 ## Safety Boundaries
 
 The implementation runner profile may:

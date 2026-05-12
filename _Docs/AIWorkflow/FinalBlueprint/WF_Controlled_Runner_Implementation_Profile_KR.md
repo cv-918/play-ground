@@ -66,6 +66,7 @@ _Local\AIWorkflow\codex_cli_adapter.local.json
 - 승인된 task 정보를 읽습니다.
 - task 전용 구현 프롬프트를 `_Temp/` 아래에 만듭니다.
 - 구현 프롬프트에는 `AGENTS.md`, `ActiveTask.md`, `Backlog.md`를 먼저 읽으라는 조건이 들어갑니다.
+- Codex CLI에는 프롬프트 파일 경로만 넘기지 않고, 파일 내용을 stdin으로 전달할 수 있습니다.
 - Codex CLI 어댑터 준비 상태를 확인합니다.
 - 준비된 경우 Codex CLI 어댑터를 실행합니다.
 - 파일 변경, 실행 결과, diff, build/test, 검증 보고서, 완료 보고서를 모읍니다.

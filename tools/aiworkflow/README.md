@@ -316,6 +316,10 @@ adapter records SessionState and EvidenceRecord runtime artifacts, but it does
 not verify results, decide pass/fail, approve tasks, mark tasks done, commit,
 or push.
 
+For `codex exec`, use `prompt_input_mode: "stdin_text"` with `args` ending in
+`"-"` so the generated runner prompt file is sent through stdin instead of
+being treated as a literal prompt path.
+
 ---
 
 ## local_cli_adapter.bat

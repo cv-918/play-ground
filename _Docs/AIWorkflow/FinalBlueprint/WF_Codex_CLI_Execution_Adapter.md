@@ -62,7 +62,8 @@ Config fields:
 | `enabled` | Must be `true` before real execution is allowed |
 | `command` | Codex CLI executable or path |
 | `args` | Base argument list |
-| `append_prompt_file` | Appends `--prompt-file` path as final arg when true |
+| `prompt_input_mode` | `argument_path` appends the prompt file path; `stdin_text` writes prompt file contents to process stdin |
+| `append_prompt_file` | Appends the prompt file path as final arg when true and `prompt_input_mode` is `argument_path` |
 | `working_directory` | Process working directory |
 | `timeout_seconds` | Optional process timeout; `0` means no timeout |
 | `allowed_task_statuses` | Task statuses allowed to execute |
@@ -77,6 +78,18 @@ The tracked example has:
 ```
 
 This prevents accidental Codex CLI execution during validation or review.
+
+The recommended Codex CLI mode for normal runner execution is:
+
+```json
+"args": ["-m", "gpt-5.5", "--sandbox", "workspace-write", "--ask-for-approval", "never", "exec", "-"],
+"prompt_input_mode": "stdin_text",
+"append_prompt_file": false
+```
+
+In this mode the adapter sends the generated runner prompt file contents through
+stdin. This matches `codex exec -` and avoids treating the prompt file path as
+the prompt text.
 
 ---
 

@@ -3,11 +3,19 @@
   "enabled": false,
   "command": "codex",
   "args": [
-    "exec"
+    "-m",
+    "gpt-5.5",
+    "--sandbox",
+    "workspace-write",
+    "--ask-for-approval",
+    "never",
+    "exec",
+    "-"
   ],
-  "append_prompt_file": true,
+  "prompt_input_mode": "stdin_text",
+  "append_prompt_file": false,
   "working_directory": ".",
-  "timeout_seconds": 0,
+  "timeout_seconds": 900,
   "allowed_task_statuses": [
     "ready_for_implementation",
     "in_progress"

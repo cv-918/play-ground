@@ -275,6 +275,41 @@ function As-Array {
     return @($Value)
 }
 
+function ConvertTo-ProcessArguments {
+    param([string[]]$ArgumentsList)
+
+    $parts = @()
+    foreach ($arg in @($ArgumentsList)) {
+        $value = [string]$arg
+        if ($value -eq "") {
+            $parts += '""'
+        }
+        elseif ($value -match '[\s"]') {
+            $parts += ('"' + $value.Replace('"', '\"') + '"')
+        }
+        else {
+            $parts += $value
+        }
+    }
+
+    return ($parts -join " ")
+}
+
+function Get-PromptInputMode {
+    param($Config)
+
+    $mode = "argument_path"
+    if ($null -ne $Config -and $null -ne $Config.prompt_input_mode) {
+        $mode = ([string]$Config.prompt_input_mode).Trim().ToLowerInvariant()
+    }
+
+    if (@("argument_path", "stdin_text") -notcontains $mode) {
+        throw "Invalid prompt_input_mode. Use argument_path or stdin_text."
+    }
+
+    return $mode
+}
+
 function Test-TaskApproval {
     param(
         $Task,
@@ -314,18 +349,49 @@ function Invoke-WorkflowScript {
         [string[]]$ArgsList
     )
 
-    $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $Script @ArgsList 2>&1
-    $exitCode = $LASTEXITCODE
-    $text = ""
-    if ($null -ne $output) {
-        $text = ($output | Out-String).Trim()
-    }
+    $processResult = Invoke-CapturedProcess -FileName "powershell" -ArgumentsList (@(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        $Script
+    ) + @($ArgsList)) -WorkingDirectory $RepoRoot
 
-    if ($exitCode -ne 0) {
+    if ($processResult.exit_code -ne 0) {
+        $text = ($processResult.stderr + $processResult.stdout).Trim()
         throw "Workflow script failed ($Script): $text"
     }
 
-    return $text
+    return $processResult.stdout
+}
+
+function Invoke-CapturedProcess {
+    param(
+        [string]$FileName,
+        [string[]]$ArgumentsList,
+        [string]$WorkingDirectory
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $FileName
+    $psi.Arguments = ConvertTo-ProcessArguments -ArgumentsList $ArgumentsList
+    $psi.WorkingDirectory = $WorkingDirectory
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $psi
+    [void]$process.Start()
+    $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+    $stderrTask = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+
+    return [pscustomobject]@{
+        stdout = $stdoutTask.Result
+        stderr = $stderrTask.Result
+        exit_code = $process.ExitCode
+    }
 }
 
 function Invoke-GitCapture {
@@ -334,36 +400,27 @@ function Invoke-GitCapture {
         [string]$DiffPath
     )
 
-    $previous = Get-Location
-    try {
-        Set-Location -LiteralPath $Repo
-        $changedOutput = & git diff --name-only 2>&1
-        $changedExit = $LASTEXITCODE
-        if ($changedExit -ne 0) {
-            throw "git diff --name-only failed: $changedOutput"
-        }
-
-        $diffOutput = & git diff 2>&1
-        $diffExit = $LASTEXITCODE
-        if ($diffExit -ne 0) {
-            throw "git diff failed: $diffOutput"
-        }
-
-        Write-Utf8Text -Path $DiffPath -Text (($diffOutput | Out-String).TrimEnd() + [Environment]::NewLine)
-
-        $changed = @()
-        foreach ($line in $changedOutput) {
-            $value = ([string]$line).Trim()
-            if (-not [string]::IsNullOrWhiteSpace($value)) {
-                $changed += ($value -replace "\\", "/")
-            }
-        }
-
-        return @($changed)
+    $changedResult = Invoke-CapturedProcess -FileName "git" -ArgumentsList @("diff", "--name-only") -WorkingDirectory $Repo
+    if ($changedResult.exit_code -ne 0) {
+        throw ("git diff --name-only failed: " + ($changedResult.stderr + $changedResult.stdout).Trim())
     }
-    finally {
-        Set-Location -LiteralPath $previous
+
+    $diffResult = Invoke-CapturedProcess -FileName "git" -ArgumentsList @("diff") -WorkingDirectory $Repo
+    if ($diffResult.exit_code -ne 0) {
+        throw ("git diff failed: " + ($diffResult.stderr + $diffResult.stdout).Trim())
     }
+
+    Write-Utf8Text -Path $DiffPath -Text ($diffResult.stdout.TrimEnd() + [Environment]::NewLine)
+
+    $changed = @()
+    foreach ($line in ($changedResult.stdout -split "`r?`n")) {
+        $value = ([string]$line).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $changed += ($value -replace "\\", "/")
+        }
+    }
+
+    return @($changed)
 }
 
 function Invoke-CodexProcess {
@@ -383,11 +440,23 @@ function Invoke-CodexProcess {
     }
 
     $args = @(As-Array -Value $Config.args | ForEach-Object { [string]$_ })
+    $promptInputMode = Get-PromptInputMode -Config $Config
+
     $appendPrompt = $true
     if ($null -ne $Config.append_prompt_file) {
         $appendPrompt = [bool]$Config.append_prompt_file
     }
-    if ($appendPrompt) {
+    $promptText = ""
+    if ($promptInputMode -eq "stdin_text") {
+        if ([string]::IsNullOrWhiteSpace($PromptPath)) {
+            throw "Prompt file is required when prompt_input_mode is stdin_text."
+        }
+        $promptText = Read-Utf8Text -Path $PromptPath
+        if ([string]::IsNullOrWhiteSpace($promptText)) {
+            throw "Prompt file is empty: $PromptPath"
+        }
+    }
+    elseif ($appendPrompt) {
         if ([string]::IsNullOrWhiteSpace($PromptPath)) {
             throw "Prompt file is required when append_prompt_file is true."
         }
@@ -409,24 +478,8 @@ function Invoke-CodexProcess {
     $psi.UseShellExecute = $false
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
-    foreach ($arg in $args) {
-        [void]$psi.ArgumentList.Add($arg)
-    }
-
-    $stdoutBuilder = New-Object System.Text.StringBuilder
-    $stderrBuilder = New-Object System.Text.StringBuilder
-    $stdoutHandler = [System.Diagnostics.DataReceivedEventHandler]{
-        param($Sender, $EventArgs)
-        if ($null -ne $EventArgs.Data) {
-            [void]$stdoutBuilder.AppendLine($EventArgs.Data)
-        }
-    }
-    $stderrHandler = [System.Diagnostics.DataReceivedEventHandler]{
-        param($Sender, $EventArgs)
-        if ($null -ne $EventArgs.Data) {
-            [void]$stderrBuilder.AppendLine($EventArgs.Data)
-        }
-    }
+    $psi.RedirectStandardInput = ($promptInputMode -eq "stdin_text")
+    $psi.Arguments = ConvertTo-ProcessArguments -ArgumentsList $args
 
     $timeout = 0
     if ($null -ne $Config.timeout_seconds) {
@@ -436,13 +489,20 @@ function Invoke-CodexProcess {
     $startedAt = Get-NowText
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $psi
-    $process.add_OutputDataReceived($stdoutHandler)
-    $process.add_ErrorDataReceived($stderrHandler)
 
     [void]$process.Start()
-    Update-Session -Repo $Repo -TaskId $TaskId -SessionId $SessionId -Status "running" -Activity "Codex CLI process started." -ProcessId ([string]$process.Id) -ProcessStartedAt $startedAt -CommandLine (($commandPath + " " + ($args -join " ")).Trim()) -WorkingDirectory $workingDir
-    $process.BeginOutputReadLine()
-    $process.BeginErrorReadLine()
+    $script:externalExecutionPerformed = $true
+    $commandLine = (($commandPath + " " + (ConvertTo-ProcessArguments -ArgumentsList $args)).Trim())
+    if ($promptInputMode -eq "stdin_text") {
+        $commandLine = ($commandLine + " < prompt_file")
+    }
+    Update-Session -Repo $Repo -TaskId $TaskId -SessionId $SessionId -Status "running" -Activity "Codex CLI process started." -ProcessId ([string]$process.Id) -ProcessStartedAt $startedAt -CommandLine $commandLine -WorkingDirectory $workingDir
+    $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+    $stderrTask = $process.StandardError.ReadToEndAsync()
+    if ($promptInputMode -eq "stdin_text") {
+        $process.StandardInput.Write($promptText)
+        $process.StandardInput.Close()
+    }
 
     $timedOut = $false
     if ($timeout -gt 0) {
@@ -459,19 +519,19 @@ function Invoke-CodexProcess {
     }
 
     $process.WaitForExit()
-    $process.remove_OutputDataReceived($stdoutHandler)
-    $process.remove_ErrorDataReceived($stderrHandler)
 
     $endedAt = Get-NowText
+    $stdout = $stdoutTask.Result
+    $stderr = $stderrTask.Result
     if ($timedOut) {
-        [void]$stderrBuilder.AppendLine("Codex CLI adapter timeout after $timeout seconds.")
+        $stderr = ($stderr.TrimEnd() + [Environment]::NewLine + "Codex CLI adapter timeout after $timeout seconds." + [Environment]::NewLine)
     }
 
-    Write-Utf8Text -Path $StdoutPath -Text $stdoutBuilder.ToString()
-    Write-Utf8Text -Path $StderrPath -Text $stderrBuilder.ToString()
+    Write-Utf8Text -Path $StdoutPath -Text $stdout
+    Write-Utf8Text -Path $StderrPath -Text $stderr
 
     return [pscustomobject]@{
-        command_line = ($commandPath + " " + ($args -join " ")).Trim()
+        command_line = $commandLine
         working_directory = $workingDir
         started_at = $startedAt
         ended_at = $endedAt
@@ -663,12 +723,15 @@ function Write-ObjectResult {
     exit $ExitCode
 }
 
+$externalExecutionPerformed = $false
+
 try {
     if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
         $RepoRoot = Join-Path $PSScriptRoot "..\.."
     }
 
     $repo = (Resolve-Path -LiteralPath $RepoRoot).Path
+    $RepoRoot = $repo
     $safeTaskId = Get-SafeTaskId -Value $TaskId
     $configFullPath = Resolve-ConfigPath -Repo $repo -Path $ConfigPath
     $configExists = Test-Path -LiteralPath $configFullPath
@@ -694,9 +757,14 @@ try {
 
     $plannedArgs = @()
     $configEnabled = $false
+    $promptInputMode = "argument_path"
     if ($null -ne $config) {
         $plannedArgs = @(As-Array -Value $config.args | ForEach-Object { [string]$_ })
-        if (($null -eq $config.append_prompt_file -or [bool]$config.append_prompt_file) -and -not [string]::IsNullOrWhiteSpace($promptFullPath)) {
+        $promptInputMode = Get-PromptInputMode -Config $config
+        if ($promptInputMode -eq "stdin_text" -and -not [string]::IsNullOrWhiteSpace($promptFullPath)) {
+            $plannedArgs += "<prompt stdin>"
+        }
+        elseif (($null -eq $config.append_prompt_file -or [bool]$config.append_prompt_file) -and -not [string]::IsNullOrWhiteSpace($promptFullPath)) {
             $plannedArgs += $promptFullPath
         }
         $configEnabled = [bool]$config.enabled
@@ -715,6 +783,7 @@ try {
             config_enabled = $configEnabled
             planned_command = if ($null -eq $config) { $null } else { [string]$config.command }
             planned_args = @($plannedArgs)
+            prompt_input_mode = $promptInputMode
             prompt_file = ConvertTo-RepoRelativePath -Repo $repo -Path $promptFullPath
             external_execution_performed = $false
         }
@@ -796,7 +865,7 @@ catch {
         command = $Command
         task_id = $TaskId
         error = $_.Exception.Message
-        external_execution_performed = $false
+        external_execution_performed = $externalExecutionPerformed
     }
 
     Write-ObjectResult -Result $result -ExitCode 1
