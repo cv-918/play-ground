@@ -14,7 +14,6 @@ creation from `/ai intake`:
 ```text
 /ai intake
 /ai intake-preview
-/ai intake-create
 /ai intake-test
 /ai intake-engine status
 /ai task review-intake
@@ -24,9 +23,10 @@ The command accepts a natural-language work request, asks local `codex exec` for
 a structured TaskDraft JSON object, validates it locally, cross-checks it against
 the deterministic rule-based baseline, and creates one Backlog task. `/ai
 intake` is now the no-paste automation path. `/ai intake-preview` keeps the old
-read-only preview behavior. `/ai intake-create` is retained as a compatibility
-alias for `/ai intake`. `/ai intake-test` renders the task-created response
-shape with sample data only.
+read-only preview behavior. The previous `/ai intake-create` compatibility
+alias has been removed from the registered Discord command surface; use
+`/ai intake` for Backlog task creation. `/ai intake-test` renders the
+task-created response shape with sample data only.
 
 ---
 
@@ -35,7 +35,6 @@ shape with sample data only.
 ```text
 /ai intake text:<natural-language work request>
 /ai intake-preview text:<natural-language work request>
-/ai intake-create text:<natural-language work request>
 /ai intake-test validation-count:<optional sample count>
 /ai intake-engine status
 /ai task review-intake id:<task_id>
@@ -53,11 +52,12 @@ Command distinction:
 
 - `/ai intake` creates one Backlog task from a validated Codex CLI TaskDraft.
 - `/ai intake-preview` is read-only and only returns the suggestion and TaskDraft.
-- `/ai intake-create` is a compatibility alias for `/ai intake`.
 - `/ai intake-test` is read-only and only renders the intake task-created
   response format with sample data.
-- `/ai intake` does not set ActiveTask, approve the task, execute implementation
-  agents, run implementation Codex, commit, or push.
+- `/ai intake` may auto-handoff low-risk DOC/VAL tasks into ActiveTask,
+  approval, and PC Runner start when deterministic policy allows it.
+- `/ai intake` does not mark tasks done, commit, push, or directly modify
+  source/data files.
 - `/ai task review-intake` is read-only and only reviews activation readiness
   plus suggested next manual commands.
 
@@ -256,7 +256,8 @@ intake diagnostics under:
 _Temp/AIWorkflowDiscordBot/intake/
 ```
 
-`/ai intake-create` is a compatibility alias for `/ai intake`.
+The removed `/ai intake-create` alias is no longer registered. Use `/ai intake`
+for Backlog task creation.
 
 `/ai intake-test` must not call Codex CLI, write Backlog, update ActiveTask,
 approve tasks, execute agents, commit, push, or modify source files. It exists
@@ -323,9 +324,8 @@ Human Director:
 LLM-assisted intake must not:
 
 ```text
-update ActiveTask.md
-approve a task
-execute implementation Codex, agents, Copilot, or local commands
+auto-handoff tasks when policy says human approval is required
+execute implementation Codex, agents, Copilot, or local commands outside the PC Runner contract
 mark a task done
 commit or push
 hide rule-based/LLM mismatches from the human
@@ -362,7 +362,7 @@ Discord smoke tests:
 
 ```text
 /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
-/ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+/ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
 /ai task review-intake id:<intake-created task id>
 /ai task review-intake id:GAME-001
 /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어"

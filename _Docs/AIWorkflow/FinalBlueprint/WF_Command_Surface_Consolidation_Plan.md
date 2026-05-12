@@ -85,7 +85,6 @@ inspection, troubleshooting, or admin commands:
 These commands should remain available for now, but should not be presented as
 the final product path:
 
-- `/ai intake-create`
 - `/ai intake-preview`
 - `/ai intake-test`
 - `/ai task create`
@@ -97,7 +96,7 @@ the final product path:
 
 | Command or path | Current status | WF-402 decision | Later action |
 | --- | --- | --- | --- |
-| `/ai intake-create` | Compatibility alias for `/ai intake`. | Mark as compatibility alias. | After guide/docs update, change copy to "use /ai intake"; removal only with explicit approval. |
+| `/ai intake-create` | Removed compatibility alias for `/ai intake`. | Remove from Discord registration. | Use `/ai intake` for Backlog task creation. |
 | `/ai prepare codex` | Legacy Codex App prompt package. | Keep as manual escalation. | Remove from regular guide; keep in troubleshooting/admin docs. |
 | `/ai prepare goal` | Manual Codex CLI goal request. | Keep as manual escalation. | Remove from regular guide; keep in troubleshooting/admin docs. |
 | `/ai result audit` | Manual result paste audit. | Keep as manual escalation audit. | Use only when runner evidence collection is unavailable or bypassed. |
@@ -146,7 +145,7 @@ Admin/diagnostic: use these for bot, engine, or state troubleshooting.
 
 WF-408 applies these non-destructive decisions:
 
-1. Keep `/ai intake-create` registered, but label it as a compatibility alias.
+1. Remove `/ai intake-create` from registered Discord commands and direct all normal creation to `/ai intake`.
 2. Keep `/ai prepare codex` and `/ai prepare goal` registered as manual
    escalation commands.
 3. Keep `/ai result audit` registered as a manual escalation audit command.

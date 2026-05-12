@@ -69,6 +69,7 @@ import {
   formatTaskList,
   formatTaskSetActive,
   formatTaskStatusUpdated,
+  formatTextCardPayload,
   truncateForDiscord,
 } from "../services/responseFormatter.js";
 
@@ -113,17 +114,6 @@ export function buildAiCommand() {
       sub
         .setName("intake")
         .setDescription("자연어 요청을 Codex CLI로 해석해 Backlog 작업을 생성합니다")
-        .addStringOption((option) =>
-          option
-            .setName("text")
-            .setDescription("자연어 작업 요청")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("intake-create")
-        .setDescription("호환 alias입니다. 정규 접수는 /ai intake를 사용하세요")
         .addStringOption((option) =>
           option
             .setName("text")
@@ -1021,7 +1011,7 @@ export async function handleAiCommand(interaction, config) {
   }
 
   if (subcommand === "docs") {
-    await interaction.editReply({ content: truncateForDiscord(formatDocs(), config.limits.maxDiscordChars) });
+    await replyCard(interaction, config, "AIWorkflow 문서", formatDocs());
     return;
   }
 
@@ -1040,20 +1030,15 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
-  if (subcommand === "intake-create") {
-    await handleIntakeCommand(interaction, config);
-    return;
-  }
-
   const statusResult = await getWorkflowStatus(config);
   if (!statusResult.ok) {
-    await interaction.editReply({ content: truncateForDiscord(koText(statusResult.error), config.limits.maxDiscordChars) });
+    await replyCard(interaction, config, "AIWorkflow 상태 확인 실패", koText(statusResult.error), 0xc62828);
     return;
   }
 
   const status = statusResult.data;
   const formatted = formatBySubcommand(subcommand, status);
-  await interaction.editReply({ content: truncateForDiscord(formatted, config.limits.maxDiscordChars) });
+  await replyCard(interaction, config, getSubcommandTitle(subcommand), formatted);
 }
 
 async function handleIntakeCommand(interaction, config) {
@@ -1064,9 +1049,7 @@ async function handleIntakeCommand(interaction, config) {
 
     await interaction.editReply(formatIntakeTaskCreatedPayload(result));
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(`작업 접수 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "작업 접수 실패", koText(error.message), 0xc62828);
   }
 }
 
@@ -1078,9 +1061,7 @@ async function handleIntakePreviewCommand(interaction, config) {
 
     await interaction.editReply(formatIntakeSuggestionPayload(result));
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(`작업 접수 task 생성 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "작업 접수 미리보기 실패", koText(error.message), 0xc62828);
   }
 }
 
@@ -1142,7 +1123,7 @@ function buildIntakeFormatTestResult(validationCount) {
 
 async function handleIntakeEngineCommand(interaction, config, subcommand) {
   if (subcommand !== "status") {
-    await interaction.editReply({ content: "알 수 없는 intake-engine 명령입니다." });
+    await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 intake-engine 명령입니다.", 0xc62828);
     return;
   }
 
@@ -1153,41 +1134,35 @@ async function handleIntakeEngineCommand(interaction, config, subcommand) {
 async function handleBotCommand(interaction, config, subcommand) {
   if (subcommand === "status") {
     const result = await getManagedBotStatus(config);
-    await interaction.editReply({
-      content: truncateForDiscord(formatBotControlResult(result), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "봇 제어 상태", formatBotControlResult(result), result.ok ? 0x1565c0 : 0xc62828);
     return;
   }
 
   if (subcommand === "restart") {
     const result = await prepareBotRestart(config);
-    await interaction.editReply({
-      content: truncateForDiscord(formatBotControlResult(result), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "봇 재시작", formatBotControlResult(result), result.ok ? 0xf9a825 : 0xc62828);
     if (result.ok) {
       scheduleBotRestart(config);
     }
     return;
   }
 
-  await interaction.editReply({ content: "Unknown bot command." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 bot 명령입니다.", 0xc62828);
 }
 
 async function handleRoleCommand(interaction, config, subcommand) {
   if (subcommand !== "status") {
-    await interaction.editReply({ content: "알 수 없는 role command입니다." });
+    await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 role 명령입니다.", 0xc62828);
     return;
   }
 
   const result = await getRoleRouterStatus(config);
   if (!result.ok) {
-    await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
+    await replyCard(interaction, config, "Role Router 상태 확인 실패", koText(result.error), 0xc62828);
     return;
   }
 
-  await interaction.editReply({
-    content: truncateForDiscord(formatRoleRouterStatus(result.data), config.limits.maxDiscordChars),
-  });
+  await replyCard(interaction, config, "Role Router 상태", formatRoleRouterStatus(result.data));
 }
 
 async function handlePrepareCommand(interaction, config, subcommand) {
@@ -1197,7 +1172,7 @@ async function handlePrepareCommand(interaction, config, subcommand) {
   }
 
   if (subcommand !== "codex") {
-    await interaction.editReply({ content: "알 수 없는 prepare command입니다." });
+    await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 prepare 명령입니다.", 0xc62828);
     return;
   }
 
@@ -1208,16 +1183,12 @@ async function handlePrepareCommand(interaction, config, subcommand) {
       context: interaction.options.getString("context"),
     });
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatCodexPrepareResult(result), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "Codex prompt 생성", formatCodexPrepareResult(result), result.ok ? 0x1565c0 : 0xc62828);
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(formatCodexPrepareResult({
-        ok: false,
-        error: `Codex prompt 생성 실패: ${koText(error.message)}`,
-      }), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "Codex prompt 생성 실패", formatCodexPrepareResult({
+      ok: false,
+      error: `Codex prompt 생성 실패: ${koText(error.message)}`,
+    }), 0xc62828);
   }
 }
 
@@ -1229,22 +1200,18 @@ async function handlePrepareGoalCommand(interaction, config) {
       context: interaction.options.getString("context"),
     });
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatGoalPrepareResult(result), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "goal 요청서 생성", formatGoalPrepareResult(result), result.ok ? 0x1565c0 : 0xc62828);
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(formatGoalPrepareResult({
-        ok: false,
-        error: `goal 요청서 생성 실패: ${koText(error.message)}`,
-      }), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "goal 요청서 생성 실패", formatGoalPrepareResult({
+      ok: false,
+      error: `goal 요청서 생성 실패: ${koText(error.message)}`,
+    }), 0xc62828);
   }
 }
 
 async function handleResultCommand(interaction, config, subcommand) {
   if (subcommand !== "audit") {
-    await interaction.editReply({ content: "알 수 없는 result command입니다." });
+    await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 result 명령입니다.", 0xc62828);
     return;
   }
 
@@ -1254,16 +1221,12 @@ async function handleResultCommand(interaction, config, subcommand) {
       result: interaction.options.getString("result"),
     });
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatResultAudit(result), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "결과 감사", formatResultAudit(result), result.ok ? 0x1565c0 : 0xc62828);
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(formatResultAudit({
-        ok: false,
-        error: `result audit 실패: ${koText(error.message)}`,
-      }), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "결과 감사 실패", formatResultAudit({
+      ok: false,
+      error: `result audit 실패: ${koText(error.message)}`,
+    }), 0xc62828);
   }
 }
 
@@ -1294,7 +1257,7 @@ async function handleCompletionCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 completion 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 completion 명령입니다.", 0xc62828);
 }
 
 async function handleFinalizationCommand(interaction, config, subcommand) {
@@ -1326,7 +1289,7 @@ async function handleFinalizationCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 finalization 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 finalization 명령입니다.", 0xc62828);
 }
 
 async function handleAutoApprovalCommand(interaction, config, subcommand) {
@@ -1357,7 +1320,7 @@ async function handleAutoApprovalCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 auto-approval 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 auto-approval 명령입니다.", 0xc62828);
 }
 
 async function handleFollowUpCommand(interaction, config, subcommand) {
@@ -1389,7 +1352,7 @@ async function handleFollowUpCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 follow-up 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 follow-up 명령입니다.", 0xc62828);
 }
 
 async function handlePcRunnerCommand(interaction, config, subcommand) {
@@ -1438,7 +1401,7 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 runner 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 runner 명령입니다.", 0xc62828);
 }
 
 async function handleGitCommand(interaction, config, subcommand) {
@@ -1461,7 +1424,7 @@ async function handleGitCommand(interaction, config, subcommand) {
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 git 명령입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 git 명령입니다.", 0xc62828);
 }
 
 async function handleRunCommand(interaction, config, subcommand) {
@@ -1470,18 +1433,14 @@ async function handleRunCommand(interaction, config, subcommand) {
     includeUntracked: interaction.options.getBoolean("include-untracked") === true,
   });
 
-  await interaction.editReply({
-    content: truncateForDiscord(formatRunCommandResult(result), config.limits.maxDiscordChars),
-  });
+  await replyCard(interaction, config, "실행 명령 결과", formatRunCommandResult(result), result.ok ? 0x1565c0 : 0xc62828);
 }
 
 async function handleTaskCommand(interaction, config, subcommand) {
   try {
     if (subcommand === "current") {
       const result = await getCurrentTask(config);
-      await interaction.editReply({
-        content: truncateForDiscord(formatTaskCurrent(result.data), config.limits.maxDiscordChars),
-      });
+      await replyCard(interaction, config, "현재 작업", formatTaskCurrent(result.data));
       return;
     }
 
@@ -1490,9 +1449,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
         status: interaction.options.getString("status"),
         kind: interaction.options.getString("kind"),
       });
-      await interaction.editReply({
-        content: truncateForDiscord(formatTaskList(result.data), config.limits.maxDiscordChars),
-      });
+      await replyCard(interaction, config, "작업 Backlog 목록", formatTaskList(result.data));
       return;
     }
 
@@ -1504,9 +1461,7 @@ async function handleTaskCommand(interaction, config, subcommand) {
         kind: interaction.options.getString("kind"),
         reason: interaction.options.getString("reason"),
       });
-      await interaction.editReply({
-        content: truncateForDiscord(formatTaskCreated(result.data), config.limits.maxDiscordChars),
-      });
+      await replyCard(interaction, config, "작업 생성 완료", formatTaskCreated(result.data), 0x2e7d32);
       return;
     }
 
@@ -1521,13 +1476,11 @@ async function handleTaskCommand(interaction, config, subcommand) {
     if (subcommand === "set-active") {
       const result = await setActiveTaskWithSafety(config, interaction.options.getString("id"));
       if (!result.ok) {
-        await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
+        await replyCard(interaction, config, "작업 선택 실패", koText(result.error), 0xc62828);
         return;
       }
 
-      await interaction.editReply({
-        content: truncateForDiscord(formatTaskSetActive(result.data), config.limits.maxDiscordChars),
-      });
+      await replyCard(interaction, config, "현재 작업 업데이트", formatTaskSetActive(result.data), 0x2e7d32);
       return;
     }
 
@@ -1563,37 +1516,31 @@ async function handleTaskCommand(interaction, config, subcommand) {
       return;
     }
 
-    await interaction.editReply({ content: "알 수 없는 task command입니다." });
+    await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 task 명령입니다.", 0xc62828);
   } catch (error) {
-    await interaction.editReply({
-      content: truncateForDiscord(`task command 실패: ${koText(error.message)}`, config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "task 명령 실패", koText(error.message), 0xc62828);
   }
 }
 
 async function handleTaskStatusCommand(interaction, config, action, input) {
   const result = await action(config, input);
   if (!result.ok) {
-    await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
+    await replyCard(interaction, config, "작업 상태 변경 실패", koText(result.error), 0xc62828);
     return;
   }
 
-  await interaction.editReply({
-    content: truncateForDiscord(formatTaskStatusUpdated(result.data), config.limits.maxDiscordChars),
-  });
+  await replyCard(interaction, config, "작업 상태 업데이트", formatTaskStatusUpdated(result.data), 0x2e7d32);
 }
 
 async function handleProjectCommand(interaction, config, subcommand) {
   if (subcommand === "list") {
     const result = await listProjectProfiles(config);
     if (!result.ok) {
-      await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
+      await replyCard(interaction, config, "Project profile 목록 실패", koText(result.error), 0xc62828);
       return;
     }
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatProjectList(result.data), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "Project profile 목록", formatProjectList(result.data));
     return;
   }
 
@@ -1606,17 +1553,30 @@ async function handleProjectCommand(interaction, config, subcommand) {
     const result = await getProjectProfile(config, projectId);
 
     if (!result.ok) {
-      await interaction.editReply({ content: truncateForDiscord(koText(result.error), config.limits.maxDiscordChars) });
+      await replyCard(interaction, config, "Project profile 조회 실패", koText(result.error), 0xc62828);
       return;
     }
 
-    await interaction.editReply({
-      content: truncateForDiscord(formatProjectProfile(result.data), config.limits.maxDiscordChars),
-    });
+    await replyCard(interaction, config, "Project profile 요약", formatProjectProfile(result.data));
     return;
   }
 
-  await interaction.editReply({ content: "알 수 없는 project command입니다." });
+  await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 project 명령입니다.", 0xc62828);
+}
+
+async function replyCard(interaction, config, title, text, color) {
+  await interaction.editReply(formatTextCardPayload(title, truncateForDiscord(text, config.limits.maxDiscordChars), { color }));
+}
+
+function getSubcommandTitle(subcommand) {
+  const titles = {
+    status: "AIWorkflow 상태",
+    active: "현재 작업",
+    backlog: "Backlog 요약",
+    next: "다음 권장 작업",
+    blockers: "Blocker 요약",
+  };
+  return titles[subcommand] ?? "AIWorkflow";
 }
 
 function formatBySubcommand(subcommand, status) {

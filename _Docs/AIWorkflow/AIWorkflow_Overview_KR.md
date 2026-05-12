@@ -46,7 +46,7 @@ LLM 실패/비활성/API key 누락 시 rule-based fallback draft를 얻는 용�
 복합 작업의 경우 `/ai intake`가 확인 질문과 cross-check mismatch를 표시할 수
 있지만, 최종 범위와 승인 여부는 Human Director가 결정합니다. 필요한 경우
 ChatGPT 또는 Codex App에서 먼저 작업 의도, 범위, non-goals, validation 기준을
-정리한 뒤 `/ai task create` 또는 `/ai intake-create`로 Backlog에 기록합니다.
+정리한 뒤 `/ai intake` 또는 `/ai task create`로 Backlog에 기록합니다.
 
 LLM-assisted intake가 도입된 현재도 책임은 분리합니다.
 
@@ -219,7 +219,7 @@ Result Audit은 읽기 전용입니다. 자동으로 done 처리하거나 commit
 
 ```text
 1. /ai intake
-2. /ai intake-create 또는 /ai task create
+2. /ai intake 또는 /ai task create
 3. /ai task set-active
 4. /ai task approve
 5. /ai prepare goal
@@ -234,7 +234,7 @@ Result Audit은 읽기 전용입니다. 자동으로 done 처리하거나 commit
 ## 기억할 원칙
 
 - `/ai intake`는 읽기 전용입니다.
-- `/ai intake-create`는 Backlog에 씁니다.
+- `/ai intake`는 Backlog에 씁니다.
 - `/ai task set-active`는 ActiveTask에 씁니다.
 - `/ai task approve`는 approval 상태를 기록합니다.
 - `/ai prepare goal`은 request file만 만듭니다.

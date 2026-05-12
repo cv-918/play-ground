@@ -16,7 +16,7 @@
 | ActiveTask | 현재 활성 작업 | 지금 진행 대상으로 선택된 하나의 task | `/ai task set-active` 후 확인 |
 | Backlog | 작업 후보 목록 | 해야 할 작업들이 쌓이는 durable list | 새 task 생성/조회 시 |
 | intake | 요청 접수/해석 | 자연어 요청을 task draft로 바꿈 | 작업을 만들기 전 |
-| intake-create | 접수 후 task 생성 | intake 결과를 Backlog row로 기록 | 사람이 task 생성을 승인했을 때 |
+| intake-create | 제거된 호환 alias | 과거 `/ai intake`와 같은 역할을 하던 명령 | 현재는 `/ai intake` 사용 |
 | set-active | 활성 작업 선택 | Backlog task를 ActiveTask로 선택 | 지금 이 작업을 진행할 때 |
 | approve | 승인 | 구현/실행 범위를 사람이 승인했다는 기록 | Codex 실행 전 |
 | prepare goal | goal 요청 생성 | Codex CLI에 붙여 넣을 request file 생성 | 승인 후 Codex 실행 준비 |
@@ -45,8 +45,9 @@ Current behavior:
 - Validates the TaskDraft locally and cross-checks it against the rule-based
   baseline.
 - Creates one Backlog task.
-- Does not update ActiveTask, approve, execute implementation, mark done,
-  commit, or push.
+- Low-risk DOC/VAL 작업은 정책이 허용하면 ActiveTask 선택, 승인, PC Runner
+  시작까지 자동 handoff 할 수 있습니다.
+- Does not mark done, commit, or push.
 
 For read-only preview, use `/ai intake-preview`.
 
@@ -66,10 +67,10 @@ For read-only preview, use `/ai intake-preview`.
 
 무엇을 하지 않나:
 
-- Backlog를 수정하지 않습니다.
-- ActiveTask를 수정하지 않습니다.
-- 승인하지 않습니다.
-- Codex를 실행하지 않습니다.
+- done 처리하지 않습니다.
+- commit/push 하지 않습니다.
+- source/data 파일을 직접 수정하지 않습니다.
+- 정책 승인이 필요한 작업을 사람 승인 없이 실행하지 않습니다.
 
 사용 예:
 
@@ -85,25 +86,15 @@ For read-only preview, use `/ai intake-preview`.
 /ai intake text:"VAL task: run result semantics에 대한 manual runtime validation checklist를 만들고 싶어."
 ```
 
-### `/ai intake-create`
+### 제거됨: `/ai intake-create`
 
-Type: write
+이 명령은 `/ai intake`의 호환 alias였지만, 사용자가 직접 쓸 필요가 없는
+중복 명령이라 현재 Discord command surface에서 제거했습니다.
 
-무엇을 하나:
-
-- intake 결과를 바탕으로 Backlog에 task를 생성합니다.
-- 생성된 task id를 반환합니다.
-
-무엇을 하지 않나:
-
-- ActiveTask로 자동 선택하지 않습니다.
-- 자동 승인하지 않습니다.
-- Codex를 실행하지 않습니다.
-
-사용 예:
+이제 Backlog task 생성은 아래 명령 하나로 시작합니다.
 
 ```text
-/ai intake-create text:"UserData 기본값 복구 작업을 정리하고 싶어"
+/ai intake text:"UserData 기본값 복구 작업을 정리하고 싶어"
 ```
 
 ### `/ai task set-active`
@@ -279,7 +270,7 @@ execution route를 보고 싶을 때 사용합니다.
 
 Type: read-only
 
-`/ai intake-create`로 만든 task가 active로 가도 되는지 한 번 더 검토할 때
+`/ai intake`로 만든 task가 active로 가도 되는지 한 번 더 검토할 때
 사용합니다.
 
 ### `/ai status`
@@ -335,7 +326,7 @@ Read-only:
 Workflow state write:
 
 ```text
-/ai intake-create
+/ai intake
 /ai task create
 /ai task set-active
 /ai task approve
@@ -378,7 +369,7 @@ git push
 - `intake-preview`: Backlog를 쓰지 않고 TaskDraft만 확인하는 read-only 단계.
 - `Codex CLI intake`: 구현 실행이 아니라 TaskDraft JSON을 얻기 위한
   non-interactive `codex exec` 호출.
-- `intake-create`: 기존 호환용 alias. 현재 기본 경로는 `/ai intake`.
+- `intake-create`: 제거된 기존 호환용 alias. 현재 기본 경로는 `/ai intake`.
 
 `/ai intake` 이후에도 ActiveTask 선택, 승인, 구현 실행, 결과 감사, done,
 commit은 자동으로 진행하지 않습니다.

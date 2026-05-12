@@ -46,7 +46,7 @@ const TEXT_REPLACEMENTS = new Map([
   ["Human Director review is required for high-risk or runtime/schema-related gates.", "고위험 작업 또는 런타임/스키마 관련 게이트가 있는 경우 Human Director 검토가 필요합니다."],
   ["Human Director Gate: P0/P1 or high-risk task requires explicit approval before implementation and before accepting validation deferral.", "사람 결정 gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다."],
   ["Human Director Gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다.", "사람 결정 gate: P0/P1 또는 high-risk task는 구현 전, 그리고 validation 유예를 받아들이기 전에 명시적 승인이 필요합니다."],
-  ["Backlog row appears to come from explicit intake-create.", "Backlog row가 명시적 intake-create에서 생성된 것으로 보입니다."],
+  ["Backlog row appears to come from explicit intake-create.", "Backlog row가 과거 intake-create alias에서 생성된 것으로 보입니다."],
   ["No intake-create marker found; using generic activation review.", "intake-create marker를 찾지 못했습니다. 일반 activation review를 사용합니다."],
   ["Backlog row appears to come from an intake-family command.", "Backlog row가 intake 계열 명령에서 생성된 것으로 보입니다."],
   ["No intake-family marker found; using generic activation review.", "intake 계열 marker를 찾지 못했습니다. 일반 activation review를 사용합니다."],

@@ -129,7 +129,6 @@ Do not commit `_Local/`.
 /ai docs
 /ai intake
 /ai intake-preview
-/ai intake-create
 /ai intake-test
 /ai intake-engine status
 /ai bot status
@@ -168,8 +167,18 @@ Do not commit `_Local/`.
 /ai runner plan
 /ai runner start
 /ai runner continue
+/ai runner accept-completion
 /ai runner stop
 /ai runner read
+/ai auto-approval status
+/ai auto-approval evaluate
+/ai auto-approval read
+/ai follow-up status
+/ai follow-up generate
+/ai follow-up read
+/ai git commit
+/ai git push
+/ai git commit-push
 ```
 
 ## Regular Workflow Path
@@ -184,10 +193,10 @@ Use this path for normal task operation:
 5. /ai runner plan, when a plan preview is needed
 6. /ai runner start, when auto-handoff did not start the runner
 7. Review the Completion Card
-8. /ai finalization accept, accept-concerns, or request-changes
-9. /ai runner continue
+8. /ai runner accept-completion, or /ai finalization request-changes
+9. /ai runner continue, only when a non-completion human gate asks for it
 10. /ai task done, only after human completion decision
-11. Review and commit manually
+11. /ai git commit, /ai git push, or /ai git commit-push after diff review
 ```
 
 Intake auto-handoff is limited to P2/P3, low-risk documentation or validation
@@ -227,7 +236,6 @@ but they are not required in the regular flow:
 /ai prepare codex
 /ai prepare goal
 /ai result audit
-/ai intake-create
 /ai intake-preview
 /ai intake-test
 ```
@@ -366,18 +374,17 @@ For intake response format smoke testing:
 data only. It does not call Codex CLI, write Backlog, update ActiveTask, approve
 tasks, execute agents, commit, push, or modify source files.
 
-For compatibility intake task creation:
+For intake task creation:
 
 ```text
-/ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
+/ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어"
 ```
 
-`/ai intake-create` is a compatibility alias for `/ai intake`. It uses the same
-Codex CLI intake path, appends one `todo` row to `_Docs/AIWorkflow/Backlog.md`,
-creates a timestamped Backlog backup before writing, and returns the new task id.
+`/ai intake` uses the Codex CLI intake path, appends one `todo` row to
+`_Docs/AIWorkflow/Backlog.md`, creates a timestamped Backlog backup before
+writing, and may auto-handoff low-risk DOC/VAL tasks into PC Runner execution.
 
-It does not update ActiveTask.md, approve the task, execute agents, run
-implementation Codex, commit, push, or modify source files.
+It does not mark tasks done, commit, push, or modify source files directly.
 
 For engine diagnostics:
 
@@ -409,7 +416,7 @@ For intake-created task review:
 ```
 
 `/ai task review-intake` reads the Backlog task, checks whether it appears to
-come from `/ai intake-create`, shows activation readiness, role routing, human
+come from the intake flow, shows activation readiness, role routing, human
 gates, validation expectations, execution route, verdict guidance, and suggested
 manual next commands.
 
@@ -536,8 +543,7 @@ After starting the bot:
 [ ] /ai active works.
 [ ] /ai backlog works.
 [ ] /ai next works.
-[ ] /ai intake returns a structured task suggestion.
-[ ] /ai intake-create creates one Backlog task only when explicitly invoked.
+[ ] /ai intake creates one Backlog task from a structured TaskDraft.
 [ ] /ai project list works.
 [ ] /ai project profile shows Source: ActiveProject.json.
 [ ] /ai project profile id:unity_project_template shows Source: explicit project id.
@@ -577,14 +583,13 @@ After starting the bot:
 [ ] /ai prepare goal id:WF-037 mode:review context:compact works.
 [ ] /ai prepare goal id:WF-038 mode:review context:compact works.
 [ ] /ai intake text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" works.
-[ ] /ai intake-create text:"UserData가 이상할 때 기본값으로 복구되게 하고 싶어" creates one Backlog task.
 [ ] /ai intake text:"Codex goal prompt에 검증 조건이 자동으로 더 잘 들어가면 좋겠어" works.
 [ ] /ai intake text:"Unity로 포팅할 때 필요한 검증 프로필을 정리하고 싶어" works.
 [ ] /ai intake-test renders the intake task-created response format without Backlog or Codex execution.
 [ ] /ai intake responses include a Task Draft section with title, category, priority, kind, reason, risk, workflow path, roles, gates, validation, and next manual action.
 [ ] /ai intake responses show LLM intake status, fallback status when used, confidence, and rule-based cross-check mismatches.
-[ ] /ai intake-create creates a timestamped Backlog backup before writing.
-[ ] /ai intake-create escapes markdown table pipes in generated Backlog cells.
+[ ] /ai intake creates a timestamped Backlog backup before writing.
+[ ] /ai intake escapes markdown table pipes in generated Backlog cells.
 [ ] /ai intake auto-handoff responses include concrete next commands for Runner human gates.
 [ ] /ai task review-intake does not modify Backlog.md or ActiveTask.md.
 [ ] /ai task review-intake does not approve tasks or execute agents/Codex CLI.
@@ -605,8 +610,7 @@ After starting the bot:
 [ ] /ai git push pushes the current branch.
 [ ] /ai git commit-push message:<message> commits then pushes only after forbidden path safety checks.
 [ ] /ai git commands reject _Temp/, _Local/, node_modules/, .env, and *.local.json changes.
-[ ] /ai intake does not modify Backlog.md or ActiveTask.md.
-[ ] /ai intake-create does not modify ActiveTask.md and does not approve the task.
+[ ] /ai intake does not mark tasks done, commit, or push.
 [ ] Git status changes only for explicitly approved write commands.
 ```
 

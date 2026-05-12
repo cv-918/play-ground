@@ -125,7 +125,6 @@ P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터�
 - `/ai intake-preview`
 - `/ai intake-test`
 - `/ai task create`
-- `/ai intake-create`
 
 이 명령들은 정규 경로라기보다 예외 상황, 디버깅, 호환을 위한 명령입니다.
 

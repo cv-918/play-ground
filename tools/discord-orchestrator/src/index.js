@@ -1,6 +1,7 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { loadConfig } from "./config.js";
 import { buildAiCommand, handleAiCommand } from "./commands/ai.js";
+import { formatTextCardPayload } from "./services/responseFormatter.js";
 
 const config = loadConfig();
 
@@ -33,16 +34,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await handleAiCommand(interaction, config);
   } catch (error) {
     console.error("[ERROR] Unhandled command failure:", error);
-    const message = [
-      "Command failed.",
-      "Reason: unhandled bot error.",
-      "Next action: check local bot console logs.",
-    ].join("\n");
+    const payload = formatTextCardPayload("명령 실행 실패", [
+      "**이유**",
+      "처리되지 않은 bot 오류입니다.",
+      "",
+      "**다음 조치**",
+      "로컬 bot console log를 확인하세요.",
+    ].join("\n"));
 
     if (interaction.deferred || interaction.replied) {
-      await interaction.editReply({ content: message });
+      await interaction.editReply(payload);
     } else {
-      await interaction.reply({ content: message, ephemeral: true });
+      await interaction.reply({ ...payload, ephemeral: true });
     }
   }
 });

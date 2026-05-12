@@ -61,7 +61,6 @@ Discord slash command search should show Korean descriptions for:
 ```text
 /ai intake
 /ai intake-preview
-/ai intake-create
 /ai intake-test
 /ai intake-engine status
 /ai bot status

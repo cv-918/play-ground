@@ -8,6 +8,31 @@ export function truncateForDiscord(text, maxChars = 1800) {
   return `${value.slice(0, Math.max(0, maxChars - 40))}\n... [잘림]`;
 }
 
+export function formatTextCardPayload(title, text, options = {}) {
+  const sections = splitCardSections(text);
+  const description = sections.intro.length > 0
+    ? compactText(sections.intro.join("\n"), 700)
+    : undefined;
+  const fields = sections.fields.slice(0, 8).map((section) =>
+    embedField(section.name, section.lines.join("\n"), section.inline === true),
+  );
+
+  if (fields.length === 0) {
+    fields.push(embedField("내용", compactText(String(text ?? ""), 1000)));
+  }
+
+  return {
+    content: "",
+    embeds: [{
+      title,
+      color: options.color ?? 0x1565c0,
+      description,
+      fields,
+      footer: options.footer ? { text: options.footer } : undefined,
+    }],
+  };
+}
+
 export function formatStatus(status) {
   const task = status.active_task ?? {};
   const backlog = status.backlog ?? {};
@@ -2213,6 +2238,47 @@ function summarizeIntakeValidation(items) {
     visible.push("상세 검증 항목은 TaskDraft 출력 파일 또는 생성된 Backlog task에서 확인하세요.");
   }
   return visible.join("; ");
+}
+
+function splitCardSections(text) {
+  const lines = String(text ?? "").split(/\r?\n/);
+  const intro = [];
+  const fields = [];
+  let current = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    const heading = line.match(/^\*\*(.+?)\*\*$/);
+    if (heading) {
+      current = {
+        name: heading[1].replace(/^\d+\.\s*/, "").trim() || "내용",
+        lines: [],
+      };
+      fields.push(current);
+      continue;
+    }
+
+    if (!current) {
+      if (line.trim()) {
+        intro.push(line);
+      }
+      continue;
+    }
+
+    if (line.trim()) {
+      current.lines.push(line);
+    }
+  }
+
+  return {
+    intro,
+    fields: fields
+      .map((field) => ({
+        ...field,
+        lines: field.lines.length > 0 ? field.lines : ["(없음)"],
+      }))
+      .filter((field) => field.name),
+  };
 }
 
 function embedField(name, value, inline = false) {

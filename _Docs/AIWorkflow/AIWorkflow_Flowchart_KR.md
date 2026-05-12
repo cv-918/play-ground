@@ -18,35 +18,32 @@
 
 ```mermaid
 flowchart TD
-    A["[RO] LLM-assisted /ai intake<br/>또는 ChatGPT/Codex App에서 작업 의도 정리"] --> B{"[HUMAN] task로 만들까?"}
-    B -- 아니오 --> Z["종료 또는 나중에 다시 검토"]
-    B -- 예 --> C["[WRITE] /ai intake-create<br/>또는 /ai task create"]
-    C --> D["[WRITE] /ai task set-active"]
-    D --> E{"[HUMAN] 범위 승인?"}
-    E -- 아니오 --> E2["task 수정 / defer / block"]
-    E -- 예 --> F["[WRITE] /ai task approve"]
-    F --> G["[WRITE] /ai prepare goal<br/>request file 생성"]
-    G --> H{"[HUMAN] request 검토"}
-    H -- 보류 --> E2
-    H -- 실행 --> I["[MANUAL] Codex App/CLI 실행"]
-    I --> J["[RO] /ai result audit"]
-    J --> K{"[HUMAN] done 가능?"}
-    K -- 아니오 --> L["추가 review / validation / follow-up"]
-    K -- 예 --> M["[WRITE] /ai task done"]
-    M --> N{"[HUMAN] commit 가능?"}
-    N -- 아니오 --> O["diff 보관 / 추가 검토"]
-    N -- 예 --> P["[MANUAL] git commit"]
+    A["[WRITE] /ai intake text:&lt;request&gt;"] --> B{"자동 handoff 가능?"}
+    B -- 예 --> C["[WRITE] set-active + approve + runner start"]
+    B -- 아니오 --> D{"[HUMAN] 착수 승인 필요?"}
+    D -- 아니오 --> E["[WRITE] /ai runner start"]
+    D -- 예 --> F["[WRITE] /ai task set-active<br/>/ai task approve<br/>/ai runner start"]
+    C --> G["[HUMAN] Completion Card 검토"]
+    E --> G
+    F --> G
+    G -- 수락 --> H["[WRITE] /ai runner accept-completion"]
+    G -- 수정 필요 --> I["/ai finalization request-changes<br/>또는 후속 작업"]
+    H --> J{"done/commit 결정"}
+    J -- 완료 --> K["[WRITE] /ai task done"]
+    K --> L{"commit/push 필요?"}
+    L -- 예 --> M["[WRITE] /ai git commit-push"]
+    L -- 아니오 --> N["종료"]
 ```
 
 핵심:
 
-- `/ai prepare goal`은 Codex를 실행하지 않습니다.
-- `/ai result audit`은 done 처리하지 않습니다.
+- `/ai intake`는 Backlog task를 만들고, 저위험 DOC/VAL은 PC Runner까지 자동 시작할 수 있습니다.
+- `/ai runner accept-completion`은 완료 검토 수락과 runner continue를 한 번에 처리합니다.
 - `/ai task done`은 commit하지 않습니다.
-- commit은 사람이 diff와 validation을 보고 따로 결정합니다.
+- commit/push는 `/ai git commit`, `/ai git push`, `/ai git commit-push` 명령으로 처리합니다.
 - 현재 `/ai intake`는 Codex CLI `codex exec` 기반 LLM-assisted TaskDraft 생성과 Backlog task 생성을 수행합니다.
 - rule-based intake는 fallback과 cross-check로 유지됩니다.
-- LLM-assisted intake도 Human Review와 task 생성/승인 단계를 건너뛰지 않습니다.
+- LLM-assisted intake도 정책상 필요한 Human Review/approval을 건너뛰지 않습니다.
 
 ---
 
@@ -80,7 +77,7 @@ flowchart TD
     B --> C["[RO] schema validation + rule-based cross-check"]
     C --> D{"[HUMAN] draft 수락/수정?"}
     D -- 보류 --> E["질문 보강 / draft 수정"]
-    D -- 수락 --> F["[WRITE] /ai intake-create<br/>또는 /ai task create"]
+    D -- 수락 --> F["[WRITE] /ai intake<br/>또는 /ai task create"]
     F --> G["[WRITE] /ai task set-active"]
     G --> H["[WRITE] /ai task approve"]
 ```
@@ -144,14 +141,14 @@ Commit recommendation은 자동 commit 명령이 아닙니다.
 
 | Command | Type | 용도 |
 |---|---|---|
-| `/ai intake` | RO | 자연어 요청을 task draft로 정리 |
-| `/ai intake-create` | WRITE | Backlog task 생성 |
+| `/ai intake` | WRITE | 자연어 요청을 TaskDraft로 정리하고 Backlog task 생성 |
 | `/ai task create` | WRITE | 수동 Backlog task 생성 |
 | `/ai task set-active` | WRITE | ActiveTask 선택 |
 | `/ai task approve` | WRITE | 구현 승인 상태 기록 |
-| `/ai prepare goal` | WRITE | `_Temp`에 goal request 파일 생성 |
-| `/ai result audit` | RO | Codex 결과 요약 감사 |
+| `/ai runner start` | WRITE | PC Runner 실행 시작 |
+| `/ai runner accept-completion` | WRITE | 완료 카드 수락 후 runner 계속 진행 |
 | `/ai task done` | WRITE | evidence와 함께 완료 상태 기록 |
+| `/ai git commit-push` | WRITE | 안전 검사를 거쳐 commit과 push 수행 |
 | `/ai role status` | RO | 상세 role routing 확인 |
 | `/ai task review-intake` | RO | intake-created task 활성화 검토 |
 | `/ai status` | RO | 전체 상태 요약 |
@@ -196,9 +193,10 @@ Commit recommendation은 자동 commit 명령이 아닙니다.
 
 Main happy path now starts with `/ai intake text:<request>`, which uses local
 `codex exec` to generate and validate a TaskDraft, then writes one Backlog task.
-`/ai intake-preview` is the read-only draft path. `/ai intake-create` is a
-compatibility alias for `/ai intake`.
+`/ai intake-preview` is the read-only draft path. The old `/ai intake-create`
+compatibility alias is no longer registered.
 
-The intake Codex CLI call is not an implementation execution path. The workflow
-still requires separate set-active, approval, execution, result audit, done, and
-manual commit decisions.
+The intake Codex CLI call is not itself an implementation execution path.
+Low-risk DOC/VAL tasks may be auto-handed off to PC Runner, while approval-gated
+tasks still require Human Director approval. Done and commit/push decisions
+remain separate.

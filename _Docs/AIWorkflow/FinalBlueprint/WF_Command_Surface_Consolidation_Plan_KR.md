@@ -79,7 +79,6 @@ WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니
 
 정규 최종 경로는 아니지만, 당장은 남겨야 하는 명령입니다.
 
-- `/ai intake-create`
 - `/ai intake-preview`
 - `/ai intake-test`
 - `/ai task create`
@@ -91,7 +90,7 @@ WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니
 
 | 명령 | 현재 상태 | 결정 | 나중 작업 |
 | --- | --- | --- | --- |
-| `/ai intake-create` | `/ai intake`의 호환 alias | 호환 명령으로 표시 | 가이드 정리 후 숨김/폐기 검토 |
+| `/ai intake-create` | `/ai intake`의 제거된 호환 alias | Discord 등록에서 제거 | Backlog task 생성은 `/ai intake` 사용 |
 | `/ai prepare codex` | Codex App 수동 프롬프트 경로 | 수동 승격으로 유지 | 정규 가이드에서는 제외 |
 | `/ai prepare goal` | Codex CLI goal 파일 생성 | 수동 승격으로 유지 | 정규 가이드에서는 제외 |
 | `/ai result audit` | 수동 결과 붙여넣기 감사 | 수동 승격 감사로 유지 | runner 증거 수집이 불가능하거나 우회된 경우에만 사용 |
@@ -125,7 +124,7 @@ WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니
 
 WF-408에서는 아래처럼 비파괴 정리를 적용합니다.
 
-1. `/ai intake-create`는 등록 상태를 유지하되 호환 alias로 설명합니다.
+1. `/ai intake-create`는 등록 상태에서 제거하고, 정규 생성 경로를 `/ai intake`로 단일화합니다.
 2. `/ai prepare codex`와 `/ai prepare goal`은 수동 승격 명령으로 유지합니다.
 3. `/ai result audit`는 수동 승격 결과 감사 명령으로 유지합니다.
 4. 진단/관리 명령은 진단 또는 복구 명령으로 설명합니다.

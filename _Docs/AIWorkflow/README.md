@@ -262,7 +262,6 @@ Compatibility and preview options:
 
 ```text
 /ai intake-preview text:<request>
-/ai intake-create text:<request>  # compatibility alias for /ai intake
 /ai task create                   # manual Backlog task creation
 ```
 

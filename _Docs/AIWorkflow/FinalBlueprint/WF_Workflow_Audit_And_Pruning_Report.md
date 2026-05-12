@@ -117,13 +117,12 @@ paths rather than the final architecture:
 - `/ai intake-preview`
 - `/ai intake-test`
 - `/ai task create`
-- `/ai intake-create`
 
 ## Pruning and Consolidation Candidates
 
 | Candidate | Current role | Recommendation |
 | --- | --- | --- |
-| `/ai intake-create` | Compatibility alias for `/ai intake`. | Keep temporarily, then hide/deprecate after WF-402 approval. |
+| `/ai intake-create` | Removed compatibility alias for `/ai intake`. | Removed from registered commands; use `/ai intake`. |
 | `/ai prepare codex` | Legacy Codex App prompt package path. | Keep as manual escalation; remove from regular guide. |
 | `/ai prepare goal` | Manual Codex CLI goal request generation. | Keep as bootstrap/manual escalation until WF-407 runner is available. |
 | `/ai result audit` | Audits pasted manual execution summaries. | Keep for manual escalation; later make it secondary to ExecutionResult/VerificationReport. |

@@ -123,13 +123,12 @@
 - `/ai intake-preview`
 - `/ai intake-test`
 - `/ai task create`
-- `/ai intake-create`
 
 ## 정리 후보
 
 | 후보 | 현재 역할 | 권장 |
 | --- | --- | --- |
-| `/ai intake-create` | `/ai intake`의 호환 alias | 당분간 유지, 나중에 숨김/폐기 후보 |
+| `/ai intake-create` | `/ai intake`의 제거된 호환 alias | 등록 명령에서 제거, `/ai intake` 사용 |
 | `/ai prepare codex` | Codex App 수동 프롬프트 생성 | 수동 승격 경로로 유지, 정규 가이드에서는 제외 |
 | `/ai prepare goal` | Codex CLI goal 요청 파일 생성 | WF-407 전까지 부트스트랩 경로로 유지 |
 | `/ai result audit` | 수동 실행 결과 붙여넣기 감사 | runner 결과 수집이 정규화되면 보조 경로로 이동 |
