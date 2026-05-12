@@ -65,6 +65,7 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Completion_Report_And_Card.md` | Defines WF-305/306 CompletionReport and Completion Card artifacts, readiness mapping, Discord display commands, runtime storage, and WF-307 handoff boundaries |
 | `FinalBlueprint/WF_Approval_History_And_Finalization_Log.md` | Defines WF-307 ApprovalHistory and FinalizationLog artifacts, explicit human completion decisions, runtime storage, Discord finalization commands, and WF-308 handoff boundaries |
 | `FinalBlueprint/WF_Auto_Approval_Policy.md` | Defines WF-308 deterministic Auto Approval Policy evaluation artifacts, Discord status/evaluate/read commands, strict eligibility rules, and no-apply safety boundary |
+| `FinalBlueprint/WF_Follow_Up_Task_Generator.md` | Defines WF-309 Follow-up Task Generator candidate plans, Discord status/generate/read commands, candidate sources, and no-task-create safety boundary |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

@@ -16,6 +16,7 @@ import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js
 import { generateCompletionCard, generateCompletionReport, getCompletionStatus } from "../services/completionService.js";
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
+import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -39,6 +40,9 @@ import {
   formatAutoApprovalEvaluatePayload,
   formatAutoApprovalReadPayload,
   formatAutoApprovalStatusPayload,
+  formatFollowUpGeneratePayload,
+  formatFollowUpReadPayload,
+  formatFollowUpStatusPayload,
   formatBlockers,
   formatCodexPrepareResult,
   formatDocs,
@@ -511,6 +515,68 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("follow-up")
+        .setDescription("후속 작업 후보를 생성하고 검토합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("status")
+            .setDescription("작업의 Follow-up Plan 생성 상태를 확인합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("generate")
+            .setDescription("완료/최종화/정책 근거로 후속 작업 후보를 생성합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("completion-report-id")
+                .setDescription("참조할 CompletionReport ID, 없으면 최신 보고서")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("finalization-log-id")
+                .setDescription("참조할 FinalizationLog ID, 없으면 최신 기록")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("policy-evaluation-id")
+                .setDescription("참조할 Auto Approval 평가 ID, 없으면 최신 평가")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("read")
+            .setDescription("Follow-up Plan 상세와 후보 목록을 읽습니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("follow-up-plan-id")
+                .setDescription("읽을 Follow-up Plan ID, 없으면 최신 계획")
+                .setRequired(false),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -699,6 +765,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "auto-approval") {
     await handleAutoApprovalCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "follow-up") {
+    await handleFollowUpCommand(interaction, config, subcommand);
     return;
   }
 
@@ -1070,6 +1141,38 @@ async function handleAutoApprovalCommand(interaction, config, subcommand) {
   }
 
   await interaction.editReply({ content: "알 수 없는 auto-approval 명령입니다." });
+}
+
+async function handleFollowUpCommand(interaction, config, subcommand) {
+  const id = interaction.options.getString("id");
+
+  if (subcommand === "status") {
+    const result = await getFollowUpStatus(config, { id });
+    await interaction.editReply(formatFollowUpStatusPayload(result));
+    return;
+  }
+
+  if (subcommand === "generate") {
+    const result = await generateFollowUpPlan(config, {
+      id,
+      completionReportId: interaction.options.getString("completion-report-id"),
+      finalizationLogId: interaction.options.getString("finalization-log-id"),
+      policyEvaluationId: interaction.options.getString("policy-evaluation-id"),
+    });
+    await interaction.editReply(formatFollowUpGeneratePayload(result));
+    return;
+  }
+
+  if (subcommand === "read") {
+    const result = await readFollowUpPlan(config, {
+      id,
+      followUpPlanId: interaction.options.getString("follow-up-plan-id"),
+    });
+    await interaction.editReply(formatFollowUpReadPayload(result));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 follow-up 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {

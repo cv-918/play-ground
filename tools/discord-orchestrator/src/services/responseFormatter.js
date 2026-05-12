@@ -1119,6 +1119,118 @@ export function formatAutoApprovalReadPayload(result) {
   };
 }
 
+export function formatFollowUpStatusPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**후속 작업 상태 확인 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "후속 작업 후보 상태",
+      color: 0x1565c0,
+      description: formatInlineCode(data.task_id || "unknown"),
+      fields: [
+        embedField("생성 기록", [
+          `개수: ${data.follow_up_plan_count ?? 0}`,
+          `최신 ID: ${formatInlineCode(data.latest_follow_up_plan_id || "none")}`,
+          `manifest: ${formatInlineCode(data.follow_up_manifest_path || "none")}`,
+        ]),
+        embedField("안전 상태", [
+          "Backlog/ActiveTask lifecycle 변경 없음",
+          "task 생성/승인/done, commit/push 없음",
+        ], true),
+      ],
+    }],
+  };
+}
+
+export function formatFollowUpGeneratePayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**후속 작업 후보 생성 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const plan = data.follow_up_plan ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "후속 작업 후보 생성 완료",
+      color: followUpColor(plan.plan_state),
+      description: [
+        `${formatInlineCode(data.follow_up_plan_id || plan.follow_up_plan_id || "unknown")}`,
+        `${data.task_id ?? plan.task_id ?? "unknown"} · ${followUpStateKo(plan.plan_state)} · 후보 ${plan.candidate_count ?? 0}개`,
+        compactText(plan.summary ?? "No summary.", 180),
+      ].join("\n"),
+      fields: [
+        embedField("후보 요약", formatFollowUpCandidates(plan.candidates, 4)),
+        embedField("참조", [
+          `CompletionReport: ${formatInlineCode(plan.sources?.completion_report?.completion_report_id || "none")}`,
+          `FinalizationLog: ${formatInlineCode(plan.sources?.finalization_log?.finalization_log_id || "none")}`,
+          `AutoApproval: ${formatInlineCode(plan.sources?.auto_approval_policy?.policy_evaluation_id || "none")}`,
+        ]),
+        embedField("다음 명령", summarizeCompactList(plan.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          "후보 기록만 생성",
+          "Backlog task 생성 없음",
+          "approve/done/commit/push 없음",
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.follow_up_plan_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
+export function formatFollowUpReadPayload(result) {
+  if (!result?.ok) {
+    return {
+      content: [
+        "**후속 작업 후보 읽기 실패**",
+        cleanKo(result?.error || "Unknown failure."),
+      ].join("\n"),
+    };
+  }
+
+  const data = result.data ?? {};
+  const plan = data.follow_up_plan ?? {};
+  return {
+    content: "",
+    embeds: [{
+      title: "FollowUpPlan",
+      color: followUpColor(plan.plan_state),
+      description: [
+        `${formatInlineCode(data.follow_up_plan_id || plan.follow_up_plan_id || "unknown")}`,
+        `${data.task_id ?? plan.task_id ?? "unknown"} · ${followUpStateKo(plan.plan_state)} · 후보 ${plan.candidate_count ?? 0}개`,
+      ].join("\n"),
+      fields: [
+        embedField("후보", formatFollowUpCandidates(plan.candidates, 6)),
+        embedField("다음 명령", summarizeCompactList(plan.suggested_next_manual_commands, 3)),
+        embedField("안전 상태", [
+          `Backlog write 없음: ${koBool(plan.invariants?.no_backlog_write)}`,
+          `task 생성 없음: ${koBool(plan.invariants?.no_task_created)}`,
+          `commit/push 없음: ${koBool(plan.invariants?.no_commit_or_push)}`,
+        ], true),
+      ],
+      footer: {
+        text: `path: ${data.follow_up_plan_path || "unknown"}`,
+      },
+    }],
+  };
+}
+
 function formatAuditFiles(files) {
   const values = Array.isArray(files) ? files.map(cleanupBlock).filter(Boolean) : [];
   if (values.length === 0) {
@@ -1285,6 +1397,50 @@ function summarizePolicyRules(rules) {
   const visible = values.slice(0, 5).map((rule) => {
     const mark = rule.status === "pass" ? "PASS" : "FAIL";
     return `${mark} ${rule.id}: ${compactText(cleanKo(rule.summary), 140)}`;
+  });
+  if (values.length > visible.length) {
+    visible.push(`+${values.length - visible.length}개 더 있음`);
+  }
+  return visible.join("\n");
+}
+
+function followUpColor(state) {
+  switch (state) {
+    case "follow_up_recommended":
+      return 0xef6c00;
+    case "no_follow_up_recommended":
+      return 0x2e7d32;
+    case "insufficient_follow_up_signal":
+      return 0x607d8b;
+    default:
+      return 0x1565c0;
+  }
+}
+
+function followUpStateKo(state) {
+  switch (state) {
+    case "follow_up_recommended":
+      return "후속 작업 후보 있음";
+    case "no_follow_up_recommended":
+      return "후속 작업 불필요";
+    case "insufficient_follow_up_signal":
+      return "근거 부족";
+    default:
+      return state || "unknown";
+  }
+}
+
+function formatFollowUpCandidates(candidates, maxCount) {
+  const values = Array.isArray(candidates) ? candidates : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, maxCount).map((candidate) => {
+    const title = compactText(cleanKo(candidate.title), 140);
+    const priority = candidate.suggested_priority ?? "?";
+    const type = candidate.candidate_type ?? "follow_up";
+    return `${candidate.candidate_id ?? "candidate"} · ${priority} · ${type}\n${title}`;
   });
   if (values.length > visible.length) {
     visible.push(`+${values.length - visible.length}개 더 있음`);
