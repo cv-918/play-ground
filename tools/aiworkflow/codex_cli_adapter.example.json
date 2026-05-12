@@ -5,6 +5,18 @@
   "model": "gpt-5.5",
   "reasoning_effort": "high",
   "ephemeral": false,
+  "runner_profiles": {
+    "documentation": {
+      "model": "gpt-5.4-mini",
+      "reasoning_effort": "low",
+      "ephemeral": true
+    },
+    "implementation": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "high",
+      "ephemeral": false
+    }
+  },
   "args": [
     "--sandbox",
     "workspace-write",

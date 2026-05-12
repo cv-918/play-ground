@@ -99,6 +99,51 @@ AIWorkflow 증거 기록은 유지
 
 ---
 
+## PC Runner profile별 모델 라우팅
+
+이제 PC Runner는 Codex CLI를 실행할 때 task 전용 임시 설정 파일을 만듭니다.
+
+```text
+_Temp/AIWorkflowRuntime/tasks/<task_id>/runner/config/
+```
+
+이 파일은 기본적으로 아래 로컬 설정을 복사해서 시작합니다.
+
+```text
+_Local/AIWorkflow/codex_cli_adapter.local.json
+```
+
+그 다음 `runner_profiles`에 profile별 설정이 있으면 적용합니다.
+
+```json
+{
+  "runner_profiles": {
+    "documentation": {
+      "model": "gpt-5.4-mini",
+      "reasoning_effort": "low",
+      "ephemeral": true
+    },
+    "implementation": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "high",
+      "ephemeral": false
+    }
+  }
+}
+```
+
+`documentation` profile은 설정을 따로 넣지 않아도 기본적으로
+`gpt-5.4-mini` / `low` / `ephemeral=true`를 사용합니다.
+
+`implementation` profile은 별도 override가 없으면 기존
+`codex_cli_adapter.local.json`의 기본 설정을 그대로 사용합니다.
+
+즉, 문서 작업은 더 빠르게, 실제 구현 작업은 더 강한 기본 설정으로 가는
+분리가 가능합니다. 단, 이 설정은 실행 속도/비용/세션 저장 방식만 바꾸며
+승인, 완료 리뷰, task done, commit/push 권한은 바꾸지 않습니다.
+
+---
+
 ## 빠른 모델 후보
 
 현재 빠른 후보는 다음입니다.

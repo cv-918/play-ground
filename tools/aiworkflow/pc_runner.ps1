@@ -165,6 +165,66 @@ function Set-ObjectProperty {
     else { $Object | Add-Member -MemberType NoteProperty -Name $Name -Value $Value }
 }
 
+function Get-ObjectPropertyValue {
+    param($Object, [string]$Name)
+    if ($null -eq $Object -or $null -eq $Object.PSObject.Properties[$Name]) { return $null }
+    return $Object.$Name
+}
+
+function Get-CodexProfileOverride {
+    param($Config, [string]$ProfileValue)
+    $profiles = Get-ObjectPropertyValue -Object $Config -Name "runner_profiles"
+    $profileOverride = Get-ObjectPropertyValue -Object $profiles -Name $ProfileValue
+    if ($null -ne $profileOverride) { return $profileOverride }
+
+    if ($ProfileValue -eq "documentation") {
+        return [pscustomobject]@{
+            model = "gpt-5.4-mini"
+            reasoning_effort = "low"
+            ephemeral = $true
+        }
+    }
+
+    return $null
+}
+
+function Write-CodexProfileConfig {
+    param([string]$Repo, $Paths, [string]$ProfileValue)
+    $basePath = Join-Path $Repo "_Local\AIWorkflow\codex_cli_adapter.local.json"
+    if (-not (Test-Path -LiteralPath $basePath)) {
+        return [pscustomobject]@{
+            path = ConvertTo-RepoRelativePath -Repo $Repo -Path $basePath
+            generated = $false
+            model = $null
+            reasoning_effort = $null
+            ephemeral = $false
+        }
+    }
+
+    Ensure-RunnerDirs -Paths $Paths
+    $config = Read-JsonFile -Path $basePath
+    $override = Get-CodexProfileOverride -Config $config -ProfileValue $ProfileValue
+    if ($null -ne $override) {
+        foreach ($name in @("model", "reasoning_effort", "ephemeral")) {
+            $value = Get-ObjectPropertyValue -Object $override -Name $name
+            if ($null -ne $value) {
+                Set-ObjectProperty -Object $config -Name $name -Value $value
+            }
+        }
+        Set-ObjectProperty -Object $config -Name "runner_profile" -Value $ProfileValue
+    }
+
+    $profileConfigPath = Join-Path $Paths.config_dir "codex_cli_adapter.$ProfileValue.pc_runner.json"
+    Save-JsonFile -Path $profileConfigPath -Value $config
+    return [pscustomobject]@{
+        path = ConvertTo-RepoRelativePath -Repo $Repo -Path $profileConfigPath
+        generated = $true
+        model = Get-ObjectPropertyValue -Object $config -Name "model"
+        reasoning_effort = Get-ObjectPropertyValue -Object $config -Name "reasoning_effort"
+        ephemeral = [bool](Get-ObjectPropertyValue -Object $config -Name "ephemeral")
+    }
+}
+
 function Get-WorkspacePaths {
     param([string]$Repo, [string]$TaskId)
     $workspacePath = Join-Path (Join-Path (Join-Path $Repo "_Temp\AIWorkflowRuntime") "tasks") $TaskId
@@ -1262,16 +1322,18 @@ function Invoke-ImplementationStart {
     param([string]$Repo, [string]$TaskId, [string]$ProfileValue, [string]$ExecutorValue, $Paths, $Plan, $RunState, [string]$RunId)
     $runnerRunId = $Plan.expected_artifacts.runner_run_id
     $promptPath = Write-ImplementationPrompt -Paths $Paths -Repo $Repo -TaskId $TaskId -Task $Plan.preflight_result.task -PromptId $Plan.expected_artifacts.prompt_id -ProfileValue $ProfileValue
+    $codexProfileConfig = Write-CodexProfileConfig -Repo $Repo -Paths $Paths -ProfileValue $ProfileValue
     Set-ReportId -RunState $RunState -Name "implementation_prompt_path" -Value $promptPath
+    Set-ReportId -RunState $RunState -Name "codex_config_path" -Value $codexProfileConfig.path
 
     $RunState.status = "starting"
     $RunState.current_phase = "executor_preflight"
     $RunState.current_step = "codex_cli_adapter.dry-run"
     $RunState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_executor_preflight" -Message "PC Runner Codex profile checking Codex CLI adapter readiness." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_executor_preflight" -Message "PC Runner Codex profile checking Codex CLI adapter readiness." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath; codex_config = $codexProfileConfig.path; model = $codexProfileConfig.model; reasoning_effort = $codexProfileConfig.reasoning_effort; ephemeral = $codexProfileConfig.ephemeral } | Out-Null
 
     $dryRun = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\codex_cli_adapter.bat" -Arguments @(
-        "dry-run", $TaskId, "--prompt-file", $promptPath, "--json"
+        "dry-run", $TaskId, "--config", $codexProfileConfig.path, "--prompt-file", $promptPath, "--json"
     ) -AllowFailure $true
 
     $configReady = $dryRun.ok -and ($dryRun.data.config_exists -eq $true) -and ($dryRun.data.config_enabled -eq $true)
@@ -1285,10 +1347,14 @@ function Invoke-ImplementationStart {
             prompt_file = $promptPath
             config_exists = $dryRun.data.config_exists
             config_enabled = $dryRun.data.config_enabled
+            config_path = $codexProfileConfig.path
+            model = $dryRun.data.model
+            reasoning_effort = $dryRun.data.reasoning_effort
+            ephemeral = $dryRun.data.ephemeral
         }
         $RunState.updated_at = Get-NowText
         $RunState.ended_at = Get-NowText
-        $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "executor_preflight" -Step "codex_cli_adapter.dry-run" -Status "stopped" -Inputs @{ prompt_file = $promptPath } -Outputs @{ config_exists = $dryRun.data.config_exists; config_enabled = $dryRun.data.config_enabled; error = $dryRun.data.error } -StopReason "executor_not_ready"
+        $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "executor_preflight" -Step "codex_cli_adapter.dry-run" -Status "stopped" -Inputs @{ prompt_file = $promptPath; config_path = $codexProfileConfig.path } -Outputs @{ config_exists = $dryRun.data.config_exists; config_enabled = $dryRun.data.config_enabled; model = $dryRun.data.model; reasoning_effort = $dryRun.data.reasoning_effort; ephemeral = $dryRun.data.ephemeral; error = $dryRun.data.error } -StopReason "executor_not_ready"
         $RunState.last_checkpoint_id = $checkpoint.id
         Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner Codex profile stopped because Codex CLI adapter is not ready." -Data $RunState.human_gate_state | Out-Null
         $runPath = Save-RunnerRun -Paths $Paths -RunState $RunState
@@ -1302,6 +1368,7 @@ function Invoke-ImplementationStart {
             stop_reason = "executor_not_ready"
             human_gate = $RunState.human_gate_state.human_gate
             prompt_file = $promptPath
+            codex_config_path = $codexProfileConfig.path
             runner_run = $RunState
             task_lifecycle_unchanged = $true
             no_task_approval = $true
@@ -1317,10 +1384,10 @@ function Invoke-ImplementationStart {
     $RunState.current_phase = "execution"
     $RunState.current_step = "codex_cli_adapter.run"
     $RunState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner Codex profile started Codex CLI adapter." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath } | Out-Null
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner Codex profile started Codex CLI adapter." -Data @{ profile = $ProfileValue; executor = $ExecutorValue; prompt_file = $promptPath; codex_config = $codexProfileConfig.path; model = $codexProfileConfig.model; reasoning_effort = $codexProfileConfig.reasoning_effort; ephemeral = $codexProfileConfig.ephemeral } | Out-Null
 
     $codex = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\codex_cli_adapter.bat" -Arguments @(
-        "run", $TaskId, "--execute", "--prompt-file", $promptPath,
+        "run", $TaskId, "--execute", "--config", $codexProfileConfig.path, "--prompt-file", $promptPath,
         "--session-id", $Plan.expected_artifacts.session_id,
         "--evidence-id", $Plan.expected_artifacts.evidence_ids[0],
         "--json"
@@ -1328,7 +1395,7 @@ function Invoke-ImplementationStart {
     $RunState.session_ids = @($Plan.expected_artifacts.session_id)
     $RunState.evidence_ids = @($Plan.expected_artifacts.evidence_ids[0])
     $checkpointStatus = if ($codex.ok) { "completed" } else { "completed_with_executor_failure" }
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "codex_cli_adapter.run" -Status $checkpointStatus -Inputs @{ prompt_file = $promptPath } -Outputs @{ session_id = $Plan.expected_artifacts.session_id; evidence_id = $Plan.expected_artifacts.evidence_ids[0]; exit_code = $codex.data.exit_code; ok = $codex.ok; error = $codex.data.error } -NextStep "runner.text_encoding_guard"
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "codex_cli_adapter.run" -Status $checkpointStatus -Inputs @{ prompt_file = $promptPath; config_path = $codexProfileConfig.path } -Outputs @{ session_id = $Plan.expected_artifacts.session_id; evidence_id = $Plan.expected_artifacts.evidence_ids[0]; exit_code = $codex.data.exit_code; ok = $codex.ok; model = $codexProfileConfig.model; reasoning_effort = $codexProfileConfig.reasoning_effort; ephemeral = $codexProfileConfig.ephemeral; error = $codex.data.error } -NextStep "runner.text_encoding_guard"
     $RunState.last_checkpoint_id = $checkpoint.id
 
     $RunState.current_step = "runner.text_encoding_guard"

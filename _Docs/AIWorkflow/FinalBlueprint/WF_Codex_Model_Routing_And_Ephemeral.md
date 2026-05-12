@@ -95,6 +95,50 @@ duplicates.
 session files for short, repeatable runs. Runtime evidence under `_Temp` is
 still collected by AIWorkflow.
 
+## PC Runner Profile Routing
+
+The PC Runner now creates a task-scoped Codex adapter config under:
+
+```text
+_Temp/AIWorkflowRuntime/tasks/<task_id>/runner/config/
+```
+
+For Codex-backed runner profiles, `pc_runner` passes that generated config to
+both `codex_cli_adapter dry-run` and `codex_cli_adapter run` with `--config`.
+
+The generated config starts from:
+
+```text
+_Local/AIWorkflow/codex_cli_adapter.local.json
+```
+
+Then it applies profile-specific overrides from `runner_profiles` when present:
+
+```json
+{
+  "runner_profiles": {
+    "documentation": {
+      "model": "gpt-5.4-mini",
+      "reasoning_effort": "low",
+      "ephemeral": true
+    },
+    "implementation": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "high",
+      "ephemeral": false
+    }
+  }
+}
+```
+
+When `runner_profiles.documentation` is omitted, the runner still applies the
+safe default `gpt-5.4-mini` / `low` / `ephemeral=true` for documentation runs.
+Implementation runs keep the base local config unless an explicit
+`runner_profiles.implementation` override is provided.
+
+The selected generated config path, model, reasoning effort, and ephemeral flag
+are recorded in runner progress/checkpoint artifacts.
+
 ---
 
 ## Fast Model Candidate
@@ -146,8 +190,11 @@ Required validation:
 - `node --check tools/discord-orchestrator/src/services/taskIntakeService.js`
 - `node --check tools/discord-orchestrator/src/services/responseFormatter.js`
 - PowerShell syntax check for `tools/aiworkflow/codex_cli_adapter.ps1`
+- PowerShell syntax check for `tools/aiworkflow/pc_runner.ps1`
 - adapter dry-run with a temp config showing structured model/reasoning fields
   become planned Codex arguments
+- PC Runner plan/start smoke showing the generated profile config path and
+  profile-selected model/reasoning metadata
 - intake smoke showing low-risk DOC/VAL route metadata
 - `git diff --check`
 
