@@ -394,7 +394,7 @@ export function formatIntakeSuggestionPayload(result) {
           "승인: no (아니오)",
           "agents/구현용 Codex 실행 없음",
         ], true),
-      ],
+      ].filter(Boolean),
       footer: {
         text: `workflow: ${draft.workflow_path ?? result.suggested_workflow_path ?? "unknown"}`,
       },
@@ -417,6 +417,7 @@ export function formatIntakeTaskCreated(result) {
   const safety = data.safety ?? {};
   const autoHandoff = data.auto_handoff ?? {};
   const testMode = data.test_mode === true;
+  const nextCommands = buildIntakeAutoHandoffNextCommands(task.id, autoHandoff);
 
   return [
     testMode ? "**작업 접수 생성 완료 양식 테스트**" : "**작업 접수 task 생성 완료**",
@@ -437,6 +438,8 @@ export function formatIntakeTaskCreated(result) {
     "",
     autoHandoff.eligible ? "**다음 확인 지점**" : "**다음 수동 조치**",
     formatAutoHandoffNextAction(autoHandoff),
+    nextCommands.length > 0 ? "**다음 명령**" : "",
+    nextCommands.length > 0 ? summarizeCommandLines(nextCommands).join("\n") : "",
     "",
     "**안전 상태**",
     `Backlog.md 업데이트: ${koBool(safety.backlog_updated)}`,
@@ -468,6 +471,7 @@ export function formatIntakeTaskCreatedPayload(result) {
   const risk = draft.suggested_risk ?? "unknown";
   const category = draft.category ?? "unknown";
   const kind = task.kind ?? draft.kind ?? "unknown";
+  const nextCommands = buildIntakeAutoHandoffNextCommands(taskId, autoHandoff);
 
   return {
     content: "",
@@ -489,6 +493,9 @@ export function formatIntakeTaskCreatedPayload(result) {
         embedField("다음 조치", testMode
           ? "이 화면의 가독성만 확인하세요. Backlog task는 생성되지 않았습니다."
           : formatAutoHandoffNextAction(autoHandoff)),
+        nextCommands.length > 0
+          ? embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n"))
+          : null,
         embedField("자동 진행", formatAutoHandoffDetails(autoHandoff)),
         embedField("안전 상태", [
           `Backlog: ${koBool(safety.backlog_updated)}`,
@@ -500,7 +507,7 @@ export function formatIntakeTaskCreatedPayload(result) {
             ? "PC Runner를 통해 구현용 Codex handoff 시작"
             : "agents/구현용 Codex 실행 없음",
         ], true),
-      ],
+      ].filter(Boolean),
       footer: {
         text: `workflow: ${draft.workflow_path ?? "unknown"}`,
       },
@@ -531,6 +538,32 @@ function formatAutoHandoffNextAction(autoHandoff) {
     ].join("\n");
   }
   return "승인이 필요한 작업입니다. 생성된 Backlog task를 검토한 뒤 approve/set-active/runner start를 진행하세요.";
+}
+
+function buildIntakeAutoHandoffNextCommands(taskId, autoHandoff) {
+  const decision = autoHandoff?.decision ?? "";
+  const runner = autoHandoff?.runner_start ?? {};
+  if (decision === "runner_started") {
+    return buildPcRunnerNextCommands({
+      taskId,
+      command: "start",
+      stopReason: runner.stop_reason,
+      reports: runner.report_ids,
+      runnerRunId: runner.runner_run_id,
+    });
+  }
+
+  if (decision === "needs_human_approval") {
+    const id = String(taskId ?? "").trim() || "<task_id>";
+    return [
+      `/ai task review-intake id:${id}`,
+      `/ai task set-active id:${id}`,
+      `/ai task approve id:${id} note:<승인 범위>`,
+      `/ai runner start id:${id}`,
+    ];
+  }
+
+  return [];
 }
 
 function formatAutoHandoffDetails(autoHandoff) {
@@ -1548,6 +1581,7 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
         autoApprovalId ? `/ai auto-approval read id:${id} policy-evaluation-id:${autoApprovalId}` : `/ai auto-approval status id:${id}`,
         followUpPlanId ? `/ai follow-up read id:${id} follow-up-plan-id:${followUpPlanId}` : `/ai follow-up status id:${id}`,
         `/ai task done id:${id} evidence:<완료 근거>`,
+        `/ai git commit-push message:<commit message>`,
       ];
     case "executor_not_ready":
       return [
@@ -1573,6 +1607,70 @@ function formatAuditFiles(files) {
     visible.push(`- +${values.length - 3}개 더 있음`);
   }
   return visible.join("\n");
+}
+
+export function formatGitCommandPayload(result) {
+  const data = result?.data ?? {};
+  const commit = data.commit ?? data;
+  const push = data.push ?? data;
+  const status = commit.status ?? data.status ?? {};
+  const safety = commit.safety ?? data.safety ?? {};
+  const files = status.files ?? [];
+  const forbidden = safety.forbidden ?? [];
+
+  if (!result?.ok) {
+    return {
+      content: "",
+      embeds: [{
+        title: "Git 명령 실패",
+        color: 0xc62828,
+        description: [
+          `명령: ${formatInlineCode(result?.command || "unknown")}`,
+          cleanKo(result?.error || "Unknown failure."),
+        ].join("\n"),
+        fields: [
+          embedField("변경 파일", summarizeGitFiles(files)),
+          forbidden.length > 0 ? embedField("차단된 경로", summarizeGitFiles(forbidden)) : null,
+          embedField("다음 명령", [
+            "/ai run capture-diff",
+            "/ai run workflow-status",
+          ].map(formatInlineCode).join("\n")),
+        ].filter(Boolean),
+      }],
+    };
+  }
+
+  const lines = [];
+  if (data.committed || commit.committed) {
+    lines.push(`commit: ${formatInlineCode(commit.commit_sha || "created")}`);
+  }
+  if (data.pushed || push.pushed) {
+    lines.push(`push: ${push.branch || "ok"}`);
+  }
+  if (commit.note) {
+    lines.push(cleanKo(commit.note));
+  }
+
+  return {
+    content: "",
+    embeds: [{
+      title: "Git 명령 완료",
+      color: 0x2e7d32,
+      description: [
+        `명령: ${formatInlineCode(result.command || "unknown")}`,
+        lines.length > 0 ? lines.join("\n") : "처리할 변경이 없습니다.",
+      ].join("\n"),
+      fields: [
+        embedField("커밋 메시지", commit.message ? formatInlineCode(commit.message) : "(없음)"),
+        embedField("변경 파일", summarizeGitFiles(files)),
+        embedField("안전 확인", [
+          `금지 경로 없음: ${koBool(forbidden.length === 0)}`,
+          `commit 실행: ${koBool(data.committed || commit.committed)}`,
+          `push 실행: ${koBool(data.pushed || push.pushed)}`,
+        ], true),
+      ],
+    }],
+  };
 }
 
 function pcRunnerTitle(command, data) {
@@ -1826,6 +1924,21 @@ function compactList(items, maxCount) {
   return visible.join("\n");
 }
 
+function summarizeGitFiles(files, maxCount = 8) {
+  const values = Array.isArray(files)
+    ? files.map((file) => (typeof file === "string" ? file : file.path)).filter(Boolean)
+    : [];
+  if (values.length === 0) {
+    return "(없음)";
+  }
+
+  const visible = values.slice(0, maxCount).map((file) => formatInlineCode(file));
+  if (values.length > visible.length) {
+    visible.push(`+${values.length - visible.length}개 더 있음`);
+  }
+  return visible.join("\n");
+}
+
 function truncateAuditText(text, maxLength) {
   const value = String(text ?? "").trim();
   if (value.length <= maxLength) {
@@ -2059,7 +2172,7 @@ function summarizeCommandLines(items) {
     return ["(없음)"];
   }
 
-  return values.slice(0, 4).map((item) => formatInlineCode(compactText(item, 220)));
+  return values.slice(0, 5).map((item) => formatInlineCode(compactText(item, 220)));
 }
 
 function summarizeIntakeValidation(items) {

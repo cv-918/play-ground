@@ -374,3 +374,22 @@ done_or_commit_decision
 ```
 
 둘 다 실패가 아니라 사람 결정이 필요한 정상 게이트입니다.
+
+---
+
+## Git commit/push 명령
+
+최종 `done_or_commit_decision` 이후, 사용자가 commit/push를 하기로 결정한 경우에만
+아래 명령을 사용합니다.
+
+```text
+/ai git commit message:<commit message>
+/ai git push
+/ai git commit-push message:<commit message>
+```
+
+안전 규칙:
+
+- `_Temp/`, `_Local/`, `node_modules/`, `.env`, `*.local.json` 경로가 Git 변경분에 있으면 차단합니다.
+- 임의 shell 명령은 실행하지 않고 `git`만 직접 실행합니다.
+- commit/push는 `/ai intake`나 Runner가 자동으로 수행하지 않으며, 명시적인 `/ai git ...` 명령이 있을 때만 수행합니다.

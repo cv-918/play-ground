@@ -19,6 +19,7 @@ import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPoli
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
 import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, stopPcRunner } from "../services/pcRunnerService.js";
 import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
+import { commitAndPushWorkflowChanges, commitWorkflowChanges, pushWorkflowChanges } from "../services/gitService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
@@ -45,6 +46,7 @@ import {
   formatFollowUpGeneratePayload,
   formatFollowUpReadPayload,
   formatFollowUpStatusPayload,
+  formatGitCommandPayload,
   formatPcRunnerPayload,
   formatRunnerAcceptCompletionPayload,
   formatBlockers,
@@ -748,6 +750,40 @@ export function buildAiCommand() {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName("git")
+        .setDescription("검토된 변경분을 commit, push, commit-push로 처리합니다")
+        .addSubcommand((sub) =>
+          sub
+            .setName("commit")
+            .setDescription("안전 경로만 확인한 뒤 현재 변경분을 commit합니다")
+            .addStringOption((option) =>
+              option
+                .setName("message")
+                .setDescription("커밋 메시지")
+                .setRequired(true)
+                .setMaxLength(180),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("push")
+            .setDescription("현재 브랜치를 push합니다"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("commit-push")
+            .setDescription("안전 경로 확인 후 commit하고 이어서 push합니다")
+            .addStringOption((option) =>
+              option
+                .setName("message")
+                .setDescription("커밋 메시지")
+                .setRequired(true)
+                .setMaxLength(180),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName("task")
         .setDescription("workflow 작업 관리 명령입니다")
         .addSubcommand((sub) =>
@@ -946,6 +982,11 @@ export async function handleAiCommand(interaction, config) {
 
   if (group === "runner") {
     await handlePcRunnerCommand(interaction, config, subcommand);
+    return;
+  }
+
+  if (group === "git") {
+    await handleGitCommand(interaction, config, subcommand);
     return;
   }
 
@@ -1398,6 +1439,29 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
   }
 
   await interaction.editReply({ content: "알 수 없는 runner 명령입니다." });
+}
+
+async function handleGitCommand(interaction, config, subcommand) {
+  const input = {
+    message: interaction.options.getString("message"),
+  };
+
+  if (subcommand === "commit") {
+    await interaction.editReply(formatGitCommandPayload(await commitWorkflowChanges(config, input)));
+    return;
+  }
+
+  if (subcommand === "push") {
+    await interaction.editReply(formatGitCommandPayload(await pushWorkflowChanges(config)));
+    return;
+  }
+
+  if (subcommand === "commit-push") {
+    await interaction.editReply(formatGitCommandPayload(await commitAndPushWorkflowChanges(config, input)));
+    return;
+  }
+
+  await interaction.editReply({ content: "알 수 없는 git 명령입니다." });
 }
 
 async function handleRunCommand(interaction, config, subcommand) {
