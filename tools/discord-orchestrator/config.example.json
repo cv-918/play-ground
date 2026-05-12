@@ -16,6 +16,22 @@
     "command": "codex",
     "args": [],
     "model": "gpt-5.5",
+    "reasoning_effort": "medium",
+    "ephemeral": true,
+    "model_routes": [
+      {
+        "id": "fast_low_risk_intake",
+        "enabled": true,
+        "description": "Use a faster Codex model for low-risk documentation and validation intake classification.",
+        "categories": ["DOC", "VAL"],
+        "kinds": ["documentation", "validation"],
+        "risks": ["low"],
+        "priorities": ["P2", "P3"],
+        "model": "gpt-5.4-mini",
+        "reasoning_effort": "low",
+        "ephemeral": true
+      }
+    ],
     "sandbox": "read-only",
     "approval_policy": "never",
     "timeout_ms": 60000,

@@ -79,6 +79,8 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md` | Korean quick reference for Discord commands by runner stop reason and Human Director decision point |
 | `FinalBlueprint/WF_Intake_Auto_Handoff.md` | Defines low-risk `/ai intake` to PC Runner auto-handoff policy, safety boundaries, configuration, and validation |
 | `FinalBlueprint/WF_Intake_Auto_Handoff_KR.md` | Korean Human Director companion for low-risk intake auto-handoff behavior |
+| `FinalBlueprint/WF_Codex_Model_Routing_And_Ephemeral.md` | Defines Codex CLI model/reasoning routing, fast intake candidate, and ephemeral run policy |
+| `FinalBlueprint/WF_Codex_Model_Routing_And_Ephemeral_KR.md` | Korean Human Director companion for Codex model routing and ephemeral runs |
 | `FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report.md` | Records WF-405 end-to-end smoke validation evidence, verdict, gaps, and WF-406 handoff |
 | `FinalBlueprint/WF_End_To_End_Workflow_Smoke_Validation_Report_KR.md` | Korean Human Director companion for the WF-405 smoke validation report |
 | `FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint.md` | Defines WF-406 unified PC Runner orchestration entrypoint design, command surface, authority model, runtime artifacts, gates, ID policy, and WF-407 acceptance criteria |

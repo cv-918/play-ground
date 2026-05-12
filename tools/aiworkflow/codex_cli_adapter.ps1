@@ -295,6 +295,83 @@ function ConvertTo-ProcessArguments {
     return ($parts -join " ")
 }
 
+function Test-ArgumentPresent {
+    param(
+        [string[]]$ArgumentsList,
+        [string[]]$Names
+    )
+
+    foreach ($arg in @($ArgumentsList)) {
+        if ($Names -contains ([string]$arg)) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Add-BeforeExec {
+    param(
+        [string[]]$ArgumentsList,
+        [string[]]$Addition
+    )
+
+    $resultArgs = @($ArgumentsList)
+    $index = [array]::IndexOf($resultArgs, "exec")
+    if ($index -lt 0) {
+        return @($Addition + $resultArgs)
+    }
+    if ($index -eq 0) {
+        return @($Addition + $resultArgs)
+    }
+    return @($resultArgs[0..($index - 1)] + $Addition + $resultArgs[$index..($resultArgs.Count - 1)])
+}
+
+function Add-AfterExec {
+    param(
+        [string[]]$ArgumentsList,
+        [string[]]$Addition
+    )
+
+    $resultArgs = @($ArgumentsList)
+    $index = [array]::IndexOf($resultArgs, "exec")
+    if ($index -lt 0) {
+        return @($resultArgs + $Addition)
+    }
+    if ($index -eq ($resultArgs.Count - 1)) {
+        return @($resultArgs + $Addition)
+    }
+    return @($resultArgs[0..$index] + $Addition + $resultArgs[($index + 1)..($resultArgs.Count - 1)])
+}
+
+function Get-ResolvedCodexArgs {
+    param($Config)
+
+    $resultArgs = @(As-Array -Value $Config.args | ForEach-Object { [string]$_ })
+
+    $model = ""
+    if ($null -ne $Config.model) {
+        $model = ([string]$Config.model).Trim()
+    }
+    if (-not [string]::IsNullOrWhiteSpace($model) -and -not (Test-ArgumentPresent -ArgumentsList $resultArgs -Names @("-m", "--model"))) {
+        $resultArgs = @(Add-BeforeExec -ArgumentsList $resultArgs -Addition @("--model", $model))
+    }
+
+    $reasoningEffort = ""
+    if ($null -ne $Config.reasoning_effort) {
+        $reasoningEffort = ([string]$Config.reasoning_effort).Trim().ToLowerInvariant()
+    }
+    if (-not [string]::IsNullOrWhiteSpace($reasoningEffort) -and -not (Test-ArgumentPresent -ArgumentsList $resultArgs -Names @("-c", "--config"))) {
+        $resultArgs = @(Add-BeforeExec -ArgumentsList $resultArgs -Addition @("-c", "model_reasoning_effort=`"$reasoningEffort`""))
+    }
+
+    if ($Config.ephemeral -eq $true -and -not (Test-ArgumentPresent -ArgumentsList $resultArgs -Names @("--ephemeral"))) {
+        $resultArgs = @(Add-AfterExec -ArgumentsList $resultArgs -Addition @("--ephemeral"))
+    }
+
+    return @($resultArgs)
+}
+
 function Get-PromptInputMode {
     param($Config)
 
@@ -439,7 +516,7 @@ function Invoke-CodexProcess {
         throw "Config field 'command' is required."
     }
 
-    $args = @(As-Array -Value $Config.args | ForEach-Object { [string]$_ })
+    $args = @(Get-ResolvedCodexArgs -Config $Config)
     $promptInputMode = Get-PromptInputMode -Config $Config
 
     $appendPrompt = $true
@@ -759,7 +836,7 @@ try {
     $configEnabled = $false
     $promptInputMode = "argument_path"
     if ($null -ne $config) {
-        $plannedArgs = @(As-Array -Value $config.args | ForEach-Object { [string]$_ })
+        $plannedArgs = @(Get-ResolvedCodexArgs -Config $config)
         $promptInputMode = Get-PromptInputMode -Config $config
         if ($promptInputMode -eq "stdin_text" -and -not [string]::IsNullOrWhiteSpace($promptFullPath)) {
             $plannedArgs += "<prompt stdin>"
@@ -783,6 +860,9 @@ try {
             config_enabled = $configEnabled
             planned_command = if ($null -eq $config) { $null } else { [string]$config.command }
             planned_args = @($plannedArgs)
+            model = if ($null -eq $config -or $null -eq $config.model) { $null } else { [string]$config.model }
+            reasoning_effort = if ($null -eq $config -or $null -eq $config.reasoning_effort) { $null } else { [string]$config.reasoning_effort }
+            ephemeral = if ($null -eq $config -or $null -eq $config.ephemeral) { $false } else { [bool]$config.ephemeral }
             prompt_input_mode = $promptInputMode
             prompt_file = ConvertTo-RepoRelativePath -Repo $repo -Path $promptFullPath
             external_execution_performed = $false

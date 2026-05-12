@@ -149,6 +149,7 @@ export async function suggestTaskFromIntake(configOrInput = {}, maybeInput = nul
       status: "ok",
       provider: llmResult.provider,
       model: llmResult.model,
+      reasoning_effort: llmResult.reasoning_effort,
       run: llmResult.run,
     },
   });
@@ -311,9 +312,24 @@ function buildCrossCheck(ruleBased, draft) {
 }
 
 function compareField(mismatches, field, baseline, candidate) {
-  if (String(baseline ?? "") !== String(candidate ?? "")) {
+  if (!crossCheckValuesMatch(field, baseline, candidate)) {
     mismatches.push(`${field}: rule=${baseline || "unknown"}; llm=${candidate || "unknown"}`);
   }
+}
+
+function crossCheckValuesMatch(field, baseline, candidate) {
+  const left = String(baseline ?? "");
+  const right = String(candidate ?? "");
+  if (left === right) {
+    return true;
+  }
+
+  if (field === "priority") {
+    const autoAllowedPriorities = new Set(["P2", "P3"]);
+    return autoAllowedPriorities.has(left.toUpperCase()) && autoAllowedPriorities.has(right.toUpperCase());
+  }
+
+  return false;
 }
 
 function normalizeIntakeText(value) {

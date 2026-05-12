@@ -1,4 +1,4 @@
-# Discord AIWorkflow Bot
+﻿# Discord AIWorkflow Bot
 
 ## Purpose
 
@@ -325,9 +325,12 @@ For automated task intake:
 
 `/ai intake` calls local `codex exec`, receives a TaskDraft JSON candidate,
 validates it, cross-checks it against the rule-based baseline, and creates one
-Backlog task. The default model is `gpt-5.5`. It does not update ActiveTask.md,
-approve tasks, execute agents, run implementation Codex, commit, push, or modify
-source files.
+Backlog task. The default model is `gpt-5.5`, but local `llm_intake.model_routes`
+can route low-risk documentation/validation intake to a faster Codex model such
+as `gpt-5.4-mini` with lower reasoning and `--ephemeral`. It does not
+update ActiveTask.md, approve tasks, execute agents, run implementation Codex,
+commit, push, or modify source files unless the separate intake auto-handoff
+policy applies after Backlog creation.
 
 For read-only task intake preview:
 

@@ -7,6 +7,7 @@ const DEFAULT_TIMEOUT_MS = 60000;
 
 export async function generateTaskDraftWithCodexCli(config, input = {}) {
   const llmConfig = config?.llmIntake ?? {};
+  const runtime = selectCodexIntakeRuntime(llmConfig, input);
   if (llmConfig.enabled === false) {
     return failure("disabled", "Codex CLI intake is disabled by config.");
   }
@@ -15,7 +16,7 @@ export async function generateTaskDraftWithCodexCli(config, input = {}) {
   }
 
   const run = await prepareRunFiles(config, input);
-  const args = buildCodexArgs(config, run.schemaPath, run.outputPath);
+  const args = buildCodexArgs(config, run.schemaPath, run.outputPath, runtime);
   const startedAt = new Date().toISOString();
   const result = await runCodexProcess({
     command: llmConfig.command || "codex",
@@ -33,7 +34,7 @@ export async function generateTaskDraftWithCodexCli(config, input = {}) {
     return failure(
       "codex_cli_failed",
       `Codex CLI intake failed with exit code ${result.exitCode}. stderr log: ${toRepoRelative(config, run.stderrPath)}`,
-      runMetadata(config, run, args, startedAt, endedAt, result),
+      runMetadata(config, run, args, startedAt, endedAt, result, runtime),
     );
   }
 
@@ -42,7 +43,7 @@ export async function generateTaskDraftWithCodexCli(config, input = {}) {
     return failure(
       "empty_response",
       `Codex CLI returned an empty TaskDraft response. stdout log: ${toRepoRelative(config, run.stdoutPath)}`,
-      runMetadata(config, run, args, startedAt, endedAt, result),
+      runMetadata(config, run, args, startedAt, endedAt, result, runtime),
     );
   }
 
@@ -53,7 +54,7 @@ export async function generateTaskDraftWithCodexCli(config, input = {}) {
     return failure(
       "invalid_json",
       `Codex CLI TaskDraft was not valid JSON: ${error.message}`,
-      runMetadata(config, run, args, startedAt, endedAt, result),
+      runMetadata(config, run, args, startedAt, endedAt, result, runtime),
     );
   }
 
@@ -62,16 +63,17 @@ export async function generateTaskDraftWithCodexCli(config, input = {}) {
     return failure(
       "schema_validation_failed",
       `Codex CLI TaskDraft failed schema validation: ${validation.errors.join("; ")}`,
-      runMetadata(config, run, args, startedAt, endedAt, result),
+      runMetadata(config, run, args, startedAt, endedAt, result, runtime),
     );
   }
 
   return {
     ok: true,
     provider: "codex_cli",
-    model: llmConfig.model || "gpt-5.5",
+    model: runtime.model,
+    reasoning_effort: runtime.reasoningEffort,
     draft: validation.draft,
-    run: runMetadata(config, run, args, startedAt, endedAt, result),
+    run: runMetadata(config, run, args, startedAt, endedAt, result, runtime),
   };
 }
 
@@ -93,6 +95,10 @@ export async function getCodexIntakeEngineStatus(config) {
       provider: llmConfig.provider || "codex_cli",
       command,
       model: llmConfig.model || "gpt-5.5",
+      reasoning_effort: llmConfig.reasoningEffort || "medium",
+      ephemeral: llmConfig.ephemeral === true,
+      model_routes_enabled: Array.isArray(llmConfig.modelRoutes) && llmConfig.modelRoutes.length > 0,
+      model_route_count: Array.isArray(llmConfig.modelRoutes) ? llmConfig.modelRoutes.length : 0,
       sandbox: llmConfig.sandbox || "read-only",
       approval_policy: llmConfig.approvalPolicy || "never",
       timeout_ms: Number(llmConfig.timeoutMs) || DEFAULT_TIMEOUT_MS,
@@ -104,10 +110,12 @@ export async function getCodexIntakeEngineStatus(config) {
   };
 }
 
-function buildCodexArgs(config, schemaPath, outputPath) {
+function buildCodexArgs(config, schemaPath, outputPath, runtime) {
   const llmConfig = config?.llmIntake ?? {};
   const args = [
     ...baseArgs(llmConfig),
+    "--ask-for-approval",
+    llmConfig.approvalPolicy || "never",
     "exec",
     "--sandbox",
     llmConfig.sandbox || "read-only",
@@ -120,13 +128,84 @@ function buildCodexArgs(config, schemaPath, outputPath) {
     "--json",
   ];
 
-  const model = String(llmConfig.model || "gpt-5.5").trim();
-  if (model) {
-    args.push("--model", model);
+  if (runtime.ephemeral) {
+    args.push("--ephemeral");
+  }
+
+  if (runtime.model) {
+    args.push("--model", runtime.model);
+  }
+
+  if (runtime.reasoningEffort) {
+    args.push("-c", `model_reasoning_effort="${runtime.reasoningEffort}"`);
   }
 
   args.push("-");
   return args;
+}
+
+function selectCodexIntakeRuntime(llmConfig, input = {}) {
+  const base = {
+    model: String(llmConfig.model || "gpt-5.5").trim(),
+    reasoningEffort: normalizeReasoningEffort(llmConfig.reasoningEffort || "medium"),
+    ephemeral: llmConfig.ephemeral === true,
+    routeId: "default",
+  };
+
+  const route = findMatchingModelRoute(llmConfig.modelRoutes, input?.ruleBasedSuggestion);
+  if (!route) {
+    return base;
+  }
+
+  return {
+    model: String(route.model || base.model).trim(),
+    reasoningEffort: normalizeReasoningEffort(route.reasoning_effort || route.reasoningEffort || base.reasoningEffort),
+    ephemeral: route.ephemeral === undefined ? base.ephemeral : route.ephemeral === true,
+    routeId: String(route.id || "matched_route").trim(),
+  };
+}
+
+function findMatchingModelRoute(routes, suggestion) {
+  if (!Array.isArray(routes) || routes.length === 0 || !suggestion?.task_draft) {
+    return null;
+  }
+
+  const draft = suggestion.task_draft;
+  const facts = {
+    category: String(draft.category || suggestion.suggested_category || "").toUpperCase(),
+    kind: String(draft.kind || suggestion.suggested_kind || "").toLowerCase(),
+    risk: String(draft.suggested_risk || suggestion.suggested_risk || "").toLowerCase(),
+    priority: String(draft.priority || suggestion.suggested_priority || "").toUpperCase(),
+    workflowPath: String(draft.workflow_path || suggestion.suggested_workflow_path || "").toLowerCase(),
+  };
+
+  return routes.find((route) => route?.enabled !== false && routeMatchesFacts(route, facts)) || null;
+}
+
+function routeMatchesFacts(route, facts) {
+  return matchesList(route.categories, facts.category, "upper")
+    && matchesList(route.kinds, facts.kind, "lower")
+    && matchesList(route.risks, facts.risk, "lower")
+    && matchesList(route.priorities, facts.priority, "upper")
+    && matchesList(route.workflow_paths || route.workflowPaths, facts.workflowPath, "lower");
+}
+
+function matchesList(values, actual, mode) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return true;
+  }
+  const normalizedActual = normalizeForMatch(actual, mode);
+  return values.map((value) => normalizeForMatch(value, mode)).includes(normalizedActual);
+}
+
+function normalizeForMatch(value, mode) {
+  const text = String(value ?? "").trim();
+  return mode === "upper" ? text.toUpperCase() : text.toLowerCase();
+}
+
+function normalizeReasoningEffort(value) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["none", "minimal", "low", "medium", "high", "xhigh"].includes(text) ? text : "medium";
 }
 
 function baseArgs(llmConfig) {
@@ -252,9 +331,13 @@ function extractJsonObject(text) {
   return value;
 }
 
-function runMetadata(config, run, args, startedAt, endedAt, result) {
+function runMetadata(config, run, args, startedAt, endedAt, result, runtime = {}) {
   return {
     command_line: `${config?.llmIntake?.command || "codex"} ${args.join(" ")}`,
+    model: runtime.model || config?.llmIntake?.model || "gpt-5.5",
+    reasoning_effort: runtime.reasoningEffort || config?.llmIntake?.reasoningEffort || "medium",
+    ephemeral: runtime.ephemeral === true,
+    model_route_id: runtime.routeId || "default",
     started_at: startedAt,
     ended_at: endedAt,
     exit_code: result.exitCode,
