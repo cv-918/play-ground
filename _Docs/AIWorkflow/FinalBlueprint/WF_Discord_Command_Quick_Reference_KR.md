@@ -17,8 +17,8 @@
 
 ## 가장 짧은 정규 흐름
 
-저위험 문서/검증 작업은 `/ai intake` 이후 자동으로 ActiveTask 선택, 승인,
-PC Runner 시작까지 진행될 수 있습니다.
+저위험 문서/검증 작업과 허용된 WF 문서/유지보수 작업은 `/ai intake` 이후
+자동으로 ActiveTask 선택, 승인, PC Runner 시작까지 진행될 수 있습니다.
 
 ```text
 /ai intake text:<작업 요청>
@@ -29,12 +29,14 @@ PC Runner 시작까지 진행될 수 있습니다.
 ```text
 /ai intake text:"VAL task: Run a safe local validation smoke for intake auto-handoff. No source or document changes."
 /ai intake text:"DOC task: Update the Human Director guide."
+/ai intake text:"WF task: low-risk maintenance cleanup for workflow harness metadata only."
 ```
 
 자동 진행 조건:
 
 ```text
 P2/P3 + low risk + DOC/VAL 또는 documentation/validation
+또는 WF documentation/maintenance
 clarifying question 없음
 rule-based cross-check 문제 없음
 ```
@@ -345,6 +347,7 @@ concern을 남기고 승인하려면:
 
 - P2/P3 low-risk 문서 작업
 - P2/P3 low-risk 검증 작업
+- P2/P3 low-risk WF 문서/유지보수 작업
 - 이미 allowlist된 local validation 실행
 - 상태 조회, 카드 조회, report read
 

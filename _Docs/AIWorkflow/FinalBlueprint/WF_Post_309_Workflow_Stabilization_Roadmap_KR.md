@@ -59,6 +59,14 @@ Phase 4는 다음 내용을 포함합니다.
 | WF-406 | PC Runner 통합 진입점 설계 | 기존 부품들을 하나의 runner 흐름으로 묶는 설계를 만든다. | 권한 모델 승인 |
 | WF-407 | PC Runner 통합 진입점 구현 | 승인된 설계에 따라 자동 실행 흐름을 구현한다. | 정책 민감 동작 승인 |
 | WF-408 | 승인된 워크플로우 정리 | 승인된 명령어 정리, 문서 정리, 표시 정리를 실제 적용한다. | 제거/변경 승인 |
+| WF-409 | 구현 runner profile 구현 | 승인된 작업을 Codex CLI adapter로 실행하고 completion review에서 멈춘다. | 로컬 Codex adapter 설정 검토 |
+| WF-410 | 구현 runner smoke | 작은 저위험 작업을 실제 runner로 통과시켜 마찰을 기록한다. | 완료 증거 리뷰 |
+| WF-411 | 텍스트/인코딩 guard | Codex 실행 후 깨진 한글/인코딩 흔적을 completion 전에 잡는다. | guard가 멈추면 결과 리뷰 |
+| WF-412 | 운영 문서 정리 | Human Director 가이드, 명령어 치트시트, HTML 가이드를 만든다. | 한국어 가이드 확인 |
+| WF-424 | 자동 워크플로우 E2E smoke | `/ai intake`에서 자동 handoff와 completion accept까지 임시 레포에서 검증한다. | 이상할 때만 evidence 리뷰 |
+| WF-425 | auto-handoff 대상 확장 | DOC/VAL 외에 저위험 WF 문서/유지보수까지 자동 착수 대상으로 넓힌다. | 정책이 막은 작업만 승인 |
+| WF-426 | runner 응답 개선 | stop_reason별 쉬운 설명과 다음 명령을 Discord 응답에 바로 표시한다. | 응답 카드만 보고 다음 행동 |
+| WF-427 | runner profile별 모델 라우팅 | 문서 profile은 빠른 모델, 구현 profile은 강한 기본 설정으로 분리한다. | 모델 정책 변경 시만 설정 검토 |
 
 ## 추천 순서
 
@@ -72,6 +80,14 @@ WF-400 완료
 -> WF-406 완료
 -> WF-407
 -> WF-408 done
+-> WF-409 done
+-> WF-410 done
+-> WF-411 done
+-> WF-412 done
+-> WF-424 done
+-> WF-425 done
+-> WF-426 done
+-> WF-427 done
 ```
 
 ## 완료 기준

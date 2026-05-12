@@ -68,6 +68,12 @@ Non-goals unless a later task explicitly approves them:
 | WF-408 | Apply approved workflow cleanup | Remove, hide, rename, or deprecate obsolete steps and commands according to the approved audit and command-surface plan. | Approve destructive command removal or behavior changes. |
 | WF-409 | Implement controlled runner implementation profile | Connect approved tasks to the guarded Codex CLI adapter through `/ai runner profile:implementation`, collect execution evidence and reports, and stop at completion review. | Enable local Codex adapter config only after reviewing local execution settings. |
 | WF-410 | Exercise controlled implementation runner on a small approved workflow task | Run one low-risk real task through the implementation runner profile and record workflow friction before using it for game work. | Review completion evidence and decide whether the workflow is ready for normal use. |
+| WF-411 | Harden runner text/encoding review | Detect suspicious encoding artifacts after Codex execution before completion artifacts are accepted. | Review guard findings if the runner stops. |
+| WF-412 | Document normal runner operation | Produce Human Director guide, command quick reference, and HTML guide for normal Discord-first use. | Read the Korean guide/cheat sheet when operating the harness. |
+| WF-424 | Add auto workflow E2E smoke | Prove `/ai intake` can auto-handoff to PC Runner and continue through completion acceptance in a temp repo. | Review smoke evidence only if behavior looks wrong. |
+| WF-425 | Expand intake auto-handoff targets | Allow low-risk WF documentation/maintenance in addition to DOC/VAL. | Only approve when policy blocks the task. |
+| WF-426 | Polish runner next-action responses | Show stop-reason summaries and next commands directly in runner Discord responses. | Follow the response card before opening docs. |
+| WF-427 | Route Codex runner profiles by model | Let documentation profile use faster Codex settings while implementation keeps stronger defaults. | Review local config only when changing model policy. |
 
 ## Recommended Order
 
@@ -83,6 +89,12 @@ WF-400 done
 -> WF-408 approved cleanup done
 -> WF-409 controlled implementation runner profile done
 -> WF-410 controlled implementation runner smoke
+-> WF-411 text/encoding guard done
+-> WF-412 operation docs done
+-> WF-424 auto workflow E2E smoke done
+-> WF-425 auto-handoff target expansion done
+-> WF-426 runner next-action response polish done
+-> WF-427 runner profile model routing done
 ```
 
 WF-401 and WF-402 come before cleanup because command removal or workflow

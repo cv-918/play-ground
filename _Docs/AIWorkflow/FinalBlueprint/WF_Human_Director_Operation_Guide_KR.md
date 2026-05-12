@@ -46,7 +46,7 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 
 ```text
 1. /ai intake text:<작업 요청>
-2. 저위험 DOC/VAL이면 하네스가 set-active, approve, runner start를 자동 진행
+2. 저위험 DOC/VAL 또는 허용된 WF 문서/유지보수 작업이면 하네스가 set-active, approve, runner start를 자동 진행
 3. 승인 필요 작업이면 /ai task set-active id:<task_id>
 4. 승인 필요 작업이면 /ai task approve id:<task_id> note:<승인 범위>
 5. 필요하면 /ai runner plan id:<task_id>
@@ -61,9 +61,10 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 `/ai prepare goal`과 `/ai result audit`은 이제 정규 경로가 아니라 runner가
 막혔을 때 쓰는 수동 승격 경로입니다.
 
-`/ai intake` auto-handoff는 P2/P3, low-risk, DOC/VAL 또는 documentation/
-validation 작업에만 적용됩니다. P0/P1, medium/high-risk, GAME/WF/UNITY,
-소스/데이터/리팩터링/명령 동작 변경 작업은 사람 승인에서 멈춥니다.
+`/ai intake` auto-handoff는 P2/P3, low-risk, DOC/VAL, documentation/
+validation, 또는 WF documentation/maintenance 작업에만 적용됩니다.
+P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터링/
+명령 동작 변경 작업은 사람 승인에서 멈춥니다.
 
 ## 최종 목표 흐름
 
@@ -201,8 +202,9 @@ defer: 지금 판단 보류
 
 ## 다음 작업
 
-WF-412까지 완료된 현재 기준으로 다음 단계는 GAME-001입니다.
+WF-427까지 완료된 현재 기준으로 다음 단계는 실제 게임 작업을 runner workflow로
+통과시키거나, 남은 자동화 안정화 작업을 이어가는 것입니다.
 
-GAME-001에서는 기존 게임 데이터 로더 검증 작업을 실제 runner workflow로
-통과시켜서, 자동화가 workflow 문서 작업뿐 아니라 실제 게임 프로젝트 작업에도
-쓸 수 있는지 확인합니다.
+게임 작업으로 넘어갈 경우에는 기존 게임 데이터 로더 검증 작업 같은 작은
+작업부터 실제 runner workflow로 통과시켜서, 자동화가 workflow 문서 작업뿐
+아니라 실제 게임 프로젝트 작업에도 쓸 수 있는지 확인합니다.
