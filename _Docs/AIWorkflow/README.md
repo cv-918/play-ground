@@ -87,6 +87,8 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Controlled_Runner_Implementation_Profile_KR.md` | Korean Human Director companion for the WF-409 controlled implementation runner profile |
 | `FinalBlueprint/WF_Controlled_Runner_Smoke_Report.md` | Records WF-410 controlled implementation runner smoke attempt, adapter fix notes, validation evidence, and blocked local/runtime steps |
 | `FinalBlueprint/WF_Controlled_Runner_Smoke_Report_KR.md` | Korean Human Director companion for the WF-410 controlled implementation runner smoke attempt |
+| `FinalBlueprint/WF_Implementation_Runner_Prompt_And_UTF8_Guard.md` | Records WF-411 implementation runner prompt boundary hardening and text encoding guard behavior |
+| `FinalBlueprint/WF_Implementation_Runner_Prompt_And_UTF8_Guard_KR.md` | Korean Human Director companion for the WF-411 implementation runner prompt and UTF-8 guard |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

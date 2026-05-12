@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-410
-title: Exercise controlled implementation runner on a small approved workflow task
+task_id: WF-411
+title: Harden implementation runner prompt boundaries and UTF-8 output guard
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,12 +26,13 @@ last_updated: 2026-05-12
 
 ## Goal
 
-Exercise the controlled PC Runner `implementation` profile with a small approved
-workflow task.
+Harden the controlled PC Runner `implementation` profile based on WF-410 smoke
+friction.
 
-The smoke must prove that the normal path can prepare an implementation prompt,
-invoke Codex CLI through the guarded adapter, collect runtime evidence, generate
-verification/completion artifacts, and stop at Human Director completion review.
+The executor-facing prompt must clearly separate Codex executor responsibilities
+from PC Runner-owned runtime validation. The runner must also detect likely
+mojibake in Codex CLI output or changed text files and stop before completion
+artifacts if the guard finds probable encoding corruption.
 
 ---
 
@@ -39,10 +40,9 @@ verification/completion artifacts, and stop at Human Director completion review.
 
 ```yaml
 discord: target user-facing control surface
-pc_runner: implementation profile orchestration
+pc_runner: implementation profile orchestration and encoding guard
 codex_cli_adapter: guarded Codex CLI execution
-codex_cli: small smoke implementation executor
-codex_app: setup, review, validation, and commit/push if safe
+codex_app: implementation, review, validation, and commit/push if safe
 human: final authority if new approval-sensitive behavior appears
 validation: required
 ```
@@ -52,26 +52,22 @@ validation: required
 ## Files In Scope
 
 ```text
-tools/aiworkflow/codex_cli_adapter.ps1
-tools/aiworkflow/codex_cli_adapter.example.json
+tools/aiworkflow/pc_runner.ps1
 tools/aiworkflow/README.md
-tools/discord-orchestrator/src/services/pcRunnerService.js
 _Docs/AIWorkflow/ActiveTask.md
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/README.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Codex_CLI_Execution_Adapter.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Controlled_Runner_Implementation_Profile.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Controlled_Runner_Implementation_Profile_KR.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Controlled_Runner_Smoke_Report.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Controlled_Runner_Smoke_Report_KR.md
-_DevLog/WorkLog/2026-05-12_WF-410_Controlled_Implementation_Runner_Smoke.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Implementation_Runner_Prompt_And_UTF8_Guard.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Implementation_Runner_Prompt_And_UTF8_Guard_KR.md
+_DevLog/WorkLog/2026-05-12_WF-411_Implementation_Runner_Prompt_UTF8_Guard.md
 ```
 
 Local-only, not tracked:
 
 ```text
-_Local/AIWorkflow/codex_cli_adapter.local.json
-_Temp/AIWorkflowRuntime/tasks/WF-410/
+_Temp/AIWorkflowRuntime/tasks/WF-411/
 ```
 
 ---
@@ -79,7 +75,7 @@ _Temp/AIWorkflowRuntime/tasks/WF-410/
 ## Human Action Required
 
 ```text
-No additional approval is required unless the runner attempts to expand beyond the approved WF-410 smoke scope.
+No additional approval is required unless implementation expands beyond runner prompt boundary hardening, text encoding guard, documentation, and validation.
 ```
 
 ---
@@ -87,12 +83,11 @@ No additional approval is required unless the runner attempts to expand beyond t
 ## Validation Plan
 
 ```text
-PowerShell parser check for changed workflow scripts
-Node syntax check for changed Discord service files
-Codex CLI adapter dry-run with local ignored config
-PC Runner plan for WF-410 implementation profile
-PC Runner start for WF-410 implementation profile
-Review generated runtime evidence, VerificationReport, CompletionReport, and Completion Card
+PowerShell parser check for pc_runner.ps1
+pc_runner plan WF-411 profile:implementation
+Prompt artifact inspection for executor/runtime boundary wording
+Text encoding guard pass smoke with clean text
+Text encoding guard stop smoke with synthetic mojibake text
 git diff --check
 forbidden tracked path check for _Temp, _Local, node_modules, .env, and local config files
 private/local tracked-file check
@@ -104,7 +99,7 @@ private/local tracked-file check
 
 ```text
 status: done
-note: WF-410 completed. The implementation runner executed Codex CLI through the guarded adapter, collected runtime evidence, generated VerificationReport/CompletionReport/Completion Card, recorded FinalizationLog acceptance, continued through Auto Approval Policy evaluation and Follow-up Task Generator, and stopped at the manual task done / commit decision gate. Runner automation did not approve the task, mark task done, write Backlog follow-ups, commit, push, release, deploy, or modify game source/data.
+note: WF-411 implemented and validated. PC Runner implementation prompts now separate executor-owned tracked edits from runner-owned runtime validation, and implementation runs include a text encoding guard before completion artifacts. Full runner execution reached completion_review_required with no blocking text guard findings. The remaining completion-card concern was an expected large-diff attention signal; current finalization policy cannot accept a needs_human_decision CompletionReport, so that friction is tracked as the next workflow candidate.
 updated_at: 2026-05-12
 source: Codex App
 ```
@@ -114,7 +109,7 @@ source: Codex App
 ## Next Recommended Task
 
 ```text
-Proceed to WF-411 runner prompt boundary and UTF-8 output hardening.
+Proceed to WF-412: add a reviewed-concern finalization path so expected completion concerns can be explicitly accepted without bypassing audit records.
 ```
 
 ---
@@ -124,7 +119,7 @@ Proceed to WF-411 runner prompt boundary and UTF-8 output hardening.
 ```text
 [x] Task scope reviewed
 [x] Required approvals recorded
-[x] Implementation runner smoke completed
+[x] Implementation completed within approved scope
 [x] Review completed
 [x] Validation completed or explicitly deferred
 [x] Dev Log created for meaningful work

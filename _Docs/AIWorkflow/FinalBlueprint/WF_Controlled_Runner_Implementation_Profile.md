@@ -73,8 +73,12 @@ The prompt includes:
 - task id, title, priority, status, kind, reason, and validation summary
 - required context files: `AGENTS.md`, `ActiveTask.md`, and `Backlog.md`
 - approved scope boundary
+- executor/runner ownership boundary: Codex handles approved tracked edits,
+  while PC Runner owns `_Temp` runtime validation, local ignored config,
+  evidence, reports, finalization, auto-approval evaluation, and follow-up plans
 - no unrelated cleanup/refactor/game-data/release/deploy rule
 - no task done, approval, Backlog creation, commit, or push rule
+- UTF-8 and readable Korean output requirement
 - required Codex return format
 
 The prompt artifact is runtime data and must not be committed.
@@ -88,6 +92,36 @@ prompt_input_mode: stdin_text
 
 That sends the prompt file contents to Codex through stdin instead of passing
 the file path as the prompt text.
+
+## Text Encoding Guard
+
+After Codex CLI execution and before file watcher/result/verification/completion
+artifacts, the implementation runner writes a text encoding guard artifact under:
+
+```text
+_Temp\AIWorkflowRuntime\tasks\<task_id>\runner\text_encoding_guard\
+```
+
+The guard scans:
+
+- executor stdout log
+- executor stderr log as warning-only evidence
+- changed text files reported by the Codex CLI adapter
+- current Git worktree tracked changed text files
+
+If blocking mojibake markers are found in executor stdout or changed text files,
+the runner stops at:
+
+```text
+text_encoding_guard_failed
+```
+
+Executor stderr findings are recorded as warnings because stderr often contains
+shell command echoes and tool output.
+
+This stop does not approve tasks, mark tasks done, create Backlog tasks, commit,
+or push. It prevents garbled Korean/user-facing text from flowing into later
+completion artifacts without review.
 
 ## Safety Boundaries
 

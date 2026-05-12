@@ -98,6 +98,15 @@ function ConvertTo-RepoRelativePath {
     return ($full -replace "\\", "/")
 }
 
+function Resolve-RepoPath {
+    param([string]$Repo, [string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        return [System.IO.Path]::GetFullPath($Path)
+    }
+    return [System.IO.Path]::GetFullPath((Join-Path $Repo $Path))
+}
+
 function Get-SafeTaskId {
     param([string]$Value)
     if ([string]::IsNullOrWhiteSpace($Value)) { throw "Task id is required." }
@@ -173,6 +182,7 @@ function Get-WorkspacePaths {
         checkpoints_dir = Join-Path $runnerDir "checkpoints"
         config_dir = Join-Path $runnerDir "config"
         prompts_dir = Join-Path $runnerDir "prompts"
+        text_encoding_guard_dir = Join-Path $runnerDir "text_encoding_guard"
     }
 }
 
@@ -183,6 +193,7 @@ function Ensure-RunnerDirs {
     New-Item -ItemType Directory -Path $Paths.checkpoints_dir -Force | Out-Null
     New-Item -ItemType Directory -Path $Paths.config_dir -Force | Out-Null
     New-Item -ItemType Directory -Path $Paths.prompts_dir -Force | Out-Null
+    New-Item -ItemType Directory -Path $Paths.text_encoding_guard_dir -Force | Out-Null
 }
 
 function Parse-BacklogRows {
@@ -403,6 +414,7 @@ function New-IdSet {
         codex_evidence_id = "evidence-$safeTask-codex-cli-$stamp"
         filewatch_evidence_id = "evidence-$safeTask-filewatch-$stamp"
         prompt_id = "runner-prompt-$safeTask-$stamp"
+        text_encoding_guard_id = "textguard-$safeTask-$stamp"
         result_id = "result-$safeTask-$stamp"
         analysis_id = "analysis-$safeTask-$stamp"
         build_test_id = "bt-$safeTask-json-smoke-$stamp"
@@ -472,6 +484,7 @@ function New-RunnerPlan {
             "runner.write_implementation_prompt",
             "codex_cli_adapter.dry-run",
             "codex_cli_adapter.run",
+            "runner.text_encoding_guard",
             "file_watcher.snapshot",
             "result_collector.collect",
             "diff_analyzer.analyze",
@@ -523,6 +536,7 @@ function New-RunnerPlan {
             "active_task_mismatch",
             "profile_not_executable_yet",
             "executor_not_ready",
+            "text_encoding_guard_failed",
             "primitive_call_failed",
             "completion_review_required"
         )
@@ -531,6 +545,7 @@ function New-RunnerPlan {
             session_id = $sessionId
             evidence_ids = @($evidenceIds)
             prompt_id = $(if ($ProfileValue -eq "implementation") { $Ids.prompt_id } else { $null })
+            text_encoding_guard_id = $(if ($ProfileValue -eq "implementation") { $Ids.text_encoding_guard_id } else { $null })
             result_id = $Ids.result_id
             analysis_id = $Ids.analysis_id
             build_test_id = $Ids.build_test_id
@@ -680,6 +695,284 @@ function Write-ValidationConfigs {
     }
 }
 
+function Get-MojibakeTokens {
+    function New-Token {
+        param([int[]]$Codepoints)
+        return (-join ($Codepoints | ForEach-Object { [string][char]$_ }))
+    }
+
+    return @(
+        [string][char]0xFFFD,
+        (New-Token @(0x00C3)),
+        (New-Token @(0x00C2)),
+        (New-Token @(0x00E2, 0x20AC, 0x2122)),
+        (New-Token @(0x00E2, 0x20AC, 0x0153)),
+        (New-Token @(0x00E2, 0x20AC)),
+        (New-Token @(0x00EC)),
+        (New-Token @(0x00ED)),
+        (New-Token @(0x00EB)),
+        (New-Token @(0x00EA)),
+        (New-Token @(0xF9CF)),
+        (New-Token @(0x8E42)),
+        (New-Token @(0x5A9B)),
+        (New-Token @(0x8ADB)),
+        (New-Token @(0x63F4)),
+        (New-Token @(0x6E72)),
+        (New-Token @(0x5BC3)),
+        (New-Token @(0x81FE)),
+        (New-Token @(0xC10F)),
+        (New-Token @(0xB349)),
+        (New-Token @(0xC496)),
+        (New-Token @(0xB4BF)),
+        (New-Token @(0xB572)),
+        (New-Token @(0xAFA9)),
+        (New-Token @(0xBB12)),
+        (New-Token @(0xC7FB)),
+        (New-Token @(0xC10E)),
+        (New-Token @(0xB300, 0xCFB2)),
+        (New-Token @(0x8E42, 0x0080)),
+        (New-Token @(0x6E72, 0xB349)),
+        (New-Token @(0x5BC3, 0x0080)),
+        (New-Token @(0xF9DE)),
+        (New-Token @(0x91AB))
+    )
+}
+
+function Get-MojibakeSignals {
+    param([string]$Text)
+    if ([string]::IsNullOrEmpty($Text)) { return @() }
+
+    $signals = [ordered]@{}
+    foreach ($token in @(Get-MojibakeTokens)) {
+        if ([string]::IsNullOrEmpty($token)) { continue }
+        if ($Text.Contains($token)) {
+            $signals[$token] = $true
+        }
+    }
+
+    return @($signals.Keys)
+}
+
+function Get-MojibakeSamples {
+    param(
+        [string]$Text,
+        [string[]]$Signals,
+        [int]$MaxSamples = 3
+    )
+    if ([string]::IsNullOrEmpty($Text) -or $Signals.Count -eq 0) { return @() }
+
+    $samples = @()
+    foreach ($line in ($Text -split "`r?`n")) {
+        foreach ($signal in @($Signals)) {
+            if ($line.Contains($signal)) {
+                $sample = $line.Trim()
+                if ($sample.Length -gt 180) {
+                    $sample = $sample.Substring(0, 180) + "..."
+                }
+                $samples += $sample
+                break
+            }
+        }
+        if ($samples.Count -ge $MaxSamples) { break }
+    }
+
+    return @($samples)
+}
+
+function Test-TextGuardCandidatePath {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+    $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
+    return @(
+        ".bat", ".c", ".cc", ".cmd", ".cpp", ".cs", ".csv", ".cxx",
+        ".filters", ".h", ".hpp", ".inl", ".js", ".json", ".md",
+        ".props", ".ps1", ".psm1", ".sln", ".targets", ".ts", ".txt",
+        ".vcxproj", ".xml", ".yaml", ".yml"
+    ) -contains $extension
+}
+
+function Test-TextEncodingGuardIgnoredLine {
+    param([string]$Line)
+    if ([string]::IsNullOrWhiteSpace($Line)) { return $false }
+
+    $trimmed = $Line.Trim()
+    if ($trimmed -match '(\brg\s+-n\b|powershell(\.exe)?"?\s+-Command.*\brg\s+-n\b|Select-String\s+.*-Pattern)') {
+        return $true
+    }
+    if ($trimmed -match '^\+.*(mojibake|replacement-character|replacement character|guard scan|encoding guard)') {
+        return $true
+    }
+
+    return $false
+}
+
+function Get-TextEncodingGuardScannableText {
+    param([string]$Text)
+    if ([string]::IsNullOrEmpty($Text)) { return "" }
+
+    $lines = @()
+    foreach ($line in ($Text -split "`r?`n")) {
+        if (Test-TextEncodingGuardIgnoredLine -Line $line) { continue }
+        $lines += $line
+    }
+
+    return ($lines -join [Environment]::NewLine)
+}
+
+function Get-GitTextEncodingGuardChangedFiles {
+    param([string]$Repo)
+
+    $paths = [ordered]@{}
+    foreach ($gitArgs in @(
+        @("diff", "--name-only"),
+        @("diff", "--cached", "--name-only")
+    )) {
+        $previousErrorActionPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = "Continue"
+            $output = & git -C $Repo @gitArgs 2>$null
+            $exitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+        if ($exitCode -ne 0 -or $null -eq $output) { continue }
+        foreach ($line in @($output)) {
+            $value = ([string]$line).Trim()
+            if ([string]::IsNullOrWhiteSpace($value)) { continue }
+            $paths[$value -replace "\\", "/"] = $true
+        }
+    }
+
+    return @($paths.Keys)
+}
+
+function Add-TextEncodingGuardSource {
+    param(
+        [System.Collections.ArrayList]$Sources,
+        [string]$Repo,
+        [string]$SourceType,
+        [string]$Path
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Path)) { return }
+    $fullPath = Resolve-RepoPath -Repo $Repo -Path $Path
+    $repoRoot = [System.IO.Path]::GetFullPath($Repo).TrimEnd("\", "/")
+    $repoRootWithSeparator = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
+    if ($fullPath -ne $repoRoot -and -not $fullPath.StartsWith($repoRootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) { return }
+    if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) { return }
+
+    $item = [pscustomobject]@{
+        source_type = $SourceType
+        path = ConvertTo-RepoRelativePath -Repo $Repo -Path $fullPath
+        full_path = $fullPath
+    }
+    [void]$Sources.Add($item)
+}
+
+function Invoke-TextEncodingGuard {
+    param(
+        [string]$Repo,
+        $Paths,
+        [string]$TaskId,
+        [string]$RunId,
+        [string]$RunnerRunId,
+        [string]$GuardId,
+        [string[]]$ChangedFiles,
+        [string]$StdoutLog,
+        [string]$StderrLog
+    )
+
+    Ensure-RunnerDirs -Paths $Paths
+    $sources = New-Object System.Collections.ArrayList
+    Add-TextEncodingGuardSource -Sources $sources -Repo $Repo -SourceType "executor_stdout_log" -Path $StdoutLog
+    Add-TextEncodingGuardSource -Sources $sources -Repo $Repo -SourceType "executor_stderr_log" -Path $StderrLog
+
+    $candidateFiles = [ordered]@{}
+    foreach ($changedPath in @($ChangedFiles)) {
+        if ([string]::IsNullOrWhiteSpace($changedPath)) { continue }
+        $candidateFiles[$changedPath -replace "\\", "/"] = "adapter_changed_text_file"
+    }
+    foreach ($changedPath in @(Get-GitTextEncodingGuardChangedFiles -Repo $Repo)) {
+        if ([string]::IsNullOrWhiteSpace($changedPath)) { continue }
+        if (-not $candidateFiles.Contains($changedPath)) {
+            $candidateFiles[$changedPath -replace "\\", "/"] = "git_worktree_text_file"
+        }
+    }
+
+    foreach ($changedPath in @($candidateFiles.Keys)) {
+        if (-not (Test-TextGuardCandidatePath -Path $changedPath)) { continue }
+        Add-TextEncodingGuardSource -Sources $sources -Repo $Repo -SourceType $candidateFiles[$changedPath] -Path $changedPath
+    }
+
+    $findings = @()
+    foreach ($source in @($sources)) {
+        $text = Read-Utf8Text -Path $source.full_path
+        $scanText = Get-TextEncodingGuardScannableText -Text $text
+        $signals = @(Get-MojibakeSignals -Text $scanText)
+        if ($signals.Count -eq 0) { continue }
+        $severity = if ($source.source_type -eq "executor_stderr_log") { "warning" } else { "blocker" }
+        $findings += [pscustomobject]@{
+            source_type = $source.source_type
+            path = $source.path
+            severity = $severity
+            signals = @($signals)
+            samples = @(Get-MojibakeSamples -Text $scanText -Signals $signals)
+        }
+    }
+
+    $blockingFindings = @($findings | Where-Object { $_.severity -eq "blocker" })
+    $status = if ($blockingFindings.Count -gt 0) {
+        "failed"
+    }
+    elseif ($findings.Count -gt 0) {
+        "passed_with_warnings"
+    }
+    else {
+        "passed"
+    }
+    $guardPath = Join-Path $Paths.text_encoding_guard_dir "$GuardId.json"
+    $result = [pscustomobject][ordered]@{
+        schema_version = 1
+        text_encoding_guard_id = $GuardId
+        task_id = $TaskId
+        run_id = $RunId
+        runner_run_id = $RunnerRunId
+        status = $status
+        inspected_source_count = $sources.Count
+        finding_count = $findings.Count
+        blocking_finding_count = $blockingFindings.Count
+        findings = @($findings)
+        guard_policy = [ordered]@{
+            blocks_on_probable_mojibake_in_stdout = $true
+            blocks_on_probable_mojibake_in_changed_text_files = $true
+            records_stderr_mojibake_as_warning = $true
+            scans_executor_stdout = $true
+            scans_executor_stderr = $true
+            scans_adapter_changed_text_files = $true
+            scans_git_worktree_text_files = $true
+            scans_untracked_text_files = $false
+            ignores_validation_command_echo = $true
+            note = "This guard detects common mojibake markers in generated text. It blocks on executor stdout or changed text file findings, and records executor stderr findings as warnings because stderr often contains shell/tool echoes."
+        }
+        created_at = Get-NowText
+    }
+
+    Save-JsonFile -Path $guardPath -Value $result
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $RunnerRunId -EventType "text_encoding_guard_checked" -Message "PC Runner checked executor output and changed text files for probable mojibake." -Data ([ordered]@{ text_encoding_guard_id = $GuardId; status = $status; finding_count = $findings.Count; blocking_finding_count = $blockingFindings.Count; path = ConvertTo-RepoRelativePath -Repo $Repo -Path $guardPath }) | Out-Null
+
+    return [pscustomobject]@{
+        ok = ($blockingFindings.Count -eq 0)
+        text_encoding_guard_id = $GuardId
+        path = ConvertTo-RepoRelativePath -Repo $Repo -Path $guardPath
+        status = $status
+        inspected_source_count = $sources.Count
+        finding_count = $findings.Count
+        blocking_finding_count = $blockingFindings.Count
+        findings = @($findings)
+    }
+}
+
 function Write-ImplementationPrompt {
     param($Paths, [string]$Repo, [string]$TaskId, $Task, [string]$PromptId)
     Ensure-RunnerDirs -Paths $Paths
@@ -714,6 +1007,17 @@ function Write-ImplementationPrompt {
         "- Do not commit or push.",
         "- Do not modify _Local/, _Temp/, node_modules/, .env, or local secrets.",
         "- Preserve task lifecycle state and runtime execution state separation.",
+        "",
+        "## Executor And Runner Ownership",
+        "- You are the executor for approved tracked repository changes only.",
+        "- PC Runner owns runtime validation, local ignored config, _Temp artifacts, evidence collection, verification reports, completion cards, finalization logs, auto-approval evaluation, and follow-up plan generation.",
+        "- Do not report the task blocked only because you cannot modify _Local/ or _Temp/; those paths are runner-owned and may be created by PC Runner outside your executor scope.",
+        "- If the task is a runner smoke, make the tracked implementation or documentation changes requested by the task and leave runtime evidence collection to PC Runner.",
+        "",
+        "## Text And Encoding Requirements",
+        "- Write generated text files as UTF-8.",
+        "- Korean user-facing documents must contain readable Korean, not mojibake.",
+        "- If output or a generated document contains replacement characters or garbled Korean, stop and report the encoding issue instead of completing the task.",
         "",
         "## Required Return Format",
         "1. Implementation summary",
@@ -854,8 +1158,60 @@ function Invoke-ImplementationStart {
     $RunState.session_ids = @($Plan.expected_artifacts.session_id)
     $RunState.evidence_ids = @($Plan.expected_artifacts.evidence_ids[0])
     $checkpointStatus = if ($codex.ok) { "completed" } else { "completed_with_executor_failure" }
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "codex_cli_adapter.run" -Status $checkpointStatus -Inputs @{ prompt_file = $promptPath } -Outputs @{ session_id = $Plan.expected_artifacts.session_id; evidence_id = $Plan.expected_artifacts.evidence_ids[0]; exit_code = $codex.data.exit_code; ok = $codex.ok; error = $codex.data.error } -NextStep "file_watcher.snapshot"
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "codex_cli_adapter.run" -Status $checkpointStatus -Inputs @{ prompt_file = $promptPath } -Outputs @{ session_id = $Plan.expected_artifacts.session_id; evidence_id = $Plan.expected_artifacts.evidence_ids[0]; exit_code = $codex.data.exit_code; ok = $codex.ok; error = $codex.data.error } -NextStep "runner.text_encoding_guard"
     $RunState.last_checkpoint_id = $checkpoint.id
+
+    $RunState.current_step = "runner.text_encoding_guard"
+    $changedFiles = @()
+    $stdoutLog = ""
+    $stderrLog = ""
+    if ($null -ne $codex.data) {
+        $changedFiles = @(As-Array -Value $codex.data.changed_files)
+        $stdoutLog = [string]$codex.data.stdout_log
+        $stderrLog = [string]$codex.data.stderr_log
+    }
+    $encodingGuard = Invoke-TextEncodingGuard -Repo $Repo -Paths $Paths -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -GuardId $Plan.expected_artifacts.text_encoding_guard_id -ChangedFiles $changedFiles -StdoutLog $stdoutLog -StderrLog $stderrLog
+    Set-ReportId -RunState $RunState -Name "text_encoding_guard_id" -Value $Plan.expected_artifacts.text_encoding_guard_id
+    Set-ReportId -RunState $RunState -Name "text_encoding_guard_path" -Value $encodingGuard.path
+    $guardCheckpointStatus = if ($encodingGuard.ok) { "completed" } else { "stopped" }
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "runner.text_encoding_guard" -Status $guardCheckpointStatus -Inputs @{ stdout_log = $stdoutLog; stderr_log = $stderrLog; changed_files_count = $changedFiles.Count } -Outputs @{ text_encoding_guard_id = $encodingGuard.text_encoding_guard_id; status = $encodingGuard.status; finding_count = $encodingGuard.finding_count; path = $encodingGuard.path } -NextStep "file_watcher.snapshot"
+    $RunState.last_checkpoint_id = $checkpoint.id
+    if (-not $encodingGuard.ok) {
+        $RunState.status = "stopped"
+        $RunState.current_phase = "human_gate"
+        $RunState.current_step = "text_encoding_guard_failed"
+        $RunState.human_gate_state = [ordered]@{
+            stop_reason = "text_encoding_guard_failed"
+            human_gate = "Review probable mojibake in executor output or changed text files before continuing."
+            text_encoding_guard_id = $encodingGuard.text_encoding_guard_id
+            text_encoding_guard_path = $encodingGuard.path
+            finding_count = $encodingGuard.finding_count
+        }
+        $RunState.updated_at = Get-NowText
+        $RunState.ended_at = Get-NowText
+        Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $runnerRunId -EventType "runner_stopped" -Message "PC Runner stopped because text encoding guard found probable mojibake." -Data $RunState.human_gate_state | Out-Null
+        $runPath = Save-RunnerRun -Paths $Paths -RunState $RunState
+        return [pscustomobject]@{
+            ok = $false
+            command = "start"
+            task_id = $TaskId
+            runner_run_id = $runnerRunId
+            runner_run_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $runPath
+            status = $RunState.status
+            stop_reason = "text_encoding_guard_failed"
+            human_gate = $RunState.human_gate_state.human_gate
+            prompt_file = $promptPath
+            text_encoding_guard_id = $encodingGuard.text_encoding_guard_id
+            text_encoding_guard_path = $encodingGuard.path
+            finding_count = $encodingGuard.finding_count
+            runner_run = $RunState
+            task_lifecycle_unchanged = $true
+            no_task_approval = $true
+            no_task_done = $true
+            no_commit_or_push = $true
+            external_execution_performed = if ($null -ne $codex.data) { [bool]$codex.data.external_execution_performed } else { $false }
+        }
+    }
 
     $RunState.current_phase = "evidence"
     $RunState.current_step = "file_watcher.snapshot"

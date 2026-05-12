@@ -467,6 +467,16 @@ not execute unless `_Local\AIWorkflow\codex_cli_adapter.local.json` exists and
 is explicitly enabled. The runner does not approve tasks, mark tasks done,
 create Backlog tasks, run arbitrary shell commands, commit, or push.
 
+For implementation runs, the generated prompt separates executor-owned tracked
+edits from PC Runner-owned runtime validation. The runner also records a
+`text_encoding_guard` artifact after Codex CLI execution and before completion
+artifacts. If the guard finds probable mojibake in executor stdout or
+adapter-reported/tracked changed text files, the runner stops at
+`text_encoding_guard_failed` for human review instead of generating
+VerificationReport/CompletionReport artifacts. Stderr findings are recorded as
+warning-only evidence because stderr often contains shell command echoes or
+tool output.
+
 ---
 
 ## result_collector.bat
