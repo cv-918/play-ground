@@ -33,25 +33,27 @@ For meaningful code/data/runtime work:
 2. Select the active task with `/ai task set-active`.
 3. Define architecture, reduced scope, non-goals, and validation expectations.
 4. Record explicit scope approval with `/ai task approve`.
-5. Generate a request with `/ai prepare goal`.
-6. Execute through the approved current execution path.
-7. Capture a full diff, including new untracked files.
-8. Review the diff.
-9. Fix review issues.
-10. Validate build/runtime/data/workflow behavior.
-11. Audit the result with `/ai result audit`.
+5. Review the PC Runner plan with `/ai runner plan`.
+6. Execute the regular runner path with `/ai runner start`.
+7. Review the Completion Card and runner artifacts.
+8. Record finalization with `/ai finalization accept`, `request-changes`,
+   `reject`, or `defer`.
+9. Continue post-finalization runner steps with `/ai runner continue` when
+   follow-up and policy artifacts are needed.
+10. Fix review issues or create follow-up tasks when required.
+11. Validate build/runtime/data/workflow behavior.
 12. Write Dev Log if required.
 13. Mark done only with human evidence using `/ai task done`.
 14. Commit only after final user decision.
 ```
 
-Discord is the task-state, request-generation, and audit layer. Codex App is a
-manual execution surface only during bootstrap or approved manual escalation.
-The final architecture is PC Runner-owned execution with task workspaces,
-session supervision, evidence collection, verification reporting, and
-Discord-based control. A Discord approval or generated goal request does not
-mean execution has already run, validation has passed, the task is done, or a
-commit is allowed.
+Discord is the task-state, approval, runner control, review, and audit layer.
+PC Runner is the regular execution coordination surface. Codex App, generated
+goal requests, and pasted result audits are manual escalation surfaces for
+bootstrap, adapter failure, authentication/session failure, or explicitly
+approved exceptions. A Discord approval or runner plan does not mean execution
+has already run, validation has passed, the task is done, or a commit is
+allowed.
 
 Current `/ai intake` uses local `codex exec` as the LLM-assisted intake backend.
 It creates one Backlog task from a validated TaskDraft and then stops. The
@@ -123,6 +125,11 @@ This section describes the legacy/bootstrap or manual-escalation path. Do not
 treat manual Codex prompt copy/paste as the final architecture. Normal execution
 should move toward PC Runner-owned execution adapters when that path is
 available.
+
+After WF-407, use `/ai runner` for the regular path. Use `/ai prepare codex`,
+`/ai prepare goal`, or `/ai result audit` only when the runner path is blocked,
+when a local adapter is not ready, or when the Human Director explicitly chooses
+manual escalation.
 
 Default Codex setup:
 

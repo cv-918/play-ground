@@ -81,6 +81,8 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint_KR.md` | Korean Human Director companion for the unified PC Runner orchestration entrypoint design |
 | `FinalBlueprint/WF_Unified_PC_Runner_Implementation_Report.md` | Records WF-407 unified PC Runner implementation, local/Discord command surface, validation evidence, authority boundaries, and WF-408 handoff |
 | `FinalBlueprint/WF_Unified_PC_Runner_Implementation_Report_KR.md` | Korean Human Director companion for the WF-407 PC Runner implementation result |
+| `FinalBlueprint/WF_Workflow_Cleanup_Application_Report.md` | Records WF-408 non-destructive workflow cleanup application, runner-centered command surface, manual-escalation labels, and cleanup validation |
+| `FinalBlueprint/WF_Workflow_Cleanup_Application_Report_KR.md` | Korean Human Director companion for the WF-408 workflow cleanup result |
 | `04_Human_Approval_Gates.md` | Defines when AI must stop and request explicit approval |
 | `05_Tool_Routing_Rules.md` | Defines when to use ChatGPT, Codex, Copilot, Git, manual implementation, and build tools |
 | `06_Task_Templates.md` | Defines canonical task request templates |

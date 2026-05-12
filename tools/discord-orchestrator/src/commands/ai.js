@@ -79,7 +79,7 @@ const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_impl
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
 const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
-const RUNNER_PROFILE_CHOICES = ["validation", "analysis", "implementation", "documentation"].map((value) => ({ name: value, value }));
+const RUNNER_PROFILE_CHOICES = ["validation"].map((value) => ({ name: value, value }));
 const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
@@ -118,7 +118,7 @@ export function buildAiCommand() {
     .addSubcommand((sub) =>
       sub
         .setName("intake-create")
-        .setDescription("/ai intake와 같은 방식으로 Backlog 작업을 생성합니다")
+        .setDescription("호환 alias입니다. 정규 접수는 /ai intake를 사용하세요")
         .addStringOption((option) =>
           option
             .setName("text")
@@ -199,7 +199,7 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("run")
-        .setDescription("허용된 local workflow script를 실행합니다")
+        .setDescription("진단/복구용 local workflow script를 실행합니다")
         .addSubcommand((sub) =>
           sub.setName("workflow-status").setDescription("workflow_status.bat --json을 실행합니다"),
         )
@@ -235,11 +235,11 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("prepare")
-        .setDescription("수동 실행용 작업 routing prompt 패키지를 생성합니다")
+        .setDescription("수동 승격용 작업 prompt 패키지를 생성합니다")
         .addSubcommand((sub) =>
           sub
             .setName("codex")
-            .setDescription("Codex App prompt 패키지를 생성합니다")
+            .setDescription("수동 승격용 Codex App prompt 패키지를 생성합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -264,7 +264,7 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("goal")
-            .setDescription("Codex CLI /goal 요청 markdown 파일을 생성합니다")
+            .setDescription("수동 승격용 Codex CLI /goal 요청 파일을 생성합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -290,11 +290,11 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("result")
-        .setDescription("수동 Codex 결과 접수 명령입니다")
+        .setDescription("수동 승격 결과를 감사하는 명령입니다")
         .addSubcommand((sub) =>
           sub
             .setName("audit")
-            .setDescription("붙여 넣은 Codex goal 결과 요약을 감사합니다")
+            .setDescription("붙여 넣은 수동 실행 결과 요약을 검토합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -582,7 +582,7 @@ export function buildAiCommand() {
     .addSubcommandGroup((group) =>
       group
         .setName("runner")
-        .setDescription("PC Runner가 승인된 작업을 안전한 실행 흐름으로 진행합니다")
+        .setDescription("정규 PC Runner 경로로 작업 실행과 검증을 진행합니다")
         .addSubcommand((sub) =>
           sub
             .setName("status")
@@ -597,7 +597,7 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("plan")
-            .setDescription("실행 전 Runner 단계 계획과 중단 gate를 생성합니다")
+            .setDescription("정규 Runner 실행 계획과 중단 지점을 확인합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -607,14 +607,14 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, 기본값 validation")
+                .setDescription("Runner profile, 현재 지원값 validation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("executor")
-                .setDescription("Runner executor, 기본값 profile 기준 자동 선택")
+                .setDescription("Runner executor, 기본값 local_cli")
                 .setRequired(false)
                 .addChoices(...RUNNER_EXECUTOR_CHOICES),
             ),
@@ -622,7 +622,7 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("start")
-            .setDescription("승인된 작업을 Runner로 시작하고 완료 검토에서 멈춥니다")
+            .setDescription("승인된 작업을 정규 Runner 경로로 시작합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -632,14 +632,14 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, 기본값 validation")
+                .setDescription("Runner profile, 현재 지원값 validation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )
             .addStringOption((option) =>
               option
                 .setName("executor")
-                .setDescription("Runner executor, 기본값 profile 기준 자동 선택")
+                .setDescription("Runner executor, 기본값 local_cli")
                 .setRequired(false)
                 .addChoices(...RUNNER_EXECUTOR_CHOICES),
             ),
@@ -647,7 +647,7 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("continue")
-            .setDescription("finalization 이후 Runner 후속 산출물을 생성합니다")
+            .setDescription("finalization 이후 Runner 후속 단계를 진행합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -664,7 +664,7 @@ export function buildAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("stop")
-            .setDescription("Runner run을 명시적으로 중단 상태로 기록합니다")
+            .setDescription("Runner run을 수동 중단 상태로 기록합니다")
             .addStringOption((option) =>
               option
                 .setName("id")

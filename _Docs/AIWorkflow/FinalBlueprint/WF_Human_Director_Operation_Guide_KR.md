@@ -42,23 +42,23 @@ DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 �
 
 ## 현재 정규 흐름
 
-PC Runner 통합 진입점이 완성되기 전까지는 아래 흐름이 현재 기준입니다.
+WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 
 ```text
 1. /ai intake text:<작업 요청>
 2. /ai task set-active id:<task_id>
-3. /ai task approve id:<task_id> note:<승인 범위>
-4. /ai prepare goal id:<task_id> mode:<mode> context:<context>
-5. 승인된 실행 경로로 작업 수행
-6. /ai result audit id:<task_id> result:<결과 요약>
-7. /ai completion card id:<task_id>
-8. /ai finalization accept 또는 request-changes/reject/defer
+3. 필요한 경우 /ai task approve id:<task_id> note:<승인 범위>
+4. /ai runner plan id:<task_id>
+5. /ai runner start id:<task_id>
+6. 완료 카드와 runner 결과 확인
+7. /ai finalization accept 또는 request-changes/reject/defer
+8. /ai runner continue id:<task_id>
 9. /ai task done id:<task_id> evidence:<완료 근거>
 10. 커밋/푸시 결정
 ```
 
-단, 4번과 6번은 최종 구조의 정규 경로가 아니라 현재 bridge입니다.
-WF-406/WF-407 이후에는 PC Runner가 이 사이를 더 많이 자동화해야 합니다.
+`/ai prepare goal`과 `/ai result audit`은 이제 정규 경로가 아니라 runner가
+막혔을 때 쓰는 수동 승격 경로입니다.
 
 ## 최종 목표 흐름
 
@@ -80,6 +80,9 @@ WF-406/WF-407 이후에는 PC Runner가 이 사이를 더 많이 자동화해야
 - `/ai intake`
 - `/ai task set-active`
 - `/ai task approve`
+- `/ai runner plan`
+- `/ai runner start`
+- `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
 - `/ai finalization request-changes`
@@ -87,13 +90,13 @@ WF-406/WF-407 이후에는 PC Runner가 이 사이를 더 많이 자동화해야
 - `/ai finalization defer`
 - `/ai task done`
 
-### 지금은 bridge로 쓰는 명령
+### 수동 승격으로 쓰는 명령
 
 - `/ai prepare goal`
 - `/ai result audit`
 
-이 둘은 현재는 필요하지만, 최종 목표에서는 수동 승격 경로로 내려가는 것이
-맞습니다.
+정규 runner 경로가 막혔거나 사람이 직접 Codex App/CLI를 사용해야 할 때만
+사용합니다.
 
 ### 필요할 때만 보는 명령
 

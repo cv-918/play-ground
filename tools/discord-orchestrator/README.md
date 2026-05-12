@@ -31,6 +31,10 @@ preserving command names, option names, choice raw values, schemas, and behavior
 WF-20260511-000002 adds Codex CLI assisted TaskDraft generation for
 `/ai intake`, with local schema validation, rule-based cross-checks, and direct
 Backlog task creation without ChatGPT Web/Codex App paste steps.
+WF-407 adds the unified PC Runner command surface through `/ai runner`.
+WF-408 makes `/ai runner` the regular workflow path and relabels older
+prepare/result/run commands as manual escalation, diagnostic, or compatibility
+surfaces.
 
 It can read:
 
@@ -47,6 +51,7 @@ show activation safety guidance after task selection
 show approval safety guidance after task approval
 show goal request execution readiness before manual Codex CLI use
 audit pasted Codex goal result summaries for completion and commit readiness
+run the approved PC Runner orchestration entrypoint and stop at human gates
 format Discord responses
 ```
 
@@ -59,6 +64,7 @@ _Temp/AIWorkflowDiscordBot/backups/
 _Temp/AIWorkflowReports/
 _Temp/AIWorkflowDiffs/
 _Temp/AIWorkflowTaskRequests/
+_Temp/AIWorkflowRuntime/
 ```
 
 It must not:
@@ -73,7 +79,7 @@ run Codex write mode
 run Codex CLI `/goal`
 run OpenClaw
 run Claude
-run build
+run arbitrary build commands outside allowlisted workflow commands
 run game/runtime
 run arbitrary shell commands
 implement subagents
@@ -157,6 +163,12 @@ Do not commit `_Local/`.
 /ai finalization reject
 /ai finalization defer
 /ai finalization read
+/ai runner status
+/ai runner plan
+/ai runner start
+/ai runner continue
+/ai runner stop
+/ai runner read
 ```
 
 ## Regular Workflow Path
@@ -165,22 +177,24 @@ Use this path for normal task operation:
 
 ```text
 1. /ai intake
-2. /ai intake-create or /ai task create
-3. /ai task set-active
-4. /ai task approve
-5. /ai prepare goal
-6. Run Codex manually outside Discord
-7. /ai result audit
-8. /ai completion report
-9. /ai completion card
-10. /ai finalization accept or /ai finalization request-changes
-11. /ai task done
-12. Review and commit manually
+2. /ai task set-active
+3. /ai task approve, only when policy requires explicit approval
+4. /ai runner plan
+5. /ai runner start
+6. Review the Completion Card
+7. /ai finalization accept or /ai finalization request-changes
+8. /ai runner continue
+9. /ai task done, only after human completion decision
+10. Review and commit manually
 ```
 
 Milestone 1 consolidation keeps regular responses short. Detailed role routing,
 path-rule reminders, validation expectations, and completion guidance remain in
 the generated `goal_request_*.md` files.
+
+`/ai prepare codex`, `/ai prepare goal`, and `/ai result audit` remain available
+as manual escalation or compatibility paths. They are no longer the regular
+workflow path after WF-407.
 
 WF-305/306 completion commands are Phase 3 runtime review helpers. They read
 VerificationReport and CompletionReport artifacts, then show a Discord-facing
@@ -201,7 +215,14 @@ but they are not required in the regular flow:
 /ai run workflow-status
 /ai run active-project
 /ai run project-profile
+/ai run json-smoke
+/ai run capture-diff
 /ai prepare codex
+/ai prepare goal
+/ai result audit
+/ai intake-create
+/ai intake-preview
+/ai intake-test
 ```
 
 For project profile:
@@ -263,15 +284,15 @@ _Docs/AIWorkflow/Goal_Result_Intake_Completion_Audit.md
 `/ai task set-active` writes ActiveTask.md and then returns an activation safety
 summary with the selected task, a short safety note, and suggested next manual
 commands. Full routing detail is available through optional `/ai role status`;
-approval is handled by `/ai task approve`; final execution readiness is checked
-by `/ai prepare goal`. It does not approve the task, change the Backlog row
+approval is handled by `/ai task approve`; regular execution readiness is checked
+by `/ai runner plan`. It does not approve the task, change the Backlog row
 status, execute Codex CLI, execute agents, mark the task done, commit, push, or
 modify source files.
 
 `/ai task approve` updates the task status to `ready_for_implementation` and
 then returns a compact approval summary, short safety note, and suggested next
-manual commands. Use `/ai prepare goal` as the final execution readiness check
-and optional `/ai role status` for full routing details. It does not execute
+manual commands. Use `/ai runner plan` as the regular execution readiness check,
+and use optional `/ai role status` for full routing details. It does not execute
 Codex CLI, execute agents, implement changes, mark the task done, commit, push,
 or modify source files.
 
@@ -414,7 +435,7 @@ _Temp/AIWorkflowTaskRequests/
 It does not execute Codex, Copilot, computer-use, build/test commands, commits,
 pushes, or releases.
 
-For Codex CLI goal request preparation:
+For manual-escalation Codex CLI goal request preparation:
 
 ```text
 /ai prepare goal
@@ -442,13 +463,14 @@ with concrete checklist items selected from the likely task scope.
 The Discord response is intentionally compact: generated path, task summary,
 mode/context, readiness verdict, next manual action, and a safety note. The
 generated markdown file carries the detailed Contract v2, role-aware,
-path-rule, validation, and completion guidance. This is advisory only; Discord
-does not execute Codex CLI or agents.
+path-rule, validation, and completion guidance. This is a manual-escalation path
+for cases where `/ai runner` is unavailable or explicitly bypassed by the Human
+Director. Discord does not execute Codex CLI or agents.
 
 It does not execute Codex CLI, OpenClaw, Claude, subagents, Unity AI,
 computer-use, commits, pushes, or releases.
 
-For Codex result audit:
+For manual-escalation Codex result audit:
 
 ```text
 /ai result audit id:<task_id> result:"Implementation completed. Files changed: ... Validation passed: ... No commit."
@@ -468,6 +490,21 @@ Completion Verdict values are `READY_TO_MARK_DONE`, `NEEDS_REVIEW`,
 It is read-only. It does not mark tasks done, update Backlog.md, update
 ActiveTask.md, approve tasks, execute Codex CLI, execute agents, commit, push,
 or modify source files.
+
+For the regular PC Runner path:
+
+```text
+/ai runner status id:<task_id>
+/ai runner plan id:<task_id>
+/ai runner start id:<task_id>
+/ai runner continue id:<task_id>
+/ai runner stop id:<task_id>
+/ai runner read id:<task_id>
+```
+
+`/ai runner` calls the local PC Runner entrypoint and stops at Human Director
+gates. It does not approve tasks, mark tasks done, create Backlog tasks, commit,
+push, or run arbitrary shell commands.
 
 ---
 
@@ -497,6 +534,9 @@ After starting the bot:
 [ ] /ai task set-active response is compact and includes selected task, safety note, and next commands.
 [ ] /ai task set-active does not approve tasks or execute agents/Codex CLI.
 [ ] /ai task approve updates Backlog.md and creates a backup.
+[ ] /ai runner plan id:<task_id> returns a runner plan.
+[ ] /ai runner start id:<task_id> stops at a Human Director gate.
+[ ] /ai runner command choices expose only currently supported profile values.
 [ ] /ai task approve response is compact and includes approval status, safety note, and next commands.
 [ ] /ai task approve does not mark done or execute agents/Codex CLI.
 [ ] /ai task block updates Backlog.md and creates a backup.

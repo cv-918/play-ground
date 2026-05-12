@@ -11,11 +11,14 @@
 
 ### A. 정규 사용자 경로
 
-일반 작업에서 사용자가 직접 보게 되는 명령입니다.
+WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니다.
 
 - `/ai intake`
 - `/ai task set-active`
 - `/ai task approve`
+- `/ai runner plan`
+- `/ai runner start`
+- `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
 - `/ai finalization request-changes`
@@ -23,18 +26,10 @@
 - `/ai finalization defer`
 - `/ai task done`
 
-부트스트랩 단계에서 아직 정규 경로에 남아 있는 bridge 명령입니다.
-
-- `/ai prepare goal`
-- `/ai result audit`
-
-나중에 PC Runner 통합 진입점이 생기면 이 두 명령은 정규 경로가 아니라
-수동 승격 경로로 내려가는 것이 목표입니다.
-
-### B. 향후 runner 내부 경로
+### B. runner 내부 경로
 
 아래 로컬 스크립트들은 사용자가 매번 직접 실행할 명령이 아닙니다.
-WF-406/WF-407 이후에는 하나의 PC Runner 진입점이 내부적으로 호출해야 합니다.
+가능한 범위에서는 하나의 PC Runner 진입점이 내부적으로 호출해야 합니다.
 
 - `task_workspace_manager.bat`
 - `session_supervisor.bat`
@@ -97,8 +92,8 @@ WF-406/WF-407 이후에는 하나의 PC Runner 진입점이 내부적으로 호�
 | --- | --- | --- | --- |
 | `/ai intake-create` | `/ai intake`의 호환 alias | 호환 명령으로 표시 | 가이드 정리 후 숨김/폐기 검토 |
 | `/ai prepare codex` | Codex App 수동 프롬프트 경로 | 수동 승격으로 유지 | 정규 가이드에서는 제외 |
-| `/ai prepare goal` | Codex CLI goal 파일 생성 | 부트스트랩 bridge 유지 | WF-407 이후 수동 승격으로 이동 |
-| `/ai result audit` | 수동 결과 붙여넣기 감사 | 부트스트랩 bridge 유지 | runner 결과 수집 이후 보조 경로로 이동 |
+| `/ai prepare goal` | Codex CLI goal 파일 생성 | 수동 승격으로 유지 | 정규 가이드에서는 제외 |
+| `/ai result audit` | 수동 결과 붙여넣기 감사 | 수동 승격 감사로 유지 | runner 증거 수집이 불가능하거나 우회된 경우에만 사용 |
 | `/ai task review-intake` | 상세 intake 검토 | 진단용 유지 | 핵심 정보를 intake/set-active에 흡수 |
 | `/ai run capture-diff` | 수동 diff 캡처 | fallback 유지 | 정규 경로는 file watcher로 이동 |
 
@@ -125,11 +120,12 @@ WF-406/WF-407 이후에는 하나의 PC Runner 진입점이 내부적으로 호�
 관리/진단: bot, engine, 상태 문제를 확인하는 명령
 ```
 
-## WF-408 전에 사용자가 결정할 것
+## WF-408 적용 결정
 
-명령어 정리를 실제 적용하기 전에 아래 결정을 해야 합니다.
+WF-408에서는 아래처럼 비파괴 정리를 적용합니다.
 
-1. `/ai intake-create`를 계속 보이게 둘지, 숨길지, 제거할지
-2. `/ai prepare codex`를 Discord 명령으로 계속 둘지, 문서상 fallback으로만 남길지
-3. `/ai result audit`를 그대로 둘지, 이름이나 설명을 바꿀지
-4. slash command 설명에 "진단용", "수동 승격", "호환 alias" 같은 라벨을 넣을지
+1. `/ai intake-create`는 등록 상태를 유지하되 호환 alias로 설명합니다.
+2. `/ai prepare codex`와 `/ai prepare goal`은 수동 승격 명령으로 유지합니다.
+3. `/ai result audit`는 수동 승격 결과 감사 명령으로 유지합니다.
+4. 진단/관리 명령은 진단 또는 복구 명령으로 설명합니다.
+5. WF-408에서는 실제 명령 삭제를 하지 않습니다.

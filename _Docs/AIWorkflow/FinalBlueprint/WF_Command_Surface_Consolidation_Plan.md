@@ -12,12 +12,15 @@ command behavior, change slash command metadata, or alter approval authority.
 
 ### Category A. Regular Human Director Path
 
-These commands belong in the normal user-facing workflow guide until the
-unified PC Runner entrypoint replaces manual substeps:
+These commands belong in the normal user-facing workflow guide after the
+unified PC Runner entrypoint is available:
 
 - `/ai intake`
 - `/ai task set-active`
 - `/ai task approve`
+- `/ai runner plan`
+- `/ai runner start`
+- `/ai runner continue`
 - `/ai completion card`
 - `/ai finalization accept`
 - `/ai finalization request-changes`
@@ -25,15 +28,10 @@ unified PC Runner entrypoint replaces manual substeps:
 - `/ai finalization defer`
 - `/ai task done`
 
-Current bridge commands that remain regular during bootstrap:
-
-- `/ai prepare goal`
-- `/ai result audit`
-
 ### Category B. Future Runner-Owned Path
 
-These local primitives should become internal steps behind a unified PC Runner
-orchestration command after WF-406/WF-407:
+These local primitives are internal steps behind the unified PC Runner
+orchestration command where possible:
 
 - `task_workspace_manager.bat`
 - `session_supervisor.bat`
@@ -100,8 +98,8 @@ the final product path:
 | --- | --- | --- | --- |
 | `/ai intake-create` | Compatibility alias for `/ai intake`. | Mark as compatibility alias. | After guide/docs update, change copy to "use /ai intake"; removal only with explicit approval. |
 | `/ai prepare codex` | Legacy Codex App prompt package. | Keep as manual escalation. | Remove from regular guide; keep in troubleshooting/admin docs. |
-| `/ai prepare goal` | Manual Codex CLI goal request. | Keep as bootstrap bridge. | After WF-407, move to manual escalation docs. |
-| `/ai result audit` | Manual result paste audit. | Keep as bootstrap bridge. | After WF-407, make secondary to ExecutionResult/VerificationReport. |
+| `/ai prepare goal` | Manual Codex CLI goal request. | Keep as manual escalation. | Remove from regular guide; keep in troubleshooting/admin docs. |
+| `/ai result audit` | Manual result paste audit. | Keep as manual escalation audit. | Use only when runner evidence collection is unavailable or bypassed. |
 | `/ai task review-intake` | Detailed intake activation review. | Keep diagnostic. | Fold essential readiness summary into intake/set-active cards later. |
 | `/ai run capture-diff` | Manual diff capture. | Keep fallback. | Normal path should use file watcher/diff snapshots after WF-407. |
 | `capture_diff.bat` | Local diff capture helper. | Keep fallback. | Keep for manual review and emergency audit. |
@@ -145,12 +143,12 @@ Admin/diagnostic: use these for bot, engine, or state troubleshooting.
 
 ## Decisions Needed Before WF-408
 
-The Human Director should decide:
+WF-408 applies these non-destructive decisions:
 
-1. Whether `/ai intake-create` should remain visible after `/ai intake` is stable.
-2. Whether `/ai prepare codex` should stay registered as a command or remain only
-   as a local/manual fallback.
-3. Whether `/ai result audit` should be renamed, relabeled, or kept as-is after
-   PC Runner result collection becomes the regular path.
-4. Whether slash command descriptions should include visible labels such as
-   "diagnostic", "manual escalation", or "compatibility alias".
+1. Keep `/ai intake-create` registered, but label it as a compatibility alias.
+2. Keep `/ai prepare codex` and `/ai prepare goal` registered as manual
+   escalation commands.
+3. Keep `/ai result audit` registered as a manual escalation audit command.
+4. Keep diagnostic/admin commands registered, but label them as diagnostic or
+   recovery surfaces.
+5. Do not remove commands in WF-408.

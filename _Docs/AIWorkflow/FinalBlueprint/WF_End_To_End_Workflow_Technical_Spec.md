@@ -90,8 +90,8 @@ flowchart TD
 
 ## Current Bootstrap Path
 
-Until WF-407 implements the unified PC Runner orchestration entrypoint, some
-steps remain manual or semi-manual:
+Before WF-407 implemented the unified PC Runner orchestration entrypoint, some
+steps remained manual or semi-manual:
 
 ```text
 1. /ai intake text:<request>
@@ -112,16 +112,18 @@ paths, not as the final architecture.
 
 ## Target PC Runner Path
 
-After WF-406/WF-407, the normal Human Director path should become:
+After WF-407, the normal Human Director path is:
 
 ```text
 1. /ai intake text:<request>
-2. approve only if policy requires approval
-3. run or continue through one PC Runner orchestration entrypoint
-4. optionally check progress
-5. review Completion Card
-6. accept/request changes/reject/defer
-7. approve commit/push only if needed
+2. /ai task set-active
+3. /ai task approve, only if policy requires approval
+4. /ai runner plan
+5. /ai runner start
+6. review Completion Card
+7. /ai finalization accept/request-changes/reject/defer
+8. /ai runner continue
+9. approve task done and commit/push only if needed
 ```
 
 The runner entrypoint should call existing primitives internally and stop at

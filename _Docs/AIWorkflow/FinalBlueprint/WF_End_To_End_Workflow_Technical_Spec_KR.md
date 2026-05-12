@@ -87,8 +87,8 @@ flowchart TD
 
 ## 현재 Bootstrap 경로
 
-WF-407에서 통합 PC Runner 진입점이 구현되기 전까지는 일부 단계가 수동 또는
-반수동입니다.
+WF-407에서 통합 PC Runner 진입점이 구현되기 전에는 일부 단계가 수동 또는
+반수동이었습니다.
 
 ```text
 1. /ai intake text:<request>
@@ -104,20 +104,22 @@ WF-407에서 통합 PC Runner 진입점이 구현되기 전까지는 일부 단�
 11. 사용자 커밋/푸시 결정
 ```
 
-이 경로는 현재 bridge입니다. 최종 구조 자체로 보면 안 됩니다.
+이 경로는 이제 정규 경로가 아니라 수동 승격 경로입니다.
 
 ## 목표 PC Runner 경로
 
-WF-406/WF-407 이후 목표는 다음입니다.
+WF-407 이후 정규 목표 경로는 다음입니다.
 
 ```text
 1. /ai intake text:<request>
-2. 정책상 필요한 경우에만 승인
-3. 하나의 PC Runner orchestration entrypoint로 진행
-4. 필요하면 진행 상황 확인
-5. Completion Card 리뷰
-6. accept/request changes/reject/defer 결정
-7. 필요한 경우 커밋/푸시 승인
+2. /ai task set-active
+3. 정책상 필요한 경우에만 /ai task approve
+4. /ai runner plan
+5. /ai runner start
+6. Completion Card 리뷰
+7. /ai finalization accept/request-changes/reject/defer
+8. /ai runner continue
+9. 필요한 경우 task done과 커밋/푸시 승인
 ```
 
 runner는 내부적으로 기존 primitive를 호출하되 사람 승인이 필요한 gate에서

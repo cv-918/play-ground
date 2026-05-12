@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-407
-title: Implement unified PC Runner orchestration entrypoint
+task_id: WF-408
+title: Apply approved workflow cleanup
 status: done
 workflow_path: discord_task_management
 priority: P1
@@ -26,16 +26,16 @@ last_updated: 2026-05-12
 
 ## Goal
 
-Implement unified PC Runner orchestration entrypoint
+Apply approved non-destructive workflow cleanup after WF-407.
 
 ---
 
 ## Tool Route
 
 ```yaml
-discord: task selection command
+discord: command metadata and workflow docs
 human: review and approval
-codex: implemented approved WF-407 scope
+codex: implemented approved WF-408 cleanup scope
 validation: completed
 ```
 
@@ -44,14 +44,23 @@ validation: completed
 ## Files In Scope
 
 ```text
-tools/aiworkflow/pc_runner.bat
-tools/aiworkflow/pc_runner.ps1
+tools/discord-orchestrator/README.md
 tools/discord-orchestrator/src/commands/ai.js
-tools/discord-orchestrator/src/services/pcRunnerService.js
 tools/discord-orchestrator/src/services/responseFormatter.js
-_Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Implementation_Report.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Implementation_Report_KR.md
-_DevLog/WorkLog/2026-05-12_WF-407_Unified_PC_Runner_Implementation.md
+_Docs/AIWorkflow/09_Operational_Playbook.md
+_Docs/AIWorkflow/README.md
+_Docs/AIWorkflow/Backlog.md
+_Docs/AIWorkflow/ActiveTask.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Command_Surface_Consolidation_Plan.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Command_Surface_Consolidation_Plan_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec.md
+_Docs/AIWorkflow/FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Implementation_Roadmap.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Workflow_Cleanup_Application_Report.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Workflow_Cleanup_Application_Report_KR.md
+_DevLog/WorkLog/2026-05-12_WF-408_Workflow_Cleanup_Application.md
 ```
 
 ---
@@ -59,7 +68,7 @@ _DevLog/WorkLog/2026-05-12_WF-407_Unified_PC_Runner_Implementation.md
 ## Human Action Required
 
 ```text
-Review WF-407 result if desired. Next workflow work is WF-408 cleanup.
+Review WF-408 result if desired. Next automation work is the controlled implementation runner profile.
 ```
 
 ---
@@ -68,11 +77,11 @@ Review WF-407 result if desired. Next workflow work is WF-408 cleanup.
 
 ```text
 node --check changed Discord JavaScript files
-PowerShell parser check for pc_runner.ps1
-pc_runner status/plan/start/read/continue smoke checks
-unapproved P1 approval-gate refusal smoke
-generated runner JSON parse check
+slash command schema smoke
+runner profile choice smoke
+documentation conflict review
 git diff --check
+forbidden path check for _Temp, _Local, node_modules, .env, and local config files
 ```
 
 ---
@@ -81,9 +90,9 @@ git diff --check
 
 ```text
 status: done
-note: implemented WF-407 unified PC Runner entrypoint and Discord /ai runner surface. Validation passed for syntax checks, runner status/plan/start/read/continue, finalization-gated continue, unapproved P1 refusal, generated JSON parse, service smoke, command schema smoke, and git diff --check. No automatic approval, task done, Backlog task creation, commit/push automation, arbitrary shell execution, or game source/data change was implemented.
+note: implemented WF-408 non-destructive workflow cleanup. /ai runner is now the regular documented workflow surface, prepare/result commands are labeled manual escalation, run helpers are labeled diagnostic/recovery, intake-create is labeled compatibility alias, unsupported runner profiles are hidden from Discord choices, and English/Korean docs were updated. No command removal, command rename, automatic approval, task done, Backlog task creation, commit/push automation, arbitrary shell execution, or game source/data change was implemented.
 updated_at: 2026-05-12
-source: Discord task status command
+source: Codex App
 ```
 
 ---
@@ -91,7 +100,7 @@ source: Discord task status command
 ## Next Recommended Task
 
 ```text
-WF-408 Apply approved workflow cleanup.
+Implement the controlled runner implementation profile.
 ```
 
 ---

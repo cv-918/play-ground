@@ -78,7 +78,7 @@ WF-400 done
 -> WF-405 end-to-end smoke validation done
 -> WF-406 orchestration entrypoint design done
 -> WF-407 orchestration entrypoint implementation done
--> WF-408 approved cleanup
+-> WF-408 approved cleanup done
 ```
 
 WF-401 and WF-402 come before cleanup because command removal or workflow

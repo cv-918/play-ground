@@ -1244,7 +1244,7 @@ export function formatPcRunnerPayload(result) {
           cleanKo(result?.error || data.stop_reason || "Unknown failure."),
         ].join("\n"),
         fields: [
-          embedField("Human gate", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
+          embedField("사람 확인 지점", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
           embedField("안전 상태", [
             `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
             `task done 없음: ${koBool(data.no_task_done !== false)}`,
@@ -1266,22 +1266,22 @@ export function formatPcRunnerPayload(result) {
       color: pcRunnerColor(data.status || run.status || data.stop_reason),
       description: [
         `${formatInlineCode(data.task_id || run.task_id || "unknown")}`,
-        data.runner_run_id || run.runner_run_id ? `runner: ${formatInlineCode(data.runner_run_id || run.runner_run_id)}` : "",
-        data.stop_reason || run.human_gate_state?.stop_reason ? `stop: ${formatInlineCode(data.stop_reason || run.human_gate_state?.stop_reason)}` : "",
+        data.runner_run_id || run.runner_run_id ? `Runner: ${formatInlineCode(data.runner_run_id || run.runner_run_id)}` : "",
+        data.stop_reason || run.human_gate_state?.stop_reason ? `중단 이유: ${formatInlineCode(data.stop_reason || run.human_gate_state?.stop_reason)}` : "",
       ].filter(Boolean).join("\n"),
       fields: [
         embedField("상태", [
           `workspace: ${koBool(data.workspace_exists ?? true)}`,
-          `run status: ${run.status || data.status || "unknown"}`,
-          `phase/step: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
+          `run 상태: ${run.status || data.status || "unknown"}`,
+          `단계: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
         ]),
-        embedField("Human gate", gate),
-        embedField("Reports", [
-          reports.verification_report_id ? `Verification: ${formatInlineCode(reports.verification_report_id)}` : "",
-          reports.completion_report_id ? `Completion: ${formatInlineCode(reports.completion_report_id)}` : "",
-          reports.completion_card_id ? `Card: ${formatInlineCode(reports.completion_card_id)}` : "",
-          reports.auto_approval_evaluation_id ? `AutoApproval: ${formatInlineCode(reports.auto_approval_evaluation_id)}` : "",
-          reports.follow_up_plan_id ? `Follow-up: ${formatInlineCode(reports.follow_up_plan_id)}` : "",
+        embedField("사람 확인 지점", gate),
+        embedField("보고서", [
+          reports.verification_report_id ? `검증: ${formatInlineCode(reports.verification_report_id)}` : "",
+          reports.completion_report_id ? `완료 보고서: ${formatInlineCode(reports.completion_report_id)}` : "",
+          reports.completion_card_id ? `완료 카드: ${formatInlineCode(reports.completion_card_id)}` : "",
+          reports.auto_approval_evaluation_id ? `자동 승인 평가: ${formatInlineCode(reports.auto_approval_evaluation_id)}` : "",
+          reports.follow_up_plan_id ? `후속 후보: ${formatInlineCode(reports.follow_up_plan_id)}` : "",
         ].filter(Boolean)),
         embedField("안전 상태", [
           `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
