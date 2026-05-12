@@ -431,10 +431,11 @@ function buildCompactScopeGuardSection(task) {
 
   if (guards.length === 0) {
     lines.push("- Treat generated requirements as bounded task scope only; do not infer extra implementation authority.");
-    return lines.join("\n");
+  } else {
+    lines.push(...guards.map((item) => "- " + item));
   }
 
-  lines.push(...guards.map((item) => "- " + item));
+  lines.push(...implementationSanityGuardrails().map((item) => "- " + item));
   return lines.join("\n");
 }
 
@@ -528,7 +529,17 @@ function buildSafetyConstraintsSection() {
     "- Preserve final-form architecture: separate decision, execution, data, animation, rendering, and validation responsibilities.",
     "- Stop for explicit approval before source implementation, structural refactoring, schema/save/load, lifecycle, runtime, build setting, workflow rule, destructive, or external-tool changes outside this request.",
     "- Do not commit, push, release, expose secrets, modify private/local/dependency folders, or execute agents/Codex CLI automatically.",
+    ...implementationSanityGuardrails().map((item) => "- " + item),
   ].join("\n");
+}
+
+function implementationSanityGuardrails() {
+  return [
+    "Think before coding: restate objective, success criteria, and validation plan internally before editing.",
+    "Simplicity first: implement the smallest useful slice of the approved final-form boundary.",
+    "Surgical changes: every changed file must map to the approved task.",
+    "No drive-by refactors, speculative abstractions, unrelated cleanup, or validation claims without evidence.",
+  ];
 }
 
 function buildHumanDecisionGatesSection({ mode }) {

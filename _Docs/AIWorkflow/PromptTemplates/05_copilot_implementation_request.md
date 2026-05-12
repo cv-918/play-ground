@@ -120,6 +120,7 @@ Do not:
 - Redesign the architecture.
 - Modify unrelated systems.
 - Add broad refactoring.
+- Add drive-by refactors, unrelated cleanup, speculative abstractions, or broad reformatting.
 - Change public behavior outside the approved scope.
 - Change data schema beyond the approved fields.
 - Modify files outside the allowed list.
@@ -137,9 +138,12 @@ Do not:
 - Keep decision, execution, and data responsibilities separated.
 - Avoid growing monolithic actor, scene, or manager classes.
 - Keep implementation reviewable.
+- Keep every changed file traceable to the approved task.
 - Add comments only when they clarify non-obvious logic, lifecycle constraints, or safety rules.
-- Avoid unnecessary abstraction.
+- Choose the approved long-term boundary first, then implement only the smallest useful slice of it.
+- Avoid unnecessary abstraction, generic frameworks, or future-proofing not required by the approved scope.
 - Avoid unrelated formatting changes.
+- Do not claim validation passed without actual evidence.
 
 ---
 

@@ -216,6 +216,40 @@ Documentation Impact
 
 ---
 
+## 7.1 Karpathy-style Implementation Sanity Checks
+
+Use these checks as a lightweight behavior guard for implementation and review.
+They do not replace the AIWorkflow approval gates.
+
+Check:
+
+- Was the objective, success criteria, and validation loop understood before
+  editing?
+- Does every changed file map directly to the approved task?
+- Is the implementation the smallest useful slice of the approved final-form
+  boundary?
+- Did the change avoid speculative abstraction, generic frameworks, and
+  future-proofing not required by the approved scope?
+- Did the diff avoid unrelated cleanup, drive-by refactors, broad reformatting,
+  and opportunistic renaming?
+- Are validation claims backed by actual command output, manual evidence, or an
+  explicit deferral?
+
+Interpretation:
+
+```text
+Final-form architecture means choosing the right long-term boundary first.
+Reduced-scope implementation means implementing only the smallest useful slice
+of that boundary.
+Do not add speculative abstractions, generic frameworks, or future-proofing not
+required by the approved scope.
+```
+
+If these checks fail, treat the issue as a scope or reviewability concern even
+when the code appears locally cleaner.
+
+---
+
 ## 8. Architecture Boundary Review
 
 Check:

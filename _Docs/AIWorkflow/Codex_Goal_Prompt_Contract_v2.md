@@ -109,6 +109,23 @@ commit/push/release
 
 ---
 
+## Implementation Sanity Guardrails
+
+Generated requests should include these behavior guardrails for implementation
+and review work:
+
+```text
+Think before coding: restate objective, success criteria, and validation plan internally before editing.
+Simplicity first: implement the smallest useful slice of the approved final-form boundary.
+Surgical changes: every changed file must map to the approved task.
+No drive-by refactors, speculative abstractions, unrelated cleanup, or validation claims without evidence.
+```
+
+These guardrails do not add new approval authority. They clarify how the
+executor should stay inside the already approved scope.
+
+---
+
 ## Subagent Policy
 
 Default policy:

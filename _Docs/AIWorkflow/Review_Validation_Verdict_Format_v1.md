@@ -29,7 +29,7 @@ workflow-tooling results.
 |---|---|---|---|---|---|
 | `PASS` | Required checks passed and no blocking issues are known | Required review or validation scope is complete, evidence is present, and no Critical, Major, or unresolved blocking issue remains | Yes | No, except normal commit decision | Yes, if scope and validation are complete |
 | `PASS_WITH_NOTES` | Work is acceptable with non-blocking notes or documented residual risk | Minor issues, optional notes, documentation notes, or explicitly non-blocking limitations exist | Yes | Usually no, unless the note changes scope, policy, validation acceptance, or commit risk | Yes, with documented notes |
-| `CONCERNS` | Meaningful risk or incomplete evidence exists, but the task is not fully blocked | Major issue, unclear scope, skipped validation, incomplete evidence, or unresolved decision remains | Only after Human Director decision | Yes | Only after Human Director decision |
+| `CONCERNS` | Meaningful risk or incomplete evidence exists, but the task is not fully blocked | Major issue, unclear scope, skipped validation, incomplete evidence, unnecessary abstraction, overbroad implementation, or unresolved decision remains | Only after Human Director decision | Yes | Only after Human Director decision |
 | `BLOCKED` | The role cannot complete the review, validation, or assessment because required context, files, approval, tools, credentials, or evidence is missing | Required input is unavailable, command cannot run, approval is missing, external setup is missing, or forbidden scope would be needed | No | Yes | No |
 | `FAIL` | Required criteria failed | Critical issue, failed build, failed data check, failed runtime check, failed documentation consistency check, or invalid workflow/tool behavior | No, except recovery/fix work | Yes, for recovery path or risk acceptance if applicable | No |
 
@@ -288,7 +288,7 @@ Issue severity levels are:
 | Severity | Meaning | Effect on verdict |
 |---|---|---|
 | `Critical` | Must be fixed before continuing; includes build breaks, crash risk, data corruption, unsafe lifetime, severe architecture violation, forbidden file modification, or failed required validation | Usually `FAIL`; may be `BLOCKED` if the issue cannot be evaluated because required evidence is missing |
-| `Major` | Should be fixed before completion unless explicitly accepted by the Human Director; includes responsibility leakage, unclear lifecycle assumption, missing validation path, incomplete evidence, or scope concern | Usually `CONCERNS`; may become `PASS_WITH_NOTES` only after explicit acceptance and documentation |
+| `Major` | Should be fixed before completion unless explicitly accepted by the Human Director; includes responsibility leakage, unclear lifecycle assumption, missing validation path, incomplete evidence, unnecessary abstraction, drive-by refactor, surgical-diff violation, or scope concern | Usually `CONCERNS`; may become `PASS_WITH_NOTES` only after explicit acceptance and documentation |
 | `Minor` | Non-blocking issue that may be fixed if practical; includes small naming, formatting, readability, or local documentation issue | Usually `PASS_WITH_NOTES`; may still be `PASS` if no action or note is needed |
 | `Optional` | Future improvement or non-required suggestion | Does not block; may appear under `PASS` or `PASS_WITH_NOTES` |
 
@@ -301,6 +301,15 @@ Severity affects verdict selection as follows:
 - `Minor` issues do not block progress, but they should be documented when they
   may affect maintainability or review clarity.
 - `Optional` notes must remain separate from required fixes.
+
+Surgical diff rule:
+
+- A change is reviewable only when every changed file maps to the approved task.
+- A "nice cleanup" outside scope is not Optional; it is a scope violation unless
+  separately approved.
+- Unrelated refactors, broad reformatting, speculative abstractions, and
+  validation claims without evidence should be reported as `CONCERNS` or higher
+  when they affect completion confidence.
 
 ---
 

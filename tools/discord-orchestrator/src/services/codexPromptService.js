@@ -214,7 +214,17 @@ function buildSafetySection() {
     "- Do not run release/deploy steps.",
     "- Do not modify files outside the approved scope.",
     "- If the task is ambiguous, summarize assumptions and stop before invasive changes.",
+    ...implementationSanityGuardrails().map((item) => "- " + item),
   ].join("\n");
+}
+
+function implementationSanityGuardrails() {
+  return [
+    "Think before coding: restate objective, success criteria, and validation plan internally before editing.",
+    "Simplicity first: implement the smallest useful slice of the approved final-form boundary.",
+    "Surgical changes: every changed file must map to the approved task.",
+    "No drive-by refactors, speculative abstractions, unrelated cleanup, or validation claims without evidence.",
+  ];
 }
 
 function buildExpectedOutputSection() {
