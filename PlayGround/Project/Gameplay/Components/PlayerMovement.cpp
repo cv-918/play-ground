@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "PlayerMovement.h"
 
 #include "Actors/Stage/StagePlayer.h"
@@ -97,7 +97,7 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 	move_direction_ = input_dir;
 
 	// 대시는 액션 에지 입력으로 시작한다.
-	if (input_manager_->ActionPressed(InputAction::Dash))
+	if (input_manager_->ActionDown(InputAction::Dash))
 		StartDashByInputDir(1200.f, 0.075);
 
 	// 입력이 있으면 목표 속도까지 가속

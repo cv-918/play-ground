@@ -3,6 +3,9 @@
 
 bool DialogueSystem::StartSession(const DialogueSessionData& _session_data, IDialogueEventListener* _event_listener)
 {
+	if (runner_.IsRunning())
+		return false;
+
 	skip_hold_triggered_ = false;
 	return runner_.StartSession(_session_data, _event_listener);
 }
