@@ -152,6 +152,15 @@ release
 | WF-307 | P1 | done | automation | WF-307 Implement ApprovalHistory and FinalizationLog | Implement ApprovalHistory and FinalizationLog runtime artifacts based on CompletionReport and Completion Card review. ApprovalHistory should record Human Director final completion decisions such as accept, reject, request changes, or defer. FinalizationLog should record final decision state, source reports, actor, git/worktree observation, state-file update expectations, and next manual commands. Scope is limited to runtime artifacts under _Temp, local status/record/read APIs, Discord finalization status/accept/reject/request-changes/defer commands, documentation, DevLog, and validation. Do not implement Auto Approval Policy, Follow-up Task Generator, automatic task done, automatic Backlog/ActiveTask lifecycle transitions, commit/push automation, arbitrary shell execution, or game source/data changes. | Discord -> human review | done: "WF-307 validation passed. ApprovalHistory and FinalizationLog artifacts are recorded by finalization_log status/record/read commands under _Temp runtime storage. accept_completion succeeds only when CompletionReport is ready for manual done review; accept against blocked evidence is rejected; request_changes/defer decisions can be recorded for blocked evidence. Discord /ai finalization status/accept/request-changes/reject/defer/read commands were registered and the managed bot was restarted. PowerShell parser checks, node --check, service/formatter smoke, generated JSON parse checks, invariant checks, git diff --check, forbidden path checks, and private/local tracking checks passed. No Auto Approval Policy, Follow-up Task Generator, automatic task done, automatic lifecycle transition, arbitrary shell execution, game source/data change, release, or deploy was implemented." |
 | WF-308 | P1 | done | automation | WF-308 Implement Auto Approval Policy | Implement deterministic Auto Approval Policy evaluation based on Backlog task context, CompletionReport, FinalizationLog, and ApprovalHistory. The policy should identify conditional auto-approval candidates for future use while preserving Human Director authority. Scope is limited to runtime evaluation artifacts under _Temp, local status/evaluate/read APIs, Discord auto-approval status/evaluate/read commands, documentation, DevLog, and validation. Do not implement automatic task approval, automatic task done, automatic Backlog/ActiveTask lifecycle transitions, Follow-up Task Generator, commit/push automation, arbitrary shell execution, or game source/data changes. | Discord -> human review | done: "WF-308 validation passed. auto_approval_policy status/evaluate/read commands record evaluate-only AutoApprovalPolicy artifacts under _Temp runtime storage. The policy reports eligible_candidate only for low-risk P2/P3 allowlisted task kinds with READY CompletionReport, accepted FinalizationLog, and linked ApprovalHistory; P1 or blocked evidence remains human_approval_required. Discord /ai auto-approval status/evaluate/read commands were registered and the managed bot was restarted. PowerShell parser checks, node --check, service/formatter smoke, command schema smoke, eligible and blocked policy smokes, git diff --check, forbidden path checks, and private/local tracking checks passed. No automatic task approval, task done, lifecycle transition, FinalizationLog write, Follow-up Task Generator, arbitrary shell execution, game source/data change, release, or deploy was implemented." |
 | WF-309 | P1 | done | automation | WF-309 Implement Follow-up Task Generator | Implement a Follow-up Task Generator that reads CompletionReport, FinalizationLog, AutoApprovalPolicy, and Backlog context to produce reviewable follow-up task candidates. Scope is limited to runtime FollowUpPlan artifacts under _Temp, local status/generate/read APIs, Discord follow-up status/generate/read commands, documentation, DevLog, and validation. Do not create Backlog tasks automatically, set ActiveTask, approve tasks, mark tasks done, apply auto approval, commit/push, run arbitrary shell commands, or modify game source/data. | Discord -> human review | done: "WF-309 validation passed. follow_up_task_generator status/generate/read commands record FollowUpPlan artifacts under _Temp runtime storage. The generator creates candidates from CompletionReport blockers/concerns/failed checks, FinalizationLog request/reject/defer decisions, and AutoApprovalPolicy blockers while preserving create_backlog_task=false. Discord /ai follow-up status/generate/read commands were registered and the managed bot was restarted. PowerShell parser checks, node --check, service/formatter smoke, command schema smoke, candidate/no-candidate plan smokes, JSON invariant checks, git diff --check, forbidden path checks, and private/local tracking checks passed. No Backlog task creation, ActiveTask selection, approval, done, auto approval apply, arbitrary shell execution, game source/data change, release, or deploy was implemented." |
+| WF-400 | P1 | done | documentation | Define post-WF-309 workflow stabilization roadmap | Define the Phase 4 sequence that turns the completed WF-201 through WF-309 runtime primitives into a practical Discord-first workflow. Include full workflow audit, command pruning plan, end-to-end technical documentation, Human Director operation guide, smoke validation, PC Runner orchestration, and approved cleanup. | Codex App -> human review | done: "Created the post-WF-309 Phase 4 stabilization roadmap, updated Backlog/ActiveTask, added README map entry, updated the implementation roadmap, and recorded a WorkLog. No command removal, workflow behavior change, automatic approval/done/commit/push, PC Runner orchestration implementation, or game source/data change was implemented." |
+| WF-401 | P1 | done | documentation | Audit full workflow and pruning candidates | Inventory the current workflow paths, required steps, stale steps, unnecessary steps, command surface, deprecated commands, and improvement candidates. Output a reviewed audit report before any command removal or workflow behavior change. | Discord -> Codex App -> human review | done: "Created WF_Workflow_Audit_And_Pruning_Report.md. The audit classified primary task commands, future runtime primitives, optional/admin diagnostics, bootstrap/manual-escalation commands, pruning candidates, documentation drift, user intervention points, and workflow paths to document next. No command removal, behavior change, automatic approval/done/commit/push, or game source/data change was implemented." |
+| WF-402 | P1 | done | documentation | Define command surface consolidation and deprecation plan | Classify Discord and local commands as primary, admin, diagnostic, bootstrap/manual escalation, deprecated, or removal candidates. Produce a deprecation/removal plan that requires Human Director approval before implementation. | Discord -> Codex App -> human review | done: "Created WF_Command_Surface_Consolidation_Plan.md. Commands were classified into regular Human Director path, future runner-owned path, diagnostic/admin surface, and compatibility/manual-escalation surface. Deprecation candidates and removal rules were recorded. No command removal, command rename, slash metadata change, behavior change, automatic approval/done/commit/push, or game source/data change was implemented." |
+| WF-403 | P1 | todo | documentation | Write end-to-end workflow technical specification | Write the source-of-truth technical workflow document with visualization, step-by-step flow, user intervention markers, state paths, runtime paths, evidence/report paths, and workflow path variants. | Discord -> Codex App -> human review | pending workflow audit context |
+| WF-404 | P1 | todo | documentation | Write Human Director workflow operation guide | Write a practical Korean operation guide for requesting work, approving work, monitoring progress, reviewing completion, handling follow-ups, and deciding commits through the workflow. | Discord -> Codex App -> human review | pending technical workflow specification |
+| WF-405 | P1 | todo | validation | Run end-to-end workflow smoke and validation pack | Exercise a representative low-risk workflow through intake, approval, workspace, execution, evidence, result collection, verification, completion, finalization, and follow-up reporting. Record evidence and gaps. | Discord -> PC Runner -> human review | pending WF-403/WF-404 guidance |
+| WF-406 | P1 | todo | automation | Design unified PC Runner orchestration entrypoint | Define how one controlled runner command should chain existing primitives while preserving approval gates, task/runtime state boundaries, evidence/report handoffs, runtime controls, and Human Director authority. | Discord -> Codex App -> human review | pending smoke findings and command surface plan |
+| WF-407 | P1 | todo | automation | Implement unified PC Runner orchestration entrypoint | Implement the approved orchestration entrypoint and Discord surface that advances a task through safe automated substeps and stops at human gates. Do not bypass approval, finalization, or commit authority. | Discord -> PC Runner -> human review | pending WF-406 approval |
+| WF-408 | P1 | todo | maintenance | Apply approved workflow cleanup | Remove, hide, rename, or deprecate obsolete steps and commands according to the approved audit and command-surface plan. Update docs, command metadata, and validation evidence. | Discord -> Codex App -> human review | pending WF-401/WF-402 approval |
 | WF-20260511-142009 | P1 | todo | automation | Workflow task: Verify /ai intake creates TaskDraft via Codex CLI and Backlog task | The request is to confirm the Discord AIWorkflow `/ai intake` flow invokes Codex CLI to produce a valid TaskDraft and then creates a Backlog task without automatic approval or unrelated execution. | Discord intake -> Codex CLI TaskDraft -> human review | codex intake draft: risk=medium; workflow_path=discord_task_management; needs review; has clarifying questions; validation pending human approval |
 | WF-20260511-145547 | P1 | done | validation | Validate Discord intake embed readability in Backlog creation response | Discord intake embed 출력 양식이 실제 Backlog 생성 응답에서도 읽기 좋은지 검증하는 WF 검증 작업이다. 구현 변경 없이 생성된 task의 LLM 접수 상태, 필수 검증 요약, 안전 상태 표시가 사람이 읽고 판단하기 충분한지 확인해야 한다. | Discord intake -> Codex CLI TaskDraft -> human review | done: Discord intake embed readability smoke accepted. Intake, intake-test, intake-engine status, and review-intake embed payload checks passed; bot restarted cleanly. |
 
@@ -163,13 +172,16 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-WF-002: Define fixed task status enum and lifecycle transition rules
+WF-403: Write end-to-end workflow technical specification
 ```
 
 Reason:
 
 ```text
-This is the next direct step toward Level 3 and future Discord orchestration.
+WF-401 and WF-402 identified the command categories, bootstrap/manual-escalation
+paths, documentation drift, pruning candidates, and removal rules. The next
+useful step is to write the technical source-of-truth workflow specification
+with visualization and user intervention markers.
 ```
 
 ---
@@ -205,21 +217,24 @@ ChatGPT orchestrator
 Recommended workflow automation progression:
 
 ```text
-WF-001 done
--> WF-003 done
--> WF-004 done
--> WF-002
--> WF-005
--> WF-009
--> WF-006
--> WF-007
--> WF-008
+WF-201 through WF-309 done
+-> WF-401 audit workflow and pruning candidates
+-> WF-402 command surface consolidation plan
+-> WF-403 technical workflow specification
+-> WF-404 Human Director operation guide
+-> WF-405 end-to-end smoke validation
+-> WF-406 PC Runner orchestration design
+-> WF-407 PC Runner orchestration implementation
+-> WF-408 approved workflow cleanup
 ```
 
 Current target:
 
 ```text
-Level 3 stabilization
+Phase 4 workflow stabilization and PC Runner orchestration
 ```
 
-Discord bot integration should wait until read-only status collection, task state transitions, and project profile abstraction are stable.
+Discord integration is active. Remaining work is to simplify the operating
+surface, document the complete workflow, validate an end-to-end path, and
+connect the completed runtime primitives behind a controlled PC Runner
+orchestration entrypoint.

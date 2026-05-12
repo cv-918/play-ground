@@ -114,6 +114,43 @@ WF-308 Implement Auto Approval Policy(Auto Approval Policy 구현)
 WF-309 Implement Follow-up Task Generator(Follow-up Task Generator 구현)
 ```
 
+## Phase 4. Workflow Stabilization, Documentation, and PC Runner Orchestration
+
+### Goal
+
+Turn the completed WF-201 through WF-309 runtime primitives into a practical
+Discord-first operating workflow with minimal Human Director intervention and
+clear approval gates.
+
+### Implementation order
+
+```text
+1. Full workflow audit and pruning inventory
+2. Command surface consolidation and deprecation plan
+3. End-to-end technical workflow specification
+4. Human Director workflow operation guide
+5. End-to-end smoke validation pack
+6. Unified PC Runner orchestration entrypoint design
+7. Unified PC Runner orchestration entrypoint implementation
+8. Approved workflow cleanup
+```
+
+### Recommended task units
+
+```text
+WF-401 Audit full workflow and pruning candidates
+WF-402 Define command surface consolidation and deprecation plan
+WF-403 Write end-to-end workflow technical specification
+WF-404 Write Human Director workflow operation guide
+WF-405 Run end-to-end workflow smoke and validation pack
+WF-406 Design unified PC Runner orchestration entrypoint
+WF-407 Implement unified PC Runner orchestration entrypoint
+WF-408 Apply approved workflow cleanup
+```
+
+Phase 4 cleanup must not remove commands or workflow paths before WF-401 and
+WF-402 produce a reviewed inventory and approval decision.
+
 ## 1차 실행기 범위
 
 ```text
