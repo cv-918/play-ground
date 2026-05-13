@@ -28,10 +28,9 @@
     main h3 { margin-top: 24px; font-size: 19px; }
     p, li { font-size: 16px; }
     ul, ol { padding-left: 24px; }
-    code { background: var(--code-bg); border: 1px solid #dbe4ec; border-radius: 5px; padding: 1px 5px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.92em; }
+    code { background: var(--code-bg); border: 1px solid #dbe4ec; border-radius: 5px; padding: 1px 5px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.92em; word-break: break-word; }
     pre { overflow-x: auto; background: #17202a; color: #f7fbff; border-radius: 8px; padding: 16px; line-height: 1.55; }
-    pre code { background: transparent; border: 0; padding: 0; color: inherit; font-size: 14px; }
-    hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+    pre code { background: transparent; border: 0; padding: 0; color: inherit; font-size: 14px; word-break: normal; }
     .note { margin: 0 0 22px; padding: 12px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 6px; color: #24435c; font-size: 14px; }
     @media (max-width: 860px) { .page { width: min(100% - 24px, 1120px); padding-top: 20px; } .layout { grid-template-columns: 1fr; } nav { position: static; } main { padding: 22px; } }
   </style>
@@ -40,7 +39,7 @@
   <div class="page">
     <header>
       <h1>Human Director용 AIWorkflow 운영 가이드</h1>
-      <p class="meta">Generated from _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md on 2026-05-12</p>
+      <p class="meta">Generated from _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md on 2026-05-13</p>
     </header>
     <div class="layout">
       <nav aria-label="목차">
@@ -57,6 +56,8 @@
 <li class="toc-level-2"><a href="#승인하지-않아도-되는-방향">승인하지 않아도 되는 방향</a></li>
 <li class="toc-level-2"><a href="#완료-리뷰-방법">완료 리뷰 방법</a></li>
 <li class="toc-level-2"><a href="#커밋-결정">커밋 결정</a></li>
+<li class="toc-level-2"><a href="#visual-studio-build-도구-인식">Visual Studio build 도구 인식</a></li>
+<li class="toc-level-2"><a href="#실제-게임-작업을-작게-넣는-기준">실제 게임 작업을 작게 넣는 기준</a></li>
 <li class="toc-level-2"><a href="#다음-작업">다음 작업</a></li>
         </ol>
       </nav>
@@ -70,46 +71,72 @@
 <p>직접 읽을 가치가 있는 문서는 다음입니다.</p>
 <ol>
 <li><code>WF_Human_Director_Operation_Guide_KR.md</code></li>
-<p>- 평소 작업할 때 보는 문서입니다.</p>
-<li><code>WF_Post_309_Workflow_Stabilization_Roadmap_KR.md</code></li>
-<p>- 앞으로 어떤 순서로 자동화가 안정화되는지 보는 문서입니다.</p>
-<li><code>WF_Command_Surface_Consolidation_Plan_KR.md</code></li>
-<p>- 어떤 명령이 정규 경로이고 어떤 명령이 진단/수동 승격인지 보는 문서입니다.</p>
-<li><code>WF_End_To_End_Workflow_Technical_Spec_KR.md</code></li>
-<p>- 전체 구조가 궁금하거나 승인 경계가 헷갈릴 때 보는 문서입니다.</p>
-<li><code>WF_Workflow_Audit_And_Pruning_Report_KR.md</code></li>
-<p>- 나중에 명령어 제거/숨김을 결정할 때 보는 문서입니다.</p>
 </ol>
+<ul>
+<li>평소 작업할 때 보는 문서입니다.</li>
+</ul>
+<ol start="2">
+<li><code>WF_Post_309_Workflow_Stabilization_Roadmap_KR.md</code></li>
+</ol>
+<ul>
+<li>앞으로 어떤 순서로 자동화가 안정화되는지 보는 문서입니다.</li>
+</ul>
+<ol start="3">
+<li><code>WF_Command_Surface_Consolidation_Plan_KR.md</code></li>
+</ol>
+<ul>
+<li>어떤 명령이 정규 경로이고 어떤 명령이 진단/수동 승격인지 보는 문서입니다.</li>
+</ul>
+<ol start="4">
+<li><code>WF_End_To_End_Workflow_Technical_Spec_KR.md</code></li>
+</ol>
+<ul>
+<li>전체 구조가 궁금하거나 승인 경계가 헷갈릴 때 보는 문서입니다.</li>
+</ul>
+<ol start="5">
+<li><code>WF_Workflow_Audit_And_Pruning_Report_KR.md</code></li>
+</ol>
+<ul>
+<li>나중에 명령어 제거/숨김을 결정할 때 보는 문서입니다.</li>
+</ul>
 <p>DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 읽을 필요는 적습니다.</p>
 <h2 id="사용자의-역할">사용자의 역할</h2>
 <p>사용자가 맡는 일은 아래로 줄이는 것이 목표입니다.</p>
-<pre><code class="language-text">1. 작업을 지시한다.
+<pre><code class="language-text">
+1. 작업을 지시한다.
 2. 승인이 필요한 작업만 승인한다.
 3. 필요할 때 진행 상황을 확인한다.
 4. 완료 결과를 리뷰한다.
-5. 필요한 경우 커밋/푸시를 승인한다.</code></pre>
+5. 필요한 경우 커밋/푸시를 승인한다.
+</code></pre>
 <p>하네스가 맡아야 하는 일은 작업 구조화, 상태 관리, 실행 감시, 증거 수집, 검증 보고, 완료 카드, 최종화 기록, 후속 작업 후보 생성입니다.</p>
 <h2 id="현재-정규-흐름">현재 정규 흐름</h2>
 <p>WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.</p>
-<pre><code class="language-text">1. /ai intake text:&lt;작업 요청&gt;
-2. /ai task set-active id:&lt;task_id&gt;
-3. 필요한 경우 /ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;
-4. /ai runner plan id:&lt;task_id&gt;
-5. /ai runner start id:&lt;task_id&gt;
-6. 완료 카드와 runner 결과 확인
-7. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
-8. /ai runner continue id:&lt;task_id&gt;
-9. /ai task done id:&lt;task_id&gt; evidence:&lt;완료 근거&gt;
-10. 커밋/푸시 결정</code></pre>
+<pre><code class="language-text">
+1. /ai intake text:&lt;작업 요청&gt;
+2. 저위험 DOC/VAL 또는 허용된 WF 문서/유지보수 작업이면 하네스가 set-active, approve, runner start를 자동 진행
+3. 승인 필요 작업이면 /ai task set-active id:&lt;task_id&gt;
+4. 승인 필요 작업이면 /ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;
+5. 필요하면 /ai runner plan id:&lt;task_id&gt;
+6. 자동 시작되지 않은 작업은 /ai runner start id:&lt;task_id&gt;
+7. 완료 카드와 runner 결과 확인
+8. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
+9. /ai runner continue id:&lt;task_id&gt;
+10. /ai task done id:&lt;task_id&gt; evidence:&lt;완료 근거&gt;
+11. 커밋/푸시 결정
+</code></pre>
 <p><code>/ai prepare goal</code>과 <code>/ai result audit</code>은 이제 정규 경로가 아니라 runner가 막혔을 때 쓰는 수동 승격 경로입니다.</p>
+<p><code>/ai intake</code> auto-handoff는 P2/P3, low-risk, DOC/VAL, documentation/ validation, 또는 WF documentation/maintenance 작업에만 적용됩니다. P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터링/ 명령 동작 변경 작업은 사람 승인에서 멈춥니다.</p>
 <h2 id="최종-목표-흐름">최종 목표 흐름</h2>
 <p>최종 목표는 아래에 가깝습니다.</p>
-<pre><code class="language-text">1. /ai intake text:&lt;작업 요청&gt;
+<pre><code class="language-text">
+1. /ai intake text:&lt;작업 요청&gt;
 2. 승인 필요 시에만 승인
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
 4. 사용자는 completion card를 리뷰
 5. accept/accept-concerns/request changes/reject/defer 결정
-6. 필요한 경우 커밋/푸시 승인</code></pre>
+6. 필요한 경우 커밋/푸시 승인
+</code></pre>
 <h2 id="명령어를-어떻게-보면-되는가">명령어를 어떻게 보면 되는가</h2>
 <h3 id="평소에-쓰는-명령">평소에 쓰는 명령</h3>
 <ul>
@@ -187,18 +214,22 @@
 <p>단, 자동으로 approval, done, commit, push를 해서는 안 됩니다.</p>
 <h2 id="완료-리뷰-방법">완료 리뷰 방법</h2>
 <p>완료 리뷰 때는 아래만 보면 됩니다.</p>
-<pre><code class="language-text">1. Completion Card가 READY인지
+<pre><code class="language-text">
+1. Completion Card가 READY인지
 2. VerificationReport verdict가 PASS 또는 PASS_WITH_NOTES인지
 3. 남은 risk나 blocker가 있는지
 4. 변경 파일이 승인 범위 안인지
 5. validation evidence가 있는지
-6. DevLog가 필요한 작업이면 기록됐는지</code></pre>
+6. DevLog가 필요한 작업이면 기록됐는지
+</code></pre>
 <p>판정은 보통 다섯 가지입니다.</p>
-<pre><code class="language-text">accept: 완료 인정
+<pre><code class="language-text">
+accept: 완료 인정
 accept-concerns: 우려를 검토했고 받아들임
 request-changes: 수정 요청
 reject: 결과 반려
-defer: 지금 판단 보류</code></pre>
+defer: 지금 판단 보류
+</code></pre>
 <h2 id="커밋-결정">커밋 결정</h2>
 <p>커밋은 자동화의 마지막 gate입니다.</p>
 <p>커밋 전에 확인할 것:</p>
@@ -210,9 +241,69 @@ defer: 지금 판단 보류</code></pre>
 <li>unrelated change가 섞이지 않았는지</li>
 </ul>
 <p>커밋/푸시는 사용자가 직접 하거나 명시적으로 승인된 Git 경로를 통해서만 진행합니다.</p>
+<h2 id="visual-studio-build-도구-인식">Visual Studio build 도구 인식</h2>
+<p>현재 PC에는 Visual Studio 2022 Community가 설치되어 있습니다.</p>
+<p>확인된 경로:</p>
+<pre><code class="language-text">
+MSBuild:
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
+
+devenv:
+C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe
+</code></pre>
+<p>일반 PowerShell에서 <code>msbuild</code>나 <code>devenv</code>가 안 보이는 것은 설치 문제가 아니라 PATH 문제입니다. 이 문제는 사용자가 직접 외워서 해결할 일이 아니라, 하네스가 자동으로 처리해야 합니다.</p>
+<p>현재 <code>build_test_runner</code>는 <code>MSBuild.exe</code> 또는 <code>devenv.exe</code>가 PATH에 없어도 <code>vswhere</code>와 기본 Visual Studio 설치 경로를 사용해 실제 실행 파일 경로를 자동 탐지합니다.</p>
+<p>운영 원칙:</p>
+<ul>
+<li>사용자는 Visual Studio 경로를 직접 입력하지 않습니다.</li>
+<li>하네스는 <code>MSBuild.exe</code> 같은 추상 command 이름을 받아 실제 경로로 해석합니다.</li>
+<li>영구 PATH 추가는 하지 않습니다. Windows <code>setx PATH</code>는 PATH가 길 때 잘릴 수</li>
+<p>있으므로 자동화에서는 사용하지 않습니다.</p>
+<li>build/test evidence에는 원래 command와 resolved command를 함께 기록합니다.</li>
+</ul>
+<h2 id="실제-게임-작업을-작게-넣는-기준">실제 게임 작업을 작게 넣는 기준</h2>
+<p>WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣지 말고, 아래 단위로 쪼개서 runner workflow를 안정화합니다.</p>
+<h3 id="좋은-작업-단위">좋은 작업 단위</h3>
+<ul>
+<li>source/data 변경이 없는 검증 작업</li>
+<li>JSON syntax smoke 또는 loader smoke처럼 실패 원인이 좁은 작업</li>
+<li>파일 1~3개 안에서 끝나는 작은 데이터 수정</li>
+<li>하나의 loader, 하나의 scene, 하나의 component만 보는 작업</li>
+<li>완료 기준과 검증 명령이 명확한 작업</li>
+</ul>
+<h3 id="피해야-하는-작업-단위">피해야 하는 작업 단위</h3>
+<ul>
+<li>여러 시스템을 동시에 바꾸는 작업</li>
+<li>data schema 변경과 runtime 구현을 한 번에 묶는 작업</li>
+<li>scene lifecycle, save/load, build 설정을 동시에 건드리는 작업</li>
+<li>&quot;전체 정리&quot;, &quot;전반 개선&quot;, &quot;구조 리팩터&quot;처럼 범위가 넓은 작업</li>
+</ul>
+<h3 id="권장-순서">권장 순서</h3>
+<pre><code class="language-text">
+1. no-source-change 검증 작업
+2. 작은 data 수정 작업
+3. loader/runtime 검증 작업
+4. 작은 source fix 작업
+5. 작은 gameplay behavior 작업
+6. 더 큰 feature 작업
+</code></pre>
+<h3 id="예시">예시</h3>
+<p>좋은 예:</p>
+<pre><code class="language-text">
+/ai intake text:&quot;GAME validation task: PlayGround/Data JSON smoke와 GameDataLoader 관련 증거를 수집하고, source/data 변경 없이 runner workflow가 완료 카드까지 도달하는지 확인해줘.&quot;
+</code></pre>
+<pre><code class="language-text">
+/ai intake text:&quot;GAME data task: UserData.json의 level-0 node 기본값만 검토하고, schema 변경 없이 필요한 최소 수정과 JSON smoke 검증까지 진행해줘.&quot;
+</code></pre>
+<p>나쁜 예:</p>
+<pre><code class="language-text">
+/ai intake text:&quot;전투랑 데이터랑 UI랑 저장까지 전부 고쳐줘.&quot;
+</code></pre>
+<p>이런 요청은 하네스가 질문을 돌려주거나, 여러 task로 나누는 것이 정상입니다.</p>
 <h2 id="다음-작업">다음 작업</h2>
 <p>WF-430까지 완료된 현재 기준으로, no-source-change 실제 게임 검증 작업도 runner workflow를 통과했습니다.</p>
-<p>GAME-001에서는 기존 게임 데이터 로더 검증 작업을 실제 runner workflow로 통과시켜서, 자동화가 workflow 문서 작업뿐 아니라 실제 게임 프로젝트 작업에도 쓸 수 있는지 확인합니다.</p>
+<p>이제 다음 단계는 실제 게임 프로젝트 작업을 작게 하나씩 넣어 보면서, 승인/검증/완료/커밋 게이트가 불편한 지점을 줄이는 것입니다.</p>
       </main>
     </div>
   </div>

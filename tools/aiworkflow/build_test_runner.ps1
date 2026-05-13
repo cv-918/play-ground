@@ -265,6 +265,16 @@ function Get-ObjectPropertyValue {
     return $property.Value
 }
 
+function StringOrEmpty {
+    param($Value)
+
+    if ($null -eq $Value) {
+        return ""
+    }
+
+    return [string]$Value
+}
+
 function Set-ObjectProperty {
     param(
         $Object,
@@ -595,17 +605,137 @@ function Invoke-WithFileLock {
 function Get-SafeCommandSummary {
     param($CommandEntry)
 
+    $command = Resolve-BuildToolCommand -Command ([string]$CommandEntry.command)
+
     return [pscustomobject][ordered]@{
         command_id = $CommandEntry.command_id
         kind = if ($null -eq $CommandEntry.kind) { "validation" } else { $CommandEntry.kind }
         label = $CommandEntry.label
         enabled = [bool]$CommandEntry.enabled
         approval_level = if ([string]::IsNullOrWhiteSpace([string]$CommandEntry.approval_level)) { "approval_required" } else { $CommandEntry.approval_level }
-        command = $CommandEntry.command
+        command = $command.command
+        original_command = [string]$CommandEntry.command
+        command_resolution = $command.resolution
         args = @(As-Array -Value $CommandEntry.args)
         working_directory = if ([string]::IsNullOrWhiteSpace([string]$CommandEntry.working_directory)) { "." } else { $CommandEntry.working_directory }
         timeout_seconds = if ($null -eq $CommandEntry.timeout_seconds) { 300 } else { [int]$CommandEntry.timeout_seconds }
     }
+}
+
+function Resolve-BuildToolCommand {
+    param([string]$Command)
+
+    $raw = StringOrEmpty -Value $Command
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return [pscustomobject]@{
+            command = $raw
+            resolution = "empty"
+        }
+    }
+
+    $expanded = [Environment]::ExpandEnvironmentVariables($raw)
+    if ([System.IO.Path]::IsPathRooted($expanded) -or $expanded.Contains("\") -or $expanded.Contains("/")) {
+        return [pscustomobject]@{
+            command = $expanded
+            resolution = if (Test-Path -LiteralPath $expanded) { "explicit_path" } else { "explicit_path_missing" }
+        }
+    }
+
+    $pathCommand = Get-Command -Name $expanded -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -ne $pathCommand -and -not [string]::IsNullOrWhiteSpace([string]$pathCommand.Source)) {
+        return [pscustomobject]@{
+            command = [string]$pathCommand.Source
+            resolution = "path"
+        }
+    }
+
+    if ($expanded -ieq "MSBuild.exe" -or $expanded -ieq "msbuild") {
+        $msbuild = Resolve-VisualStudioTool -Tool "MSBuild"
+        if (-not [string]::IsNullOrWhiteSpace($msbuild)) {
+            return [pscustomobject]@{
+                command = $msbuild
+                resolution = "visual_studio_auto"
+            }
+        }
+    }
+
+    if ($expanded -ieq "devenv.exe" -or $expanded -ieq "devenv") {
+        $devenv = Resolve-VisualStudioTool -Tool "devenv"
+        if (-not [string]::IsNullOrWhiteSpace($devenv)) {
+            return [pscustomobject]@{
+                command = $devenv
+                resolution = "visual_studio_auto"
+            }
+        }
+    }
+
+    return [pscustomobject]@{
+        command = $expanded
+        resolution = "unresolved_path_lookup"
+    }
+}
+
+function Resolve-VisualStudioTool {
+    param([ValidateSet("MSBuild", "devenv")][string]$Tool)
+
+    $installPath = Resolve-VisualStudioInstallPath
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($installPath)) {
+        if ($Tool -eq "MSBuild") {
+            $candidates += Join-Path $installPath "MSBuild\Current\Bin\amd64\MSBuild.exe"
+            $candidates += Join-Path $installPath "MSBuild\Current\Bin\MSBuild.exe"
+        }
+        else {
+            $candidates += Join-Path $installPath "Common7\IDE\devenv.exe"
+        }
+    }
+
+    foreach ($root in @(
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community",
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional",
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Professional",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise"
+    )) {
+        if ([string]::IsNullOrWhiteSpace($root)) { continue }
+        if ($Tool -eq "MSBuild") {
+            $candidates += Join-Path $root "MSBuild\Current\Bin\amd64\MSBuild.exe"
+            $candidates += Join-Path $root "MSBuild\Current\Bin\MSBuild.exe"
+        }
+        else {
+            $candidates += Join-Path $root "Common7\IDE\devenv.exe"
+        }
+    }
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate) {
+            return [System.IO.Path]::GetFullPath($candidate)
+        }
+    }
+
+    return ""
+}
+
+function Resolve-VisualStudioInstallPath {
+    $vswhereCandidates = @(
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe",
+        "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vswhere.exe"
+    )
+
+    foreach ($candidate in $vswhereCandidates) {
+        if (-not (Test-Path -LiteralPath $candidate)) { continue }
+        try {
+            $path = & $candidate -latest -products * -requires Microsoft.Component.MSBuild -property installationPath 2>$null
+            if (-not [string]::IsNullOrWhiteSpace($path)) {
+                return [string]$path
+            }
+        }
+        catch {
+        }
+    }
+
+    return ""
 }
 
 function ConvertTo-ProcessArgumentText {
@@ -738,6 +868,9 @@ function Invoke-BuildTestCommand {
             kind = $summary.kind
             label = $summary.label
             approval_level = $summary.approval_level
+            original_command = $summary.original_command
+            resolved_command = $summary.command
+            command_resolution = $summary.command_resolution
             command_line = $commandLine
             working_directory = ConvertTo-RepoRelativePath -Repo $Repo -Path $workingDir
             config_path = ConvertTo-RepoRelativePath -Repo $Repo -Path $ConfigPath

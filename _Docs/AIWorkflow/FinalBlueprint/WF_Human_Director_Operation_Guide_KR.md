@@ -199,6 +199,88 @@ defer: 지금 판단 보류
 커밋/푸시는 사용자가 직접 하거나 명시적으로 승인된 Git 경로를 통해서만
 진행합니다.
 
+## Visual Studio build 도구 인식
+
+현재 PC에는 Visual Studio 2022 Community가 설치되어 있습니다.
+
+확인된 경로:
+
+```text
+MSBuild:
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
+
+devenv:
+C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe
+```
+
+일반 PowerShell에서 `msbuild`나 `devenv`가 안 보이는 것은 설치 문제가 아니라
+PATH 문제입니다. 이 문제는 사용자가 직접 외워서 해결할 일이 아니라,
+하네스가 자동으로 처리해야 합니다.
+
+현재 `build_test_runner`는 `MSBuild.exe` 또는 `devenv.exe`가 PATH에 없어도
+`vswhere`와 기본 Visual Studio 설치 경로를 사용해 실제 실행 파일 경로를
+자동 탐지합니다.
+
+운영 원칙:
+
+- 사용자는 Visual Studio 경로를 직접 입력하지 않습니다.
+- 하네스는 `MSBuild.exe` 같은 추상 command 이름을 받아 실제 경로로 해석합니다.
+- 영구 PATH 추가는 하지 않습니다. Windows `setx PATH`는 PATH가 길 때 잘릴 수
+  있으므로 자동화에서는 사용하지 않습니다.
+- build/test evidence에는 원래 command와 resolved command를 함께 기록합니다.
+
+## 실제 게임 작업을 작게 넣는 기준
+
+WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣지 말고, 아래
+단위로 쪼개서 runner workflow를 안정화합니다.
+
+### 좋은 작업 단위
+
+- source/data 변경이 없는 검증 작업
+- JSON syntax smoke 또는 loader smoke처럼 실패 원인이 좁은 작업
+- 파일 1~3개 안에서 끝나는 작은 데이터 수정
+- 하나의 loader, 하나의 scene, 하나의 component만 보는 작업
+- 완료 기준과 검증 명령이 명확한 작업
+
+### 피해야 하는 작업 단위
+
+- 여러 시스템을 동시에 바꾸는 작업
+- data schema 변경과 runtime 구현을 한 번에 묶는 작업
+- scene lifecycle, save/load, build 설정을 동시에 건드리는 작업
+- "전체 정리", "전반 개선", "구조 리팩터"처럼 범위가 넓은 작업
+
+### 권장 순서
+
+```text
+1. no-source-change 검증 작업
+2. 작은 data 수정 작업
+3. loader/runtime 검증 작업
+4. 작은 source fix 작업
+5. 작은 gameplay behavior 작업
+6. 더 큰 feature 작업
+```
+
+### 예시
+
+좋은 예:
+
+```text
+/ai intake text:"GAME validation task: PlayGround/Data JSON smoke와 GameDataLoader 관련 증거를 수집하고, source/data 변경 없이 runner workflow가 완료 카드까지 도달하는지 확인해줘."
+```
+
+```text
+/ai intake text:"GAME data task: UserData.json의 level-0 node 기본값만 검토하고, schema 변경 없이 필요한 최소 수정과 JSON smoke 검증까지 진행해줘."
+```
+
+나쁜 예:
+
+```text
+/ai intake text:"전투랑 데이터랑 UI랑 저장까지 전부 고쳐줘."
+```
+
+이런 요청은 하네스가 질문을 돌려주거나, 여러 task로 나누는 것이 정상입니다.
+
 ## 다음 작업
 
 WF-430까지 완료된 현재 기준으로, no-source-change 실제 게임 검증 작업도

@@ -72,6 +72,29 @@ reads the latest result from the manifest.
 
 ---
 
+## Visual Studio Tool Resolution
+
+Build commands may use stable tool names such as `MSBuild.exe` or `devenv.exe`
+without requiring those tools to be present on the shell `PATH`.
+
+When the runner sees one of those command names, it resolves the actual
+executable in this order:
+
+1. Existing `PATH` lookup
+2. Visual Studio `vswhere.exe` installation discovery
+3. Known Visual Studio 2022/2019 install locations
+
+The BuildTestResult records:
+
+- `original_command`
+- `resolved_command`
+- `command_resolution`
+
+This keeps local execution reproducible without asking the Human Director to
+manually edit PATH or paste Visual Studio-specific paths into Discord.
+
+---
+
 ## Runtime Artifacts
 
 The runner writes local runtime artifacts under:
