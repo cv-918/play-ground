@@ -83,6 +83,12 @@ Git 경로에서만 수행합니다.
 /ai runner start id:<task_id>
 ```
 
+범위를 검토했고 권장안대로 바로 착수해도 되면 아래 단축 명령을 씁니다.
+
+```text
+/ai task approve-runner id:<task_id>
+```
+
 P0/P1, medium/high risk, 게임 소스/데이터 변경, workflow 명령 변경은 보통
 여기서 멈춥니다.
 

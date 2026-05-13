@@ -468,6 +468,7 @@
 /ai runner start id:&lt;task_id&gt;</code></pre>
           <p><code>/ai runner start</code>는 백그라운드 실행을 시작하고 바로 응답합니다. 실행이 길어져도 Discord가 계속 “생각 중”으로 붙잡혀 있지 않아야 하며, 진행 상태는 <code>/ai runner status</code>와 <code>/ai runner read</code>로 확인합니다.</p>
           <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션에서 왜 승인이 필요한지, 무엇을 승인하는지, 무엇은 승인하지 않는지 확인합니다. <code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
+          <p>범위를 검토했고 권장안대로 착수해도 된다면 <code>/ai task approve-runner id:&lt;task_id&gt;</code> 하나로 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 함께 처리할 수 있습니다.</p>
 
           <h3>완료 리뷰 흐름</h3>
           <pre><code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;
@@ -541,6 +542,7 @@
               <tr><td>미리보기</td><td><code>/ai intake-preview text:&lt;request&gt;</code></td></tr>
               <tr><td>작업 선택</td><td><code>/ai task set-active id:&lt;task_id&gt;</code></td></tr>
               <tr><td>작업 승인</td><td><code>/ai task approve id:&lt;task_id&gt;</code><br><span class="muted">필요하면 <code>note:&lt;scope&gt;</code>로 직접 범위 작성</span></td></tr>
+              <tr><td>승인+Runner 시작</td><td><code>/ai task approve-runner id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 시작</td><td><code>/ai runner start id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 상태</td><td><code>/ai runner status id:&lt;task_id&gt;</code></td></tr>
               <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>

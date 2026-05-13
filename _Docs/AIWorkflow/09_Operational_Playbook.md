@@ -52,6 +52,11 @@ For meaningful code/data/runtime work:
 15. Commit only after final user decision.
 ```
 
+When the Human Director has already reviewed the intake card and wants to
+approve the recommended scope in one action, use `/ai task approve-runner`.
+This records approval, selects ActiveTask, and starts PC Runner in the
+background. It does not mark the task done and does not commit or push.
+
 Discord is the task-state, approval, runner control, review, and audit layer.
 PC Runner is the regular execution coordination surface. Codex App, generated
 goal requests, and pasted result audits are manual escalation surfaces for

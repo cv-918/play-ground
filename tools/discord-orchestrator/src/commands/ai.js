@@ -886,6 +886,37 @@ export function buildAiCommand() {
         )
         .addSubcommand((sub) =>
           sub
+            .setName("approve-runner")
+            .setDescription("작업을 승인하고 ActiveTask 선택 후 PC Runner를 백그라운드로 시작합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("note")
+                .setDescription("승인 메모, 비우면 task 내용 기준 자동 작성")
+                .setRequired(false),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("profile")
+                .setDescription("Runner profile: validation/build/implementation/documentation")
+                .setRequired(false)
+                .addChoices(...RUNNER_PROFILE_CHOICES),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("executor")
+                .setDescription("Runner executor, 기본값은 local_cli")
+                .setRequired(false)
+                .addChoices(...RUNNER_EXECUTOR_CHOICES),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
             .setName("block")
             .setDescription("작업을 사유와 함께 blocked 상태로 표시합니다")
             .addStringOption((option) =>
@@ -1539,6 +1570,11 @@ async function handleTaskCommand(interaction, config, subcommand) {
       return;
     }
 
+    if (subcommand === "approve-runner") {
+      await handleTaskApproveRunnerCommand(interaction, config);
+      return;
+    }
+
     if (subcommand === "block") {
       await handleTaskStatusCommand(interaction, config, blockTask, {
         id: interaction.options.getString("id"),
@@ -1577,6 +1613,85 @@ async function handleTaskStatusCommand(interaction, config, action, input) {
   }
 
   await replyCard(interaction, config, "작업 상태 업데이트", formatTaskStatusUpdated(result.data), 0x2e7d32);
+}
+
+async function handleTaskApproveRunnerCommand(interaction, config) {
+  const id = interaction.options.getString("id");
+  const profile = interaction.options.getString("profile");
+  const executor = interaction.options.getString("executor");
+
+  const activation = await setActiveTaskWithSafety(config, id);
+  if (!activation.ok) {
+    await replyCard(interaction, config, "승인 후 Runner 시작 실패", [
+      "**단계**",
+      "ActiveTask 선택",
+      "",
+      "**이유**",
+      koText(activation.error || "ActiveTask 선택에 실패했습니다."),
+    ].join("\n"), 0xc62828);
+    return;
+  }
+
+  const approval = await approveTaskWithSafety(config, {
+    id,
+    note: interaction.options.getString("note"),
+  });
+  if (!approval.ok) {
+    await replyCard(interaction, config, "승인 후 Runner 시작 실패", [
+      "**단계**",
+      "작업 승인",
+      "",
+      "**이유**",
+      koText(approval.error || "작업 승인에 실패했습니다."),
+      "",
+      "**현재 상태**",
+      "ActiveTask 선택은 완료됐지만 Runner는 시작하지 않았습니다.",
+    ].join("\n"), 0xc62828);
+    return;
+  }
+
+  const runner = await startPcRunnerDetached(config, { id, profile, executor });
+  await replyCard(interaction, config, runner.ok ? "승인 후 Runner 시작 완료" : "승인 후 Runner 시작 실패", formatTaskApproveRunnerResult({
+    id,
+    activation,
+    approval,
+    runner,
+  }), runner.ok ? 0x2e7d32 : 0xc62828);
+}
+
+function formatTaskApproveRunnerResult(result) {
+  const runnerData = result.runner?.data ?? {};
+  const approvalSafety = result.approval?.data?.approval_safety ?? {};
+  const nextCommands = result.runner?.ok
+    ? [
+        `/ai runner status id:${result.id}`,
+        `/ai runner read id:${result.id}`,
+      ]
+    : [
+        `/ai runner plan id:${result.id}`,
+        `/ai runner start id:${result.id}`,
+      ];
+
+  return [
+    "**처리 내용**",
+    `ActiveTask 선택: ${result.activation?.ok ? "ok" : "fail"}`,
+    `승인 기록: ${result.approval?.ok ? "ok" : "fail"}`,
+    `Runner 백그라운드 시작: ${result.runner?.ok ? "ok" : "fail"}`,
+    approvalSafety.auto_note_generated ? "승인 메모: task 내용 기준 자동 작성" : "",
+    "",
+    "**Runner**",
+    runnerData.process_id ? `PID: ${runnerData.process_id}` : "(not started)",
+    runnerData.stdout_log ? `stdout: ${runnerData.stdout_log}` : "",
+    runnerData.stderr_log ? `stderr: ${runnerData.stderr_log}` : "",
+    result.runner?.error ? `error: ${koText(result.runner.error)}` : "",
+    "",
+    "**다음 명령**",
+    nextCommands.map((command) => `\`${command}\``).join("\n"),
+    "",
+    "**안전 상태**",
+    "task done 없음",
+    "commit/push 없음",
+  ].filter((line) => line !== "").join("\n");
 }
 
 async function handleProjectCommand(interaction, config, subcommand) {
