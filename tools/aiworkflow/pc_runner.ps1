@@ -636,11 +636,11 @@ function Test-GameDataReadabilityRequested {
 
 function Get-BuildTestCommandId {
     param([string]$ProfileValue, $Task)
-    if (Test-BuildValidationRequested -ProfileValue $ProfileValue -Task $Task) {
-        return "debug_visual_studio_build"
-    }
     if (Test-GameDataReadabilityRequested -Task $Task) {
         return "game_data_loader_readability"
+    }
+    if (Test-BuildValidationRequested -ProfileValue $ProfileValue -Task $Task) {
+        return "debug_visual_studio_build"
     }
     return "json_smoke"
 }

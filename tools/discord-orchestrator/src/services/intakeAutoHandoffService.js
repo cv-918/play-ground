@@ -142,10 +142,11 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
 }
 
 function chooseExecution(category, kind, contextText = "") {
+  const dataReadabilityRequested = hasAny(contextText, GAME_DATA_READABILITY_TERMS);
   const buildRequested = hasAny(contextText, BUILD_TERMS);
   if (category === "VAL" || kind === "validation") {
     return {
-      profile: buildRequested ? "build" : "validation",
+      profile: dataReadabilityRequested ? "validation" : (buildRequested ? "build" : "validation"),
       executor: "local_cli",
     };
   }

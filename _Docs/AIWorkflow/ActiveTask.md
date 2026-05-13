@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260513-172224
-title: Validation task: GameDataLoader expected files, JSON shape, ID/reference, and readability check
+task_id: VAL-20260513-180418
+title: Validation task: UserData.json 기본 stage_progress 값과 GameDataLoader readability 경로 검증
 status: done
 workflow_path: discord_task_management
 priority: P2
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-Validation task: GameDataLoader expected files, JSON shape, ID/reference, and readability check
+Validation task: UserData.json 기본 stage_progress 값과 GameDataLoader readability 경로 검증
 
 ---
 
@@ -36,7 +36,7 @@ Validation task: GameDataLoader expected files, JSON shape, ID/reference, and re
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_172157_362.output.json; validation pending human approval
+validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=21; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_180408_764.output.json; validation pending human approval
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-codex intake draft: risk=low; workflow_path=validation; required_validation_count=23; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_172157_362.output.json; validation pending human approval
+codex intake draft: risk=low; workflow_path=validation; required_validation_count=21; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_180408_764.output.json; validation pending human approval
 ```
 
 ---
@@ -70,7 +70,7 @@ codex intake draft: risk=low; workflow_path=validation; required_validation_coun
 
 ```text
 status: done
-note: done: Completion accept recorded; FinalizationLog finalization-20260513-172325-921-0bb57a1e; Runner runner-run-val-20260513-172224-20260513-172303-660; stopped at done_or_commit_decision
+note: done: Completion accept recorded; FinalizationLog finalization-20260513-180534-457-ce2ce55f; Runner runner-run-val-20260513-180418-20260513-180419-708; stopped at done_or_commit_decision
 updated_at: 2026-05-13
 source: Discord task status command
 ```
