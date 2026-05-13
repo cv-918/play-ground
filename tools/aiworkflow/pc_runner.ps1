@@ -131,10 +131,10 @@ function Get-SafeRunnerRunIdOrEmpty {
 
 function Get-SafeProfile {
     param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return "validation" }
+    if ([string]::IsNullOrWhiteSpace($Value)) { return "auto" }
     $trimmed = $Value.Trim().ToLowerInvariant()
-    if (@("analysis", "implementation", "validation", "build", "game-data", "source-fix", "documentation") -notcontains $trimmed) {
-        throw "Invalid profile. Use analysis, implementation, validation, build, game-data, source-fix, or documentation."
+    if (@("auto", "analysis", "implementation", "validation", "build", "game-data", "source-fix", "documentation") -notcontains $trimmed) {
+        throw "Invalid profile. Use auto, analysis, implementation, validation, build, game-data, source-fix, or documentation."
     }
     return $trimmed
 }
@@ -142,6 +142,7 @@ function Get-SafeProfile {
 function Get-SafeExecutor {
     param([string]$Value, [string]$ProfileValue)
     if ([string]::IsNullOrWhiteSpace($Value)) {
+        if ($ProfileValue -eq "auto") { return "" }
         if (@("validation", "build") -contains $ProfileValue) { return "local_cli" }
         return "codex_cli"
     }
@@ -632,6 +633,32 @@ function Test-GameDataReadabilityRequested {
         if ($text.Contains($term)) { return $true }
     }
     return $false
+}
+
+function Resolve-AutoRunnerProfile {
+    param([string]$ProfileValue, $Task)
+    if ($ProfileValue -ne "auto") { return $ProfileValue }
+    if ($null -eq $Task) { return "validation" }
+
+    $kind = ([string]$Task.kind).ToLowerInvariant()
+    $id = ([string]$Task.id).ToUpperInvariant()
+    if ($kind -eq "documentation" -or $id.StartsWith("DOC-")) {
+        return "documentation"
+    }
+    if (@("implementation", "data", "game", "refactoring", "maintenance") -contains $kind) {
+        return "implementation"
+    }
+    if (Test-BuildValidationRequested -ProfileValue "validation" -Task $Task) {
+        return "build"
+    }
+    return "validation"
+}
+
+function Resolve-AutoRunnerExecutor {
+    param([string]$ExecutorValue, [string]$ProfileValue)
+    if (-not [string]::IsNullOrWhiteSpace($ExecutorValue)) { return $ExecutorValue }
+    if (@("validation", "build") -contains $ProfileValue) { return "local_cli" }
+    return "codex_cli"
 }
 
 function Get-BuildTestCommandId {
@@ -1393,8 +1420,11 @@ function Invoke-Plan {
     Ensure-Workspace -Repo $Repo -TaskId $TaskId | Out-Null
     Ensure-RunnerDirs -Paths $paths
     $ids = New-IdSet -TaskId $TaskId
-    $preflight = New-Preflight -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue
-    $plan = New-RunnerPlan -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue -Preflight $preflight -Ids $ids
+    $taskForRouting = Get-BacklogTask -Repo $Repo -TaskId $TaskId
+    $resolvedProfile = Resolve-AutoRunnerProfile -ProfileValue $ProfileValue -Task $taskForRouting
+    $resolvedExecutor = Resolve-AutoRunnerExecutor -ExecutorValue $ExecutorValue -ProfileValue $resolvedProfile
+    $preflight = New-Preflight -Repo $Repo -TaskId $TaskId -ProfileValue $resolvedProfile -ExecutorValue $resolvedExecutor
+    $plan = New-RunnerPlan -TaskId $TaskId -ProfileValue $resolvedProfile -ExecutorValue $resolvedExecutor -Preflight $preflight -Ids $ids
     $path = Save-RunnerPlan -Paths $paths -Plan $plan
     return [pscustomobject]@{
         ok = $true
@@ -1589,6 +1619,8 @@ function Invoke-Start {
     $paths = Get-WorkspacePaths -Repo $Repo -TaskId $TaskId
     $runId = Get-RunIdFromWorkspace -Paths $paths
     $plan = $planResult.runner_plan
+    $resolvedProfile = [string]$plan.profile
+    $resolvedExecutor = [string]$plan.executor
     $runnerRunId = $plan.expected_artifacts.runner_run_id
     $runState = [ordered]@{
         schema_version = 1
@@ -1639,16 +1671,16 @@ function Invoke-Start {
         }
     }
 
-    if (@("implementation", "documentation") -contains $ProfileValue) {
-        return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue -Paths $paths -Plan $plan -RunState $runState -RunId $runId
+    if (@("implementation", "documentation") -contains $resolvedProfile) {
+        return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ProfileValue $resolvedProfile -ExecutorValue $resolvedExecutor -Paths $paths -Plan $plan -RunState $runState -RunId $runId
     }
 
-    $configPaths = Write-ValidationConfigs -Paths $paths -ProfileValue $ProfileValue
+    $configPaths = Write-ValidationConfigs -Paths $paths -ProfileValue $resolvedProfile
     $runState.status = "running"
     $runState.current_phase = "execution"
     $runState.current_step = "local_cli_adapter.run.node_version"
     $runState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $paths.progress_event_log_path -TaskId $TaskId -RunId $runId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner validation profile started." -Data @{ profile = $ProfileValue; executor = $ExecutorValue } | Out-Null
+    Write-ProgressEvent -Path $paths.progress_event_log_path -TaskId $TaskId -RunId $runId -RunnerRunId $runnerRunId -EventType "runner_started" -Message "PC Runner validation profile started." -Data @{ profile = $resolvedProfile; executor = $resolvedExecutor } | Out-Null
 
     $localCli = Invoke-ToolJson -Repo $Repo -RelativeScriptPath "tools\aiworkflow\local_cli_adapter.bat" -Arguments @(
         "run", $TaskId, "node_version", "--execute", "--config", $configPaths.local_cli,

@@ -447,8 +447,8 @@ Commands:
 
 ```bat
 tools\aiworkflow\pc_runner.bat status task_id [--json]
-tools\aiworkflow\pc_runner.bat plan task_id [--profile validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
-tools\aiworkflow\pc_runner.bat start task_id [--profile validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
+tools\aiworkflow\pc_runner.bat plan task_id [--profile auto|validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
+tools\aiworkflow\pc_runner.bat start task_id [--profile auto|validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
 tools\aiworkflow\pc_runner.bat continue task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat stop task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat read task_id [--runner-run-id id] [--json]
@@ -461,7 +461,12 @@ _Temp\AIWorkflowRuntime\tasks\<task_id>\runner\
 ```
 
 It can advance approved work through safe automated substeps and stops at
-Human Director gates. The `validation` profile uses allowlisted local workflow
+Human Director gates. If `--profile` is omitted, the runner uses `auto` routing:
+implementation/data/game/refactoring/maintenance tasks route to
+`implementation/codex_cli`, documentation tasks route to
+`documentation/codex_cli`, build validation tasks route to `build/local_cli`,
+and other validation tasks route to `validation/local_cli`. The `validation`
+profile uses allowlisted local workflow
 commands. The `build` profile routes build-validation requests to allowlisted
 `build_test_runner` commands such as `debug_visual_studio_build`. The
 `documentation` and `implementation` profiles use `codex_cli_adapter.bat` and
