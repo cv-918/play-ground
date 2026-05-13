@@ -62,8 +62,10 @@ WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
 막혔을 때 쓰는 수동 승격 경로입니다.
 
 `/ai intake` auto-handoff는 P2/P3, low-risk, DOC/VAL, documentation/
-validation, 또는 WF documentation/maintenance 작업에만 적용됩니다.
-P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터링/
+validation, 또는 WF documentation/maintenance 작업에 적용됩니다. 추가로
+source/data/schema/runtime 변경이 없다고 명시된 GAME validation/build
+validation 작업도 자동 착수 대상입니다. P0/P1, medium/high-risk, GAME
+source/data/schema/runtime 변경, UNITY, WF automation, 소스/데이터/리팩터링/
 명령 동작 변경 작업은 사람 승인에서 멈춥니다.
 
 ## 최종 목표 흐름
@@ -76,7 +78,7 @@ P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터�
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
 4. 사용자는 completion card를 리뷰
 5. accept/accept-concerns/request changes/reject/defer 결정
-6. 필요한 경우 커밋/푸시 승인
+6. 필요한 경우 task done과 커밋/푸시 승인
 ```
 
 ## 명령어를 어떻게 보면 되는가
@@ -90,12 +92,16 @@ P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터�
 - `/ai runner start`
 - `/ai runner continue`
 - `/ai completion card`
+- `/ai runner accept-completion`
 - `/ai finalization accept`
 - `/ai finalization accept-concerns`
 - `/ai finalization request-changes`
 - `/ai finalization reject`
 - `/ai finalization defer`
 - `/ai task done`
+- `/ai git commit`
+- `/ai git push`
+- `/ai git commit-push`
 
 ### 수동 승격으로 쓰는 명령
 
@@ -160,6 +166,9 @@ P0/P1, medium/high-risk, GAME/UNITY, WF automation, 소스/데이터/리팩터�
 - Follow-up 후보 생성
 
 단, 자동으로 approval, done, commit, push를 해서는 안 됩니다.
+명시적인 `/ai runner accept-completion mark-done:true`처럼 사용자가 실행한
+단축 명령은 완료 승인과 task done을 한 번에 처리할 수 있습니다. 커밋/푸시는
+여전히 별도 명시 명령입니다.
 
 ## 완료 리뷰 방법
 
@@ -182,6 +191,12 @@ accept-concerns: 우려를 검토했고 받아들임
 request-changes: 수정 요청
 reject: 결과 반려
 defer: 지금 판단 보류
+```
+
+완료 카드가 괜찮고 바로 done 처리까지 해도 되는 경우:
+
+```text
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
 
 ## 커밋 결정
@@ -221,6 +236,10 @@ PATH 문제입니다. 이 문제는 사용자가 직접 외워서 해결할 일�
 현재 `build_test_runner`는 `MSBuild.exe` 또는 `devenv.exe`가 PATH에 없어도
 `vswhere`와 기본 Visual Studio 설치 경로를 사용해 실제 실행 파일 경로를
 자동 탐지합니다.
+
+PC Runner는 `build` profile을 지원합니다. `Visual Studio build`, `MSBuild`,
+`Debug x64 build`, `빌드 검증` 같은 요청은 `json_smoke` 대신
+`debug_visual_studio_build`로 라우팅됩니다.
 
 운영 원칙:
 
@@ -273,6 +292,10 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 /ai intake text:"GAME data task: UserData.json의 level-0 node 기본값만 검토하고, schema 변경 없이 필요한 최소 수정과 JSON smoke 검증까지 진행해줘."
 ```
 
+```text
+/ai intake text:"GAME validation task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 PC Runner로 검증하고 MSBuild 자동 탐지 evidence와 CompletionCard를 확인해줘."
+```
+
 나쁜 예:
 
 ```text
@@ -283,8 +306,8 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 
 ## 다음 작업
 
-WF-430까지 완료된 현재 기준으로, no-source-change 실제 게임 검증 작업도
-runner workflow를 통과했습니다.
+WF-438까지 완료된 현재 기준으로, no-source-change 실제 게임 검증 작업과
+Visual Studio Debug x64 build 검증 작업이 runner workflow를 통과했습니다.
 
 이제 다음 단계는 실제 게임 프로젝트 작업을 작게 하나씩 넣어 보면서,
 승인/검증/완료/커밋 게이트가 불편한 지점을 줄이는 것입니다.

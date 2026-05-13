@@ -84,7 +84,7 @@ const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_impl
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
 const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
-const RUNNER_PROFILE_CHOICES = ["validation", "implementation", "documentation"].map((value) => ({ name: value, value }));
+const RUNNER_PROFILE_CHOICES = ["validation", "build", "implementation", "documentation"].map((value) => ({ name: value, value }));
 const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
 const RUNNER_COMPLETION_DECISION_CHOICES = ["accept", "accept-concerns"].map((value) => ({ name: value, value }));
 
@@ -619,7 +619,7 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, validation/implementation/documentation")
+                .setDescription("Runner profile: validation/build/implementation/documentation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )
@@ -644,7 +644,7 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("profile")
-                .setDescription("Runner profile, validation/implementation/documentation")
+                .setDescription("Runner profile: validation/build/implementation/documentation")
                 .setRequired(false)
                 .addChoices(...RUNNER_PROFILE_CHOICES),
             )
@@ -701,6 +701,12 @@ export function buildAiCommand() {
                 .setDescription("완료 승인 방식, 기본값 accept")
                 .setRequired(false)
                 .addChoices(...RUNNER_COMPLETION_DECISION_CHOICES),
+            )
+            .addBooleanOption((option) =>
+              option
+                .setName("mark-done")
+                .setDescription("승인 후 Runner가 done/commit gate에 도달하면 task done까지 기록")
+                .setRequired(false),
             ),
         )
         .addSubcommand((sub) =>
@@ -1363,6 +1369,7 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
     runnerRunId: interaction.options.getString("runner-run-id"),
     completionReportId: interaction.options.getString("completion-report-id"),
     decision: interaction.options.getString("decision"),
+    markDone: interaction.options.getBoolean("mark-done") === true,
     actor: interaction.user?.id,
   };
 

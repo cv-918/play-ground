@@ -77,6 +77,14 @@ Non-goals unless a later task explicitly approves them:
 | WF-428 | Refresh workflow stability docs | Update guides and roadmap after WF-424 through WF-427 changed normal operation. | Review only if the guide no longer matches actual Discord behavior. |
 | WF-429 | Prune stale Discord commands and cardify replies | Remove the obsolete `/ai intake-create` alias, cardify remaining plain-text command replies, and update command docs. | Command removal was approved as part of the cleanup request. |
 | WF-430 | Run real game-task runner pilot | Exercise a no-source-change GAME validation task through the regular PC Runner workflow. | Review completion evidence before marking the workflow ready for game work. |
+| WF-431 | Add runner build profile routing | Route build-validation work to Visual Studio build evidence instead of always using JSON smoke. | Review build evidence. |
+| WF-432 | Extend safe GAME validation auto-handoff | Allow low-risk no-source/data-change GAME validation/build-validation to auto start. | Approve the deterministic policy boundary. |
+| WF-433 | Shorten completion review | Let explicit completion acceptance optionally mark the task done in the same command. | Review the completion card before using the shortcut. |
+| WF-434 | Improve Discord next-action UX | Show the shortened completion path and message-less git path in response cards. | Follow the card commands. |
+| WF-435 | Refine approval policy levels | Keep GAME validation/build-validation separate from GAME source/data/schema/runtime mutation work. | Approve policy-sensitive boundary changes. |
+| WF-436 | Run small GAME workflow stabilization smoke | Exercise build routing and GAME validation policy without source/data changes. | Review evidence only if it fails. |
+| WF-437 | Split runner profiles by work type | Expose validation/build/implementation/documentation as distinct runner profiles. | Review profile policy if new executors are added. |
+| WF-438 | Refresh final-target workflow docs | Update the Human Director docs and command guide for the current target path. | Read the guide when operating the harness. |
 
 ## Recommended Order
 
@@ -101,6 +109,14 @@ WF-400 done
 -> WF-428 workflow stability docs done
 -> WF-429 command cleanup/card output done
 -> WF-430 real game-task runner pilot done
+-> WF-431 build profile routing done
+-> WF-432 safe GAME validation auto-handoff done
+-> WF-433 completion shortcut done
+-> WF-434 next-action UX polish done
+-> WF-435 approval policy refinement done
+-> WF-436 small GAME stabilization smoke done
+-> WF-437 runner profile split done
+-> WF-438 docs refresh done
 ```
 
 WF-401 and WF-402 come before cleanup because command removal or workflow
@@ -126,3 +142,10 @@ WF-430 completed this final condition with runner run
 `runner-run-wf-430-20260513-040359-458`: JSON smoke passed 11/11,
 VerificationReport was `PASS_WITH_NOTES`, CompletionCard was
 `READY_WITH_NOTES`, and finalization reached `done_or_commit_decision`.
+
+WF-431 through WF-438 add the next practical layer: build-validation requests
+route to the `build/local_cli` profile and `debug_visual_studio_build`, safe
+GAME validation/build validation can auto-handoff when the request explicitly
+has no source/data/schema/runtime mutation scope, completion review can use an
+explicit `mark-done:true` shortcut, and the Human Director docs describe the
+updated path.

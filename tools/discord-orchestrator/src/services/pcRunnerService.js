@@ -4,7 +4,7 @@ const DEFAULT_TIMEOUT_MS = 30000;
 const LONG_TIMEOUT_MS = 900000;
 const TASK_ID_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*-[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 const RUNNER_RUN_ID_PATTERN = /^runner-run-[A-Za-z0-9][A-Za-z0-9_.-]*$/;
-const PROFILE_VALUES = new Set(["analysis", "implementation", "validation", "documentation"]);
+const PROFILE_VALUES = new Set(["analysis", "implementation", "validation", "build", "documentation"]);
 const EXECUTOR_VALUES = new Set(["codex_cli", "local_cli"]);
 
 export async function getPcRunnerStatus(config, input = {}) {

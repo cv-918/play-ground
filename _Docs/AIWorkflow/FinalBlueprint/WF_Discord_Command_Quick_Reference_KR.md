@@ -269,7 +269,11 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai runner start id:<task_id> profile:implementation executor:codex_cli
 /ai runner start id:<task_id> profile:documentation executor:codex_cli
 /ai runner start id:<task_id> profile:validation executor:local_cli
+/ai runner start id:<task_id> profile:build executor:local_cli
 ```
+
+`build` profile은 Visual Studio Debug x64 build 검증처럼 빌드 evidence가
+필요한 작업에 사용합니다.
 
 ### Completion Card 확인
 
@@ -281,6 +285,12 @@ Runner가 `completion_review_required`에서 멈추면 완료 카드를 확인�
 
 ```text
 /ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
+```
+
+완료 승인과 task done을 한 번에 처리하려면:
+
+```text
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
 
 concern을 남기고 승인하려면:

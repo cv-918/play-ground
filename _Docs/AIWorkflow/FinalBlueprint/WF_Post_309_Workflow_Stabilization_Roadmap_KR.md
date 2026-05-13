@@ -70,6 +70,14 @@ Phase 4는 다음 내용을 포함합니다.
 | WF-428 | 워크플로우 안정화 문서 갱신 | WF-424~WF-427 이후 실제 동작에 맞게 가이드와 로드맵을 갱신한다. | 가이드가 실제 Discord 동작과 다를 때만 리뷰 |
 | WF-429 | 오래된 명령 제거와 카드 응답 일괄화 | `/ai intake-create` alias를 제거하고 일반 텍스트 응답을 카드 출력으로 바꾼다. | 명령 제거는 이번 정리 요청으로 승인됨 |
 | WF-430 | 실제 게임 작업 runner 파일럿 | source/data 변경 없이 GAME 검증 작업을 PC Runner 정규 경로로 통과시킨다. | 완료 증거 검토 |
+| WF-431 | runner build profile routing | 빌드 검증 요청을 `json_smoke`가 아니라 Visual Studio build 명령으로 라우팅한다. | 검증 증거 확인 |
+| WF-432 | safe GAME validation auto-handoff | source/data/schema/runtime 변경 없는 GAME validation/build validation을 자동 착수 대상으로 확장한다. | 정책 범위 승인 |
+| WF-433 | completion review 단축 | 완료 승인과 Runner continue, 선택적 task done을 한 명령으로 처리한다. | 완료 카드 확인 |
+| WF-434 | Discord next-action UX 개선 | 다음 명령에 단축 경로와 자동 커밋 메시지 경로를 표시한다. | 카드 문구 확인 |
+| WF-435 | approval policy level refinement | GAME 검증 자동 착수와 GAME 변경 작업 승인 대기를 분리한다. | 정책 범위 승인 |
+| WF-436 | 작은 GAME workflow 안정화 smoke | 새 build routing과 GAME validation 정책을 source/data 변경 없이 검증한다. | 실패 시 evidence 리뷰 |
+| WF-437 | runner profile 세분화 | validation/build/implementation/documentation profile을 명확히 분리한다. | profile 정책 확인 |
+| WF-438 | 최종 목표 흐름 문서 최신화 | Human Director 가이드와 치트시트를 현재 단계에 맞게 갱신한다. | 문서 확인 |
 
 ## 추천 순서
 
@@ -94,12 +102,26 @@ WF-400 완료
 -> WF-428 done
 -> WF-429 done
 -> WF-430 done
+-> WF-431 done
+-> WF-432 done
+-> WF-433 done
+-> WF-434 done
+-> WF-435 done
+-> WF-436 done
+-> WF-437 done
+-> WF-438 done
 ```
 
 WF-430은 `runner-run-wf-430-20260513-040359-458`로 완료했습니다.
 JSON smoke는 11/11 통과했고, VerificationReport는 `PASS_WITH_NOTES`,
 CompletionCard는 `READY_WITH_NOTES`, runner는 `done_or_commit_decision`까지
 도달했습니다.
+
+WF-431~WF-438에서는 빌드 검증 라우팅, 안전한 GAME validation 자동 착수,
+completion review 단축, runner profile 세분화, 문서 최신화를 적용했습니다.
+Visual Studio Debug x64 build 검증은 `bt-build-20260513-112013-004-16056e99`
+증거에서 `MSBuild.exe`가 `visual_studio_auto`로 해석되고 exit 0으로
+완료된 것을 확인했습니다.
 
 ## 완료 기준
 
@@ -112,3 +134,5 @@ Phase 4가 끝났다고 보려면 다음이 필요합니다.
 - 대표 smoke 검증 증거가 있음
 - PC Runner가 정규 작업을 하나의 통합 경로로 실행할 수 있음
 - 폐기/숨김/정리할 명령어가 승인 기준에 따라 처리됨
+- 빌드 검증 요청이 build profile과 Visual Studio build evidence로 연결됨
+- source/data 변경 없는 GAME validation/build validation은 자동 착수 가능함

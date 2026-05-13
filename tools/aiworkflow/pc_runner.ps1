@@ -133,8 +133,8 @@ function Get-SafeProfile {
     param([string]$Value)
     if ([string]::IsNullOrWhiteSpace($Value)) { return "validation" }
     $trimmed = $Value.Trim().ToLowerInvariant()
-    if (@("analysis", "implementation", "validation", "documentation") -notcontains $trimmed) {
-        throw "Invalid profile. Use analysis, implementation, validation, or documentation."
+    if (@("analysis", "implementation", "validation", "build", "game-data", "source-fix", "documentation") -notcontains $trimmed) {
+        throw "Invalid profile. Use analysis, implementation, validation, build, game-data, source-fix, or documentation."
     }
     return $trimmed
 }
@@ -142,7 +142,7 @@ function Get-SafeProfile {
 function Get-SafeExecutor {
     param([string]$Value, [string]$ProfileValue)
     if ([string]::IsNullOrWhiteSpace($Value)) {
-        if ($ProfileValue -eq "validation") { return "local_cli" }
+        if (@("validation", "build") -contains $ProfileValue) { return "local_cli" }
         return "codex_cli"
     }
     $trimmed = $Value.Trim().ToLowerInvariant()
@@ -531,6 +531,7 @@ function New-IdSet {
     $safeTask = ($TaskId -replace "[^A-Za-z0-9_.-]", "-").ToLowerInvariant()
     return [pscustomobject]@{
         stamp = $stamp
+        safe_task = $safeTask
         runner_plan_id = "runner-plan-$safeTask-$stamp"
         runner_run_id = "runner-run-$safeTask-$stamp"
         checkpoint_prefix = "checkpoint-$safeTask"
@@ -575,10 +576,10 @@ function New-Preflight {
             $humanGate = "Set ActiveTask to this task or run a read-only plan only."
         }
     }
-    $profileSupportedForStart = (($ProfileValue -eq "validation") -and ($ExecutorValue -eq "local_cli")) -or ((@("implementation", "documentation") -contains $ProfileValue) -and ($ExecutorValue -eq "codex_cli"))
+    $profileSupportedForStart = ((@("validation", "build") -contains $ProfileValue) -and ($ExecutorValue -eq "local_cli")) -or ((@("implementation", "documentation") -contains $ProfileValue) -and ($ExecutorValue -eq "codex_cli"))
     if ($approvalOk -and $activeTaskId -eq $TaskId -and -not $profileSupportedForStart) {
         $stopReason = "executor_not_ready"
-        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli, implementation/codex_cli, or documentation/codex_cli."
+        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli, build/local_cli, implementation/codex_cli, or documentation/codex_cli."
     }
     return [pscustomobject]@{
         task_found = $null -ne $task
@@ -596,6 +597,33 @@ function New-Preflight {
     }
 }
 
+function Get-TaskSearchText {
+    param($Task)
+    if ($null -eq $Task) { return "" }
+    return @(
+        [string]$Task.id,
+        [string]$Task.title,
+        [string]$Task.reason,
+        [string]$Task.validation,
+        [string]$Task.kind
+    ) -join " "
+}
+
+function Test-BuildValidationRequested {
+    param([string]$ProfileValue, $Task)
+    if ($ProfileValue -eq "build") { return $true }
+    $text = (Get-TaskSearchText -Task $Task).ToLowerInvariant()
+    return $text -match "visual studio|msbuild|debug x64|x64 build|build validation|빌드|빌드 검증|visual studio build"
+}
+
+function Get-BuildTestCommandId {
+    param([string]$ProfileValue, $Task)
+    if (Test-BuildValidationRequested -ProfileValue $ProfileValue -Task $Task) {
+        return "debug_visual_studio_build"
+    }
+    return "json_smoke"
+}
+
 function New-RunnerPlan {
     param(
         [string]$TaskId,
@@ -604,6 +632,14 @@ function New-RunnerPlan {
         $Preflight,
         $Ids
     )
+    $buildTestCommandId = Get-BuildTestCommandId -ProfileValue $ProfileValue -Task $Preflight.task
+    $buildTestId = if ($buildTestCommandId -eq "json_smoke") {
+        $Ids.build_test_id
+    }
+    else {
+        "bt-$($Ids.safe_task)-$buildTestCommandId-$($Ids.stamp)"
+    }
+
     if (@("implementation", "documentation") -contains $ProfileValue) {
         $plannedSteps = @(
             "task_workspace_manager.create_or_read",
@@ -611,7 +647,7 @@ function New-RunnerPlan {
             "codex_cli_adapter.dry-run",
             "codex_cli_adapter.run",
             "runner.text_encoding_guard",
-            "parallel_validation.file_watcher_snapshot_and_json_smoke",
+            "parallel_validation.file_watcher_snapshot_and_build_test",
             "result_collector.collect",
             "diff_analyzer.analyze",
             "verification_report.generate",
@@ -626,7 +662,7 @@ function New-RunnerPlan {
         $plannedSteps = @(
             "task_workspace_manager.create_or_read",
             "local_cli_adapter.run.node_version",
-            "parallel_validation.file_watcher_snapshot_and_json_smoke",
+            "parallel_validation.file_watcher_snapshot_and_build_test",
             "result_collector.collect",
             "diff_analyzer.analyze",
             "verification_report.generate",
@@ -673,7 +709,8 @@ function New-RunnerPlan {
             text_encoding_guard_id = $(if (@("implementation", "documentation") -contains $ProfileValue) { $Ids.text_encoding_guard_id } else { $null })
             result_id = $Ids.result_id
             analysis_id = $Ids.analysis_id
-            build_test_id = $Ids.build_test_id
+            build_test_id = $buildTestId
+            build_test_command_id = $buildTestCommandId
             verification_report_id = $Ids.verification_id
             completion_report_id = $Ids.completion_id
             completion_card_id = $Ids.card_id
@@ -753,7 +790,7 @@ function Set-ReportId {
 }
 
 function Write-ValidationConfigs {
-    param($Paths)
+    param($Paths, [string]$ProfileValue = "validation")
     Ensure-RunnerDirs -Paths $Paths
     $localCliConfigPath = Join-Path $Paths.config_dir "local_cli_adapter.pc_runner.json"
     $buildTestConfigPath = Join-Path $Paths.config_dir "build_test_runner.pc_runner.json"
@@ -796,6 +833,22 @@ function Write-ValidationConfigs {
                 args = @()
                 working_directory = "."
                 timeout_seconds = 60
+                env = @{}
+            },
+            [ordered]@{
+                command_id = "debug_visual_studio_build"
+                kind = "build"
+                label = "Debug Visual Studio build"
+                enabled = $true
+                approval_level = "approval_required"
+                command = "MSBuild.exe"
+                args = @(
+                    "PlayGround\PlayGround.sln",
+                    "/p:Configuration=Debug",
+                    "/p:Platform=x64"
+                )
+                working_directory = "."
+                timeout_seconds = 600
                 env = @{}
             }
         )
@@ -1183,9 +1236,11 @@ function Invoke-PostExecutionValidationPipeline {
     )
 
     $RunState.current_phase = "parallel_validation"
-    $RunState.current_step = "parallel_validation.file_watcher_snapshot_and_json_smoke"
+    $RunState.current_step = "parallel_validation.file_watcher_snapshot_and_build_test"
     $RunState.updated_at = Get-NowText
-    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $RunnerRunId -EventType "runner_parallel_validation_started" -Message "PC Runner started independent file watcher and JSON smoke validation steps." -Data @{ file_watcher = $ConfigPaths.file_watcher; build_test = $ConfigPaths.build_test } | Out-Null
+    $buildTestCommandId = [string]$Plan.expected_artifacts.build_test_command_id
+    if ([string]::IsNullOrWhiteSpace($buildTestCommandId)) { $buildTestCommandId = "json_smoke" }
+    Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $RunnerRunId -EventType "runner_parallel_validation_started" -Message "PC Runner started independent file watcher and build/test validation steps." -Data @{ file_watcher = $ConfigPaths.file_watcher; build_test = $ConfigPaths.build_test; build_test_command_id = $buildTestCommandId } | Out-Null
 
     $parallel = Invoke-ToolJsonBatch -Repo $Repo -Specs @(
         [pscustomobject]@{
@@ -1201,7 +1256,7 @@ function Invoke-PostExecutionValidationPipeline {
             name = "build_test"
             relative_script_path = "tools\aiworkflow\build_test_runner.bat"
             arguments = @(
-                "run", $TaskId, "json_smoke", "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
+                "run", $TaskId, $buildTestCommandId, "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
                 "--config", $ConfigPaths.build_test, "--json"
             )
             allow_failure = $false
@@ -1211,7 +1266,7 @@ function Invoke-PostExecutionValidationPipeline {
     $buildTest = $parallel.build_test
     $RunState.evidence_ids = @($Plan.expected_artifacts.evidence_ids)
     Set-ReportId -RunState $RunState -Name "build_test_id" -Value $Plan.expected_artifacts.build_test_id
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "parallel_validation" -Step "parallel_validation.file_watcher_snapshot_and_json_smoke" -Status "completed" -Inputs @{ file_watcher_config = $ConfigPaths.file_watcher; build_test_config = $ConfigPaths.build_test } -Outputs @{ evidence_id = $Plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count; build_test_id = $Plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "result_collector.collect"
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $RunnerRunId -RunId $RunId -Phase "parallel_validation" -Step "parallel_validation.file_watcher_snapshot_and_build_test" -Status "completed" -Inputs @{ file_watcher_config = $ConfigPaths.file_watcher; build_test_config = $ConfigPaths.build_test; build_test_command_id = $buildTestCommandId } -Outputs @{ evidence_id = $Plan.expected_artifacts.evidence_ids[1]; changed_files_count = $fileWatch.data.changed_files_count; build_test_id = $Plan.expected_artifacts.build_test_id; observed_exit_state = $buildTest.data.observed_exit_state; exit_code = $buildTest.data.exit_code } -NextStep "result_collector.collect"
     $RunState.last_checkpoint_id = $checkpoint.id
 
     $RunState.current_phase = "result"
@@ -1378,7 +1433,7 @@ function Invoke-ImplementationStart {
         }
     }
 
-    $configPaths = Write-ValidationConfigs -Paths $Paths
+    $configPaths = Write-ValidationConfigs -Paths $Paths -ProfileValue $ProfileValue
 
     $RunState.status = "running"
     $RunState.current_phase = "execution"
@@ -1411,7 +1466,7 @@ function Invoke-ImplementationStart {
     Set-ReportId -RunState $RunState -Name "text_encoding_guard_id" -Value $Plan.expected_artifacts.text_encoding_guard_id
     Set-ReportId -RunState $RunState -Name "text_encoding_guard_path" -Value $encodingGuard.path
     $guardCheckpointStatus = if ($encodingGuard.ok) { "completed" } else { "stopped" }
-    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "runner.text_encoding_guard" -Status $guardCheckpointStatus -Inputs @{ stdout_log = $stdoutLog; stderr_log = $stderrLog; changed_files_count = $changedFiles.Count } -Outputs @{ text_encoding_guard_id = $encodingGuard.text_encoding_guard_id; status = $encodingGuard.status; finding_count = $encodingGuard.finding_count; path = $encodingGuard.path } -NextStep "parallel_validation.file_watcher_snapshot_and_json_smoke"
+    $checkpoint = New-Checkpoint -Paths $Paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $RunId -Phase "execution" -Step "runner.text_encoding_guard" -Status $guardCheckpointStatus -Inputs @{ stdout_log = $stdoutLog; stderr_log = $stderrLog; changed_files_count = $changedFiles.Count } -Outputs @{ text_encoding_guard_id = $encodingGuard.text_encoding_guard_id; status = $encodingGuard.status; finding_count = $encodingGuard.finding_count; path = $encodingGuard.path } -NextStep "parallel_validation.file_watcher_snapshot_and_build_test"
     $RunState.last_checkpoint_id = $checkpoint.id
     if (-not $encodingGuard.ok) {
         $RunState.status = "stopped"
@@ -1551,7 +1606,7 @@ function Invoke-Start {
         return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ProfileValue $ProfileValue -ExecutorValue $ExecutorValue -Paths $paths -Plan $plan -RunState $runState -RunId $runId
     }
 
-    $configPaths = Write-ValidationConfigs -Paths $paths
+    $configPaths = Write-ValidationConfigs -Paths $paths -ProfileValue $ProfileValue
     $runState.status = "running"
     $runState.current_phase = "execution"
     $runState.current_step = "local_cli_adapter.run.node_version"
@@ -1566,7 +1621,7 @@ function Invoke-Start {
     )
     $runState.session_ids = @($plan.expected_artifacts.session_id)
     $runState.evidence_ids = @($plan.expected_artifacts.evidence_ids[0])
-    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "execution" -Step "local_cli_adapter.run.node_version" -Status "completed" -Inputs @{ config = $configPaths.local_cli } -Outputs @{ session_id = $plan.expected_artifacts.session_id; evidence_id = $plan.expected_artifacts.evidence_ids[0]; exit_code = $localCli.data.exit_code } -NextStep "parallel_validation.file_watcher_snapshot_and_json_smoke"
+    $checkpoint = New-Checkpoint -Paths $paths -TaskId $TaskId -RunnerRunId $runnerRunId -RunId $runId -Phase "execution" -Step "local_cli_adapter.run.node_version" -Status "completed" -Inputs @{ config = $configPaths.local_cli } -Outputs @{ session_id = $plan.expected_artifacts.session_id; evidence_id = $plan.expected_artifacts.evidence_ids[0]; exit_code = $localCli.data.exit_code } -NextStep "parallel_validation.file_watcher_snapshot_and_build_test"
     $runState.last_checkpoint_id = $checkpoint.id
 
     $pipeline = Invoke-PostExecutionValidationPipeline -Repo $Repo -Paths $paths -TaskId $TaskId -Plan $plan -RunState $runState -RunId $runId -RunnerRunId $runnerRunId -ConfigPaths $configPaths

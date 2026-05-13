@@ -1476,6 +1476,7 @@ export function formatPcRunnerPayload(result) {
 export function formatRunnerAcceptCompletionPayload(result) {
   const data = result?.data ?? {};
   const runnerResult = data.runner_continue ?? {};
+  const taskDone = data.task_done ?? {};
   const runnerData = runnerResult.data ?? {};
   const run = runnerData.runner_run ?? {};
   const reports = runnerData.report_ids ?? run.report_ids ?? data.report_ids ?? {};
@@ -1529,6 +1530,7 @@ export function formatRunnerAcceptCompletionPayload(result) {
           `FinalizationLog: ${formatInlineCode(data.finalization_log_id || "unknown")}`,
           `decision: ${data.decision || "accept"}`,
           `runner continue: ${koBool(runnerResult.ok === true)}`,
+          `task done: ${koBool(taskDone?.ok === true)}`,
         ]),
         embedField("현재 위치", [
           `run 상태: ${run.status || runnerData.status || "unknown"}`,
@@ -1536,8 +1538,8 @@ export function formatRunnerAcceptCompletionPayload(result) {
         ]),
         embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
         embedField("안전 상태", [
-          `task lifecycle 변경 없음: ${koBool(runnerData.task_lifecycle_unchanged !== false)}`,
-          `task done 없음: ${koBool(runnerData.no_task_done !== false)}`,
+          `task lifecycle 변경 없음: ${koBool(runnerData.task_lifecycle_unchanged !== false && taskDone?.ok !== true)}`,
+          `task done 없음: ${koBool(runnerData.no_task_done !== false && taskDone?.ok !== true)}`,
           `commit/push 없음: ${koBool(runnerData.no_commit_or_push !== false)}`,
         ], true),
       ],
@@ -1607,8 +1609,8 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
           ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
           : `/ai completion card id:${id}`,
         completionReportId
-          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg}`
-          : `/ai runner accept-completion id:${id}${runArg}`,
+          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg} mark-done:true`
+          : `/ai runner accept-completion id:${id}${runArg} mark-done:true`,
       ];
     case "finalization_required":
       return [
@@ -1616,8 +1618,8 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
           ? `/ai completion card id:${id} completion-report-id:${completionReportId}`
           : `/ai completion card id:${id}`,
         completionReportId
-          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg}`
-          : `/ai runner accept-completion id:${id}${runArg}`,
+          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg} mark-done:true`
+          : `/ai runner accept-completion id:${id}${runArg} mark-done:true`,
       ];
     case "finalization_not_accepted":
       return [

@@ -7,6 +7,20 @@ const AUTO_RISK_VALUES = new Set(["low"]);
 const AUTO_CATEGORY_VALUES = new Set(["DOC", "VAL"]);
 const AUTO_KIND_VALUES = new Set(["documentation", "validation"]);
 const AUTO_WF_KIND_VALUES = new Set(["documentation", "maintenance"]);
+const GAME_NO_CHANGE_TERMS = [
+  "no source", "no data", "without source", "without data", "no source/data",
+  "source/data 변경 없이", "소스/데이터 변경 없이", "변경 없이", "수정 없이",
+  "read-only", "검증만", "validation-only",
+];
+const GAME_MUTATION_TERMS = [
+  "implement", "fix", "modify", "change source", "change data", "edit data",
+  "schema", "runtime behavior", "gameplay behavior",
+  "구현", "수정", "고쳐", "소스 변경", "데이터 변경", "스키마", "런타임 동작", "게임플레이 동작",
+];
+const BUILD_TERMS = [
+  "visual studio", "msbuild", "debug x64", "x64 build", "build validation",
+  "빌드", "빌드 검증",
+];
 
 export async function runIntakeAutoHandoff(config, input = {}) {
   const policy = evaluateIntakeAutoHandoffPolicy(config, input);
@@ -74,20 +88,22 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
   const risk = String(draft.suggested_risk ?? "").toLowerCase();
   const category = String(draft.category ?? categoryFromTaskId(task.id)).toUpperCase();
   const kind = String(task.kind ?? draft.kind ?? "").toLowerCase();
+  const contextText = buildPolicyContextText({ task, draft, suggestion });
   const clarifyingQuestions = Array.isArray(draft.clarifying_questions)
     ? draft.clarifying_questions.filter((item) => String(item ?? "").trim())
     : [];
   const crossCheck = suggestion.rule_based_cross_check ?? {};
   const enabled = config?.intakeAutoHandoff?.enabled !== false;
   const autoStartLowRisk = config?.intakeAutoHandoff?.autoStartLowRisk !== false;
-  const execution = chooseExecution(category, kind);
+  const execution = chooseExecution(category, kind, contextText);
 
   const blockers = [];
   if (!enabled) blockers.push("intake_auto_handoff_disabled");
   if (!autoStartLowRisk) blockers.push("low_risk_auto_start_disabled");
   if (!AUTO_PRIORITY_VALUES.has(priority)) blockers.push("priority_requires_human_approval");
   if (!AUTO_RISK_VALUES.has(risk)) blockers.push("risk_requires_human_approval");
-  if (!isAutoHandoffClassAllowed(category, kind)) blockers.push("category_or_kind_requires_human_approval");
+  if (!isAutoHandoffClassAllowed(category, kind, contextText)) blockers.push("category_or_kind_requires_human_approval");
+  if (category === "GAME" && kind === "validation" && hasUnsafeGameValidationScope(contextText)) blockers.push("game_validation_scope_requires_human_approval");
   if (clarifyingQuestions.length > 0) blockers.push("clarification_required");
   if (crossCheck.requires_human_review === true) blockers.push("rule_based_cross_check_requires_review");
   if (!execution.profile || !execution.executor) blockers.push("no_supported_runner_profile");
@@ -108,10 +124,11 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
   };
 }
 
-function chooseExecution(category, kind) {
+function chooseExecution(category, kind, contextText = "") {
+  const buildRequested = hasAny(contextText, BUILD_TERMS);
   if (category === "VAL" || kind === "validation") {
     return {
-      profile: "validation",
+      profile: buildRequested ? "build" : "validation",
       executor: "local_cli",
     };
   }
@@ -136,10 +153,42 @@ function chooseExecution(category, kind) {
   };
 }
 
-function isAutoHandoffClassAllowed(category, kind) {
+function isAutoHandoffClassAllowed(category, kind, contextText = "") {
   return AUTO_CATEGORY_VALUES.has(category)
     || AUTO_KIND_VALUES.has(kind)
-    || (category === "WF" && AUTO_WF_KIND_VALUES.has(kind));
+    || (category === "WF" && AUTO_WF_KIND_VALUES.has(kind))
+    || (category === "GAME" && kind === "validation" && isSafeGameValidationContext(contextText));
+}
+
+function isSafeGameValidationContext(text) {
+  const normalized = String(text ?? "");
+  return hasAny(normalized, GAME_NO_CHANGE_TERMS)
+    || (hasAny(normalized, ["validation", "smoke", "build", "검증", "스모크", "빌드"]) && !hasUnsafeGameValidationScope(normalized));
+}
+
+function hasUnsafeGameValidationScope(text) {
+  const normalized = String(text ?? "");
+  return hasAny(normalized, GAME_MUTATION_TERMS) && !hasAny(normalized, GAME_NO_CHANGE_TERMS);
+}
+
+function buildPolicyContextText({ task = {}, draft = {}, suggestion = {} }) {
+  return [
+    task.id,
+    task.title,
+    task.kind,
+    task.reason,
+    task.validation,
+    draft.title,
+    draft.reason,
+    draft.workflow_path,
+    ...(Array.isArray(draft.required_validation) ? draft.required_validation : []),
+    suggestion?.interpreted_request,
+  ].filter(Boolean).join(" ");
+}
+
+function hasAny(text, terms) {
+  const lower = String(text ?? "").toLowerCase();
+  return terms.some((term) => lower.includes(String(term).toLowerCase()));
 }
 
 function buildApprovalNote(policy) {
