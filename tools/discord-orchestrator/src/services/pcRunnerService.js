@@ -1,3 +1,6 @@
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { runScript } from "./commandRunner.js";
 
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -17,6 +20,49 @@ export async function planPcRunner(config, input = {}) {
 
 export async function startPcRunner(config, input = {}) {
   return runPcRunner(config, "start", input, { timeoutMs: LONG_TIMEOUT_MS, includeProfile: true, includeExecutor: true });
+}
+
+export async function startPcRunnerDetached(config, input = {}) {
+  try {
+    const taskId = validateId(input.id, TASK_ID_PATTERN, "task id");
+    const args = ["start", taskId];
+
+    const profile = normalizeOptionalChoice(input.profile, PROFILE_VALUES, "profile");
+    if (profile) {
+      args.push("--profile", profile);
+    }
+
+    const executor = normalizeOptionalChoice(input.executor, EXECUTOR_VALUES, "executor");
+    if (executor) {
+      args.push("--executor", executor);
+    }
+
+    args.push("--json");
+    const processInfo = spawnDetachedScript(config, "tools/aiworkflow/pc_runner.bat", args);
+
+    return {
+      ok: true,
+      command: "start",
+      detached: true,
+      data: {
+        task_id: taskId,
+        process_id: processInfo.pid,
+        stdout_log: processInfo.stdoutLog,
+        stderr_log: processInfo.stderrLog,
+      },
+      raw: null,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      command: "start",
+      detached: true,
+      data: null,
+      raw: null,
+      error: error.message,
+    };
+  }
 }
 
 export async function continuePcRunner(config, input = {}) {
@@ -108,6 +154,79 @@ function normalizeOptionalChoice(value, allowed, label) {
     throw new Error(`Invalid ${label}.`);
   }
   return normalized;
+}
+
+function spawnDetachedScript(config, relativeScriptPath, args) {
+  validateDetachedScriptPath(relativeScriptPath);
+  validateDetachedArgs(args);
+
+  const scriptPath = path.join(config.repoRoot, relativeScriptPath);
+  const logsDir = path.join(config.repoRoot, "_Temp", "AIWorkflowDiscordBot", "runner_start");
+  fs.mkdirSync(logsDir, { recursive: true });
+
+  const stamp = new Date().toISOString().replaceAll(/[-:.TZ]/g, "").slice(0, 17);
+  const safeTask = args[1].replaceAll(/[^A-Za-z0-9_.-]/g, "-").toLowerCase();
+  const stdoutPath = path.join(logsDir, `pc_runner_start_${safeTask}_${stamp}.stdout.log`);
+  const stderrPath = path.join(logsDir, `pc_runner_start_${safeTask}_${stamp}.stderr.log`);
+
+  const stdoutFd = fs.openSync(stdoutPath, "a");
+  const stderrFd = fs.openSync(stderrPath, "a");
+  const commandLine = [quoteCmdPath(scriptPath), ...args].join(" ");
+
+  try {
+    const child = spawn("cmd.exe", ["/d", "/c", commandLine], {
+      cwd: config.repoRoot,
+      detached: true,
+      windowsHide: true,
+      windowsVerbatimArguments: true,
+      shell: false,
+      stdio: ["ignore", stdoutFd, stderrFd],
+      env: {
+        ...process.env,
+        PYTHONIOENCODING: "utf-8",
+      },
+    });
+
+    child.unref();
+    return {
+      pid: child.pid,
+      stdoutLog: toRepoRelativePath(config.repoRoot, stdoutPath),
+      stderrLog: toRepoRelativePath(config.repoRoot, stderrPath),
+    };
+  } finally {
+    fs.closeSync(stdoutFd);
+    fs.closeSync(stderrFd);
+  }
+}
+
+function validateDetachedScriptPath(relativeScriptPath) {
+  if (typeof relativeScriptPath !== "string" || relativeScriptPath.length === 0) {
+    throw new Error("Script path is empty.");
+  }
+  if (path.isAbsolute(relativeScriptPath) || relativeScriptPath.includes("..")) {
+    throw new Error(`Unsafe script path rejected: ${relativeScriptPath}`);
+  }
+  if (!relativeScriptPath.startsWith("tools/aiworkflow/") || !relativeScriptPath.toLowerCase().endsWith(".bat")) {
+    throw new Error(`Script path is not allowed: ${relativeScriptPath}`);
+  }
+}
+
+function validateDetachedArgs(args) {
+  for (const arg of args) {
+    if (typeof arg !== "string" || !/^(--[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)$/.test(arg)) {
+      throw new Error(`Unsafe script argument rejected: ${arg}`);
+    }
+  }
+}
+
+function quoteCmdPath(value) {
+  return `"${String(value).replaceAll('"', '\\"')}"`;
+}
+
+function toRepoRelativePath(repoRoot, targetPath) {
+  const root = path.resolve(repoRoot);
+  const full = path.resolve(targetPath);
+  return path.relative(root, full).replaceAll(path.sep, "/");
 }
 
 function parseScriptJson(label, raw) {

@@ -1078,7 +1078,7 @@ export function formatCompletionCardPayload(result) {
           generatedLine,
         ]),
         embedField("남은 이슈", summarizeCompletionCardIssues(presentation)),
-        embedField("다음 명령", summarizeCompactList(presentation.next_manual_commands, 3)),
+        embedField("다음 명령", summarizeCompactList(buildCompletionCardNextCommands(data, card, presentation), 3)),
         embedField("안전 상태", [
           `수동 done 가능: ${koBool(presentation.can_mark_task_done_manually)}`,
           `커밋 검토 가능: ${koBool(presentation.can_commit_after_review)}`,
@@ -1090,6 +1090,33 @@ export function formatCompletionCardPayload(result) {
       },
     }],
   };
+}
+
+function buildCompletionCardNextCommands(data, card, presentation) {
+  const taskId = card.task_id ?? data.task_id;
+  const completionReportId = card.sources?.completion_report_id ?? data.completion_report_id;
+  if (!taskId) {
+    return presentation.next_manual_commands ?? [];
+  }
+
+  const reportArg = completionReportId ? ` completion-report-id:${completionReportId}` : "";
+  if (presentation.state === "needs_human_decision" && presentation.verdict === "CONCERNS") {
+    return [
+      `/ai runner read id:${taskId}`,
+      `/ai runner accept-completion id:${taskId}${reportArg} decision:accept-concerns mark-done:true`,
+      "/ai git commit-push",
+    ];
+  }
+
+  if (presentation.state === "ready_for_human_completion_review" || presentation.state === "ready_for_human_completion_review_with_notes") {
+    return [
+      `/ai runner read id:${taskId}`,
+      `/ai runner accept-completion id:${taskId}${reportArg} mark-done:true`,
+      "/ai git commit-push",
+    ];
+  }
+
+  return presentation.next_manual_commands ?? [];
 }
 
 export function formatFinalizationStatusPayload(result) {

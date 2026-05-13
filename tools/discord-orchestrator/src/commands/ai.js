@@ -17,7 +17,7 @@ import { generateCompletionCard, generateCompletionReport, getCompletionStatus }
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
-import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, stopPcRunner } from "../services/pcRunnerService.js";
+import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, startPcRunnerDetached, stopPcRunner } from "../services/pcRunnerService.js";
 import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
 import { commitAndPushWorkflowChanges, commitWorkflowChanges, pushWorkflowChanges } from "../services/gitService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
@@ -1387,7 +1387,7 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
   }
 
   if (subcommand === "start") {
-    await interaction.editReply(formatPcRunnerPayload(await startPcRunner(config, input)));
+    await interaction.editReply(formatPcRunnerDetachedStartPayload(await startPcRunnerDetached(config, input)));
     return;
   }
 
@@ -1412,6 +1412,43 @@ async function handlePcRunnerCommand(interaction, config, subcommand) {
   }
 
   await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 runner 명령입니다.", 0xc62828);
+}
+
+function formatPcRunnerDetachedStartPayload(result) {
+  const data = result.data ?? {};
+  const id = data.task_id ?? "unknown";
+
+  if (!result.ok) {
+    return formatTextCardPayload("PC Runner 시작 실패", [
+      `ID: ${id}`,
+      "",
+      "**이유**",
+      koText(result.error || "PC Runner start request failed."),
+      "",
+      "**다음 명령**",
+      id !== "unknown" ? `/ai runner status id:${id}` : "/ai run workflow-status",
+    ].join("\n"), { color: 0xc62828 });
+  }
+
+  return formatTextCardPayload("PC Runner 백그라운드 시작", [
+    `ID: ${id}`,
+    `process: ${data.process_id ?? "unknown"}`,
+    "",
+    "**상태**",
+    "실행 명령을 백그라운드로 넘겼습니다. Discord 응답은 여기서 바로 닫히며, Runner가 끝나면 artifact에 결과가 기록됩니다.",
+    "",
+    "**다음 명령**",
+    `/ai runner status id:${id}`,
+    `/ai runner read id:${id}`,
+    "",
+    "**로그**",
+    data.stdout_log ? `stdout: ${data.stdout_log}` : "stdout: none",
+    data.stderr_log ? `stderr: ${data.stderr_log}` : "stderr: none",
+    "",
+    "**안전 상태**",
+    "task done 없음: yes (예)",
+    "commit/push 없음: yes (예)",
+  ].join("\n"), { color: 0x1565c0 });
 }
 
 async function handleGitCommand(interaction, config, subcommand) {
