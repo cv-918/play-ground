@@ -11,11 +11,11 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260513-160636
-title: PC Runner workflow smoke for GAME validation
+task_id: VAL-20260513-164104
+title: Validation task: PC Runner workflow smoke for PlayGround Debug x64 build
 status: done
 workflow_path: discord_task_management
-priority: P1
+priority: P2
 risk_level: low
 requested_by: human_director
 requested_at: 2026-05-13
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-PC Runner workflow smoke for GAME validation
+Validation task: PC Runner workflow smoke for PlayGround Debug x64 build
 
 ---
 
@@ -46,7 +46,12 @@ validation: completed with PASS_WITH_NOTES and explicit MSBuild evidence
 ```text
 _Docs/AIWorkflow/Backlog.md
 _Docs/AIWorkflow/ActiveTask.md
-tools/aiworkflow/pc_runner.ps1
+tools/discord-orchestrator/src/services/codexCliIntakeService.js
+tools/discord-orchestrator/src/services/intakeAutoHandoffService.js
+tools/discord-orchestrator/src/services/taskIntakeService.js
+_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html
+_Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff_KR.md
 ```
 
 ---
@@ -55,7 +60,7 @@ tools/aiworkflow/pc_runner.ps1
 
 ```text
 No immediate human action required for this smoke task.
-Review the commit diff before committing workflow state and the PC Runner approval-flag fix.
+Review the diff before committing the intake classification and auto-handoff policy update.
 ```
 
 ---
@@ -63,21 +68,21 @@ Review the commit diff before committing workflow state and the PC Runner approv
 ## Validation Plan
 
 ```text
-Actual smoke evidence:
-- Initial isolated E2E smoke passed without modifying the real repository.
-- Real intake created VAL-20260513-160636 but classified it as P1/high-risk with clarifying questions.
-- Human-approved manual path set the task active and approved safe build validation scope.
-- PC Runner build/local_cli initially failed because build_test_runner did not receive --approved.
-- tools/aiworkflow/pc_runner.ps1 now forwards --approved when the runner plan approval_state is approved.
-- Retry reached completion_review_required.
-- BuildTestResult: bt-val-20260513-160636-debug_visual_studio_build-20260513-161011-492
-- MSBuild auto-resolution: visual_studio_auto -> C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
-- Visual Studio build: Debug x64, exit_code 0
-- VerificationReport: verification-val-20260513-160636-20260513-161011-492, PASS_WITH_NOTES
-- CompletionCard: card-val-20260513-160636-20260513-161011-492, READY_WITH_NOTES
-- FinalizationLog: finalization-20260513-161135-305-8ab06207
+Actual evidence:
+- Rule-based safe build validation classification: P2/low, no clarification, auto_start_allowed, profile=build, executor=local_cli.
+- Unknown data loader/readability validation remains blocked with clarification_required.
+- Codex intake preview for safe GAME build validation: P2/low, no questions, cross-check review=false, auto_start_allowed.
+- Actual intake task: VAL-20260513-164104.
+- Auto-handoff decision: runner_started.
+- Runner route: profile=build, executor=local_cli, command_id=debug_visual_studio_build.
+- RunnerRun: runner-run-val-20260513-164104-20260513-164105-633.
+- BuildTestResult: bt-val-20260513-164104-debug_visual_studio_build-20260513-164105-633.
+- MSBuild auto-resolution: visual_studio_auto -> C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe.
+- Visual Studio build: Debug x64, exit_code 0.
+- VerificationReport: verification-val-20260513-164104-20260513-164105-633, PASS_WITH_NOTES.
+- CompletionCard: card-val-20260513-164104-20260513-164105-633, READY_WITH_NOTES.
+- FinalizationLog: finalization-20260513-164153-330-f32b72f6.
 - Task marked done through accept-completion markDone flow.
-- Guide update decision: checked; no user guide update needed because the user-facing command flow did not change.
 ```
 
 ---
@@ -86,7 +91,7 @@ Actual smoke evidence:
 
 ```text
 status: done
-note: done: Completion accept recorded; FinalizationLog finalization-20260513-161135-305-8ab06207; Runner runner-run-val-20260513-160636-20260513-161011-492; stopped at done_or_commit_decision
+note: done: Completion accept recorded; FinalizationLog finalization-20260513-164153-330-f32b72f6; Runner runner-run-val-20260513-164104-20260513-164105-633; stopped at done_or_commit_decision
 updated_at: 2026-05-13
 source: Discord task status command
 ```

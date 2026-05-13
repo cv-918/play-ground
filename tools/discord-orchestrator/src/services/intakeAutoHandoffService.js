@@ -9,13 +9,17 @@ const AUTO_KIND_VALUES = new Set(["documentation", "validation"]);
 const AUTO_WF_KIND_VALUES = new Set(["documentation", "maintenance"]);
 const GAME_NO_CHANGE_TERMS = [
   "no source", "no data", "without source", "without data", "no source/data",
+  "no schema", "no runtime", "no document", "without schema", "without runtime", "without document",
+  "without changing source", "without changing data", "without changing schema", "without changing runtime", "without changing documents",
+  "without changing source files", "without changing data files", "without changing source files, data files, schemas, runtime behavior, or documents",
   "source/data 변경 없이", "소스/데이터 변경 없이", "변경 없이", "수정 없이",
+  "소스나 데이터 변경 없이", "소스, 데이터 변경 없이", "스키마 변경 없이", "런타임 변경 없이", "문서 변경 없이",
   "read-only", "검증만", "validation-only",
 ];
 const GAME_MUTATION_TERMS = [
   "implement", "fix", "modify", "change source", "change data", "edit data",
-  "schema", "runtime behavior", "gameplay behavior",
-  "구현", "수정", "고쳐", "소스 변경", "데이터 변경", "스키마", "런타임 동작", "게임플레이 동작",
+  "schema change", "runtime behavior change", "gameplay behavior change",
+  "구현", "수정", "고쳐", "소스를 변경", "데이터를 변경", "스키마를 변경", "런타임 동작 변경", "게임플레이 동작 변경",
 ];
 const BUILD_TERMS = [
   "visual studio", "msbuild", "debug x64", "x64 build", "build validation",

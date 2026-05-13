@@ -175,6 +175,23 @@ Discord smoke:
 /ai intake text:"GAME validation task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 검증해줘."
 ```
 
+안전한 GAME build validation은 아래 deterministic route를 사용합니다.
+
+```text
+profile=build
+executor=local_cli
+command_id=debug_visual_studio_build
+```
+
+요청에 source/data/schema/runtime/document 변경이 없고 Visual Studio,
+MSBuild, Debug x64 build 검증만 명시되어 있으면 intake는 이를
+`VAL`/`validation`/`P2`/`low`로 보정할 수 있습니다. 이 경우 build
+profile 또는 command_id를 묻는 clarification은 제거합니다.
+
+반대로 data loader/readability 검증처럼 어떤 allowlisted command를 써야
+하는지 하네스가 확정할 수 없는 요청은 clarification을 유지하고 사람
+승인 경로에서 멈춥니다.
+
 이 명령 하나로 Backlog 생성, ActiveTask 선택, 승인, PC Runner 시작까지
 이어지는지 확인합니다.
 

@@ -43,6 +43,24 @@ const TERMS = {
   highRisk: ["schema", "save", "runtime", "external tool", "computer-use", "destructive", "migration", "userdata", "스키마", "저장", "세이브", "런타임", "마이그레이션", "유저데이터"],
 };
 
+const SAFE_VALIDATION_NO_CHANGE_TERMS = [
+  "no source", "no data", "no schema", "no runtime", "no document",
+  "without source", "without data", "without schema", "without runtime", "without document",
+  "without changing source", "without changing data", "without changing schema", "without changing runtime", "without changing documents",
+  "without changing source files", "without changing data files", "without changing source files, data files, schemas, runtime behavior, or documents",
+  "source/data 변경 없이", "소스/데이터 변경 없이", "소스나 데이터 변경 없이", "소스, 데이터 변경 없이",
+  "스키마 변경 없이", "런타임 변경 없이", "문서 변경 없이", "변경 없이", "수정 없이",
+  "read-only", "검증만", "validation-only",
+];
+
+const SAFE_BUILD_VALIDATION_TERMS = [
+  "visual studio", "msbuild", "debug x64", "x64 build", "visual studio build",
+  "build validation", "debug visual studio build", "PlayGround Debug x64",
+  "빌드", "빌드 검증", "visual studio 빌드",
+];
+
+const INFERABLE_BUILD_ROUTE_QUESTION = /(command[_ -]?id|pc runner profile|runner profile|profile should be used|which exact command|which command|debug x64|visual studio build|msbuild)/i;
+
 const PATH_HINT_RULES = [
   {
     path: "PlayGround/Data/**",
@@ -191,54 +209,55 @@ export function suggestTaskFromIntakeRuleBased(input = {}) {
 }
 
 function buildSuggestionFromDraft({ interpretedRequest, draft, ruleBased, llm }) {
+  const normalizedDraft = normalizeDraftForKnownSafeRoutes(draft, interpretedRequest);
   const pathReminders = getPathScopedReminders(
-    [interpretedRequest, draft.title, draft.reason, draft.workflow_path].join(" "),
-    draft.category,
-    draft.kind,
+    [interpretedRequest, normalizedDraft.title, normalizedDraft.reason, normalizedDraft.workflow_path].join(" "),
+    normalizedDraft.category,
+    normalizedDraft.kind,
   );
   const task = {
-    id: `${draft.category}-INTAKE`,
-    item: draft.title,
+    id: `${normalizedDraft.category}-INTAKE`,
+    item: normalizedDraft.title,
     status: "intake_suggestion",
-    priority: draft.priority,
-    kind: draft.kind,
-    reason: draft.reason,
+    priority: normalizedDraft.priority,
+    kind: normalizedDraft.kind,
+    reason: normalizedDraft.reason,
     tool_route: llm?.used ? "Discord LLM-assisted intake -> human review" : "Discord rule-based intake -> human review",
     validation: "Define exact validation after human accepts or edits the suggested task.",
   };
   const activeTask = {
     metadata: {
       task_id: task.id,
-      title: draft.title,
+      title: normalizedDraft.title,
       status: "intake_suggestion",
-      priority: draft.priority,
-      risk_level: draft.suggested_risk,
-      workflow_path: draft.workflow_path,
+      priority: normalizedDraft.priority,
+      risk_level: normalizedDraft.suggested_risk,
+      workflow_path: normalizedDraft.workflow_path,
     },
   };
   const roleRecommendation = getRoleRouterRecommendationForTask({ task, activeTask });
-  const recommendedRoles = mergeUnique(draft.recommended_roles, roleRecommendation.recommended_roles, ["Orchestrator", "Reviewer", "Validator"]);
+  const recommendedRoles = mergeUnique(normalizedDraft.recommended_roles, roleRecommendation.recommended_roles, ["Orchestrator", "Reviewer", "Validator"]);
   const humanDecisionGates = normalizeGates(
-    mergeUnique(draft.human_decision_gates, roleRecommendation.human_gates),
+    mergeUnique(normalizedDraft.human_decision_gates, roleRecommendation.human_gates),
     interpretedRequest,
-    draft.suggested_risk,
-    draft.category,
-    draft.kind,
+    normalizedDraft.suggested_risk,
+    normalizedDraft.category,
+    normalizedDraft.kind,
   );
   const requiredValidation = normalizeValidation(
-    mergeUnique(draft.required_validation, roleRecommendation.required_validation),
+    mergeUnique(normalizedDraft.required_validation, roleRecommendation.required_validation),
     interpretedRequest,
-    draft.category,
-    draft.kind,
+    normalizedDraft.category,
+    normalizedDraft.kind,
     pathReminders,
   );
-  const executionRoute = normalizeRoute(roleRecommendation.execution_route, draft.category, draft.kind);
+  const executionRoute = normalizeRoute(roleRecommendation.execution_route, normalizedDraft.category, normalizedDraft.kind);
   const taskDraft = {
-    ...draft,
+    ...normalizedDraft,
     recommended_roles: recommendedRoles,
     human_decision_gates: humanDecisionGates,
     required_validation: requiredValidation,
-    suggested_next_manual_action: draft.suggested_next_manual_action || "Review the generated Backlog task, then set active or approve manually if accepted.",
+    suggested_next_manual_action: normalizedDraft.suggested_next_manual_action || "Review the generated Backlog task, then set active or approve manually if accepted.",
   };
   const crossCheck = buildCrossCheck(ruleBased, taskDraft);
 
@@ -273,6 +292,53 @@ function buildSuggestionFromDraft({ interpretedRequest, draft, ruleBased, llm })
       pushed: false,
     },
   };
+}
+
+function normalizeDraftForKnownSafeRoutes(draft, interpretedRequest) {
+  const contextText = [
+    interpretedRequest,
+    draft.title,
+    draft.reason,
+    draft.workflow_path,
+    ...(Array.isArray(draft.required_validation) ? draft.required_validation : []),
+  ].join(" ");
+
+  if (!isSafeBuildValidationRequest(contextText, draft)) {
+    return draft;
+  }
+
+  const clarifyingQuestions = arrayValues(draft.clarifying_questions)
+    .filter((question) => !INFERABLE_BUILD_ROUTE_QUESTION.test(String(question ?? "")));
+  if (needsUnknownGameDataValidationRoute(contextText)) {
+    addUnique(
+      clarifyingQuestions,
+      "Which allowlisted command_id should be used for the requested game data loader/readability validation?",
+    );
+  }
+  const requiredValidation = mergeUnique(draft.required_validation, [
+    "PC Runner route is deterministic for this request: profile=build, executor=local_cli, command_id=debug_visual_studio_build.",
+    "Run PlayGround Debug x64 Visual Studio build through PC Runner build/local_cli.",
+    "Confirm no source, data, schema, runtime behavior, or document files were changed.",
+  ]);
+
+  return {
+    ...draft,
+    category: "VAL",
+    kind: "validation",
+    priority: "P2",
+    suggested_risk: "low",
+    workflow_path: "validation",
+    required_validation: requiredValidation,
+    clarifying_questions: clarifyingQuestions,
+    suggested_next_manual_action: "Auto-handoff may start PC Runner build/local_cli when no other clarifying questions remain.",
+  };
+}
+
+function needsUnknownGameDataValidationRoute(text) {
+  return hasAny(text, [
+    "data loader", "loader/readability", "readability", "semantic validation",
+    "loader validation", "데이터 로더", "로더 검증", "의미 검증",
+  ]) && !hasAny(text, ["json_smoke", "json smoke", "debug_visual_studio_build"]);
 }
 
 function withLlmStatus(ruleBased, llmStatus) {
@@ -404,6 +470,7 @@ function classifyKind(text, category) {
 
 function classifyPriority(text, category, kind) {
   if (hasAny(text, TERMS.critical)) return "P0";
+  if (isSafeBuildValidationRequest(text, { category, kind })) return "P2";
   if (category === "WF" && ["documentation", "maintenance"].includes(kind)) return "P2";
   if (["WF", "UNITY"].includes(category) || hasAny(text, ["infrastructure", "high leverage", "important", "runtime", "save", "userdata", "중요", "런타임", "저장", "세이브", "유저데이터"])) return "P1";
   if (hasAny(text, ["optional", "later", "cleanup", "선택", "나중", "정리"])) return "P3";
@@ -411,6 +478,7 @@ function classifyPriority(text, category, kind) {
 }
 
 function classifyRisk(text, kind, category) {
+  if (isSafeBuildValidationRequest(text, { category, kind })) return "low";
   if (hasAny(text, TERMS.highRisk)) return "high";
   if (
     category === "WF"
@@ -421,6 +489,21 @@ function classifyRisk(text, kind, category) {
   }
   if (kind === "implementation" || category === "WF" || hasAny(text, ["source behavior", "command behavior", "bot behavior", "workflow command", "소스 동작", "명령 동작", "봇 동작"])) return "medium";
   return "low";
+}
+
+function isSafeBuildValidationRequest(text, draft = {}) {
+  const normalized = String(text ?? "");
+  const category = String(draft.category ?? "").toUpperCase();
+  const kind = String(draft.kind ?? "").toLowerCase();
+  const validationClass = category === "VAL" || category === "GAME" || kind === "validation";
+  return validationClass
+    && hasAny(normalized, SAFE_BUILD_VALIDATION_TERMS)
+    && hasAny(normalized, SAFE_VALIDATION_NO_CHANGE_TERMS)
+    && !hasAny(normalized, [
+      "change source", "change data", "edit source", "edit data",
+      "modify source", "modify data", "schema change", "runtime behavior change",
+      "gameplay behavior change", "소스를 변경", "데이터를 변경", "스키마를 변경", "런타임 동작 변경", "게임플레이 동작 변경",
+    ]);
 }
 
 function buildSuggestedTitle(text, category, kind) {

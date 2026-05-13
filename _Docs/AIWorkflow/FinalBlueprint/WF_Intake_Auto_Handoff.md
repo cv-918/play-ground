@@ -53,6 +53,24 @@ Current profile mapping:
 
 `WF` + `documentation` follows the `documentation/codex_cli` route.
 
+Safe GAME build validation has a deterministic route:
+
+```text
+profile=build
+executor=local_cli
+command_id=debug_visual_studio_build
+```
+
+When the request explicitly says there are no source, data, schema, runtime
+behavior, or document changes and asks only for Visual Studio/MSBuild/Debug x64
+build validation, intake normalization treats it as `VAL`, `validation`,
+`P2/low`. Clarifying questions about the build runner profile or command_id are
+removed because the route above is fixed.
+
+Requests for unknown validation evidence, such as an unspecified game data
+loader/readability command, still keep a clarifying question and remain in the
+human approval path.
+
 For stable classification, intake text may start with an explicit category
 marker such as `DOC task:`, `VAL task:`, `WF task:`, `GAME task:`, or
 `UNITY task:`. The rule-based cross-check treats this marker as the strongest
