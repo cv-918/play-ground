@@ -749,8 +749,8 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("message")
-                .setDescription("커밋 메시지")
-                .setRequired(true)
+                .setDescription("커밋 메시지, 비우면 변경 파일 기준으로 자동 생성")
+                .setRequired(false)
                 .setMaxLength(180),
             ),
         )
@@ -766,8 +766,8 @@ export function buildAiCommand() {
             .addStringOption((option) =>
               option
                 .setName("message")
-                .setDescription("커밋 메시지")
-                .setRequired(true)
+                .setDescription("커밋 메시지, 비우면 변경 파일 기준으로 자동 생성")
+                .setRequired(false)
                 .setMaxLength(180),
             ),
         ),

@@ -383,8 +383,10 @@ done_or_commit_decision
 아래 명령을 사용합니다.
 
 ```text
+/ai git commit
 /ai git commit message:<commit message>
 /ai git push
+/ai git commit-push
 /ai git commit-push message:<commit message>
 ```
 
@@ -392,6 +394,7 @@ done_or_commit_decision
 
 - `_Temp/`, `_Local/`, `node_modules/`, `.env`, `*.local.json` 경로가 Git 변경분에 있으면 차단합니다.
 - 임의 shell 명령은 실행하지 않고 `git`만 직접 실행합니다.
+- `message`를 생략하면 변경 파일 기준으로 짧은 커밋 메시지를 자동 생성합니다.
 - commit/push는 `/ai intake`나 Runner가 자동으로 수행하지 않으며, 명시적인 `/ai git ...` 명령이 있을 때만 수행합니다.
 
 ---

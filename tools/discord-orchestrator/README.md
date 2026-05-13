@@ -606,9 +606,9 @@ After starting the bot:
 [ ] /ai result audit distinguishes completion verdict from commit recommendation.
 [ ] /ai result audit does not modify Backlog.md or ActiveTask.md.
 [ ] /ai result audit does not mark tasks done, execute agents/Codex CLI, commit, or push.
-[ ] /ai git commit message:<message> commits only after forbidden path safety checks.
+[ ] /ai git commit [message:<message>] commits only after forbidden path safety checks and generates a concise message when omitted.
 [ ] /ai git push pushes the current branch.
-[ ] /ai git commit-push message:<message> commits then pushes only after forbidden path safety checks.
+[ ] /ai git commit-push [message:<message>] commits then pushes only after forbidden path safety checks and generates a concise message when omitted.
 [ ] /ai git commands reject _Temp/, _Local/, node_modules/, .env, and *.local.json changes.
 [ ] /ai intake does not mark tasks done, commit, or push.
 [ ] Git status changes only for explicitly approved write commands.

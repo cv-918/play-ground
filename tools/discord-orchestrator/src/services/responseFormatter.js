@@ -1633,7 +1633,7 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
         autoApprovalId ? `/ai auto-approval read id:${id} policy-evaluation-id:${autoApprovalId}` : `/ai auto-approval status id:${id}`,
         followUpPlanId ? `/ai follow-up read id:${id} follow-up-plan-id:${followUpPlanId}` : `/ai follow-up status id:${id}`,
         `/ai task done id:${id} evidence:<완료 근거>`,
-        `/ai git commit-push message:<commit message>`,
+        "/ai git commit-push",
       ];
     case "executor_not_ready":
       return [
@@ -1702,6 +1702,9 @@ export function formatGitCommandPayload(result) {
   if (commit.note) {
     lines.push(cleanKo(commit.note));
   }
+  if (commit.message_generated) {
+    lines.push("커밋 메시지 자동 생성됨");
+  }
 
   return {
     content: "",
@@ -1713,7 +1716,10 @@ export function formatGitCommandPayload(result) {
         lines.length > 0 ? lines.join("\n") : "처리할 변경이 없습니다.",
       ].join("\n"),
       fields: [
-        embedField("커밋 메시지", commit.message ? formatInlineCode(commit.message) : "(없음)"),
+        embedField("커밋 메시지", [
+          commit.message ? formatInlineCode(commit.message) : "(없음)",
+          commit.message_generated ? "자동 생성" : "사용자 입력",
+        ].join("\n")),
         embedField("변경 파일", summarizeGitFiles(files)),
         embedField("안전 확인", [
           `금지 경로 없음: ${koBool(forbidden.length === 0)}`,

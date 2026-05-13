@@ -4,11 +4,6 @@ import path from "node:path";
 const DEFAULT_TIMEOUT_MS = 60000;
 
 export async function commitWorkflowChanges(config, input = {}) {
-  const message = normalizeCommitMessage(input.message);
-  if (!message.ok) {
-    return failure("commit", message.error);
-  }
-
   const status = await readGitStatus(config);
   if (!status.ok) {
     return failure("commit", status.error, { status });
@@ -19,6 +14,11 @@ export async function commitWorkflowChanges(config, input = {}) {
     return failure("commit", safety.error, { status, safety });
   }
 
+  const message = normalizeCommitMessage(input.message, status.files);
+  if (!message.ok) {
+    return failure("commit", message.error, { status, safety });
+  }
+
   if (status.files.length === 0) {
     return {
       ok: true,
@@ -26,6 +26,7 @@ export async function commitWorkflowChanges(config, input = {}) {
       stage: "no_changes",
       data: {
         message: message.value,
+        message_generated: message.generated,
         status,
         safety,
         committed: false,
@@ -54,6 +55,7 @@ export async function commitWorkflowChanges(config, input = {}) {
       stage: "nothing_staged",
       data: {
         message: message.value,
+        message_generated: message.generated,
         status,
         safety,
         committed: false,
@@ -75,6 +77,7 @@ export async function commitWorkflowChanges(config, input = {}) {
     stage: "committed",
     data: {
       message: message.value,
+      message_generated: message.generated,
       status,
       safety,
       staged_files: stagedFiles,
@@ -221,15 +224,46 @@ function normalizeRepoPath(filePath) {
   return String(filePath ?? "").replaceAll("\\", "/").replace(/^\.\/+/, "").trim();
 }
 
-function normalizeCommitMessage(message) {
+function normalizeCommitMessage(message, files = []) {
   const value = String(message ?? "").replace(/\s+/g, " ").trim();
-  if (!value) {
-    return { ok: false, error: "Commit message is required." };
-  }
-  if (value.length > 180) {
+  const generated = !value;
+  const normalized = generated ? generateCommitMessage(files) : value;
+  if (normalized.length > 180) {
     return { ok: false, error: "Commit message must be 180 characters or fewer." };
   }
-  return { ok: true, value };
+  return { ok: true, value: normalized, generated };
+}
+
+function generateCommitMessage(files = []) {
+  const paths = files.map((file) => normalizeRepoPath(file.path));
+  if (paths.length === 0) {
+    return "No workflow changes";
+  }
+
+  const all = (predicate) => paths.every(predicate);
+  const any = (predicate) => paths.some(predicate);
+
+  if (all((filePath) => filePath === "_Docs/AIWorkflow/ActiveTask.md" || filePath === "_Docs/AIWorkflow/Backlog.md")) {
+    return "Record workflow task state";
+  }
+
+  if (any((filePath) => filePath.startsWith("tools/discord-orchestrator/"))) {
+    return "Update Discord orchestrator workflow";
+  }
+
+  if (any((filePath) => filePath.startsWith("tools/aiworkflow/"))) {
+    return "Update AIWorkflow runner tooling";
+  }
+
+  if (all((filePath) => filePath.startsWith("_Docs/") || filePath.startsWith("_DevLog/"))) {
+    return "Update workflow documentation";
+  }
+
+  if (any((filePath) => filePath.startsWith("PlayGround/"))) {
+    return "Update PlayGround project files";
+  }
+
+  return "Update workflow files";
 }
 
 function runGit(config, args, timeoutMs = DEFAULT_TIMEOUT_MS) {
