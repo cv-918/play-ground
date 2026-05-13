@@ -11,8 +11,8 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: WF-430
-title: Run real game-task pilot through PC Runner workflow
+task_id: VAL-20260513-110245
+title: Validation task: PC Runner PlayGround Debug x64 Visual Studio build validation
 status: done
 workflow_path: discord_task_management
 priority: P2
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-Run real game-task pilot through PC Runner workflow
+Validation task: PC Runner PlayGround Debug x64 Visual Studio build validation
 
 ---
 
@@ -35,8 +35,8 @@ Run real game-task pilot through PC Runner workflow
 ```yaml
 discord: task selection command
 human: review and approval
-pc_runner: validation/local_cli
-validation: completed
+pc_runner: validation/local_cli plus build_test_runner
+validation: completed with PASS_WITH_NOTES and explicit MSBuild evidence
 ```
 
 ---
@@ -52,7 +52,7 @@ Define during task intake before implementation.
 ## Human Action Required
 
 ```text
-No immediate human action required. WF-430 is done.
+No immediate human action required. VAL-20260513-110245 is done.
 ```
 
 ---
@@ -60,14 +60,16 @@ No immediate human action required. WF-430 is done.
 ## Validation Plan
 
 ```text
-PC Runner validation/local_cli completed.
+PC Runner validation completed.
 
 Evidence:
-- runner_run_id: runner-run-wf-430-20260513-040359-458
-- JSON smoke: 11 files checked, 0 failures
+- RunnerRun: runner-run-val-20260513-110245-20260513-110246-878
+- Initial runner build/test gate: json_smoke exit_zero
+- Explicit Visual Studio build evidence: bt-build-20260513-112013-004-16056e99
+- MSBuild auto-resolution: visual_studio_auto -> C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
+- Visual Studio build: Debug x64, exit_code 0
 - VerificationReport: PASS_WITH_NOTES
 - CompletionCard: READY_WITH_NOTES
-- FinalizationLog: finalization-20260513-040454-617-e0367da2
 ```
 
 ---
@@ -76,7 +78,7 @@ Evidence:
 
 ```text
 status: done
-note: done: PC Runner real game-task pilot passed: JSON smoke 11/11, VerificationReport PASS_WITH_NOTES, CompletionCard READY_WITH_NOTES, FinalizationLog finalization-20260513-040454-617-e0367da2 accepted completion, runner stopped at done_or_commit_decision.
+note: done: PC Runner PlayGround Debug x64 Visual Studio build validation passed. Explicit MSBuild evidence bt-build-20260513-112013-004-16056e99 resolved MSBuild.exe through visual_studio_auto and exited 0.
 updated_at: 2026-05-13
 source: Discord task status command
 ```
