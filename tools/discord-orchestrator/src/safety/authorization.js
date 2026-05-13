@@ -13,6 +13,6 @@ export function isAuthorized(interaction, config) {
 export async function rejectUnauthorized(interaction) {
   await interaction.reply({
     content: "Not authorized.",
-    ephemeral: true,
+    flags: 64,
   });
 }

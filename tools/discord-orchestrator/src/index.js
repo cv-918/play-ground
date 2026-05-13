@@ -45,7 +45,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply(payload);
     } else {
-      await interaction.reply({ ...payload, ephemeral: true });
+      await interaction.reply({ ...payload, flags: 64 });
     }
   }
 });
