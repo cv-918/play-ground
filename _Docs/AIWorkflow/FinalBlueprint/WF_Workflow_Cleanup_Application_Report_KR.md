@@ -4,9 +4,15 @@
 
 WF-408에서는 PC Runner가 생긴 뒤의 명령어 표면을 정리했습니다.
 
-중요한 점은 **명령어를 삭제하지 않았다**는 것입니다. 대신 사용자가 Discord에서
-명령어를 볼 때 어떤 것이 정규 경로이고, 어떤 것이 수동 승격/진단/호환 경로인지
-더 분명하게 보이도록 정리했습니다.
+상태 메모: 이 문서는 당시 적용 결과를 남긴 역사 기록입니다. 이후 WF-429와
+후속 작업에서 `/ai intake-create` 호환 alias 제거, runner profile 확장,
+completion/git 단축 경로가 추가되었습니다. 현재 운영 흐름은
+`WF_Post_309_Workflow_Stabilization_Roadmap_KR.md`와 Human Director 가이드를
+기준으로 보세요.
+
+당시 중요한 점은 **명령어를 삭제하지 않았다**는 것입니다. 이후 WF-429에서
+일부 오래된 명령 제거가 적용되었습니다. 이 문서는 그 이전 정리 결과를
+기록합니다.
 
 ## 적용한 결정
 
@@ -14,9 +20,9 @@ WF-408에서는 PC Runner가 생긴 뒤의 명령어 표면을 정리했습니�
 - `/ai prepare codex`와 `/ai prepare goal`은 수동 승격 명령으로 유지했습니다.
 - `/ai result audit`은 수동 승격 결과 감사 명령으로 유지했습니다.
 - `/ai run ...` 명령은 진단/복구용 명령으로 설명했습니다.
-- `/ai intake-create`는 `/ai intake`의 호환 alias로 유지했습니다.
-- Discord의 runner profile 선택지는 현재 실제 실행 가능한 `validation`만 보이게 했습니다.
-- 실제 명령 삭제는 하지 않았습니다.
+- 이후 변경됨: `/ai intake-create`는 더 이상 등록되지 않습니다. `/ai intake`를 사용합니다.
+- 이후 변경됨: 지원 runner profile은 `validation`, `build`, `implementation`, `documentation`으로 확장되었습니다.
+- 이후 변경됨: WF-429에서 오래된 명령 제거가 적용되었습니다.
 
 ## 이제 사용자가 보면 되는 흐름
 

@@ -3,27 +3,27 @@
 ## Metadata Snapshot
 
 ```yaml
-last_updated: 2026-04-30
+last_updated: 2026-05-13
 analysis_mode:
-  - codex_read_only_analysis
-  - local_script_validation_report
-workflow_level_actual: Level 2 + Level 3 entry
-workflow_level_target_next: Level 3 stabilization
-worktree_status_at_analysis: clean
+  - workflow_document_cleanup_review
+  - pc_runner_status_review
+workflow_level_actual: Discord-first PC Runner execution harness stabilization
+workflow_level_target_next: real small GAME task stabilization
+worktree_status_at_analysis: documentation cleanup in progress
 latest_local_script_validation:
-  status_bat: passed
-  capture_diff_bat_include_untracked: passed
-  json_smoke_check_bat: passed
-build_verified_in_latest_update: false
+  pc_runner_build_profile_plan: passed
+  build_test_runner_visual_studio_dry_run: passed
+  intake_auto_handoff_policy_smoke: passed
+build_verified_in_latest_update: true
 runtime_verified_in_latest_update: false
 json_syntax_smoke_check:
   total: 11
   failed: 0
 ```
 
-This is a planning snapshot based on Codex read-only analysis and local helper script validation.
+This is a lightweight workflow status snapshot.
 
-This is not a full build or runtime validation report.
+This is not a full gameplay runtime validation report.
 
 ---
 
@@ -79,8 +79,7 @@ multi-project configuration
 Current maturity:
 
 ```text
-Level 2: repeatable semi-automated workflow
-Level 3 entry: local helper scripts v1 created and validated
+Discord-first PC Runner execution harness stabilization
 ```
 
 Completed evidence:
@@ -88,87 +87,97 @@ Completed evidence:
 - AI workflow documents exist.
 - Prompt templates exist.
 - Task request records exist.
-- A real trial completed the path:
-  `Orchestrator -> Codex read-only -> Copilot -> diff review -> validation -> DevLog -> commit`.
 - Durable state files were seeded:
   - `ProjectStatus.md`
   - `Backlog.md`
   - `ActiveTask.md`
-- Local helper scripts v1 were created and committed:
-  - `tools/aiworkflow/status.bat`
-  - `tools/aiworkflow/capture_diff.bat`
-  - `tools/aiworkflow/json_smoke_check.bat`
-  - `tools/aiworkflow/json_smoke_check.ps1`
+- PC Runner primitives and Discord runner commands exist.
+- PC Runner can create task workspaces, supervise sessions, collect evidence,
+  generate VerificationReport/CompletionReport/CompletionCard artifacts, and
+  stop at Human Director gates.
+- `/ai intake` can use Codex CLI-assisted TaskDraft generation and, for
+  allowlisted low-risk work, auto-handoff into PC Runner execution.
+- Visual Studio Debug x64 build validation can route through the `build`
+  profile and `debug_visual_studio_build`.
+- Completion review can use an explicit `mark-done:true` shortcut; commit/push
+  remains a separate explicit gate.
 
-Local script validation result:
+Recent validation result:
 
 ```text
-status.bat:
+safe GAME validation policy smoke:
   passed
 
-capture_diff.bat --include-untracked:
+unsafe GAME mutation policy block:
   passed
 
-json_smoke_check.bat:
+build profile plan:
   passed
-  total JSON files: 11
-  failed: 0
+  command_id: debug_visual_studio_build
+
+Visual Studio build evidence:
+  bt-build-20260513-112013-004-16056e99
+  MSBuild.exe resolution: visual_studio_auto
+  exit_code: 0
 ```
 
-Current missing pieces for Level 3 stabilization:
+Current missing pieces for final workflow stabilization:
 
 ```text
-- fixed ActiveTask state transition policy
-- read-only status summary suitable for Discord
-- JSON smoke check integration into standard validation workflow
-- project config abstraction for future Unity projects
+- repeat real small GAME source/data tasks through PC Runner
+- refine approval policy levels from observed use
+- continue reducing completion/commit friction without removing Human Director authority
+- keep command/document surface pruned as old manual paths become rare
 ```
 
 ---
 
-## Discord Read-Only Bot v1 Status
+## Discord Orchestrator / PC Runner Status
 
 ```yaml
-status: passed
-validated_at: 2026-04-30
-permission_level: read_only
-workflow_stage: Discord Read-Only Bot v1
+status: active
+validated_at: 2026-05-13
+permission_level: controlled_write_with_human_gates
+workflow_stage: Discord-first PC Runner execution harness stabilization
 ```
 
-Validated commands:
+Primary workflow commands:
 
 ```text
-/ai status
-/ai active
-/ai backlog
-/ai next
-/ai project list
-/ai project profile
-/ai project profile id:unity_project_template
+/ai intake
+/ai runner start
+/ai completion card
+/ai runner accept-completion
+/ai task done
+/ai git commit
+/ai git push
+/ai git commit-push
 ```
 
 Current capability:
 
 ```text
-Discord can be used as a remote read-only status interface for AIWorkflow.
+Discord can be used as the primary Human Director control surface for intake,
+approval, PC Runner execution, completion review, task done, and commit/push
+decisions.
 ```
 
 Safety constraints:
 
 ```text
-No file writes.
-No source edits.
-No document edits.
-No build/test execution.
-No Copilot execution.
-No commit/push/release automation.
+No automatic final approval authority for LLM output.
+No automatic unsafe GAME mutation work.
+No automatic commit/push/release/deploy.
+No arbitrary user-provided shell execution.
+Task lifecycle, runtime execution, evidence, verification, and finalization
+remain separate.
 ```
 
 Known limitation:
 
 ```text
-There is not yet a durable active project selector.
-The next recommended workflow task is WF-012.
+The harness is ready for small real GAME task stabilization, but broader
+autonomous source/data changes should still be introduced incrementally.
 ```
 
 ---

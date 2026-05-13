@@ -187,7 +187,7 @@ Use this path for normal task operation:
 
 ```text
 1. /ai intake
-2. low-risk DOC/VAL tasks may auto-handoff to set-active, approve, and runner start
+2. eligible low-risk tasks may auto-handoff to set-active, approve, and runner start
 3. /ai task set-active, only when auto-handoff does not apply
 4. /ai task approve, only when policy requires explicit approval
 5. /ai runner plan, when a plan preview is needed
@@ -199,10 +199,13 @@ Use this path for normal task operation:
 11. /ai git commit, /ai git push, or /ai git commit-push after diff review
 ```
 
-Intake auto-handoff is limited to P2/P3, low-risk documentation or validation
-tasks with no clarification or cross-check blocker. P0/P1, medium/high-risk,
-WF/GAME/UNITY, source/data/refactor, and command-behavior tasks remain behind
-manual Human Director approval.
+Intake auto-handoff is limited to P2/P3, low-risk tasks with no clarification
+or cross-check blocker. Current allowlisted classes are DOC/VAL,
+documentation/validation, WF documentation/maintenance, and GAME validation or
+build-validation only when the request explicitly says there is no source,
+data, schema, or runtime behavior change. P0/P1, medium/high-risk, GAME
+mutation work, UNITY, source/data/refactor, and command-behavior tasks remain
+behind manual Human Director approval.
 
 Milestone 1 consolidation keeps regular responses short. Detailed role routing,
 path-rule reminders, validation expectations, and completion guidance remain in
@@ -217,8 +220,11 @@ VerificationReport and CompletionReport artifacts, then show a Discord-facing
 completion card. They do not approve, mark done, finalize, commit, or push.
 
 WF-307 finalization commands record explicit Human Director completion
-decisions into ApprovalHistory and FinalizationLog artifacts. They do not mark
-tasks done, apply auto approval, commit, or push.
+decisions into ApprovalHistory and FinalizationLog artifacts. They do not apply
+auto approval, commit, or push. The regular shortcut
+`/ai runner accept-completion ... mark-done:true` is an explicit Human Director
+command that combines completion acceptance and `task done`; it still does not
+commit or push.
 
 ## Optional / Debug / Admin Commands
 
@@ -291,9 +297,10 @@ _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md
 _Docs/AIWorkflow/Role_Aware_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Path_Rule_Checklist_Goal_Prompt_Injection.md
 _Docs/AIWorkflow/Intake_To_Task_Draft_Generation.md
-_Docs/AIWorkflow/Intake_Approval_Task_Creation_Flow.md
 _Docs/AIWorkflow/Intake_Created_Task_Review_Activation_Flow.md
 _Docs/AIWorkflow/Goal_Result_Intake_Completion_Audit.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md
 ```
 
 `/ai task set-active` writes ActiveTask.md and then returns an activation safety
@@ -382,7 +389,8 @@ For intake task creation:
 
 `/ai intake` uses the Codex CLI intake path, appends one `todo` row to
 `_Docs/AIWorkflow/Backlog.md`, creates a timestamped Backlog backup before
-writing, and may auto-handoff low-risk DOC/VAL tasks into PC Runner execution.
+writing, and may auto-handoff allowlisted low-risk DOC/VAL/WF tasks or safe
+no-mutation GAME validation/build-validation tasks into PC Runner execution.
 
 It does not mark tasks done, commit, push, or modify source files directly.
 
@@ -525,10 +533,13 @@ For the regular PC Runner path:
 ```
 
 `/ai runner` calls the local PC Runner entrypoint and stops at Human Director
-gates. `profile:validation` runs the safe validation chain. `profile:implementation`
-routes through the guarded Codex CLI adapter and stops if the local Codex adapter
-config is missing or disabled. It does not approve tasks, mark tasks done,
-create Backlog tasks, commit, push, or run arbitrary shell commands.
+gates. `profile:validation` runs the safe validation chain. `profile:build`
+routes build validation through allowlisted `build_test_runner` commands such
+as `debug_visual_studio_build`. `profile:implementation` routes through the
+guarded Codex CLI adapter and stops if the local Codex adapter config is
+missing or disabled. It does not create Backlog tasks, commit, push, or run
+arbitrary shell commands. It marks tasks done only when the Human Director uses
+an explicit completion shortcut such as `mark-done:true`.
 
 ---
 

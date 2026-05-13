@@ -37,7 +37,7 @@ flowchart TD
 
 핵심:
 
-- `/ai intake`는 Backlog task를 만들고, 저위험 DOC/VAL은 PC Runner까지 자동 시작할 수 있습니다.
+- `/ai intake`는 Backlog task를 만들고, allowlist된 저위험 작업은 PC Runner까지 자동 시작할 수 있습니다.
 - `/ai runner accept-completion`은 완료 검토 수락과 runner continue를 한 번에 처리합니다.
 - `/ai task done`은 commit하지 않습니다.
 - commit/push는 `/ai git commit`, `/ai git push`, `/ai git commit-push` 명령으로 처리합니다.
@@ -78,13 +78,15 @@ flowchart TD
     C --> D{"[HUMAN] draft 수락/수정?"}
     D -- 보류 --> E["질문 보강 / draft 수정"]
     D -- 수락 --> F["[WRITE] /ai intake<br/>또는 /ai task create"]
-    F --> G["[WRITE] /ai task set-active"]
-    G --> H["[WRITE] /ai task approve"]
+    F --> G{"자동 handoff 가능?"}
+    G -- 예 --> H["[WRITE] set-active + approve + runner start"]
+    G -- 아니오 --> I["[WRITE] /ai task set-active<br/>/ai task approve<br/>/ai runner start"]
 ```
 
 LLM-assisted intake는 task draft를 더 잘 만들기 위한 보조 계층입니다.
-Backlog write, ActiveTask write, approval, execution, done, commit은 기존
-Human Director 게이트와 Discord 명령을 그대로 통과해야 합니다.
+Backlog write 이후의 ActiveTask write, approval, execution은 deterministic
+auto-handoff 정책 또는 Human Director 명령을 통과해야 합니다. done과
+commit/push는 계속 별도 명시 명령입니다.
 
 ---
 
@@ -179,8 +181,9 @@ Commit recommendation은 자동 commit 명령이 아닙니다.
 
 정규 흐름에서는 `/ai role status`를 매번 실행할 필요가 없습니다.
 
-`/ai prepare goal`이 최종 실행 준비 확인이고, 자세한 role/path/validation
-내용은 generated `goal_request_*.md` 안에 들어 있습니다.
+`/ai prepare goal`은 이제 정규 실행 준비 단계가 아니라 수동 승격/호환
+경로입니다. 정규 흐름에서는 Discord 카드의 `다음 명령`과 Completion Card를
+따릅니다.
 
 헷갈릴 때는 아래 세 개만 먼저 봅니다.
 
@@ -197,6 +200,7 @@ Main happy path now starts with `/ai intake text:<request>`, which uses local
 compatibility alias is no longer registered.
 
 The intake Codex CLI call is not itself an implementation execution path.
-Low-risk DOC/VAL tasks may be auto-handed off to PC Runner, while approval-gated
-tasks still require Human Director approval. Done and commit/push decisions
-remain separate.
+Low-risk allowlisted DOC/VAL/WF tasks and safe no-mutation GAME
+validation/build-validation tasks may be auto-handed off to PC Runner, while
+approval-gated tasks still require Human Director approval. Done and
+commit/push decisions remain separate.

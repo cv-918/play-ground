@@ -447,8 +447,8 @@ Commands:
 
 ```bat
 tools\aiworkflow\pc_runner.bat status task_id [--json]
-tools\aiworkflow\pc_runner.bat plan task_id [--profile validation|implementation] [--executor local_cli|codex_cli] [--json]
-tools\aiworkflow\pc_runner.bat start task_id [--profile validation|implementation] [--executor local_cli|codex_cli] [--json]
+tools\aiworkflow\pc_runner.bat plan task_id [--profile validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
+tools\aiworkflow\pc_runner.bat start task_id [--profile validation|build|implementation|documentation] [--executor local_cli|codex_cli] [--json]
 tools\aiworkflow\pc_runner.bat continue task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat stop task_id [--runner-run-id id] [--json]
 tools\aiworkflow\pc_runner.bat read task_id [--runner-run-id id] [--json]
@@ -462,10 +462,14 @@ _Temp\AIWorkflowRuntime\tasks\<task_id>\runner\
 
 It can advance approved work through safe automated substeps and stops at
 Human Director gates. The `validation` profile uses allowlisted local workflow
-commands. The `implementation` profile uses `codex_cli_adapter.bat` and will
-not execute unless `_Local\AIWorkflow\codex_cli_adapter.local.json` exists and
-is explicitly enabled. The runner does not approve tasks, mark tasks done,
-create Backlog tasks, run arbitrary shell commands, commit, or push.
+commands. The `build` profile routes build-validation requests to allowlisted
+`build_test_runner` commands such as `debug_visual_studio_build`. The
+`documentation` and `implementation` profiles use `codex_cli_adapter.bat` and
+will not execute unless `_Local\AIWorkflow\codex_cli_adapter.local.json` exists
+and is explicitly enabled. The runner does not approve tasks, create Backlog
+tasks, run arbitrary shell commands, commit, or push. A task is marked done
+only through an explicit Human Director command path such as Discord
+`/ai runner accept-completion ... mark-done:true` or `/ai task done`.
 
 For implementation runs, the generated prompt separates executor-owned tracked
 edits from PC Runner-owned runtime validation. The runner also records a

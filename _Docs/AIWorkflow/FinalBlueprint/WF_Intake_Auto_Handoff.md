@@ -31,8 +31,10 @@ A task is eligible only when all conditions are true:
 
 - priority is `P2` or `P3`
 - suggested risk is `low`
-- category is `DOC` or `VAL`, kind is `documentation` or `validation`, or
-  category is `WF` with kind `documentation` or `maintenance`
+- category is `DOC` or `VAL`, kind is `documentation` or `validation`,
+  category is `WF` with kind `documentation` or `maintenance`, or category is
+  `GAME` with kind `validation` and an explicit no source/data/schema/runtime
+  mutation scope
 - the TaskDraft has no clarifying questions
 - the rule-based cross-check does not require human review
 - a supported PC Runner profile/executor can be selected
@@ -45,6 +47,8 @@ Current profile mapping:
 |---|---|---|
 | `DOC` or `documentation` | `documentation` | `codex_cli` |
 | `VAL` or `validation` | `validation` | `local_cli` |
+| build validation text such as `Visual Studio`, `MSBuild`, `Debug x64`, or `빌드 검증` | `build` | `local_cli` |
+| safe `GAME` validation with explicit no source/data/schema/runtime mutation | `validation` or `build` | `local_cli` |
 | `WF` + `maintenance` | `implementation` | `codex_cli` |
 
 `WF` + `documentation` follows the `documentation/codex_cli` route.
@@ -64,7 +68,9 @@ The task must remain in human approval flow when any condition is true:
 
 - priority is `P0` or `P1`
 - suggested risk is `medium` or `high`
-- category is `GAME`, `UNITY`, or another non-allowlisted category
+- category is unsafe `GAME`, `UNITY`, or another non-allowlisted category
+- category is `GAME` and the request may change source, data, schema, runtime
+  behavior, gameplay behavior, or build settings
 - category is `WF` with any kind other than `documentation` or `maintenance`
 - kind is source implementation, game data, refactoring, release, or another
   non-allowlisted kind
@@ -84,7 +90,7 @@ Auto-handoff must not:
 
 - approve P0/P1 or medium/high-risk work
 - approve game source, game data, schema, lifecycle, save/load, build setting,
-  or workflow command behavior changes
+  runtime behavior, gameplay behavior, or workflow command behavior changes
 - approve workflow command behavior changes even when the request is otherwise
   classified as WF maintenance
 - mark a task done
@@ -168,8 +174,8 @@ Discord bot.
 
 This layer is complete when:
 
-- low-risk DOC/VAL and allowlisted low-risk WF intake can auto-handoff to PC
-  Runner
+- low-risk DOC/VAL, allowlisted low-risk WF, and safe no-mutation GAME
+  validation/build-validation intake can auto-handoff to PC Runner
 - higher-risk tasks remain behind human approval
 - Discord response explains automatic actions and next review point
 - PC Runner response includes next commands for common stop reasons

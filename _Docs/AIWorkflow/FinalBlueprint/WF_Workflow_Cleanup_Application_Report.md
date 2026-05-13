@@ -5,9 +5,16 @@
 WF-408 applied the approved non-destructive workflow cleanup after the unified
 PC Runner entrypoint was implemented.
 
-The cleanup does not remove commands. It clarifies the command surface so the
-regular workflow is centered on `/ai runner`, while older bridge commands remain
-available as manual escalation, diagnostic, or compatibility surfaces.
+Status note: this report is historical. WF-429 and later work superseded part
+of its command-surface state by removing the `/ai intake-create` compatibility
+alias, exposing additional runner profiles, and adding newer completion/git
+shortcuts. Use `WF_Post_309_Workflow_Stabilization_Roadmap.md` and the Human
+Director guide for the current operating flow.
+
+At the time, the cleanup did not remove commands. It clarified the command
+surface so the regular workflow was centered on `/ai runner`, while older
+bridge commands remained available as manual escalation, diagnostic, or
+compatibility surfaces.
 
 ## Applied Decisions
 
@@ -16,11 +23,11 @@ available as manual escalation, diagnostic, or compatibility surfaces.
   escalation commands.
 - `/ai result audit` remains registered as a manual escalation audit command.
 - `/ai run ...` commands are described as diagnostic/recovery helpers.
-- `/ai intake-create` remains registered as a compatibility alias for
+- Superseded later: `/ai intake-create` is no longer registered. Use
   `/ai intake`.
-- Unsupported runner profiles are hidden from the Discord command choices.
-  The local runner still rejects unsupported profiles safely.
-- No command was removed.
+- Superseded later: supported runner profiles now include
+  `validation`, `build`, `implementation`, and `documentation`.
+- Superseded later: obsolete command removal was applied in WF-429.
 
 ## Discord Metadata Cleanup
 
@@ -31,10 +38,9 @@ Updated slash command descriptions to make the categories visible:
 - diagnostic/recovery
 - compatibility alias
 
-The runner `profile` choice list now exposes only `validation`, because that is
-the currently executable runner profile. This avoids implying that
-implementation, analysis, or documentation profiles are ready for normal
-Discord use.
+Superseded later: the runner `profile` choice list now exposes supported
+regular profiles such as `validation`, `build`, `implementation`, and
+`documentation`.
 
 ## Documentation Cleanup
 

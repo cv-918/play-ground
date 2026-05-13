@@ -19,8 +19,11 @@
 | intake-create | 제거된 호환 alias | 과거 `/ai intake`와 같은 역할을 하던 명령 | 현재는 `/ai intake` 사용 |
 | set-active | 활성 작업 선택 | Backlog task를 ActiveTask로 선택 | 지금 이 작업을 진행할 때 |
 | approve | 승인 | 구현/실행 범위를 사람이 승인했다는 기록 | Codex 실행 전 |
-| prepare goal | goal 요청 생성 | Codex CLI에 붙여 넣을 request file 생성 | 승인 후 Codex 실행 준비 |
-| result audit | 결과 감사 | Codex 결과 요약에서 validation/위험/done 가능성 확인 | Codex 실행 후 |
+| runner start | Runner 시작 | PC Runner가 task workspace 실행, 증거 수집, 검증 보고 흐름을 시작 | 정규 실행 경로 |
+| completion card | 완료 카드 | 실행 결과, 검증 verdict, 다음 결정을 짧게 보여주는 카드 | 완료 리뷰 시 |
+| runner accept-completion | 완료 승인 | completion review를 수락하고 Runner를 다음 gate로 진행 | 완료 카드 확인 후 |
+| prepare goal | goal 요청 생성 | Codex CLI에 붙여 넣을 request file 생성 | 수동 승격/호환 경로 |
+| result audit | 결과 감사 | 수동 Codex 결과 요약에서 validation/위험/done 가능성 확인 | 수동 승격/호환 경로 |
 | done | 완료 처리 | evidence와 함께 task를 done 상태로 기록 | 사람이 완료를 받아들일 때 |
 | role routing | 역할 라우팅 | task 성격에 맞는 검토 역할 추천 | 상세 검토가 필요할 때 |
 | path-scoped rules | 경로별 규칙 | 파일 경로별 review/validation 주의사항 | source/data/tool/doc 변경 시 |
@@ -29,7 +32,7 @@
 | commit recommendation | commit 권고 | result audit이 제안하는 commit 가능성 | 최종 commit 전 참고 |
 | rule-based intake | 규칙 기반 intake | 키워드와 고정 규칙으로 task draft를 제안하는 fallback/cross-check 방식 | LLM 실패 또는 mismatch 확인이 필요할 때 |
 | LLM-assisted intake | LLM 보조 intake | LLM이 TaskDraft 후보를 제안하되 하네스가 검증하고 사람이 승인하는 현재 `/ai intake` 방식 | 복합 요청의 문맥 해석이 필요할 때 |
-| Codex App execution | Codex App 실행 | 사람이 승인된 요청서를 Codex App에 붙여 넣고 저장소 작업을 수행하는 수동 실행 | `/ai prepare goal` 이후 |
+| Codex App execution | Codex App 실행 | 사람이 승인된 요청서를 Codex App에 붙여 넣고 저장소 작업을 수행하는 수동 실행 | PC Runner가 막힌 수동 승격 |
 
 ---
 
@@ -45,8 +48,8 @@ Current behavior:
 - Validates the TaskDraft locally and cross-checks it against the rule-based
   baseline.
 - Creates one Backlog task.
-- Low-risk DOC/VAL 작업은 정책이 허용하면 ActiveTask 선택, 승인, PC Runner
-  시작까지 자동 handoff 할 수 있습니다.
+- Low-risk allowlist 작업은 정책이 허용하면 ActiveTask 선택, 승인, PC
+  Runner 시작까지 자동 handoff 할 수 있습니다.
 - Does not mark done, commit, or push.
 
 For read-only preview, use `/ai intake-preview`.
@@ -140,9 +143,44 @@ Type: write
 /ai task approve id:GAME-001 note:"Human reviewed analysis scope."
 ```
 
+### `/ai runner start`
+
+Type: controlled workflow execution
+
+무엇을 하나:
+
+- PC Runner를 시작합니다.
+- task workspace, session, evidence, verification, completion card 흐름을
+  연결합니다.
+- Human Director gate에서 멈추고 다음 명령을 보여줍니다.
+
+사용 예:
+
+```text
+/ai runner start id:GAME-001
+```
+
+### `/ai runner accept-completion`
+
+Type: write
+
+무엇을 하나:
+
+- Completion Card 검토 결과를 수락합니다.
+- FinalizationLog를 기록하고 Runner continue를 수행합니다.
+- `mark-done:true`를 붙이면 명시적으로 task done까지 같이 처리합니다.
+
+사용 예:
+
+```text
+/ai runner accept-completion id:GAME-001 completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
+```
+
 ### `/ai prepare goal`
 
 Type: write to `_Temp`
+
+현재 위치: 수동 승격/호환 경로
 
 무엇을 하나:
 
@@ -167,6 +205,8 @@ Type: write to `_Temp`
 
 Type: manual
 
+현재 위치: 정규 경로가 아니라 수동 승격/호환 경로
+
 사람이 generated markdown file을 열고 내용을 검토한 뒤 Codex App 또는
 Codex CLI에 직접 붙여 넣습니다.
 
@@ -178,6 +218,8 @@ Codex CLI에 직접 붙여 넣습니다.
 ### `/ai result audit`
 
 Type: read-only
+
+현재 위치: 수동 승격/호환 경로
 
 무엇을 하나:
 

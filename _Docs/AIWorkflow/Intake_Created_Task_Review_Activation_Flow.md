@@ -21,7 +21,7 @@ approve it. It does not make that decision automatically.
 The command:
 
 1. Reads the Backlog task by id.
-2. Checks whether the task appears to have been created by `/ai intake-create`.
+2. Checks whether the task appears to have been created by `/ai intake`.
 3. Provides a generic activation review when no intake marker is found.
 4. Reuses role router recommendation logic for roles, gates, validation,
    execution route, path-scoped reminders, and verdict guidance.
@@ -32,8 +32,11 @@ Suggested commands shown in the response:
 ```text
 /ai task set-active id:<task_id>
 /ai task approve id:<task_id> note:"..."
-/ai prepare goal id:<task_id> mode:analysis context:standard
+/ai runner start id:<task_id>
 ```
+
+`/ai prepare goal` is now a manual-escalation or compatibility path, not the
+regular next step for PC Runner-owned execution.
 
 ---
 

@@ -42,7 +42,6 @@ This README is the entry point for the document set.
 | `Role_Aware_Goal_Prompt_Injection.md` | Defines how `/ai prepare goal` injects selected-task role router recommendations into generated Codex `/goal` request files |
 | `Path_Rule_Checklist_Goal_Prompt_Injection.md` | Defines how `/ai prepare goal` injects concrete path-scoped rule checklist reminders into generated Codex `/goal` request files |
 | `Intake_To_Task_Draft_Generation.md` | Defines how `/ai intake` adds a structured Task Draft for manual review and later task creation |
-| `Intake_Approval_Task_Creation_Flow.md` | Defines the explicit human-invoked intake task creation flow and Backlog safety boundaries |
 | `Intake_Created_Task_Review_Activation_Flow.md` | Defines the read-only activation review command for intake-created Backlog tasks |
 | `ActiveTask_Activation_Safety_Summary.md` | Defines the activation safety summary returned by `/ai task set-active` |
 | `Task_Approval_Safety_Summary.md` | Defines the approval safety summary returned by `/ai task approve` |
@@ -110,16 +109,9 @@ This README is the entry point for the document set.
 | `Task_State_Model.md` | Defines fixed task states, lifecycle transitions, approval-sensitive transitions, and completion rules for future local/Discord orchestration |
 | `ActiveTask_Template.md` | Template for replacing `ActiveTask.md` when starting a new workflow task |
 | `Project_Profile_Schema.md` | Defines project profile schema for multi-project, Unity-ready, and Discord-connected workflow orchestration |
-| `Discord_Orchestrator_Implementation_Stages.md` | Defines staged implementation plan for Discord-connected AI workflow orchestration |
-| `Discord_ReadOnly_Bot_v1_Spec.md` | Defines read-only Discord Bot v1 commands, behavior, output, and restrictions |
 | `Discord_Orchestrator_Safety_Rules.md` | Defines permission classes and safety rules for Discord-connected orchestration |
-| `Discord_ReadOnly_Bot_v1_Implementation_Plan.md` | Defines implementation plan, runtime model, command mapping, safety constraints, and validation plan for Discord Read-Only Bot v1 |
-| `Discord_ReadOnly_Bot_v1_Setup_Checklist.md` | Checklist for Discord Developer Portal setup, local environment setup, and v1 bot validation |
 | `Discord_Bot_Config_Template.json` | Template for local Discord bot configuration without secrets |
-| `Discord_ReadOnly_Bot_v1_Validation_Result.md` | Records validation results, fixes, limitations, and safety constraints for Discord Read-Only Bot v1 |
 | `Active_Project_Selector.md` | Defines the durable active project selector convention for multi-project and Unity-ready workflow operation |
-| `Discord_Bot_v1_Operation_Guide.md` | Daily operation guide for starting, using, shutting down, and safely operating Discord Read-Only Bot v1 |
-| `Discord_Bot_v1_Troubleshooting.md` | Troubleshooting reference for Discord Bot v1 token, command, local script, active project, and Git safety issues |
 | `Discord_Bot_Always_On_Guide.md` | Operation guide for Discord Bot always-on background start, stop, status, restart, logging, and local safety checks |
 | `Discord_Task_Management_Commands.md` | Defines Release B Discord task management commands, safety scope, validation commands, and acceptance criteria |
 | `Discord_Task_Status_Commands.md` | Defines Release C Discord approval and status note commands, write scope, backup behavior, and validation result |
@@ -244,18 +236,16 @@ Manual Codex App / Codex CLI prompt copy/paste is a legacy/bootstrap escalation
 path. It remains allowed while the PC Runner execution path is being built, but
 it is not the final architecture.
 
-For regular Discord-assisted AIWorkflow task operation during the current
-bootstrap stage:
+For regular Discord-assisted AIWorkflow task operation:
 
 ```text
 1. /ai intake text:<request>
-2. /ai task set-active
-3. /ai task approve
-4. /ai prepare goal
-5. Execute through the approved current path
-6. /ai result audit
-7. /ai task done
-8. Manual commit decision
+2. If auto-handoff is allowed, review the runner/completion card when it stops.
+3. If approval is required, approve the task and start the runner from the
+   next-command card.
+4. Use /ai runner accept-completion after reviewing the Completion Card.
+5. Use mark-done:true only when the completion result is acceptable.
+6. Use /ai git commit, /ai git push, or /ai git commit-push after diff review.
 ```
 
 Compatibility and preview options:
@@ -263,14 +253,16 @@ Compatibility and preview options:
 ```text
 /ai intake-preview text:<request>
 /ai task create                   # manual Backlog task creation
+/ai prepare goal                  # manual escalation / compatibility path
+/ai result audit                  # manual escalation / compatibility path
 ```
 
 Current responsibility split:
 
 ```text
 Discord Orchestrator:
-  task state, approval records, goal request files, result audit, command safety,
-  and Codex CLI-backed intake-to-Backlog automation
+  task state, approval records, command safety, Codex CLI-backed
+  intake-to-Backlog automation, and runner control cards
 
 Codex CLI intake backend:
   non-interactive TaskDraft JSON generation only
@@ -280,27 +272,29 @@ PC Runner execution target:
   collection, verification reporting, and Discord progress/completion reporting
 
 Codex App / Codex CLI manual execution:
-  legacy/bootstrap or approved manual-escalation path until PC Runner execution
-  is complete
+  approved manual-escalation path for bootstrap, adapter failure, auth/session
+  failure, or high-risk exceptions
 ```
 
 Current `/ai intake` uses local `codex exec` through the signed-in Codex CLI as
 the LLM-assisted intake backend. It creates one Backlog task from a validated
-TaskDraft and stops there. The local rule-based classifier remains as the
-baseline and cross-check layer. `/ai intake` does not update ActiveTask, approve
-scope, run implementation, mark done, commit, or push. `/ai intake-preview` is
-the read-only draft path.
+TaskDraft. For P2/P3 low-risk allowlisted work, deterministic auto-handoff may
+set ActiveTask, approve, and start PC Runner. Current allowlisted classes are
+DOC/VAL, documentation/validation, WF documentation/maintenance, and safe
+GAME validation/build validation when the request explicitly excludes
+source/data/schema/runtime mutation. `/ai intake` does not mark done, commit, or
+push. `/ai intake-preview` is the read-only draft path.
 
-The regular post-intake task flow remains:
+When auto-handoff is blocked, the manual post-intake task flow is:
 
 ```text
-3. /ai task set-active
-4. /ai task approve
-5. /ai prepare goal
-6. Execute through PC Runner when available; otherwise use approved manual escalation
-7. /ai result audit
-8. /ai task done
-9. Manual commit decision
+1. /ai task set-active
+2. /ai task approve
+3. /ai runner start
+4. /ai completion card
+5. /ai runner accept-completion
+6. /ai task done or /ai runner accept-completion ... mark-done:true
+7. /ai git commit, /ai git push, or /ai git commit-push
 ```
 
 Optional/debug/admin commands such as `/ai role status`, `/ai task

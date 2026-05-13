@@ -2,11 +2,17 @@
 
 ## Purpose
 
-This guide documents the local Windows operation layer for the AIWorkflow Discord Read-Only Bot.
+This guide documents the local Windows operation layer for the AIWorkflow
+Discord Orchestrator bot.
 
-The bot remains read-only. These scripts only start, stop, restart, inspect, and optionally register local Windows Scheduled Tasks for the existing bot process.
+These scripts only start, stop, restart, inspect, and optionally register local
+Windows Scheduled Tasks for the existing bot process. They do not bypass command
+permissions or workflow safety gates.
 
-This release does not add Discord write commands, task creation, approval commands, safe script execution, Codex routing, computer-use, build execution, or source editing.
+The current bot includes controlled workflow write commands such as intake,
+task approval, PC Runner control, and git command helpers. Those capabilities
+remain governed by the Discord command handlers and workflow policy, not by the
+start/stop scripts in this guide.
 
 ## Commands
 

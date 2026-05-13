@@ -114,13 +114,13 @@ _Docs/AIWorkflow/Unity_Workflow_Context.md
 _Docs/AIWorkflow/Task_State_Model.md
 _Docs/AIWorkflow/ActiveTask_Template.md
 _Docs/AIWorkflow/Project_Profile_Schema.md
-_Docs/AIWorkflow/Discord_Orchestrator_Implementation_Stages.md
-_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Spec.md
 _Docs/AIWorkflow/Discord_Orchestrator_Safety_Rules.md
-_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md
-_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Setup_Checklist.md
-_Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Validation_Result.md
 _Docs/AIWorkflow/Active_Project_Selector.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.

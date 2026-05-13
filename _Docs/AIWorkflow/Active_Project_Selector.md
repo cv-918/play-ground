@@ -11,7 +11,8 @@ dustland_custom_cpp_prototype
 unity_project_template
 ```
 
-Discord Read-Only Bot v1 can read project profiles, but the workflow still needs a durable way to know which project is currently active.
+The Discord Orchestrator and PC Runner can read project profiles, but the
+workflow still needs a durable way to know which project is currently active.
 
 ---
 
@@ -35,7 +36,7 @@ Do not hardcode active project selection inside Discord command handlers.
 ## 3. Final Architecture
 
 ```text
-Discord Bot
+Discord Orchestrator / PC Runner
   ↓
 Orchestrator Core / Local Script Layer
   ↓

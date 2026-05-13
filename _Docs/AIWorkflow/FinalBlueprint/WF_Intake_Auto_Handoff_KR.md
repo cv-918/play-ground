@@ -53,6 +53,8 @@
 |---|---|---|
 | `DOC` 또는 `documentation` | `documentation` | `codex_cli` |
 | `VAL` 또는 `validation` | `validation` | `local_cli` |
+| Visual Studio/MSBuild/Debug x64/빌드 검증 요청 | `build` | `local_cli` |
+| source/data/schema/runtime 변경 없는 `GAME` 검증 | `validation` 또는 `build` | `local_cli` |
 
 분류를 안정시키려면 요청 앞에 `DOC task:`, `VAL task:`, `WF task:`,
 `GAME task:`, `UNITY task:` 같은 짧은 식별자를 붙일 수 있습니다. rule-based
@@ -68,8 +70,9 @@ cross-check는 이 식별자를 일반 키워드보다 먼저 봅니다. 예를 
 
 - P0/P1 작업
 - medium/high risk 작업
-- WF/GAME/UNITY 작업
-- 소스 구현, 게임 데이터, 리팩터링, maintenance, release 작업
+- 허용되지 않은 WF/GAME/UNITY 작업
+- GAME source/data/schema/runtime/gameplay 변경 작업
+- 소스 구현, 게임 데이터, 리팩터링, release 작업
 - clarifying question이 있는 작업
 - rule-based cross-check가 human review를 요구한 작업
 - runner profile/executor를 안전하게 고를 수 없는 작업
@@ -160,6 +163,8 @@ node --check tools/discord-orchestrator/src/services/responseFormatter.js
 
 ```text
 P2/low/DOC -> 자동 진행 가능
+P2/low/GAME validation + source/data/schema/runtime 변경 없음 -> 자동 진행 가능
+P2/low/GAME validation + gameplay/runtime 수정 -> 사람 승인 필요
 P1/medium/WF -> 사람 승인 필요
 ```
 
@@ -167,6 +172,7 @@ Discord smoke:
 
 ```text
 /ai intake text:<저위험 DOC 또는 VAL 작업>
+/ai intake text:"GAME validation task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 검증해줘."
 ```
 
 이 명령 하나로 Backlog 생성, ActiveTask 선택, 승인, PC Runner 시작까지
@@ -176,7 +182,9 @@ Discord smoke:
 
 ## 완료 기준
 
-- 저위험 DOC/VAL intake가 PC Runner까지 자동 handoff됨
+- 저위험 DOC/VAL, 허용된 저위험 WF, 그리고 source/data/schema/runtime
+  변경이 없다고 명시된 GAME validation/build validation intake가 PC
+  Runner까지 자동 handoff됨
 - 위험한 작업은 계속 사람 승인에서 멈춤
 - Discord 응답이 자동 진행 결과와 다음 확인 지점을 설명함
 - PC Runner 응답이 stop_reason별 다음 명령을 표시함

@@ -37,7 +37,9 @@ sequence.
 7. Human Director reviews the Completion Card.
 8. Human Director accepts, requests changes, rejects, or defers.
 9. PC Runner records follow-up artifacts after the final decision.
-10. Human Director decides whether to mark done and commit/push.
+10. Human Director decides whether to mark done and commit/push. Completion
+    acceptance and task done may be combined only through an explicit Human
+    Director shortcut command.
 ```
 
 The Human Director should not need to copy prompts into Codex or run individual
@@ -109,7 +111,7 @@ The runner must not:
   does that before runner start
 - approve tasks automatically
 - bypass P0/P1/high-risk approval gates
-- mark tasks done automatically
+- mark tasks done automatically without an explicit Human Director command
 - apply auto approval automatically
 - commit, push, release, or deploy
 - execute arbitrary user-provided shell commands
@@ -356,6 +358,7 @@ The runner should select executor by profile and task route:
 | analysis | `codex_cli` when available, otherwise manual escalation |
 | implementation | `codex_cli` for AI implementation, `local_cli` for allowlisted checks |
 | validation | `local_cli` and `build_test_runner` |
+| build | `local_cli` and `build_test_runner` |
 | documentation | `codex_cli` or approved Codex App manual escalation during bootstrap |
 
 Codex App, Copilot, OpenClaw, and Hermes remain future candidates until the PC

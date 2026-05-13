@@ -195,13 +195,14 @@ export function formatDocs() {
     "- _Docs/AIWorkflow/Task_State_Model.md",
     "- _Docs/AIWorkflow/Project_Profile_Schema.md",
     "- _Docs/AIWorkflow/Active_Project_Selector.md",
-    "- _Docs/AIWorkflow/Discord_ReadOnly_Bot_v1_Implementation_Plan.md",
     "- _Docs/AIWorkflow/Discord_Task_Management_Commands.md",
     "- _Docs/AIWorkflow/Discord_Task_Status_Commands.md",
     "- _Docs/AIWorkflow/Discord_Safe_Script_Execution_Commands.md",
     "- _Docs/AIWorkflow/Discord_Codex_Task_Routing_Commands.md",
     "- _Docs/AIWorkflow/Discord_Goal_Task_Routing_Commands.md",
     "- _Docs/AIWorkflow/Discord_Role_Recommendation_Command.md",
+    "- _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md",
+    "- _Docs/AIWorkflow/FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md",
   ].join("\n");
 }
 
