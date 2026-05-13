@@ -47,6 +47,7 @@ Current profile mapping:
 |---|---|---|
 | `DOC` or `documentation` | `documentation` | `codex_cli` |
 | `VAL` or `validation` | `validation` | `local_cli` |
+| safe game data loader/readability validation | `validation` | `local_cli` |
 | build validation text such as `Visual Studio`, `MSBuild`, `Debug x64`, or `빌드 검증` | `build` | `local_cli` |
 | safe `GAME` validation with explicit no source/data/schema/runtime mutation | `validation` or `build` | `local_cli` |
 | `WF` + `maintenance` | `implementation` | `codex_cli` |
@@ -61,15 +62,28 @@ executor=local_cli
 command_id=debug_visual_studio_build
 ```
 
+Safe GAME data loader/readability validation has a deterministic route:
+
+```text
+profile=validation
+executor=local_cli
+command_id=game_data_loader_readability
+```
+
 When the request explicitly says there are no source, data, schema, runtime
 behavior, or document changes and asks only for Visual Studio/MSBuild/Debug x64
 build validation, intake normalization treats it as `VAL`, `validation`,
 `P2/low`. Clarifying questions about the build runner profile or command_id are
 removed because the route above is fixed.
 
-Requests for unknown validation evidence, such as an unspecified game data
-loader/readability command, still keep a clarifying question and remain in the
-human approval path.
+When the request explicitly says there are no source, data, schema, runtime
+behavior, or document changes and asks only for GameDataLoader expected-file,
+JSON shape, ID/reference, or readability validation, intake normalization also
+treats it as `VAL`, `validation`, `P2/low`. The PC Runner then uses
+`game_data_loader_readability` through the `validation/local_cli` profile.
+
+Requests for other unknown validation evidence still keep a clarifying question
+and remain in the human approval path.
 
 For stable classification, intake text may start with an explicit category
 marker such as `DOC task:`, `VAL task:`, `WF task:`, `GAME task:`, or
@@ -176,6 +190,8 @@ Required validation:
   says no source or document changes
 - policy smoke: low-risk DOC is eligible
 - policy smoke: low-risk WF documentation and WF maintenance are eligible
+- policy smoke: safe game data loader/readability validation uses
+  `game_data_loader_readability`
 - policy smoke: P1/WF automation and workflow command behavior changes are
   blocked
 - formatter smoke: runner stop reasons produce next commands
@@ -193,7 +209,8 @@ Discord bot.
 This layer is complete when:
 
 - low-risk DOC/VAL, allowlisted low-risk WF, and safe no-mutation GAME
-  validation/build-validation intake can auto-handoff to PC Runner
+  validation/build-validation/data-readability intake can auto-handoff to PC
+  Runner
 - higher-risk tasks remain behind human approval
 - Discord response explains automatic actions and next review point
 - PC Runner response includes next commands for common stop reasons

@@ -51,6 +51,11 @@ const SAFE_VALIDATION_NO_CHANGE_TERMS = [
   "source/data 변경 없이", "소스/데이터 변경 없이", "소스나 데이터 변경 없이", "소스, 데이터 변경 없이",
   "스키마 변경 없이", "런타임 변경 없이", "문서 변경 없이", "변경 없이", "수정 없이",
   "read-only", "검증만", "validation-only",
+  "\uBCC0\uACBD \uC5C6\uC774", "\uC218\uC815 \uC5C6\uC774", "\uAC80\uC99D\uB9CC",
+  "\uC18C\uC2A4 \uBCC0\uACBD \uC5C6\uC774", "\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
+  "\uC18C\uC2A4/\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
+  "\uC2A4\uD0A4\uB9C8 \uBCC0\uACBD \uC5C6\uC774", "\uB7F0\uD0C0\uC784 \uBCC0\uACBD \uC5C6\uC774",
+  "\uBB38\uC11C \uBCC0\uACBD \uC5C6\uC774",
 ];
 
 const SAFE_BUILD_VALIDATION_TERMS = [
@@ -59,7 +64,17 @@ const SAFE_BUILD_VALIDATION_TERMS = [
   "빌드", "빌드 검증", "visual studio 빌드",
 ];
 
+const SAFE_GAME_DATA_READABILITY_TERMS = [
+  "game data loader", "data loader", "loader/readability", "readability",
+  "semantic validation", "loader validation", "game data readability",
+  "game_data_loader_readability", "json readability",
+  "데이터 로더", "로더 검증", "의미 검증", "가독성",
+  "\uB370\uC774\uD130 \uB85C\uB354", "\uB85C\uB354 \uAC80\uC99D",
+  "\uC758\uBBF8 \uAC80\uC99D", "\uAC00\uB3C5\uC131",
+];
+
 const INFERABLE_BUILD_ROUTE_QUESTION = /(command[_ -]?id|pc runner profile|runner profile|profile should be used|which exact command|which command|debug x64|visual studio build|msbuild)/i;
+const INFERABLE_DATA_READABILITY_ROUTE_QUESTION = /(command[_ -]?id|pc runner profile|runner profile|profile should be used|which exact command|which command|data loader|loader\/readability|readability|semantic validation|game_data_loader_readability|데이터 로더|로더 검증|의미 검증|가독성)/i;
 
 const PATH_HINT_RULES = [
   {
@@ -303,21 +318,30 @@ function normalizeDraftForKnownSafeRoutes(draft, interpretedRequest) {
     ...(Array.isArray(draft.required_validation) ? draft.required_validation : []),
   ].join(" ");
 
-  if (!isSafeBuildValidationRequest(contextText, draft)) {
+  const safeBuildValidation = isSafeBuildValidationRequest(contextText, draft);
+  const safeDataReadabilityValidation = isSafeGameDataReadabilityValidationRequest(contextText, draft);
+  if (!safeBuildValidation && !safeDataReadabilityValidation) {
     return draft;
   }
 
+  const profile = safeBuildValidation ? "build" : "validation";
+  const commandId = safeBuildValidation ? "debug_visual_studio_build" : "game_data_loader_readability";
+  const routeQuestionPattern = safeBuildValidation
+    ? INFERABLE_BUILD_ROUTE_QUESTION
+    : INFERABLE_DATA_READABILITY_ROUTE_QUESTION;
   const clarifyingQuestions = arrayValues(draft.clarifying_questions)
-    .filter((question) => !INFERABLE_BUILD_ROUTE_QUESTION.test(String(question ?? "")));
-  if (needsUnknownGameDataValidationRoute(contextText)) {
-    addUnique(
-      clarifyingQuestions,
-      "Which allowlisted command_id should be used for the requested game data loader/readability validation?",
-    );
-  }
+    .filter((question) => !routeQuestionPattern.test(String(question ?? "")));
+  const routeValidation = safeBuildValidation
+    ? [
+      "PC Runner route is deterministic for this request: profile=build, executor=local_cli, command_id=debug_visual_studio_build.",
+      "Run PlayGround Debug x64 Visual Studio build through PC Runner build/local_cli.",
+    ]
+    : [
+      "PC Runner route is deterministic for this request: profile=validation, executor=local_cli, command_id=game_data_loader_readability.",
+      "Run GameDataLoader expected-file, JSON shape, ID/reference, and readability validation through PC Runner validation/local_cli.",
+    ];
   const requiredValidation = mergeUnique(draft.required_validation, [
-    "PC Runner route is deterministic for this request: profile=build, executor=local_cli, command_id=debug_visual_studio_build.",
-    "Run PlayGround Debug x64 Visual Studio build through PC Runner build/local_cli.",
+    ...routeValidation,
     "Confirm no source, data, schema, runtime behavior, or document files were changed.",
   ]);
 
@@ -330,7 +354,7 @@ function normalizeDraftForKnownSafeRoutes(draft, interpretedRequest) {
     workflow_path: "validation",
     required_validation: requiredValidation,
     clarifying_questions: clarifyingQuestions,
-    suggested_next_manual_action: "Auto-handoff may start PC Runner build/local_cli when no other clarifying questions remain.",
+    suggested_next_manual_action: `Auto-handoff may start PC Runner ${profile}/local_cli with command_id=${commandId} when no other clarifying questions remain.`,
   };
 }
 
@@ -368,6 +392,14 @@ function buildCrossCheck(ruleBased, draft) {
   compareField(mismatches, "kind", baseline.kind, draft.kind);
   compareField(mismatches, "priority", baseline.priority, draft.priority);
   compareField(mismatches, "suggested_risk", baseline.suggested_risk, draft.suggested_risk);
+  const deterministicSafeRoute = isDeterministicSafeValidationRoute(draft);
+  if (deterministicSafeRoute && draft.clarifying_questions.length === 0) {
+    return {
+      mismatches,
+      requires_human_review: false,
+      summary: "Known safe deterministic validation route normalized the intake draft; human review is not required by cross-check.",
+    };
+  }
 
   return {
     mismatches,
@@ -376,6 +408,20 @@ function buildCrossCheck(ruleBased, draft) {
       ? "LLM draft differs from the local rule-based baseline; review before creating or approving."
       : "LLM draft matches the main rule-based category, kind, priority, and risk signals.",
   };
+}
+
+function isDeterministicSafeValidationRoute(draft) {
+  const text = [
+    draft.title,
+    draft.reason,
+    draft.workflow_path,
+    ...(Array.isArray(draft.required_validation) ? draft.required_validation : []),
+  ].join(" ");
+  return String(draft.category ?? "").toUpperCase() === "VAL"
+    && String(draft.kind ?? "").toLowerCase() === "validation"
+    && ["P2", "P3"].includes(String(draft.priority ?? "").toUpperCase())
+    && String(draft.suggested_risk ?? "").toLowerCase() === "low"
+    && (isSafeBuildValidationRequest(text, draft) || isSafeGameDataReadabilityValidationRequest(text, draft));
 }
 
 function compareField(mismatches, field, baseline, candidate) {
@@ -471,6 +517,7 @@ function classifyKind(text, category) {
 function classifyPriority(text, category, kind) {
   if (hasAny(text, TERMS.critical)) return "P0";
   if (isSafeBuildValidationRequest(text, { category, kind })) return "P2";
+  if (isSafeGameDataReadabilityValidationRequest(text, { category, kind })) return "P2";
   if (category === "WF" && ["documentation", "maintenance"].includes(kind)) return "P2";
   if (["WF", "UNITY"].includes(category) || hasAny(text, ["infrastructure", "high leverage", "important", "runtime", "save", "userdata", "중요", "런타임", "저장", "세이브", "유저데이터"])) return "P1";
   if (hasAny(text, ["optional", "later", "cleanup", "선택", "나중", "정리"])) return "P3";
@@ -479,6 +526,7 @@ function classifyPriority(text, category, kind) {
 
 function classifyRisk(text, kind, category) {
   if (isSafeBuildValidationRequest(text, { category, kind })) return "low";
+  if (isSafeGameDataReadabilityValidationRequest(text, { category, kind })) return "low";
   if (hasAny(text, TERMS.highRisk)) return "high";
   if (
     category === "WF"
@@ -503,6 +551,22 @@ function isSafeBuildValidationRequest(text, draft = {}) {
       "change source", "change data", "edit source", "edit data",
       "modify source", "modify data", "schema change", "runtime behavior change",
       "gameplay behavior change", "소스를 변경", "데이터를 변경", "스키마를 변경", "런타임 동작 변경", "게임플레이 동작 변경",
+    ]);
+}
+
+function isSafeGameDataReadabilityValidationRequest(text, draft = {}) {
+  const normalized = String(text ?? "");
+  const category = String(draft.category ?? "").toUpperCase();
+  const kind = String(draft.kind ?? "").toLowerCase();
+  const validationClass = category === "VAL" || category === "GAME" || kind === "validation";
+  return validationClass
+    && hasAny(normalized, SAFE_GAME_DATA_READABILITY_TERMS)
+    && hasAny(normalized, SAFE_VALIDATION_NO_CHANGE_TERMS)
+    && !hasAny(normalized, [
+      "change source", "change data", "edit source", "edit data",
+      "modify source", "modify data", "schema change", "runtime behavior change",
+      "gameplay behavior change",
+      "소스 변경", "데이터 변경", "스키마 변경", "런타임 동작 변경", "게임플레이 동작 변경",
     ]);
 }
 

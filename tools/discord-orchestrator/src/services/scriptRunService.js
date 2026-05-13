@@ -40,6 +40,12 @@ export const RUN_SCRIPT_REGISTRY = Object.freeze({
     output: "json-smoke-text",
     timeoutMs: LONG_TIMEOUT_MS,
   }),
+  "game-data-readability": Object.freeze({
+    script: "tools/aiworkflow/game_data_loader_readability_check.bat",
+    baseArgs: [],
+    output: "game-data-readability-text",
+    timeoutMs: LONG_TIMEOUT_MS,
+  }),
   "capture-diff": Object.freeze({
     script: "tools/aiworkflow/capture_diff.bat",
     output: "capture-diff-text",
@@ -120,7 +126,11 @@ function parseRunOutput(outputType, raw) {
   }
 
   if (outputType === "json-smoke-text") {
-    return { ok: true, data: parseJsonSmokeText(raw.stdout, raw.stderr) };
+    return { ok: true, data: parseValidationText(raw.stdout, raw.stderr) };
+  }
+
+  if (outputType === "game-data-readability-text") {
+    return { ok: true, data: parseValidationText(raw.stdout, raw.stderr) };
   }
 
   if (outputType === "capture-diff-text") {
@@ -130,10 +140,13 @@ function parseRunOutput(outputType, raw) {
   return { ok: true, data: {} };
 }
 
-function parseJsonSmokeText(stdout, stderr) {
+function parseValidationText(stdout, stderr) {
   const output = [stdout, stderr].filter(Boolean).join("\n");
   return {
     total: parseIntegerMatch(output, /^Total:\s*(\d+)/im),
+    expectedFiles: parseIntegerMatch(output, /^Expected loader files:\s*(\d+)/im),
+    parsedFiles: parseIntegerMatch(output, /^Parsed loader files:\s*(\d+)/im),
+    warnings: parseIntegerMatch(output, /^Warnings:\s*(\d+)/im),
     failed: parseIntegerMatch(output, /^Failed:\s*(\d+)/im),
     reportPath: parseStringMatch(output, /^Report:\s*(.+)$/im),
     relevantLines: getLastRelevantLines(stdout || stderr),

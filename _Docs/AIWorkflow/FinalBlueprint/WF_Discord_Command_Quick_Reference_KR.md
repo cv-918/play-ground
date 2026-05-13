@@ -273,6 +273,14 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai runner start id:<task_id> profile:build executor:local_cli
 ```
 
+`validation` profile은 JSON smoke와 GameDataLoader data readability 같은
+읽기 전용 검증에 사용합니다. 수동 진단이 필요하면 다음 명령을 사용할 수 있습니다.
+
+```text
+/ai run json-smoke
+/ai run game-data-readability
+```
+
 `build` profile은 Visual Studio Debug x64 build 검증처럼 빌드 evidence가
 필요한 작업에 사용합니다.
 

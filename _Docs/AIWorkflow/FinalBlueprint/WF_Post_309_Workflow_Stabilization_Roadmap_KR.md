@@ -123,6 +123,12 @@ Visual Studio Debug x64 build 검증은 `bt-build-20260513-112013-004-16056e99`
 증거에서 `MSBuild.exe`가 `visual_studio_auto`로 해석되고 exit 0으로
 완료된 것을 확인했습니다.
 
+WF-439에서는 source/data/schema/runtime/document 변경 없는 GameDataLoader
+data readability 검증을 `game_data_loader_readability` allowlist 명령으로
+정의했습니다. 이 명령은 GameDataLoader가 기대하는 JSON 파일 존재, top-level
+shape, 주요 ID 중복, Stage/SpawnPool/Enemy, ParticleEmitter/Particle,
+AttributeNode, UserData 참조 관계를 읽기 전용으로 확인합니다.
+
 ## 완료 기준
 
 Phase 4가 끝났다고 보려면 다음이 필요합니다.

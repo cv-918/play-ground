@@ -104,6 +104,7 @@ steps:
 - `/ai run active-project`
 - `/ai run project-profile`
 - `/ai run json-smoke`
+- `/ai run game-data-readability`
 - `/ai run capture-diff`
 
 ### Bootstrap or Manual-Escalation Commands

@@ -616,10 +616,31 @@ function Test-BuildValidationRequested {
     return $text -match "visual studio|msbuild|debug x64|x64 build|build validation|빌드|빌드 검증|visual studio build"
 }
 
+function Test-GameDataReadabilityRequested {
+    param($Task)
+    $text = (Get-TaskSearchText -Task $Task).ToLowerInvariant()
+    foreach ($term in @(
+        "game data loader",
+        "data loader",
+        "loader/readability",
+        "readability",
+        "semantic validation",
+        "loader validation",
+        "game_data_loader_readability",
+        "game data readability"
+    )) {
+        if ($text.Contains($term)) { return $true }
+    }
+    return $false
+}
+
 function Get-BuildTestCommandId {
     param([string]$ProfileValue, $Task)
     if (Test-BuildValidationRequested -ProfileValue $ProfileValue -Task $Task) {
         return "debug_visual_studio_build"
+    }
+    if (Test-GameDataReadabilityRequested -Task $Task) {
+        return "game_data_loader_readability"
     }
     return "json_smoke"
 }
@@ -833,6 +854,18 @@ function Write-ValidationConfigs {
                 args = @()
                 working_directory = "."
                 timeout_seconds = 60
+                env = @{}
+            },
+            [ordered]@{
+                command_id = "game_data_loader_readability"
+                kind = "test"
+                label = "Game data loader readability check"
+                enabled = $true
+                approval_level = "auto_allowed"
+                command = "tools\aiworkflow\game_data_loader_readability_check.bat"
+                args = @()
+                working_directory = "."
+                timeout_seconds = 90
                 env = @{}
             },
             [ordered]@{

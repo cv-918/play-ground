@@ -73,6 +73,7 @@ WF-407 이후 일반 작업에서 사용자가 직접 보게 되는 명령입니
 - `/ai run active-project`
 - `/ai run project-profile`
 - `/ai run json-smoke`
+- `/ai run game-data-readability`
 - `/ai run capture-diff`
 
 ### D. 호환 또는 수동 승격 명령

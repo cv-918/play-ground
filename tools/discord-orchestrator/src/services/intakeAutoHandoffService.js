@@ -15,6 +15,11 @@ const GAME_NO_CHANGE_TERMS = [
   "source/data 변경 없이", "소스/데이터 변경 없이", "변경 없이", "수정 없이",
   "소스나 데이터 변경 없이", "소스, 데이터 변경 없이", "스키마 변경 없이", "런타임 변경 없이", "문서 변경 없이",
   "read-only", "검증만", "validation-only",
+  "\uBCC0\uACBD \uC5C6\uC774", "\uC218\uC815 \uC5C6\uC774", "\uAC80\uC99D\uB9CC",
+  "\uC18C\uC2A4 \uBCC0\uACBD \uC5C6\uC774", "\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
+  "\uC18C\uC2A4/\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
+  "\uC2A4\uD0A4\uB9C8 \uBCC0\uACBD \uC5C6\uC774", "\uB7F0\uD0C0\uC784 \uBCC0\uACBD \uC5C6\uC774",
+  "\uBB38\uC11C \uBCC0\uACBD \uC5C6\uC774",
 ];
 const GAME_MUTATION_TERMS = [
   "implement", "fix", "modify", "change source", "change data", "edit data",
@@ -24,6 +29,14 @@ const GAME_MUTATION_TERMS = [
 const BUILD_TERMS = [
   "visual studio", "msbuild", "debug x64", "x64 build", "build validation",
   "빌드", "빌드 검증",
+];
+
+const GAME_DATA_READABILITY_TERMS = [
+  "game data loader", "data loader", "loader/readability", "readability",
+  "semantic validation", "loader validation", "game_data_loader_readability",
+  "데이터 로더", "로더 검증", "의미 검증", "가독성",
+  "\uB370\uC774\uD130 \uB85C\uB354", "\uB85C\uB354 \uAC80\uC99D",
+  "\uC758\uBBF8 \uAC80\uC99D", "\uAC00\uB3C5\uC131",
 ];
 
 export async function runIntakeAutoHandoff(config, input = {}) {
@@ -167,7 +180,7 @@ function isAutoHandoffClassAllowed(category, kind, contextText = "") {
 function isSafeGameValidationContext(text) {
   const normalized = String(text ?? "");
   return hasAny(normalized, GAME_NO_CHANGE_TERMS)
-    || (hasAny(normalized, ["validation", "smoke", "build", "검증", "스모크", "빌드"]) && !hasUnsafeGameValidationScope(normalized));
+    || (hasAny(normalized, ["validation", "smoke", "build", "검증", "스모크", "빌드", ...GAME_DATA_READABILITY_TERMS]) && !hasUnsafeGameValidationScope(normalized));
 }
 
 function hasUnsafeGameValidationScope(text) {

@@ -250,7 +250,7 @@ export function formatRoleRouterStatus(data) {
 }
 
 export function formatRunCommandResult(result) {
-  const hasTextSummary = ["json-smoke", "capture-diff"].includes(result.key) && result.data && result.raw;
+  const hasTextSummary = ["json-smoke", "game-data-readability", "capture-diff"].includes(result.key) && result.data && result.raw;
   if (!result.ok && !hasTextSummary) {
     return [
       `**run 명령 실패: ${result.key ?? "unknown"}**`,
@@ -267,6 +267,8 @@ export function formatRunCommandResult(result) {
       return formatRunProjectProfile(result.data);
     case "json-smoke":
       return formatRunJsonSmoke(result.data, result.raw);
+    case "game-data-readability":
+      return formatRunGameDataReadability(result.data, result.raw);
     case "capture-diff":
       return formatRunCaptureDiff(result.data, result.raw);
     default:
@@ -2072,6 +2074,23 @@ function formatRunJsonSmoke(data, raw) {
     "**실행 결과: json-smoke**",
     `Result: ${koPassFail(passed)}`,
     `Total: ${data.total ?? "unknown"}`,
+    `Failed: ${data.failed ?? "unknown"}`,
+    `Report: ${formatInlineCode(data.reportPath || "unknown")}`,
+  ];
+
+  appendRelevantLines(lines, data.relevantLines);
+  return lines.join("\n");
+}
+
+function formatRunGameDataReadability(data, raw) {
+  const failed = data.failed;
+  const passed = raw.ok && (failed === 0 || failed === null);
+  const lines = [
+    "**실행 결과: game-data-readability**",
+    `Result: ${koPassFail(passed)}`,
+    `Expected loader files: ${data.expectedFiles ?? "unknown"}`,
+    `Parsed loader files: ${data.parsedFiles ?? "unknown"}`,
+    `Warnings: ${data.warnings ?? "unknown"}`,
     `Failed: ${data.failed ?? "unknown"}`,
     `Report: ${formatInlineCode(data.reportPath || "unknown")}`,
   ];

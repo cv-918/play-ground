@@ -456,6 +456,7 @@
           <h2>정규 흐름</h2>
           <h3>가장 짧은 흐름</h3>
           <pre><code>/ai intake text:"VAL task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 검증해줘."</code></pre>
+          <pre><code>/ai intake text:"VAL task: source/data/schema/runtime/document 변경 없이 GameDataLoader expected files, JSON shape, ID/reference, readability를 검증해줘."</code></pre>
           <p>자동 착수 조건에 맞으면 하네스가 Backlog 생성, ActiveTask 선택, 승인, PC Runner 시작까지 진행합니다. 이후 Completion Card를 보고 완료를 판단합니다.</p>
 
           <h3>승인이 필요한 흐름</h3>
@@ -483,10 +484,12 @@
               <tr><td>DOC/VAL</td><td>P2/P3, low risk, clarification 없음, cross-check 문제 없음</td></tr>
               <tr><td>WF 문서/유지보수</td><td>workflow command behavior 변경이 없는 저위험 문서/metadata 정리</td></tr>
               <tr><td>GAME validation/build validation</td><td>source/data/schema/runtime/document 변경이 없다고 명시된 Visual Studio Debug x64 build 검증 작업</td></tr>
+              <tr><td>GAME data readability validation</td><td>source/data/schema/runtime/document 변경이 없다고 명시된 GameDataLoader expected-file, JSON shape, ID/reference, readability 검증 작업</td></tr>
             </tbody>
           </table>
           <p>안전한 GAME build validation은 deterministic route를 사용합니다: <code>profile=build</code>, <code>executor=local_cli</code>, <code>command_id=debug_visual_studio_build</code>.</p>
-          <p>알 수 없는 data loader/readability 검증처럼 어떤 allowlisted command를 써야 하는지 하네스가 확정할 수 없는 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
+          <p>안전한 GAME data readability validation은 deterministic route를 사용합니다: <code>profile=validation</code>, <code>executor=local_cli</code>, <code>command_id=game_data_loader_readability</code>.</p>
+          <p>그 밖의 알 수 없는 validation evidence 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
           <div class="warn">
             GAME source/data/schema/runtime/gameplay 변경, P0/P1, medium/high risk, UNITY 작업, 명령 동작 변경은 사람 승인에서 멈춥니다.
           </div>
@@ -536,6 +539,7 @@
               <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
               <tr><td>완료 승인</td><td><code>/ai runner accept-completion ...</code></td></tr>
               <tr><td>완료+done 단축</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
+              <tr><td>GAME 데이터 검증</td><td><code>/ai run game-data-readability</code></td></tr>
               <tr><td>커밋/푸시</td><td><code>/ai git commit</code>, <code>/ai git push</code>, <code>/ai git commit-push</code></td></tr>
               <tr><td>수동 승격</td><td><code>/ai prepare goal</code>, <code>/ai result audit</code></td></tr>
             </tbody>
@@ -547,7 +551,7 @@
               <tr><th>profile</th><th>용도</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>validation</code></td><td>JSON smoke, local validation, no-source-change 검증</td></tr>
+              <tr><td><code>validation</code></td><td>JSON smoke, GameDataLoader readability, local validation, no-source-change 검증</td></tr>
               <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence</td></tr>
               <tr><td><code>documentation</code></td><td>문서 작업</td></tr>
               <tr><td><code>implementation</code></td><td>승인된 구현 작업</td></tr>

@@ -216,6 +216,9 @@ export function buildAiCommand() {
           sub.setName("json-smoke").setDescription("JSON 문법 smoke 검증을 실행합니다"),
         )
         .addSubcommand((sub) =>
+          sub.setName("game-data-readability").setDescription("GameDataLoader 데이터 가독성/참조 검증을 실행합니다"),
+        )
+        .addSubcommand((sub) =>
           sub
             .setName("capture-diff")
             .setDescription("리뷰용 diff 파일을 캡처합니다")

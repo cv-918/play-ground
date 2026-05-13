@@ -53,6 +53,7 @@
 |---|---|---|
 | `DOC` 또는 `documentation` | `documentation` | `codex_cli` |
 | `VAL` 또는 `validation` | `validation` | `local_cli` |
+| 안전한 game data loader/readability 검증 | `validation` | `local_cli` |
 | Visual Studio/MSBuild/Debug x64/빌드 검증 요청 | `build` | `local_cli` |
 | source/data/schema/runtime 변경 없는 `GAME` 검증 | `validation` 또는 `build` | `local_cli` |
 
@@ -183,14 +184,27 @@ executor=local_cli
 command_id=debug_visual_studio_build
 ```
 
+안전한 GAME data loader/readability 검증은 아래 deterministic route를 사용합니다.
+
+```text
+profile=validation
+executor=local_cli
+command_id=game_data_loader_readability
+```
+
 요청에 source/data/schema/runtime/document 변경이 없고 Visual Studio,
 MSBuild, Debug x64 build 검증만 명시되어 있으면 intake는 이를
 `VAL`/`validation`/`P2`/`low`로 보정할 수 있습니다. 이 경우 build
 profile 또는 command_id를 묻는 clarification은 제거합니다.
 
-반대로 data loader/readability 검증처럼 어떤 allowlisted command를 써야
-하는지 하네스가 확정할 수 없는 요청은 clarification을 유지하고 사람
-승인 경로에서 멈춥니다.
+요청에 source/data/schema/runtime/document 변경이 없고 GameDataLoader
+expected-file, JSON shape, ID/reference, readability 검증만 명시되어 있으면
+intake는 이를 `VAL`/`validation`/`P2`/`low`로 보정할 수 있습니다. 이 경우
+PC Runner는 `validation/local_cli`에서 `game_data_loader_readability`를
+사용합니다.
+
+그 밖의 알 수 없는 검증 evidence 요청은 clarification을 유지하고 사람 승인
+경로에서 멈춥니다.
 
 이 명령 하나로 Backlog 생성, ActiveTask 선택, 승인, PC Runner 시작까지
 이어지는지 확인합니다.
@@ -200,8 +214,8 @@ profile 또는 command_id를 묻는 clarification은 제거합니다.
 ## 완료 기준
 
 - 저위험 DOC/VAL, 허용된 저위험 WF, 그리고 source/data/schema/runtime
-  변경이 없다고 명시된 GAME validation/build validation intake가 PC
-  Runner까지 자동 handoff됨
+  변경이 없다고 명시된 GAME validation/build validation/data readability
+  intake가 PC Runner까지 자동 handoff됨
 - 위험한 작업은 계속 사람 승인에서 멈춤
 - Discord 응답이 자동 진행 결과와 다음 확인 지점을 설명함
 - PC Runner 응답이 stop_reason별 다음 명령을 표시함

@@ -20,6 +20,18 @@
       "env": {}
     },
     {
+      "command_id": "game_data_loader_readability",
+      "kind": "test",
+      "label": "Game data loader readability check",
+      "enabled": true,
+      "approval_level": "auto_allowed",
+      "command": "tools\\aiworkflow\\game_data_loader_readability_check.bat",
+      "args": [],
+      "working_directory": ".",
+      "timeout_seconds": 90,
+      "env": {}
+    },
+    {
       "command_id": "debug_visual_studio_build",
       "kind": "build",
       "label": "Debug Visual Studio build",

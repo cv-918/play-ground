@@ -78,6 +78,7 @@ inspection, troubleshooting, or admin commands:
 - `/ai run active-project`
 - `/ai run project-profile`
 - `/ai run json-smoke`
+- `/ai run game-data-readability`
 - `/ai run capture-diff`
 
 ### Category D. Compatibility or Manual Escalation Surface
