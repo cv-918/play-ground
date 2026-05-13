@@ -13,7 +13,7 @@ There should be only one active task represented here at a time.
 ```yaml
 task_id: GAME-20260513-181243
 title: GAME data task: UserData.json stage_progress default and node state fix with loader validation
-status: ready_for_implementation
+status: done
 workflow_path: discord_task_management
 priority: P1
 risk_level: low
@@ -69,12 +69,11 @@ done: Completion accept recorded; FinalizationLog finalization-20260513-185553-6
 ## Latest Status Note
 
 ```text
-status: ready_for_implementation
-note: approved: Reopened after validation-only runner false positive. Approved implementation scope remains: inspect and minimally fix UserData.json stage_progress default and node state handling without schema change; run JSON smoke, GameDataLoader readability, and Debug x64 build validation; no unrelated refactor or broad cleanup.
+status: done
+note: done: Completion accept-concerns recorded; FinalizationLog finalization-20260513-200835-482-db57e3f8; Runner runner-run-game-20260513-181243-20260513-191138-761; stopped at done_or_commit_decision
 updated_at: 2026-05-13
 source: Discord task status command
 ```
-
 ---
 
 ## Next Recommended Task

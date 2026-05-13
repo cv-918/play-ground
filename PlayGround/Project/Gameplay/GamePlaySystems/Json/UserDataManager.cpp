@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "UserDataManager.h"
 
+#include "AttributeNodeDataManager.h"
 #include "../UserProfile.h"
 
 namespace
@@ -44,6 +45,57 @@ namespace
 			return exe_project_root / requested_path;
 
 		return std::filesystem::current_path() / requested_path;
+	}
+
+	void NormalizeUserData(UserDataJsonInfo& user_data, const std::filesystem::path& source_path)
+	{
+		if (user_data.stage_progress_ == 0)
+		{
+			user_data.stage_progress_ = 1;
+			_SYSTEM_LOG_WARN(L"UserData stage_progress_ normalized to 1. file: %s", source_path.wstring().c_str());
+		}
+
+		std::vector<std::pair<_uint, _uint>> normalized_nodes;
+		for (const auto& [node_id, node_level] : user_data.acquired_node_ids_)
+		{
+			const auto node_data = _AttributeNodeDataMgr.GetData(node_id);
+			if (nullptr == node_data)
+			{
+				_SYSTEM_LOG_WARN(L"UserData acquired node skipped: missing AttributeNode id. file: %s, node_id: %u", source_path.wstring().c_str(), node_id);
+				continue;
+			}
+
+			if (node_level == 0)
+			{
+				_SYSTEM_LOG_WARN(L"UserData acquired node skipped: level 0 is not an acquired state. file: %s, node_id: %u", source_path.wstring().c_str(), node_id);
+				continue;
+			}
+
+			if (node_data->max_lv_ == 0)
+			{
+				_SYSTEM_LOG_WARN(L"UserData acquired node skipped: AttributeNode max_lv_ is 0. file: %s, node_id: %u", source_path.wstring().c_str(), node_id);
+				continue;
+			}
+
+			const auto normalized_level = std::min(node_level, node_data->max_lv_);
+			if (normalized_level != node_level)
+			{
+				_SYSTEM_LOG_WARN(L"UserData acquired node level clamped. file: %s, node_id: %u, loaded: %u, max: %u", source_path.wstring().c_str(), node_id, node_level, node_data->max_lv_);
+			}
+
+			auto existing_node = std::find_if(normalized_nodes.begin(), normalized_nodes.end(),
+				[node_id](const std::pair<_uint, _uint>& entry) { return entry.first == node_id; });
+			if (existing_node != normalized_nodes.end())
+			{
+				existing_node->second = std::max(existing_node->second, normalized_level);
+				_SYSTEM_LOG_WARN(L"UserData duplicate acquired node merged. file: %s, node_id: %u", source_path.wstring().c_str(), node_id);
+				continue;
+			}
+
+			normalized_nodes.emplace_back(node_id, normalized_level);
+		}
+
+		user_data.acquired_node_ids_ = std::move(normalized_nodes);
 	}
 }
 
@@ -107,7 +159,8 @@ _bool UserDataManager::Load(const std::string& _file_path)
 		}
 
 		// JSON에서 읽어온 데이터 중 첫 번째 요소를 사용하여 유저 데이터를 세팅
-		const auto& user_save_data = data_list.front();
+		auto user_save_data = data_list.front();
+		NormalizeUserData(user_save_data, resolved_path);
 		_UserProfile.StoreUserData(user_save_data);
 
 		return true;

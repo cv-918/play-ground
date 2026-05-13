@@ -23,7 +23,7 @@ inline void from_json(const json& _json, UserDataJsonInfo& _info)
 	_info.unlocked_character_ids_ = _json.value("unlocked_character_ids_", std::vector<_uint>{});
 	_info.acquired_node_ids_ = _json.value("acquired_node_ids_", std::vector<std::pair<_uint, _uint>>{});
 	_info.equipped_skill_ids_ = _json.value("equipped_skill_ids_", std::array<_int, 2>{ -1, -1 });
-	_info.stage_progress_ = _json.value("stage_progress_", 0u);
+	_info.stage_progress_ = _json.value("stage_progress_", 1u);
 
 	if (_info.stage_progress_ <= 0)
 		_info.stage_progress_ = 1;
