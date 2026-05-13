@@ -61,10 +61,13 @@ has already run, validation has passed, the task is done, or a commit is
 allowed.
 
 Current `/ai intake` uses local `codex exec` as the LLM-assisted intake backend.
-It creates one Backlog task from a validated TaskDraft and then stops. The
-rule-based classifier remains as a cross-check layer. `/ai intake-preview` is
-the read-only draft path. Intake still does not approve scope, activate tasks,
-execute implementation, mark done, or commit.
+It creates one Backlog task from a validated TaskDraft. The rule-based
+classifier remains as a cross-check layer. `/ai intake-preview` is the read-only
+draft path. For deterministic low-risk DOC/VAL/WF-maintenance validation flows,
+intake may auto-select ActiveTask, record a policy approval, and start PC Runner
+in the background. After that, use `/ai runner status` and `/ai runner read` for
+progress. Intake still does not mark done, commit, push, or bypass Human
+Director approval for unsafe GAME/source/schema/runtime work.
 
 ---
 

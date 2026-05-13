@@ -580,6 +580,12 @@ function formatAutoHandoffNextAction(autoHandoff) {
   const decision = autoHandoff?.decision ?? "";
   const runner = autoHandoff?.runner_start ?? {};
   if (decision === "runner_started") {
+    if (runner.detached) {
+      return [
+        "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 백그라운드 시작까지 자동 진행했습니다.",
+        "진행 상태는 다음 명령의 runner status/read로 확인하세요.",
+      ].join("\n");
+    }
     return [
       "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 시작까지 자동 진행했습니다.",
       runner.human_gate ? `다음 확인: ${cleanKo(runner.human_gate)}` : "완료 카드 또는 Runner 결과를 확인하세요.",
@@ -598,6 +604,13 @@ function buildIntakeAutoHandoffNextCommands(taskId, autoHandoff) {
   const decision = autoHandoff?.decision ?? "";
   const runner = autoHandoff?.runner_start ?? {};
   if (decision === "runner_started") {
+    if (runner.detached) {
+      const id = String(taskId ?? "").trim() || "<task_id>";
+      return [
+        `/ai runner status id:${id}`,
+        `/ai runner read id:${id}`,
+      ];
+    }
     return buildPcRunnerNextCommands({
       taskId,
       command: "start",
@@ -637,11 +650,23 @@ function formatAutoHandoffDetails(autoHandoff) {
   }
 
   const runner = autoHandoff.runner_start ?? {};
+  if (runner.detached) {
+    lines.push("Runner: background start");
+  }
+  if (runner.process_id) {
+    lines.push(`PID: ${formatInlineCode(runner.process_id)}`);
+  }
   if (runner.runner_run_id) {
     lines.push(`Runner: ${formatInlineCode(runner.runner_run_id)}`);
   }
   if (runner.stop_reason) {
     lines.push(`중단 이유: ${formatInlineCode(runner.stop_reason)}`);
+  }
+  if (runner.stdout_log) {
+    lines.push(`stdout: ${formatInlineCode(runner.stdout_log)}`);
+  }
+  if (runner.stderr_log) {
+    lines.push(`stderr: ${formatInlineCode(runner.stderr_log)}`);
   }
 
   return compactText(lines.join("\n"), 900);

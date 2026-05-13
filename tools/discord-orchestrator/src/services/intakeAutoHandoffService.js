@@ -1,5 +1,5 @@
 import { setActiveTaskWithSafety } from "./activeTaskActivationService.js";
-import { startPcRunner } from "./pcRunnerService.js";
+import { startPcRunnerDetached } from "./pcRunnerService.js";
 import { approveTaskWithSafety } from "./taskApprovalSafetyService.js";
 
 const AUTO_PRIORITY_VALUES = new Set(["P2", "P3"]);
@@ -79,7 +79,7 @@ export async function runIntakeAutoHandoff(config, input = {}) {
   }
   result.approved = true;
 
-  const runnerStart = await startPcRunner(config, {
+  const runnerStart = await startPcRunnerDetached(config, {
     id: taskId,
     profile: policy.profile,
     executor: policy.executor,
@@ -234,6 +234,10 @@ function summarizeRunnerStart(result) {
   return {
     ok: result?.ok === true,
     command: result?.command || "start",
+    detached: result?.detached === true,
+    process_id: data.process_id ?? "",
+    stdout_log: data.stdout_log ?? "",
+    stderr_log: data.stderr_log ?? "",
     status: data.status || run.status || "",
     stop_reason: data.stop_reason || run.human_gate_state?.stop_reason || "",
     human_gate: data.human_gate || run.human_gate_state?.human_gate || "",

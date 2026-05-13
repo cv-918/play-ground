@@ -495,6 +495,7 @@
           </table>
           <p>안전한 GAME build validation은 deterministic route를 사용합니다: <code>profile=build</code>, <code>executor=local_cli</code>, <code>command_id=debug_visual_studio_build</code>.</p>
           <p>안전한 GAME data readability validation은 deterministic route를 사용합니다: <code>profile=validation</code>, <code>executor=local_cli</code>, <code>command_id=game_data_loader_readability</code>.</p>
+          <p>자동 handoff가 허용된 경우 <code>/ai intake</code>는 Backlog 생성, ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작까지 처리합니다. 이후 진행 상황은 <code>/ai runner status id:&lt;task_id&gt;</code>와 <code>/ai runner read id:&lt;task_id&gt;</code>로 확인합니다.</p>
           <p>그 밖의 알 수 없는 validation evidence 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
           <div class="warn">
             GAME source/data/schema/runtime/gameplay 변경, P0/P1, medium/high risk, UNITY 작업, 명령 동작 변경은 사람 승인에서 멈춥니다.

@@ -381,6 +381,10 @@ concern을 남기고 승인하려면:
 
 단, 하네스가 자동으로 `done`, `commit`, `push`를 해서는 안 됩니다.
 
+자동 handoff가 허용되면 `/ai intake` 응답은 PC Runner를 백그라운드로 시작합니다.
+이후에는 응답 카드의 다음 명령, 또는 `/ai runner status id:<task_id>`와
+`/ai runner read id:<task_id>`로 진행 상황을 확인합니다.
+
 ---
 
 ## 헷갈릴 때
