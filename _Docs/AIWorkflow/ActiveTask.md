@@ -11,11 +11,11 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: VAL-20260513-180418
-title: Validation task: UserData.json 기본 stage_progress 값과 GameDataLoader readability 경로 검증
-status: done
+task_id: GAME-20260513-181243
+title: GAME data task: UserData.json stage_progress default and node state fix with loader validation
+status: ready_for_implementation
 workflow_path: discord_task_management
-priority: P2
+priority: P1
 risk_level: low
 requested_by: human_director
 requested_at: 2026-05-13
@@ -26,7 +26,7 @@ last_updated: 2026-05-13
 
 ## Goal
 
-Validation task: UserData.json 기본 stage_progress 값과 GameDataLoader readability 경로 검증
+GAME data task: UserData.json stage_progress default and node state fix with loader validation
 
 ---
 
@@ -36,7 +36,7 @@ Validation task: UserData.json 기본 stage_progress 값과 GameDataLoader reada
 discord: task selection command
 human: review and approval
 codex: only after explicit approval for implementation
-validation: codex intake draft: risk=low; workflow_path=validation; required_validation_count=21; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_180408_764.output.json; validation pending human approval
+validation: codex intake draft: risk=high; workflow_path=data; required_validation_count=22; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_181230_960.output.json; needs review; has clarifying questions; validation pending human approval
 ```
 
 ---
@@ -61,7 +61,7 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-codex intake draft: risk=low; workflow_path=validation; required_validation_count=21; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_180408_764.output.json; validation pending human approval
+codex intake draft: risk=high; workflow_path=data; required_validation_count=22; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260513_181230_960.output.json; needs review; has clarifying questions; validation pending human approval
 ```
 
 ---
@@ -69,11 +69,12 @@ codex intake draft: risk=low; workflow_path=validation; required_validation_coun
 ## Latest Status Note
 
 ```text
-status: done
-note: done: Completion accept recorded; FinalizationLog finalization-20260513-180534-457-ce2ce55f; Runner runner-run-val-20260513-180418-20260513-180419-708; stopped at done_or_commit_decision
+status: ready_for_implementation
+note: approved: Human Director delegated approval in Codex App. Approved scope: inspect and minimally fix UserData.json stage_progress default and node state handling without schema change; run JSON smoke, GameDataLoader readability, and Debug x64 build validation; no unrelated refactor or broad data cleanup.
 updated_at: 2026-05-13
 source: Discord task status command
 ```
+
 ---
 
 ## Next Recommended Task

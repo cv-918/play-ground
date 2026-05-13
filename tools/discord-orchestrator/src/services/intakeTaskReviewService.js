@@ -33,6 +33,7 @@ export async function reviewIntakeTask(config, input = {}) {
     },
   });
   const readiness = assessActivationReadiness(task, intakeSource, riskLevel);
+  const approvalRequest = buildApprovalRequest(task, readiness, riskLevel, roleRecommendation.human_gates ?? []);
 
   return {
     ok: true,
@@ -40,6 +41,7 @@ export async function reviewIntakeTask(config, input = {}) {
       task,
       intake_source_check: intakeSource,
       activation_readiness: readiness,
+      approval_request: approvalRequest,
       recommended_roles: roleRecommendation.recommended_roles ?? [],
       human_decision_gates: roleRecommendation.human_gates ?? [],
       required_validation: roleRecommendation.required_validation ?? [],
@@ -144,6 +146,69 @@ function buildNextManualCommands(task, isActiveTask) {
     commands.splice(isActiveTask ? 0 : 1, 0, `/ai task approve id:${taskId} note:"Human Director가 intake task 범위와 검증 목적을 확인하고 승인함."`);
   }
   return commands;
+}
+
+function buildApprovalRequest(task, readiness, riskLevel, humanGates) {
+  const priority = String(task.priority ?? "").toUpperCase();
+  const kind = String(task.kind ?? "").toLowerCase();
+  const reasonLines = [];
+  if (priority === "P0" || priority === "P1") {
+    reasonLines.push(`${priority} 우선순위 작업이라 구현 착수 전 Human Director 승인이 필요합니다.`);
+  }
+  if (String(riskLevel ?? "").toLowerCase() === "high") {
+    reasonLines.push("high risk 작업이라 자동 진행하지 않고 승인 후에만 실행합니다.");
+  }
+  if (kind === "implementation") {
+    reasonLines.push("파일 수정 가능성이 있는 implementation 작업입니다.");
+  }
+  if (humanGates.length > 0) {
+    reasonLines.push("schema/save/runtime/data 변경 경계가 승인 대상에 포함될 수 있습니다.");
+  }
+  if (reasonLines.length === 0 && String(readiness.verdict ?? "").includes("approval")) {
+    reasonLines.push("정책상 명시적 승인 후 진행해야 하는 작업입니다.");
+  }
+
+  return {
+    required: reasonLines.length > 0,
+    reasons: reasonLines,
+    approving: buildApprovalScope(task),
+    not_approving: buildApprovalNonGoals(task),
+  };
+}
+
+function buildApprovalScope(task) {
+  const id = task.id ?? "task";
+  const title = task.item ?? "selected task";
+  const reason = String(task.reason ?? "");
+  const lines = [
+    `${id} 작업을 ActiveTask로 선택하고 승인된 범위 안에서 실행하는 것.`,
+    `작업 목적: ${title}`,
+  ];
+  if (/UserData|stage_progress|node/i.test(reason + " " + title)) {
+    lines.push("UserData.json의 stage_progress 기본값과 node 상태 관련 문제를 검토하고 필요한 최소 수정만 적용하는 것.");
+  }
+  if (/schema/i.test(reason)) {
+    lines.push("schema 변경 없이 진행하는 것.");
+  }
+  if (/JSON smoke/i.test(reason) || /GameDataLoader|readability|Debug x64|build/i.test(reason)) {
+    lines.push("JSON smoke, GameDataLoader readability, Debug x64 build 검증을 수행하는 것.");
+  }
+  return lines;
+}
+
+function buildApprovalNonGoals(task) {
+  const reason = String(task.reason ?? "");
+  const lines = [
+    "관련 없는 리팩터, 대규모 정리, 임의의 기능 추가.",
+    "승인 범위를 벗어난 파일 수정.",
+  ];
+  if (/schema/i.test(reason)) {
+    lines.push("JSON schema 변경.");
+  }
+  if (/runtime|loader|save|stage_progress|node/i.test(reason)) {
+    lines.push("저장/로드 구조 대개편 또는 게임플레이 밸런스 변경.");
+  }
+  return lines;
 }
 
 function extractRisk(task) {

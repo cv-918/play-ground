@@ -337,11 +337,11 @@
               </div>
               <div class="flow-step decision">
                 <strong>3. 승인 판단</strong>
-                <span>저위험은 자동 착수, 위험 작업은 사람 승인에서 멈춥니다.</span>
+                <span>저위험은 자동 착수, 위험 작업은 승인 요청 카드에서 이유와 범위를 확인한 뒤 사람 승인에서 멈춥니다.</span>
                 <div class="flow-command">
                   <em>승인 필요 시</em>
                   <code>/ai task set-active id:&lt;task_id&gt;</code>
-                  <code>/ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;</code>
+                  <code>/ai task approve id:&lt;task_id&gt;</code>
                 </div>
               </div>
               <div class="flow-step auto">
@@ -462,8 +462,9 @@
           <h3>승인이 필요한 흐름</h3>
           <pre><code>/ai intake text:&lt;작업 요청&gt;
 /ai task set-active id:&lt;task_id&gt;
-/ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;
+/ai task approve id:&lt;task_id&gt;
 /ai runner start id:&lt;task_id&gt;</code></pre>
+          <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션에서 왜 승인이 필요한지, 무엇을 승인하는지, 무엇은 승인하지 않는지 확인합니다. <code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
 
           <h3>완료 리뷰 흐름</h3>
           <pre><code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;
@@ -533,7 +534,7 @@
               <tr><td>작업 접수</td><td><code>/ai intake text:&lt;request&gt;</code></td></tr>
               <tr><td>미리보기</td><td><code>/ai intake-preview text:&lt;request&gt;</code></td></tr>
               <tr><td>작업 선택</td><td><code>/ai task set-active id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>작업 승인</td><td><code>/ai task approve id:&lt;task_id&gt; note:&lt;scope&gt;</code></td></tr>
+              <tr><td>작업 승인</td><td><code>/ai task approve id:&lt;task_id&gt;</code><br><span class="muted">필요하면 <code>note:&lt;scope&gt;</code>로 직접 범위 작성</span></td></tr>
               <tr><td>Runner 시작</td><td><code>/ai runner start id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 상태</td><td><code>/ai runner status id:&lt;task_id&gt;</code></td></tr>
               <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>

@@ -191,7 +191,7 @@ WF-048 consolidated response contract:
 The next commands are suggestions only. The bot does not execute them:
 
 ```text
-/ai task approve id:<task_id> note:"..."
+/ai task approve id:<task_id>
 /ai role status
 /ai prepare goal id:<task_id> mode:analysis context:standard
 /ai status
@@ -230,8 +230,13 @@ Validation = approved: <note>
 If `note` is omitted:
 
 ```text
-Validation = approved: approved from Discord
+Validation = approved: <generated task-specific approval note>
 ```
+
+The generated note summarizes the task title, likely approved scope, required
+validation, and explicit non-goals such as unrelated refactors, broad cleanup,
+done, commit, or push. Human Director can still provide `note` manually when a
+more precise approval boundary is needed.
 
 If the task is the current ActiveTask, the bot also updates ActiveTask metadata status and the Latest Status Note section.
 

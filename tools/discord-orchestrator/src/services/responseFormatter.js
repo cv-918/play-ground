@@ -532,6 +532,9 @@ export function formatIntakeTaskCreatedPayload(result) {
         embedField("다음 조치", testMode
           ? "이 화면의 가독성만 확인하세요. Backlog task는 생성되지 않았습니다."
           : formatAutoHandoffNextAction(autoHandoff)),
+        autoHandoff?.decision === "needs_human_approval"
+          ? embedField("승인 요청", formatIntakeApprovalRequest(draft, autoHandoff).join("\n"))
+          : null,
         nextCommands.length > 0
           ? embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n"))
           : null,
@@ -597,7 +600,7 @@ function buildIntakeAutoHandoffNextCommands(taskId, autoHandoff) {
     return [
       `/ai task review-intake id:${id}`,
       `/ai task set-active id:${id}`,
-      `/ai task approve id:${id} note:<승인 범위>`,
+      `/ai task approve id:${id}`,
       `/ai runner start id:${id}`,
     ];
   }
@@ -630,6 +633,49 @@ function formatAutoHandoffDetails(autoHandoff) {
   }
 
   return compactText(lines.join("\n"), 900);
+}
+
+function formatIntakeApprovalRequest(draft = {}, autoHandoff = {}) {
+  const blockers = Array.isArray(autoHandoff.blockers) ? autoHandoff.blockers : [];
+  const reason = String(draft.reason ?? "");
+  const lines = [
+    `왜 필요한가: ${summarizeApprovalBlockers(blockers)}`,
+    `승인 대상: ${compactText(cleanKo(draft.title || "생성된 Backlog task 범위"), 180)}`,
+  ];
+
+  if (/schema/i.test(reason)) {
+    lines.push("금지/주의: schema 변경은 명시 범위에 없으면 승인되지 않습니다.");
+  }
+  if (/source|data|runtime|loader|UserData|stage_progress|node/i.test(reason)) {
+    lines.push("주의: 소스/데이터/런타임 인접 변경 가능성이 있어 승인 후 진행합니다.");
+  }
+
+  return lines;
+}
+
+function summarizeApprovalBlockers(blockers) {
+  const labels = {
+    priority_requires_human_approval: "우선순위상 사람 승인 필요",
+    risk_requires_human_approval: "위험도상 사람 승인 필요",
+    category_or_kind_requires_human_approval: "작업 종류상 자동 진행 불가",
+    clarification_required: "모호한 부분 검토 필요",
+    rule_based_cross_check_requires_review: "규칙 기반 교차검토 필요",
+    no_supported_runner_profile: "지원 실행 경로 수동 확인 필요",
+    game_validation_scope_requires_human_approval: "게임 데이터/런타임 범위 승인 필요",
+  };
+  const known = blockers.map((item) => labels[item] || item).filter(Boolean);
+  return known.length > 0 ? summarizeCompactList(known, 4) : "정책상 명시적 승인 후 진행";
+}
+
+function formatReviewApprovalRequest(approvalRequest = {}) {
+  const reasons = Array.isArray(approvalRequest.reasons) ? approvalRequest.reasons : [];
+  const approving = Array.isArray(approvalRequest.approving) ? approvalRequest.approving : [];
+  const notApproving = Array.isArray(approvalRequest.not_approving) ? approvalRequest.not_approving : [];
+  return [
+    `왜 필요한가: ${summarizeCompactList(reasons.length > 0 ? reasons : ["정책상 명시적 승인 후 진행"], 3)}`,
+    `승인하는 것: ${summarizeCompactList(approving, 3)}`,
+    `승인하지 않는 것: ${summarizeCompactList(notApproving, 3)}`,
+  ];
 }
 
 export function formatIntakeEngineStatus(result) {
@@ -751,6 +797,7 @@ export function formatIntakeTaskReview(result) {
   const task = data.task ?? {};
   const source = data.intake_source_check ?? {};
   const readiness = data.activation_readiness ?? {};
+  const approvalRequest = data.approval_request ?? {};
   const safety = data.safety ?? {};
 
   return [
@@ -768,22 +815,25 @@ export function formatIntakeTaskReview(result) {
     `${koStatus(readiness.verdict)}: ${cleanKo(readiness.reason)}`,
     `권장 조치: ${cleanKo(readiness.recommended_action)}`,
     "",
-    "**4. 권장 역할**",
+    "**4. 승인 요청**",
+    formatReviewApprovalRequest(approvalRequest).join("\n"),
+    "",
+    "**5. 권장 역할**",
     summarizeList(data.recommended_roles, 4),
     "",
-    "**5. 사람 결정 필요 항목**",
+    "**6. 사람 결정 필요 항목**",
     summarizeList(data.human_decision_gates, 2),
     "",
-    "**6. 필수 검증**",
+    "**7. 필수 검증**",
     summarizeList(data.required_validation, 2),
     "",
-    "**7. 권장 실행 경로**",
+    "**8. 권장 실행 경로**",
     summarizeList(data.suggested_execution_route, 5),
     "",
-    "**8. 다음 권장 수동 명령**",
+    "**9. 다음 권장 수동 명령**",
     summarizeList(data.suggested_next_manual_commands, 3),
     "",
-    "**9. 안전 상태**",
+    "**10. 안전 상태**",
     `Backlog 업데이트: ${koBool(safety.backlog_updated)}`,
     `ActiveTask 업데이트: ${koBool(safety.active_task_updated)}`,
     `task 승인/상태 변경: ${koBool(safety.task_approved || safety.task_status_changed)}`,
@@ -803,6 +853,7 @@ export function formatIntakeTaskReviewPayload(result) {
   const task = data.task ?? {};
   const source = data.intake_source_check ?? {};
   const readiness = data.activation_readiness ?? {};
+  const approvalRequest = data.approval_request ?? {};
   const safety = data.safety ?? {};
   const title = task.item ?? "unknown";
   const taskId = task.id ?? "unknown";
@@ -830,6 +881,9 @@ export function formatIntakeTaskReviewPayload(result) {
           `${koStatusLabel(readiness.verdict)}: ${compactText(koText(readiness.reason), 260)}`,
           `권장 조치: ${compactText(koText(readiness.recommended_action), 220)}`,
         ]),
+        approvalRequest.required
+          ? embedField("승인 요청", formatReviewApprovalRequest(approvalRequest).join("\n"))
+          : null,
         embedField("권장 역할", summarizeCompactList(data.recommended_roles, 5), true),
         embedField("사람 결정", summarizeCompactList(data.human_decision_gates, 2), true),
         embedField("필수 검증", summarizeValidationLines(data.required_validation).join("\n")),
@@ -842,7 +896,7 @@ export function formatIntakeTaskReviewPayload(result) {
           "agents/Codex CLI 실행 없음",
         ], true),
         embedField("판정 안내", compactText(koText(data.verdict_guidance || "Use Review_Validation_Verdict_Format_v1.md before accepting implementation or validation results."), 300)),
-      ],
+      ].filter(Boolean),
       footer: {
         text: "읽기 전용 검토입니다. Backlog/ActiveTask는 변경하지 않았습니다.",
       },
@@ -2475,6 +2529,7 @@ export function formatTaskStatusUpdated(data) {
     "",
     "**승인 요약**",
     cleanKo(approval.approval_summary || data.note || "approved"),
+    approval.auto_note_generated ? "note가 비어 있어 task 내용 기반 승인 메모를 자동 작성했습니다." : "",
     "",
     "**안전 안내**",
     cleanKo(approval.safety_note || "Approval only. No Codex, agents, done status, commit, or push was executed."),
