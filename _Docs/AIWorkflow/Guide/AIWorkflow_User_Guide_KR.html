@@ -129,23 +129,22 @@
     }
     .flow {
       display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr));
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
       margin: 12px 0;
     }
     .flow-step {
       position: relative;
-      min-height: 116px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
-      padding: 12px;
+      padding: 14px 16px;
     }
     .flow-step::after {
-      content: "→";
+      content: "↓";
       position: absolute;
-      right: -13px;
-      top: 42%;
+      left: 24px;
+      bottom: -20px;
       color: var(--accent);
       font-weight: 700;
     }
@@ -159,6 +158,26 @@
       display: block;
       color: var(--muted);
       font-size: 13px;
+    }
+    .flow-command {
+      margin-top: 10px;
+      padding: 9px 10px;
+      border: 1px solid #d8e2ec;
+      border-radius: 7px;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .flow-command em {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-style: normal;
+      font-size: 13px;
+    }
+    .flow-command code {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
     }
     .decision {
       border-left: 5px solid var(--warn);
@@ -245,12 +264,6 @@
       main { padding: 22px; }
       .grid { grid-template-columns: 1fr; }
       .flow { grid-template-columns: 1fr; }
-      .flow-step::after {
-        content: "↓";
-        right: calc(50% - 6px);
-        top: auto;
-        bottom: -18px;
-      }
       .flow-step:last-child::after { content: ""; }
       .lane { grid-template-columns: 1fr; }
       .lane-items { grid-template-columns: 1fr; }
@@ -309,26 +322,54 @@
               <div class="flow-step manual">
                 <strong>1. 작업 지시</strong>
                 <span><code>/ai intake</code>로 자연어 요청을 넣습니다.</span>
+                <div class="flow-command">
+                  <em>사용자 명시 명령</em>
+                  <code>/ai intake text:&lt;작업 요청&gt;</code>
+                </div>
               </div>
               <div class="flow-step auto">
                 <strong>2. 접수/분류</strong>
                 <span>TaskDraft, Backlog, 위험도, 실행 후보를 만듭니다.</span>
+                <div class="flow-command">
+                  <em>확인 명령</em>
+                  <code>/ai task review-intake id:&lt;task_id&gt;</code>
+                </div>
               </div>
               <div class="flow-step decision">
                 <strong>3. 승인 판단</strong>
                 <span>저위험은 자동 착수, 위험 작업은 사람 승인에서 멈춥니다.</span>
+                <div class="flow-command">
+                  <em>승인 필요 시</em>
+                  <code>/ai task set-active id:&lt;task_id&gt;</code>
+                  <code>/ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;</code>
+                </div>
               </div>
               <div class="flow-step auto">
                 <strong>4. Runner 실행</strong>
                 <span>workspace, session, evidence, verification을 생성합니다.</span>
+                <div class="flow-command">
+                  <em>자동 착수가 안 됐을 때</em>
+                  <code>/ai runner start id:&lt;task_id&gt;</code>
+                  <code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
+                </div>
               </div>
               <div class="flow-step decision">
                 <strong>5. 완료 리뷰</strong>
                 <span>Completion Card를 보고 accept/request changes 등을 결정합니다.</span>
+                <div class="flow-command">
+                  <em>완료 판단 명령</em>
+                  <code>/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;</code>
+                  <code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
+                </div>
               </div>
               <div class="flow-step manual">
                 <strong>6. 완료/커밋</strong>
                 <span><code>task done</code>, <code>git commit/push</code>를 명시적으로 결정합니다.</span>
+                <div class="flow-command">
+                  <em>마무리 명령</em>
+                  <code>/ai task done id:&lt;task_id&gt; evidence:&lt;완료 근거&gt;</code>
+                  <code>/ai git commit-push message:&lt;commit message&gt;</code>
+                </div>
               </div>
             </div>
             <div class="legend">
