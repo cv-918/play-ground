@@ -33,6 +33,18 @@ export function formatTextCardPayload(title, text, options = {}) {
   };
 }
 
+function formatFailureCardPayload(title, error, options = {}) {
+  const nextCommands = Array.isArray(options.nextCommands) ? options.nextCommands : [];
+  const lines = [
+    "**이유**",
+    cleanKo(error || "Unknown failure."),
+  ];
+  if (nextCommands.length > 0) {
+    lines.push("", "**다음 명령**", summarizeCommandLines(nextCommands).join("\n"));
+  }
+  return formatTextCardPayload(title, lines.join("\n"), { color: 0xc62828 });
+}
+
 export function formatStatus(status) {
   const task = status.active_task ?? {};
   const backlog = status.backlog ?? {};
@@ -404,7 +416,7 @@ export function formatIntakeSuggestion(result) {
 
 export function formatIntakeSuggestionPayload(result) {
   if (!result?.ok) {
-    return { content: formatIntakeSuggestion(result) };
+    return formatFailureCardPayload("작업 접수 미리보기 실패", formatIntakeSuggestion(result));
   }
 
   const draft = result.task_draft ?? {};
@@ -494,7 +506,7 @@ export function formatIntakeTaskCreated(result) {
 
 export function formatIntakeTaskCreatedPayload(result) {
   if (!result?.ok) {
-    return { content: formatIntakeTaskCreated(result) };
+    return formatFailureCardPayload("작업 접수 실패", formatIntakeTaskCreated(result));
   }
 
   const data = result.data ?? {};
@@ -846,7 +858,7 @@ export function formatIntakeTaskReview(result) {
 
 export function formatIntakeTaskReviewPayload(result) {
   if (!result?.ok) {
-    return { content: formatIntakeTaskReview(result) };
+    return formatFailureCardPayload("작업 접수 활성화 검토 실패", formatIntakeTaskReview(result));
   }
 
   const data = result.data ?? {};
@@ -954,12 +966,7 @@ export function formatResultAudit(result) {
 
 export function formatCompletionStatusPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**완료 보고 상태 확인 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("완료 보고 상태 확인 실패", result?.error);
   }
 
   const report = result.data?.report_status ?? {};
@@ -992,12 +999,7 @@ export function formatCompletionStatusPayload(result) {
 
 export function formatCompletionReportPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**CompletionReport 생성 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("CompletionReport 생성 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1045,12 +1047,7 @@ export function formatCompletionReportPayload(result) {
 
 export function formatCompletionCardPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**완료 카드 생성 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("완료 카드 생성 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1121,12 +1118,7 @@ function buildCompletionCardNextCommands(data, card, presentation) {
 
 export function formatFinalizationStatusPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**최종화 상태 확인 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("최종 기록 상태 확인 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1158,12 +1150,7 @@ export function formatFinalizationStatusPayload(result) {
 
 export function formatFinalizationRecordPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**최종화 기록 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("최종 결정 기록 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1202,12 +1189,7 @@ export function formatFinalizationRecordPayload(result) {
 
 export function formatFinalizationReadPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**최종화 기록 읽기 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("최종 기록 읽기 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1243,12 +1225,7 @@ export function formatFinalizationReadPayload(result) {
 
 export function formatAutoApprovalStatusPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**자동 승인 정책 상태 확인 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("자동 승인 정책 상태 확인 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1275,12 +1252,7 @@ export function formatAutoApprovalStatusPayload(result) {
 
 export function formatAutoApprovalEvaluatePayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**자동 승인 정책 평가 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("자동 승인 정책 평가 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1326,12 +1298,7 @@ export function formatAutoApprovalEvaluatePayload(result) {
 
 export function formatAutoApprovalReadPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**자동 승인 정책 평가 읽기 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("자동 승인 정책 읽기 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1369,12 +1336,7 @@ export function formatAutoApprovalReadPayload(result) {
 
 export function formatFollowUpStatusPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**후속 작업 상태 확인 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("후속 작업 상태 확인 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1401,12 +1363,7 @@ export function formatFollowUpStatusPayload(result) {
 
 export function formatFollowUpGeneratePayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**후속 작업 후보 생성 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("후속 작업 후보 생성 실패", result?.error);
   }
 
   const data = result.data ?? {};
@@ -1444,12 +1401,7 @@ export function formatFollowUpGeneratePayload(result) {
 
 export function formatFollowUpReadPayload(result) {
   if (!result?.ok) {
-    return {
-      content: [
-        "**후속 작업 후보 읽기 실패**",
-        cleanKo(result?.error || "Unknown failure."),
-      ].join("\n"),
-    };
+    return formatFailureCardPayload("후속 작업 후보 읽기 실패", result?.error);
   }
 
   const data = result.data ?? {};
