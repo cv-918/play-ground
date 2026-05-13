@@ -110,6 +110,7 @@ _Docs/AIWorkflow/09_Operational_Playbook.md
 _Docs/AIWorkflow/10_Quick_Checklists.md
 _Docs/AIWorkflow/11_Workflow_Examples.md
 _Docs/AIWorkflow/12_Troubleshooting_and_Recovery_Guide.md
+_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html
 _Docs/AIWorkflow/Unity_Workflow_Context.md
 _Docs/AIWorkflow/Task_State_Model.md
 _Docs/AIWorkflow/ActiveTask_Template.md
@@ -521,6 +522,30 @@ Korean required-read summaries may be created for the human developer.
 User-facing explanations in ChatGPT should be in Korean unless the user requests otherwise.
 
 Dev Logs may be written in Korean or English depending on the intended reader, but they must remain accurate and traceable.
+
+---
+
+## 14.1 AIWorkflow User Guide Update Policy
+
+The canonical Human Director user guide is:
+
+```text
+_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html
+```
+
+Any workflow-affecting task must check whether this guide needs an update.
+
+Update the guide in the same change set when changing:
+
+- Discord command names, options, cards, labels, or next-command prompts
+- Intake auto-handoff eligibility or approval behavior
+- PC Runner profiles, executor routing, stop reasons, or completion gates
+- Task done, finalization, commit, push, or manual-escalation steps
+- Any user intervention point in the regular workflow
+
+If no guide update is needed, say so explicitly in the review or validation summary.
+
+A workflow-affecting task is not complete until the guide update decision is recorded.
 
 ---
 

@@ -28,6 +28,7 @@ This README is the entry point for the document set.
 | `AIWorkflow_Overview_KR.md` | Korean Human Director overview of the AIWorkflow layers, responsibilities, and regular operating model |
 | `AIWorkflow_Flowchart_KR.md` | Korean flowchart guide for the regular path, read-only inspection path, missing-validation path, and commit decision path |
 | `AIWorkflow_Korean_Guide_Glossary.md` | Korean glossary and command usage guide for regular and optional/debug AIWorkflow commands |
+| `Guide/AIWorkflow_User_Guide_KR.html` | Complete browser-readable Korean Human Director user guide for the current Discord-first PC Runner workflow |
 | `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |
 | `00_AI_Orchestrator_Overview.md` | High-level overview of the AI Orchestrator workflow |
@@ -304,6 +305,20 @@ project-profile`, and `/ai prepare codex` are not required in the regular path.
 For broader architecture or high-risk implementation work, the older Full Path
 still applies conceptually: intake, architecture/reduced scope, approval,
 bounded execution, review, validation, Dev Log, and manual commit decision.
+
+User guide update policy:
+
+`Guide/AIWorkflow_User_Guide_KR.html` is the canonical browser-readable user
+guide for the Human Director. Any task that changes the user-facing workflow
+must update this guide in the same change set. This includes Discord command
+names/options, output cards, next-command prompts, auto-handoff eligibility,
+approval behavior, runner profiles, executor routing, stop reasons, completion
+gates, task done, finalization, commit/push, manual escalation, or any user
+intervention point in the regular workflow.
+
+If a workflow-related task does not require a guide update, the review or
+validation summary must explicitly say that the guide was checked and no update
+was needed.
 
 ---
 

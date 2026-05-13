@@ -7,6 +7,7 @@
 
 자세한 설계 설명은 아래 문서를 봅니다.
 
+- `_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html`
 - `WF_Human_Director_Operation_Guide_KR.md`
 - `WF_Unified_PC_Runner_Orchestration_Entrypoint_KR.md`
 - `WF_Intake_Auto_Handoff_KR.md`

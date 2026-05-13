@@ -266,6 +266,7 @@ Never invent validation results.
 [ ] Review passed or issues accepted.
 [ ] Validation passed or gaps are explicitly accepted.
 [ ] Dev Log exists if required.
+[ ] Human Director user guide update was completed or explicitly not needed.
 [ ] Remaining risks are documented.
 [ ] git status checked.
 [ ] git diff --stat checked.
@@ -279,7 +280,23 @@ Avoid `git add .` unless the whole working tree was reviewed.
 
 ---
 
-## 14. Stop Checklist
+## 14. Human Director User Guide Checklist
+
+Use this checklist for any AIWorkflow command, runner, approval, completion, or
+commit/push behavior change.
+
+```text
+[ ] Does this task change the user-facing workflow?
+[ ] Does it change Discord commands, cards, labels, or next-command prompts?
+[ ] Does it change auto-handoff, approval, runner, finalization, done, commit, push, or manual escalation behavior?
+[ ] If yes, update _Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html.
+[ ] If no, record that the guide was checked and no update was needed.
+[ ] If the HTML guide changed, open or render-check it before completion when practical.
+```
+
+---
+
+## 15. Stop Checklist
 
 Stop if:
 
@@ -300,7 +317,7 @@ Stop if:
 
 ---
 
-## 15. Fast Path Checklist
+## 16. Fast Path Checklist
 
 Fast Path may be used only when:
 
@@ -325,7 +342,7 @@ Even in Fast Path:
 
 ---
 
-## 16. Full Path Checklist
+## 17. Full Path Checklist
 
 Full Path is required when:
 
@@ -351,12 +368,13 @@ Implementation plan
 Review
 Validation
 Dev Log if meaningful
+Human Director guide update decision if the workflow changed
 Commit decision
 ```
 
 ---
 
-## 17. Summary
+## 18. Summary
 
 ```text
 Start deliberately.
@@ -365,6 +383,7 @@ Use the right tool.
 Capture full diff.
 Review before validation.
 Validate with evidence.
+Keep the Human Director guide current.
 Document remaining risk.
 Commit intentionally.
 ```

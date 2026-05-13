@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIWorkflow 사용자 가이드</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fa;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #5f6f7f;
+      --line: #d9e1ea;
+      --accent: #245c8f;
+      --accent-soft: #e7f1fa;
+      --warn: #8a5a13;
+      --warn-soft: #fff4dc;
+      --ok: #146c43;
+      --ok-soft: #e5f5ec;
+      --code: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+      line-height: 1.65;
+    }
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    header {
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    h1, h2, h3 { line-height: 1.3; letter-spacing: 0; }
+    h1 { margin: 0 0 8px; font-size: clamp(30px, 4vw, 44px); }
+    h2 { margin: 36px 0 14px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 24px; }
+    h3 { margin: 24px 0 10px; font-size: 18px; }
+    p, li, td, th { font-size: 16px; }
+    .meta { margin: 0; color: var(--muted); font-size: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    nav h2 { margin: 0 0 10px; padding: 0; border: 0; font-size: 16px; }
+    nav ol { margin: 0; padding-left: 20px; }
+    nav li { margin: 6px 0; font-size: 14px; }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 30px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: var(--code);
+      border: 1px solid #d8e2ec;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.92em;
+      word-break: break-word;
+    }
+    pre {
+      overflow-x: auto;
+      background: #17202a;
+      color: #f7fbff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      line-height: 1.55;
+    }
+    pre code { background: transparent; border: 0; padding: 0; color: inherit; word-break: normal; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #f4f7fb; }
+    .note, .good, .warn {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border-radius: 7px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+    }
+    .good { border-left-color: var(--ok); background: var(--ok-soft); }
+    .warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+    .panel h3 { margin-top: 0; }
+    .visual {
+      margin: 16px 0 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 16px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .flow-step {
+      position: relative;
+      min-height: 116px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 12px;
+    }
+    .flow-step::after {
+      content: "→";
+      position: absolute;
+      right: -13px;
+      top: 42%;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .flow-step:last-child::after { content: ""; }
+    .flow-step strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    .flow-step span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .decision {
+      border-left: 5px solid var(--warn);
+      background: var(--warn-soft);
+    }
+    .auto {
+      border-left: 5px solid var(--ok);
+      background: var(--ok-soft);
+    }
+    .manual {
+      border-left: 5px solid var(--accent);
+      background: var(--accent-soft);
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+    .legend .auto-key::before { background: var(--ok); }
+    .legend .manual-key::before { background: var(--accent); }
+    .legend .decision-key::before { background: var(--warn); }
+    .lane {
+      display: grid;
+      grid-template-columns: 160px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .lane + .lane { margin-top: 10px; }
+    .lane-title {
+      background: #eef4fa;
+      padding: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .lane-items {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+    .lane-item {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px 10px;
+      font-size: 14px;
+      background: #fbfcfe;
+    }
+    .stop-map {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stop-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+    .stop-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    @media (max-width: 860px) {
+      .page { width: min(100% - 20px, 1180px); padding-top: 18px; }
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      main { padding: 22px; }
+      .grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-step::after {
+        content: "↓";
+        right: calc(50% - 6px);
+        top: auto;
+        bottom: -18px;
+      }
+      .flow-step:last-child::after { content: ""; }
+      .lane { grid-template-columns: 1fr; }
+      .lane-items { grid-template-columns: 1fr; }
+      .stop-map { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>AIWorkflow 사용자 가이드</h1>
+      <p class="meta">Discord 중심 PC Runner 기반 AI 개발 워크플로우 운영 가이드 · 2026-05-13</p>
+    </header>
+    <div class="layout">
+      <nav aria-label="목차">
+        <h2>목차</h2>
+        <ol>
+          <li><a href="#summary">한눈에 보기</a></li>
+          <li><a href="#visual-map">워크플로우 시각화</a></li>
+          <li><a href="#roles">사용자와 하네스 역할</a></li>
+          <li><a href="#normal-flow">정규 흐름</a></li>
+          <li><a href="#auto-handoff">자동 착수 기준</a></li>
+          <li><a href="#approval">승인해야 하는 경우</a></li>
+          <li><a href="#commands">명령어 빠른 참조</a></li>
+          <li><a href="#completion">완료 리뷰</a></li>
+          <li><a href="#git">커밋/푸시</a></li>
+          <li><a href="#game-work">게임 작업 투입 기준</a></li>
+          <li><a href="#troubleshooting">막혔을 때</a></li>
+          <li><a href="#maintenance">가이드 최신화 정책</a></li>
+        </ol>
+      </nav>
+      <main>
+        <section id="summary">
+          <h2>한눈에 보기</h2>
+          <p>이 프로젝트의 워크플로우는 Discord를 사용자 인터페이스로 쓰고, PC Runner가 로컬 실행, 감시, 증거 수집, 검증 보고, 완료 카드를 담당하는 개발 작업 하네스입니다.</p>
+          <div class="good">
+            <strong>사용자가 목표로 하는 최종 사용감:</strong>
+            작업 지시, 위험 작업 승인, 완료 결과 리뷰, 커밋/푸시 결정만 사람이 맡고 나머지는 하네스가 처리합니다.
+          </div>
+          <pre><code>1. /ai intake text:&lt;작업 요청&gt;
+2. 승인 필요 시에만 승인
+3. PC Runner가 실행, 감시, 증거 수집, 검증 보고
+4. Completion Card 리뷰
+5. accept / accept-concerns / request-changes / reject / defer 결정
+6. task done 및 commit/push 결정</code></pre>
+          <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다.</p>
+        </section>
+
+        <section id="visual-map">
+          <h2>워크플로우 시각화</h2>
+          <p>정규 목표는 사용자가 Discord에서 작업을 넣고, 하네스가 실행과 증거 수집을 맡으며, 사람은 승인과 완료 판단만 하는 흐름입니다.</p>
+
+          <div class="visual" aria-label="정규 워크플로우 흐름도">
+            <h3>전체 흐름 지도</h3>
+            <div class="flow">
+              <div class="flow-step manual">
+                <strong>1. 작업 지시</strong>
+                <span><code>/ai intake</code>로 자연어 요청을 넣습니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>2. 접수/분류</strong>
+                <span>TaskDraft, Backlog, 위험도, 실행 후보를 만듭니다.</span>
+              </div>
+              <div class="flow-step decision">
+                <strong>3. 승인 판단</strong>
+                <span>저위험은 자동 착수, 위험 작업은 사람 승인에서 멈춥니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>4. Runner 실행</strong>
+                <span>workspace, session, evidence, verification을 생성합니다.</span>
+              </div>
+              <div class="flow-step decision">
+                <strong>5. 완료 리뷰</strong>
+                <span>Completion Card를 보고 accept/request changes 등을 결정합니다.</span>
+              </div>
+              <div class="flow-step manual">
+                <strong>6. 완료/커밋</strong>
+                <span><code>task done</code>, <code>git commit/push</code>를 명시적으로 결정합니다.</span>
+              </div>
+            </div>
+            <div class="legend">
+              <span class="auto-key">하네스 자동 처리</span>
+              <span class="decision-key">사람 판단 지점</span>
+              <span class="manual-key">사용자 명시 명령</span>
+            </div>
+          </div>
+
+          <div class="visual" aria-label="정규 경로와 수동 승격 경로 비교">
+            <h3>정규 경로와 수동 승격 경로</h3>
+            <div class="lane">
+              <div class="lane-title">정규 경로</div>
+              <div class="lane-items">
+                <div class="lane-item"><code>/ai intake</code></div>
+                <div class="lane-item">auto-handoff 또는 승인</div>
+                <div class="lane-item">PC Runner 실행/검증</div>
+                <div class="lane-item">Completion Card 리뷰</div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-title">수동 승격</div>
+              <div class="lane-items">
+                <div class="lane-item">runner/adapter/auth 문제</div>
+                <div class="lane-item"><code>/ai prepare goal</code></div>
+                <div class="lane-item">Codex App/CLI 수동 실행</div>
+                <div class="lane-item"><code>/ai result audit</code></div>
+              </div>
+            </div>
+            <div class="note">수동 승격은 예외 경로입니다. 정상 목표는 PC Runner가 실행, 감시, 증거 수집, 검증 보고를 맡는 것입니다.</div>
+          </div>
+
+          <div class="visual" aria-label="Runner 중단 이유별 다음 행동">
+            <h3>Runner가 멈췄을 때 보는 지도</h3>
+            <div class="stop-map">
+              <div class="stop-card">
+                <strong>approval_required</strong>
+                범위와 위험도를 확인한 뒤 <code>/ai task approve</code>, <code>/ai runner start</code>를 사용합니다.
+              </div>
+              <div class="stop-card">
+                <strong>completion_review_required</strong>
+                <code>/ai completion card</code>를 확인하고 <code>/ai runner accept-completion</code>으로 판단을 기록합니다.
+              </div>
+              <div class="stop-card">
+                <strong>done_or_commit_decision</strong>
+                <code>/ai task done</code>으로 완료 처리하거나 <code>/ai git commit-push</code>를 명시적으로 실행합니다.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="roles">
+          <h2>사용자와 하네스 역할</h2>
+          <table>
+            <thead>
+              <tr><th>주체</th><th>맡는 일</th><th>하지 않는 일</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Human Director</td>
+                <td>작업 지시, 위험 작업 승인, 완료 판단, 커밋/푸시 결정</td>
+                <td>반복 명령 수동 실행, 증거 파일 직접 조립</td>
+              </tr>
+              <tr>
+                <td>Discord Orchestrator</td>
+                <td>명령 UI, task 상태 관리, 승인 기록, 다음 명령 카드 제공</td>
+                <td>LLM 출력 최종 승인, 위험 작업 무단 실행</td>
+              </tr>
+              <tr>
+                <td>PC Runner</td>
+                <td>workspace, session, evidence, verification, completion report/card</td>
+                <td>사람 승인 우회, 자동 commit/push</td>
+              </tr>
+              <tr>
+                <td>LLM/Codex</td>
+                <td>TaskDraft 생성, 승인된 범위의 분석/구현 보조</td>
+                <td>최종 승인권 행사, 정책 결정 단독 수행</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="normal-flow">
+          <h2>정규 흐름</h2>
+          <h3>가장 짧은 흐름</h3>
+          <pre><code>/ai intake text:"VAL task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 검증해줘."</code></pre>
+          <p>자동 착수 조건에 맞으면 하네스가 Backlog 생성, ActiveTask 선택, 승인, PC Runner 시작까지 진행합니다. 이후 Completion Card를 보고 완료를 판단합니다.</p>
+
+          <h3>승인이 필요한 흐름</h3>
+          <pre><code>/ai intake text:&lt;작업 요청&gt;
+/ai task set-active id:&lt;task_id&gt;
+/ai task approve id:&lt;task_id&gt; note:&lt;승인 범위&gt;
+/ai runner start id:&lt;task_id&gt;</code></pre>
+
+          <h3>완료 리뷰 흐름</h3>
+          <pre><code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;
+/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;
+/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code></pre>
+          <p>완료 카드가 괜찮고 바로 done까지 처리해도 되는 경우에는 아래 단축 명령을 씁니다.</p>
+          <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; mark-done:true</code></pre>
+        </section>
+
+        <section id="auto-handoff">
+          <h2>자동 착수 기준</h2>
+          <p>자동 착수는 LLM이 마음대로 승인하는 기능이 아닙니다. deterministic policy가 허용하는 저위험 작업만 자동으로 ActiveTask 선택, approve, runner start까지 이어집니다.</p>
+          <table>
+            <thead>
+              <tr><th>자동 가능</th><th>조건</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>DOC/VAL</td><td>P2/P3, low risk, clarification 없음, cross-check 문제 없음</td></tr>
+              <tr><td>WF 문서/유지보수</td><td>workflow command behavior 변경이 없는 저위험 문서/metadata 정리</td></tr>
+              <tr><td>GAME validation/build validation</td><td>source/data/schema/runtime 변경이 없다고 명시된 검증 작업</td></tr>
+            </tbody>
+          </table>
+          <div class="warn">
+            GAME source/data/schema/runtime/gameplay 변경, P0/P1, medium/high risk, UNITY 작업, 명령 동작 변경은 사람 승인에서 멈춥니다.
+          </div>
+        </section>
+
+        <section id="approval">
+          <h2>승인해야 하는 경우</h2>
+          <div class="grid">
+            <div class="panel">
+              <h3>항상 승인 필요</h3>
+              <ul>
+                <li>P0/P1 또는 high-risk 작업</li>
+                <li>게임 소스 구현</li>
+                <li>게임 데이터/schema 변경</li>
+                <li>save/load, lifecycle, runtime behavior 변경</li>
+                <li>workflow rule, approval policy, command behavior 변경</li>
+                <li>commit/push/release/deploy</li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h3>자동화해도 되는 방향</h3>
+              <ul>
+                <li>TaskDraft 생성</li>
+                <li>workspace 준비</li>
+                <li>session/progress/heartbeat 기록</li>
+                <li>file watcher, diff snapshot, evidence 수집</li>
+                <li>VerificationReport, CompletionReport/Card 생성</li>
+                <li>Follow-up 후보 생성</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="commands">
+          <h2>명령어 빠른 참조</h2>
+          <table>
+            <thead>
+              <tr><th>상황</th><th>명령</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>작업 접수</td><td><code>/ai intake text:&lt;request&gt;</code></td></tr>
+              <tr><td>미리보기</td><td><code>/ai intake-preview text:&lt;request&gt;</code></td></tr>
+              <tr><td>작업 선택</td><td><code>/ai task set-active id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>작업 승인</td><td><code>/ai task approve id:&lt;task_id&gt; note:&lt;scope&gt;</code></td></tr>
+              <tr><td>Runner 시작</td><td><code>/ai runner start id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>Runner 상태</td><td><code>/ai runner status id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>완료 승인</td><td><code>/ai runner accept-completion ...</code></td></tr>
+              <tr><td>완료+done 단축</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
+              <tr><td>커밋/푸시</td><td><code>/ai git commit</code>, <code>/ai git push</code>, <code>/ai git commit-push</code></td></tr>
+              <tr><td>수동 승격</td><td><code>/ai prepare goal</code>, <code>/ai result audit</code></td></tr>
+            </tbody>
+          </table>
+
+          <h3>Runner profile</h3>
+          <table>
+            <thead>
+              <tr><th>profile</th><th>용도</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>validation</code></td><td>JSON smoke, local validation, no-source-change 검증</td></tr>
+              <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence</td></tr>
+              <tr><td><code>documentation</code></td><td>문서 작업</td></tr>
+              <tr><td><code>implementation</code></td><td>승인된 구현 작업</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="completion">
+          <h2>완료 리뷰</h2>
+          <p>Completion Card에서 아래를 확인합니다.</p>
+          <ol>
+            <li>결과가 작업 요청과 일치하는가?</li>
+            <li>VerificationReport가 <code>PASS</code> 또는 <code>PASS_WITH_NOTES</code>인가?</li>
+            <li><code>CONCERNS</code>가 있다면 사람이 받아들일 수 있는 우려인가?</li>
+            <li>변경 파일이 승인 범위 안인가?</li>
+            <li>검증 증거가 실제로 존재하는가?</li>
+          </ol>
+          <table>
+            <thead>
+              <tr><th>결정</th><th>의미</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>accept</code></td><td>완료 인정</td></tr>
+              <tr><td><code>accept-concerns</code></td><td>우려를 확인했고 받아들임</td></tr>
+              <tr><td><code>request-changes</code></td><td>수정 필요</td></tr>
+              <tr><td><code>reject</code></td><td>결과 반려</td></tr>
+              <tr><td><code>defer</code></td><td>판단 보류</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="git">
+          <h2>커밋/푸시</h2>
+          <p>커밋/푸시는 자동화의 마지막 gate입니다. 하네스가 도와줄 수는 있지만, 명시적 명령 없이 자동으로 진행하면 안 됩니다.</p>
+          <pre><code>/ai git commit message:&lt;message&gt;
+/ai git push
+/ai git commit-push message:&lt;message&gt;</code></pre>
+          <p>메시지를 비워두면 현재 diff를 기반으로 하네스가 간단한 commit message를 만들 수 있습니다. 그래도 commit/push 실행 자체는 사용자의 명시적 명령입니다.</p>
+        </section>
+
+        <section id="game-work">
+          <h2>실제 게임 작업 투입 기준</h2>
+          <p>하네스 안정화 단계에서는 실제 게임 작업을 작게 넣습니다.</p>
+          <h3>좋은 작업 단위</h3>
+          <ul>
+            <li>source/data 변경 없는 검증 작업</li>
+            <li>Visual Studio Debug x64 build 검증</li>
+            <li>파일 1~3개 안의 작은 data 수정</li>
+            <li>하나의 loader, scene, component만 보는 작업</li>
+            <li>검증 명령과 완료 기준이 명확한 작업</li>
+          </ul>
+          <h3>피해야 하는 작업 단위</h3>
+          <ul>
+            <li>전투, 데이터, UI, 저장을 한 번에 바꾸는 작업</li>
+            <li>schema 변경과 runtime 구현을 한 task에 묶는 작업</li>
+            <li>넓은 리팩터링 또는 전반 개선</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>막혔을 때</h2>
+          <table>
+            <thead>
+              <tr><th>상태</th><th>해야 할 일</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>approval_required</code></td><td>작업 범위를 확인하고 <code>/ai task approve</code> 후 <code>/ai runner start</code></td></tr>
+              <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 <code>/ai runner accept-completion</code></td></tr>
+              <tr><td><code>done_or_commit_decision</code></td><td><code>/ai task done</code> 또는 git 명령 결정</td></tr>
+              <tr><td>명령이 안 보임</td><td><code>/ai bot status</code>, 필요 시 <code>/ai bot restart</code></td></tr>
+              <tr><td>build tool 인식 문제</td><td>하네스가 MSBuild/devenv를 자동 탐지해야 하며, 사용자가 PATH를 직접 외울 필요는 없음</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="maintenance">
+          <h2>가이드 최신화 정책</h2>
+          <div class="warn">
+            워크플로우 명령, 승인 정책, runner profile, auto-handoff 기준, completion/git gate, 사용자 개입 단계가 바뀌는 작업은 반드시 이 HTML 가이드를 함께 갱신해야 합니다.
+          </div>
+          <p>가이드 갱신이 필요한 변경 예시는 다음입니다.</p>
+          <ul>
+            <li>새 Discord 명령 추가, 삭제, 이름 변경, 옵션 변경</li>
+            <li>정규 경로와 수동 승격 경로의 변경</li>
+            <li>자동 handoff 허용/차단 기준 변경</li>
+            <li>approval/done/commit/push 정책 변경</li>
+            <li>runner profile 또는 executor routing 변경</li>
+            <li>Completion Card, VerificationReport, FinalizationLog 사용 방식 변경</li>
+          </ul>
+          <p>관련 작업의 완료 조건에는 <code>_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html</code> 검토와 갱신 여부 판단이 포함되어야 합니다.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

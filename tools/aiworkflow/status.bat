@@ -55,6 +55,7 @@ for %%F in (
     "_Docs\AIWorkflow\ProjectStatus.md"
     "_Docs\AIWorkflow\Backlog.md"
     "_Docs\AIWorkflow\ActiveTask.md"
+    "_Docs\AIWorkflow\Guide\AIWorkflow_User_Guide_KR.html"
     "_Docs\AIWorkflow\FinalBlueprint\WF_Post_309_Workflow_Stabilization_Roadmap.md"
     "_Docs\AIWorkflow\FinalBlueprint\WF_Human_Director_Operation_Guide_KR.md"
     "_Docs\AIWorkflow\Discord_Orchestrator_Architecture_v1.md"

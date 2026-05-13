@@ -11,15 +11,17 @@
 
 직접 읽을 가치가 있는 문서는 다음입니다.
 
-1. `WF_Human_Director_Operation_Guide_KR.md`
-   - 평소 작업할 때 보는 문서입니다.
-2. `WF_Post_309_Workflow_Stabilization_Roadmap_KR.md`
+1. `_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html`
+   - 평소 작업할 때 여는 완성형 브라우저용 사용자 가이드입니다.
+2. `WF_Human_Director_Operation_Guide_KR.md`
+   - 운영 배경과 기존 기록을 확인할 때 보는 companion 문서입니다.
+3. `WF_Post_309_Workflow_Stabilization_Roadmap_KR.md`
    - 앞으로 어떤 순서로 자동화가 안정화되는지 보는 문서입니다.
-3. `WF_Command_Surface_Consolidation_Plan_KR.md`
+4. `WF_Command_Surface_Consolidation_Plan_KR.md`
    - 어떤 명령이 정규 경로이고 어떤 명령이 진단/수동 승격인지 보는 문서입니다.
-4. `WF_End_To_End_Workflow_Technical_Spec_KR.md`
+5. `WF_End_To_End_Workflow_Technical_Spec_KR.md`
    - 전체 구조가 궁금하거나 승인 경계가 헷갈릴 때 보는 문서입니다.
-5. `WF_Workflow_Audit_And_Pruning_Report_KR.md`
+6. `WF_Workflow_Audit_And_Pruning_Report_KR.md`
    - 나중에 명령어 제거/숨김을 결정할 때 보는 문서입니다.
 
 DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 읽을 필요는

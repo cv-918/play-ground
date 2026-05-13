@@ -42,9 +42,10 @@ For meaningful code/data/runtime work:
    follow-up and policy artifacts are needed.
 10. Fix review issues or create follow-up tasks when required.
 11. Validate build/runtime/data/workflow behavior.
-12. Write Dev Log if required.
-13. Mark done only with human evidence using `/ai task done`.
-14. Commit only after final user decision.
+12. Update the Human Director user guide when the workflow surface changed.
+13. Write Dev Log if required.
+14. Mark done only with human evidence using `/ai task done`.
+15. Commit only after final user decision.
 ```
 
 Discord is the task-state, approval, runner control, review, and audit layer.
@@ -60,6 +61,25 @@ It creates one Backlog task from a validated TaskDraft and then stops. The
 rule-based classifier remains as a cross-check layer. `/ai intake-preview` is
 the read-only draft path. Intake still does not approve scope, activate tasks,
 execute implementation, mark done, or commit.
+
+---
+
+## 3.1 Human Director Guide Update Procedure
+
+`_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html` is the canonical
+browser-readable user guide for regular workflow operation.
+
+Update this guide in the same task when changing:
+
+- Regular Discord flow steps.
+- Discord command names, options, cards, labels, or next-command prompts.
+- Intake auto-handoff eligibility or approval behavior.
+- PC Runner profiles, executor routing, stop reasons, or completion gates.
+- Finalization, task done, commit, push, or manual-escalation steps.
+- Any point where the Human Director must approve, review, decide, or act.
+
+When a workflow-related change does not require a guide update, record that the
+guide was checked and no update was needed in the review or validation summary.
 
 ---
 
