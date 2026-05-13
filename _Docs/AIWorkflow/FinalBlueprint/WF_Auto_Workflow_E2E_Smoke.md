@@ -24,7 +24,8 @@ intake request
 -> deterministic auto-handoff policy
 -> set-active in temp repo
 -> approve in temp repo
--> PC Runner validation/local_cli start
+-> PC Runner validation/local_cli background start
+-> status polling until runner artifacts exist
 -> completion_review_required
 -> runner accept-completion shortcut
 -> FinalizationLog in temp repo
@@ -57,6 +58,7 @@ The expected final report contains:
 ```text
 ok: true
 runner_start_stop_reason: completion_review_required
+runner_start_detached: true
 final_stop_reason: done_or_commit_decision
 real_repo_state_modified: false
 ```
@@ -66,8 +68,9 @@ real_repo_state_modified: false
 2026-05-13 local run:
 
 ```text
-task_id: VAL-20260513-014558
+task_id: VAL-20260513-205738
 intake_decision: runner_started
+runner_start_detached: true
 runner_start_stop_reason: completion_review_required
 final_stop_reason: done_or_commit_decision
 real_repo_state_modified: false
