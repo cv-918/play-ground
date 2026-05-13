@@ -1240,6 +1240,13 @@ function Invoke-PostExecutionValidationPipeline {
     $RunState.updated_at = Get-NowText
     $buildTestCommandId = [string]$Plan.expected_artifacts.build_test_command_id
     if ([string]::IsNullOrWhiteSpace($buildTestCommandId)) { $buildTestCommandId = "json_smoke" }
+    $buildTestArgs = @(
+        "run", $TaskId, $buildTestCommandId, "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
+        "--config", $ConfigPaths.build_test, "--json"
+    )
+    if ([string]$Plan.approval_state -eq "approved") {
+        $buildTestArgs += "--approved"
+    }
     Write-ProgressEvent -Path $Paths.progress_event_log_path -TaskId $TaskId -RunId $RunId -RunnerRunId $RunnerRunId -EventType "runner_parallel_validation_started" -Message "PC Runner started independent file watcher and build/test validation steps." -Data @{ file_watcher = $ConfigPaths.file_watcher; build_test = $ConfigPaths.build_test; build_test_command_id = $buildTestCommandId } | Out-Null
 
     $parallel = Invoke-ToolJsonBatch -Repo $Repo -Specs @(
@@ -1255,10 +1262,7 @@ function Invoke-PostExecutionValidationPipeline {
         [pscustomobject]@{
             name = "build_test"
             relative_script_path = "tools\aiworkflow\build_test_runner.bat"
-            arguments = @(
-                "run", $TaskId, $buildTestCommandId, "--execute", "--build-test-id", $Plan.expected_artifacts.build_test_id,
-                "--config", $ConfigPaths.build_test, "--json"
-            )
+            arguments = $buildTestArgs
             allow_failure = $false
         }
     )
