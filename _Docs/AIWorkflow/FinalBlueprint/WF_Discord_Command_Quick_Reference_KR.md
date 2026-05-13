@@ -132,16 +132,17 @@ Runner가 실행, 증거 수집, 검증 보고, 완료 보고, 완료 카드 생
 완료 결과가 문제 없으면:
 
 ```text
-/ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
-/ai runner continue id:<task_id>
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
 
 우려는 있지만 검토 후 받아들일 수 있으면:
 
 ```text
-/ai finalization accept-concerns id:<task_id> completion-report-id:<completion_report_id>
-/ai runner continue id:<task_id>
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> decision:accept-concerns mark-done:true
 ```
+
+개별 단계로 나눠 처리해야 할 때만 `/ai finalization accept`,
+`/ai finalization accept-concerns`, `/ai runner continue`를 직접 사용합니다.
 
 수정이 필요하면:
 
@@ -264,6 +265,14 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai runner start id:<task_id>
 ```
 
+현재 Discord 명령의 `/ai runner start`는 백그라운드 실행을 시작하고 바로 응답합니다.
+긴 Codex 실행이 진행 중이면 아래 명령으로 상태를 확인합니다.
+
+```text
+/ai runner status id:<task_id>
+/ai runner read id:<task_id>
+```
+
 필요하면 profile/executor를 명시합니다.
 
 ```text
@@ -305,7 +314,7 @@ Runner가 `completion_review_required`에서 멈추면 완료 카드를 확인�
 concern을 남기고 승인하려면:
 
 ```text
-/ai runner accept-completion id:<task_id> decision:accept-concerns completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
+/ai runner accept-completion id:<task_id> decision:accept-concerns completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
 
 ```text

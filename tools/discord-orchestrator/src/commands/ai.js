@@ -17,7 +17,7 @@ import { generateCompletionCard, generateCompletionReport, getCompletionStatus }
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
-import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunner, startPcRunnerDetached, stopPcRunner } from "../services/pcRunnerService.js";
+import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunnerDetached, stopPcRunner } from "../services/pcRunnerService.js";
 import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
 import { commitAndPushWorkflowChanges, commitWorkflowChanges, pushWorkflowChanges } from "../services/gitService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";

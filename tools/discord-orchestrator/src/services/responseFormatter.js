@@ -1656,7 +1656,7 @@ function pcRunnerNextActionSummary(stopReason, command) {
     case "active_task_mismatch":
       return "ActiveTask를 이 작업으로 맞춘 뒤 Runner를 다시 시작하세요.";
     case "completion_review_required":
-      return "완료 카드와 검증 결과를 보고, 문제가 없으면 `accept-completion`으로 마무리 검토를 통과시키세요.";
+      return "완료 카드와 검증 결과를 확인하세요. PASS/PASS_WITH_NOTES면 일반 accept, CONCERNS면 `decision:accept-concerns`로 검토한 우려를 명시 수용합니다.";
     case "finalization_required":
       return "완료 카드를 확인하고 최종 결정을 기록하세요.";
     case "finalization_not_accepted":
@@ -1706,6 +1706,9 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
         completionReportId
           ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg} mark-done:true`
           : `/ai runner accept-completion id:${id}${runArg} mark-done:true`,
+        completionReportId
+          ? `/ai runner accept-completion id:${id} completion-report-id:${completionReportId}${runArg} decision:accept-concerns mark-done:true`
+          : `/ai runner accept-completion id:${id}${runArg} decision:accept-concerns mark-done:true`,
       ];
     case "finalization_required":
       return [

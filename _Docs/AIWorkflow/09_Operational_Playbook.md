@@ -34,12 +34,16 @@ For meaningful code/data/runtime work:
 3. Define architecture, reduced scope, non-goals, and validation expectations.
 4. Record explicit scope approval with `/ai task approve`.
 5. Review the PC Runner plan with `/ai runner plan`.
-6. Execute the regular runner path with `/ai runner start`.
+6. Execute the regular runner path with `/ai runner start`. Discord should
+   acknowledge this as a background runner start; use `/ai runner status` and
+   `/ai runner read` for progress or artifact review.
 7. Review the Completion Card and runner artifacts.
-8. Record finalization with `/ai finalization accept`, `accept-concerns`,
-   `request-changes`, `reject`, or `defer`.
-9. Continue post-finalization runner steps with `/ai runner continue` when
-   follow-up and policy artifacts are needed.
+8. Prefer `/ai runner accept-completion` for normal completion review because
+   it records finalization and continues the runner in one audited command.
+   Use `decision:accept-concerns` when a `CONCERNS` report has been reviewed
+   and accepted by the Human Director.
+9. Use the lower-level `/ai finalization ...` and `/ai runner continue`
+   commands only when the workflow needs step-by-step recovery or escalation.
 10. Fix review issues or create follow-up tasks when required.
 11. Validate build/runtime/data/workflow behavior.
 12. Update the Human Director user guide when the workflow surface changed.

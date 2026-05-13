@@ -350,6 +350,7 @@
                 <div class="flow-command">
                   <em>자동 착수가 안 됐을 때</em>
                   <code>/ai runner start id:&lt;task_id&gt;</code>
+                  <code>/ai runner status id:&lt;task_id&gt;</code>
                   <code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
                 </div>
               </div>
@@ -360,6 +361,7 @@
                   <em>완료 판단 명령</em>
                   <code>/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;</code>
                   <code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
+                  <code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; decision:accept-concerns</code>
                 </div>
               </div>
               <div class="flow-step manual">
@@ -464,6 +466,7 @@
 /ai task set-active id:&lt;task_id&gt;
 /ai task approve id:&lt;task_id&gt;
 /ai runner start id:&lt;task_id&gt;</code></pre>
+          <p><code>/ai runner start</code>는 백그라운드 실행을 시작하고 바로 응답합니다. 실행이 길어져도 Discord가 계속 “생각 중”으로 붙잡혀 있지 않아야 하며, 진행 상태는 <code>/ai runner status</code>와 <code>/ai runner read</code>로 확인합니다.</p>
           <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션에서 왜 승인이 필요한지, 무엇을 승인하는지, 무엇은 승인하지 않는지 확인합니다. <code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
 
           <h3>완료 리뷰 흐름</h3>
@@ -472,6 +475,8 @@
 /ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code></pre>
           <p>완료 카드가 괜찮고 바로 done까지 처리해도 되는 경우에는 아래 단축 명령을 씁니다.</p>
           <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; mark-done:true</code></pre>
+          <p>완료 카드가 <code>CONCERNS</code>이지만 blocker나 failed check가 없고, 사람이 우려를 검토한 뒤 받아들이기로 결정했다면 아래처럼 명시합니다.</p>
+          <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; decision:accept-concerns mark-done:true</code></pre>
         </section>
 
         <section id="auto-handoff">
@@ -538,7 +543,7 @@
               <tr><td>Runner 시작</td><td><code>/ai runner start id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 상태</td><td><code>/ai runner status id:&lt;task_id&gt;</code></td></tr>
               <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>완료 승인</td><td><code>/ai runner accept-completion ...</code></td></tr>
+              <tr><td>완료 승인</td><td><code>/ai runner accept-completion ...</code><br><span class="muted"><code>CONCERNS</code> 수용 시 <code>decision:accept-concerns</code> 사용</span></td></tr>
               <tr><td>완료+done 단축</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
               <tr><td>GAME 데이터 검증</td><td><code>/ai run game-data-readability</code></td></tr>
               <tr><td>커밋/푸시</td><td><code>/ai git commit</code>, <code>/ai git push</code>, <code>/ai git commit-push</code></td></tr>
@@ -621,7 +626,7 @@
             </thead>
             <tbody>
               <tr><td><code>approval_required</code></td><td>작업 범위를 확인하고 <code>/ai task approve</code> 후 <code>/ai runner start</code></td></tr>
-              <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 <code>/ai runner accept-completion</code></td></tr>
+              <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 <code>/ai runner accept-completion</code>. <code>CONCERNS</code>를 수용할 때는 <code>decision:accept-concerns</code></td></tr>
               <tr><td><code>done_or_commit_decision</code></td><td><code>/ai task done</code> 또는 git 명령 결정</td></tr>
               <tr><td>명령이 안 보임</td><td><code>/ai bot status</code>, 필요 시 <code>/ai bot restart</code></td></tr>
               <tr><td>build tool 인식 문제</td><td>하네스가 MSBuild/devenv를 자동 탐지해야 하며, 사용자가 PATH를 직접 외울 필요는 없음</td></tr>
