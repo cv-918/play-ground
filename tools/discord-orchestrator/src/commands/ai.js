@@ -70,6 +70,8 @@ import {
   formatTaskSetActive,
   formatTaskStatusUpdated,
   formatTextCardPayload,
+  buildWorkflowActionRows,
+  workflowAction,
   truncateForDiscord,
 } from "../services/responseFormatter.js";
 
@@ -1081,6 +1083,125 @@ export async function handleAiCommand(interaction, config) {
   await replyCard(interaction, config, getSubcommandTitle(subcommand), formatted);
 }
 
+export async function handleAiButton(interaction, config) {
+  if (!isAuthorized(interaction, config)) {
+    await rejectUnauthorized(interaction);
+    return;
+  }
+
+  const action = parseWorkflowButton(interaction.customId);
+  if (!action) {
+    await interaction.reply({
+      ...formatTextCardPayload("알 수 없는 버튼", "이 버튼은 현재 AIWorkflow bot이 처리할 수 없습니다.", { color: 0xc62828 }),
+      flags: 64,
+    });
+    return;
+  }
+
+  await interaction.deferReply({ flags: 64 });
+
+  if (action.name === "reviewIntake") {
+    await interaction.editReply(formatIntakeTaskReviewPayload(await reviewIntakeTask(config, { id: action.taskId })));
+    return;
+  }
+
+  if (action.name === "approveRunner") {
+    await runApproveRunnerAction(interaction, config, action.taskId);
+    return;
+  }
+
+  if (action.name === "runnerStatus") {
+    await interaction.editReply(formatPcRunnerPayload(await getPcRunnerStatus(config, { id: action.taskId })));
+    return;
+  }
+
+  if (action.name === "runnerRead") {
+    await interaction.editReply(formatPcRunnerPayload(await readPcRunner(config, {
+      id: action.taskId,
+      runnerRunId: action.runnerRunId,
+    })));
+    return;
+  }
+
+  if (action.name === "completionCard") {
+    await interaction.editReply(formatCompletionCardPayload(await generateCompletionCard(config, {
+      id: action.taskId,
+      completionReportId: action.completionReportId,
+    })));
+    return;
+  }
+
+  if (action.name === "acceptDone" || action.name === "acceptConcernsDone") {
+    const decision = action.name === "acceptConcernsDone" ? "accept-concerns" : "accept";
+    await interaction.editReply(formatRunnerAcceptCompletionPayload(await acceptCompletionAndContinueRunner(config, {
+      id: action.taskId,
+      decision,
+      completionReportId: action.completionReportId,
+      runnerRunId: action.runnerRunId,
+      markDone: true,
+      actor: interaction.user?.id,
+    })));
+    return;
+  }
+
+  if (action.name === "taskDone") {
+    await handleTaskStatusCommand(interaction, config, completeTask, {
+      id: action.taskId,
+      evidence: "Completed from Discord action card.",
+    });
+    return;
+  }
+
+  if (action.name === "gitCommitPush") {
+    await interaction.editReply(formatTextCardPayload("커밋+푸시 확인", [
+      "**무엇을 하나요**",
+      "현재 허용된 변경사항을 git commit 후 push합니다.",
+      "",
+      "**확인할 것**",
+      "Diff와 완료 상태를 이미 확인했다면 아래 버튼으로 확정하세요.",
+    ].join("\n"), {
+      color: 0xf9a825,
+      components: buildWorkflowActionRows([{
+        customId: "aiw:gitCommitPushConfirm",
+        label: "커밋+푸시 확정",
+        style: 3,
+      }]),
+    }));
+    return;
+  }
+
+  if (action.name === "gitCommitPushConfirm") {
+    await interaction.editReply(formatGitCommandPayload(await commitAndPushWorkflowChanges(config, {})));
+    return;
+  }
+
+  await interaction.editReply(formatTextCardPayload("알 수 없는 버튼", `지원하지 않는 action: ${action.name}`, { color: 0xc62828 }));
+}
+
+function parseWorkflowButton(customId) {
+  const parts = String(customId ?? "").split(":");
+  if (parts[0] !== "aiw") {
+    return null;
+  }
+  const name = parts[1] || "";
+  const taskId = parts[2] || "";
+  const stamp = parts[3] || "";
+  const noTaskActions = new Set(["gitCommitPush", "gitCommitPushConfirm"]);
+  if (noTaskActions.has(name)) {
+    return { name, taskId: "" };
+  }
+  if (!taskId) {
+    return null;
+  }
+  return {
+    name,
+    taskId,
+    stamp,
+    runnerRunId: stamp ? `runner-run-${taskId.toLowerCase()}-${stamp}` : "",
+    completionReportId: stamp ? `completion-${taskId.toLowerCase()}-${stamp}` : "",
+  };
+}
+
 async function handleIntakeCommand(interaction, config) {
   try {
     const result = await createTaskFromIntake(config, {
@@ -1466,11 +1587,10 @@ function formatPcRunnerDetachedStartPayload(result) {
     `process: ${data.process_id ?? "unknown"}`,
     "",
     "**상태**",
-    "실행 명령을 백그라운드로 넘겼습니다. Discord 응답은 여기서 바로 닫히며, Runner가 끝나면 artifact에 결과가 기록됩니다.",
+    "Runner를 백그라운드로 시작했습니다.",
     "",
-    "**다음 명령**",
-    `/ai runner status id:${id}`,
-    `/ai runner read id:${id}`,
+    "**다음 행동**",
+    "상태 또는 결과 보기 버튼을 사용하세요.",
     "",
     "**로그**",
     data.stdout_log ? `stdout: ${data.stdout_log}` : "stdout: none",
@@ -1479,7 +1599,13 @@ function formatPcRunnerDetachedStartPayload(result) {
     "**안전 상태**",
     "task done 없음: yes (예)",
     "commit/push 없음: yes (예)",
-  ].join("\n"), { color: 0x1565c0 });
+  ].join("\n"), {
+    color: 0x1565c0,
+    components: buildWorkflowActionRows([
+      workflowAction("runnerStatus", id, "상태"),
+      workflowAction("runnerRead", id, "결과 보기"),
+    ]),
+  });
 }
 
 async function handleGitCommand(interaction, config, subcommand) {
@@ -1619,7 +1745,14 @@ async function handleTaskApproveRunnerCommand(interaction, config) {
   const id = interaction.options.getString("id");
   const profile = interaction.options.getString("profile");
   const executor = interaction.options.getString("executor");
+  const note = interaction.options.getString("note");
 
+  await runApproveRunnerAction(interaction, config, id, { profile, executor, note });
+}
+
+async function runApproveRunnerAction(interaction, config, id, options = {}) {
+  const profile = options.profile ?? null;
+  const executor = options.executor ?? null;
   const activation = await setActiveTaskWithSafety(config, id);
   if (!activation.ok) {
     await replyCard(interaction, config, "승인 후 Runner 시작 실패", [
@@ -1634,7 +1767,7 @@ async function handleTaskApproveRunnerCommand(interaction, config) {
 
   const approval = await approveTaskWithSafety(config, {
     id,
-    note: interaction.options.getString("note"),
+    note: options.note ?? null,
   });
   if (!approval.ok) {
     await replyCard(interaction, config, "승인 후 Runner 시작 실패", [
@@ -1656,7 +1789,17 @@ async function handleTaskApproveRunnerCommand(interaction, config) {
     activation,
     approval,
     runner,
-  }), runner.ok ? 0x2e7d32 : 0xc62828);
+  }), runner.ok ? 0x2e7d32 : 0xc62828, {
+    components: buildWorkflowActionRows(runner.ok
+      ? [
+          workflowAction("runnerStatus", id, "상태"),
+          workflowAction("runnerRead", id, "결과 보기"),
+        ]
+      : [
+          workflowAction("runnerStatus", id, "상태"),
+          workflowAction("approveRunner", id, "다시 시작"),
+        ]),
+  });
 }
 
 function formatTaskApproveRunnerResult(result) {
@@ -1685,8 +1828,9 @@ function formatTaskApproveRunnerResult(result) {
     runnerData.stderr_log ? `stderr: ${runnerData.stderr_log}` : "",
     result.runner?.error ? `error: ${koText(result.runner.error)}` : "",
     "",
-    "**다음 명령**",
-    nextCommands.map((command) => `\`${command}\``).join("\n"),
+    "**다음 행동**",
+    result.runner?.ok ? "상태 또는 결과 보기 버튼을 사용하세요." : "상태 확인 후 다시 시작 버튼을 사용하세요.",
+    result.runner?.ok ? "" : nextCommands.map((command) => `\`${command}\``).join("\n"),
     "",
     "**안전 상태**",
     "task done 없음",
@@ -1726,8 +1870,11 @@ async function handleProjectCommand(interaction, config, subcommand) {
   await replyCard(interaction, config, "알 수 없는 명령", "알 수 없는 project 명령입니다.", 0xc62828);
 }
 
-async function replyCard(interaction, config, title, text, color) {
-  await interaction.editReply(formatTextCardPayload(title, truncateForDiscord(text, config.limits.maxDiscordChars), { color }));
+async function replyCard(interaction, config, title, text, color, options = {}) {
+  await interaction.editReply(formatTextCardPayload(title, truncateForDiscord(text, config.limits.maxDiscordChars), {
+    color,
+    components: options.components,
+  }));
 }
 
 function getSubcommandTitle(subcommand) {

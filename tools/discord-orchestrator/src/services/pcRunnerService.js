@@ -159,26 +159,16 @@ async function spawnDetachedPcRunner(config, input) {
   const safeTask = taskId.replaceAll(/[^A-Za-z0-9_.-]/g, "-").toLowerCase();
   const stdoutPath = path.join(logsDir, `pc_runner_start_${safeTask}_${stamp}.stdout.log`);
   const stderrPath = path.join(logsDir, `pc_runner_start_${safeTask}_${stamp}.stderr.log`);
+  const runnerArgs = buildPcRunnerStartArgs({
+    scriptPath,
+    taskId,
+    profile,
+    executor,
+    repoRoot: config.repoRoot,
+  });
   const launcher = [
     "$ErrorActionPreference = 'Stop'",
-    `$argList = @(${[
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      scriptPath,
-      "-Command",
-      "start",
-      "-TaskId",
-      taskId,
-      "-Profile",
-      profile,
-      "-Executor",
-      executor,
-      "-RepoRoot",
-      config.repoRoot,
-      "-Json",
-    ].map(toPowerShellSingleQuoted).join(", ")})`,
+    `$argList = @(${runnerArgs.map(toPowerShellSingleQuoted).join(", ")})`,
     `$process = Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -WorkingDirectory ${toPowerShellSingleQuoted(config.repoRoot)} -RedirectStandardOutput ${toPowerShellSingleQuoted(stdoutPath)} -RedirectStandardError ${toPowerShellSingleQuoted(stderrPath)} -WindowStyle Hidden -PassThru`,
     "Write-Output $process.Id",
   ].join("\n");
@@ -193,6 +183,30 @@ async function spawnDetachedPcRunner(config, input) {
     stdoutLog: toRepoRelativePath(config.repoRoot, stdoutPath),
     stderrLog: toRepoRelativePath(config.repoRoot, stderrPath),
   };
+}
+
+function buildPcRunnerStartArgs({ scriptPath, taskId, profile, executor, repoRoot }) {
+  const args = [
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    scriptPath,
+    "-Command",
+    "start",
+    "-TaskId",
+    taskId,
+  ];
+
+  if (profile) {
+    args.push("-Profile", profile);
+  }
+  if (executor) {
+    args.push("-Executor", executor);
+  }
+
+  args.push("-RepoRoot", repoRoot, "-Json");
+  return args;
 }
 
 function runPowerShellLauncher(cwd, encodedCommand) {

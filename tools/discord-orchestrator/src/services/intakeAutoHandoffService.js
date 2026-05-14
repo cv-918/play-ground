@@ -7,24 +7,27 @@ const AUTO_RISK_VALUES = new Set(["low"]);
 const AUTO_CATEGORY_VALUES = new Set(["DOC", "VAL"]);
 const AUTO_KIND_VALUES = new Set(["documentation", "validation"]);
 const AUTO_WF_KIND_VALUES = new Set(["documentation", "maintenance"]);
-const GAME_NO_CHANGE_TERMS = [
-  "no source", "no data", "without source", "without data", "no source/data",
-  "no schema", "no runtime", "no document", "without schema", "without runtime", "without document",
-  "without changing source", "without changing data", "without changing schema", "without changing runtime", "without changing documents",
-  "without changing source files", "without changing data files", "without changing source files, data files, schemas, runtime behavior, or documents",
-  "source/data 변경 없이", "소스/데이터 변경 없이", "변경 없이", "수정 없이",
-  "소스나 데이터 변경 없이", "소스, 데이터 변경 없이", "스키마 변경 없이", "런타임 변경 없이", "문서 변경 없이",
-  "read-only", "검증만", "validation-only",
-  "\uBCC0\uACBD \uC5C6\uC774", "\uC218\uC815 \uC5C6\uC774", "\uAC80\uC99D\uB9CC",
-  "\uC18C\uC2A4 \uBCC0\uACBD \uC5C6\uC774", "\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
-  "\uC18C\uC2A4/\uB370\uC774\uD130 \uBCC0\uACBD \uC5C6\uC774",
-  "\uC2A4\uD0A4\uB9C8 \uBCC0\uACBD \uC5C6\uC774", "\uB7F0\uD0C0\uC784 \uBCC0\uACBD \uC5C6\uC774",
-  "\uBB38\uC11C \uBCC0\uACBD \uC5C6\uC774",
+const GAME_STRICT_NO_MUTATION_TERMS = [
+  "no source/data", "without source/data",
+  "without changing source and data", "without changing source or data",
+  "without changing source files and data files", "without changing source files or data files",
+  "without changing source files, data files, schemas, runtime behavior, or documents",
+  "source/data 변경 없이", "소스/데이터 변경 없이", "소스나 데이터 변경 없이", "소스, 데이터 변경 없이",
+  "source/data/schema/runtime 변경 없음", "source/data/schema/runtime/document 변경 없음",
+  "source/data/schema/runtime 변경 없이", "source/data/schema/runtime/document 변경 없이",
+  "소스/데이터/schema/runtime 변경 없이", "소스/데이터/스키마/런타임 변경 없이",
 ];
 const GAME_MUTATION_TERMS = [
-  "implement", "fix", "modify", "change source", "change data", "edit data",
+  "implement", "fix", "modify", "change source", "change data", "edit data", "data task",
+  "data fix", "data change", "json change", "json fix", "minimal fix",
   "schema change", "runtime behavior change", "gameplay behavior change",
-  "구현", "수정", "고쳐", "소스를 변경", "데이터를 변경", "스키마를 변경", "런타임 동작 변경", "게임플레이 동작 변경",
+  "구현", "수정", "고쳐", "소스를 변경", "데이터를 변경", "데이터 수정", "data 수정",
+  "json 수정", "필요한 최소 수정", "스키마를 변경", "런타임 동작 변경", "게임플레이 동작 변경",
+];
+const GAME_CONTEXT_TERMS = [
+  "game", "gameplay", "userdata", "user data", "stage_progress", "node state",
+  "gamedataloader", "game data loader", "playground/data", "json/userdatamanager",
+  "게임", "게임플레이", "유저데이터", "사용자 데이터", "데이터 로더", "노드 상태",
 ];
 const BUILD_TERMS = [
   "visual studio", "msbuild", "debug x64", "x64 build", "build validation",
@@ -120,6 +123,7 @@ export function evaluateIntakeAutoHandoffPolicy(config, input = {}) {
   if (!AUTO_PRIORITY_VALUES.has(priority)) blockers.push("priority_requires_human_approval");
   if (!AUTO_RISK_VALUES.has(risk)) blockers.push("risk_requires_human_approval");
   if (!isAutoHandoffClassAllowed(category, kind, contextText)) blockers.push("category_or_kind_requires_human_approval");
+  if (hasGameMutationScope(contextText)) blockers.push("game_data_or_runtime_mutation_requires_human_approval");
   if (category === "GAME" && kind === "validation" && hasUnsafeGameValidationScope(contextText)) blockers.push("game_validation_scope_requires_human_approval");
   if (clarifyingQuestions.length > 0) blockers.push("clarification_required");
   if (crossCheck.requires_human_review === true) blockers.push("rule_based_cross_check_requires_review");
@@ -180,13 +184,43 @@ function isAutoHandoffClassAllowed(category, kind, contextText = "") {
 
 function isSafeGameValidationContext(text) {
   const normalized = String(text ?? "");
-  return hasAny(normalized, GAME_NO_CHANGE_TERMS)
+  return hasExplicitNoGameMutationScope(normalized)
     || (hasAny(normalized, ["validation", "smoke", "build", "검증", "스모크", "빌드", ...GAME_DATA_READABILITY_TERMS]) && !hasUnsafeGameValidationScope(normalized));
 }
 
 function hasUnsafeGameValidationScope(text) {
   const normalized = String(text ?? "");
-  return hasAny(normalized, GAME_MUTATION_TERMS) && !hasAny(normalized, GAME_NO_CHANGE_TERMS);
+  return hasGameContext(normalized) && hasAny(normalized, GAME_MUTATION_TERMS) && !hasExplicitNoGameMutationScope(normalized);
+}
+
+function hasGameMutationScope(text) {
+  const normalized = String(text ?? "");
+  return hasGameContext(normalized) && hasAny(normalized, GAME_MUTATION_TERMS) && !hasExplicitNoGameMutationScope(normalized);
+}
+
+function hasGameContext(text) {
+  return hasAny(text, GAME_CONTEXT_TERMS) || hasAny(text, GAME_DATA_READABILITY_TERMS);
+}
+
+function hasExplicitNoGameMutationScope(text) {
+  const normalized = String(text ?? "");
+  const lower = normalized.toLowerCase();
+  const hasStrictPhrase = hasAny(normalized, GAME_STRICT_NO_MUTATION_TERMS);
+  const hasNoSource = lower.includes("no source")
+    || lower.includes("without source")
+    || lower.includes("without changing source")
+    || normalized.includes("소스/데이터 변경 없이")
+    || normalized.includes("소스나 데이터 변경 없이")
+    || normalized.includes("소스, 데이터 변경 없이")
+    || normalized.includes("소스 변경 없이");
+  const hasNoData = lower.includes("no data")
+    || lower.includes("without data")
+    || lower.includes("without changing data")
+    || normalized.includes("소스/데이터 변경 없이")
+    || normalized.includes("소스나 데이터 변경 없이")
+    || normalized.includes("소스, 데이터 변경 없이")
+    || normalized.includes("데이터 변경 없이");
+  return hasStrictPhrase || (hasNoSource && hasNoData);
 }
 
 function buildPolicyContextText({ task = {}, draft = {}, suggestion = {} }) {

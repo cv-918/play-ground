@@ -463,9 +463,10 @@
 
           <h3>승인이 필요한 흐름</h3>
           <pre><code>/ai intake text:&lt;작업 요청&gt;
-/ai task set-active id:&lt;task_id&gt;
-/ai task approve id:&lt;task_id&gt;
-/ai runner start id:&lt;task_id&gt;</code></pre>
+/ai task review-intake id:&lt;task_id&gt;
+/ai task approve-runner id:&lt;task_id&gt;</code></pre>
+          <p><code>approve-runner</code>는 범위를 승인한 뒤 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 한 번에 처리하는 권장 명령입니다. 세부 단계가 필요할 때만 <code>set-active</code>, <code>approve</code>, <code>runner start</code>를 나눠서 사용합니다.</p>
+          <p>Discord 카드에 버튼이 보이면 버튼이 우선입니다. <strong>승인 내용 보기</strong>는 승인 대상과 제외 범위를 보여주고, <strong>승인+실행</strong>은 승인 기록과 Runner 시작을 한 번에 처리합니다. 명령어는 버튼이 없거나 실패했을 때의 예비 경로입니다.</p>
           <p><code>/ai runner start</code>는 백그라운드 실행을 시작하고 바로 응답합니다. 실행이 길어져도 Discord가 계속 “생각 중”으로 붙잡혀 있지 않아야 하며, 진행 상태는 <code>/ai runner status</code>와 <code>/ai runner read</code>로 확인합니다.</p>
           <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션에서 왜 승인이 필요한지, 무엇을 승인하는지, 무엇은 승인하지 않는지 확인합니다. <code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
           <p>범위를 검토했고 권장안대로 착수해도 된다면 <code>/ai task approve-runner id:&lt;task_id&gt;</code> 하나로 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 함께 처리할 수 있습니다.</p>
@@ -476,6 +477,8 @@
 /ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code></pre>
           <p>완료 카드가 괜찮고 바로 done까지 처리해도 되는 경우에는 아래 단축 명령을 씁니다.</p>
           <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; mark-done:true</code></pre>
+          <p><code>mark-done:true</code>로 성공하면 task done은 이미 처리된 것입니다. 이후 응답에 <code>task done: yes</code>가 보이면 <code>/ai task done</code>을 다시 실행하지 말고, 필요한 경우 <code>/ai git commit-push</code>만 결정합니다.</p>
+          <p>완료 리뷰 카드의 <strong>완료 카드</strong>, <strong>완료 승인</strong>, <strong>우려 수용</strong>, <strong>커밋+푸시</strong> 버튼은 복사할 명령 대신 쓰는 기본 UI입니다. 각 버튼은 이름 그대로 한 단계만 처리하며, commit/push는 별도 버튼을 눌러야 실행됩니다.</p>
           <p>완료 카드가 <code>CONCERNS</code>이지만 blocker나 failed check가 없고, 사람이 우려를 검토한 뒤 받아들이기로 결정했다면 아래처럼 명시합니다.</p>
           <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; decision:accept-concerns mark-done:true</code></pre>
         </section>
@@ -497,6 +500,10 @@
           <p>안전한 GAME build validation은 deterministic route를 사용합니다: <code>profile=build</code>, <code>executor=local_cli</code>, <code>command_id=debug_visual_studio_build</code>.</p>
           <p>안전한 GAME data readability validation은 deterministic route를 사용합니다: <code>profile=validation</code>, <code>executor=local_cli</code>, <code>command_id=game_data_loader_readability</code>.</p>
           <p>자동 handoff가 허용된 경우 <code>/ai intake</code>는 Backlog 생성, ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작까지 처리합니다. 이후 진행 상황은 <code>/ai runner status id:&lt;task_id&gt;</code>와 <code>/ai runner read id:&lt;task_id&gt;</code>로 확인합니다.</p>
+          <p><code>schema 변경 없음</code>만으로는 GAME 작업이 자동 착수되지 않습니다. <code>GAME data task</code>, <code>data 수정</code>, <code>필요한 최소 수정</code>, <code>json 수정</code>처럼 실제 수정이 포함되면 작은 작업이어도 사람 승인에서 멈추는 것이 정상입니다.</p>
+          <p>백그라운드 시작 직후의 intake 응답에는 아직 <code>completion-report-id</code>와 <code>runner-run-id</code>가 없을 수 있습니다. 이때 다음 명령이 <code>/ai runner status</code>, <code>/ai runner read</code> 두 개만 나오는 것은 정상입니다. <code>/ai runner read</code>를 실행하면 완료 카드와 <code>accept-completion</code>에 필요한 실제 ID가 표시됩니다.</p>
+          <p>가이드의 <code>&lt;task_id&gt;</code>, <code>&lt;completion_report_id&gt;</code>, <code>&lt;runner_run_id&gt;</code>는 예시 자리표시자입니다. Discord에 그대로 입력하지 말고 응답 카드에 표시된 실제 값으로 바꿔서 사용합니다.</p>
+          <p><code>ephemeral</code>은 Discord의 “나만 보이는 메시지”가 아니라 Codex CLI <code>exec --ephemeral</code>입니다. intake 해석용 임시 실행으로, Codex 세션 기록을 오래 남기지 않는 1회성 분류 실행에 사용합니다.</p>
           <p>그 밖의 알 수 없는 validation evidence 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
           <div class="warn">
             GAME source/data/schema/runtime/gameplay 변경, P0/P1, medium/high risk, UNITY 작업, 명령 동작 변경은 사람 승인에서 멈춥니다.
@@ -533,24 +540,20 @@
 
         <section id="commands">
           <h2>명령어 빠른 참조</h2>
+          <p>평소에는 명령어보다 카드 버튼을 우선 사용합니다. 아래 명령은 버튼이 없거나 복구가 필요할 때의 예비 경로입니다.</p>
           <table>
             <thead>
-              <tr><th>상황</th><th>명령</th></tr>
+              <tr><th>상황</th><th>기본 UI</th><th>예비 명령</th></tr>
             </thead>
             <tbody>
-              <tr><td>작업 접수</td><td><code>/ai intake text:&lt;request&gt;</code></td></tr>
-              <tr><td>미리보기</td><td><code>/ai intake-preview text:&lt;request&gt;</code></td></tr>
-              <tr><td>작업 선택</td><td><code>/ai task set-active id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>작업 승인</td><td><code>/ai task approve id:&lt;task_id&gt;</code><br><span class="muted">필요하면 <code>note:&lt;scope&gt;</code>로 직접 범위 작성</span></td></tr>
-              <tr><td>승인+Runner 시작</td><td><code>/ai task approve-runner id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>Runner 시작</td><td><code>/ai runner start id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>Runner 상태</td><td><code>/ai runner status id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>완료 승인</td><td><code>/ai runner accept-completion ...</code><br><span class="muted"><code>CONCERNS</code> 수용 시 <code>decision:accept-concerns</code> 사용</span></td></tr>
-              <tr><td>완료+done 단축</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
-              <tr><td>GAME 데이터 검증</td><td><code>/ai run game-data-readability</code></td></tr>
-              <tr><td>커밋/푸시</td><td><code>/ai git commit</code>, <code>/ai git push</code>, <code>/ai git commit-push</code></td></tr>
-              <tr><td>수동 승격</td><td><code>/ai prepare goal</code>, <code>/ai result audit</code></td></tr>
+              <tr><td>작업 접수</td><td>명령 1회</td><td><code>/ai intake text:&lt;request&gt;</code></td></tr>
+              <tr><td>승인 검토</td><td>승인 내용 보기</td><td><code>/ai task review-intake id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>승인+실행</td><td>승인+실행</td><td><code>/ai task approve-runner id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>Runner 확인</td><td>상태, 결과 보기</td><td><code>/ai runner status/read</code></td></tr>
+              <tr><td>완료 검토</td><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
+              <tr><td>완료 승인</td><td>완료 승인, 우려 수용</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
+              <tr><td>커밋/푸시</td><td>커밋+푸시, 커밋+푸시 확정</td><td><code>/ai git commit-push</code></td></tr>
+              <tr><td>고급/복구</td><td>보통 사용 안 함</td><td><code>set-active</code>, <code>approve</code>, <code>runner start</code>, <code>finalization</code></td></tr>
             </tbody>
           </table>
 
@@ -579,6 +582,7 @@
             <li>변경 파일이 승인 범위 안인가?</li>
             <li>검증 증거가 실제로 존재하는가?</li>
           </ol>
+          <p><code>PASS_WITH_NOTES</code>는 검증 통과에 가까운 상태지만 자동 완료 신호는 아닙니다. notes를 사람이 읽고 받아들일 수 있을 때만 완료 승인 또는 우려 수용으로 진행합니다.</p>
           <table>
             <thead>
               <tr><th>결정</th><th>의미</th></tr>
@@ -609,7 +613,7 @@
           <ul>
             <li>source/data 변경 없는 검증 작업</li>
             <li>Visual Studio Debug x64 build 검증</li>
-            <li>파일 1~3개 안의 작은 data 수정</li>
+            <li>파일 1~3개 안의 작은 data 수정. 단, 실제 수정은 자동 착수하지 않고 사람 승인 후 진행</li>
             <li>하나의 loader, scene, component만 보는 작업</li>
             <li>검증 명령과 완료 기준이 명확한 작업</li>
           </ul>

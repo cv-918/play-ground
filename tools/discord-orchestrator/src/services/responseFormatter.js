@@ -1,3 +1,4 @@
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { koBool, koListValue, koPassFail, koStatus, koText } from "./koreanOutput.js";
 
 export function truncateForDiscord(text, maxChars = 1800) {
@@ -30,6 +31,7 @@ export function formatTextCardPayload(title, text, options = {}) {
       fields,
       footer: options.footer ? { text: options.footer } : undefined,
     }],
+    components: options.components ?? [],
   };
 }
 
@@ -523,6 +525,7 @@ export function formatIntakeTaskCreatedPayload(result) {
   const category = draft.category ?? "unknown";
   const kind = task.kind ?? draft.kind ?? "unknown";
   const nextCommands = buildIntakeAutoHandoffNextCommands(taskId, autoHandoff);
+  const actions = buildIntakeActions(taskId, autoHandoff);
 
   return {
     content: "",
@@ -547,7 +550,9 @@ export function formatIntakeTaskCreatedPayload(result) {
         autoHandoff?.decision === "needs_human_approval"
           ? embedField("승인 요청", formatIntakeApprovalRequest(draft, autoHandoff).join("\n"))
           : null,
-        nextCommands.length > 0
+        actions.length > 0
+          ? embedField("다음 행동", actionSummary(actions))
+          : nextCommands.length > 0
           ? embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n"))
           : null,
         embedField("자동 진행", formatAutoHandoffDetails(autoHandoff)),
@@ -566,6 +571,7 @@ export function formatIntakeTaskCreatedPayload(result) {
         text: `workflow: ${draft.workflow_path ?? "unknown"}`,
       },
     }],
+    components: buildActionRows(actions),
   };
 }
 
@@ -579,13 +585,13 @@ function formatAutoHandoffInline(autoHandoff) {
 function formatAutoHandoffNextAction(autoHandoff) {
   const decision = autoHandoff?.decision ?? "";
   const runner = autoHandoff?.runner_start ?? {};
+  if (decision === "runner_started" && runner.detached) {
+    return [
+      "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 백그라운드 시작까지 자동 진행했습니다.",
+      "백그라운드 시작 직후에는 status/read만 표시되는 것이 정상입니다. runner read에서 완료 카드와 accept-completion에 필요한 실제 ID를 확인하세요.",
+    ].join("\n");
+  }
   if (decision === "runner_started") {
-    if (runner.detached) {
-      return [
-        "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 백그라운드 시작까지 자동 진행했습니다.",
-        "진행 상태는 다음 명령의 runner status/read로 확인하세요.",
-      ].join("\n");
-    }
     return [
       "저위험 작업으로 판단되어 ActiveTask 선택, 승인, PC Runner 시작까지 자동 진행했습니다.",
       runner.human_gate ? `다음 확인: ${cleanKo(runner.human_gate)}` : "완료 카드 또는 Runner 결과를 확인하세요.",
@@ -597,7 +603,7 @@ function formatAutoHandoffNextAction(autoHandoff) {
       `이유: ${cleanKo(autoHandoff?.reason || runner.error || "unknown")}`,
     ].join("\n");
   }
-  return "승인이 필요한 작업입니다. 생성된 Backlog task를 검토한 뒤 approve/set-active/runner start를 진행하세요.";
+  return "승인 필요. 범위를 확인한 뒤 승인+실행 버튼으로 진행하세요.";
 }
 
 function buildIntakeAutoHandoffNextCommands(taskId, autoHandoff) {
@@ -624,9 +630,7 @@ function buildIntakeAutoHandoffNextCommands(taskId, autoHandoff) {
     const id = String(taskId ?? "").trim() || "<task_id>";
     return [
       `/ai task review-intake id:${id}`,
-      `/ai task set-active id:${id}`,
-      `/ai task approve id:${id}`,
-      `/ai runner start id:${id}`,
+      `/ai task approve-runner id:${id}`,
     ];
   }
 
@@ -699,6 +703,7 @@ function summarizeApprovalBlockers(blockers) {
     rule_based_cross_check_requires_review: "규칙 기반 교차검토 필요",
     no_supported_runner_profile: "지원 실행 경로 수동 확인 필요",
     game_validation_scope_requires_human_approval: "게임 데이터/런타임 범위 승인 필요",
+    game_data_or_runtime_mutation_requires_human_approval: "GAME data/source/runtime 수정은 사람 승인 필요",
   };
   const known = blockers.map((item) => labels[item] || item).filter(Boolean);
   return known.length > 0 ? summarizeCompactList(known, 4) : "정책상 명시적 승인 후 진행";
@@ -1082,6 +1087,9 @@ export function formatCompletionCardPayload(result) {
   const generatedLine = generatedReport
     ? `새 CompletionReport 생성: ${formatInlineCode(generatedReport)}`
     : "기존 CompletionReport 사용";
+  const taskId = card.task_id ?? data.task_id;
+  const completionReportId = card.sources?.completion_report_id ?? data.completion_report_id;
+  const actions = buildCompletionCardActions(taskId, presentation, { completionReportId });
 
   return {
     content: "",
@@ -1100,7 +1108,9 @@ export function formatCompletionCardPayload(result) {
           generatedLine,
         ]),
         embedField("남은 이슈", summarizeCompletionCardIssues(presentation)),
-        embedField("다음 명령", summarizeCompactList(buildCompletionCardNextCommands(data, card, presentation), 3)),
+        actions.length > 0
+          ? embedField("다음 행동", actionSummary(actions))
+          : embedField("다음 명령", summarizeCompactList(buildCompletionCardNextCommands(data, card, presentation), 3)),
         embedField("안전 상태", [
           `수동 done 가능: ${koBool(presentation.can_mark_task_done_manually)}`,
           `커밋 검토 가능: ${koBool(presentation.can_commit_after_review)}`,
@@ -1111,6 +1121,7 @@ export function formatCompletionCardPayload(result) {
         text: `report: ${card.sources?.completion_report_id || "unknown"} · path: ${data.completion_card_path || "unknown"}`,
       },
     }],
+    components: buildActionRows(actions),
   };
 }
 
@@ -1139,6 +1150,28 @@ function buildCompletionCardNextCommands(data, card, presentation) {
   }
 
   return presentation.next_manual_commands ?? [];
+}
+
+function buildCompletionCardActions(taskId, presentation, ids = {}) {
+  if (!taskId) {
+    return [];
+  }
+
+  if (presentation.state === "needs_human_decision" && presentation.verdict === "CONCERNS") {
+    return [
+      workflowAction("runnerRead", taskId, "결과 보기", ids),
+      workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
+    ];
+  }
+
+  if (presentation.state === "ready_for_human_completion_review" || presentation.state === "ready_for_human_completion_review_with_notes") {
+    return [
+      workflowAction("runnerRead", taskId, "결과 보기", ids),
+      workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success }),
+    ];
+  }
+
+  return [];
 }
 
 export function formatFinalizationStatusPayload(result) {
@@ -1410,7 +1443,8 @@ export function formatFollowUpGeneratePayload(result) {
           `FinalizationLog: ${formatInlineCode(plan.sources?.finalization_log?.finalization_log_id || "none")}`,
           `AutoApproval: ${formatInlineCode(plan.sources?.auto_approval_policy?.policy_evaluation_id || "none")}`,
         ]),
-        embedField("다음 명령", summarizeCompactList(plan.suggested_next_manual_commands, 3)),
+        embedField("다음 명령", summarizeCommandLines(commandItems(plan.suggested_next_manual_commands)).join("\n")),
+        embedField("안내", summarizeCompactList(noteItems(plan.suggested_next_manual_commands), 2)),
         embedField("안전 상태", [
           "후보 기록만 생성",
           "Backlog task 생성 없음",
@@ -1442,7 +1476,8 @@ export function formatFollowUpReadPayload(result) {
       ].join("\n"),
       fields: [
         embedField("후보", formatFollowUpCandidates(plan.candidates, 6)),
-        embedField("다음 명령", summarizeCompactList(plan.suggested_next_manual_commands, 3)),
+        embedField("다음 명령", summarizeCommandLines(commandItems(plan.suggested_next_manual_commands)).join("\n")),
+        embedField("안내", summarizeCompactList(noteItems(plan.suggested_next_manual_commands), 2)),
         embedField("안전 상태", [
           `Backlog write 없음: ${koBool(plan.invariants?.no_backlog_write)}`,
           `task 생성 없음: ${koBool(plan.invariants?.no_task_created)}`,
@@ -1461,13 +1496,17 @@ export function formatPcRunnerPayload(result) {
     const data = result?.data ?? {};
     const run = data.runner_run ?? data.latest_runner_run ?? {};
     const reports = data.report_ids ?? run.report_ids ?? {};
+    const stopReason = data.stop_reason || run.human_gate_state?.stop_reason;
+    const taskId = data.task_id || run.task_id;
+    const runnerRunId = data.runner_run_id || run.runner_run_id;
     const nextCommands = buildPcRunnerNextCommands({
-      taskId: data.task_id || run.task_id,
+      taskId,
       command: result?.command,
-      stopReason: data.stop_reason || run.human_gate_state?.stop_reason,
+      stopReason,
       reports,
-      runnerRunId: data.runner_run_id || run.runner_run_id,
+      runnerRunId,
     });
+    const actions = buildPcRunnerActions({ taskId, stopReason, reports, runnerRunId });
     return {
       content: "",
       embeds: [{
@@ -1476,11 +1515,13 @@ export function formatPcRunnerPayload(result) {
         description: [
           `${formatInlineCode(data.task_id || "unknown")}`,
           cleanKo(result?.error || data.stop_reason || "Unknown failure."),
-          `지금 할 일: ${pcRunnerNextActionSummary(data.stop_reason || run.human_gate_state?.stop_reason, result?.command)}`,
+          `지금 할 일: ${pcRunnerNextActionSummary(stopReason, result?.command)}`,
         ].join("\n"),
         fields: [
           embedField("사람 확인 지점", data.human_gate || data.runner_run?.human_gate_state?.human_gate || "(none)"),
-          embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
+          actions.length > 0
+            ? embedField("다음 행동", actionSummary(actions))
+            : embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
           embedField("안전 상태", [
             `task lifecycle 변경 없음: ${koBool(data.task_lifecycle_unchanged !== false)}`,
             `task done 없음: ${koBool(data.no_task_done !== false)}`,
@@ -1488,6 +1529,7 @@ export function formatPcRunnerPayload(result) {
           ], true),
         ],
       }],
+      components: buildActionRows(actions),
     };
   }
 
@@ -1506,6 +1548,16 @@ export function formatPcRunnerPayload(result) {
     runnerRunId,
     canStart: data.can_start,
   });
+  const actions = buildPcRunnerActions({
+    taskId,
+    stopReason,
+    reports,
+    runnerRunId: data.runner_run_id || run.runner_run_id,
+  });
+  const nextField = actions.length > 0
+    ? embedField("다음 행동", actionSummary(actions))
+    : embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n"));
+
   return {
     content: "",
     embeds: [{
@@ -1524,7 +1576,7 @@ export function formatPcRunnerPayload(result) {
           `단계: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
         ]),
         embedField("사람 확인 지점", gate),
-        embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
+        nextField,
         embedField("보고서", [
           reports.verification_report_id ? `검증: ${formatInlineCode(reports.verification_report_id)}` : "",
           reports.completion_report_id ? `완료 보고서: ${formatInlineCode(reports.completion_report_id)}` : "",
@@ -1542,6 +1594,7 @@ export function formatPcRunnerPayload(result) {
         text: data.runner_run_path || data.runner_manifest_path || data.runner_plan_path || "PC Runner artifact",
       },
     }],
+    components: buildActionRows(actions),
   };
 }
 
@@ -1561,6 +1614,7 @@ export function formatRunnerAcceptCompletionPayload(result) {
     stopReason,
     reports,
     runnerRunId,
+    taskDoneOk: taskDone?.ok === true,
   });
 
   if (!result?.ok) {
@@ -1587,6 +1641,17 @@ export function formatRunnerAcceptCompletionPayload(result) {
     };
   }
 
+  const actions = buildPcRunnerActions({
+    taskId,
+    stopReason,
+    reports,
+    runnerRunId,
+    taskDoneOk: taskDone?.ok === true,
+  });
+  const nextField = actions.length > 0
+    ? embedField("다음 행동", actionSummary(actions))
+    : embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n"));
+
   return {
     content: "",
     embeds: [{
@@ -1608,7 +1673,7 @@ export function formatRunnerAcceptCompletionPayload(result) {
           `run 상태: ${run.status || runnerData.status || "unknown"}`,
           `단계: ${(run.current_phase || "unknown")} / ${(run.current_step || "unknown")}`,
         ]),
-        embedField("다음 명령", summarizeCommandLines(nextCommands).join("\n")),
+        nextField,
         embedField("안전 상태", [
           `task lifecycle 변경 없음: ${koBool(runnerData.task_lifecycle_unchanged !== false && taskDone?.ok !== true)}`,
           `task done 없음: ${koBool(runnerData.no_task_done !== false && taskDone?.ok !== true)}`,
@@ -1619,6 +1684,7 @@ export function formatRunnerAcceptCompletionPayload(result) {
         text: runnerData.runner_run_path || "PC Runner artifact",
       },
     }],
+    components: buildActionRows(actions),
   };
 }
 
@@ -1651,7 +1717,7 @@ function pcRunnerNextActionSummary(stopReason, command) {
   }
 }
 
-function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runnerRunId, canStart }) {
+function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runnerRunId, canStart, taskDoneOk = false }) {
   const id = String(taskId ?? "").trim() || "<task_id>";
   const completionReportId = reports?.completion_report_id;
   const autoApprovalId = reports?.auto_approval_evaluation_id;
@@ -1709,9 +1775,9 @@ function buildPcRunnerNextCommands({ taskId, command, stopReason, reports, runne
         `/ai runner read id:${id}${runArg}`,
         autoApprovalId ? `/ai auto-approval read id:${id} policy-evaluation-id:${autoApprovalId}` : `/ai auto-approval status id:${id}`,
         followUpPlanId ? `/ai follow-up read id:${id} follow-up-plan-id:${followUpPlanId}` : `/ai follow-up status id:${id}`,
-        `/ai task done id:${id} evidence:<완료 근거>`,
+        taskDoneOk ? "" : `/ai task done id:${id} evidence:<완료 근거>`,
         "/ai git commit-push",
-      ];
+      ].filter(Boolean);
     case "executor_not_ready":
       return [
         `/ai runner plan id:${id}`,
@@ -2303,6 +2369,133 @@ function summarizeCompactList(items, maxCount) {
   const visible = values.slice(0, maxCount).map(koListValue);
   const suffix = values.length > maxCount ? ` 외 ${values.length - maxCount}개` : "";
   return `${visible.join(", ")}${suffix}`;
+}
+
+export function buildWorkflowActionRows(actions) {
+  return buildActionRows(actions);
+}
+
+export function workflowAction(action, taskId, label, options = {}) {
+  const id = String(taskId ?? "").trim();
+  if (!id || id === "unknown" || id.includes("<")) {
+    return null;
+  }
+  const stamp = options.stamp || extractRunStamp(options.runnerRunId) || extractRunStamp(options.completionReportId);
+  return {
+    customId: ["aiw", action, id, stamp].filter(Boolean).join(":"),
+    label,
+    style: options.style ?? ButtonStyle.Secondary,
+    emoji: options.emoji,
+  };
+}
+
+export function gitCommitPushAction() {
+  return {
+    customId: "aiw:gitCommitPush",
+    label: "커밋+푸시",
+    style: ButtonStyle.Success,
+  };
+}
+
+function buildActionRows(actions) {
+  const values = Array.isArray(actions) ? actions.filter(Boolean).slice(0, 5) : [];
+  if (values.length === 0) {
+    return [];
+  }
+
+  const row = new ActionRowBuilder();
+  for (const action of values) {
+    if (String(action.customId ?? "").length > 100) {
+      continue;
+    }
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(action.customId)
+        .setLabel(action.label)
+        .setStyle(action.style ?? ButtonStyle.Secondary),
+    );
+  }
+  if (row.components.length === 0) {
+    return [];
+  }
+  return [row];
+}
+
+function extractRunStamp(value) {
+  const text = String(value ?? "").trim();
+  const match = text.match(/(\d{8}-\d{6}-\d{3})$/);
+  return match ? match[1] : "";
+}
+
+function actionSummary(actions) {
+  const labels = Array.isArray(actions)
+    ? actions.filter(Boolean).map((action) => action.label).filter(Boolean)
+    : [];
+  if (labels.length === 0) {
+    return "(없음)";
+  }
+  return `${labels.join(" → ")} 버튼을 사용하세요.`;
+}
+
+function buildIntakeActions(taskId, autoHandoff) {
+  const decision = autoHandoff?.decision ?? "";
+  if (decision === "needs_human_approval") {
+    return [
+      workflowAction("reviewIntake", taskId, "승인 내용 보기"),
+      workflowAction("approveRunner", taskId, "승인+실행", { style: ButtonStyle.Primary }),
+    ];
+  }
+  if (decision === "runner_started") {
+    return [
+      workflowAction("runnerStatus", taskId, "상태"),
+      workflowAction("runnerRead", taskId, "결과 보기", { style: ButtonStyle.Primary }),
+    ];
+  }
+  return [];
+}
+
+function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, taskDoneOk = false }) {
+  const ids = {
+    completionReportId: reports?.completion_report_id,
+    runnerRunId,
+  };
+  switch (stopReason) {
+    case "approval_required":
+      return [
+        workflowAction("runnerStatus", taskId, "상태"),
+        workflowAction("approveRunner", taskId, "승인+실행", { style: ButtonStyle.Primary }),
+      ];
+    case "completion_review_required":
+      return [
+        workflowAction("runnerRead", taskId, "결과 보기", ids),
+        workflowAction("completionCard", taskId, "완료 카드", { ...ids, style: ButtonStyle.Primary }),
+        workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success }),
+        workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
+      ];
+    case "done_or_commit_decision":
+      return [
+        workflowAction("runnerRead", taskId, "결과 보기", ids),
+        taskDoneOk ? null : workflowAction("taskDone", taskId, "작업 완료", { style: ButtonStyle.Success }),
+        gitCommitPushAction(),
+      ];
+    default:
+      return [
+        workflowAction("runnerStatus", taskId, "상태"),
+        workflowAction("runnerRead", taskId, "결과 보기"),
+      ];
+  }
+}
+
+function commandItems(items) {
+  return Array.isArray(items)
+    ? items.map(cleanupBlock).filter((item) => item.startsWith("/ai "))
+    : [];
+}
+
+function noteItems(items) {
+  return Array.isArray(items)
+    ? items.map(cleanupBlock).filter((item) => item && !item.startsWith("/ai "))
+    : [];
 }
 
 function summarizeValidationLines(items) {

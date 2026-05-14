@@ -41,6 +41,12 @@ A task is eligible only when all conditions are true:
 - `intake_auto_handoff.enabled` is not disabled
 - `intake_auto_handoff.auto_start_low_risk` is not disabled
 
+For GAME work, `no schema change` alone is not enough for auto-handoff. A
+request that includes `GAME data task`, data edits, JSON edits, minimal fixes,
+source changes, or runtime behavior changes must stay in the human approval
+flow even when it is P2/low. Only explicit no-source/data/schema/runtime
+validation or build checks are eligible.
+
 Current profile mapping:
 
 | Task type | Runner profile | Executor |
@@ -103,6 +109,8 @@ The task must remain in human approval flow when any condition is true:
 - category is unsafe `GAME`, `UNITY`, or another non-allowlisted category
 - category is `GAME` and the request may change source, data, schema, runtime
   behavior, gameplay behavior, or build settings
+- GAME data/JSON edits or minimal fixes, even when the request says there is
+  no schema change
 - category is `WF` with any kind other than `documentation` or `maintenance`
 - kind is source implementation, game data, refactoring, release, or another
   non-allowlisted kind

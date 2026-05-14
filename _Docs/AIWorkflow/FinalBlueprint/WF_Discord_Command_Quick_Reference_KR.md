@@ -42,30 +42,60 @@ clarifying question 없음
 rule-based cross-check 문제 없음
 ```
 
+GAME 작업은 더 엄격합니다. source/data/schema/runtime 변경이 없다고 명시된
+검증 또는 build 검증만 자동 착수 후보입니다. `GAME data task`, `data 수정`,
+`필요한 최소 수정`, `json 수정`처럼 실제 변경이 들어가면 `schema 변경 없음`이
+있어도 사람 승인에서 멈추는 것이 정상입니다.
+
 자동 진행이 되면 `set-active`, `approve`, `runner start`를 따로 입력하지
-않아도 됩니다.
+않아도 됩니다. 카드에 버튼이 보이면 버튼이 기본 UI입니다.
 
 Runner가 완료 리뷰 지점에서 멈추면:
 
 ```text
-/ai runner read id:<task_id>
-/ai completion card id:<task_id> completion-report-id:<completion_report_id>
-/ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
-/ai runner continue id:<task_id>
+결과 보기 버튼
+완료 카드 버튼
+완료 승인 버튼
 ```
 
 마지막으로 done/commit 판단 지점에서 멈추면:
 
 ```text
-/ai task done id:<task_id> evidence:<완료 근거>
+커밋+푸시 버튼
 ```
 
-커밋/푸시는 자동으로 하지 않습니다. 사용자가 직접 하거나 명시적으로 승인된
-Git 경로에서만 수행합니다.
+커밋+푸시는 자동으로 하지 않습니다. 사용자가 버튼 또는 명시 Git 명령으로
+확정한 경우에만 수행합니다.
 
 ---
 
 ## 멈춘 이유별 다음 명령
+
+카드에 버튼이 보이면 버튼을 우선 사용합니다. 명령어는 버튼이 없거나 실패했을
+때의 예비 경로입니다.
+
+| 버튼 | 하는 일 |
+| --- | --- |
+| 승인 내용 보기 | 승인 대상, 승인 제외 범위, 필수 검증을 읽기 전용으로 확인 |
+| 승인+실행 | ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작 |
+| 상태 | Runner 상태 확인 |
+| 결과 보기 | Runner run 기록과 생성된 report ID 확인 |
+| 완료 카드 | Completion Card 생성/표시 |
+| 완료 승인 | Completion accept, Runner continue, task done 처리 |
+| 우려 수용 | CONCERNS를 명시 수용하고 task done 처리 |
+| 커밋+푸시 | 확인 카드를 띄움 |
+| 커밋+푸시 확정 | 현재 허용된 변경사항을 commit 후 push |
+
+`PASS_WITH_NOTES`는 완료 후보이지만 자동 완료 신호가 아닙니다. notes를 사람이
+읽고 받아들일 수 있으면 `완료 승인` 또는 `우려 수용`으로 진행합니다.
+
+## 명령어 등급
+
+| 등급 | 평소 사용 여부 | 예시 |
+| --- | --- | --- |
+| 기본 | 자주 사용 | `/ai intake`, 버튼 UI, `/ai docs`, `/ai run workflow-status` |
+| 확인 | 필요할 때 사용 | `/ai runner read`, `/ai completion card`, `/ai git commit-push` |
+| 고급/복구 | 버튼 실패, 상태 꼬임, 디버깅 때만 사용 | `set-active`, `approve`, `runner start`, `finalization`, `auto-approval`, `follow-up` |
 
 ### `approval_required`
 
@@ -78,15 +108,19 @@ Git 경로에서만 수행합니다.
 다음 명령:
 
 ```text
+/ai task review-intake id:<task_id>
+/ai task approve-runner id:<task_id>
+```
+
+`approve-runner`는 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을
+한 번에 처리하는 권장 명령입니다.
+
+단계를 나눠서 처리해야 하는 예외 상황이면 아래 명령을 따로 씁니다.
+
+```text
 /ai task set-active id:<task_id>
 /ai task approve id:<task_id> note:<승인 범위>
 /ai runner start id:<task_id>
-```
-
-범위를 검토했고 권장안대로 바로 착수해도 되면 아래 단축 명령을 씁니다.
-
-```text
-/ai task approve-runner id:<task_id>
 ```
 
 P0/P1, medium/high risk, 게임 소스/데이터 변경, workflow 명령 변경은 보통
@@ -220,6 +254,10 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 이제 task done과 commit/push 판단만 남았습니다.
 ```
 
+`/ai runner accept-completion ... mark-done:true`를 사용했고 응답에
+`task done: yes`가 보이면 task done은 이미 처리된 것입니다. 이 경우
+`/ai task done`을 다시 실행하지 말고, 필요한 경우 Git 명령만 결정합니다.
+
 다음 확인:
 
 ```text
@@ -234,7 +272,34 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai task done id:<task_id> evidence:<완료 근거>
 ```
 
+위 명령은 `mark-done:true`를 쓰지 않았거나, 완료 승인과 task done을 분리해서
+처리하려는 경우에만 사용합니다.
+
 그 다음 Git commit/push는 사람이 결정합니다.
+
+```text
+/ai git commit-push
+```
+
+---
+
+## 자리표시자와 백그라운드 Runner 주의점
+
+가이드의 `<task_id>`, `<completion_report_id>`, `<runner_run_id>`는 예시
+자리표시자입니다. Discord에 그대로 입력하면 잘못된 ID로 거절됩니다. 실제 응답
+카드에 표시된 `VAL-...`, `completion-...`, `runner-run-...` 값을 넣어야 합니다.
+
+자동 handoff가 PC Runner를 백그라운드로 시작한 직후에는 아직
+`completion_report_id`와 `runner_run_id`가 응답에 없을 수 있습니다. 이때 다음
+명령이 아래 두 개만 나오는 것은 정상입니다.
+
+```text
+/ai runner status id:<task_id>
+/ai runner read id:<task_id>
+```
+
+`/ai runner read`를 실행하면 완료 카드와 `accept-completion`에 필요한 실제 ID가
+표시됩니다.
 
 ---
 

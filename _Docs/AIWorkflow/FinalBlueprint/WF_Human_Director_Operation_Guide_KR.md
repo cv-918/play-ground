@@ -45,19 +45,27 @@ DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 �
 ## 현재 정규 흐름
 
 WF-407 이후에는 PC Runner를 중심으로 아래 흐름을 사용합니다.
+카드에 버튼이 보이면 버튼이 기본 UI이며, 명령어는 예비 경로입니다.
 
 ```text
 1. /ai intake text:<작업 요청>
 2. 저위험 DOC/VAL 또는 허용된 WF 문서/유지보수 작업이면 하네스가 set-active, approve, runner start를 자동 진행
-3. 승인 필요 작업이면 /ai task set-active id:<task_id>
-4. 승인 필요 작업이면 /ai task approve id:<task_id> note:<승인 범위>
-5. 필요하면 /ai runner plan id:<task_id>
-6. 자동 시작되지 않은 작업은 /ai runner start id:<task_id>
-7. 완료 카드와 runner 결과 확인
-8. /ai finalization accept, accept-concerns 또는 request-changes/reject/defer
-9. /ai runner continue id:<task_id>
-10. /ai task done id:<task_id> evidence:<완료 근거>
-11. 커밋/푸시 결정
+3. 승인 필요 작업이면 /ai task review-intake id:<task_id>로 승인 대상과 제외 범위 확인
+4. 권장안대로 착수할 수 있으면 /ai task approve-runner id:<task_id>
+5. 완료 카드와 runner 결과 확인
+6. /ai runner accept-completion ... mark-done:true 또는 request-changes/reject/defer 결정
+7. 커밋/푸시 결정
+```
+
+주요 버튼:
+
+```text
+승인 내용 보기: 승인 대상과 제외 범위 확인
+승인+실행: 승인 기록 후 Runner 시작
+결과 보기: Runner 산출물 확인
+완료 카드: 완료 리뷰 카드 확인
+완료 승인: accept + runner continue + task done
+커밋+푸시: Git commit/push 실행
 ```
 
 `/ai prepare goal`과 `/ai result audit`은 이제 정규 경로가 아니라 runner가
@@ -69,6 +77,11 @@ source/data/schema/runtime 변경이 없다고 명시된 GAME validation/build
 validation 작업도 자동 착수 대상입니다. P0/P1, medium/high-risk, GAME
 source/data/schema/runtime 변경, UNITY, WF automation, 소스/데이터/리팩터링/
 명령 동작 변경 작업은 사람 승인에서 멈춥니다.
+
+주의: `schema 변경 없음`은 자동 착수 조건이 아닙니다. GAME data/source/runtime을
+실제로 수정하는 작업은 범위가 작아도 사람 승인이 필요합니다. 자동 착수 가능한
+GAME 작업은 source/data/schema/runtime 변경이 없다고 명시된 검증 또는 build
+검증뿐입니다.
 
 ## 최종 목표 흐름
 
@@ -185,6 +198,11 @@ source/data/schema/runtime 변경, UNITY, WF automation, 소스/데이터/리팩
 6. DevLog가 필요한 작업이면 기록됐는지
 ```
 
+`PASS_WITH_NOTES`는 "문제 없음"이 아닙니다. 검증은 완료됐지만 사람이 읽고
+받아들일 notes가 있다는 뜻입니다. 그래서 자동 완료 후보가 아니라 Human
+Director가 Completion Card의 notes를 보고 accept 또는 accept-concerns를
+결정해야 합니다.
+
 판정은 보통 다섯 가지입니다.
 
 ```text
@@ -200,6 +218,19 @@ defer: 지금 판단 보류
 ```text
 /ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
+
+`mark-done:true`로 성공했고 응답에 `task done: yes`가 보이면 `/ai task done`은
+다시 실행하지 않습니다. 그 다음에는 필요한 경우 `/ai git commit-push`만
+결정합니다.
+
+자동 handoff가 PC Runner를 백그라운드로 시작한 직후에는 아직
+`completion_report_id`와 `runner_run_id`가 응답에 없을 수 있습니다. 이때
+다음 명령이 `/ai runner status`, `/ai runner read`만 보이는 것은 정상입니다.
+`/ai runner read`를 실행하면 완료 카드와 `accept-completion`에 필요한 실제 ID가
+표시됩니다.
+
+문서의 `<task_id>`, `<completion_report_id>`, `<runner_run_id>`는 자리표시자입니다.
+Discord에 그대로 입력하지 말고 응답 카드의 실제 ID로 바꿔서 사용합니다.
 
 ## 커밋 결정
 
@@ -260,7 +291,8 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 
 - source/data 변경이 없는 검증 작업
 - JSON syntax smoke 또는 loader smoke처럼 실패 원인이 좁은 작업
-- 파일 1~3개 안에서 끝나는 작은 데이터 수정
+- 파일 1~3개 안에서 끝나는 작은 데이터 수정. 단, 이 경우에도 자동 착수하지
+  않고 사람 승인 후 진행합니다.
 - 하나의 loader, 하나의 scene, 하나의 component만 보는 작업
 - 완료 기준과 검증 명령이 명확한 작업
 
@@ -275,7 +307,7 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 
 ```text
 1. no-source-change 검증 작업
-2. 작은 data 수정 작업
+2. 작은 data 수정 작업. 이 단계부터는 approval_required가 정상입니다.
 3. loader/runtime 검증 작업
 4. 작은 source fix 작업
 5. 작은 gameplay behavior 작업
@@ -293,6 +325,10 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 ```text
 /ai intake text:"GAME data task: UserData.json의 level-0 node 기본값만 검토하고, schema 변경 없이 필요한 최소 수정과 JSON smoke 검증까지 진행해줘."
 ```
+
+이 예시는 좋은 작업 단위이지만 자동 착수 예시는 아닙니다. `필요한 최소 수정`이
+포함되어 있으므로 승인 요청 카드에서 멈추고, Human Director가 범위와 금지
+사항을 확인한 뒤 승인해야 합니다.
 
 ```text
 /ai intake text:"GAME validation task: source/data 변경 없이 PlayGround Debug x64 Visual Studio build를 PC Runner로 검증하고 MSBuild 자동 탐지 evidence와 CompletionCard를 확인해줘."

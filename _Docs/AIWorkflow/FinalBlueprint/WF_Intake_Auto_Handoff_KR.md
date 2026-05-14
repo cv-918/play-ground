@@ -47,6 +47,12 @@
 - `intake_auto_handoff.enabled`가 꺼져 있지 않음
 - `intake_auto_handoff.auto_start_low_risk`가 꺼져 있지 않음
 
+GAME 작업은 추가 조건이 있습니다. `schema 변경 없음`만으로는 자동 진행하지
+않습니다. source/data/schema/runtime 변경이 없다고 명시된 검증 또는 build
+검증만 자동 진행 후보입니다. `GAME data task`, `data 수정`, `필요한 최소 수정`,
+`json 수정`, `runtime behavior change`처럼 실제 수정이 포함된 요청은 P2/low라도
+사람 승인에서 멈춥니다.
+
 현재 실행 매핑:
 
 | 작업 유형 | Runner profile | Executor |
@@ -73,6 +79,7 @@ cross-check는 이 식별자를 일반 키워드보다 먼저 봅니다. 예를 
 - medium/high risk 작업
 - 허용되지 않은 WF/GAME/UNITY 작업
 - GAME source/data/schema/runtime/gameplay 변경 작업
+- GAME data 수정, JSON 수정, 필요한 최소 수정처럼 실제 변경이 포함된 작업
 - 소스 구현, 게임 데이터, 리팩터링, release 작업
 - clarifying question이 있는 작업
 - rule-based cross-check가 human review를 요구한 작업
@@ -165,6 +172,7 @@ node --check tools/discord-orchestrator/src/services/responseFormatter.js
 ```text
 P2/low/DOC -> 자동 진행 가능
 P2/low/GAME validation + source/data/schema/runtime 변경 없음 -> 자동 진행 가능
+P2/low/GAME data task + schema 변경 없음 + 필요한 최소 수정 -> 사람 승인 필요
 P2/low/GAME validation + gameplay/runtime 수정 -> 사람 승인 필요
 P1/medium/WF -> 사람 승인 필요
 ```

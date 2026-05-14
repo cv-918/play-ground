@@ -106,6 +106,11 @@ If blocking rules pass but `completion_without_notes` fails, the decision is
 
 If any blocking rule fails, the decision is `human_approval_required`.
 
+`PASS_WITH_NOTES` is intentionally not treated as a no-touch auto-completion
+case. It means validation reached a pass verdict with reviewable notes. The
+Human Director must read the notes and explicitly accept the completion or
+accept the concerns before normal done/commit decisions proceed.
+
 ---
 
 ## Evaluation Output

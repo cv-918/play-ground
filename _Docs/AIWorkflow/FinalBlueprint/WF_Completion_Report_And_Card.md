@@ -113,6 +113,10 @@ done, finalize, commit, or push anything.
 Human review remains required for accepting completion. The report only states
 whether the evidence is ready enough for that review.
 
+`PASS_WITH_NOTES` is not a silent auto-completion signal. It means the task may
+be acceptable after a human reads and accepts the notes. Auto-approval policy
+must treat it as requiring human completion review.
+
 ---
 
 ## TaskRunState Projection

@@ -1,6 +1,6 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { loadConfig } from "./config.js";
-import { buildAiCommand, handleAiCommand } from "./commands/ai.js";
+import { buildAiCommand, handleAiButton, handleAiCommand } from "./commands/ai.js";
 import { formatTextCardPayload } from "./services/responseFormatter.js";
 
 const config = loadConfig();
@@ -22,6 +22,28 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isButton() && String(interaction.customId ?? "").startsWith("aiw:")) {
+    try {
+      await handleAiButton(interaction, config);
+    } catch (error) {
+      console.error("[ERROR] Unhandled button failure:", error);
+      const payload = formatTextCardPayload("버튼 실행 실패", [
+        "**이유**",
+        "처리되지 않은 bot 오류입니다.",
+        "",
+        "**다음 조치**",
+        "로컬 bot console log를 확인하세요.",
+      ].join("\n"));
+
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(payload);
+      } else {
+        await interaction.reply({ ...payload, flags: 64 });
+      }
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) {
     return;
   }
