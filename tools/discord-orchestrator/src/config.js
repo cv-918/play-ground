@@ -55,6 +55,9 @@ export function loadConfig() {
       enabled: raw?.intake_auto_handoff?.enabled !== false,
       autoStartLowRisk: raw?.intake_auto_handoff?.auto_start_low_risk !== false,
     },
+    autoApprovalApply: {
+      enabled: raw?.auto_approval_apply?.enabled === true || raw?.autoApprovalApply?.enabled === true,
+    },
     limits: {
       scriptTimeoutMs: raw?.limits?.script_timeout_ms ?? 15000,
       maxDiscordChars: raw?.limits?.max_discord_chars ?? 1800,

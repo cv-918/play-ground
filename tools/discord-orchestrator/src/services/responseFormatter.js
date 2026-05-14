@@ -1358,6 +1358,36 @@ export function formatAutoApprovalEvaluatePayload(result) {
   };
 }
 
+export function formatAutoApprovalApplyPayload(result) {
+  const data = result?.data ?? {};
+  const applied = result?.ok === true && data.applied === true;
+  return {
+    content: "",
+    embeds: [{
+      title: applied ? "자동 승인 적용 완료" : "자동 승인 적용 차단",
+      color: applied ? 0x2e7d32 : 0xf9a825,
+      description: [
+        formatInlineCode(data.task_id || "unknown"),
+        data.policy_evaluation_id ? `Policy: ${formatInlineCode(data.policy_evaluation_id)}` : "",
+        applied ? "정책 gate를 통과해 task done을 처리했습니다." : cleanKo(result?.error || data.reason || "Auto approval apply gate blocked."),
+      ].filter(Boolean).join("\n"),
+      fields: [
+        embedField("처리 결과", [
+          `applied: ${koBool(applied)}`,
+          `stage: ${result?.stage || data.stage || "unknown"}`,
+          `decision: ${data.decision || "unknown"}`,
+        ]),
+        embedField("차단/근거", summarizeCompactList(data.reasons, 4)),
+        embedField("안전 상태", [
+          `task done: ${koBool(applied)}`,
+          "commit/push 없음",
+          "명시 apply 명령 없이 자동 적용 없음",
+        ], true),
+      ],
+    }],
+  };
+}
+
 export function formatAutoApprovalReadPayload(result) {
   if (!result?.ok) {
     return formatFailureCardPayload("자동 승인 정책 읽기 실패", result?.error);

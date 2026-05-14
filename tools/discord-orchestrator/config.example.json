@@ -42,6 +42,9 @@
     "enabled": true,
     "auto_start_low_risk": true
   },
+  "auto_approval_apply": {
+    "enabled": false
+  },
   "limits": {
     "script_timeout_ms": 15000,
     "max_discord_chars": 1800

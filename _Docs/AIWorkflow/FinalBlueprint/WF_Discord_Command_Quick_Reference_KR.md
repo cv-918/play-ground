@@ -94,6 +94,11 @@ Runner가 완료 리뷰 지점에서 멈추면:
 `PASS_WITH_NOTES`는 완료 후보이지만 자동 완료 신호가 아닙니다. notes를 사람이
 읽고 받아들일 수 있으면 `완료 승인` 또는 `우려 수용`으로 진행합니다.
 
+`/ai auto-approval apply`는 기본 설정에서 차단됩니다. 나중에
+`autoApprovalApply.enabled=true`가 명시되고 정책 평가가 `eligible_candidate`와
+`can_auto_approve_now=true`를 동시에 만족할 때만 task done을 적용할 수 있습니다.
+commit/push는 여전히 별도 버튼 또는 Git 명령이 필요합니다.
+
 ## 명령어 등급
 
 | 등급 | 평소 사용 여부 | 예시 |

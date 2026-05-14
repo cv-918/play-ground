@@ -16,6 +16,7 @@ import { getCodexIntakeEngineStatus } from "../services/codexCliIntakeService.js
 import { generateCompletionCard, generateCompletionReport, getCompletionStatus } from "../services/completionService.js";
 import { getFinalizationStatus, readFinalizationLog, recordFinalizationDecision } from "../services/finalizationService.js";
 import { evaluateAutoApprovalPolicy, getAutoApprovalStatus, readAutoApprovalPolicy } from "../services/autoApprovalPolicyService.js";
+import { applyAutoApprovalPolicy } from "../services/autoApprovalApplyService.js";
 import { generateFollowUpPlan, getFollowUpStatus, readFollowUpPlan } from "../services/followUpTaskService.js";
 import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startPcRunnerDetached, stopPcRunner } from "../services/pcRunnerService.js";
 import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
@@ -40,6 +41,7 @@ import {
   formatFinalizationReadPayload,
   formatFinalizationRecordPayload,
   formatFinalizationStatusPayload,
+  formatAutoApprovalApplyPayload,
   formatAutoApprovalEvaluatePayload,
   formatAutoApprovalReadPayload,
   formatAutoApprovalStatusPayload,
@@ -530,6 +532,23 @@ export function buildAiCommand() {
               option
                 .setName("policy-evaluation-id")
                 .setDescription("읽을 Auto Approval 평가 ID, 없으면 최신 평가")
+                .setRequired(false),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("apply")
+            .setDescription("허용된 AutoApprovalPolicy 평가만 명시적으로 적용합니다")
+            .addStringOption((option) =>
+              option
+                .setName("id")
+                .setDescription("Backlog 작업 ID")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("policy-evaluation-id")
+                .setDescription("적용할 Auto Approval 평가 ID, 없으면 최신 평가")
                 .setRequired(false),
             ),
         ),
@@ -1519,6 +1538,15 @@ async function handleAutoApprovalCommand(interaction, config, subcommand) {
       policyEvaluationId: interaction.options.getString("policy-evaluation-id"),
     });
     await interaction.editReply(formatAutoApprovalReadPayload(result));
+    return;
+  }
+
+  if (subcommand === "apply") {
+    const result = await applyAutoApprovalPolicy(config, {
+      id,
+      policyEvaluationId: interaction.options.getString("policy-evaluation-id"),
+    });
+    await interaction.editReply(formatAutoApprovalApplyPayload(result));
     return;
   }
 
