@@ -150,8 +150,11 @@ The implementation runner profile must not:
 
 ```text
 profile: validation
+profile: build
 profile: implementation
 profile: documentation
+profile: game-data
+profile: source-fix
 ```
 
 Unsupported profile/executor pairings are still rejected by the local runner
@@ -161,6 +164,15 @@ The `documentation` profile uses the same guarded Codex CLI adapter path as
 `implementation`, but the generated prompt explicitly constrains the executor to
 documentation-only changes unless the approved task says otherwise. It lets
 low-risk DOC auto-handoff avoid pretending it is general implementation work.
+
+The `game-data` profile uses the guarded Codex CLI adapter with a narrower
+prompt boundary for approved small GAME data or data-loader-adjacent changes.
+It must not change schemas unless the approval explicitly includes schema
+changes.
+
+The `source-fix` profile uses the guarded Codex CLI adapter with a narrower
+prompt boundary for approved small GAME source fixes. It must not perform broad
+refactors, schema changes, save/load changes, or unrelated gameplay changes.
 
 ## Completion Review Shortcut
 

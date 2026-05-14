@@ -568,6 +568,8 @@
               <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence</td></tr>
               <tr><td><code>documentation</code></td><td>문서 작업</td></tr>
               <tr><td><code>implementation</code></td><td>승인된 구현 작업</td></tr>
+              <tr><td><code>game-data</code></td><td>승인된 작은 GAME data 또는 data-loader 인접 수정</td></tr>
+              <tr><td><code>source-fix</code></td><td>승인된 작은 GAME source fix. 리팩터, 스키마, save/load 변경은 제외</td></tr>
             </tbody>
           </table>
         </section>
@@ -583,6 +585,7 @@
             <li>검증 증거가 실제로 존재하는가?</li>
           </ol>
           <p><code>PASS_WITH_NOTES</code>는 검증 통과에 가까운 상태지만 자동 완료 신호는 아닙니다. notes를 사람이 읽고 받아들일 수 있을 때만 완료 승인 또는 우려 수용으로 진행합니다.</p>
+          <p>완료 카드 버튼은 명령어 복붙 대신 쓰는 기본 UI입니다. <strong>완료 승인</strong>은 accept와 task done을 처리하고, <strong>수정 요청</strong>은 request-changes를 기록하며, <strong>판단 보류</strong>는 defer를 기록합니다. <code>CONCERNS</code>가 있지만 blocker나 failed check가 없고 사람이 우려를 받아들이기로 결정했다면 <strong>우려 수용</strong>을 사용합니다.</p>
           <table>
             <thead>
               <tr><th>결정</th><th>의미</th></tr>

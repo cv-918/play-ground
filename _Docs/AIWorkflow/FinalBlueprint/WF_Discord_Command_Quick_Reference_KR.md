@@ -82,7 +82,12 @@ Runner가 완료 리뷰 지점에서 멈추면:
 | 결과 보기 | Runner run 기록과 생성된 report ID 확인 |
 | 완료 카드 | Completion Card 생성/표시 |
 | 완료 승인 | Completion accept, Runner continue, task done 처리 |
+| 수정 요청 | Completion review에서 request-changes 기록 |
+| 판단 보류 | Completion review에서 defer 기록 |
 | 우려 수용 | CONCERNS를 명시 수용하고 task done 처리 |
+| 자동승인 평가 | AutoApprovalPolicy 평가 결과 확인 |
+| 후속 후보 | FollowUpPlan 후보 확인 |
+| 중단 | Runner run stop 기록 |
 | 커밋+푸시 | 확인 카드를 띄움 |
 | 커밋+푸시 확정 | 현재 허용된 변경사항을 commit 후 push |
 
@@ -349,6 +354,8 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 ```text
 /ai runner start id:<task_id> profile:implementation executor:codex_cli
 /ai runner start id:<task_id> profile:documentation executor:codex_cli
+/ai runner start id:<task_id> profile:game-data executor:codex_cli
+/ai runner start id:<task_id> profile:source-fix executor:codex_cli
 /ai runner start id:<task_id> profile:validation executor:local_cli
 /ai runner start id:<task_id> profile:build executor:local_cli
 ```
@@ -363,6 +370,13 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 `build` profile은 Visual Studio Debug x64 build 검증처럼 빌드 evidence가
 필요한 작업에 사용합니다.
+
+`game-data` profile은 승인된 작은 GAME data 또는 data-loader 인접 수정에
+사용합니다. `schema 변경 없음`만으로 자동 착수하지 않으며, 사람 승인 후 Codex
+CLI 실행과 runner 검증 파이프라인으로 이어집니다.
+
+`source-fix` profile은 승인된 작은 GAME source fix에 사용합니다. 리팩터, schema,
+save/load, 광범위한 gameplay 변경은 별도 승인 범위가 없으면 포함하지 않습니다.
 
 ### Completion Card 확인
 

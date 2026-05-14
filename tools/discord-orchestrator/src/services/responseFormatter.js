@@ -1160,7 +1160,9 @@ function buildCompletionCardActions(taskId, presentation, ids = {}) {
   if (presentation.state === "needs_human_decision" && presentation.verdict === "CONCERNS") {
     return [
       workflowAction("runnerRead", taskId, "결과 보기", ids),
+      workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary }),
       workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
+      workflowAction("deferCompletion", taskId, "판단 보류", ids),
     ];
   }
 
@@ -1168,6 +1170,8 @@ function buildCompletionCardActions(taskId, presentation, ids = {}) {
     return [
       workflowAction("runnerRead", taskId, "결과 보기", ids),
       workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success }),
+      workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary }),
+      workflowAction("deferCompletion", taskId, "판단 보류", ids),
     ];
   }
 
@@ -2470,11 +2474,14 @@ function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, t
         workflowAction("runnerRead", taskId, "결과 보기", ids),
         workflowAction("completionCard", taskId, "완료 카드", { ...ids, style: ButtonStyle.Primary }),
         workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success }),
+        workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary }),
         workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
       ];
     case "done_or_commit_decision":
       return [
         workflowAction("runnerRead", taskId, "결과 보기", ids),
+        workflowAction("autoApprovalRead", taskId, "자동승인 평가", ids),
+        workflowAction("followUpRead", taskId, "후속 후보", ids),
         taskDoneOk ? null : workflowAction("taskDone", taskId, "작업 완료", { style: ButtonStyle.Success }),
         gitCommitPushAction(),
       ];
@@ -2482,6 +2489,7 @@ function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, t
       return [
         workflowAction("runnerStatus", taskId, "상태"),
         workflowAction("runnerRead", taskId, "결과 보기"),
+        workflowAction("runnerStop", taskId, "중단", { runnerRunId, style: ButtonStyle.Danger }),
       ];
   }
 }

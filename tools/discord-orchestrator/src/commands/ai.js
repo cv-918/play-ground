@@ -86,7 +86,7 @@ const STATUS_CHOICES = ["todo", "analysis", "awaiting_approval", "ready_for_impl
 const CODEX_MODE_CHOICES = ["analysis", "implementation", "review"].map((value) => ({ name: value, value }));
 const GOAL_MODE_CHOICES = ["analysis", "implementation", "prototype", "review"].map((value) => ({ name: value, value }));
 const CODEX_CONTEXT_CHOICES = ["compact", "standard", "full"].map((value) => ({ name: value, value }));
-const RUNNER_PROFILE_CHOICES = ["validation", "build", "implementation", "documentation"].map((value) => ({ name: value, value }));
+const RUNNER_PROFILE_CHOICES = ["validation", "build", "implementation", "documentation", "game-data", "source-fix"].map((value) => ({ name: value, value }));
 const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ name: value, value }));
 const RUNNER_COMPLETION_DECISION_CHOICES = ["accept", "accept-concerns"].map((value) => ({ name: value, value }));
 
@@ -1123,10 +1123,34 @@ export async function handleAiButton(interaction, config) {
     return;
   }
 
+  if (action.name === "runnerStop") {
+    await interaction.editReply(formatPcRunnerPayload(await stopPcRunner(config, {
+      id: action.taskId,
+      runnerRunId: action.runnerRunId,
+    })));
+    return;
+  }
+
   if (action.name === "completionCard") {
     await interaction.editReply(formatCompletionCardPayload(await generateCompletionCard(config, {
       id: action.taskId,
       completionReportId: action.completionReportId,
+    })));
+    return;
+  }
+
+  if (action.name === "autoApprovalRead") {
+    await interaction.editReply(formatAutoApprovalReadPayload(await readAutoApprovalPolicy(config, {
+      id: action.taskId,
+      policyEvaluationId: action.policyEvaluationId,
+    })));
+    return;
+  }
+
+  if (action.name === "followUpRead") {
+    await interaction.editReply(formatFollowUpReadPayload(await readFollowUpPlan(config, {
+      id: action.taskId,
+      followUpPlanId: action.followUpPlanId,
     })));
     return;
   }
@@ -1139,6 +1163,21 @@ export async function handleAiButton(interaction, config) {
       completionReportId: action.completionReportId,
       runnerRunId: action.runnerRunId,
       markDone: true,
+      actor: interaction.user?.id,
+    })));
+    return;
+  }
+
+  if (["requestChanges", "rejectCompletion", "deferCompletion"].includes(action.name)) {
+    const commandByAction = {
+      requestChanges: "request-changes",
+      rejectCompletion: "reject",
+      deferCompletion: "defer",
+    };
+    await interaction.editReply(formatFinalizationRecordPayload(await recordFinalizationDecision(config, {
+      id: action.taskId,
+      command: commandByAction[action.name],
+      completionReportId: action.completionReportId,
       actor: interaction.user?.id,
     })));
     return;
@@ -1199,6 +1238,8 @@ function parseWorkflowButton(customId) {
     stamp,
     runnerRunId: stamp ? `runner-run-${taskId.toLowerCase()}-${stamp}` : "",
     completionReportId: stamp ? `completion-${taskId.toLowerCase()}-${stamp}` : "",
+    policyEvaluationId: stamp ? `autoeval-${taskId.toLowerCase()}-${stamp}` : "",
+    followUpPlanId: stamp ? `followup-${taskId.toLowerCase()}-${stamp}` : "",
   };
 }
 

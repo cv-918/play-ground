@@ -577,10 +577,11 @@ function New-Preflight {
             $humanGate = "Set ActiveTask to this task or run a read-only plan only."
         }
     }
-    $profileSupportedForStart = ((@("validation", "build") -contains $ProfileValue) -and ($ExecutorValue -eq "local_cli")) -or ((@("implementation", "documentation") -contains $ProfileValue) -and ($ExecutorValue -eq "codex_cli"))
+    $codexProfiles = @("implementation", "documentation", "game-data", "source-fix")
+    $profileSupportedForStart = ((@("validation", "build") -contains $ProfileValue) -and ($ExecutorValue -eq "local_cli")) -or (($codexProfiles -contains $ProfileValue) -and ($ExecutorValue -eq "codex_cli"))
     if ($approvalOk -and $activeTaskId -eq $TaskId -and -not $profileSupportedForStart) {
         $stopReason = "executor_not_ready"
-        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli, build/local_cli, implementation/codex_cli, or documentation/codex_cli."
+        $humanGate = "This runner profile requires a supported executor. Use validation/local_cli, build/local_cli, implementation/codex_cli, documentation/codex_cli, game-data/codex_cli, or source-fix/codex_cli."
     }
     return [pscustomobject]@{
         task_found = $null -ne $task
@@ -635,6 +636,48 @@ function Test-GameDataReadabilityRequested {
     return $false
 }
 
+function Test-GameDataChangeRequested {
+    param($Task)
+    $text = (Get-TaskSearchText -Task $Task).ToLowerInvariant()
+    foreach ($term in @(
+        "game data task",
+        "data task",
+        "user data",
+        "userdata",
+        "stage_progress",
+        "node state",
+        "json fix",
+        "json change",
+        "json 수정",
+        "data 수정",
+        "데이터 수정",
+        "필요한 최소 수정"
+    )) {
+        if ($text.Contains($term)) { return $true }
+    }
+    return $false
+}
+
+function Test-GameSourceFixRequested {
+    param($Task)
+    $text = (Get-TaskSearchText -Task $Task).ToLowerInvariant()
+    foreach ($term in @(
+        "source fix",
+        "game source",
+        "runtime behavior",
+        "gameplay behavior",
+        "component",
+        "scene",
+        "loader behavior",
+        "소스 수정",
+        "런타임 동작",
+        "게임플레이 동작"
+    )) {
+        if ($text.Contains($term)) { return $true }
+    }
+    return $false
+}
+
 function Resolve-AutoRunnerProfile {
     param([string]$ProfileValue, $Task)
     if ($ProfileValue -ne "auto") { return $ProfileValue }
@@ -644,6 +687,12 @@ function Resolve-AutoRunnerProfile {
     $id = ([string]$Task.id).ToUpperInvariant()
     if ($kind -eq "documentation" -or $id.StartsWith("DOC-")) {
         return "documentation"
+    }
+    if (Test-GameDataChangeRequested -Task $Task) {
+        return "game-data"
+    }
+    if (Test-GameSourceFixRequested -Task $Task) {
+        return "source-fix"
     }
     if (@("implementation", "data", "game", "refactoring", "maintenance") -contains $kind) {
         return "implementation"
@@ -688,7 +737,7 @@ function New-RunnerPlan {
         "bt-$($Ids.safe_task)-$buildTestCommandId-$($Ids.stamp)"
     }
 
-    if (@("implementation", "documentation") -contains $ProfileValue) {
+    if (@("implementation", "documentation", "game-data", "source-fix") -contains $ProfileValue) {
         $plannedSteps = @(
             "task_workspace_manager.create_or_read",
             $(if ($ProfileValue -eq "documentation") { "runner.write_documentation_prompt" } else { "runner.write_implementation_prompt" }),
@@ -753,8 +802,8 @@ function New-RunnerPlan {
             runner_run_id = $Ids.runner_run_id
             session_id = $sessionId
             evidence_ids = @($evidenceIds)
-            prompt_id = $(if (@("implementation", "documentation") -contains $ProfileValue) { $Ids.prompt_id } else { $null })
-            text_encoding_guard_id = $(if (@("implementation", "documentation") -contains $ProfileValue) { $Ids.text_encoding_guard_id } else { $null })
+        prompt_id = $(if (@("implementation", "documentation", "game-data", "source-fix") -contains $ProfileValue) { $Ids.prompt_id } else { $null })
+        text_encoding_guard_id = $(if (@("implementation", "documentation", "game-data", "source-fix") -contains $ProfileValue) { $Ids.text_encoding_guard_id } else { $null })
             result_id = $Ids.result_id
             analysis_id = $Ids.analysis_id
             build_test_id = $buildTestId
@@ -1218,11 +1267,16 @@ function Write-ImplementationPrompt {
     $repoLabel = ConvertTo-RepoRelativePath -Repo $Repo -Path $Repo
     $isDocumentationProfile = $ProfileValue -eq "documentation"
     $title = if ($isDocumentationProfile) { "# PC Runner Documentation Request" } else { "# PC Runner Implementation Request" }
-    $profileScopeLine = if ($isDocumentationProfile) {
-        "- This is the documentation runner profile: keep changes documentation-only unless the approved task explicitly says otherwise."
+    $profileScopeLine = switch ($ProfileValue) {
+        "documentation" { "- This is the documentation runner profile: keep changes documentation-only unless the approved task explicitly says otherwise." }
+        "game-data" { "- This is the GAME data runner profile: make only the approved game data or data-loader-adjacent changes, and do not change schemas unless the approval explicitly says schema changes are included." }
+        "source-fix" { "- This is the source-fix runner profile: make only the approved small source fix, and do not perform broad refactors, architecture rewrites, schema changes, save/load changes, or unrelated gameplay changes." }
+        default { "- This is the implementation runner profile: make only the approved tracked repository changes required by the task." }
     }
-    else {
-        "- This is the implementation runner profile: make only the approved tracked repository changes required by the task."
+    $profileNonGoalLine = switch ($ProfileValue) {
+        "game-data" { "- For GAME data work, keep changes to the approved data/loader boundary and run JSON/data readability/build validation requested by the task." }
+        "source-fix" { "- For source-fix work, keep the diff surgical and run the requested build/runtime validation evidence." }
+        default { "- Follow the task validation plan and keep the diff surgical." }
     }
     $lines = @(
         $title,
@@ -1244,6 +1298,7 @@ function Write-ImplementationPrompt {
         "",
         "## Required Scope",
         $profileScopeLine,
+        $profileNonGoalLine,
         "- Implement only the approved task scope recorded in Backlog and ActiveTask.",
         "- Do not expand into unrelated cleanup, refactors, game/data changes, releases, deploys, commits, or pushes.",
         "- If the task requires a new approval decision, stop and report the decision needed.",
@@ -1671,7 +1726,7 @@ function Invoke-Start {
         }
     }
 
-    if (@("implementation", "documentation") -contains $resolvedProfile) {
+    if (@("implementation", "documentation", "game-data", "source-fix") -contains $resolvedProfile) {
         return Invoke-ImplementationStart -Repo $Repo -TaskId $TaskId -ProfileValue $resolvedProfile -ExecutorValue $resolvedExecutor -Paths $paths -Plan $plan -RunState $runState -RunId $runId
     }
 

@@ -537,9 +537,12 @@ gates. `profile:validation` runs the safe validation chain. `profile:build`
 routes build validation through allowlisted `build_test_runner` commands such
 as `debug_visual_studio_build`. `profile:implementation` routes through the
 guarded Codex CLI adapter and stops if the local Codex adapter config is
-missing or disabled. It does not create Backlog tasks, commit, push, or run
-arbitrary shell commands. It marks tasks done only when the Human Director uses
-an explicit completion shortcut such as `mark-done:true`.
+missing or disabled. `profile:game-data` and `profile:source-fix` are stricter
+Codex-backed implementation routes for approved small GAME data/data-loader work
+and small GAME source fixes. They do not bypass approval. The runner does not
+create Backlog tasks, commit, push, or run arbitrary shell commands. It marks
+tasks done only when the Human Director uses an explicit completion shortcut
+such as `mark-done:true`.
 
 ---
 
