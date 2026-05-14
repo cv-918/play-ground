@@ -1347,11 +1347,22 @@ function parseWorkflowButton(customId) {
     name,
     taskId,
     stamp,
-    runnerRunId: stamp ? `runner-run-${taskId.toLowerCase()}-${stamp}` : "",
-    completionReportId: stamp ? `completion-${taskId.toLowerCase()}-${stamp}` : "",
-    policyEvaluationId: stamp ? `autoeval-${taskId.toLowerCase()}-${stamp}` : "",
-    followUpPlanId: stamp ? `followup-${taskId.toLowerCase()}-${stamp}` : "",
+    runnerRunId: parseActionArtifactId(stamp, "runner-run", taskId),
+    completionReportId: parseActionArtifactId(stamp, "completion", taskId),
+    policyEvaluationId: parseActionArtifactId(stamp, "autoeval", taskId),
+    followUpPlanId: parseActionArtifactId(stamp, "followup", taskId),
   };
+}
+
+function parseActionArtifactId(stamp, prefix, taskId) {
+  const value = String(stamp ?? "").trim();
+  if (!value) {
+    return "";
+  }
+  if (value.startsWith(`${prefix}-`)) {
+    return value;
+  }
+  return `${prefix}-${String(taskId ?? "").toLowerCase()}-${value}`;
 }
 
 async function handleAskCommand(interaction, config) {
@@ -1405,6 +1416,8 @@ function buildNavigatorActionRows(data) {
     const runnerRunId = typeof action === "string" ? "" : action.runnerRunId ?? "";
     const ids = {
       completionReportId: reports.completion_report_id,
+      policyEvaluationId: reports.auto_approval_evaluation_id,
+      followUpPlanId: reports.follow_up_plan_id,
       runnerRunId,
     };
     switch (name) {

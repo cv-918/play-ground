@@ -2604,7 +2604,11 @@ export function workflowAction(action, taskId, label, options = {}) {
   if (!id || id === "unknown" || id.includes("<")) {
     return null;
   }
-  const stamp = options.stamp || extractRunStamp(options.runnerRunId) || extractRunStamp(options.completionReportId);
+  const stamp = options.stamp
+    || options.policyEvaluationId
+    || options.followUpPlanId
+    || extractRunStamp(options.runnerRunId)
+    || extractRunStamp(options.completionReportId);
   return {
     customId: ["aiw", action, id, stamp].filter(Boolean).join(":"),
     label,
@@ -2706,6 +2710,8 @@ function buildIntakeActions(taskId, autoHandoff) {
 function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, taskDoneOk = false }) {
   const ids = {
     completionReportId: reports?.completion_report_id,
+    policyEvaluationId: reports?.auto_approval_evaluation_id,
+    followUpPlanId: reports?.follow_up_plan_id,
     runnerRunId,
   };
   switch (stopReason) {
