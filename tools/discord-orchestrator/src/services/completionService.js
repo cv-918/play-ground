@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { runScript } from "./commandRunner.js";
 
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -96,16 +97,92 @@ export async function generateCompletionCard(config, input = {}) {
 
     const raw = await runCompletionCardScript(config, args);
     const parsed = parseScriptJson("completion_card generate", raw);
+    const evidenceContext = parsed.ok
+      ? await loadCompletionEvidenceContext(parsed.data)
+      : null;
+
     return {
       ok: parsed.ok,
       command: "card",
       data: parsed.data,
+      evidence_context: evidenceContext,
       generated_report: generatedReport,
       raw,
       error: parsed.error,
     };
   } catch (error) {
     return buildFailure("card", error);
+  }
+}
+
+async function loadCompletionEvidenceContext(data = {}) {
+  const card = data.completion_card ?? {};
+  const completionReportPath = card.sources?.completion_report_path;
+  const completionReport = await readJsonArtifact(completionReportPath);
+  const verificationPath = completionReport?.sources?.verification_report?.verification_report_path;
+  const verification = await readJsonArtifact(verificationPath);
+  const resultPath = verification?.sources?.execution_result?.result_path;
+  const result = await readJsonArtifact(resultPath);
+
+  const sessions = Array.isArray(result?.sessions)
+    ? await Promise.all(result.sessions.map((session) => summarizeSession(session)))
+    : [];
+
+  return {
+    completion_report_path: completionReportPath || "",
+    verification_report_path: verificationPath || "",
+    execution_result_path: resultPath || "",
+    observed_exit_state: verification?.gates?.execution_result_gate?.evidence?.observed_exit_state || "",
+    diff_attention_signals: verification?.gates?.diff_gate?.evidence?.attention_signals ?? [],
+    expected_categories: verification?.gates?.diff_gate?.evidence?.expected_categories ?? [],
+    sessions: sessions.filter(Boolean),
+  };
+}
+
+async function summarizeSession(session = {}) {
+  const stderrText = await readShortLog(session.outputs?.stderr_log);
+  const stdoutText = await readShortLog(session.outputs?.stdout_log);
+  return {
+    session_id: session.session_id || "",
+    status: session.status || "",
+    executor_type: session.executor_type || "",
+    command_line: session.command_line || "",
+    exit_code: session.process?.exit_code ?? null,
+    last_activity: session.last_activity || "",
+    stderr_summary: stderrText,
+    stdout_summary: stdoutText,
+  };
+}
+
+async function readShortLog(filePath) {
+  const text = await readTextArtifact(filePath);
+  if (!text) {
+    return "";
+  }
+  return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, 2).join(" ");
+}
+
+async function readJsonArtifact(filePath) {
+  const text = await readTextArtifact(filePath);
+  if (!text) {
+    return null;
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+async function readTextArtifact(filePath) {
+  const normalized = String(filePath ?? "").replaceAll("\\", "/").trim();
+  if (!normalized || normalized.includes("..") || !normalized.startsWith("_Temp/AIWorkflowRuntime/")) {
+    return "";
+  }
+  try {
+    return await readFile(normalized, "utf8");
+  } catch {
+    return "";
   }
 }
 

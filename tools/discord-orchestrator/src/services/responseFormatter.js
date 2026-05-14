@@ -718,14 +718,37 @@ function formatReviewApprovalRequest(approvalRequest = {}) {
   const reasons = Array.isArray(approvalRequest.reasons) ? approvalRequest.reasons : [];
   const approving = Array.isArray(approvalRequest.approving) ? approvalRequest.approving : [];
   const notApproving = Array.isArray(approvalRequest.not_approving) ? approvalRequest.not_approving : [];
+  const preview = formatChangePreview(approvalRequest.change_preview);
   return [
     "- 왜 필요한가",
     ...bulletLines(simplifyApprovalItems(reasons.length > 0 ? reasons : ["정책상 명시적 승인 후 진행"]), 2, { indent: true }),
-    "- 승인하면",
-    ...bulletLines(simplifyApprovalItems(approving), 2, { indent: true, fallback: "표시된 task 범위 안에서만 진행" }),
+    "- 승인하면 하네스가 시도할 변경",
+    ...bulletLines(preview.intended, 4, { indent: true, fallback: "예상 변경이 명확하지 않음. 승인 전에 task 설명 보강 필요" }),
+    "- 대상/근거",
+    ...bulletLines(preview.targets, 4, { indent: true, fallback: "대상 파일/영역이 명확하지 않음" }),
     "- 승인하지 않음",
-    ...bulletLines(simplifyApprovalItems(notApproving), 2, { indent: true, fallback: "범위 밖 수정, 자동 완료, 자동 커밋/푸시" }),
+    ...bulletLines(preview.nonGoals.length > 0 ? preview.nonGoals : simplifyApprovalItems(notApproving), 3, { indent: true, fallback: "범위 밖 수정, 자동 완료, 자동 커밋/푸시" }),
   ];
+}
+
+function formatChangePreview(preview = {}) {
+  const intended = [
+    ...asArray(preview.intended_changes),
+    ...asArray(preview.no_change_claims).map((item) => `${item} 확인`),
+  ];
+  const targets = [
+    ...asArray(preview.target_files).map((item) => formatInlineCode(item)),
+    ...asArray(preview.validation).map((item) => `검증: ${item}`),
+  ];
+  return {
+    intended: intended.length > 0 ? intended : asArray(preview.source_note),
+    targets,
+    nonGoals: asArray(preview.non_goals).map(cleanKo),
+  };
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value.map(cleanupBlock).filter(Boolean) : [];
 }
 
 function simplifyApprovalItems(items) {
@@ -994,7 +1017,7 @@ export function formatIntakeTaskReviewPayload(result) {
           ? embedField("주의", "- 이 작업은 지금 바로 실행 대상이 아닙니다.\n- 이력을 확인하거나 새 task로 다시 접수하세요.")
           : null,
         canProceed
-          ? embedField("승인하면 바뀌는 것", buildActivationDecisionImpact(data.active_task_match === true))
+          ? embedField("승인하면 바뀌는 것", buildActivationDecisionImpact(data.active_task_match === true, approvalRequest))
           : null,
         embedField("권장 역할", summarizeCompactList(data.recommended_roles, 5), true),
         embedField("사람 결정", summarizeCompactList(simplifyHumanDecisionItems(data.human_decision_gates), 2), true),
@@ -1019,13 +1042,21 @@ export function formatIntakeTaskReviewPayload(result) {
   };
 }
 
-function buildActivationDecisionImpact(isActiveTask) {
+function buildActivationDecisionImpact(isActiveTask, approvalRequest = {}) {
+  const preview = formatChangePreview(approvalRequest.change_preview);
   const lines = [];
   if (!isActiveTask) {
     lines.push("- ActiveTask가 이 작업으로 선택됨");
   }
   lines.push("- 승인 기록이 Backlog/ActiveTask에 남음");
-  lines.push("- PC Runner가 승인된 범위로 시작됨");
+  if (preview.targets.length > 0) {
+    lines.push(`- PC Runner가 다음 대상 중심으로 시작: ${preview.targets.slice(0, 2).join(", ")}`);
+  } else {
+    lines.push("- PC Runner가 승인된 task를 시작함. 대상이 불명확하면 실행 전 보강 필요");
+  }
+  if (preview.intended.length > 0) {
+    lines.push(`- 예상 작업: ${preview.intended.slice(0, 2).join("; ")}`);
+  }
   lines.push("- task done, commit, push는 실행하지 않음");
   return lines.join("\n");
 }
@@ -1202,10 +1233,10 @@ export function formatCompletionCardPayload(result) {
       fields: [
         embedField("요약", [
           completionStateKo(presentation.state),
-          compactText(cleanKo(presentation.summary), 260),
+          compactText(koText(presentation.summary), 260),
           generatedLine,
         ]),
-        embedField("남은 이슈", summarizeCompletionCardIssues(presentation)),
+        embedField("남은 이슈", summarizeCompletionCardIssues(presentation, result.evidence_context)),
         embedField("결정하면 바뀌는 것", buildCompletionDecisionImpact(presentation)),
         actions.length > 0
           ? embedField("다음 행동", actionSummary(actions))
@@ -1318,14 +1349,23 @@ export function formatFinalizationRecordPayload(result) {
   const log = data.finalization_log ?? {};
   const approval = data.approval_record ?? {};
   const source = log.sources?.completion_report ?? {};
+  const taskId = data.task_id ?? log.task_id ?? "unknown";
+  const completionReportId = source.completion_report_id || "";
+  const finalizationLogId = data.finalization_log_id || log.finalization_log_id || "";
+  const actions = buildFinalizationActions({
+    taskId,
+    state: log.finalization_state,
+    completionReportId,
+    finalizationLogId,
+  });
   return {
     content: "",
     embeds: [{
       title: "최종화 기록 완료",
       color: finalizationColor(log.finalization_state),
       description: [
-        `${formatInlineCode(data.finalization_log_id || log.finalization_log_id || "unknown")}`,
-        `${data.task_id ?? log.task_id ?? "unknown"} · ${finalizationStateKo(log.finalization_state)}`,
+        `${formatInlineCode(finalizationLogId || "unknown")}`,
+        `${taskId} · ${finalizationStateKo(log.finalization_state)}`,
         `decision: ${approval.decision ?? log.final_decision ?? "unknown"}`,
       ].join("\n"),
       fields: [
@@ -1334,7 +1374,9 @@ export function formatFinalizationRecordPayload(result) {
           `CompletionReport: ${formatInlineCode(source.completion_report_id || "none")}`,
           `결정자: ${approval.decision_by ?? log.final_decision_by ?? "unknown"}`,
         ]),
-        embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
+        actions.length > 0
+          ? embedField("다음 행동", actionSummary(actions))
+          : embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
         embedField("안전 상태", [
           "task done 처리 안 함",
           "auto approval 생성 안 함",
@@ -1345,6 +1387,7 @@ export function formatFinalizationRecordPayload(result) {
         text: `path: ${data.finalization_log_path || "unknown"}`,
       },
     }],
+    components: buildActionRows(actions),
   };
 }
 
@@ -1355,14 +1398,23 @@ export function formatFinalizationReadPayload(result) {
 
   const data = result.data ?? {};
   const log = data.finalization_log ?? {};
+  const taskId = data.task_id ?? log.task_id ?? "unknown";
+  const completionReportId = log.sources?.completion_report?.completion_report_id || "";
+  const finalizationLogId = data.finalization_log_id || log.finalization_log_id || "";
+  const actions = buildFinalizationActions({
+    taskId,
+    state: log.finalization_state,
+    completionReportId,
+    finalizationLogId,
+  });
   return {
     content: "",
     embeds: [{
       title: "FinalizationLog",
       color: finalizationColor(log.finalization_state),
       description: [
-        `${formatInlineCode(data.finalization_log_id || log.finalization_log_id || "unknown")}`,
-        `${data.task_id ?? log.task_id ?? "unknown"} · ${finalizationStateKo(log.finalization_state)}`,
+        `${formatInlineCode(finalizationLogId || "unknown")}`,
+        `${taskId} · ${finalizationStateKo(log.finalization_state)}`,
       ].join("\n"),
       fields: [
         embedField("결정", [
@@ -1370,7 +1422,9 @@ export function formatFinalizationReadPayload(result) {
           `by: ${log.final_decision_by ?? "unknown"}`,
           `time: ${log.decision_time ?? "unknown"}`,
         ]),
-        embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
+        actions.length > 0
+          ? embedField("다음 행동", actionSummary(actions))
+          : embedField("다음 명령", summarizeCompactList(log.suggested_next_manual_commands, 3)),
         embedField("안전 상태", [
           `state files updated: ${koBool(log.state_files_updated)}`,
           `task done 없음: ${koBool(log.invariants?.no_task_done)}`,
@@ -1381,7 +1435,35 @@ export function formatFinalizationReadPayload(result) {
         text: `path: ${data.finalization_log_path || "unknown"}`,
       },
     }],
+    components: buildActionRows(actions),
   };
+}
+
+function buildFinalizationActions({ taskId, state, completionReportId, finalizationLogId } = {}) {
+  const id = String(taskId ?? "").trim();
+  if (!id || id === "unknown") {
+    return [];
+  }
+
+  const ids = { completionReportId, finalizationLogId };
+  if (state === "changes_requested") {
+    return [
+      workflowAction("runnerRead", id, "결과 보기"),
+      workflowAction("completionCard", id, "완료 카드", { completionReportId, stamp: completionReportId, style: ButtonStyle.Primary }),
+      workflowAction("createFixTask", id, "수정 작업 접수", { finalizationLogId, stamp: finalizationLogId, style: ButtonStyle.Success }),
+      workflowAction("ask", id, "도움"),
+    ];
+  }
+
+  if (state === "completion_rejected" || state === "completion_deferred") {
+    return [
+      workflowAction("runnerRead", id, "결과 보기"),
+      workflowAction("completionCard", id, "완료 카드", { completionReportId, stamp: completionReportId, style: ButtonStyle.Primary }),
+      workflowAction("ask", id, "도움"),
+    ];
+  }
+
+  return [];
 }
 
 export function formatAutoApprovalStatusPayload(result) {
@@ -2102,14 +2184,15 @@ function summarizeCompletionRisks(risks) {
   return values.join("\n");
 }
 
-function summarizeCompletionCardIssues(presentation) {
+function summarizeCompletionCardIssues(presentation, evidenceContext = null) {
   const values = buildIssueSummaryItems({
     failed: presentation?.failed_checks,
     blockers: presentation?.blockers,
     concerns: presentation?.concerns,
     warnings: presentation?.warnings,
     decisions: presentation?.human_decisions,
-  });
+  }, evidenceContext);
+  values.push(...summarizeExecutionEvidenceContext(evidenceContext));
   if (values.length === 0) {
     return "없음";
   }
@@ -2152,13 +2235,13 @@ function prefixItems(prefix, values) {
     .map((value) => `${prefix}: ${value}`);
 }
 
-function buildIssueSummaryItems({ failed, blockers, concerns, warnings, decisions } = {}) {
+function buildIssueSummaryItems({ failed, blockers, concerns, warnings, decisions } = {}, evidenceContext = null) {
   const lines = [];
-  appendIssueGroup(lines, "실패", failed, 2);
-  appendIssueGroup(lines, "차단", blockers, 2);
-  appendIssueGroup(lines, "우려", concerns, 3);
-  appendIssueGroup(lines, "사람 결정", decisions, 2);
-  appendIssueGroup(lines, "참고 경고", warnings, 2, { warning: true });
+  appendIssueGroup(lines, "실패", failed, 2, { evidenceContext });
+  appendIssueGroup(lines, "차단", blockers, 2, { evidenceContext });
+  appendIssueGroup(lines, "우려", concerns, 3, { evidenceContext });
+  appendIssueGroup(lines, "사람 결정", decisions, 2, { evidenceContext });
+  appendIssueGroup(lines, "참고 경고", warnings, 2, { warning: true, evidenceContext });
   return lines;
 }
 
@@ -2190,20 +2273,96 @@ function normalizeCompletionIssue(value, options = {}) {
       return `${formatInlineCode(filePath)} 변경 감지. Backlog/ActiveTask 상태 파일이 diff에 포함됐다는 참고 정보입니다.`;
     }
     if (relation === "outside") {
-      return `${formatInlineCode(filePath)}가 예상 범위 밖 변경으로 감지됨 (${category})`;
+      return `${formatInlineCode(filePath)}가 이번 task의 예상 범위 밖 변경으로 감지됐습니다. 데이터 작업인데 Discord 하네스 파일처럼 다른 영역이 섞였는지 확인해야 합니다. 분류: ${category}`;
     }
     return `${formatInlineCode(filePath)} 변경 감지 (${category})`;
   }
   if (/ExecutionResult observed exit state is mixed/i.test(text)) {
-    return "실행 결과에 성공/실패 신호가 섞여 있어 확인 필요";
+    return "실행 결과에 성공/실패 신호가 섞여 있습니다. 보통 핵심 실행은 실패했지만, 파일 감시나 증거 수집 같은 보조 단계는 성공했을 때 나오는 신호입니다.";
   }
-  if (/failed or cancelled session/i.test(text)) {
-    return "실패 또는 취소된 실행 세션이 있어 확인 필요";
+  const failedSession = text.match(/failed or cancelled session\(s\):\s*([A-Za-z0-9_.-]+)/i);
+  if (failedSession) {
+    const sessionId = failedSession[1].replace(/[.,;:)]+$/g, "");
+    return findSessionContext(options.evidenceContext, sessionId)
+      ? ""
+      : explainFailedSession(sessionId, options.evidenceContext);
+  }
+  if (/Review concerns and either accept risk, request fixes, or create a follow-up/i.test(text)) {
+    return "우려를 읽고 결정해야 합니다. 받아들일 수 있으면 우려 감수 후 완료, 고쳐야 하면 수정 요청, 별도 작업이면 후속 작업으로 분리합니다.";
+  }
+  if (/Review diff attention signals before accepting the task/i.test(text)) {
+    return "완료로 인정하기 전에 변경 파일 신호를 확인해야 합니다. 작업 범위 밖 파일이 섞였는지 보는 단계입니다.";
+  }
+  if (/Review execution-result concerns before accepting the task/i.test(text)) {
+    return "완료로 인정하기 전에 실행 실패/취소 신호를 확인해야 합니다. 실제 작업 실행이 끝까지 성공했는지 보는 단계입니다.";
   }
   if (options.warning) {
     return text.replace(/^warning:\s*/i, "");
   }
-  return text;
+  return koText(text);
+}
+
+function summarizeExecutionEvidenceContext(evidenceContext) {
+  const sessions = Array.isArray(evidenceContext?.sessions) ? evidenceContext.sessions : [];
+  const failedSessions = sessions.filter((session) => ["failed", "cancelled", "canceled"].includes(String(session.status).toLowerCase()));
+  if (failedSessions.length === 0) {
+    return [];
+  }
+
+  const lines = ["- 실행 실패 상세"];
+  for (const session of failedSessions.slice(0, 2)) {
+    lines.push(`  - ${describeSessionFailure(session)}`);
+    const cause = summarizeSessionCause(session);
+    if (cause) {
+      lines.push(`  - 원인 신호: ${cause}`);
+    }
+  }
+  if (failedSessions.length > 2) {
+    lines.push(`  - +${failedSessions.length - 2}개 세션 더 있음`);
+  }
+  return lines;
+}
+
+function explainFailedSession(sessionId, evidenceContext = null) {
+  const id = String(sessionId ?? "");
+  const session = findSessionContext(evidenceContext, id);
+  if (session) {
+    return describeSessionFailure(session);
+  }
+  const executor = id.includes("codex-cli")
+    ? "Codex CLI가 실제 수정 지시를 실행하던 작업"
+    : id.includes("local-cli")
+    ? "로컬 검증 명령을 실행하던 작업"
+    : "Runner가 맡긴 실행 작업";
+  return `${executor}이 실패 또는 취소되었습니다. 이 말은 결과 보고서 생성은 되었지만, 핵심 실행이 끝까지 성공했다고 보기 어렵다는 뜻입니다. 세부 원인은 '결과 보기'에서 stdout/stderr 로그를 확인해야 합니다. 세션: ${formatInlineCode(id)}`;
+}
+
+function findSessionContext(evidenceContext, sessionId) {
+  const sessions = Array.isArray(evidenceContext?.sessions) ? evidenceContext.sessions : [];
+  return sessions.find((session) => session.session_id === sessionId) || null;
+}
+
+function describeSessionFailure(session = {}) {
+  const executor = String(session.executor_type ?? "");
+  const status = String(session.status ?? "unknown");
+  const exitCode = session.exit_code === null || session.exit_code === undefined ? "unknown" : session.exit_code;
+  const action = executor === "codex_cli"
+    ? "Codex CLI가 실제 수정 지시를 읽고 실행하던 단계"
+    : executor === "local_cli"
+    ? "로컬 검증 명령을 실행하던 단계"
+    : "Runner가 맡긴 실행 단계";
+  return `${action}가 ${status} 상태로 끝났습니다. 종료 코드: ${exitCode}. 세션: ${formatInlineCode(session.session_id || "unknown")}`;
+}
+
+function summarizeSessionCause(session = {}) {
+  const stderr = String(session.stderr_summary ?? "").trim();
+  if (!stderr) {
+    return String(session.last_activity ?? "").trim();
+  }
+  if (/not valid UTF-8|invalid byte|UTF-8/i.test(stderr)) {
+    return "Codex가 작업 지시 프롬프트를 UTF-8로 읽지 못해 시작 단계에서 멈췄습니다. 실제 수정이 정상 완료된 신호가 아닙니다.";
+  }
+  return compactText(stderr, 220);
 }
 
 function finalizationColor(state) {
@@ -2607,6 +2766,7 @@ export function workflowAction(action, taskId, label, options = {}) {
   const stamp = options.stamp
     || options.policyEvaluationId
     || options.followUpPlanId
+    || options.finalizationLogId
     || extractRunStamp(options.runnerRunId)
     || extractRunStamp(options.completionReportId);
   return {
@@ -2672,10 +2832,11 @@ function describeActionLabel(label) {
     "승인+실행": "작업 선택, 승인 기록, PC Runner 시작",
     "다시 시작": "같은 작업으로 Runner 시작 재시도",
     "상태": "현재 Runner 상태만 확인",
-    "결과 보기": "Runner 기록과 생성된 보고서 확인",
+    "결과 보기": "실제로 무엇을 실행했고 어떤 로그/보고서가 생겼는지 확인",
     "완료 카드": "완료 판정과 남은 이슈 확인",
     "완료 승인": "검증 결과를 받아들이고 task done 처리. 커밋/푸시는 별도",
     "수정 요청": "task를 완료하지 않고 수정 필요로 기록",
+    "수정 작업 접수": "방금 수정 요청된 내용을 새 focused fix task로 접수",
     "우려 감수 후 완료": "우려를 확인했다는 기록을 남기고 task done 처리. 폐기/우회 아님",
     "판단 보류": "task를 완료하지 않고 판단을 나중으로 미룸",
     "자동승인 평가": "자동 승인 정책 결과 확인",

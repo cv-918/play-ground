@@ -121,6 +121,13 @@ const TEXT_REPLACEMENTS = new Map([
   ["Human Decision Gate: high-risk schema/save/runtime/external-tool/destructive scope must be explicitly approved before implementation.", "사람 결정 gate: high-risk schema/save/runtime/external-tool/destructive 범위는 구현 전에 명시적으로 승인되어야 합니다."],
   ["general validation pass", "일반 검증 통과"],
   ["Resolve the blocker or failed result before marking done.", "done 처리 전에 blocker 또는 실패 결과를 해결하세요."],
+  ["Verification reported concerns. Human Director decision is required before completion.", "검증 결과에 우려가 있어 완료 전 사람 결정이 필요합니다."],
+  ["Review concerns and either accept risk, request fixes, or create a follow-up.", "우려를 읽고 결정하세요. 감수할 수 있으면 우려 감수 후 완료, 고쳐야 하면 수정 요청, 별도 작업이면 후속 작업으로 분리합니다."],
+  ["Review diff attention signals before accepting the task.", "완료로 인정하기 전에 변경 파일 신호를 확인하세요. 작업 범위 밖 파일이 섞였는지 보는 단계입니다."],
+  ["Review execution-result concerns before accepting the task.", "완료로 인정하기 전에 실행 실패/취소 신호를 확인하세요. 실제 작업 실행이 끝까지 성공했는지 보는 단계입니다."],
+  ["Human Director should review concerns before accepting completion or commit.", "완료나 커밋 전에 Human Director가 우려 사항을 검토해야 합니다."],
+  ["Do not mark this task done yet.", "아직 이 작업을 done 처리하지 마세요."],
+  ["Regenerate VerificationReport and CompletionReport after fixes or added evidence.", "수정하거나 근거를 보강한 뒤 VerificationReport와 CompletionReport를 다시 생성하세요."],
 ]);
 
 export function koStatus(value) {
@@ -184,6 +191,10 @@ export function koText(value) {
     .replaceAll("Run Debug x64 build and manual runtime validation when gameplay/runtime behavior changes.", "gameplay/runtime behavior가 바뀐 경우 Debug x64 build와 manual runtime validation을 실행하세요.")
     .replaceAll("Review git diff and commit manually only after validation is accepted.", "검증이 받아들여진 뒤에만 git diff를 검토하고 수동 commit하세요.")
     .replaceAll("Run missing validation manually, then paste updated evidence into /ai result audit.", "누락된 검증을 수동으로 실행한 뒤 갱신된 근거를 `/ai result audit`에 붙여 넣으세요.")
+    .replaceAll("Verification reported concerns. Human Director decision is required before completion.", "검증 결과에 우려가 있어 완료 전 사람 결정이 필요합니다.")
+    .replaceAll("Review concerns and either accept risk, request fixes, or create a follow-up.", "우려를 읽고 결정하세요. 감수할 수 있으면 우려 감수 후 완료, 고쳐야 하면 수정 요청, 별도 작업이면 후속 작업으로 분리합니다.")
+    .replaceAll("Review diff attention signals before accepting the task.", "완료로 인정하기 전에 변경 파일 신호를 확인하세요. 작업 범위 밖 파일이 섞였는지 보는 단계입니다.")
+    .replaceAll("Review execution-result concerns before accepting the task.", "완료로 인정하기 전에 실행 실패/취소 신호를 확인하세요. 실제 작업 실행이 끝까지 성공했는지 보는 단계입니다.")
     .replace(/Compact goal request is (\d+) characters; target is below (\d+)\./g, "compact goal 요청서가 $1자입니다. 목표는 $2자 미만입니다.")
     .replace(/(\d+) claimed file\(s\) changed\./g, "$1개 변경 파일이 있다고 보고했습니다.");
 }

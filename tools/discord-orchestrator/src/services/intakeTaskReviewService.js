@@ -173,7 +173,128 @@ function buildApprovalRequest(task, readiness, riskLevel, humanGates) {
     reasons: reasonLines,
     approving: buildApprovalScope(task),
     not_approving: buildApprovalNonGoals(task),
+    change_preview: buildChangePreview(task),
   };
+}
+
+function buildChangePreview(task) {
+  const text = taskText(task);
+  const kind = String(task.kind ?? "").toLowerCase();
+  const inferredFiles = inferFiles(text);
+  const changes = inferChangeTypes(text, kind);
+  const noChanges = inferNoChangeClaims(text);
+  const explicitNonGoals = buildApprovalNonGoals(task);
+  const validation = inferValidation(task);
+
+  return {
+    target_files: inferredFiles,
+    intended_changes: changes,
+    no_change_claims: noChanges,
+    non_goals: explicitNonGoals,
+    validation,
+    confidence: inferredFiles.length > 0 || changes.length > 0 ? "medium" : "low",
+    source_note: "Backlog title/reason/validation에서 추출한 승인 전 예상 변경 요약입니다. 비어 있거나 틀리면 승인 전에 task를 수정해야 합니다.",
+  };
+}
+
+function taskText(task) {
+  return [
+    task.id,
+    task.item,
+    task.reason,
+    task.validation,
+    task.tool_route,
+    task.kind,
+  ].filter(Boolean).join(" ");
+}
+
+function inferFiles(text) {
+  const values = new Set();
+  const patterns = [
+    /\b[A-Za-z0-9_./\\-]+\.(?:json|md|html|js|ts|cpp|h|hpp|cs|sln|vcxproj|props|targets)\b/g,
+    /\b[A-Za-z0-9_./\\-]+\/[A-Za-z0-9_./\\-]+\b/g,
+    /\b(?:FinalizationLog|CompletionReport|VerificationReport)\s+([A-Za-z0-9_.-]+)\b/g,
+    /\b(?:finalization|completion|verification)-[A-Za-z0-9_.-]+\b/g,
+  ];
+  for (const pattern of patterns) {
+    for (const match of String(text ?? "").matchAll(pattern)) {
+      const raw = match[1] || match[0];
+      const value = raw.replaceAll("\\", "/").replace(/[.,;:)]+$/g, "");
+      if (
+        value.length >= 4
+        && !/^(and|or|the|with|from|then)$/i.test(value)
+        && !value.startsWith("_Temp/")
+        && !value.startsWith("node_modules/")
+      ) {
+        values.add(value);
+      }
+    }
+  }
+  return [...values].slice(0, 6);
+}
+
+function inferChangeTypes(text, kind) {
+  const source = String(text ?? "");
+  const lines = [];
+  const schemaMentionIsNonGoal = /no schema|without .*schema|schema 변경 없음|스키마 변경 없음|do not change .*schemas?|command schemas?.*(?:not|no|금지|변경하지)/i.test(source);
+  if (/schema|스키마/i.test(source)) {
+    addUnique(lines, schemaMentionIsNonGoal
+      ? "schema 변경 없음 확인"
+      : "schema 구조/필드 의미 변경 가능성");
+  }
+  if (/data|json|GameData|Skill\.json|PlayableCharacter\.json|AttributeNode\.json/i.test(source) || kind === "data") {
+    addUnique(lines, "JSON/data 값, ID/reference, 기본값, 무결성 확인 또는 최소 수정");
+  }
+  if (/loader|GameDataLoader|readability|parse|load/i.test(source)) {
+    addUnique(lines, "data loader 읽기/파싱/참조 검증");
+  }
+  if (/runtime|behavior|gameplay|save|stage_progress|node/i.test(source)) {
+    addUnique(lines, "runtime/save/load 동작 영향 가능성 확인");
+  }
+  if (/Discord|command|slash|button|card|responseFormatter|workflow|FinalizationLog|CompletionReport/i.test(source)) {
+    addUnique(lines, "Discord workflow 카드/버튼/보고서 흐름 수정 또는 검증");
+  }
+  if (/documentation|doc|guide|html|md/i.test(source) || kind === "documentation") {
+    addUnique(lines, "문서/가이드 설명 갱신");
+  }
+  if (/build|Debug x64|MSBuild|Visual Studio/i.test(source)) {
+    addUnique(lines, "Debug x64 build 검증");
+  }
+  if (/fix only|focused fix|request_changes/i.test(source)) {
+    addUnique(lines, "request_changes 원인만 고치는 focused fix");
+  }
+  return lines.slice(0, 6);
+}
+
+function inferNoChangeClaims(text) {
+  const source = String(text ?? "");
+  const lines = [];
+  if (/no unrelated|unrelated files|관련 없는/i.test(source)) addUnique(lines, "관련 없는 파일 변경 없음");
+  if (/no schema|without .*schema|schema 변경 없음|스키마 변경 없음|do not change .*schemas?|command schemas?.*(?:not|no|금지|변경하지)/i.test(source)) addUnique(lines, "schema 변경 없음");
+  if (/no source|without .*source|소스.*변경 없이/i.test(source)) addUnique(lines, "source 변경 없음");
+  if (/no data|without .*data|데이터.*변경 없이/i.test(source)) addUnique(lines, "data 변경 없음");
+  if (/no runtime|without .*runtime|runtime 변경 없음|런타임 변경 없음/i.test(source)) addUnique(lines, "runtime 동작 변경 없음");
+  if (/no commit|commit.*없|push.*없|commit,? or push/i.test(source)) addUnique(lines, "commit/push 없음");
+  if (/no task lifecycle|task lifecycle state/i.test(source)) addUnique(lines, "Backlog/ActiveTask lifecycle 직접 변경 없음");
+  return lines.slice(0, 6);
+}
+
+function inferValidation(task) {
+  const source = String(task.validation || task.reason || "");
+  const values = [];
+  for (const sentence of source.split(/(?:\.|;|\n)+/)) {
+    const trimmed = sentence.trim();
+    if (/git status|git diff|VerificationReport|CompletionReport|JSON|GameDataLoader|Debug x64|build|runtime|loader|smoke/i.test(trimmed)) {
+      addUnique(values, trimmed);
+    }
+  }
+  return values.slice(0, 5);
+}
+
+function addUnique(values, value) {
+  if (value && !values.includes(value)) {
+    values.push(value);
+  }
 }
 
 function buildApprovalScope(task) {

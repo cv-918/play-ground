@@ -1,7 +1,9 @@
 import { getPcRunnerStatus } from "./pcRunnerService.js";
+import { getFinalizationStatus, readFinalizationLog } from "./finalizationService.js";
 import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
 
 const TASK_ID_PATTERN = /\b(WF|GAME|DOC|VAL|UNITY)-[A-Za-z0-9][A-Za-z0-9_.-]*\b/i;
+const SPACED_TIMESTAMP_TASK_ID_PATTERN = /\b(WF|GAME|DOC|VAL|UNITY)\s*-?\s*([0-9]{8})\s+([0-9]{6})\b/i;
 const COMPACT_TASK_ID_PATTERN = /\b(WF|GAME|DOC|VAL|UNITY)\s*-?\s*([0-9][A-Za-z0-9_.-]*)\b/i;
 const KOREAN_TASK_ID_PATTERN = /(\uac8c\uc784|\ubb38\uc11c|\uac80\uc99d|\uc6cc\ud06c\ud50c\ub85c\uc6b0|\uc6cc\ud06c|\uc720\ub2c8\ud2f0)\s*-?\s*([0-9][A-Za-z0-9_.-]*)/iu;
 const KOREAN_TASK_PREFIXES = new Map([
@@ -76,11 +78,19 @@ export async function navigateWorkflow(config, input = {}) {
 
 async function buildTaskNavigation(config, question, concept, task) {
   const runnerStatus = await safeRunnerStatus(config, task.id);
+  const finalization = await safeLatestFinalization(config, task.id);
   const runData = runnerStatus?.data ?? {};
   const run = runData.runner_run ?? runData.latest_runner_run ?? {};
   const reports = runData.report_ids ?? run.report_ids ?? {};
   const stopReason = runData.stop_reason || run.human_gate_state?.stop_reason || "";
-  const effectiveConcept = stopReason && concept === "task_next" ? stopReason : concept;
+  const finalizationState = finalization?.log?.finalization_state || "";
+  const effectiveConcept = concept === "task_info"
+    ? "task_info"
+    : finalizationState === "changes_requested" && concept === "task_next"
+    ? "changes_requested"
+    : stopReason && concept === "task_next"
+    ? stopReason
+    : concept;
 
   return {
     ok: true,
@@ -94,8 +104,15 @@ async function buildTaskNavigation(config, question, concept, task) {
         runner_run_id: runData.runner_run_id || run.runner_run_id || "",
         reports,
       },
-      answer: buildAnswer({ task, concept: effectiveConcept, stopReason, runnerOk: runnerStatus?.ok === true }),
-      actions: buildActions({ task, stopReason, reports, runnerRunId: runData.runner_run_id || run.runner_run_id || "" }),
+      finalization,
+      answer: buildAnswer({ task, concept: effectiveConcept, stopReason, runnerOk: runnerStatus?.ok === true, finalization }),
+      actions: buildActions({
+        task,
+        stopReason,
+        reports,
+        runnerRunId: runData.runner_run_id || run.runner_run_id || "",
+        finalization,
+      }),
     },
   };
 }
@@ -134,9 +151,21 @@ function buildActiveMetadataNavigation(question, metadata) {
   };
 }
 
-function buildAnswer({ task, concept, stopReason, runnerOk }) {
+function buildAnswer({ task, concept, stopReason, runnerOk, finalization = null }) {
   if (isStopReasonConcept(concept)) {
     return buildStopReasonAnswer(concept, task);
+  }
+  if (concept === "task_info") {
+    return buildTaskInfoAnswer(task, stopReason, finalization);
+  }
+  if (concept === "changes_requested") {
+    return {
+      meaning: "완료 검토에서 수정 요청이 기록된 상태입니다.",
+      remaining: "원 작업을 done/commit으로 넘기지 말고, 요청된 문제만 고치는 focused fix task를 만들어야 합니다.",
+      next_action: "수정 작업 접수를 누르세요. 새 fix task가 생성되고 기존 승인/실행 정책을 다시 탑니다.",
+      caution: "수정 작업 접수는 바로 파일을 고치지 않습니다. 새 task를 만들 뿐이며, 위험하면 다시 사람 승인에서 멈춥니다.",
+      evidence: finalization?.id ? `FinalizationLog ${finalization.id}` : compactEvidence(task.validation || task.reason),
+    };
   }
   if (isVerdictConcept(concept)) {
     return buildVerdictAnswer(concept, task);
@@ -210,6 +239,67 @@ function buildGenericAnswer(concept) {
     caution: "/ai ask는 설명만 제공하고 작업 상태를 변경하지 않습니다.",
     evidence: "",
   };
+}
+
+function buildTaskInfoAnswer(task, stopReason = "", finalization = null) {
+  return {
+    meaning: `${task.id}는 "${task.item}" 작업입니다.`,
+    remaining: summarizeTaskPurpose(task),
+    next_action: stopReason === "completion_review_required"
+      ? "완료 카드에서 남은 이슈를 보고 완료 승인, 수정 요청, 우려 감수 후 완료 중 하나를 고르세요."
+      : finalization?.state === "changes_requested"
+      ? "수정 요청이 이미 기록되어 있습니다. 수정 작업 접수 버튼으로 focused fix task를 만드세요."
+      : inferNextActionFromTask(task),
+    caution: buildApprovalCaution(task),
+    evidence: compactEvidence(task.validation || task.reason),
+  };
+}
+
+function summarizeTaskPurpose(task) {
+  const taskSummary = inferHumanTaskSummary(task);
+  if (taskSummary) {
+    return taskSummary;
+  }
+
+  const reason = compactEvidence(task.reason);
+  const validation = compactEvidence(task.validation);
+  return [
+    reason ? `목적: ${reason}` : "",
+    validation ? `검증/기록: ${validation}` : "",
+  ].filter(Boolean).join("\n") || "Backlog에 기록된 목적을 확인해야 합니다.";
+}
+
+function inferHumanTaskSummary(task) {
+  const text = [task.item, task.reason, task.validation].filter(Boolean).join(" ");
+  const lines = [];
+
+  if (/completion[-\s]?review|request_changes|FinalizationLog/i.test(text)) {
+    lines.push("목적: 이전 완료 검토에서 '수정 필요'로 기록된 문제만 고치는 후속 작업입니다.");
+    const originalTask = text.match(/\b(?:for|outcome for)\s+((?:WF|GAME|DOC|VAL|UNITY)-[A-Za-z0-9_.-]+)/i);
+    if (originalTask) {
+      lines.push(`원래 작업: ${originalTask[1]}`);
+    }
+    const finalization = text.match(/\b(finalization-[A-Za-z0-9_.-]+)\b/i);
+    if (finalization) {
+      lines.push(`근거 기록: ${finalization[1]}`);
+    }
+    const completion = text.match(/\b(completion-(?:wf|game|doc|val|unity)-[A-Za-z0-9_.-]+)\b/i);
+    if (completion) {
+      lines.push(`확인할 완료 보고서: ${completion[1]}`);
+    }
+  }
+
+  if (/schema/i.test(text) && /do not|no schema|without/i.test(text)) {
+    lines.push("금지: schema 변경은 포함되지 않습니다.");
+  }
+  if (/unrelated|command schema|task lifecycle|commit|push/i.test(text)) {
+    lines.push("금지: 관련 없는 파일 변경, 명령 schema 변경, task 상태 변경, commit/push는 포함되지 않습니다.");
+  }
+  if (/VerificationReport|CompletionReport/i.test(text)) {
+    lines.push("완료 기준: 수정 뒤 VerificationReport와 CompletionReport를 다시 만들어 확인합니다.");
+  }
+
+  return lines.join("\n");
 }
 
 function buildStopReasonAnswer(stopReason, task = null) {
@@ -290,9 +380,22 @@ function buildVerdictAnswer(verdict, task = null) {
   return buildGenericAnswer("task_next");
 }
 
-function buildActions({ task, stopReason, reports = {}, runnerRunId = "" }) {
+function buildActions({ task, stopReason, reports = {}, runnerRunId = "", finalization = null }) {
   const status = String(task.status ?? "").toLowerCase();
   const priority = String(task.priority ?? "").toUpperCase();
+  if (finalization?.state === "changes_requested") {
+    const finalizationLogId = finalization.id || "";
+    const completionReportId = finalization.completion_report_id || reports.completion_report_id || "";
+    return ["runnerRead", "completionCard", "createFixTask", "ask"].map((name) => ({
+      name,
+      reports: {
+        ...reports,
+        completion_report_id: completionReportId,
+      },
+      runnerRunId,
+      finalizationLogId,
+    }));
+  }
   if (stopReason === "completion_review_required") {
     return ["runnerRead", "completionCard", "acceptDone", "requestChanges", "acceptConcernsDone"].map((name) => ({
       name,
@@ -320,6 +423,8 @@ function buildActions({ task, stopReason, reports = {}, runnerRunId = "" }) {
 
 function detectConcept(question) {
   const text = String(question ?? "").toLowerCase();
+  if (/무슨\s*작업|무슨\s*내용|내용이\s*뭐|뭐야|뭔\s*작업|what.*task|what.*about/i.test(text)) return "task_info";
+  if (text.includes("changes_requested") || text.includes("수정 요청") || text.includes("수정요청")) return "changes_requested";
   if (text.includes("completion_review_required")) return "completion_review_required";
   if (text.includes("done_or_commit_decision")) return "done_or_commit_decision";
   if (text.includes("approval_required")) return "approval_required";
@@ -345,6 +450,11 @@ function extractTaskId(text) {
     return prefix ? `${prefix}-${korean[2]}` : "";
   }
 
+  const spacedTimestamp = source.match(SPACED_TIMESTAMP_TASK_ID_PATTERN);
+  if (spacedTimestamp) {
+    return `${spacedTimestamp[1].toUpperCase()}-${spacedTimestamp[2]}-${spacedTimestamp[3]}`;
+  }
+
   const compact = source.match(COMPACT_TASK_ID_PATTERN);
   if (compact) {
     return `${compact[1].toUpperCase()}-${compact[2]}`;
@@ -363,6 +473,29 @@ function normalizeTaskId(value) {
 
 function isStopReasonConcept(value) {
   return ["approval_required", "completion_review_required", "done_or_commit_decision"].includes(String(value ?? ""));
+}
+
+async function safeLatestFinalization(config, taskId) {
+  const status = await getFinalizationStatus(config, { id: taskId });
+  if (!status.ok) {
+    return null;
+  }
+
+  const latest = status.data?.task_run_finalization_log ?? {};
+  const finalizationLogId = latest.latest_finalization_log_id || status.data?.latest_finalization_log_id || "";
+  if (!finalizationLogId) {
+    return null;
+  }
+
+  const read = await readFinalizationLog(config, { id: taskId, finalizationLogId });
+  const log = read.ok ? read.data?.finalization_log ?? {} : {};
+  return {
+    id: finalizationLogId,
+    state: latest.latest_finalization_state || log.finalization_state || "",
+    decision: latest.latest_final_decision || log.final_decision || "",
+    completion_report_id: log.sources?.completion_report?.completion_report_id || "",
+    log,
+  };
 }
 
 function isVerdictConcept(value) {

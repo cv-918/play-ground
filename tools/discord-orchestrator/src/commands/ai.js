@@ -1250,6 +1250,16 @@ export async function handleAiButton(interaction, config) {
     return;
   }
 
+  if (action.name === "createFixTask") {
+    const finalization = action.finalizationLogId
+      ? await readFinalizationLog(config, { id: action.taskId, finalizationLogId: action.finalizationLogId })
+      : null;
+    await interaction.editReply(formatIntakeTaskCreatedPayload(await createTaskFromIntake(config, {
+      text: buildFocusedFixIntakeText(action, finalization?.data?.finalization_log),
+    })));
+    return;
+  }
+
   if (action.name === "autoApprovalRead") {
     await interaction.editReply(formatAutoApprovalReadPayload(await readAutoApprovalPolicy(config, {
       id: action.taskId,
@@ -1351,6 +1361,7 @@ function parseWorkflowButton(customId) {
     completionReportId: parseActionArtifactId(stamp, "completion", taskId),
     policyEvaluationId: parseActionArtifactId(stamp, "autoeval", taskId),
     followUpPlanId: parseActionArtifactId(stamp, "followup", taskId),
+    finalizationLogId: parseActionArtifactId(stamp, "finalization", taskId),
   };
 }
 
@@ -1363,6 +1374,19 @@ function parseActionArtifactId(stamp, prefix, taskId) {
     return value;
   }
   return `${prefix}-${String(taskId ?? "").toLowerCase()}-${value}`;
+}
+
+function buildFocusedFixIntakeText(action, finalizationLog = null) {
+  const completionReportId = finalizationLog?.sources?.completion_report?.completion_report_id || action.completionReportId;
+  const parts = [
+    `WF fix task: Address the completion review changes requested for ${action.taskId}.`,
+    action.finalizationLogId ? `Use FinalizationLog ${action.finalizationLogId} as the source of the request_changes decision.` : "",
+    completionReportId ? `Review CompletionReport ${completionReportId} before changing files.` : "",
+    "Fix only the issue that caused request_changes.",
+    "Do not change unrelated files, command schemas, task lifecycle state, commit, or push.",
+    "After the fix, regenerate VerificationReport and CompletionReport.",
+  ].filter(Boolean);
+  return parts.join(" ");
 }
 
 async function handleAskCommand(interaction, config) {
@@ -1437,6 +1461,13 @@ function buildNavigatorActionRows(data) {
         return workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary });
       case "acceptConcernsDone":
         return workflowAction("acceptConcernsDone", taskId, "우려 감수 후 완료", { ...ids, style: ButtonStyle.Danger });
+      case "createFixTask":
+        return workflowAction("createFixTask", taskId, "수정 작업 접수", {
+          ...ids,
+          finalizationLogId: typeof action === "string" ? "" : action.finalizationLogId,
+          stamp: typeof action === "string" ? "" : action.finalizationLogId,
+          style: ButtonStyle.Success,
+        });
       case "gitCommitPush":
         return gitCommitPushAction();
       case "ask":

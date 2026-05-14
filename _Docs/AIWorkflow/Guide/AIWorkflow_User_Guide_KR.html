@@ -275,7 +275,7 @@
   <div class="page">
     <header>
       <h1>AIWorkflow 사용자 가이드</h1>
-      <p class="meta">Discord 중심 PC Runner 기반 AI 개발 워크플로우 운영 가이드 · 2026-05-13</p>
+      <p class="meta">Discord 중심 PC Runner 기반 AI 개발 워크플로우 운영 가이드 · 2026-05-14</p>
     </header>
     <div class="layout">
       <nav aria-label="목차">
@@ -468,9 +468,10 @@
           <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션은 짧은 bullet로 표시됩니다. 확인할 것은 세 가지입니다.</p>
           <ul>
             <li>왜 사람 승인이 필요한가?</li>
-            <li>승인하면 어디까지 실행되는가?</li>
+            <li>승인하면 어떤 파일/영역에 어떤 변경을 시도하는가?</li>
             <li>승인하지 않는 범위는 무엇인가?</li>
           </ul>
+          <p>승인 카드의 <strong>승인하면 하네스가 시도할 변경</strong>과 <strong>대상/근거</strong>가 비어 있거나 모호하면 승인하지 말고, 먼저 <code>/ai ask</code>로 물어보거나 task 내용을 보강합니다. “task 범위 안에서” 같은 표현만으로는 충분한 승인 근거가 아닙니다.</p>
           <p><code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
           <p>범위를 검토했고 권장안대로 착수해도 된다면 <code>/ai task approve-runner id:&lt;task_id&gt;</code> 하나로 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 함께 처리할 수 있습니다.</p>
 
@@ -553,6 +554,7 @@
               <tr><td>Runner 확인</td><td>상태, 결과 보기</td><td><code>/ai runner status/read</code></td></tr>
               <tr><td>완료 검토</td><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
               <tr><td>완료 판단</td><td>완료 승인, 우려 감수 후 완료, 수정 요청, 판단 보류</td><td>완료 카드 버튼</td></tr>
+              <tr><td>수정 요청 이후</td><td>수정 작업 접수</td><td><code>/ai ask id:&lt;task_id&gt; text:다음에 뭐해?</code></td></tr>
               <tr><td>커밋/푸시</td><td>커밋+푸시, 커밋+푸시 확정</td><td><code>/ai git commit-push</code></td></tr>
               <tr><td>고급/복구</td><td>보통 사용 안 함</td><td>slash 검색에 숨김. 버튼/내부 복구 경로</td></tr>
             </tbody>
@@ -587,6 +589,9 @@
           </ol>
           <p><code>PASS_WITH_NOTES</code>는 검증 통과에 가까운 상태지만 자동 완료 신호는 아닙니다. notes를 사람이 읽고 받아들일 수 있을 때만 완료 승인 또는 우려 감수 후 완료로 진행합니다.</p>
           <p>완료 카드 버튼은 명령어 복붙 대신 쓰는 기본 UI입니다. <strong>완료 승인</strong>은 accept와 task done을 처리하고, <strong>수정 요청</strong>은 request-changes를 기록하며, <strong>판단 보류</strong>는 defer를 기록합니다. <code>CONCERNS</code>가 있지만 blocker나 failed check가 없고 사람이 우려를 감수하기로 결정했다면 <strong>우려 감수 후 완료</strong>를 사용합니다. 이 결정은 작업을 폐기하거나 우려를 우회하는 뜻이 아니라, 우려를 확인했다는 기록을 남기고 task done으로 넘기는 뜻입니다.</p>
+          <p><strong>결과 보기</strong>는 Runner가 실제로 무엇을 실행했고 어떤 로그, 세션, 보고서를 만들었는지 확인하는 버튼입니다. <strong>완료 카드</strong>는 그 결과를 사람이 완료로 받아들일 수 있는지 판단하기 위한 요약 카드입니다. 문제가 생기면 먼저 결과 보기로 원인을 보고, 완료 카드에서 완료 승인/수정 요청/우려 감수 여부를 결정합니다.</p>
+          <p>완료 카드의 <strong>남은 이슈</strong>에는 실패 또는 취소된 실행 세션이 사람 말로 표시됩니다. 예를 들어 Codex CLI가 프롬프트를 UTF-8로 읽지 못해 시작 단계에서 실패한 경우, “Codex CLI가 실제 수정 지시를 읽고 실행하던 단계가 실패했고, 작업 지시 프롬프트 인코딩 때문에 멈췄다”처럼 원인 신호를 함께 확인합니다.</p>
+          <p><strong>수정 요청</strong>을 누른 뒤에는 task done이나 commit/push로 가지 않습니다. 최종화 카드의 <strong>수정 작업 접수</strong> 버튼을 눌러 방금 request_changes가 난 CompletionReport/FinalizationLog 기준의 focused fix task를 새로 접수합니다.</p>
           <p><code>/ai auto-approval apply</code>는 기본 설정에서 차단됩니다. 나중에 apply 설정이 켜지고 정책 평가가 자동 적용 가능 상태를 낼 때만 task done을 적용할 수 있으며, commit/push는 계속 별도 결정입니다.</p>
           <table>
             <thead>
@@ -634,8 +639,10 @@
           <h2>막혔을 때</h2>
           <p>상태 이름이나 다음 버튼이 헷갈리면 먼저 <code>/ai ask text:&lt;질문&gt;</code>을 사용합니다. 특정 작업을 물어볼 때는 <code>/ai ask id:&lt;task_id&gt; text:&lt;질문&gt;</code>처럼 작업 ID를 함께 넣습니다.</p>
           <pre><code>/ai ask text:GAME-001 partial_done이면 다음에 뭐해?
-/ai ask text:completion_review_required면 뭐 눌러?</code></pre>
-          <p>작업 ID는 <code>GAME-001</code>, <code>GAME001</code>, <code>게임001</code>, <code>게임-001</code>처럼 입력할 수 있습니다. 한글 별칭은 게임/GAME, 문서/DOC, 검증/VAL, 워크/WF, 유니티/UNITY로 해석됩니다.</p>
+/ai ask text:completion_review_required면 뭐 눌러?
+/ai ask text:game 20260514 172323 이 무슨 작업이야?</code></pre>
+          <p>작업 ID는 <code>GAME-001</code>, <code>GAME001</code>, <code>게임001</code>, <code>게임-001</code>, <code>game 20260514 172323</code>처럼 입력할 수 있습니다. 한글 별칭은 게임/GAME, 문서/DOC, 검증/VAL, 워크/WF, 유니티/UNITY로 해석됩니다.</p>
+          <p>“무슨 작업이야?”라고 물으면 하네스는 단순 상태가 아니라 작업 목적, 원래 작업, 근거 FinalizationLog/CompletionReport, 금지 범위, 다음 행동을 짧게 설명해야 합니다.</p>
           <table>
             <thead>
               <tr><th>상태</th><th>해야 할 일</th></tr>
