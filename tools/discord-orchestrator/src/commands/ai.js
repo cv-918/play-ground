@@ -93,6 +93,15 @@ const RUNNER_EXECUTOR_CHOICES = ["local_cli", "codex_cli"].map((value) => ({ nam
 const RUNNER_COMPLETION_DECISION_CHOICES = ["accept", "accept-concerns"].map((value) => ({ name: value, value }));
 
 export function buildAiCommand() {
+  return {
+    name: "ai",
+    toJSON() {
+      return pruneAiCommandJson(buildFullAiCommand().toJSON());
+    },
+  };
+}
+
+function buildFullAiCommand() {
   return new SlashCommandBuilder()
     .setName("ai")
     .setDescription("AIWorkflow 상태와 작업 명령을 실행합니다")
@@ -988,6 +997,55 @@ export function buildAiCommand() {
             ),
         ),
     );
+}
+
+const PUBLIC_COMMAND_PATHS = new Set([
+  "status",
+  "docs",
+  "intake",
+  "intake-engine status",
+  "bot status",
+  "bot restart",
+  "runner status",
+  "runner read",
+  "completion card",
+  "task review-intake",
+  "task approve-runner",
+  "git commit",
+  "git push",
+  "git commit-push",
+]);
+
+function pruneAiCommandJson(commandJson) {
+  return {
+    ...commandJson,
+    options: pruneOptions(commandJson.options ?? []),
+  };
+}
+
+function pruneOptions(options) {
+  const visible = [];
+  for (const option of options) {
+    if (option.type === 1) {
+      if (PUBLIC_COMMAND_PATHS.has(option.name)) {
+        visible.push(option);
+      }
+      continue;
+    }
+
+    if (option.type === 2) {
+      const subcommands = (option.options ?? []).filter((subcommand) =>
+        subcommand.type === 1 && PUBLIC_COMMAND_PATHS.has(`${option.name} ${subcommand.name}`),
+      );
+      if (subcommands.length > 0) {
+        visible.push({
+          ...option,
+          options: subcommands,
+        });
+      }
+    }
+  }
+  return visible;
 }
 
 export async function handleAiCommand(interaction, config) {

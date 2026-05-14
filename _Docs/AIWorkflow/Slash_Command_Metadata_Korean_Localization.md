@@ -56,26 +56,34 @@ for English metadata.
 
 ## Expected Discord UI Behavior
 
-Discord slash command search should show Korean descriptions for:
+Discord slash command search should show Korean descriptions only for the
+public Human Director command surface:
 
 ```text
 /ai intake
-/ai intake-preview
-/ai intake-test
 /ai intake-engine status
 /ai bot status
 /ai bot restart
-/ai task create
 /ai task review-intake
-/ai task approve
-/ai prepare goal
-/ai result audit
+/ai task approve-runner
+/ai runner status
+/ai runner read
+/ai completion card
+/ai git commit
+/ai git push
+/ai git commit-push
 /ai status
-/ai active
+/ai docs
 ```
 
 Command names and option names remain English/raw, while their visible
 descriptions are Korean.
+
+Advanced/debug/recovery paths such as `intake-preview`, `intake-test`,
+`set-active`, `approve`, `runner start`, `accept-completion`, `finalization`,
+`auto-approval`, `follow-up`, `prepare goal`, and `result audit` may remain in
+code for button handlers or internal recovery, but they should not be registered
+in the normal Discord slash autocomplete surface.
 
 ---
 

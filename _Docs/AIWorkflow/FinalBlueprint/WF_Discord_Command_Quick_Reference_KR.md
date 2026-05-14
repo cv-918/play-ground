@@ -103,9 +103,9 @@ commit/push는 여전히 별도 버튼 또는 Git 명령이 필요합니다.
 
 | 등급 | 평소 사용 여부 | 예시 |
 | --- | --- | --- |
-| 기본 | 자주 사용 | `/ai intake`, 버튼 UI, `/ai docs`, `/ai run workflow-status` |
+| 기본 | 자주 사용 | `/ai intake`, 버튼 UI, `/ai docs` |
 | 확인 | 필요할 때 사용 | `/ai runner read`, `/ai completion card`, `/ai git commit-push` |
-| 고급/복구 | 버튼 실패, 상태 꼬임, 디버깅 때만 사용 | `set-active`, `approve`, `runner start`, `finalization`, `auto-approval`, `follow-up` |
+| 고급/복구 | 버튼 실패, 상태 꼬임, 디버깅 때만 사용 | slash 검색에 숨김. 버튼/내부 복구 경로에서만 사용 |
 
 ### `approval_required`
 
@@ -125,7 +125,8 @@ commit/push는 여전히 별도 버튼 또는 Git 명령이 필요합니다.
 `approve-runner`는 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을
 한 번에 처리하는 권장 명령입니다.
 
-단계를 나눠서 처리해야 하는 예외 상황이면 아래 명령을 따로 씁니다.
+단계를 나눠서 처리해야 하는 예외 상황에서는 내부 복구 경로가 사용됩니다.
+이 복구 명령들은 일반 Discord slash 검색에는 노출하지 않습니다.
 
 ```text
 /ai task set-active id:<task_id>
@@ -161,6 +162,9 @@ Backlog task와 ActiveTask가 서로 다릅니다.
 /ai task approve id:<task_id> note:<승인 범위>
 ```
 
+이 명령들은 일반 slash 검색에 숨겨진 복구용 단계입니다. 평소에는
+`/ai task approve-runner id:<task_id>` 또는 카드 버튼을 사용합니다.
+
 ---
 
 ### `completion_review_required`
@@ -179,19 +183,21 @@ Runner가 실행, 증거 수집, 검증 보고, 완료 보고, 완료 카드 생
 /ai completion card id:<task_id> completion-report-id:<completion_report_id>
 ```
 
-완료 결과가 문제 없으면:
+완료 결과가 문제 없으면 완료 카드의 `완료 승인` 버튼을 사용합니다.
+버튼이 실패했을 때만 아래 숨김 복구 명령을 사용합니다.
 
 ```text
 /ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
 ```
 
-우려는 있지만 검토 후 받아들일 수 있으면:
+우려는 있지만 검토 후 받아들일 수 있으면 완료 카드의 `우려 수용` 버튼을 사용합니다.
+버튼이 실패했을 때만 아래 숨김 복구 명령을 사용합니다.
 
 ```text
 /ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> decision:accept-concerns mark-done:true
 ```
 
-개별 단계로 나눠 처리해야 할 때만 `/ai finalization accept`,
+개별 단계로 나눠 처리해야 할 때만 숨김 복구 경로에서 `/ai finalization accept`,
 `/ai finalization accept-concerns`, `/ai runner continue`를 직접 사용합니다.
 
 수정이 필요하면:
@@ -206,6 +212,9 @@ Runner가 실행, 증거 수집, 검증 보고, 완료 보고, 완료 카드 생
 /ai finalization reject id:<task_id> completion-report-id:<completion_report_id>
 /ai finalization defer id:<task_id> completion-report-id:<completion_report_id>
 ```
+
+이 finalization 명령들은 일반 slash 검색에 숨겨진 복구용 단계입니다. 평소에는
+완료 카드 버튼을 사용합니다.
 
 ---
 
@@ -272,8 +281,6 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 ```text
 /ai runner read id:<task_id>
-/ai auto-approval read id:<task_id>
-/ai follow-up read id:<task_id>
 ```
 
 완료 처리:
@@ -284,6 +291,10 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 위 명령은 `mark-done:true`를 쓰지 않았거나, 완료 승인과 task done을 분리해서
 처리하려는 경우에만 사용합니다.
+
+`auto-approval read`, `follow-up read`, `task done`은 일반 slash 검색에 숨겨진
+확인/복구 단계입니다. 완료 카드에서 `mark-done:true` 흐름이 성공했다면 다시
+입력하지 않습니다.
 
 그 다음 Git commit/push는 사람이 결정합니다.
 
@@ -308,8 +319,9 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai runner read id:<task_id>
 ```
 
-`/ai runner read`를 실행하면 완료 카드와 `accept-completion`에 필요한 실제 ID가
-표시됩니다.
+`/ai runner read`를 실행하면 완료 카드와 완료 검토 버튼에 필요한 실제 ID가
+표시됩니다. `accept-completion` 같은 세부 명령은 일반 slash 검색에 숨겨져 있고,
+완료 카드 버튼이 기본 경로입니다.
 
 ---
 
@@ -327,12 +339,6 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai intake text:<작업 요청>
 ```
 
-### 접수 결과만 미리보기
-
-```text
-/ai intake-preview text:<작업 요청>
-```
-
 ### Runner 상태 확인
 
 ```text
@@ -340,72 +346,7 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 /ai runner read id:<task_id>
 ```
 
-### Runner 시작
-
-```text
-/ai runner start id:<task_id>
-```
-
-현재 Discord 명령의 `/ai runner start`는 백그라운드 실행을 시작하고 바로 응답합니다.
-긴 Codex 실행이 진행 중이면 아래 명령으로 상태를 확인합니다.
-
-```text
-/ai runner status id:<task_id>
-/ai runner read id:<task_id>
-```
-
-필요하면 profile/executor를 명시합니다.
-
-```text
-/ai runner start id:<task_id> profile:implementation executor:codex_cli
-/ai runner start id:<task_id> profile:documentation executor:codex_cli
-/ai runner start id:<task_id> profile:game-data executor:codex_cli
-/ai runner start id:<task_id> profile:source-fix executor:codex_cli
-/ai runner start id:<task_id> profile:validation executor:local_cli
-/ai runner start id:<task_id> profile:build executor:local_cli
-```
-
-`validation` profile은 JSON smoke와 GameDataLoader data readability 같은
-읽기 전용 검증에 사용합니다. 수동 진단이 필요하면 다음 명령을 사용할 수 있습니다.
-
-```text
-/ai run json-smoke
-/ai run game-data-readability
-```
-
-`build` profile은 Visual Studio Debug x64 build 검증처럼 빌드 evidence가
-필요한 작업에 사용합니다.
-
-`game-data` profile은 승인된 작은 GAME data 또는 data-loader 인접 수정에
-사용합니다. `schema 변경 없음`만으로 자동 착수하지 않으며, 사람 승인 후 Codex
-CLI 실행과 runner 검증 파이프라인으로 이어집니다.
-
-`source-fix` profile은 승인된 작은 GAME source fix에 사용합니다. 리팩터, schema,
-save/load, 광범위한 gameplay 변경은 별도 승인 범위가 없으면 포함하지 않습니다.
-
 ### Completion Card 확인
-
-### Completion review 단축
-
-Runner가 `completion_review_required`에서 멈추면 완료 카드를 확인한 뒤
-아래 명령 하나로 FinalizationLog 기록과 runner continue를 같이 처리할 수
-있습니다.
-
-```text
-/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id>
-```
-
-완료 승인과 task done을 한 번에 처리하려면:
-
-```text
-/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
-```
-
-concern을 남기고 승인하려면:
-
-```text
-/ai runner accept-completion id:<task_id> decision:accept-concerns completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
-```
 
 ```text
 /ai completion card id:<task_id>
@@ -417,7 +358,29 @@ concern을 남기고 승인하려면:
 /ai completion card id:<task_id> completion-report-id:<completion_report_id>
 ```
 
+### Completion review 단축
+
+Runner가 `completion_review_required`에서 멈추면 완료 카드를 확인한 뒤
+완료 카드의 버튼으로 FinalizationLog 기록, runner continue, 필요 시 task done까지
+처리합니다.
+
+완료 승인과 task done을 한 번에 처리하려면 완료 카드의 `완료 승인` 버튼을 사용합니다.
+버튼이 실패했을 때만 아래 숨김 복구 명령을 사용합니다.
+
+```text
+/ai runner accept-completion id:<task_id> completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
+```
+
+concern을 남기고 승인하려면:
+
+```text
+/ai runner accept-completion id:<task_id> decision:accept-concerns completion-report-id:<completion_report_id> runner-run-id:<runner_run_id> mark-done:true
+```
+
 ### 최종 결정 기록
+
+아래 명령들은 숨김 복구 경로입니다. 평소에는 완료 카드의 `완료 승인`,
+`우려 수용`, `수정 요청`, `반려`, `판단 보류` 버튼을 사용합니다.
 
 ```text
 /ai finalization accept id:<task_id>
@@ -433,13 +396,23 @@ concern을 남기고 승인하려면:
 /ai finalization accept id:<task_id> completion-report-id:<completion_report_id>
 ```
 
+이 섹션의 `accept-completion`, `finalization`, `auto-approval`, `follow-up` 명령은
+slash 검색에서 숨겨진 고급/복구 경로입니다. 일반 사용자는 완료 카드 버튼과
+공개 Git 명령만 사용합니다.
+
 ### 최종 결정 이후 이어가기
+
+숨김 복구 경로입니다. 평소에는 완료 카드 버튼 또는 `accept-completion`
+복구 명령이 runner continue까지 처리합니다.
 
 ```text
 /ai runner continue id:<task_id>
 ```
 
 ### 후속 산출물 확인
+
+숨김 확인 경로입니다. 필요한 경우 응답 카드의 버튼/링크 또는 runner read에서
+제시되는 산출물 ID로 확인합니다.
 
 ```text
 /ai auto-approval status id:<task_id>

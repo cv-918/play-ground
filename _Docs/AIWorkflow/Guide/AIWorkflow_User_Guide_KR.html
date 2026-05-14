@@ -340,16 +340,15 @@
                 <span>저위험은 자동 착수, 위험 작업은 승인 요청 카드에서 이유와 범위를 확인한 뒤 사람 승인에서 멈춥니다.</span>
                 <div class="flow-command">
                   <em>승인 필요 시</em>
-                  <code>/ai task set-active id:&lt;task_id&gt;</code>
-                  <code>/ai task approve id:&lt;task_id&gt;</code>
+                  <code>/ai task review-intake id:&lt;task_id&gt;</code>
+                  <code>/ai task approve-runner id:&lt;task_id&gt;</code>
                 </div>
               </div>
               <div class="flow-step auto">
                 <strong>4. Runner 실행</strong>
                 <span>workspace, session, evidence, verification을 생성합니다.</span>
                 <div class="flow-command">
-                  <em>자동 착수가 안 됐을 때</em>
-                  <code>/ai runner start id:&lt;task_id&gt;</code>
+                  <em>확인할 때</em>
                   <code>/ai runner status id:&lt;task_id&gt;</code>
                   <code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
                 </div>
@@ -358,18 +357,16 @@
                 <strong>5. 완료 리뷰</strong>
                 <span>Completion Card를 보고 accept/request changes 등을 결정합니다.</span>
                 <div class="flow-command">
-                  <em>완료 판단 명령</em>
+                  <em>완료 판단 UI</em>
                   <code>/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;</code>
-                  <code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code>
-                  <code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; decision:accept-concerns</code>
+                  <code>완료 승인 / 우려 수용 / 수정 요청 / 반려 / 판단 보류 버튼</code>
                 </div>
               </div>
               <div class="flow-step manual">
                 <strong>6. 완료/커밋</strong>
-                <span><code>task done</code>, <code>git commit/push</code>를 명시적으로 결정합니다.</span>
+                <span>완료 버튼이 task done까지 처리하고, <code>git commit/push</code>만 명시적으로 결정합니다.</span>
                 <div class="flow-command">
                   <em>마무리 명령</em>
-                  <code>/ai task done id:&lt;task_id&gt; evidence:&lt;완료 근거&gt;</code>
                   <code>/ai git commit-push message:&lt;commit message&gt;</code>
                 </div>
               </div>
@@ -396,9 +393,9 @@
               <div class="lane-title">수동 승격</div>
               <div class="lane-items">
                 <div class="lane-item">runner/adapter/auth 문제</div>
-                <div class="lane-item"><code>/ai prepare goal</code></div>
+                <div class="lane-item">숨김 복구 경로로 Goal Request 생성</div>
                 <div class="lane-item">Codex App/CLI 수동 실행</div>
-                <div class="lane-item"><code>/ai result audit</code></div>
+                <div class="lane-item">숨김 복구 경로로 결과 감사</div>
               </div>
             </div>
             <div class="note">수동 승격은 예외 경로입니다. 정상 목표는 PC Runner가 실행, 감시, 증거 수집, 검증 보고를 맡는 것입니다.</div>
@@ -409,15 +406,15 @@
             <div class="stop-map">
               <div class="stop-card">
                 <strong>approval_required</strong>
-                범위와 위험도를 확인한 뒤 <code>/ai task approve</code>, <code>/ai runner start</code>를 사용합니다.
+                범위와 위험도를 확인한 뒤 <code>/ai task approve-runner</code> 또는 카드의 승인+실행 버튼을 사용합니다.
               </div>
               <div class="stop-card">
                 <strong>completion_review_required</strong>
-                <code>/ai completion card</code>를 확인하고 <code>/ai runner accept-completion</code>으로 판단을 기록합니다.
+                <code>/ai completion card</code>를 확인하고 완료 카드 버튼으로 판단을 기록합니다.
               </div>
               <div class="stop-card">
                 <strong>done_or_commit_decision</strong>
-                <code>/ai task done</code>으로 완료 처리하거나 <code>/ai git commit-push</code>를 명시적으로 실행합니다.
+                완료 버튼이 task done까지 처리했는지 확인하고 <code>/ai git commit-push</code>를 명시적으로 실행합니다.
               </div>
             </div>
           </div>
@@ -465,22 +462,19 @@
           <pre><code>/ai intake text:&lt;작업 요청&gt;
 /ai task review-intake id:&lt;task_id&gt;
 /ai task approve-runner id:&lt;task_id&gt;</code></pre>
-          <p><code>approve-runner</code>는 범위를 승인한 뒤 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 한 번에 처리하는 권장 명령입니다. 세부 단계가 필요할 때만 <code>set-active</code>, <code>approve</code>, <code>runner start</code>를 나눠서 사용합니다.</p>
+          <p><code>approve-runner</code>는 범위를 승인한 뒤 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 한 번에 처리하는 권장 명령입니다. <code>set-active</code>, <code>approve</code>, <code>runner start</code> 같은 세부 단계는 일반 slash 검색에 숨겨진 복구용 경로입니다.</p>
           <p>Discord 카드에 버튼이 보이면 버튼이 우선입니다. <strong>승인 내용 보기</strong>는 승인 대상과 제외 범위를 보여주고, <strong>승인+실행</strong>은 승인 기록과 Runner 시작을 한 번에 처리합니다. 명령어는 버튼이 없거나 실패했을 때의 예비 경로입니다.</p>
-          <p><code>/ai runner start</code>는 백그라운드 실행을 시작하고 바로 응답합니다. 실행이 길어져도 Discord가 계속 “생각 중”으로 붙잡혀 있지 않아야 하며, 진행 상태는 <code>/ai runner status</code>와 <code>/ai runner read</code>로 확인합니다.</p>
+          <p>Runner 시작은 자동 handoff, 승인+실행 버튼, 또는 <code>/ai task approve-runner</code>가 처리합니다. 진행 상태는 <code>/ai runner status</code>와 <code>/ai runner read</code>로 확인합니다.</p>
           <p><code>/ai task review-intake</code>와 intake 응답 카드의 <strong>승인 요청</strong> 섹션에서 왜 승인이 필요한지, 무엇을 승인하는지, 무엇은 승인하지 않는지 확인합니다. <code>note</code>를 비워두면 하네스가 task 제목, 범위, 필수 검증, 금지 범위를 바탕으로 승인 메모를 자동 작성합니다.</p>
           <p>범위를 검토했고 권장안대로 착수해도 된다면 <code>/ai task approve-runner id:&lt;task_id&gt;</code> 하나로 ActiveTask 선택, 승인 기록, PC Runner 백그라운드 시작을 함께 처리할 수 있습니다.</p>
 
           <h3>완료 리뷰 흐름</h3>
           <pre><code>/ai runner read id:&lt;task_id&gt; runner-run-id:&lt;runner_run_id&gt;
-/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;
-/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt;</code></pre>
-          <p>완료 카드가 괜찮고 바로 done까지 처리해도 되는 경우에는 아래 단축 명령을 씁니다.</p>
-          <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; mark-done:true</code></pre>
-          <p><code>mark-done:true</code>로 성공하면 task done은 이미 처리된 것입니다. 이후 응답에 <code>task done: yes</code>가 보이면 <code>/ai task done</code>을 다시 실행하지 말고, 필요한 경우 <code>/ai git commit-push</code>만 결정합니다.</p>
+/ai completion card id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt;</code></pre>
+          <p>완료 카드가 괜찮고 바로 done까지 처리해도 되는 경우에는 완료 카드의 <strong>완료 승인</strong> 버튼을 씁니다.</p>
+          <p>완료 승인 버튼이 성공하면 task done은 이미 처리된 것입니다. 이후 응답에 <code>task done: yes</code>가 보이면 완료 처리를 다시 실행하지 말고, 필요한 경우 <code>/ai git commit-push</code>만 결정합니다.</p>
           <p>완료 리뷰 카드의 <strong>완료 카드</strong>, <strong>완료 승인</strong>, <strong>우려 수용</strong>, <strong>커밋+푸시</strong> 버튼은 복사할 명령 대신 쓰는 기본 UI입니다. 각 버튼은 이름 그대로 한 단계만 처리하며, commit/push는 별도 버튼을 눌러야 실행됩니다.</p>
-          <p>완료 카드가 <code>CONCERNS</code>이지만 blocker나 failed check가 없고, 사람이 우려를 검토한 뒤 받아들이기로 결정했다면 아래처럼 명시합니다.</p>
-          <pre><code>/ai runner accept-completion id:&lt;task_id&gt; completion-report-id:&lt;completion_report_id&gt; runner-run-id:&lt;runner_run_id&gt; decision:accept-concerns mark-done:true</code></pre>
+          <p>완료 카드가 <code>CONCERNS</code>이지만 blocker나 failed check가 없고, 사람이 우려를 검토한 뒤 받아들이기로 결정했다면 <strong>우려 수용</strong> 버튼을 사용합니다.</p>
         </section>
 
         <section id="auto-handoff">
@@ -551,9 +545,9 @@
               <tr><td>승인+실행</td><td>승인+실행</td><td><code>/ai task approve-runner id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 확인</td><td>상태, 결과 보기</td><td><code>/ai runner status/read</code></td></tr>
               <tr><td>완료 검토</td><td>완료 카드</td><td><code>/ai completion card id:&lt;task_id&gt;</code></td></tr>
-              <tr><td>완료 승인</td><td>완료 승인, 우려 수용</td><td><code>/ai runner accept-completion ... mark-done:true</code></td></tr>
+              <tr><td>완료 승인</td><td>완료 승인, 우려 수용</td><td>완료 카드 버튼</td></tr>
               <tr><td>커밋/푸시</td><td>커밋+푸시, 커밋+푸시 확정</td><td><code>/ai git commit-push</code></td></tr>
-              <tr><td>고급/복구</td><td>보통 사용 안 함</td><td><code>set-active</code>, <code>approve</code>, <code>runner start</code>, <code>finalization</code></td></tr>
+              <tr><td>고급/복구</td><td>보통 사용 안 함</td><td>slash 검색에 숨김. 버튼/내부 복구 경로</td></tr>
             </tbody>
           </table>
 
@@ -563,7 +557,7 @@
               <tr><th>profile</th><th>용도</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>auto</code></td><td><code>/ai runner start id:&lt;task_id&gt;</code>에서 기본 적용. 작업 종류를 보고 implementation/documentation/build/validation 경로를 자동 선택</td></tr>
+              <tr><td><code>auto</code></td><td>자동 handoff 또는 <code>/ai task approve-runner</code>에서 기본 적용. 작업 종류를 보고 implementation/documentation/build/validation 경로를 자동 선택</td></tr>
               <tr><td><code>validation</code></td><td>JSON smoke, GameDataLoader readability, local validation, no-source-change 검증</td></tr>
               <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence</td></tr>
               <tr><td><code>documentation</code></td><td>문서 작업</td></tr>
@@ -636,9 +630,9 @@
               <tr><th>상태</th><th>해야 할 일</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>approval_required</code></td><td>작업 범위를 확인하고 <code>/ai task approve</code> 후 <code>/ai runner start</code></td></tr>
-              <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 <code>/ai runner accept-completion</code>. <code>CONCERNS</code>를 수용할 때는 <code>decision:accept-concerns</code></td></tr>
-              <tr><td><code>done_or_commit_decision</code></td><td><code>/ai task done</code> 또는 git 명령 결정</td></tr>
+              <tr><td><code>approval_required</code></td><td>작업 범위를 확인하고 승인+실행 버튼 또는 <code>/ai task approve-runner</code></td></tr>
+              <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 완료 카드 버튼. <code>CONCERNS</code>를 수용할 때는 우려 수용 버튼</td></tr>
+              <tr><td><code>done_or_commit_decision</code></td><td>task done이 이미 처리됐는지 확인하고 git 명령 결정</td></tr>
               <tr><td>명령이 안 보임</td><td><code>/ai bot status</code>, 필요 시 <code>/ai bot restart</code></td></tr>
               <tr><td>build tool 인식 문제</td><td>하네스가 MSBuild/devenv를 자동 탐지해야 하며, 사용자가 PATH를 직접 외울 필요는 없음</td></tr>
             </tbody>

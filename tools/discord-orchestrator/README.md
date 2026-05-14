@@ -122,64 +122,25 @@ Do not commit `_Local/`.
 
 ```text
 /ai status
-/ai active
-/ai backlog
-/ai next
-/ai blockers
 /ai docs
 /ai intake
-/ai intake-preview
-/ai intake-test
 /ai intake-engine status
 /ai bot status
 /ai bot restart
-/ai project list
-/ai project profile
-/ai role status
-/ai task current
-/ai task list
-/ai task create
 /ai task review-intake
-/ai task set-active
-/ai task approve
-/ai task block
-/ai task defer
-/ai task done
-/ai run workflow-status
-/ai run active-project
-/ai run project-profile
-/ai run json-smoke
-/ai run capture-diff
-/ai prepare codex
-/ai prepare goal
-/ai result audit
-/ai completion status
-/ai completion report
+/ai task approve-runner
 /ai completion card
-/ai finalization status
-/ai finalization accept
-/ai finalization accept-concerns
-/ai finalization request-changes
-/ai finalization reject
-/ai finalization defer
-/ai finalization read
 /ai runner status
-/ai runner plan
-/ai runner start
-/ai runner continue
-/ai runner accept-completion
-/ai runner stop
 /ai runner read
-/ai auto-approval status
-/ai auto-approval evaluate
-/ai auto-approval read
-/ai follow-up status
-/ai follow-up generate
-/ai follow-up read
 /ai git commit
 /ai git push
 /ai git commit-push
 ```
+
+Advanced recovery commands still exist in code and button handlers where needed,
+but they are intentionally not registered in the public Discord slash command
+surface. Normal operation should use `/ai intake`, buttons, runner status/read,
+completion card, and explicit git commands.
 
 ## Regular Workflow Path
 
@@ -188,15 +149,11 @@ Use this path for normal task operation:
 ```text
 1. /ai intake
 2. eligible low-risk tasks may auto-handoff to set-active, approve, and runner start
-3. /ai task set-active, only when auto-handoff does not apply
-4. /ai task approve, only when policy requires explicit approval
-5. /ai runner plan, when a plan preview is needed
-6. /ai runner start, when auto-handoff did not start the runner
-7. Review the Completion Card
-8. /ai runner accept-completion, or /ai finalization request-changes
-9. /ai runner continue, only when a non-completion human gate asks for it
-10. /ai task done, only after human completion decision
-11. /ai git commit, /ai git push, or /ai git commit-push after diff review
+3. /ai task review-intake when approval context needs review
+4. /ai task approve-runner when explicit approval is required
+5. Review the Completion Card
+6. Use action buttons for accept, request changes, defer, or reviewed concerns
+7. /ai git commit, /ai git push, or /ai git commit-push after diff review
 ```
 
 Intake auto-handoff is limited to P2/P3, low-risk tasks with no clarification
@@ -212,28 +169,28 @@ path-rule reminders, validation expectations, and completion guidance remain in
 the generated `goal_request_*.md` files.
 
 `/ai prepare codex`, `/ai prepare goal`, and `/ai result audit` remain available
-as manual escalation or compatibility paths. They are no longer the regular
-workflow path after WF-407.
+in code for manual escalation or compatibility paths, but they are no longer
+registered in the normal public slash command surface after WF-407.
 
-WF-305/306 completion commands are Phase 3 runtime review helpers. They read
-VerificationReport and CompletionReport artifacts, then show a Discord-facing
-completion card. They do not approve, mark done, finalize, commit, or push.
+WF-305/306 completion commands are Phase 3 runtime review helpers. The public
+surface exposes completion card read commands and Discord buttons for completion
+decisions. Hidden recovery commands may still exist in code for button handlers
+or operator fallback, but they are intentionally not registered in the normal
+Discord slash autocomplete surface.
 
 WF-307 finalization commands record explicit Human Director completion
-decisions into ApprovalHistory and FinalizationLog artifacts. They do not apply
-auto approval, commit, or push. The regular shortcut
-`/ai runner accept-completion ... mark-done:true` is an explicit Human Director
-command that combines completion acceptance and `task done`; it still does not
-commit or push.
+decisions into ApprovalHistory and FinalizationLog artifacts. In the regular
+flow, completion card buttons record those decisions and can also mark the task
+done. They still do not commit or push.
 
 ## Optional / Debug / Admin Commands
 
 These commands are useful for inspection, troubleshooting, or fallback paths,
-but they are not required in the regular flow:
+but they are not required in the regular flow and are intentionally hidden from
+the public Discord slash autocomplete surface:
 
 ```text
 /ai role status
-/ai task review-intake
 /ai run workflow-status
 /ai run active-project
 /ai run project-profile
@@ -244,6 +201,14 @@ but they are not required in the regular flow:
 /ai result audit
 /ai intake-preview
 /ai intake-test
+/ai task set-active
+/ai task approve
+/ai task done
+/ai runner start
+/ai runner accept-completion
+/ai finalization ...
+/ai auto-approval ...
+/ai follow-up ...
 ```
 
 For project profile:
