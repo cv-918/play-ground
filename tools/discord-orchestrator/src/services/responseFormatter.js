@@ -2477,12 +2477,14 @@ function buildIntakeActions(taskId, autoHandoff) {
     return [
       workflowAction("reviewIntake", taskId, "승인 내용 보기"),
       workflowAction("approveRunner", taskId, "승인+실행", { style: ButtonStyle.Primary }),
+      workflowAction("ask", taskId, "도움"),
     ];
   }
   if (decision === "runner_started") {
     return [
       workflowAction("runnerStatus", taskId, "상태"),
       workflowAction("runnerRead", taskId, "결과 보기", { style: ButtonStyle.Primary }),
+      workflowAction("ask", taskId, "도움"),
     ];
   }
   return [];
@@ -2498,6 +2500,7 @@ function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, t
       return [
         workflowAction("runnerStatus", taskId, "상태"),
         workflowAction("approveRunner", taskId, "승인+실행", { style: ButtonStyle.Primary }),
+        workflowAction("ask", taskId, "도움"),
       ];
     case "completion_review_required":
       return [
@@ -2520,6 +2523,7 @@ function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, t
         workflowAction("runnerStatus", taskId, "상태"),
         workflowAction("runnerRead", taskId, "결과 보기"),
         workflowAction("runnerStop", taskId, "중단", { runnerRunId, style: ButtonStyle.Danger }),
+        workflowAction("ask", taskId, "도움"),
       ];
   }
 }

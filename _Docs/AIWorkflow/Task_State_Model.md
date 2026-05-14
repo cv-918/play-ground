@@ -42,6 +42,7 @@ in_progress
 review
 fixing
 validation
+partial_done
 ready_to_commit
 blocked
 done
@@ -65,6 +66,7 @@ Do not invent new state names without updating this document.
 | `review` | Diff, document, or result is being reviewed | Human / ChatGPT |
 | `fixing` | Review found required fixes and a bounded fix is in progress | Human / Copilot |
 | `validation` | Build, runtime, data, or workflow validation is in progress | Human / Local tool |
+| `partial_done` | Some evidence, fix, or follow-up is complete, but the original task still lacks enough evidence to close | Human / Orchestrator |
 | `ready_to_commit` | Review and validation are complete or explicitly accepted | Human |
 | `blocked` | Work cannot continue without external decision, missing evidence, or failure recovery | Human / Orchestrator |
 | `done` | Task is complete and committed or explicitly closed | Human |
@@ -117,7 +119,20 @@ validation
 
 Use this when validation fails and a code/data/doc fix is required.
 
-## 5.4 Blocked Path
+## 5.4 Partial Done Path
+
+```text
+validation
+-> partial_done
+-> validation
+-> ready_to_commit
+```
+
+Use `partial_done` when a task has meaningful completed evidence but still has
+explicit remaining work. Example: JSON syntax smoke passed, but runtime loader
+validation remains. `partial_done` is not a completion state.
+
+## 5.5 Blocked Path
 
 Any active state may move to:
 
@@ -146,7 +161,7 @@ blocked -> deferred
 blocked -> cancelled
 ```
 
-## 5.5 Fast Path
+## 5.6 Fast Path
 
 For low-risk documentation or prompt work:
 

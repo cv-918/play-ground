@@ -61,6 +61,7 @@ public Human Director command surface:
 
 ```text
 /ai intake
+/ai ask
 /ai intake-engine status
 /ai bot status
 /ai bot restart

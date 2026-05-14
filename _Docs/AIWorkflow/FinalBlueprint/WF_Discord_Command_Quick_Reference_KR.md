@@ -88,6 +88,7 @@ Runner가 완료 리뷰 지점에서 멈추면:
 | 자동승인 평가 | AutoApprovalPolicy 평가 결과 확인 |
 | 후속 후보 | FollowUpPlan 후보 확인 |
 | 중단 | Runner run stop 기록 |
+| 도움 | 현재 task/runner 상태의 의미와 다음 행동 확인 |
 | 커밋+푸시 | 확인 카드를 띄움 |
 | 커밋+푸시 확정 | 현재 허용된 변경사항을 commit 후 push |
 
@@ -103,7 +104,7 @@ commit/push는 여전히 별도 버튼 또는 Git 명령이 필요합니다.
 
 | 등급 | 평소 사용 여부 | 예시 |
 | --- | --- | --- |
-| 기본 | 자주 사용 | `/ai intake`, 버튼 UI, `/ai docs` |
+| 기본 | 자주 사용 | `/ai intake`, `/ai ask`, 버튼 UI, `/ai docs` |
 | 확인 | 필요할 때 사용 | `/ai runner read`, `/ai completion card`, `/ai git commit-push` |
 | 고급/복구 | 버튼 실패, 상태 꼬임, 디버깅 때만 사용 | slash 검색에 숨김. 버튼/내부 복구 경로에서만 사용 |
 
@@ -337,6 +338,20 @@ CompletionReport는 있지만 최종 결정 기록이 없습니다.
 
 ```text
 /ai intake text:<작업 요청>
+```
+
+### 막혔을 때 묻기
+
+```text
+/ai ask text:<질문>
+/ai ask id:<task_id> text:<질문>
+```
+
+예시:
+
+```text
+/ai ask text:GAME-001 partial_done이면 다음에 뭐해?
+/ai ask text:completion_review_required면 뭐 눌러?
 ```
 
 ### Runner 상태 확인

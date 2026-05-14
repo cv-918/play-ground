@@ -309,7 +309,7 @@
 4. Completion Card 리뷰
 5. accept / accept-concerns / request-changes / reject / defer 결정
 6. task done 및 commit/push 결정</code></pre>
-          <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다.</p>
+          <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어봅니다.</p>
         </section>
 
         <section id="visual-map">
@@ -541,6 +541,7 @@
             </thead>
             <tbody>
               <tr><td>작업 접수</td><td>명령 1회</td><td><code>/ai intake text:&lt;request&gt;</code></td></tr>
+              <tr><td>상태 질문</td><td>도움 버튼</td><td><code>/ai ask text:&lt;질문&gt;</code></td></tr>
               <tr><td>승인 검토</td><td>승인 내용 보기</td><td><code>/ai task review-intake id:&lt;task_id&gt;</code></td></tr>
               <tr><td>승인+실행</td><td>승인+실행</td><td><code>/ai task approve-runner id:&lt;task_id&gt;</code></td></tr>
               <tr><td>Runner 확인</td><td>상태, 결과 보기</td><td><code>/ai runner status/read</code></td></tr>
@@ -625,12 +626,16 @@
 
         <section id="troubleshooting">
           <h2>막혔을 때</h2>
+          <p>상태 이름이나 다음 버튼이 헷갈리면 먼저 <code>/ai ask text:&lt;질문&gt;</code>을 사용합니다. 특정 작업을 물어볼 때는 <code>/ai ask id:&lt;task_id&gt; text:&lt;질문&gt;</code>처럼 작업 ID를 함께 넣습니다.</p>
+          <pre><code>/ai ask text:GAME-001 partial_done이면 다음에 뭐해?
+/ai ask text:completion_review_required면 뭐 눌러?</code></pre>
           <table>
             <thead>
               <tr><th>상태</th><th>해야 할 일</th></tr>
             </thead>
             <tbody>
               <tr><td><code>approval_required</code></td><td>작업 범위를 확인하고 승인+실행 버튼 또는 <code>/ai task approve-runner</code></td></tr>
+              <tr><td><code>partial_done</code></td><td><code>/ai ask id:&lt;task_id&gt; text:다음에 뭐해야 해?</code>로 완료된 것과 남은 것을 확인</td></tr>
               <tr><td><code>completion_review_required</code></td><td>Completion Card 확인 후 완료 카드 버튼. <code>CONCERNS</code>를 수용할 때는 우려 수용 버튼</td></tr>
               <tr><td><code>done_or_commit_decision</code></td><td>task done이 이미 처리됐는지 확인하고 git 명령 결정</td></tr>
               <tr><td>명령이 안 보임</td><td><code>/ai bot status</code>, 필요 시 <code>/ai bot restart</code></td></tr>

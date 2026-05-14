@@ -123,6 +123,7 @@ Do not commit `_Local/`.
 ```text
 /ai status
 /ai docs
+/ai ask
 /ai intake
 /ai intake-engine status
 /ai bot status
@@ -139,8 +140,8 @@ Do not commit `_Local/`.
 
 Advanced recovery commands still exist in code and button handlers where needed,
 but they are intentionally not registered in the public Discord slash command
-surface. Normal operation should use `/ai intake`, buttons, runner status/read,
-completion card, and explicit git commands.
+surface. Normal operation should use `/ai intake`, `/ai ask`, buttons, runner
+status/read, completion card, and explicit git commands.
 
 ## Regular Workflow Path
 
@@ -149,11 +150,12 @@ Use this path for normal task operation:
 ```text
 1. /ai intake
 2. eligible low-risk tasks may auto-handoff to set-active, approve, and runner start
-3. /ai task review-intake when approval context needs review
-4. /ai task approve-runner when explicit approval is required
-5. Review the Completion Card
-6. Use action buttons for accept, request changes, defer, or reviewed concerns
-7. /ai git commit, /ai git push, or /ai git commit-push after diff review
+3. /ai ask when a status, stop reason, or next action is unclear
+4. /ai task review-intake when approval context needs review
+5. /ai task approve-runner when explicit approval is required
+6. Review the Completion Card
+7. Use action buttons for accept, request changes, defer, or reviewed concerns
+8. /ai git commit, /ai git push, or /ai git commit-push after diff review
 ```
 
 Intake auto-handoff is limited to P2/P3, low-risk tasks with no clarification

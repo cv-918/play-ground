@@ -22,6 +22,7 @@ import { continuePcRunner, getPcRunnerStatus, planPcRunner, readPcRunner, startP
 import { acceptCompletionAndContinueRunner } from "../services/runnerCompletionService.js";
 import { commitAndPushWorkflowChanges, commitWorkflowChanges, pushWorkflowChanges } from "../services/gitService.js";
 import { suggestTaskFromIntake } from "../services/taskIntakeService.js";
+import { navigateWorkflow } from "../services/workflowNavigatorService.js";
 import { koText } from "../services/koreanOutput.js";
 import {
   blockTask,
@@ -73,6 +74,7 @@ import {
   formatTaskStatusUpdated,
   formatTextCardPayload,
   buildWorkflowActionRows,
+  gitCommitPushAction,
   workflowAction,
   truncateForDiscord,
 } from "../services/responseFormatter.js";
@@ -122,6 +124,23 @@ function buildFullAiCommand() {
     )
     .addSubcommand((sub) =>
       sub.setName("docs").setDescription("주요 workflow 문서 경로를 표시합니다"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("ask")
+        .setDescription("현재 workflow 상태와 다음 행동을 짧게 설명합니다")
+        .addStringOption((option) =>
+          option
+            .setName("text")
+            .setDescription("궁금한 점. 예: GAME-001 partial_done이면 다음에 뭐해?")
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("id")
+            .setDescription("선택 Backlog 작업 ID. 비우면 질문 또는 ActiveTask에서 찾습니다")
+            .setRequired(false),
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -1002,6 +1021,7 @@ function buildFullAiCommand() {
 const PUBLIC_COMMAND_PATHS = new Set([
   "status",
   "docs",
+  "ask",
   "intake",
   "intake-engine status",
   "bot status",
@@ -1134,6 +1154,11 @@ export async function handleAiCommand(interaction, config) {
     return;
   }
 
+  if (subcommand === "ask") {
+    await handleAskCommand(interaction, config);
+    return;
+  }
+
   if (subcommand === "intake") {
     await handleIntakeCommand(interaction, config);
     return;
@@ -1179,6 +1204,15 @@ export async function handleAiButton(interaction, config) {
 
   if (action.name === "reviewIntake") {
     await interaction.editReply(formatIntakeTaskReviewPayload(await reviewIntakeTask(config, { id: action.taskId })));
+    return;
+  }
+
+  if (action.name === "ask") {
+    const result = await navigateWorkflow(config, {
+      id: action.taskId,
+      question: "다음에 무엇을 해야 하나요?",
+    });
+    await interaction.editReply(formatNavigatorPayload(result));
     return;
   }
 
@@ -1318,6 +1352,99 @@ function parseWorkflowButton(customId) {
     policyEvaluationId: stamp ? `autoeval-${taskId.toLowerCase()}-${stamp}` : "",
     followUpPlanId: stamp ? `followup-${taskId.toLowerCase()}-${stamp}` : "",
   };
+}
+
+async function handleAskCommand(interaction, config) {
+  const result = await navigateWorkflow(config, {
+    question: interaction.options.getString("text"),
+    id: interaction.options.getString("id"),
+  });
+  await interaction.editReply(formatNavigatorPayload(result));
+}
+
+function formatNavigatorPayload(result) {
+  const data = result?.data ?? {};
+  const answer = data.answer ?? {};
+  const task = data.task ?? {};
+  const lines = [
+    "**대상**",
+    data.subject || data.requested_task_id || "워크플로우 상태",
+    data.question ? `질문: ${data.question}` : "",
+    "",
+    "**현재 의미**",
+    answer.meaning || "상태를 해석할 수 없습니다.",
+    "",
+    "**남은 일**",
+    answer.remaining || "남은 일을 확인해야 합니다.",
+    "",
+    "**다음 행동**",
+    answer.next_action || "`/ai status`로 현재 상태를 확인하세요.",
+    "",
+    "**주의/승인 필요**",
+    answer.caution || "/ai ask는 설명만 제공하고 상태를 변경하지 않습니다.",
+    answer.evidence ? ["", "**근거**", answer.evidence].join("\n") : "",
+  ].filter(Boolean);
+
+  const color = result?.ok === false ? 0xc62828 : navigatorColor(task.status, data.runner?.stop_reason);
+  return formatTextCardPayload("AIWorkflow 도움", truncateForDiscord(lines.join("\n"), 1800), {
+    color,
+    components: buildNavigatorActionRows(data),
+  });
+}
+
+function buildNavigatorActionRows(data) {
+  const taskId = data?.task?.id || data?.task?.task_id;
+  const actions = Array.isArray(data?.actions) ? data.actions : [];
+  if (!taskId || taskId === "unknown") {
+    return [];
+  }
+
+  return buildWorkflowActionRows(actions.map((action) => {
+    const name = typeof action === "string" ? action : action.name;
+    const reports = typeof action === "string" ? {} : action.reports ?? {};
+    const runnerRunId = typeof action === "string" ? "" : action.runnerRunId ?? "";
+    const ids = {
+      completionReportId: reports.completion_report_id,
+      runnerRunId,
+    };
+    switch (name) {
+      case "reviewIntake":
+        return workflowAction("reviewIntake", taskId, "승인 내용 보기");
+      case "approveRunner":
+        return workflowAction("approveRunner", taskId, "승인+실행", { style: ButtonStyle.Primary });
+      case "runnerStatus":
+        return workflowAction("runnerStatus", taskId, "상태");
+      case "runnerRead":
+        return workflowAction("runnerRead", taskId, "결과 보기", { ...ids, style: ButtonStyle.Primary });
+      case "completionCard":
+        return workflowAction("completionCard", taskId, "완료 카드", { ...ids, style: ButtonStyle.Primary });
+      case "acceptDone":
+        return workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success });
+      case "requestChanges":
+        return workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary });
+      case "acceptConcernsDone":
+        return workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger });
+      case "gitCommitPush":
+        return gitCommitPushAction();
+      case "ask":
+        return workflowAction("ask", taskId, "도움");
+      default:
+        return null;
+    }
+  }));
+}
+
+function navigatorColor(status, stopReason) {
+  if (stopReason === "completion_review_required") {
+    return 0xf9a825;
+  }
+  if (stopReason === "done_or_commit_decision") {
+    return 0x2e7d32;
+  }
+  if (["blocked", "partial_done"].includes(String(status ?? "").toLowerCase())) {
+    return 0xf9a825;
+  }
+  return 0x1565c0;
 }
 
 async function handleIntakeCommand(interaction, config) {
