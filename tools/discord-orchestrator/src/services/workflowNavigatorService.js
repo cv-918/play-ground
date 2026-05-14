@@ -2,6 +2,16 @@ import { getPcRunnerStatus } from "./pcRunnerService.js";
 import { getBacklogTaskById, getCurrentTask } from "./taskService.js";
 
 const TASK_ID_PATTERN = /\b(WF|GAME|DOC|VAL|UNITY)-[A-Za-z0-9][A-Za-z0-9_.-]*\b/i;
+const COMPACT_TASK_ID_PATTERN = /\b(WF|GAME|DOC|VAL|UNITY)\s*-?\s*([0-9][A-Za-z0-9_.-]*)\b/i;
+const KOREAN_TASK_ID_PATTERN = /(\uac8c\uc784|\ubb38\uc11c|\uac80\uc99d|\uc6cc\ud06c\ud50c\ub85c\uc6b0|\uc6cc\ud06c|\uc720\ub2c8\ud2f0)\s*-?\s*([0-9][A-Za-z0-9_.-]*)/iu;
+const KOREAN_TASK_PREFIXES = new Map([
+  ["\uac8c\uc784", "GAME"],
+  ["\ubb38\uc11c", "DOC"],
+  ["\uac80\uc99d", "VAL"],
+  ["\uc6cc\ud06c", "WF"],
+  ["\uc6cc\ud06c\ud50c\ub85c\uc6b0", "WF"],
+  ["\uc720\ub2c8\ud2f0", "UNITY"],
+]);
 const HIGH_APPROVAL_PRIORITIES = new Set(["P0", "P1"]);
 
 export async function navigateWorkflow(config, input = {}) {
@@ -216,8 +226,8 @@ function buildStopReasonAnswer(stopReason, task = null) {
       return {
         meaning: "Runner가 실행과 보고서 생성을 끝내고, 사람이 완료 결과를 검토해야 하는 지점입니다.",
         remaining: "Completion Card와 검증 결과를 확인해야 합니다.",
-        next_action: "문제가 없으면 완료 승인, 우려를 받아들일 수 있으면 우려 수용, 수정이 필요하면 수정 요청을 누르세요.",
-        caution: "완료 승인은 task done까지 처리할 수 있지만 commit/push는 별도 결정입니다.",
+        next_action: "문제가 없으면 완료 승인, 우려를 감수하고 끝낼 수 있으면 우려 감수 후 완료, 고쳐야 하면 수정 요청을 누르세요.",
+        caution: "우려 감수 후 완료는 작업 폐기가 아닙니다. 우려를 사람이 확인했고 감수한다고 기록한 뒤 완료 처리하는 결정입니다. commit/push는 별도입니다.",
         evidence: "",
       };
     case "done_or_commit_decision":
@@ -254,7 +264,7 @@ function buildVerdictAnswer(verdict, task = null) {
     return {
       meaning: "검증은 대체로 통과했지만 사람이 읽고 받아들일 notes가 있는 상태입니다.",
       remaining: "notes가 허용 가능한지 확인해야 합니다.",
-      next_action: "notes를 받아들일 수 있으면 완료 승인 또는 우려 수용으로 진행하세요.",
+      next_action: "notes를 받아들일 수 있으면 완료 승인 또는 우려 감수 후 완료로 진행하세요.",
       caution: "자동 완료 신호가 아니라 사람 검토가 필요한 상태입니다.",
       evidence: task ? compactEvidence(task.validation) : "",
     };
@@ -263,8 +273,8 @@ function buildVerdictAnswer(verdict, task = null) {
     return {
       meaning: "검증 결과에 우려가 있습니다.",
       remaining: "우려가 차단 사유인지, 사람이 받아들일 수 있는 위험인지 판단해야 합니다.",
-      next_action: "받아들일 수 있으면 우려 수용, 수정이 필요하면 수정 요청을 누르세요.",
-      caution: "우려를 읽지 않고 완료 승인하지 마세요.",
+      next_action: "받아들일 수 있으면 우려 감수 후 완료, 고쳐야 하면 수정 요청, 아직 모르겠으면 판단 보류를 누르세요.",
+      caution: "우려 감수 후 완료는 우려를 없애는 기능이 아닙니다. 확인한 우려를 기록하고 task done으로 넘기는 결정입니다.",
       evidence: task ? compactEvidence(task.validation) : "",
     };
   }
@@ -323,8 +333,32 @@ function detectConcept(question) {
 }
 
 function extractTaskId(text) {
-  const match = String(text ?? "").match(TASK_ID_PATTERN);
-  return match ? match[0] : "";
+  const source = String(text ?? "");
+  const direct = source.match(TASK_ID_PATTERN);
+  if (direct) {
+    return normalizeTaskId(direct[0]);
+  }
+
+  const korean = source.match(KOREAN_TASK_ID_PATTERN);
+  if (korean) {
+    const prefix = KOREAN_TASK_PREFIXES.get(korean[1]) || "";
+    return prefix ? `${prefix}-${korean[2]}` : "";
+  }
+
+  const compact = source.match(COMPACT_TASK_ID_PATTERN);
+  if (compact) {
+    return `${compact[1].toUpperCase()}-${compact[2]}`;
+  }
+
+  return "";
+}
+
+function normalizeTaskId(value) {
+  const match = String(value ?? "").match(/^([A-Za-z]+)\s*-?\s*(.+)$/);
+  if (!match) {
+    return String(value ?? "").trim();
+  }
+  return `${match[1].toUpperCase()}-${match[2].trim()}`;
 }
 
 function isStopReasonConcept(value) {

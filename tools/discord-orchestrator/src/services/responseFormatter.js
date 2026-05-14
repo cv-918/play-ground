@@ -679,16 +679,17 @@ function formatAutoHandoffDetails(autoHandoff) {
 function formatIntakeApprovalRequest(draft = {}, autoHandoff = {}) {
   const blockers = Array.isArray(autoHandoff.blockers) ? autoHandoff.blockers : [];
   const reason = String(draft.reason ?? "");
-  const lines = [
+  const lines = bulletLines([
     `왜 필요한가: ${summarizeApprovalBlockers(blockers)}`,
-    `승인 대상: ${compactText(cleanKo(draft.title || "생성된 Backlog task 범위"), 180)}`,
-  ];
+    `승인하면: ${compactText(cleanKo(draft.title || "생성된 Backlog task 범위"), 180)} 범위 안에서 진행`,
+    "승인하지 않음: 범위 밖 수정, 자동 완료, 자동 커밋/푸시",
+  ], 3, { maxLength: 150 });
 
   if (/schema/i.test(reason)) {
-    lines.push("금지/주의: schema 변경은 명시 범위에 없으면 승인되지 않습니다.");
+    lines.push("- 주의: schema 변경은 명시 범위에 없으면 제외");
   }
   if (/source|data|runtime|loader|UserData|stage_progress|node/i.test(reason)) {
-    lines.push("주의: 소스/데이터/런타임 인접 변경 가능성이 있어 승인 후 진행합니다.");
+    lines.push("- 주의: 소스/데이터/런타임 인접 변경 가능성이 있어 승인 후 진행");
   }
 
   return lines;
@@ -706,7 +707,11 @@ function summarizeApprovalBlockers(blockers) {
     game_data_or_runtime_mutation_requires_human_approval: "GAME data/source/runtime 수정은 사람 승인 필요",
   };
   const known = blockers.map((item) => labels[item] || item).filter(Boolean);
-  return known.length > 0 ? summarizeCompactList(known, 4) : "정책상 명시적 승인 후 진행";
+  if (known.length === 0) {
+    return "정책상 명시적 승인 후 진행";
+  }
+  const visible = known.slice(0, 3);
+  return `${visible.join(", ")}${known.length > visible.length ? ` 외 ${known.length - visible.length}개` : ""}`;
 }
 
 function formatReviewApprovalRequest(approvalRequest = {}) {
@@ -714,10 +719,64 @@ function formatReviewApprovalRequest(approvalRequest = {}) {
   const approving = Array.isArray(approvalRequest.approving) ? approvalRequest.approving : [];
   const notApproving = Array.isArray(approvalRequest.not_approving) ? approvalRequest.not_approving : [];
   return [
-    `왜 필요한가: ${summarizeCompactList(reasons.length > 0 ? reasons : ["정책상 명시적 승인 후 진행"], 3)}`,
-    `승인하는 것: ${summarizeCompactList(approving, 3)}`,
-    `승인하지 않는 것: ${summarizeCompactList(notApproving, 3)}`,
+    "- 왜 필요한가",
+    ...bulletLines(simplifyApprovalItems(reasons.length > 0 ? reasons : ["정책상 명시적 승인 후 진행"]), 2, { indent: true }),
+    "- 승인하면",
+    ...bulletLines(simplifyApprovalItems(approving), 2, { indent: true, fallback: "표시된 task 범위 안에서만 진행" }),
+    "- 승인하지 않음",
+    ...bulletLines(simplifyApprovalItems(notApproving), 2, { indent: true, fallback: "범위 밖 수정, 자동 완료, 자동 커밋/푸시" }),
   ];
+}
+
+function simplifyApprovalItems(items) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  const simplified = [];
+  for (const item of values) {
+    const text = cleanKo(item);
+    if (/P0|P1|우선순위|priority/i.test(text)) {
+      simplified.push("중요 작업이라 시작 전 사람 승인이 필요");
+    } else if (/high risk|위험도|risk/i.test(text)) {
+      simplified.push("위험도가 높아 자동 진행하지 않음");
+    } else if (/관련 없는|범위를 벗어난|승인 범위|리팩터|대규모|임의/i.test(text)) {
+      simplified.push("관련 없는 수정이나 리팩터는 제외");
+    } else if (/저장\/로드 구조|구조 대개편|게임플레이 밸런스/i.test(text)) {
+      simplified.push("구조 대개편이나 게임플레이 변경은 제외");
+    } else if (/JSON schema 변경|schema 변경/i.test(text)) {
+      simplified.push("schema 변경은 제외");
+    } else if (/schema|save|runtime|data|loader|UserData|stage_progress|node/i.test(text)) {
+      simplified.push("데이터/런타임 경계에 닿을 수 있어 범위 확인 필요");
+    } else if (/implementation|파일 수정/i.test(text)) {
+      simplified.push("파일 수정 가능성이 있어 승인 후 진행");
+    } else if (/ActiveTask|승인된 범위|selected task|작업 목적|task 범위/i.test(text)) {
+      simplified.push("선택한 task 범위 안에서만 실행");
+    } else if (/커밋|push|완료|done/i.test(text)) {
+      simplified.push("완료 처리와 커밋/푸시는 별도 결정");
+    } else {
+      simplified.push(text);
+    }
+  }
+  return [...new Set(simplified)];
+}
+
+function simplifyHumanDecisionItems(items) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  const simplified = values.map((item) => {
+    const text = cleanKo(item);
+    if (/P0\/P1|high-risk|high risk|우선순위/i.test(text)) {
+      return "중요도나 위험도가 높으면 시작 전 사람 승인이 필요";
+    }
+    if (/schema|save|runtime|external-tool|computer-use|destructive-command/i.test(text)) {
+      return "schema, save/load, runtime, 외부 도구, 파괴적 명령은 명시 승인 필요";
+    }
+    if (/gameplay runtime behavior/i.test(text)) {
+      return "게임플레이 런타임 동작 변경은 명시 승인 필요";
+    }
+    if (/validation deferral|검증 유예/i.test(text)) {
+      return "필수 검증을 건너뛰려면 사람 결정 필요";
+    }
+    return text;
+  });
+  return [...new Set(simplified)];
 }
 
 export function formatIntakeEngineStatus(result) {
@@ -903,6 +962,12 @@ export function formatIntakeTaskReviewPayload(result) {
   const kind = task.kind ?? "?";
   const status = koStatus(task.status);
   const ready = ["ready", "ready_for_manual_activation_review", "generic_review_ready"].includes(String(readiness.verdict ?? ""));
+  const canProceed = !["not_ready", "blocked"].includes(String(readiness.verdict ?? ""));
+  const actions = buildReviewIntakeActions(taskId, {
+    activeTaskMatch: data.active_task_match === true,
+    approvalRequired: approvalRequest.required === true,
+    canProceed,
+  });
 
   return {
     content: "",
@@ -923,13 +988,20 @@ export function formatIntakeTaskReviewPayload(result) {
           `${koStatusLabel(readiness.verdict)}: ${compactText(koText(readiness.reason), 260)}`,
           `권장 조치: ${compactText(koText(readiness.recommended_action), 220)}`,
         ]),
-        approvalRequest.required
+        approvalRequest.required && canProceed
           ? embedField("승인 요청", formatReviewApprovalRequest(approvalRequest).join("\n"))
+          : !canProceed
+          ? embedField("주의", "- 이 작업은 지금 바로 실행 대상이 아닙니다.\n- 이력을 확인하거나 새 task로 다시 접수하세요.")
+          : null,
+        canProceed
+          ? embedField("승인하면 바뀌는 것", buildActivationDecisionImpact(data.active_task_match === true))
           : null,
         embedField("권장 역할", summarizeCompactList(data.recommended_roles, 5), true),
-        embedField("사람 결정", summarizeCompactList(data.human_decision_gates, 2), true),
+        embedField("사람 결정", summarizeCompactList(simplifyHumanDecisionItems(data.human_decision_gates), 2), true),
         embedField("필수 검증", summarizeValidationLines(data.required_validation).join("\n")),
-        embedField("다음 명령", summarizeCommandLines(data.suggested_next_manual_commands).join("\n")),
+        actions.length > 0
+          ? embedField("다음 행동", actionSummary(actions))
+          : embedField("다음 명령", summarizeCommandLines(data.suggested_next_manual_commands).join("\n")),
         embedField("안전 상태", [
           `현재 ActiveTask: ${koBool(data.active_task_match)}`,
           `Backlog: ${koBool(safety.backlog_updated)}`,
@@ -943,7 +1015,33 @@ export function formatIntakeTaskReviewPayload(result) {
         text: "읽기 전용 검토입니다. Backlog/ActiveTask는 변경하지 않았습니다.",
       },
     }],
+    components: buildActionRows(actions),
   };
+}
+
+function buildActivationDecisionImpact(isActiveTask) {
+  const lines = [];
+  if (!isActiveTask) {
+    lines.push("- ActiveTask가 이 작업으로 선택됨");
+  }
+  lines.push("- 승인 기록이 Backlog/ActiveTask에 남음");
+  lines.push("- PC Runner가 승인된 범위로 시작됨");
+  lines.push("- task done, commit, push는 실행하지 않음");
+  return lines.join("\n");
+}
+
+function buildReviewIntakeActions(taskId, options = {}) {
+  const id = String(taskId ?? "").trim();
+  if (!id || id === "unknown") {
+    return [];
+  }
+
+  const actions = [];
+  if (options.canProceed !== false && (options.approvalRequired || options.activeTaskMatch !== true)) {
+    actions.push(workflowAction("approveRunner", id, "승인+실행", { style: ButtonStyle.Primary }));
+  }
+  actions.push(workflowAction("ask", id, "도움"));
+  return actions;
 }
 
 export function formatResultAudit(result) {
@@ -1108,6 +1206,7 @@ export function formatCompletionCardPayload(result) {
           generatedLine,
         ]),
         embedField("남은 이슈", summarizeCompletionCardIssues(presentation)),
+        embedField("결정하면 바뀌는 것", buildCompletionDecisionImpact(presentation)),
         actions.length > 0
           ? embedField("다음 행동", actionSummary(actions))
           : embedField("다음 명령", summarizeCompactList(buildCompletionCardNextCommands(data, card, presentation), 3)),
@@ -1161,7 +1260,7 @@ function buildCompletionCardActions(taskId, presentation, ids = {}) {
     return [
       workflowAction("runnerRead", taskId, "결과 보기", ids),
       workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary }),
-      workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
+      workflowAction("acceptConcernsDone", taskId, "우려 감수 후 완료", { ...ids, style: ButtonStyle.Danger }),
       workflowAction("deferCompletion", taskId, "판단 보류", ids),
     ];
   }
@@ -1733,7 +1832,7 @@ function pcRunnerNextActionSummary(stopReason, command) {
     case "active_task_mismatch":
       return "ActiveTask를 이 작업으로 맞춘 뒤 Runner를 다시 시작하세요.";
     case "completion_review_required":
-      return "완료 카드와 검증 결과를 확인하세요. PASS/PASS_WITH_NOTES면 일반 accept, CONCERNS면 `decision:accept-concerns`로 검토한 우려를 명시 수용합니다.";
+      return "완료 카드에서 남은 이슈를 확인하세요. 문제를 고칠 거면 수정 요청, 감수하고 끝낼 거면 우려 감수 후 완료를 누르세요.";
     case "finalization_required":
       return "완료 카드를 확인하고 최종 결정을 기록하세요.";
     case "finalization_not_accepted":
@@ -1991,30 +2090,56 @@ function readinessKo(level) {
 }
 
 function summarizeCompletionRisks(risks) {
-  const values = [
-    ...prefixItems("warning", risks?.warnings),
-    ...prefixItems("concern", risks?.concerns),
-    ...prefixItems("blocker", risks?.blockers),
-    ...prefixItems("failed", risks?.failed_checks),
-  ];
+  const values = buildIssueSummaryItems({
+    failed: risks?.failed_checks,
+    blockers: risks?.blockers,
+    concerns: risks?.concerns,
+    warnings: risks?.warnings,
+  });
   if (values.length === 0) {
     return "없음";
   }
-  return summarizeCompactList(values, 3);
+  return values.join("\n");
 }
 
 function summarizeCompletionCardIssues(presentation) {
-  const values = [
-    ...prefixItems("warning", presentation?.warnings),
-    ...prefixItems("concern", presentation?.concerns),
-    ...prefixItems("blocker", presentation?.blockers),
-    ...prefixItems("failed", presentation?.failed_checks),
-    ...prefixItems("decision", presentation?.human_decisions),
-  ];
+  const values = buildIssueSummaryItems({
+    failed: presentation?.failed_checks,
+    blockers: presentation?.blockers,
+    concerns: presentation?.concerns,
+    warnings: presentation?.warnings,
+    decisions: presentation?.human_decisions,
+  });
   if (values.length === 0) {
     return "없음";
   }
-  return summarizeCompactList(values, 3);
+  return values.join("\n");
+}
+
+function buildCompletionDecisionImpact(presentation = {}) {
+  const hasConcerns = presentation.state === "needs_human_decision" && presentation.verdict === "CONCERNS";
+  if (hasConcerns) {
+    return [
+      "- 수정 요청: 완료하지 않음. 수정 필요 결정만 기록",
+      "- 우려 감수 후 완료: 우려를 확인했다는 FinalizationLog를 남기고 task done 처리",
+      "- 판단 보류: 완료하지 않음. 나중에 다시 판단",
+      "- 어떤 버튼도 commit/push는 실행하지 않음",
+    ].join("\n");
+  }
+
+  if (presentation.state === "ready_for_human_completion_review" || presentation.state === "ready_for_human_completion_review_with_notes") {
+    return [
+      "- 완료 승인: 결과를 받아들이고 task done 처리",
+      "- 수정 요청: 완료하지 않음. 수정 필요 결정만 기록",
+      "- 판단 보류: 완료하지 않음. 나중에 다시 판단",
+      "- 어떤 버튼도 commit/push는 실행하지 않음",
+    ].join("\n");
+  }
+
+  return [
+    "- 이 카드는 표시/검토용입니다.",
+    "- 완료, 승인, commit/push는 별도 버튼이나 명령이 있어야 실행됩니다.",
+  ].join("\n");
 }
 
 function prefixItems(prefix, values) {
@@ -2025,6 +2150,60 @@ function prefixItems(prefix, values) {
     .map((value) => cleanKo(value))
     .filter(Boolean)
     .map((value) => `${prefix}: ${value}`);
+}
+
+function buildIssueSummaryItems({ failed, blockers, concerns, warnings, decisions } = {}) {
+  const lines = [];
+  appendIssueGroup(lines, "실패", failed, 2);
+  appendIssueGroup(lines, "차단", blockers, 2);
+  appendIssueGroup(lines, "우려", concerns, 3);
+  appendIssueGroup(lines, "사람 결정", decisions, 2);
+  appendIssueGroup(lines, "참고 경고", warnings, 2, { warning: true });
+  return lines;
+}
+
+function appendIssueGroup(lines, label, values, limit, options = {}) {
+  const items = Array.isArray(values)
+    ? values.map((value) => normalizeCompletionIssue(value, options)).filter(Boolean)
+    : [];
+  if (items.length === 0) {
+    return;
+  }
+
+  lines.push(`- ${label}`);
+  for (const item of items.slice(0, limit)) {
+    lines.push(`  - ${item}`);
+  }
+  if (items.length > limit) {
+    lines.push(`  - +${items.length - limit}개 더 있음`);
+  }
+}
+
+function normalizeCompletionIssue(value, options = {}) {
+  const text = cleanKo(value);
+  const reviewSignal = text.match(/Review signal (within|outside) expected task category:\s*(.+?)\s*\(([^)]+)\)\.?$/i);
+  if (reviewSignal) {
+    const relation = reviewSignal[1].toLowerCase();
+    const filePath = reviewSignal[2];
+    const category = reviewSignal[3];
+    if (category === "workflow_state") {
+      return `${formatInlineCode(filePath)} 변경 감지. Backlog/ActiveTask 상태 파일이 diff에 포함됐다는 참고 정보입니다.`;
+    }
+    if (relation === "outside") {
+      return `${formatInlineCode(filePath)}가 예상 범위 밖 변경으로 감지됨 (${category})`;
+    }
+    return `${formatInlineCode(filePath)} 변경 감지 (${category})`;
+  }
+  if (/ExecutionResult observed exit state is mixed/i.test(text)) {
+    return "실행 결과에 성공/실패 신호가 섞여 있어 확인 필요";
+  }
+  if (/failed or cancelled session/i.test(text)) {
+    return "실패 또는 취소된 실행 세션이 있어 확인 필요";
+  }
+  if (options.warning) {
+    return text.replace(/^warning:\s*/i, "");
+  }
+  return text;
 }
 
 function finalizationColor(state) {
@@ -2389,9 +2568,7 @@ function summarizeList(items, maxCount) {
     return "(없음)";
   }
 
-  const visible = values.slice(0, maxCount).map(koListValue);
-  const suffix = values.length > maxCount ? `; +${values.length - maxCount}개 더 있음` : "";
-  return `${visible.join("; ")}${suffix}`;
+  return bulletLines(values, maxCount).join("\n");
 }
 
 function summarizeCompactList(items, maxCount) {
@@ -2400,9 +2577,22 @@ function summarizeCompactList(items, maxCount) {
     return "(없음)";
   }
 
-  const visible = values.slice(0, maxCount).map(koListValue);
-  const suffix = values.length > maxCount ? ` 외 ${values.length - maxCount}개` : "";
-  return `${visible.join(", ")}${suffix}`;
+  return bulletLines(values, maxCount).join("\n");
+}
+
+function bulletLines(items, maxCount = 4, options = {}) {
+  const values = Array.isArray(items) ? items.map(cleanupBlock).filter(Boolean) : [];
+  const fallback = options.fallback || "(없음)";
+  if (values.length === 0) {
+    return [options.indent ? `  - ${fallback}` : `- ${fallback}`];
+  }
+
+  const prefix = options.indent ? "  - " : "- ";
+  const visible = values.slice(0, maxCount).map((item) => `${prefix}${compactText(koListValue(item), options.maxLength ?? 180)}`);
+  if (values.length > visible.length) {
+    visible.push(`${prefix}+${values.length - visible.length}개 더 있음`);
+  }
+  return visible;
 }
 
 export function buildWorkflowActionRows(actions) {
@@ -2468,7 +2658,30 @@ function actionSummary(actions) {
   if (labels.length === 0) {
     return "(없음)";
   }
-  return `${labels.join(" → ")} 버튼을 사용하세요.`;
+  return bulletLines(labels.map((label) => `${label}: ${describeActionLabel(label)}`)).join("\n");
+}
+
+function describeActionLabel(label) {
+  const text = String(label ?? "");
+  const descriptions = {
+    "승인 내용 보기": "범위와 금지 사항을 먼저 확인",
+    "승인+실행": "작업 선택, 승인 기록, PC Runner 시작",
+    "다시 시작": "같은 작업으로 Runner 시작 재시도",
+    "상태": "현재 Runner 상태만 확인",
+    "결과 보기": "Runner 기록과 생성된 보고서 확인",
+    "완료 카드": "완료 판정과 남은 이슈 확인",
+    "완료 승인": "검증 결과를 받아들이고 task done 처리. 커밋/푸시는 별도",
+    "수정 요청": "task를 완료하지 않고 수정 필요로 기록",
+    "우려 감수 후 완료": "우려를 확인했다는 기록을 남기고 task done 처리. 폐기/우회 아님",
+    "판단 보류": "task를 완료하지 않고 판단을 나중으로 미룸",
+    "자동승인 평가": "자동 승인 정책 결과 확인",
+    "후속 후보": "남은 후속 작업 후보 확인",
+    "작업 완료": "task done 상태로 기록",
+    "커밋+푸시": "현재 변경을 git commit 후 push",
+    "도움": "현재 상태와 다음 행동 설명",
+    "중단": "기록된 Runner 실행 중단",
+  };
+  return descriptions[text] || "해당 작업을 실행";
 }
 
 function buildIntakeActions(taskId, autoHandoff) {
@@ -2508,7 +2721,7 @@ function buildPcRunnerActions({ taskId, stopReason, reports = {}, runnerRunId, t
         workflowAction("completionCard", taskId, "완료 카드", { ...ids, style: ButtonStyle.Primary }),
         workflowAction("acceptDone", taskId, "완료 승인", { ...ids, style: ButtonStyle.Success }),
         workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary }),
-        workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger }),
+        workflowAction("acceptConcernsDone", taskId, "우려 감수 후 완료", { ...ids, style: ButtonStyle.Danger }),
       ];
     case "done_or_commit_decision":
       return [
@@ -2546,9 +2759,9 @@ function summarizeValidationLines(items) {
     return ["(없음)"];
   }
 
-  const lines = values.slice(0, 3).map((item, index) => `${index + 1}. ${compactText(koListValue(item), 180)}`);
+  const lines = values.slice(0, 3).map((item) => `- ${compactText(koListValue(item), 180)}`);
   if (values.length > lines.length) {
-    lines.push("상세 검증 항목은 TaskDraft 출력 파일 또는 생성된 Backlog task에서 확인하세요.");
+    lines.push(`- +${values.length - lines.length}개 더 있음. 상세 항목은 TaskDraft 출력 또는 Backlog task에서 확인`);
   }
   return lines;
 }
@@ -2559,7 +2772,7 @@ function summarizeCommandLines(items) {
     return ["(없음)"];
   }
 
-  return values.slice(0, 5).map((item) => formatInlineCode(compactText(item, 220)));
+  return values.slice(0, 5).map((item) => `- ${formatInlineCode(compactText(item, 220))}`);
 }
 
 function summarizeIntakeValidation(items) {
@@ -2617,12 +2830,27 @@ function splitCardSections(text) {
 }
 
 function embedField(name, value, inline = false) {
-  const raw = Array.isArray(value) ? value.filter(Boolean).join("\n") : String(value ?? "");
+  const raw = Array.isArray(value) ? formatFieldList(value) : String(value ?? "");
   return {
     name,
     value: compactText(raw || "(없음)", 1024),
     inline,
   };
+}
+
+function formatFieldList(value) {
+  const lines = [];
+  for (const item of value.filter(Boolean)) {
+    const parts = String(item).split(/\r?\n/).map((line) => line.trimEnd()).filter(Boolean);
+    for (const part of parts) {
+      if (/^\s*[-*]\s+/.test(part) || /^\s*\d+\.\s+/.test(part)) {
+        lines.push(part);
+      } else {
+        lines.push(`- ${part}`);
+      }
+    }
+  }
+  return lines.join("\n");
 }
 
 function koStatusLabel(value) {

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { ButtonStyle, SlashCommandBuilder } from "discord.js";
 import { isAuthorized, rejectUnauthorized } from "../safety/authorization.js";
 import { getWorkflowStatus } from "../services/workflowStatusService.js";
 import { listProjectProfiles, getProjectProfile } from "../services/projectProfileService.js";
@@ -425,7 +425,7 @@ function buildFullAiCommand() {
         .addSubcommand((sub) =>
           sub
             .setName("accept-concerns")
-            .setDescription("검토한 CONCERNS 완료 보고서를 우려 수락으로 기록합니다")
+            .setDescription("검토한 CONCERNS를 감수하고 완료로 기록합니다")
             .addStringOption((option) =>
               option
                 .setName("id")
@@ -1423,7 +1423,7 @@ function buildNavigatorActionRows(data) {
       case "requestChanges":
         return workflowAction("requestChanges", taskId, "수정 요청", { ...ids, style: ButtonStyle.Primary });
       case "acceptConcernsDone":
-        return workflowAction("acceptConcernsDone", taskId, "우려 수용", { ...ids, style: ButtonStyle.Danger });
+        return workflowAction("acceptConcernsDone", taskId, "우려 감수 후 완료", { ...ids, style: ButtonStyle.Danger });
       case "gitCommitPush":
         return gitCommitPushAction();
       case "ask":
