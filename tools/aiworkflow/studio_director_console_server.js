@@ -379,6 +379,7 @@ async function getMeetings(repoRoot) {
       follow_up_count: Array.isArray(json.follow_up_workorders) ? json.follow_up_workorders.length : 0,
       path: toRepoRelative(repoRoot, file),
       href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+      is_stored: slash(file).includes("/_Docs/AIWorkflow/Studio/MeetingSessions/"),
       updated_at: stat.mtime.toISOString(),
     });
   }
@@ -995,7 +996,7 @@ function directorConsoleHtml() {
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
         button("회의 점검", "meeting-inspect", meeting.path) +
         button("handoff 보기", "meeting-handoff", meeting.path) +
-        button("회의 저장", "meeting-create", meeting.path, "good") +
+        (meeting.is_stored ? button("?? ??", "meeting-start", meeting.meeting_id, "good") + button("?? ??", "meeting-finalize", meeting.meeting_id, "warn") : button("?? ??", "meeting-create", meeting.path, "good")) +
         '</div></div>'
       ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
       el("departments").innerHTML = state.departments.length ? state.departments.map((department) =>
@@ -1112,8 +1113,18 @@ function directorConsoleHtml() {
       if (action === "automation-repair") return log(await post("/api/automation/repair", { path:filePath }));
       if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
       if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
+      if (action === "meeting-start") {
+        if (!confirm("? ??? in_progress ??? ?????? ?? ??? ??? task ??? ???? ????.")) return;
+        log(await post("/api/meeting/start", { meeting_id:filePath }));
+        await refresh();
+      }
+      if (action === "meeting-finalize") {
+        if (!confirm("? ??? finalized ??? ?????? ?? ??? ??? ??/canon/task ??? ?????.")) return;
+        log(await post("/api/meeting/finalize", { meeting_id:filePath }));
+        await refresh();
+      }
       if (action === "meeting-create") {
-        if (!confirm("이 MeetingSession을 Studio 저장소에 기록할까요? 회의 합의는 승인이나 캐논이 아닙니다.")) return;
+        if (!confirm("? MeetingSession? Studio ???? ?????? ?? ??? ???? ??? ????.")) return;
         log(await post("/api/meeting/create", { path:filePath }));
         await refresh();
       }
@@ -1282,6 +1293,28 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     safeResolveReadable(repoRoot, body.path || "");
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
     const result = await runTool(repoRoot, bat, ["handoff", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/start") {
+    const body = await readRequestJson(req);
+    const meetingId = String(body.meeting_id || "");
+    if (!/^[A-Za-z0-9_.:-]+$/.test(meetingId)) {
+      throw new Error("Invalid meeting_id.");
+    }
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    const result = await runTool(repoRoot, bat, ["start", meetingId, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/finalize") {
+    const body = await readRequestJson(req);
+    const meetingId = String(body.meeting_id || "");
+    if (!/^[A-Za-z0-9_.:-]+$/.test(meetingId)) {
+      throw new Error("Invalid meeting_id.");
+    }
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    const result = await runTool(repoRoot, bat, ["finalize", meetingId, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 

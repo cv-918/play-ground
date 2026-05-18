@@ -653,7 +653,8 @@ Profiles, Tool Adapters, and review packet links. It can:
   Handoff draft records
 - record Human Director decisions for materialized drafts
 - create a Backlog task from a reviewed WorkOrder
-- inspect, handoff-check, or explicitly store MeetingSession records
+- inspect, handoff-check, explicitly store, start, or finalize MeetingSession
+  records
 - show Department and StaffAgent responsibility summaries
 - show the active Project Profile and Tool Adapter policy summary
 - run Conditional Automation status, validate, test, `_Temp` test-write,
@@ -662,9 +663,10 @@ Profiles, Tool Adapters, and review packet links. It can:
 All write actions require an explicit browser button click. The console is
 local-only. It does not approve task execution, start PC Runner, write canon,
 modify source files, commit, or push. Meeting consensus remains separate from
-Director approval and canon. Conditional Automation test-write writes only
-`_Temp` evaluation artifacts. Handoff execution uses the signed-in Codex App/CLI
-route first and does not use OpenAI API billing by default.
+Director approval and canon, and meeting lifecycle changes do not approve task
+execution. Conditional Automation test-write writes only `_Temp` evaluation
+artifacts. Handoff execution uses the signed-in Codex App/CLI route first and
+does not use OpenAI API billing by default.
 
 ---
 

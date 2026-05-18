@@ -61,9 +61,9 @@ This slice defines:
   plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, Department/StaffAgent directory panels,
-  Proposal/Decision/Memory browser panels, Meeting Room inspection/actions,
-  Project Profile and Tool Adapter browser panels, Conditional Automation
-  policy test actions, and review packet links
+  Proposal/Decision/Memory browser panels, Meeting Room inspection/lifecycle
+  actions, Project Profile and Tool Adapter browser panels, Conditional
+  Automation policy test actions, and review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -173,6 +173,9 @@ Project Profiles and Tool Adapter policy summaries so the Director can see the
 project target and available execution equipment before approving downstream
 work. It exposes Department and StaffAgent directory panels so the Director can
 see who owns a responsibility before starting a meeting, handoff, or WorkOrder.
+Meeting Room lifecycle buttons may create, start, or finalize MeetingSession
+records only through explicit UI actions; meeting lifecycle state is not
+approval, canon, task execution, or git finalization.
 It exposes Conditional Automation status, validation, dry-run test, `_Temp`
 evaluation write, replay, and repair-plan actions as policy evidence only. Its
 handoff execution path still routes through the existing read-only staff
