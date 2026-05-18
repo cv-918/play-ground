@@ -1,0 +1,17 @@
+{
+  "name": "google-drive-data-upload",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Create and upload PlayGround Data ZIP snapshots to Google Drive.",
+  "main": "src/uploadDataSnapshot.js",
+  "scripts": {
+    "check": "node --check src/uploadDataSnapshot.js"
+  },
+  "dependencies": {
+    "googleapis": "^164.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

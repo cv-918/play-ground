@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Google Drive Data 업로드 도구 사용 가이드</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fa;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #5f6f7f;
+      --line: #d9e1ea;
+      --accent: #245c8f;
+      --accent-soft: #e7f1fa;
+      --warn: #8a5a13;
+      --warn-soft: #fff4dc;
+      --ok: #146c43;
+      --ok-soft: #e5f5ec;
+      --code: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+      line-height: 1.65;
+    }
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    header {
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    h1, h2, h3 { line-height: 1.3; letter-spacing: 0; }
+    h1 { margin: 0 0 8px; font-size: 34px; }
+    h2 { margin: 36px 0 14px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 24px; }
+    h3 { margin: 24px 0 10px; font-size: 18px; }
+    p, li, td, th { font-size: 16px; }
+    .meta { margin: 0; color: var(--muted); font-size: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    nav h2 { margin: 0 0 10px; padding: 0; border: 0; font-size: 16px; }
+    nav ol { margin: 0; padding-left: 20px; }
+    nav li { margin: 6px 0; font-size: 14px; }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 30px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: var(--code);
+      border: 1px solid #d8e2ec;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.92em;
+      word-break: break-word;
+    }
+    pre {
+      overflow-x: auto;
+      background: #17202a;
+      color: #f7fbff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      line-height: 1.55;
+    }
+    pre code { background: transparent; border: 0; padding: 0; color: inherit; word-break: normal; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #f4f7fb; }
+    .note, .good, .warn {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border-radius: 7px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+    }
+    .good { border-left-color: var(--ok); background: var(--ok-soft); }
+    .warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .checklist { padding-left: 22px; }
+    .checklist li { margin: 6px 0; }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      main { padding: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Google Drive Data 업로드 도구 사용 가이드</h1>
+      <p class="meta">대상 저장소: <code>play-ground</code> / 도구: <code>tools\google-drive-data-upload\</code> / 작성일: 2026-05-14</p>
+    </header>
+
+    <div class="layout">
+      <nav aria-label="문서 목차">
+        <h2>목차</h2>
+        <ol>
+          <li><a href="#purpose">도구 목적</a></li>
+          <li><a href="#paths">파일 위치</a></li>
+          <li><a href="#prepare-drive">Google Drive 준비</a></li>
+          <li><a href="#local-config">로컬 설정</a></li>
+          <li><a href="#run">실행 방법</a></li>
+          <li><a href="#team-publish">팀원 배포 데이터 발행</a></li>
+          <li><a href="#verify">결과 확인</a></li>
+          <li><a href="#game-config">게임 자동 갱신 설정</a></li>
+          <li><a href="#troubleshooting">문제 해결</a></li>
+          <li><a href="#safety">주의 사항</a></li>
+        </ol>
+      </nav>
+
+      <main>
+        <section id="purpose">
+          <h2>1. 도구 목적</h2>
+          <p>
+            이 도구는 <code>PlayGround\Data</code> 폴더의 현재 내용을 ZIP 파일로 묶은 뒤,
+            사용자의 Google Drive 폴더에 업로드합니다. 게임 데이터 JSON, 폰트, 이미지 리소스,
+            Git에 아직 추적되지 않은 Data 하위 리소스도 실제 디스크에 있으면 함께 포함됩니다.
+          </p>
+          <div class="good">
+            기본 결과물 이름은 <code>PlayGround_Data_yyyyMMdd_HHmmss.zip</code> 형식입니다.
+            실행할 때마다 새 스냅샷이 생성되므로 이전 백업을 보존하기 쉽습니다.
+          </div>
+        </section>
+
+        <section id="paths">
+          <h2>2. 파일 위치</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>경로</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>실행 파일</td>
+                <td><code>tools\google-drive-data-upload\upload_playground_data.bat</code></td>
+                <td>사용자가 실행하는 진입점입니다.</td>
+              </tr>
+              <tr>
+                <td>예시 설정</td>
+                <td><code>tools\google-drive-data-upload\config.example.json</code></td>
+                <td>로컬 설정 파일을 만들 때 복사해서 씁니다.</td>
+              </tr>
+              <tr>
+                <td>로컬 설정</td>
+                <td><code>_Local\GoogleDriveDataUpload\config.local.json</code></td>
+                <td>Google Drive 폴더 ID와 옵션을 넣습니다. Git에 올리지 않습니다.</td>
+              </tr>
+              <tr>
+                <td>OAuth client</td>
+                <td><code>_Local\GoogleDriveDataUpload\oauth_client.json</code></td>
+                <td>Google Cloud Console에서 받은 Desktop OAuth client JSON입니다. Git에 올리지 않습니다.</td>
+              </tr>
+              <tr>
+                <td>OAuth token</td>
+                <td><code>_Local\GoogleDriveDataUpload\token.json</code></td>
+                <td>최초 로그인 후 자동 생성됩니다. Git에 올리지 않습니다.</td>
+              </tr>
+              <tr>
+                <td>ZIP/로그</td>
+                <td><code>_Temp\GoogleDriveDataUpload\</code></td>
+                <td>임시 ZIP과 업로드 로그가 생성됩니다. Git에 올리지 않습니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="prepare-drive">
+          <h2>3. Google Drive 준비</h2>
+          <ol>
+            <li>Google Drive에서 백업을 저장할 폴더를 하나 만듭니다.</li>
+            <li>브라우저 주소창에서 폴더 ID를 확인합니다. 보통 <code>folders/</code> 뒤의 긴 문자열입니다.</li>
+            <li>
+              Google Cloud Console에서 프로젝트를 만들고 Google Drive API를 활성화합니다.
+              공식 문서: <a href="https://developers.google.com/workspace/drive/api/quickstart/nodejs" target="_blank" rel="noreferrer">Google Drive API Node.js quickstart</a>
+            </li>
+            <li>OAuth consent screen을 설정합니다. 개인용 테스트라면 테스트 사용자에 본인 Google 계정을 추가합니다.</li>
+            <li>OAuth client ID를 만들 때 Application type은 <strong>Desktop app</strong>으로 선택합니다.</li>
+            <li>받은 JSON 파일을 <code>_Local\GoogleDriveDataUpload\oauth_client.json</code>에 둡니다.</li>
+          </ol>
+          <div class="warn">
+            OAuth client JSON과 token JSON은 인증 정보입니다. 문서, Dev Log, Git commit, 채팅에 내용을 붙여넣지 마세요.
+          </div>
+        </section>
+
+        <section id="local-config">
+          <h2>4. 로컬 설정 만들기</h2>
+          <p>저장소 루트에서 다음 폴더를 준비합니다.</p>
+          <pre><code>mkdir _Local\GoogleDriveDataUpload</code></pre>
+
+          <p>예시 설정을 로컬 설정으로 복사합니다.</p>
+          <pre><code>copy tools\google-drive-data-upload\config.example.json _Local\GoogleDriveDataUpload\config.local.json</code></pre>
+
+          <p><code>_Local\GoogleDriveDataUpload\config.local.json</code>을 열고 <code>drive_folder_id</code>를 본인의 Google Drive 폴더 ID로 바꿉니다.</p>
+          <pre><code>{
+  "drive_folder_id": "여기에_구글드라이브_폴더_ID",
+  "source_dir": "PlayGround\\Data",
+  "archive_name_prefix": "PlayGround_Data",
+  "keep_local_archive": false
+}</code></pre>
+
+          <table>
+            <thead>
+              <tr>
+                <th>필드</th>
+                <th>의미</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>drive_folder_id</code></td>
+                <td>업로드 대상 Google Drive 폴더 ID입니다. 필수입니다.</td>
+              </tr>
+              <tr>
+                <td><code>source_dir</code></td>
+                <td>ZIP으로 묶을 데이터 폴더입니다. 기본값은 <code>PlayGround\Data</code>입니다.</td>
+              </tr>
+              <tr>
+                <td><code>archive_name_prefix</code></td>
+                <td>ZIP 파일명 앞부분입니다. 기본값은 <code>PlayGround_Data</code>입니다.</td>
+              </tr>
+              <tr>
+                <td><code>keep_local_archive</code></td>
+                <td><code>true</code>면 업로드 성공 후에도 로컬 ZIP을 남깁니다. <code>false</code>면 성공 후 삭제합니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="run">
+          <h2>5. 실행 방법</h2>
+
+          <h3>5.1 사전 확인</h3>
+          <p>업로드 없이 대상 파일 수와 생성될 ZIP 경로만 확인합니다.</p>
+          <pre><code>tools\google-drive-data-upload\upload_playground_data.bat --dry-run</code></pre>
+
+          <h3>5.2 최초 업로드</h3>
+          <p>처음 실행하면 브라우저가 열리고 Google 로그인/동의 화면이 나옵니다.</p>
+          <pre><code>tools\google-drive-data-upload\upload_playground_data.bat --keep-archive</code></pre>
+          <p>
+            인증이 끝나면 <code>_Local\GoogleDriveDataUpload\token.json</code>이 생성됩니다.
+            이후 실행부터는 브라우저 인증 없이 업로드될 수 있습니다.
+          </p>
+
+          <h3>5.3 일반 업로드</h3>
+          <p>설정의 <code>keep_local_archive</code>가 <code>false</code>면 업로드 성공 후 로컬 ZIP은 자동 삭제됩니다.</p>
+          <pre><code>tools\google-drive-data-upload\upload_playground_data.bat</code></pre>
+
+          <h3>5.4 다른 설정 파일 사용</h3>
+          <pre><code>tools\google-drive-data-upload\upload_playground_data.bat --config _Local\GoogleDriveDataUpload\config.local.json</code></pre>
+        </section>
+
+        <section id="team-publish">
+          <h2>6. 팀원 배포 데이터 발행</h2>
+          <p>
+            팀원 게임 실행 시 자동으로 내려받을 최신 Data를 발행하려면 <code>--publish-team-data</code> 옵션을 사용합니다.
+            이 모드는 Google Drive에 <code>PlayGround_Data_Latest.zip</code>과
+            <code>PlayGround_Data_Manifest.json</code>을 고정 이름으로 유지하고, 실행할 때마다 파일 내용만 갱신합니다.
+          </p>
+          <pre><code>tools\google-drive-data-upload\upload_playground_data.bat --publish-team-data --data-version 2026.05.15.001</code></pre>
+          <p>
+            팀원 배포 ZIP에서는 기본적으로 <code>Data/UserData.json</code>을 제외합니다.
+            팀원 로컬 세이브는 게임 실행 폴더의 기존 <code>Data\UserData.json</code>을 보존합니다.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>옵션</th>
+                <th>의미</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--publish-team-data</code></td>
+                <td>최신 배포 ZIP과 manifest를 만들고 Google Drive의 고정 파일을 생성 또는 갱신합니다.</td>
+              </tr>
+              <tr>
+                <td><code>--data-version 값</code></td>
+                <td>manifest의 <code>data_version</code>입니다. 같은 버전과 SHA256이면 게임 시작 시 다운로드를 생략합니다.</td>
+              </tr>
+              <tr>
+                <td><code>--dry-run</code></td>
+                <td>업로드 없이 파일 수와 생성될 경로만 확인합니다.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">
+            발행 성공 후 콘솔의 <code>Manifest URL</code>을 복사해 배포 폴더의 <code>DataUpdateConfig.json</code>에 넣습니다.
+            Google Drive 파일은 팀원이 인증 없이 받을 수 있도록 <code>anyone reader</code> 권한으로 설정됩니다.
+          </div>
+        </section>
+
+        <section id="verify">
+          <h2>7. 결과 확인</h2>
+          <ol class="checklist">
+            <li>콘솔에 <code>Google Drive upload complete.</code>가 출력됐는지 확인합니다.</li>
+            <li>콘솔에 표시된 <code>File ID</code>, <code>File name</code>, <code>Link</code>를 확인합니다.</li>
+            <li>Google Drive 대상 폴더에서 <code>PlayGround_Data_yyyyMMdd_HHmmss.zip</code> 파일이 보이는지 확인합니다.</li>
+            <li>ZIP을 열어 <code>Data/UserData.json</code>, JSON 데이터, <code>Data/Resources/...</code> 리소스가 들어있는지 확인합니다.</li>
+            <li>업로드 로그는 <code>_Temp\GoogleDriveDataUpload\logs\</code> 아래의 <code>upload_*.json</code> 파일에서 확인합니다.</li>
+          </ol>
+        </section>
+
+        <section id="game-config">
+          <h2>8. 게임 자동 갱신 설정</h2>
+          <p>
+            빌드하면 <code>DataUpdater\apply_data_update.ps1</code>과
+            <code>DataUpdater\download_manifest.ps1</code>이 exe와 같은 출력 폴더로 복사됩니다.
+            <code>DataUpdateConfig.json</code>은 출력 폴더에 없을 때만 기본값으로 생성됩니다.
+            팀원에게 배포할 폴더의 <code>DataUpdateConfig.json</code>을 열어 자동 갱신을 켜면,
+            이후 빌드가 그 설정을 덮어쓰지 않습니다.
+          </p>
+          <pre><code>{
+  "schema_version": 1,
+  "enabled": true,
+  "manifest_url": "여기에_Manifest_URL",
+  "timeout_seconds": 15,
+  "failure_policy": "run_existing_data"
+}</code></pre>
+          <p>
+            게임은 시작 직후 <code>Data\DataUpdateManifest.json</code>과 원격 manifest를 비교합니다.
+            이미 같은 <code>data_version</code>과 <code>archive_sha256</code>이면 다운로드 없이 바로 실행합니다.
+            새 데이터면 ZIP 다운로드, SHA256 검증, 압축 해제, 기존 Data 백업, Data 교체를 PowerShell helper로 수행합니다.
+          </p>
+          <p>
+            업데이트 진행 상황과 실패 원인은 exe 폴더의
+            <code>_DataUpdate\data_update_service.log</code>에 기록됩니다. 시작 전 별도 팝업은 띄우지 않습니다.
+          </p>
+          <p>
+            이번 실행에서 실제로 업데이트했는지, 이미 최신이라 생략했는지는
+            <code>_DataUpdate\last_update_result.json</code>에서 바로 확인할 수 있습니다.
+          </p>
+          <p>
+            <code>SHIPPING</code>이 아닌 Debug/Release 테스트 빌드에서는 게임 화면 우상단에도 약 8초 동안
+            <code>Data updated</code>, <code>Data already latest</code>, <code>Data update failed</code> 상태가 표시됩니다.
+          </p>
+          <pre><code>{
+  "schema_version": 1,
+  "status": "updated",
+  "checked_at_local": "2026-05-15T03:20:00",
+  "data_version": "2026.05.15.001",
+  "message": "Data update helper completed."
+}</code></pre>
+          <table>
+            <thead>
+              <tr>
+                <th>status</th>
+                <th>의미</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>updated</code></td>
+                <td>새 ZIP을 다운로드하고 Data 교체를 완료했습니다.</td>
+              </tr>
+              <tr>
+                <td><code>skipped_already_applied</code></td>
+                <td>로컬 manifest가 원격 manifest와 같아서 다운로드와 교체를 생략했습니다.</td>
+              </tr>
+              <tr>
+                <td><code>update_failed</code></td>
+                <td>업데이트 적용 중 실패했습니다. 게임은 기존 Data로 실행됩니다.</td>
+              </tr>
+              <tr>
+                <td><code>check_failed</code> / <code>manifest_invalid</code></td>
+                <td>원격 manifest 확인에 실패했습니다. 게임은 기존 Data로 실행됩니다.</td>
+              </tr>
+              <tr>
+                <td><code>disabled</code></td>
+                <td><code>DataUpdateConfig.json</code>에서 자동 갱신이 꺼져 있습니다.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="warn">
+            업데이트 실패, 네트워크 실패, manifest 오류, SHA 불일치가 발생해도 게임은 기존 <code>Data</code>로 실행됩니다.
+            이 정책은 <code>failure_policy</code>의 기본값인 <code>run_existing_data</code>에 맞춘 동작입니다.
+          </div>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>9. 문제 해결</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>오류</th>
+                <th>원인</th>
+                <th>해결</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CONFIG_ERROR</code></td>
+                <td>로컬 설정 파일이 없거나 <code>drive_folder_id</code>가 비어 있습니다.</td>
+                <td><code>_Local\GoogleDriveDataUpload\config.local.json</code>을 만들고 폴더 ID를 입력합니다.</td>
+              </tr>
+              <tr>
+                <td><code>SOURCE_ERROR</code></td>
+                <td><code>PlayGround\Data</code> 폴더를 찾지 못했습니다.</td>
+                <td>저장소 루트에서 실행했는지, 설정의 <code>source_dir</code>가 맞는지 확인합니다.</td>
+              </tr>
+              <tr>
+                <td><code>ZIP_ERROR</code></td>
+                <td>ZIP 생성 중 파일 접근 문제가 생겼습니다.</td>
+                <td>게임이나 이미지 편집기가 Data 파일을 잠그고 있지 않은지 확인한 뒤 다시 실행합니다.</td>
+              </tr>
+              <tr>
+                <td><code>AUTH_ERROR</code></td>
+                <td>OAuth client JSON이 없거나 Google 인증이 실패했습니다.</td>
+                <td><code>oauth_client.json</code> 위치를 확인하고, 필요하면 <code>token.json</code>을 삭제한 뒤 다시 인증합니다.</td>
+              </tr>
+              <tr>
+                <td><code>EADDRINUSE</code></td>
+                <td>이전 인증 시도나 다른 프로그램이 로컬 OAuth 콜백 포트를 사용 중입니다.</td>
+                <td>최신 도구는 <code>53682</code>부터 <code>53720</code>까지 빈 포트를 자동으로 찾습니다. 계속 실패하면 이전 Node 프로세스를 종료한 뒤 다시 실행합니다.</td>
+              </tr>
+              <tr>
+                <td><code>UPLOAD_ERROR</code></td>
+                <td>Drive 폴더 접근 권한, 폴더 ID, 네트워크, API 설정 문제일 수 있습니다.</td>
+                <td>Google Drive API 활성화 여부, 폴더 ID, 계정 권한, 네트워크 상태를 확인합니다.</td>
+              </tr>
+              <tr>
+                <td><code>DOWNLOAD_ERROR</code></td>
+                <td>게임 실행 중 manifest의 <code>download_url</code>에서 ZIP을 받지 못했습니다.</td>
+                <td>Drive 공개 권한, URL, 네트워크 상태를 확인합니다. 게임은 기존 Data로 계속 실행됩니다.</td>
+              </tr>
+              <tr>
+                <td><code>CHECKSUM_ERROR</code></td>
+                <td>다운로드한 ZIP의 크기나 SHA256이 manifest와 다릅니다.</td>
+                <td>배포 데이터를 다시 발행하고, manifest URL이 최신 파일을 가리키는지 확인합니다.</td>
+              </tr>
+              <tr>
+                <td><code>EXTRACT_ERROR</code> / <code>APPLY_ERROR</code></td>
+                <td>압축 해제나 Data 교체 중 문제가 발생했습니다.</td>
+                <td>게임 폴더 권한, 실행 중인 다른 프로세스의 파일 잠금, 디스크 여유 공간을 확인합니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="safety">
+          <h2>10. 주의 사항</h2>
+          <ul>
+            <li><code>_Local</code>, <code>_Temp</code>, <code>node_modules</code>, <code>.env</code>, OAuth 관련 JSON은 Git에 올리지 않습니다.</li>
+            <li>이 도구는 <code>PlayGround\Data</code>를 수정하지 않습니다. 현재 디스크 상태를 읽어서 ZIP으로 묶습니다.</li>
+            <li>업로드 성공은 Google Drive 폴더에서 직접 한 번 확인해야 합니다.</li>
+            <li>다른 Google 계정으로 바꾸려면 <code>_Local\GoogleDriveDataUpload\token.json</code>을 삭제하고 다시 실행합니다.</li>
+            <li>Google Drive API와 OAuth 사용법은 Google 정책 변경에 영향을 받을 수 있으므로, 인증 문제가 계속되면 공식 문서를 확인합니다.</li>
+          </ul>
+          <div class="note">
+            이 문서는 독립 로컬 도구 사용 가이드입니다. AIWorkflow Discord 명령, PC Runner, 승인 게이트, 완료/커밋 절차는 변경하지 않습니다.
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

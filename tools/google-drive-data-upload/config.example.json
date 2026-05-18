@@ -1,0 +1,13 @@
+{
+  "drive_folder_id": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+  "source_dir": "PlayGround\\Data",
+  "archive_name_prefix": "PlayGround_Data",
+  "keep_local_archive": false,
+  "publish_archive_name": "PlayGround_Data_Latest.zip",
+  "publish_manifest_name": "PlayGround_Data_Manifest.json",
+  "preserve_paths": [
+    "Data/UserData.json"
+  ],
+  "latest_archive_file_id": "",
+  "latest_manifest_file_id": ""
+}
