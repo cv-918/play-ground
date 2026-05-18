@@ -644,8 +644,8 @@ tools\aiworkflow\studio_director_console.bat --once --json
 
 The console shows Studio metrics, handoff candidates, recent staff runs,
 materialized draft records, WorkOrders, Proposal/Decision/Memory browser
-panels, Meeting Room records, Project Profiles, Tool Adapters, and review
-packet links. It can:
+panels, Meeting Room records, Department/StaffAgent directories, Project
+Profiles, Tool Adapters, and review packet links. It can:
 
 - refresh the static dashboard
 - preview or run the existing read-only `studio_staff_pipeline.bat`
@@ -654,6 +654,7 @@ packet links. It can:
 - record Human Director decisions for materialized drafts
 - create a Backlog task from a reviewed WorkOrder
 - inspect, handoff-check, or explicitly store MeetingSession records
+- show Department and StaffAgent responsibility summaries
 - show the active Project Profile and Tool Adapter policy summary
 - run Conditional Automation status, validate, test, `_Temp` test-write,
   replay, and repair-plan actions as policy evidence

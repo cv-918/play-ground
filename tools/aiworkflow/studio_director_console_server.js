@@ -482,6 +482,52 @@ async function getConditionalAutomation(repoRoot) {
   };
 }
 
+async function getStaffDirectory(repoRoot) {
+  const registryRoot = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Registries");
+  const departmentPath = path.join(registryRoot, "departments.initial.json");
+  const staffPath = path.join(registryRoot, "staff_agents.initial.json");
+  const departmentRegistry = (await readJsonIfExists(departmentPath)) || {};
+  const staffRegistry = (await readJsonIfExists(staffPath)) || {};
+  const staffAgents = Array.isArray(staffRegistry.staff_agents) ? staffRegistry.staff_agents : [];
+  const plannedStaffAgents = Array.isArray(staffRegistry.planned_staff_agents) ? staffRegistry.planned_staff_agents : [];
+  const staffById = new Map(staffAgents.map((agent) => [agent.agent_id, agent]));
+
+  const departments = (Array.isArray(departmentRegistry.departments) ? departmentRegistry.departments : []).map((department) => ({
+    department_id: department.department_id || "",
+    name: department.name || "",
+    mission: department.mission || "",
+    department_lead: department.department_lead || "",
+    staff_count: Array.isArray(department.staff_agents) ? department.staff_agents.length : 0,
+    active_staff_count: Array.isArray(department.staff_agents)
+      ? department.staff_agents.filter((agentId) => staffById.has(agentId)).length
+      : 0,
+    review_gates: Array.isArray(department.default_review_gates) ? department.default_review_gates.slice(0, 4) : [],
+    owned_artifacts: Array.isArray(department.owned_artifacts) ? department.owned_artifacts.slice(0, 4) : [],
+    path: toRepoRelative(repoRoot, departmentPath),
+    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, departmentPath))}`,
+  }));
+
+  const staff = staffAgents.map((agent) => ({
+    agent_id: agent.agent_id || "",
+    display_name: agent.display_name || "",
+    department_id: agent.department_id || "",
+    role_title: agent.role_title || "",
+    seniority: agent.seniority || "",
+    mission: agent.role_charter && agent.role_charter.mission ? agent.role_charter.mission : "",
+    authority: agent.role_charter && Array.isArray(agent.role_charter.authority) ? agent.role_charter.authority.slice(0, 3) : [],
+    approval_required_actions: agent.role_charter && Array.isArray(agent.role_charter.approval_required_actions) ? agent.role_charter.approval_required_actions.slice(0, 3) : [],
+    output_contracts: agent.output_contracts && Array.isArray(agent.output_contracts.required_outputs) ? agent.output_contracts.required_outputs.slice(0, 3) : [],
+    path: toRepoRelative(repoRoot, staffPath),
+    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, staffPath))}`,
+  }));
+
+  return {
+    departments,
+    staff,
+    planned_staff_count: plannedStaffAgents.length,
+  };
+}
+
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
@@ -528,6 +574,7 @@ async function getSummary(repoRoot) {
   const projectProfiles = await getProjectProfiles(repoRoot);
   const toolAdapters = await getToolAdapters(repoRoot);
   const conditionalAutomation = await getConditionalAutomation(repoRoot);
+  const staffDirectory = await getStaffDirectory(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -546,9 +593,9 @@ async function getSummary(repoRoot) {
     repo_root: repoRoot,
     generated_at: new Date().toISOString(),
     metrics: {
-      departments: 8,
-      staff: Array.isArray(registry.staff_agents) ? registry.staff_agents.length : 0,
-      planned_staff: Array.isArray(registry.planned_staff_agents) ? registry.planned_staff_agents.length : 0,
+      departments: staffDirectory.departments.length,
+      staff: staffDirectory.staff.length,
+      planned_staff: staffDirectory.planned_staff_count,
       tool_adapters: Array.isArray(toolRegistry.tool_adapters) ? toolRegistry.tool_adapters.length : 0,
       project_profiles: projectProfiles.profiles.length,
       automation_evaluations: conditionalAutomation.evaluations.length,
@@ -573,6 +620,8 @@ async function getSummary(repoRoot) {
     },
     tool_adapters: toolAdapters.slice(0, 16),
     conditional_automation: conditionalAutomation,
+    departments: staffDirectory.departments.slice(0, 12),
+    staff_agents: staffDirectory.staff.slice(0, 16),
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
@@ -793,6 +842,18 @@ function directorConsoleHtml() {
     </section>
     <section class="grid">
       <div class="card">
+        <h2>Departments</h2>
+        <p class="muted">AI 회사의 부서 목록입니다. 각 부서가 어떤 산출물과 검토 게이트를 맡는지 확인합니다.</p>
+        <div id="departments" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Staff Agents</h2>
+        <p class="muted">영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p>
+        <div id="staffAgents" class="list"></div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="card">
         <h2>Project Profile</h2>
         <p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다. Core는 프로젝트 경로를 직접 하드코딩하지 않고 이 profile을 읽어야 합니다.</p>
         <div id="projectProfiles" class="list"></div>
@@ -937,6 +998,22 @@ function directorConsoleHtml() {
         button("회의 저장", "meeting-create", meeting.path, "good") +
         '</div></div>'
       ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
+      el("departments").innerHTML = state.departments.length ? state.departments.map((department) =>
+        '<div class="item"><h3><code>' + esc(department.department_id) + '</code></h3>' +
+        '<p>' + esc(department.name) + '</p>' +
+        '<p class="summary">' + esc(short(department.mission, 150)) + '</p>' +
+        '<p class="small muted">lead ' + esc(department.department_lead) + ' · active staff ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
+        '<p class="small muted">gates: ' + esc(department.review_gates.join(", ") || "(none)") + '</p>' +
+        '<div class="row"><a href="' + esc(department.href) + '" target="_blank">registry 열기</a></div></div>'
+      ).join("") : '<p class="muted">Department가 없습니다.</p>';
+      el("staffAgents").innerHTML = state.staff_agents.length ? state.staff_agents.map((agent) =>
+        '<div class="item"><h3><code>' + esc(agent.agent_id) + '</code> <span class="pill">' + esc(agent.seniority) + '</span></h3>' +
+        '<p>' + esc(agent.display_name) + ' · ' + esc(agent.role_title) + ' · ' + esc(agent.department_id) + '</p>' +
+        '<p class="summary">' + esc(short(agent.mission, 150)) + '</p>' +
+        '<p class="small muted">outputs: ' + esc(agent.output_contracts.join(", ") || "(none)") + '</p>' +
+        '<p class="small muted">approval: ' + esc(agent.approval_required_actions.join(", ") || "(none)") + '</p>' +
+        '<div class="row"><a href="' + esc(agent.href) + '" target="_blank">registry 열기</a></div></div>'
+      ).join("") : '<p class="muted">StaffAgent가 없습니다.</p>';
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
         '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(profile.status) + '</span></h3>' +
         '<p>' + esc(profile.display_name) + ' · ' + esc(profile.engine) + ' · ' + esc(profile.project_type) + '</p>' +

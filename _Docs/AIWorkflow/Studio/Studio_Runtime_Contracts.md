@@ -159,10 +159,10 @@ tools\aiworkflow\studio_director_console.bat --once --json
 
 It serves a local-only browser UI for Studio metrics, Director Inbox, handoff
 candidates, staff run timeline, materialized draft records, WorkOrders,
-MeetingSessions, Project Profiles, Tool Adapters, Proposal/Decision/Memory
-browser panels, Conditional Automation policy evidence, and review packet
-links. The console may call only allowlisted Studio actions: refresh summary,
-export the static dashboard, preview or
+MeetingSessions, Department and StaffAgent directories, Project Profiles, Tool
+Adapters, Proposal/Decision/Memory browser panels, Conditional Automation
+policy evidence, and review packet links. The console may call only allowlisted
+Studio actions: refresh summary, export the static dashboard, preview or
 execute the existing read-only staff handoff pipeline, materialize
 RoleRunOutput into governed draft records, record Human Director decisions for
 materialized drafts, create Backlog tasks from reviewed WorkOrders, and inspect
