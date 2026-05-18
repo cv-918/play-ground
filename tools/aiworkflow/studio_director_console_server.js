@@ -449,6 +449,39 @@ async function getToolAdapters(repoRoot) {
   }));
 }
 
+async function getConditionalAutomation(repoRoot) {
+  const casesPath = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Examples/conditional_automation_cases.example.json");
+  const casesJson = (await readJsonIfExists(casesPath)) || {};
+  const evalRoot = repoPath(repoRoot, "_Temp/AIWorkflowStudio/conditional_automation");
+  const evalFiles = await listFiles(evalRoot, (_full, name) => name.endsWith(".json"));
+  const evaluations = [];
+
+  for (const file of evalFiles) {
+    const json = await readJsonIfExists(file);
+    if (!json) continue;
+    const stat = await fsp.stat(file);
+    evaluations.push({
+      id: json.evaluation_id || json.output_id || path.basename(file, ".json"),
+      policy_version: json.policy_version || "",
+      command: json.command || "",
+      case_count: Array.isArray(json.evaluations) ? json.evaluations.length : Number(json.case_count || 0),
+      passed_count: Number(json.passed_count || 0),
+      failed_count: Number(json.failed_count || 0),
+      path: toRepoRelative(repoRoot, file),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+
+  return {
+    policy_version: casesJson.policy_version || "unknown",
+    case_count: Array.isArray(casesJson.cases) ? casesJson.cases.length : 0,
+    cases_path: toRepoRelative(repoRoot, casesPath),
+    cases_href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, casesPath))}`,
+    evaluations: evaluations.sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, 8),
+  };
+}
+
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
@@ -494,6 +527,7 @@ async function getSummary(repoRoot) {
   const meetings = await getMeetings(repoRoot);
   const projectProfiles = await getProjectProfiles(repoRoot);
   const toolAdapters = await getToolAdapters(repoRoot);
+  const conditionalAutomation = await getConditionalAutomation(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -517,6 +551,7 @@ async function getSummary(repoRoot) {
       planned_staff: Array.isArray(registry.planned_staff_agents) ? registry.planned_staff_agents.length : 0,
       tool_adapters: Array.isArray(toolRegistry.tool_adapters) ? toolRegistry.tool_adapters.length : 0,
       project_profiles: projectProfiles.profiles.length,
+      automation_evaluations: conditionalAutomation.evaluations.length,
       review_packets: reviewPackets.length,
       staff_runs: staffRuns.length,
       handoffs: handoffs.length,
@@ -537,6 +572,7 @@ async function getSummary(repoRoot) {
       profile_path: projectProfiles.active_profile_path,
     },
     tool_adapters: toolAdapters.slice(0, 16),
+    conditional_automation: conditionalAutomation,
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
@@ -767,6 +803,11 @@ function directorConsoleHtml() {
         <div id="toolAdapters" class="list"></div>
       </div>
     </section>
+    <section class="card">
+      <h2>Automation Policy</h2>
+      <p class="muted">자동 진행 가능 여부를 재현 가능한 정책 케이스로 확인합니다. 이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p>
+      <div id="automationPolicy" class="list"></div>
+    </section>
     <section class="grid">
       <div class="card">
         <h2>Proposal Inbox</h2>
@@ -848,7 +889,8 @@ function directorConsoleHtml() {
         metric("Proposal", m.proposals),
         metric("Memory", m.memories),
         metric("Meeting", state.meetings.length),
-        metric("Project", m.project_profiles)
+        metric("Project", m.project_profiles),
+        metric("Policy Eval", m.automation_evaluations)
       ].join("");
       renderInbox();
       el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
@@ -910,6 +952,24 @@ function directorConsoleHtml() {
         '<p class="summary">' + esc(short(adapter.provider_policy, 140)) + '</p>' +
         '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">registry 열기</a></div></div>'
       ).join("") : '<p class="muted">Tool Adapter가 없습니다.</p>';
+      const automation = state.conditional_automation;
+      el("automationPolicy").innerHTML =
+        '<div class="item"><h3><code>' + esc(automation.policy_version) + '</code></h3>' +
+        '<p class="small muted">cases ' + esc(automation.case_count) + ' · recent evaluations ' + esc(automation.evaluations.length) + '</p>' +
+        '<div class="row"><a href="' + esc(automation.cases_href) + '" target="_blank">case 열기</a>' +
+        button("status", "automation-status", "") +
+        button("validate", "automation-validate", "") +
+        button("test", "automation-test", "") +
+        button("_Temp 평가 기록", "automation-test-write", "", "good") +
+        '</div></div>' +
+        (automation.evaluations.length ? automation.evaluations.map((evaluation) =>
+          '<div class="item good"><h3><code>' + esc(evaluation.id) + '</code></h3>' +
+          '<p class="small muted">' + esc(evaluation.command || "evaluation") + ' · passed ' + esc(evaluation.passed_count) + ' · failed ' + esc(evaluation.failed_count) + ' · ' + esc(evaluation.updated_at) + '</p>' +
+          '<div class="row"><a href="' + esc(evaluation.href) + '" target="_blank">평가 열기</a>' +
+          button("replay", "automation-replay", evaluation.path) +
+          button("repair plan", "automation-repair", evaluation.path) +
+          '</div></div>'
+        ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
       el("proposals").innerHTML = state.proposals.length ? state.proposals.map((p) =>
         '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
@@ -963,6 +1023,16 @@ function directorConsoleHtml() {
         log(await post("/api/workorder/create", { path:filePath }));
         await refresh();
       }
+      if (action === "automation-status") return log(await post("/api/automation/status", {}));
+      if (action === "automation-validate") return log(await post("/api/automation/validate", {}));
+      if (action === "automation-test") return log(await post("/api/automation/test", {}));
+      if (action === "automation-test-write") {
+        if (!confirm("정책 테스트 결과를 _Temp 평가 기록으로 남길까요? workflow state, source, git은 바꾸지 않습니다.")) return;
+        log(await post("/api/automation/test-write", {}));
+        await refresh();
+      }
+      if (action === "automation-replay") return log(await post("/api/automation/replay", { path:filePath }));
+      if (action === "automation-repair") return log(await post("/api/automation/repair", { path:filePath }));
       if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
       if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
       if (action === "meeting-create") {
@@ -1079,6 +1149,46 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     safeResolveReadable(repoRoot, body.path || "");
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
     const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/status") {
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["status", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/validate") {
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["validate", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/test") {
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["test", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/test-write") {
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["test", "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/replay") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["replay", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/automation/repair") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
+    const result = await runTool(repoRoot, bat, ["repair-plan", body.path, "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 

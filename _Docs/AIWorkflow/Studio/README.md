@@ -62,7 +62,7 @@ This slice defines:
   RoleRunOutput materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, Proposal/Decision/Memory browser panels,
   Meeting Room inspection/actions, Project Profile and Tool Adapter browser
-  panels, and review packet links
+  panels, Conditional Automation policy test actions, and review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -170,10 +170,12 @@ can inspect, handoff-check, or explicitly store meeting records while keeping
 meeting consensus separate from approval and canon. It also displays active
 Project Profiles and Tool Adapter policy summaries so the Director can see the
 project target and available execution equipment before approving downstream
-work. Its handoff execution path still routes through the existing read-only
+work. It exposes Conditional Automation status, validation, dry-run test,
+`_Temp` evaluation write, replay, and repair-plan actions as policy evidence
+only. Its handoff execution path still routes through the existing read-only
 staff pipeline. These tools do not set ActiveTask, approve task execution,
 start PC Runner, modify source files, commit, or push. Conditional automation
-replay writes only `_Temp` evaluation artifacts when `--execute` is passed.
+test-write writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
