@@ -16,7 +16,7 @@
     "endColor": 2164228096,
     "airResistance": 6.0,
     "gravityScale": 0.0,
-    "textureKey": "Data/Resources/Textures/Particles/Flare_White.png"
+    "textureKey": "Data/Resources/Textures/Particles/Smoke_Puff_White.png"
   },
   {
     "id_": 1002,
@@ -54,7 +54,7 @@
     "endColor": 2147516671,
     "airResistance": 5.0,
     "gravityScale": 0.0,
-    "textureKey": "Data/Resources/Textures/Particles/Flare_White.png"
+    "textureKey": "Data/Resources/Textures/Particles/Smoke_Puff_White.png"
   },
 	{
 		"id_": 1004,
