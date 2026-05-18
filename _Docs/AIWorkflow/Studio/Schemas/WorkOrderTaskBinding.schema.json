@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/WorkOrderTaskBinding.schema.json",
+  "title": "WorkOrderTaskBinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "binding_id",
+    "work_order_id",
+    "task_id",
+    "relationship",
+    "creation_source",
+    "status",
+    "authorized_scope",
+    "non_goals",
+    "approval_refs",
+    "evidence_refs",
+    "runner_run_ids",
+    "completion_report_refs",
+    "finalization_refs",
+    "safety"
+  ],
+  "properties": {
+    "binding_id": {
+      "type": "string",
+      "pattern": "^WOTB-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "work_order_id": {
+      "type": "string",
+      "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^(WF|GAME|VAL|DOC|UNITY|DATA)-[A-Za-z0-9_-]+$"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "primary_task",
+        "subtask",
+        "validation_task",
+        "review_task",
+        "documentation_task",
+        "fix_task",
+        "follow_up_task"
+      ]
+    },
+    "creation_source": {
+      "type": "string",
+      "enum": [
+        "director_approved",
+        "meeting_follow_up",
+        "proposal_accepted",
+        "finalization_request_changes",
+        "policy_follow_up",
+        "manual_link"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "created",
+        "active",
+        "completed",
+        "blocked",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "authorized_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "non_goals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "approval_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "runner_run_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "completion_report_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "finalization_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_write_authorized",
+        "schema_change_authorized",
+        "canon_change_authorized",
+        "asset_import_authorized",
+        "external_tool_authorized",
+        "commit_authorized"
+      ],
+      "properties": {
+        "source_write_authorized": { "type": "boolean" },
+        "schema_change_authorized": { "type": "boolean" },
+        "canon_change_authorized": { "type": "boolean" },
+        "asset_import_authorized": { "type": "boolean" },
+        "external_tool_authorized": { "type": "boolean" },
+        "commit_authorized": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -53,6 +53,21 @@
     "verification_plan": { "type": "array", "items": { "type": "string" } },
     "handoff_plan": { "type": "array", "items": { "type": "string" } },
     "target_project_profile": { "type": "string" },
-    "status": { "type": "string", "enum": ["proposed", "approved", "active", "review", "completed", "blocked", "rejected"] }
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "proposed",
+        "director_review",
+        "approved_for_tasking",
+        "tasking",
+        "tasks_open",
+        "completion_review",
+        "completed",
+        "blocked",
+        "rejected",
+        "superseded"
+      ]
+    }
   }
 }

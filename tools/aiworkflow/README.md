@@ -186,6 +186,12 @@ tools\aiworkflow\studio_registry_status.bat staff scenario_director
 This command is read-only. It does not execute staff agents, call LLMs, approve
 tasks, change task lifecycle state, modify source files, commit, or push.
 
+The Studio WorkOrder-to-Task bridge is documented in:
+
+```text
+_Docs\AIWorkflow\Studio\WorkOrder_Task_Bridge.md
+```
+
 ---
 
 ## project_profile_status.bat

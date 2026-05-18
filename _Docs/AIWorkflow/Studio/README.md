@@ -25,8 +25,10 @@ This slice defines:
 - Handoff schema
 - RoleRun schema
 - ToolRun schema
+- WorkOrderTaskBinding schema
 - Memory status policy
 - Initial read-only department and staff registries
+- WorkOrder to Task bridge rules
 
 ## Current Execution Status
 
@@ -65,10 +67,12 @@ commit, or push.
 ```text
 _Docs/AIWorkflow/Studio/
 +-- README.md
++-- WorkOrder_Task_Bridge.md
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
 |   +-- WorkOrder.schema.json
+|   +-- WorkOrderTaskBinding.schema.json
 |   +-- MeetingSession.schema.json
 |   +-- MemoryRecord.schema.json
 |   +-- Proposal.schema.json
@@ -118,6 +122,7 @@ The Studio layer adds:
 - Department
 - MeetingSession
 - WorkOrder
+- WorkOrderTaskBinding
 - Memory
 - Proposal
 - Decision
