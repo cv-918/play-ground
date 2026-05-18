@@ -193,13 +193,18 @@ function Resolve-RoleRunInput {
 function Test-RequiredFields {
     param(
         [object]$Value,
-        [string[]]$Required
+        [string[]]$Required,
+        [string]$Scope = ""
     )
 
     $errors = @()
     foreach ($name in $Required) {
         if (-not (Test-HasProperty -Value $Value -Name $name)) {
-            $errors += "Missing required field: $name"
+            if ([string]::IsNullOrWhiteSpace($Scope)) {
+                $errors += "Missing required field: $name"
+            } else {
+                $errors += "${Scope}: Missing required field: $name"
+            }
         }
     }
     return @($errors)
@@ -496,10 +501,56 @@ function Test-RoleRunOutput {
         $warnings += "needs_director_decision should include approval_items or questions."
     }
 
-    foreach ($memory in @($Output.memory_write_requests)) {
-        if ([string]$memory.status -eq "canon" -and -not [bool]$memory.requires_approval) {
-            $errors += "canon memory_write_requests must require approval."
+    $index = 0
+    foreach ($proposal in @($Output.proposals)) {
+        $scope = "proposals[$index]"
+        $errors += Test-RequiredFields -Value $proposal -Required @("title", "summary", "status", "risks", "evidence_required") -Scope $scope
+        if (@("draft", "proposed", "recommended", "not_recommended") -notcontains ([string]$proposal.status)) {
+            $errors += "${scope}: Invalid status: $($proposal.status)"
         }
+        $index += 1
+    }
+    $index = 0
+    foreach ($objection in @($Output.objections)) {
+        $scope = "objections[$index]"
+        $errors += Test-RequiredFields -Value $objection -Required @("summary", "reason", "severity", "blocks_progress") -Scope $scope
+        if (@("info", "minor", "major", "blocking") -notcontains ([string]$objection.severity)) {
+            $errors += "${scope}: Invalid severity: $($objection.severity)"
+        }
+        $index += 1
+    }
+    $index = 0
+    foreach ($question in @($Output.questions)) {
+        $errors += Test-RequiredFields -Value $question -Required @("question", "why_needed", "blocks_progress") -Scope "questions[$index]"
+        $index += 1
+    }
+    $index = 0
+    foreach ($item in @($Output.approval_items)) {
+        $scope = "approval_items[$index]"
+        $errors += Test-RequiredFields -Value $item -Required @("type", "plain_language_summary", "what_will_change", "what_will_not_change", "risks", "evidence_required") -Scope $scope
+        if (@("scope", "canon", "implementation", "asset_import", "external_tool", "completion", "git") -notcontains ([string]$item.type)) {
+            $errors += "${scope}: Invalid type: $($item.type)"
+        }
+        $index += 1
+    }
+    $index = 0
+    foreach ($handoff in @($Output.handoff_requests)) {
+        $errors += Test-RequiredFields -Value $handoff -Required @("target_agent_id", "objective", "required_context", "expected_output") -Scope "handoff_requests[$index]"
+        $index += 1
+    }
+    $index = 0
+    foreach ($workOrder in @($Output.workorder_recommendations)) {
+        $errors += Test-RequiredFields -Value $workOrder -Required @("objective", "department_id", "scope", "non_goals", "expected_outputs") -Scope "workorder_recommendations[$index]"
+        $index += 1
+    }
+    $index = 0
+    foreach ($memory in @($Output.memory_write_requests)) {
+        $scope = "memory_write_requests[$index]"
+        $errors += Test-RequiredFields -Value $memory -Required @("status", "scope", "summary", "requires_approval") -Scope $scope
+        if ([string]$memory.status -eq "canon" -and -not [bool]$memory.requires_approval) {
+            $errors += "${scope}: canon memory_write_requests must require approval."
+        }
+        $index += 1
     }
 
     if ($Output.safety.source_changed) { $errors += "RoleRunOutput claims source_changed=true; staff output must not directly change source." }

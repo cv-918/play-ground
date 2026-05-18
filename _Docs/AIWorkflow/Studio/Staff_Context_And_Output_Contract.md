@@ -54,6 +54,17 @@ The exporter turns a sealed context packet into a Codex-ready staff execution
 prompt that requires `RoleRunOutput` JSON. It writes only `_Temp` prompt
 artifacts and does not call an LLM.
 
+The first local signed-in Codex executor is:
+
+```bat
+tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat run _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
+```
+
+The executor uses the signed-in Codex App/CLI route with a read-only sandbox.
+It does not use OpenAI API billing by default. Its output is still evidence
+until routed through materialization, review, and the normal governance gates.
+
 ## RoleRunOutput
 
 `RoleRunOutput` is the structured answer from a StaffAgent.

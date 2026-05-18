@@ -36,6 +36,7 @@ studio_memory_store.bat
 studio_meeting_runtime.bat
 studio_context_builder.bat
 studio_staff_prompt_exporter.bat
+studio_staff_executor.bat
 studio_staff_runtime.bat
 studio_output_materializer.bat
 studio_materialization_review.bat
@@ -410,6 +411,32 @@ default. `--output` may override the path only under `_Temp\`.
 
 The command does not call LLMs, execute staff agents, call tools, create tasks,
 approve work, write memory, write canon, modify source files, commit, or push.
+
+---
+
+## studio_staff_executor.bat
+
+Plans or runs a StaffContextPacket through the signed-in Codex App/CLI route.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_staff_executor.bat status
+tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat run _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat run _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
+```
+
+`run --execute` calls local `codex exec -` with the generated prompt through
+stdin, using the signed-in Codex route. The default model is `gpt-5.5` with
+`high` reasoning and a read-only sandbox. This path is not OpenAI API billing.
+
+Outputs are stored under `_Temp\AIWorkflowStudio\staff_runs\`. The executor
+captures stdout/stderr and writes `role_run_output.json` only when Codex stdout
+contains parseable `RoleRunOutput` JSON.
+
+The command does not create tasks, approve work, write canon, modify source
+files, commit, or push.
 
 ---
 
@@ -1139,6 +1166,7 @@ tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Exampl
 tools\aiworkflow\studio_decision_store.bat validate
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat status
 tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_materialization_review.bat status
 tools\aiworkflow\studio_conditional_automation.bat test

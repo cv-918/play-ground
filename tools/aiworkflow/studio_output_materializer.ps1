@@ -236,6 +236,26 @@ function Test-HasProperty {
     return ($null -ne $Value -and $null -ne $Value.PSObject.Properties[$Name])
 }
 
+function Test-RequiredFields {
+    param(
+        [object]$Value,
+        [string[]]$Required,
+        [string]$Scope = ""
+    )
+
+    $errors = @()
+    foreach ($name in $Required) {
+        if (-not (Test-HasProperty -Value $Value -Name $name)) {
+            if ([string]::IsNullOrWhiteSpace($Scope)) {
+                $errors += "Missing required field: $name"
+            } else {
+                $errors += "${Scope}: Missing required field: $name"
+            }
+        }
+    }
+    return @($errors)
+}
+
 function Test-RoleRunOutputShape {
     param([object]$Output)
 
@@ -258,10 +278,56 @@ function Test-RoleRunOutputShape {
     if ($Output.safety.source_changed -or $Output.safety.task_created -or $Output.safety.approval_changed -or $Output.safety.canon_changed -or $Output.safety.commit_or_push_performed) {
         Add-Unique -List $errors -Value "RoleRunOutput safety claims direct side effects. Materialization refuses unsafe outputs."
     }
-    foreach ($memory in @($Output.memory_write_requests)) {
-        if ([string]$memory.status -eq "canon" -and -not [bool]$memory.requires_approval) {
-            Add-Unique -List $errors -Value "canon memory request must require approval."
+    $index = 0
+    foreach ($proposal in @($Output.proposals)) {
+        $scope = "proposals[$index]"
+        foreach ($error in (Test-RequiredFields -Value $proposal -Required @("title", "summary", "status", "risks", "evidence_required") -Scope $scope)) { Add-Unique -List $errors -Value $error }
+        if (@("draft", "proposed", "recommended", "not_recommended") -notcontains ([string]$proposal.status)) {
+            Add-Unique -List $errors -Value "${scope}: Invalid status: $($proposal.status)"
         }
+        $index += 1
+    }
+    $index = 0
+    foreach ($objection in @($Output.objections)) {
+        $scope = "objections[$index]"
+        foreach ($error in (Test-RequiredFields -Value $objection -Required @("summary", "reason", "severity", "blocks_progress") -Scope $scope)) { Add-Unique -List $errors -Value $error }
+        if (@("info", "minor", "major", "blocking") -notcontains ([string]$objection.severity)) {
+            Add-Unique -List $errors -Value "${scope}: Invalid severity: $($objection.severity)"
+        }
+        $index += 1
+    }
+    $index = 0
+    foreach ($question in @($Output.questions)) {
+        foreach ($error in (Test-RequiredFields -Value $question -Required @("question", "why_needed", "blocks_progress") -Scope "questions[$index]")) { Add-Unique -List $errors -Value $error }
+        $index += 1
+    }
+    $index = 0
+    foreach ($item in @($Output.approval_items)) {
+        $scope = "approval_items[$index]"
+        foreach ($error in (Test-RequiredFields -Value $item -Required @("type", "plain_language_summary", "what_will_change", "what_will_not_change", "risks", "evidence_required") -Scope $scope)) { Add-Unique -List $errors -Value $error }
+        if (@("scope", "canon", "implementation", "asset_import", "external_tool", "completion", "git") -notcontains ([string]$item.type)) {
+            Add-Unique -List $errors -Value "${scope}: Invalid type: $($item.type)"
+        }
+        $index += 1
+    }
+    $index = 0
+    foreach ($handoff in @($Output.handoff_requests)) {
+        foreach ($error in (Test-RequiredFields -Value $handoff -Required @("target_agent_id", "objective", "required_context", "expected_output") -Scope "handoff_requests[$index]")) { Add-Unique -List $errors -Value $error }
+        $index += 1
+    }
+    $index = 0
+    foreach ($workOrder in @($Output.workorder_recommendations)) {
+        foreach ($error in (Test-RequiredFields -Value $workOrder -Required @("objective", "department_id", "scope", "non_goals", "expected_outputs") -Scope "workorder_recommendations[$index]")) { Add-Unique -List $errors -Value $error }
+        $index += 1
+    }
+    $index = 0
+    foreach ($memory in @($Output.memory_write_requests)) {
+        $scope = "memory_write_requests[$index]"
+        foreach ($error in (Test-RequiredFields -Value $memory -Required @("status", "scope", "summary", "requires_approval") -Scope $scope)) { Add-Unique -List $errors -Value $error }
+        if ([string]$memory.status -eq "canon" -and -not [bool]$memory.requires_approval) {
+            Add-Unique -List $errors -Value "${scope}: canon memory request must require approval."
+        }
+        $index += 1
     }
     if (@($Output.proposals).Count + @($Output.handoff_requests).Count + @($Output.workorder_recommendations).Count + @($Output.memory_write_requests).Count -eq 0) {
         Add-Unique -List $warnings -Value "Output has no materializable proposals, handoffs, workorders, or memory requests."

@@ -105,6 +105,19 @@ It turns a StaffContextPacket into a Codex-ready prompt that demands
 RoleRunOutput JSON and repeats governance boundaries. It writes only `_Temp`
 prompt artifacts and does not call an LLM or execute staff.
 
+The first local signed-in Codex staff executor is:
+
+```bat
+tools\aiworkflow\studio_staff_executor.bat status
+tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat run _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
+```
+
+It calls local `codex exec -` only when `--execute` is explicit. The default
+policy is signed-in Codex App/CLI first, `gpt-5.5`, high reasoning, read-only
+sandbox, and no OpenAI API billing by default. It stores stdout, stderr,
+metadata, and parseable `RoleRunOutput` JSON under `_Temp`.
+
 ## RoleRun Lifecycle
 
 ```text
@@ -588,6 +601,7 @@ Implemented now:
 - ToolAdapter registry and governed ToolRunRequest planner
 - StaffContextPacket builder
 - Staff prompt exporter for signed-in Codex App/CLI execution input
+- Staff executor for signed-in Codex CLI read-only RoleRun attempts
 - RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
   Handoff records
 - materialization review decision recorder

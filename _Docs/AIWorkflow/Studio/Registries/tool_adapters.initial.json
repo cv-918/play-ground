@@ -219,6 +219,28 @@
       ]
     },
     {
+      "adapter_id": "studio_staff_executor",
+      "display_name": "Studio Staff Executor",
+      "category": "llm",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Uses signed-in Codex App/CLI route first. Does not use OpenAI API billing by default.",
+      "allowed_actions": ["plan Codex staff execution", "explicit run through Codex CLI", "capture raw output", "extract RoleRunOutput JSON"],
+      "blocked_actions": ["OpenAI API billing by default", "write source files", "create tasks", "approve work", "write canon", "commit or push"],
+      "approval_required_actions": ["real Codex CLI execution", "using produced RoleRunOutput downstream", "changing sandbox from read-only"],
+      "input_contract": ["StaffContextPacket JSON", "generated staff prompt"],
+      "output_evidence": ["_Temp staff run metadata", "Codex stdout/stderr logs", "RoleRunOutput JSON path when parse succeeds"],
+      "can_modify_files": true,
+      "can_call_external": true,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Consumes signed-in Codex usage/time, not OpenAI API billing.",
+        "Uses read-only sandbox and requires --execute for real Codex CLI calls."
+      ]
+    },
+    {
       "adapter_id": "studio_output_materializer",
       "display_name": "Studio RoleRunOutput Materializer",
       "category": "workflow_core",

@@ -233,6 +233,25 @@ $(Render-Bullets -Items $Context.quality_criteria)
 
 $(Render-Bullets -Items $Context.stop_conditions)
 
+## RoleRunOutput Field Contract
+
+Use these exact field names. Do not invent alternate names.
+
+- proposals[] requires: title, summary, status, risks, evidence_required.
+  status must be draft, proposed, recommended, or not_recommended.
+- objections[] requires: summary, reason, severity, blocks_progress.
+  severity must be info, minor, major, or blocking.
+- questions[] requires: question, why_needed, blocks_progress.
+- approval_items[] requires: type, plain_language_summary,
+  what_will_change, what_will_not_change, risks, evidence_required.
+  type must be scope, canon, implementation, asset_import, external_tool,
+  completion, or git.
+- handoff_requests[] requires: target_agent_id, objective, required_context,
+  expected_output.
+- workorder_recommendations[] requires: objective, department_id, scope,
+  non_goals, expected_outputs.
+- memory_write_requests[] requires: status, scope, summary, requires_approval.
+
 ## Hard Safety Rules
 
 - Do not modify source files.

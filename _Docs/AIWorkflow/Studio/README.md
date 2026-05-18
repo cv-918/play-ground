@@ -46,6 +46,7 @@ This slice defines:
 - Local MeetingSession runtime validation and handoff tool
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
+- Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
   Handoff drafts
@@ -106,6 +107,7 @@ tools\aiworkflow\studio_meeting_runtime.bat finalize MEET-20260518-151000-scenar
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
@@ -131,13 +133,14 @@ records, sealed StaffContextPacket records, Codex-ready staff prompt
 artifacts, and RoleRunOutput materialization manifests. ToolRunRequest records
 evaluate adapter permission, approval, cost, and evidence needs before any tool
 executes. Staff prompt export prepares the signed-in Codex App/CLI input but
-still does not call a model. Output materialization writes draft/proposed
-Studio records only; it is not approval, task creation, canonization, or
-implementation. Materialization review can write Decision records only; it
-does not execute the accepted records. These tools do not execute live staff
-agents, call LLMs, set ActiveTask, start PC Runner, modify source files,
-commit, or push. Conditional automation replay writes only `_Temp` evaluation
-artifacts when `--execute` is passed.
+still does not call a model. Staff executor can call signed-in Codex CLI only
+with `run --execute`; it stores evidence under `_Temp` and uses a read-only
+sandbox. Output materialization writes draft/proposed Studio records only; it
+is not approval, task creation, canonization, or implementation.
+Materialization review can write Decision records only; it does not execute
+the accepted records. These tools do not set ActiveTask, start PC Runner,
+modify source files, commit, or push. Conditional automation replay writes
+only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -253,6 +256,10 @@ These rules are mandatory for all future implementations:
 22. Materialization review may record Human Director decisions about drafts,
     but it must not execute accepted drafts. Acceptance records are evidence
     for downstream governance, not direct permission to bypass the Core gates.
+23. Staff executor may call Codex CLI only through signed-in App/CLI execution,
+    not OpenAI API billing by default. Its default sandbox must be read-only,
+    and any produced output is evidence until routed through the normal
+    Proposal, Decision, Memory, WorkOrder, and Task gates.
 
 ## Relationship To Existing AIWorkflow Core
 
