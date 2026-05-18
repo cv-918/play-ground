@@ -7,7 +7,8 @@
   "required": [
     "proposal_id",
     "source_agent_id",
-    "source_meeting_id",
+    "source_type",
+    "source_ref",
     "title",
     "summary",
     "rationale",
@@ -21,7 +22,11 @@
   "properties": {
     "proposal_id": { "type": "string", "pattern": "^PROP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "source_agent_id": { "type": "string" },
-    "source_meeting_id": { "type": "string" },
+    "source_type": {
+      "type": "string",
+      "enum": ["meeting", "role_run_output", "director_goal", "manual", "follow_up"]
+    },
+    "source_ref": { "type": "string" },
     "title": { "type": "string", "minLength": 1 },
     "summary": { "type": "string" },
     "rationale": { "type": "string" },

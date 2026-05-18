@@ -205,6 +205,7 @@ function Test-StudioRegistry {
         "Decision.schema.json",
         "Handoff.schema.json",
         "RoleRun.schema.json",
+        "RoleRunOutputMaterialization.schema.json",
         "ToolRun.schema.json",
         "ToolRunRequest.schema.json",
         "ToolAdapter.schema.json",

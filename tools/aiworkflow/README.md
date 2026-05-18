@@ -37,6 +37,7 @@ studio_meeting_runtime.bat
 studio_context_builder.bat
 studio_staff_prompt_exporter.bat
 studio_staff_runtime.bat
+studio_output_materializer.bat
 studio_dashboard_export.bat
 studio_tool_registry_status.bat
 studio_tool_run_planner.bat
@@ -449,6 +450,30 @@ candidates.
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not call LLMs, call tools, create WorkOrders, create
 tasks, approve work, start PC Runner, modify source files, commit, or push.
+
+---
+
+## studio_output_materializer.bat
+
+Plans or materializes governed draft records from a `RoleRunOutput`.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_output_materializer.bat status
+tools\aiworkflow\studio_output_materializer.bat validate
+tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
+```
+
+The materializer can create Proposal drafts, Memory drafts or proposed memory,
+WorkOrder drafts, Handoff proposals, and one materialization manifest. It does
+not approve those records. It also does not create Backlog tasks, write canon,
+call LLMs, execute staff, modify source files, commit, or push.
+
+For validation smoke tests, `--store-root` may override the Studio store only
+under `_Temp\`.
 
 ---
 
@@ -1089,6 +1114,7 @@ tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Exampl
 tools\aiworkflow\studio_decision_store.bat validate
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json

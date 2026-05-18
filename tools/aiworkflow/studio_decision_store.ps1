@@ -165,7 +165,7 @@ function Test-Proposal {
 
     $errors = New-StringList
     $warnings = New-StringList
-    $required = @("proposal_id", "source_agent_id", "source_meeting_id", "title", "summary", "rationale", "options", "risks", "dependencies", "approval_items", "evidence_refs", "status")
+    $required = @("proposal_id", "source_agent_id", "source_type", "source_ref", "title", "summary", "rationale", "options", "risks", "dependencies", "approval_items", "evidence_refs", "status")
     foreach ($field in $required) {
         if (-not (Test-HasProperty -Value $Proposal -Name $field)) {
             Add-Message -List $errors -Message "Missing required field: $field"
@@ -177,6 +177,9 @@ function Test-Proposal {
     }
     if (@("draft", "submitted", "accepted", "rejected", "superseded") -notcontains ([string]$Proposal.status)) {
         Add-Message -List $errors -Message "Invalid proposal status: $($Proposal.status)"
+    }
+    if (@("meeting", "role_run_output", "director_goal", "manual", "follow_up") -notcontains ([string]$Proposal.source_type)) {
+        Add-Message -List $errors -Message "Invalid source_type: $($Proposal.source_type)"
     }
     if (@($Proposal.options).Count -eq 0) {
         Add-Message -List $warnings -Message "Proposal has no options; Director comparison may be weak."

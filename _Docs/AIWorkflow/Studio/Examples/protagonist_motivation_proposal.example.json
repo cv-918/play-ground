@@ -1,7 +1,8 @@
 {
   "proposal_id": "PROP-20260518-153000-motivation",
   "source_agent_id": "scenario_director",
-  "source_meeting_id": "MEET-20260518-151000-scenario",
+  "source_type": "meeting",
+  "source_ref": "MEET-20260518-151000-scenario",
   "title": "Protagonist motivation direction",
   "summary": "Choose a small-scope protagonist motivation that can drive the first playable loop without requiring a full narrative bible.",
   "rationale": "The prototype needs a clear reason for the player to move, fight, or survive, but canon should stay lightweight and gameplay-facing.",

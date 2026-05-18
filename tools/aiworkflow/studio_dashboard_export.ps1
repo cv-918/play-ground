@@ -376,6 +376,7 @@ function New-DashboardHtml {
       <div class="card"><h2>RoleRuns</h2><div class="metric">$(Html ([string]$Data.role_run_count))</div><p class="muted">durable RoleRun 수</p></div>
       <div class="card"><h2>Context Packets</h2><div class="metric">$(Html ([string]$Data.context_packet_count))</div><p class="muted">sealed StaffContextPacket 수</p></div>
       <div class="card"><h2>ToolRun Requests</h2><div class="metric">$(Html ([string]$Data.tool_run_request_count))</div><p class="muted">governed ToolRunRequest 수</p></div>
+      <div class="card"><h2>Materializations</h2><div class="metric">$(Html ([string]$Data.materialization_count))</div><p class="muted">RoleRunOutput materialization 수</p></div>
       <div class="card"><h2>Tool Adapters</h2><div class="metric">$(Html ([string]$Data.tool_adapter_count))</div><p class="muted">registered ToolAdapter 수</p></div>
       <div class="card"><h2>Automation Cases</h2><div class="metric">$(Html ([string]$Data.conditional_case_count))</div><p class="muted">conditional automation policy test 수</p></div>
     </section>
@@ -412,6 +413,7 @@ function New-DashboardHtml {
       <div class="card"><h2>RoleRuns</h2>$(Render-List -Items $Data.role_runs)</div>
       <div class="card"><h2>Context Packets</h2>$(Render-List -Items $Data.context_packets)</div>
       <div class="card"><h2>ToolRun Requests</h2>$(Render-List -Items $Data.tool_run_requests)</div>
+      <div class="card"><h2>Materializations</h2>$(Render-List -Items $Data.materializations)</div>
       <div class="card"><h2>Tool Adapters</h2>$(Render-List -Items $Data.tool_adapters)</div>
     </section>
 
@@ -444,6 +446,7 @@ function New-DashboardData {
     $roleRunPath = Join-Path $Root "_Docs\AIWorkflow\Studio\RoleRuns"
     $contextPacketPath = Join-Path $Root "_Docs\AIWorkflow\Studio\ContextPackets"
     $toolRunRequestPath = Join-Path $Root "_Docs\AIWorkflow\Studio\ToolRuns"
+    $materializationPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Materializations"
     $toolPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Registries\tool_adapters.initial.json"
     $toolData = Read-JsonFile -Path $toolPath
     $conditionalCasesPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Examples\conditional_automation_cases.example.json"
@@ -474,6 +477,7 @@ function New-DashboardData {
         role_run_count = (Get-StoreCount -Path $roleRunPath)
         context_packet_count = (Get-StoreCount -Path $contextPacketPath)
         tool_run_request_count = (Get-StoreCount -Path $toolRunRequestPath)
+        materialization_count = (Get-StoreCount -Path $materializationPath)
         tool_adapter_count = @($toolData.tool_adapters).Count
         conditional_case_count = $conditionalCaseCount
         departments = @($deptData.departments)
@@ -486,6 +490,7 @@ function New-DashboardData {
         role_runs = (Get-RecordSummaries -Path $roleRunPath -IdField "role_run_id" -StatusField "status" -TitleField "agent_id")
         context_packets = (Get-RecordSummaries -Path $contextPacketPath -IdField "context_packet_id" -StatusField "source_type" -TitleField "objective")
         tool_run_requests = (Get-RecordSummaries -Path $toolRunRequestPath -IdField "tool_run_request_id" -StatusField "status" -TitleField "purpose")
+        materializations = (Get-RecordSummaries -Path $materializationPath -IdField "materialization_id" -StatusField "source_agent_id" -TitleField "source_output_id")
         tool_adapters = @($toolItems)
         director_inbox = @()
     }
@@ -544,6 +549,7 @@ try {
         role_run_count = $data.role_run_count
         context_packet_count = $data.context_packet_count
         tool_run_request_count = $data.tool_run_request_count
+        materialization_count = $data.materialization_count
         tool_adapter_count = $data.tool_adapter_count
         conditional_case_count = $data.conditional_case_count
         safety = [pscustomobject]@{
@@ -565,7 +571,7 @@ try {
         Write-Host "output: $outputPath"
         Write-Host "departments: $($data.department_count)"
         Write-Host "staff: $($data.staff_count) concrete, $($data.planned_staff_count) planned"
-        Write-Host "workOrders/proposals/decisions/memory/meetings/roleRuns/contextPackets/toolRunRequests/tools: $($data.work_order_count) / $($data.proposal_count) / $($data.decision_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.context_packet_count) / $($data.tool_run_request_count) / $($data.tool_adapter_count)"
+        Write-Host "workOrders/proposals/decisions/memory/meetings/roleRuns/contextPackets/toolRunRequests/materializations/tools: $($data.work_order_count) / $($data.proposal_count) / $($data.decision_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.context_packet_count) / $($data.tool_run_request_count) / $($data.materialization_count) / $($data.tool_adapter_count)"
         Write-Host "conditional automation cases: $($data.conditional_case_count)"
         Write-Host "safety: _Temp HTML only; no LLM/tool/task/source/git changes"
     }

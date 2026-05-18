@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/RoleRunOutputMaterialization.schema.json",
+  "title": "RoleRunOutputMaterialization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "materialization_id",
+    "source_output_id",
+    "source_role_run_id",
+    "source_agent_id",
+    "created_at",
+    "created_records",
+    "skipped_items",
+    "safety"
+  ],
+  "properties": {
+    "materialization_id": {
+      "type": "string",
+      "pattern": "^MAT-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$"
+    },
+    "source_output_id": { "type": "string" },
+    "source_role_run_id": { "type": "string" },
+    "source_agent_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "created_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["record_type", "record_id", "path", "status", "human_required"],
+        "properties": {
+          "record_type": {
+            "type": "string",
+            "enum": ["proposal", "memory", "work_order", "handoff"]
+          },
+          "record_id": { "type": "string" },
+          "path": { "type": "string" },
+          "status": { "type": "string" },
+          "human_required": { "type": "boolean" }
+        }
+      }
+    },
+    "skipped_items": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_created",
+        "approval_changed",
+        "canon_changed",
+        "source_changed",
+        "git_changed",
+        "llm_called"
+      ],
+      "properties": {
+        "task_created": { "type": "boolean" },
+        "approval_changed": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "git_changed": { "type": "boolean" },
+        "llm_called": { "type": "boolean" }
+      }
+    }
+  }
+}

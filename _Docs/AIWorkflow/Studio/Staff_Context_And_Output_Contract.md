@@ -75,6 +75,17 @@ The schema is:
 _Docs/AIWorkflow/Studio/Schemas/RoleRunOutput.schema.json
 ```
 
+The first local materializer is:
+
+```bat
+tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
+```
+
+The materializer may create draft/proposed Proposal, MemoryRecord, WorkOrder,
+and Handoff records. It does not approve staff output, write canon, create
+Backlog tasks, execute implementation, commit, or push.
+
 ## Required Behavior
 
 A StaffAgent must not answer only in prose when running as part of Studio

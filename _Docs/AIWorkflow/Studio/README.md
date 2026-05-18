@@ -47,6 +47,8 @@ This slice defines:
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
+- Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
+  Handoff drafts
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
@@ -107,6 +109,8 @@ tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_staff_runtime.bat route-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
@@ -121,13 +125,16 @@ preview or create WorkOrder-derived Backlog tasks, store governed WorkOrder
 records, governed Proposal and Decision records, governed MemoryRecord files,
 governed MeetingSession records, governed RoleRun envelopes, read-only
 dashboard snapshots, tool adapter policy displays, governed ToolRunRequest
-records, sealed StaffContextPacket records, and Codex-ready staff prompt
-artifacts. ToolRunRequest records evaluate adapter permission, approval, cost,
-and evidence needs before any tool executes. Staff prompt export prepares the
-signed-in Codex App/CLI input but still does not call a model. These tools do
-not execute live staff agents, call LLMs, set ActiveTask, approve work, start
-PC Runner, modify source files, commit, or push. Conditional automation replay
-writes only `_Temp` evaluation artifacts when `--execute` is passed.
+records, sealed StaffContextPacket records, Codex-ready staff prompt
+artifacts, and RoleRunOutput materialization manifests. ToolRunRequest records
+evaluate adapter permission, approval, cost, and evidence needs before any tool
+executes. Staff prompt export prepares the signed-in Codex App/CLI input but
+still does not call a model. Output materialization writes draft/proposed
+Studio records only; it is not approval, task creation, canonization, or
+implementation. These tools do not execute live staff agents, call LLMs, set
+ActiveTask, approve work, start PC Runner, modify source files, commit, or
+push. Conditional automation replay writes only `_Temp` evaluation artifacts
+when `--execute` is passed.
 
 ## Directory Map
 
@@ -151,6 +158,10 @@ _Docs/AIWorkflow/Studio/
 +-- ContextPackets/
 |   +-- README.md
 +-- RoleRuns/
+|   +-- README.md
++-- Handoffs/
+|   +-- README.md
++-- Materializations/
 |   +-- README.md
 +-- Examples/
 |   +-- scenario_director_context_packet.example.json
@@ -177,6 +188,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- Decision.schema.json
 |   +-- Handoff.schema.json
 |   +-- RoleRun.schema.json
+|   +-- RoleRunOutputMaterialization.schema.json
 |   +-- ToolRun.schema.json
 |   +-- ToolRunRequest.schema.json
 |   +-- ToolAdapter.schema.json
@@ -232,6 +244,9 @@ These rules are mandatory for all future implementations:
 20. Conditional automation decisions must be deterministic, replayable, and
     auditable. A staff agent, LLM, or tool adapter may propose automation
     eligibility, but the policy test/replay result is the authority.
+21. RoleRunOutput materialization may create draft/proposed Studio records,
+    but it must not treat staff output as approval. Canon, executable tasks,
+    implementation, and commits still require their normal governance gates.
 
 ## Relationship To Existing AIWorkflow Core
 

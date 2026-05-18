@@ -12,6 +12,7 @@ official project truth.
 
 ```text
 RoleRunOutput
+  -> RoleRunOutputMaterialization
   -> Proposal
   -> Human Director Decision
   -> MemoryRecord(status=canon)
@@ -36,6 +37,8 @@ Proposal
 7. Superseding canon requires another Decision.
 8. Memory store writes must be explicit; dry-run previews are not durable
    memory.
+9. RoleRunOutput materialization may create draft/proposed records, but it is
+   not approval and cannot canonize staff output.
 
 ## Proposal Requirements
 
@@ -48,6 +51,7 @@ A proposal must explain:
 - dependencies
 - approval items
 - evidence refs
+- source type and source ref, such as `meeting` or `role_run_output`
 
 ## Decision Requirements
 

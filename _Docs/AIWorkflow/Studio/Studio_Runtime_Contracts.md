@@ -293,6 +293,18 @@ It stores Proposal and Decision records only when `--execute` is explicit.
 canon. Proposal storage is not approval. Decision storage is not task
 execution approval.
 
+The first local RoleRunOutput materializer is:
+
+```bat
+tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
+```
+
+It turns staff output into draft/proposed Proposal, MemoryRecord, WorkOrder,
+and Handoff records, plus one materialization manifest. It does not approve
+those records, create Backlog tasks, write canon, execute tools, call LLMs,
+modify source files, commit, or push.
+
 ## MeetingSession Runtime Contract
 
 A MeetingSession is a structured work session, not a loose chat transcript.
@@ -564,14 +576,15 @@ Implemented now:
 - ToolAdapter registry and governed ToolRunRequest planner
 - StaffContextPacket builder
 - Staff prompt exporter for signed-in Codex App/CLI execution input
+- RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
+  Handoff records
 - conditional automation replay and repair-plan support
 
 Not implemented yet:
 
 - live RoleRun execution
 - live LLM staff execution from exported prompts
-- RoleRunOutput materializers that write accepted proposals, memory, handoffs,
-  or WorkOrders
+- Director-reviewed materialization acceptance workflows
 - Studio UI
 - autonomous handoff router
 
