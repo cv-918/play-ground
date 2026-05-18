@@ -385,6 +385,70 @@ async function getMeetings(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+async function getProjectProfiles(repoRoot) {
+  const activeProject = (await readJsonIfExists(repoPath(repoRoot, "_Docs/AIWorkflow/ActiveProject.json"))) || {};
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/ProjectProfiles");
+  const files = await listFiles(dir, (_full, name) => name.endsWith(".json"));
+  const profiles = [];
+
+  for (const file of files) {
+    const json = await readJsonIfExists(file);
+    if (!json || !json.project_id) continue;
+    const validationProfiles = Array.isArray(json.validation_profiles) ? json.validation_profiles : [];
+    const buildProfiles = Array.isArray(json.build_profiles) ? json.build_profiles : [];
+    profiles.push({
+      project_id: json.project_id || "",
+      display_name: json.display_name || "",
+      project_type: json.project_type || "",
+      engine: json.engine || "",
+      status: json.project_id === activeProject.active_project_id ? "active" : "available",
+      source_root_count: Array.isArray(json.source_roots) ? json.source_roots.length : 0,
+      data_root_count: Array.isArray(json.data_roots) ? json.data_roots.length : 0,
+      validation_profile_count: validationProfiles.length,
+      build_profile_count: buildProfiles.length,
+      validation_profile_ids: validationProfiles.map((profile) => profile.id || profile.label || "").filter(Boolean).slice(0, 4),
+      build_profile_ids: buildProfiles.map((profile) => profile.id || profile.label || "").filter(Boolean).slice(0, 4),
+      path: toRepoRelative(repoRoot, file),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+    });
+  }
+
+  profiles.sort((a, b) => {
+    if (a.status !== b.status) return a.status === "active" ? -1 : 1;
+    return a.project_id.localeCompare(b.project_id);
+  });
+
+  return {
+    active_project_id: activeProject.active_project_id || "",
+    active_profile_path: activeProject.profile_path || "",
+    profiles,
+  };
+}
+
+async function getToolAdapters(repoRoot) {
+  const registryPath = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Registries/tool_adapters.initial.json");
+  const registry = (await readJsonIfExists(registryPath)) || {};
+  const adapters = Array.isArray(registry.tool_adapters) ? registry.tool_adapters : [];
+  return adapters.map((adapter) => ({
+    adapter_id: adapter.adapter_id || "",
+    display_name: adapter.display_name || "",
+    category: adapter.category || "",
+    status: adapter.status || "",
+    execution_owner: adapter.execution_owner || "",
+    default_enabled: Boolean(adapter.default_enabled),
+    requires_human_approval: Boolean(adapter.requires_human_approval),
+    can_modify_files: Boolean(adapter.can_modify_files),
+    can_call_external: Boolean(adapter.can_call_external),
+    can_incur_cost: Boolean(adapter.can_incur_cost),
+    allowed_count: Array.isArray(adapter.allowed_actions) ? adapter.allowed_actions.length : 0,
+    blocked_count: Array.isArray(adapter.blocked_actions) ? adapter.blocked_actions.length : 0,
+    approval_count: Array.isArray(adapter.approval_required_actions) ? adapter.approval_required_actions.length : 0,
+    provider_policy: adapter.provider_policy || "",
+    path: toRepoRelative(repoRoot, registryPath),
+    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, registryPath))}`,
+  }));
+}
+
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
@@ -428,6 +492,8 @@ async function getSummary(repoRoot) {
   const decisions = await getDecisions(repoRoot);
   const memories = await getMemories(repoRoot);
   const meetings = await getMeetings(repoRoot);
+  const projectProfiles = await getProjectProfiles(repoRoot);
+  const toolAdapters = await getToolAdapters(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -450,6 +516,7 @@ async function getSummary(repoRoot) {
       staff: Array.isArray(registry.staff_agents) ? registry.staff_agents.length : 0,
       planned_staff: Array.isArray(registry.planned_staff_agents) ? registry.planned_staff_agents.length : 0,
       tool_adapters: Array.isArray(toolRegistry.tool_adapters) ? toolRegistry.tool_adapters.length : 0,
+      project_profiles: projectProfiles.profiles.length,
       review_packets: reviewPackets.length,
       staff_runs: staffRuns.length,
       handoffs: handoffs.length,
@@ -464,6 +531,12 @@ async function getSummary(repoRoot) {
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
     meetings: meetings.slice(0, 12),
+    project_profiles: projectProfiles.profiles.slice(0, 12),
+    active_project: {
+      project_id: projectProfiles.active_project_id,
+      profile_path: projectProfiles.active_profile_path,
+    },
+    tool_adapters: toolAdapters.slice(0, 16),
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
@@ -684,6 +757,18 @@ function directorConsoleHtml() {
     </section>
     <section class="grid">
       <div class="card">
+        <h2>Project Profile</h2>
+        <p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다. Core는 프로젝트 경로를 직접 하드코딩하지 않고 이 profile을 읽어야 합니다.</p>
+        <div id="projectProfiles" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Tool Adapters</h2>
+        <p class="muted">AI 직원과 Runner가 사용할 수 있는 장비 목록입니다. 비용, 외부 호출, 파일 수정, 승인 필요 여부를 한눈에 확인합니다.</p>
+        <div id="toolAdapters" class="list"></div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="card">
         <h2>Proposal Inbox</h2>
         <p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 캐논이 아닙니다.</p>
         <div id="proposals" class="list"></div>
@@ -762,7 +847,8 @@ function directorConsoleHtml() {
         metric("Draft 결정", m.materializations),
         metric("Proposal", m.proposals),
         metric("Memory", m.memories),
-        metric("Meeting", state.meetings.length)
+        metric("Meeting", state.meetings.length),
+        metric("Project", m.project_profiles)
       ].join("");
       renderInbox();
       el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
@@ -809,6 +895,21 @@ function directorConsoleHtml() {
         button("회의 저장", "meeting-create", meeting.path, "good") +
         '</div></div>'
       ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
+      el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
+        '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(profile.status) + '</span></h3>' +
+        '<p>' + esc(profile.display_name) + ' · ' + esc(profile.engine) + ' · ' + esc(profile.project_type) + '</p>' +
+        '<p class="small muted">source ' + esc(profile.source_root_count) + ' · data ' + esc(profile.data_root_count) + ' · validation ' + esc(profile.validation_profile_count) + ' · build ' + esc(profile.build_profile_count) + '</p>' +
+        '<p class="summary">validation: ' + esc(profile.validation_profile_ids.join(", ") || "(none)") + '</p>' +
+        '<div class="row"><a href="' + esc(profile.href) + '" target="_blank">profile 열기</a></div></div>'
+      ).join("") : '<p class="muted">Project Profile이 없습니다.</p>';
+      el("toolAdapters").innerHTML = state.tool_adapters.length ? state.tool_adapters.map((adapter) =>
+        '<div class="item ' + (adapter.status === "available" ? "good" : adapter.status === "planned" ? "warn" : "") + '"><h3><code>' + esc(adapter.adapter_id) + '</code> <span class="pill">' + esc(adapter.status) + '</span></h3>' +
+        '<p>' + esc(adapter.display_name) + ' · ' + esc(adapter.category) + '</p>' +
+        '<p class="small muted">owner ' + esc(adapter.execution_owner) + ' · default ' + esc(adapter.default_enabled ? "yes" : "no") + ' · approval ' + esc(adapter.requires_human_approval ? "yes" : "no") + '</p>' +
+        '<p class="small muted">files ' + esc(adapter.can_modify_files ? "write-capable" : "read-only") + ' · external ' + esc(adapter.can_call_external ? "yes" : "no") + ' · cost ' + esc(adapter.can_incur_cost ? "yes" : "no") + '</p>' +
+        '<p class="summary">' + esc(short(adapter.provider_policy, 140)) + '</p>' +
+        '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">registry 열기</a></div></div>'
+      ).join("") : '<p class="muted">Tool Adapter가 없습니다.</p>';
       el("proposals").innerHTML = state.proposals.length ? state.proposals.map((p) =>
         '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
