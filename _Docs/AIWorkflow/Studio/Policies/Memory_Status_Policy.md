@@ -21,6 +21,8 @@ proposed setting != approved setting != canon
 | `rejected` | Explicitly declined idea or direction. Useful as negative memory. | Human Director, MeetingSession finalization |
 | `deprecated` | Previously valid memory that should no longer guide new work. | Human Director or governance policy |
 | `superseded` | Replaced by a newer approved/canon record. | Human Director or governance policy |
+| `evidence` | Evidence-bearing memory that points to reports, logs, diffs, screenshots, or review artifacts. | Evidence collector, QA, Documentation Keeper |
+| `lesson` | Reusable lesson learned from completed work, failures, reviews, or retrospectives. | Human Director, QA, Documentation Keeper, approved retrospective |
 
 ## Rules
 
@@ -33,6 +35,10 @@ proposed setting != approved setting != canon
   rejected directions.
 - Deprecated and superseded records must point to their replacement or reason
   when possible.
+- Evidence memory must point to concrete evidence refs and must not be treated
+  as approval by itself.
+- Lesson memory may guide future work, but it does not override canon or
+  current approval gates.
 - Every important memory record must include `source_refs`.
 - Agents must not write canon directly unless their role policy explicitly
   allows canon proposal and a separate decision approves it.

@@ -22,7 +22,20 @@
     "project_id": { "type": "string" },
     "scope": { "type": "string", "enum": ["global", "project", "agent", "department", "meeting", "task", "canon"] },
     "type": { "type": "string", "enum": ["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"] },
-    "status": { "type": "string", "enum": ["draft", "proposed", "approved", "canon", "rejected", "deprecated", "superseded"] },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "proposed",
+        "approved",
+        "canon",
+        "rejected",
+        "deprecated",
+        "superseded",
+        "evidence",
+        "lesson"
+      ]
+    },
     "content": { "type": "string", "minLength": 1 },
     "source_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "confidence": { "type": "string", "enum": ["low", "medium", "high"] },

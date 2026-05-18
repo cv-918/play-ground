@@ -35,6 +35,7 @@ This slice defines:
 - Staff context and structured output contract
 - Scenario Director context/output examples
 - Creative MeetingSession to WorkOrder to TaskBinding examples
+- Canon decision flow and proposal/decision/memory examples
 
 ## Current Execution Status
 
@@ -76,12 +77,17 @@ _Docs/AIWorkflow/Studio/
 +-- WorkOrder_Task_Bridge.md
 +-- Studio_Runtime_Contracts.md
 +-- Staff_Context_And_Output_Contract.md
++-- Canon_Decision_Flow.md
 +-- Examples/
 |   +-- scenario_director_context_packet.example.json
 |   +-- scenario_director_role_run_output.example.json
 |   +-- creative_meeting_session.example.json
 |   +-- scenario_pitch_work_order.example.json
 |   +-- scenario_pitch_task_binding.example.json
+|   +-- protagonist_motivation_proposal.example.json
+|   +-- protagonist_motivation_decision.example.json
+|   +-- protagonist_motivation_canon_memory.example.json
+|   +-- protagonist_motivation_rejected_memory.example.json
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json

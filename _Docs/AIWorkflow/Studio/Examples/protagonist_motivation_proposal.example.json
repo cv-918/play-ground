@@ -1,0 +1,46 @@
+{
+  "proposal_id": "PROP-20260518-153000-motivation",
+  "source_agent_id": "scenario_director",
+  "source_meeting_id": "MEET-20260518-151000-scenario",
+  "title": "Protagonist motivation direction",
+  "summary": "Choose a small-scope protagonist motivation that can drive the first playable loop without requiring a full narrative bible.",
+  "rationale": "The prototype needs a clear reason for the player to move, fight, or survive, but canon should stay lightweight and gameplay-facing.",
+  "options": [
+    {
+      "option_id": "survival",
+      "title": "Survival",
+      "summary": "The protagonist keeps moving to survive an immediate threat.",
+      "tradeoffs": [
+        "Easy to communicate early.",
+        "Works with repeated action loops.",
+        "Can feel generic if not supported by stronger world details later."
+      ]
+    },
+    {
+      "option_id": "rescue",
+      "title": "Rescue",
+      "summary": "The protagonist pushes forward to rescue someone or recover something important.",
+      "tradeoffs": [
+        "Creates stronger emotional direction.",
+        "May require more character/canon work.",
+        "Could expand scope if supporting cast is introduced too early."
+      ]
+    }
+  ],
+  "risks": [
+    "Approving a motivation before core gameplay is stable may create later rewrite pressure.",
+    "Leaving motivation undecided keeps scenario work provisional."
+  ],
+  "dependencies": [
+    "Human Director decision on preferred motivation.",
+    "Game Designer check that motivation supports the first playable loop."
+  ],
+  "approval_items": [
+    "Approve one protagonist motivation as canon, or keep all options proposed only."
+  ],
+  "evidence_refs": [
+    "MEET-20260518-151000-scenario",
+    "RRO-20260518-150000-scenario"
+  ],
+  "status": "submitted"
+}

@@ -1,0 +1,16 @@
+{
+  "memory_id": "MEM-20260518-154000-motivation",
+  "project_id": "playground",
+  "scope": "canon",
+  "type": "canon",
+  "status": "canon",
+  "content": "For the current prototype stage, the protagonist's initial motivation is survival. This is approved as lightweight scenario canon and should guide early player-facing story framing.",
+  "source_refs": [
+    "DEC-20260518-153500-motivation",
+    "PROP-20260518-153000-motivation"
+  ],
+  "confidence": "high",
+  "owner_agent_id": "scenario_director",
+  "created_at": "2026-05-18T15:40:00+09:00",
+  "updated_at": "2026-05-18T15:40:00+09:00"
+}

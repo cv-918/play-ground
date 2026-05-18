@@ -1,0 +1,17 @@
+{
+  "memory_id": "MEM-20260518-154100-rejected-rescue",
+  "project_id": "playground",
+  "scope": "project",
+  "type": "rejection",
+  "status": "rejected",
+  "content": "For the current prototype stage, do not use a rescue target as the protagonist's core motivation because it expands supporting character and canon scope too early.",
+  "source_refs": [
+    "DEC-20260518-153500-motivation",
+    "PROP-20260518-153000-motivation"
+  ],
+  "confidence": "high",
+  "owner_agent_id": "scenario_director",
+  "created_at": "2026-05-18T15:41:00+09:00",
+  "updated_at": "2026-05-18T15:41:00+09:00",
+  "rejection_reason": "Rejected by Human Director decision for current prototype scope."
+}

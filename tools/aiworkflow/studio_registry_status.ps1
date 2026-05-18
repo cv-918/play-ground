@@ -185,7 +185,11 @@ function Test-StudioRegistry {
         "scenario_director_role_run_output.example.json",
         "creative_meeting_session.example.json",
         "scenario_pitch_work_order.example.json",
-        "scenario_pitch_task_binding.example.json"
+        "scenario_pitch_task_binding.example.json",
+        "protagonist_motivation_proposal.example.json",
+        "protagonist_motivation_decision.example.json",
+        "protagonist_motivation_canon_memory.example.json",
+        "protagonist_motivation_rejected_memory.example.json"
     )
 
     $exampleNames = @($Registry.examples | ForEach-Object { $_.Name })

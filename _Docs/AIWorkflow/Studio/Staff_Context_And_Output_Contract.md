@@ -156,6 +156,10 @@ scenario_director_role_run_output.example.json
 creative_meeting_session.example.json
 scenario_pitch_work_order.example.json
 scenario_pitch_task_binding.example.json
+protagonist_motivation_proposal.example.json
+protagonist_motivation_decision.example.json
+protagonist_motivation_canon_memory.example.json
+protagonist_motivation_rejected_memory.example.json
 ```
 
 These examples are read-only contract fixtures. They demonstrate how a
@@ -174,3 +178,14 @@ Scenario Director RoleRunOutput
 
 This shows the Studio layer producing structured follow-up work without
 bypassing existing AIWorkflow task approval, runner, completion, or git gates.
+
+The canon examples demonstrate the governance boundary:
+
+```text
+proposal
+  -> Human Director decision
+  -> canon memory
+```
+
+Rejected ideas are also recorded as rejected memory so future staff agents do
+not repeatedly propose them as if they were new.
