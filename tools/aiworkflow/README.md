@@ -30,6 +30,7 @@ run_result_semantics_check.bat
 workflow_status.bat
 role_router_status.bat
 studio_registry_status.bat
+studio_workorder_planner.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -191,6 +192,23 @@ The Studio WorkOrder-to-Task bridge is documented in:
 ```text
 _Docs\AIWorkflow\Studio\WorkOrder_Task_Bridge.md
 ```
+
+---
+
+## studio_workorder_planner.bat
+
+Converts a Studio WorkOrder JSON file into a read-only AIWorkflow TaskDraft and
+Backlog row preview.
+
+Example:
+
+```bat
+tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --json
+```
+
+This is a planner only. It does not create a Backlog task, set ActiveTask,
+approve work, start PC Runner, modify source files, commit, or push.
 
 ---
 

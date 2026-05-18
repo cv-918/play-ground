@@ -171,6 +171,29 @@ execute within approved scope
 It must say what is expected to change and what is explicitly not expected to
 change.
 
+## Read-Only Planner
+
+The first local bridge support tool is:
+
+```bat
+tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path>
+tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> --json
+```
+
+It converts a WorkOrder into a TaskDraft and Backlog row preview.
+
+It does not:
+
+- write Backlog.md
+- set ActiveTask
+- approve work
+- start PC Runner
+- modify source files
+- commit or push
+
+The planner exists to show what would be created before the workflow writes any
+task state.
+
 ## Example
 
 ```text
