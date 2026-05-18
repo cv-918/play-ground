@@ -36,13 +36,14 @@ This slice defines:
 - Scenario Director context/output examples
 - Creative MeetingSession to WorkOrder to TaskBinding examples
 - Canon decision flow and proposal/decision/memory examples
+- Local MemoryRecord store and validation tool
 
 ## Current Execution Status
 
 Current status:
 
 ```text
-read-only model foundation
+domain model foundation + guarded WorkOrder/Memory local tools
 ```
 
 This folder does not:
@@ -65,12 +66,17 @@ tools\aiworkflow\studio_registry_status.bat departments
 tools\aiworkflow\studio_registry_status.bat staff scenario_director
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
+tools\aiworkflow\studio_memory_store.bat status
+tools\aiworkflow\studio_memory_store.bat validate
+tools\aiworkflow\studio_memory_store.bat list
+tools\aiworkflow\studio_memory_store.bat read MEM-20260518-154000-motivation
+tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json --execute
 ```
 
 These tools validate registry references, print department/staff details, and
-preview or create WorkOrder-derived Backlog tasks. They do not execute agents,
-call LLMs, set ActiveTask, approve work, start PC Runner, modify source files,
-commit, or push.
+preview or create WorkOrder-derived Backlog tasks and governed MemoryRecord
+files. They do not execute agents, call LLMs, set ActiveTask, approve work,
+start PC Runner, modify source files, commit, or push.
 
 ## Directory Map
 
@@ -81,6 +87,8 @@ _Docs/AIWorkflow/Studio/
 +-- Studio_Runtime_Contracts.md
 +-- Staff_Context_And_Output_Contract.md
 +-- Canon_Decision_Flow.md
++-- MemoryRecords/
+|   +-- README.md
 +-- Examples/
 |   +-- scenario_director_context_packet.example.json
 |   +-- scenario_director_role_run_output.example.json
@@ -127,6 +135,8 @@ These rules are mandatory for all future implementations:
 8. WorkOrder sits above Task and may create one or more AIWorkflow tasks.
 9. Evidence collection is not verification.
 10. Completion is not commit.
+11. Durable memory writes must preserve memory status, source refs, and canon
+    decision boundaries.
 
 ## Relationship To Existing AIWorkflow Core
 

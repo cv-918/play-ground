@@ -31,6 +31,7 @@ workflow_status.bat
 role_router_status.bat
 studio_registry_status.bat
 studio_workorder_planner.bat
+studio_memory_store.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -218,6 +219,42 @@ tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Exa
 one Backlog row and writes a Backlog backup under `_Temp\AIWorkflowStudio\`.
 It does not set ActiveTask, approve work, start PC Runner, modify source files,
 commit, or push.
+
+---
+
+## studio_memory_store.bat
+
+Inspects, validates, and explicitly creates AIWorkflow Studio `MemoryRecord`
+JSON files. The default durable store is:
+
+```text
+_Docs\AIWorkflow\Studio\MemoryRecords\
+```
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_memory_store.bat status
+tools\aiworkflow\studio_memory_store.bat validate
+tools\aiworkflow\studio_memory_store.bat list
+tools\aiworkflow\studio_memory_store.bat list --status canon
+tools\aiworkflow\studio_memory_store.bat read MEM-20260518-154000-motivation
+tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json
+tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json --execute
+```
+
+`create` without `--execute` is a dry-run preview. `create --execute` writes one
+MemoryRecord JSON file. The tool enforces the first governance checks for
+durable memory:
+
+- `canon` memory must cite a `DEC-*` decision reference.
+- `rejected` memory must include `rejection_reason`.
+- `superseded` memory must include `replacement_ref`.
+- duplicate `memory_id` values are rejected.
+
+For validation smoke tests, `--store-path` may override the store only under
+`_Temp\`. The command does not create tasks, approve work, start PC Runner,
+modify source files, commit, or push.
 
 ---
 

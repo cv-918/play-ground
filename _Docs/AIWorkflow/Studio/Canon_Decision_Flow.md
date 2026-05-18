@@ -34,6 +34,8 @@ Proposal
 5. A StaffAgent may request canonization but may not canonize its own output.
 6. Canon memory must cite the approving Decision.
 7. Superseding canon requires another Decision.
+8. Memory store writes must be explicit; dry-run previews are not durable
+   memory.
 
 ## Proposal Requirements
 
@@ -68,6 +70,9 @@ A canon memory record must include:
 - the decision id that canonized it
 - clear content that future staff can cite safely
 
+The local memory store rejects canon memory when no `DEC-*` source reference is
+present.
+
 ## Rejected Memory Requirements
 
 A rejected memory record must include:
@@ -79,6 +84,34 @@ A rejected memory record must include:
 
 Rejected memory is valuable. It prevents the studio from repeatedly suggesting
 the same rejected idea.
+
+## Local Memory Store
+
+The first local memory tool is:
+
+```bat
+tools\aiworkflow\studio_memory_store.bat
+```
+
+It supports:
+
+```bat
+status
+validate
+list
+read <memory_id>
+create <memory_json_path> [--execute]
+```
+
+`create` without `--execute` is a dry-run. `create --execute` writes one
+MemoryRecord JSON file to:
+
+```text
+_Docs/AIWorkflow/Studio/MemoryRecords/
+```
+
+The tool does not approve proposals, canonize ideas, create tasks, start
+runners, mark work done, commit, or push.
 
 ## Example Files
 

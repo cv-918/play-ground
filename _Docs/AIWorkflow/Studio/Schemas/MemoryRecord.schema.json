@@ -18,7 +18,7 @@
     "updated_at"
   ],
   "properties": {
-    "memory_id": { "type": "string", "pattern": "^MEM-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "memory_id": { "type": "string", "pattern": "^MEM-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "project_id": { "type": "string" },
     "scope": { "type": "string", "enum": ["global", "project", "agent", "department", "meeting", "task", "canon"] },
     "type": { "type": "string", "enum": ["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"] },

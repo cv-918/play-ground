@@ -42,6 +42,9 @@ proposed setting != approved setting != canon
 - Every important memory record must include `source_refs`.
 - Agents must not write canon directly unless their role policy explicitly
   allows canon proposal and a separate decision approves it.
+- Local memory tools must require an explicit write action for durable memory.
+- Canon memory writes must fail when no decision reference is present.
+- Rejected memory writes must fail when no rejection reason is present.
 
 ## Required UI Behavior
 
