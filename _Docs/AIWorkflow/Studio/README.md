@@ -55,6 +55,8 @@ This slice defines:
 - Read-only Studio dashboard HTML snapshot export with Director Inbox and
   review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
+- WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
+  task
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
 - Conditional automation case suite, deterministic policy test, replay, and
@@ -163,6 +165,8 @@ _Docs/AIWorkflow/Studio/
 +-- MemoryRecords/
 |   +-- README.md
 +-- WorkOrders/
+|   +-- README.md
++-- TaskBindings/
 |   +-- README.md
 +-- Proposals/
 |   +-- README.md

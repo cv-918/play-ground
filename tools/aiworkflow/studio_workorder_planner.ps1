@@ -28,13 +28,15 @@ function ConvertTo-StudioJson {
 function New-SafetyState {
     param(
         [bool]$BacklogWritten = $false,
-        [bool]$WorkOrderWritten = $false
+        [bool]$WorkOrderWritten = $false,
+        [bool]$TaskBindingWritten = $false
     )
 
     return [pscustomobject]@{
-        read_only = (-not $BacklogWritten -and -not $WorkOrderWritten)
+        read_only = (-not $BacklogWritten -and -not $WorkOrderWritten -and -not $TaskBindingWritten)
         workorder_written = $WorkOrderWritten
         backlog_written = $BacklogWritten
+        task_binding_written = $TaskBindingWritten
         active_task_changed = $false
         approval_changed = $false
         runner_started = $false
@@ -695,6 +697,132 @@ function New-BacklogTaskFromDraft {
     }
 }
 
+function Get-TaskBindingStorePath {
+    param(
+        [string]$Root,
+        [string]$BacklogPath
+    )
+
+    $approvedBacklog = (Resolve-Path -LiteralPath (Join-Path $Root "_Docs\AIWorkflow\Backlog.md")).Path
+    $resolvedBacklog = (Resolve-Path -LiteralPath $BacklogPath).Path
+    if ($resolvedBacklog -eq $approvedBacklog) {
+        return (Join-Path $Root "_Docs\AIWorkflow\Studio\TaskBindings")
+    }
+    return (Join-Path $Root "_Temp\AIWorkflowStudio\task_bindings")
+}
+
+function New-TaskBindingId {
+    param(
+        [string]$TaskId,
+        [string]$StorePath
+    )
+
+    $slug = ([string]$TaskId).ToLowerInvariant() -replace "[^a-z0-9-]", "-"
+    $slug = $slug.Trim("-")
+    if ($slug.Length -gt 36) {
+        $slug = $slug.Substring(0, 36).Trim("-")
+    }
+    $now = Get-Date
+    for ($offset = 0; $offset -lt 60; $offset += 1) {
+        $candidateTime = $now.AddSeconds($offset)
+        $candidate = "WOTB-{0}-{1}" -f $candidateTime.ToString("yyyyMMdd-HHmmss"), $slug
+        $candidatePath = Join-Path $StorePath ($candidate + ".json")
+        if (-not (Test-Path -LiteralPath $candidatePath)) {
+            return $candidate
+        }
+    }
+    throw "Failed to generate unique WorkOrderTaskBinding id within one minute."
+}
+
+function Get-BindingRelationship {
+    param([object]$Draft)
+
+    switch ([string]$Draft.kind) {
+        "validation" { return "validation_task" }
+        "documentation" { return "documentation_task" }
+        "data" { return "primary_task" }
+        "implementation" { return "primary_task" }
+        default { return "primary_task" }
+    }
+}
+
+function Get-BindingCreationSource {
+    param([object]$WorkOrder)
+
+    switch ([string]$WorkOrder.source_type) {
+        "meeting" { return "meeting_follow_up" }
+        "proposal" { return "proposal_accepted" }
+        "finalization" { return "finalization_request_changes" }
+        default { return "director_approved" }
+    }
+}
+
+function New-TaskBinding {
+    param(
+        [object]$WorkOrder,
+        [object]$Draft,
+        [object]$Task,
+        [string]$StorePath
+    )
+
+    $evidenceRefs = New-Object System.Collections.Generic.List[string]
+    Add-Unique -List $evidenceRefs -Value ([string]$WorkOrder.source_ref)
+    Add-Unique -List $evidenceRefs -Value ([string]$WorkOrder.work_order_id)
+    foreach ($item in Get-StringArray -Value $WorkOrder.evidence_requirements) {
+        Add-Unique -List $evidenceRefs -Value $item
+    }
+
+    return [pscustomobject]@{
+        binding_id = New-TaskBindingId -TaskId ([string]$Task.id) -StorePath $StorePath
+        work_order_id = [string]$WorkOrder.work_order_id
+        task_id = [string]$Task.id
+        relationship = Get-BindingRelationship -Draft $Draft
+        creation_source = Get-BindingCreationSource -WorkOrder $WorkOrder
+        status = "created"
+        authorized_scope = @(Get-StringArray -Value $WorkOrder.scope)
+        non_goals = @(Get-StringArray -Value $WorkOrder.non_goals)
+        approval_refs = @()
+        evidence_refs = @($evidenceRefs)
+        runner_run_ids = @()
+        completion_report_refs = @()
+        finalization_refs = @()
+        safety = [pscustomobject]@{
+            source_write_authorized = $false
+            schema_change_authorized = $false
+            canon_change_authorized = $false
+            asset_import_authorized = $false
+            external_tool_authorized = $false
+            commit_authorized = $false
+        }
+    }
+}
+
+function Write-TaskBinding {
+    param(
+        [string]$Root,
+        [string]$BacklogPath,
+        [object]$WorkOrder,
+        [object]$Draft,
+        [object]$Task
+    )
+
+    $storePath = Get-TaskBindingStorePath -Root $Root -BacklogPath $BacklogPath
+    if (-not (Test-Path -LiteralPath $storePath)) {
+        New-Item -ItemType Directory -Path $storePath -Force | Out-Null
+    }
+
+    $binding = New-TaskBinding -WorkOrder $WorkOrder -Draft $Draft -Task $Task -StorePath $storePath
+    $targetPath = Join-Path $storePath ([string]$binding.binding_id + ".json")
+    $json = ($binding | ConvertTo-Json -Depth 64) + [Environment]::NewLine
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($targetPath, $json, $encoding)
+
+    return [pscustomobject]@{
+        binding = $binding
+        binding_path = $targetPath
+    }
+}
+
 function Write-BacklogTask {
     param(
         [string]$Root,
@@ -793,7 +921,9 @@ function New-CreateResult {
         }
     }
 
-    $write = Write-BacklogTask -Root $Root -BacklogPath $backlogPath -WorkOrder (Read-JsonFile -Path $plan.work_order_path) -Draft $plan.task_draft
+    $workOrder = Read-JsonFile -Path $plan.work_order_path
+    $write = Write-BacklogTask -Root $Root -BacklogPath $backlogPath -WorkOrder $workOrder -Draft $plan.task_draft
+    $bindingWrite = Write-TaskBinding -Root $Root -BacklogPath $backlogPath -WorkOrder $workOrder -Draft $plan.task_draft -Task $write.task
     return [pscustomobject]@{
         ok = $true
         command = "create"
@@ -803,7 +933,9 @@ function New-CreateResult {
         backlog_row = $write.row
         backlog_path = $write.backlog_path
         backup_path = $write.backup_path
-        safety = New-SafetyState -BacklogWritten $true
+        task_binding = $bindingWrite.binding
+        task_binding_path = $bindingWrite.binding_path
+        safety = New-SafetyState -BacklogWritten $true -TaskBindingWritten $true
     }
 }
 
@@ -888,6 +1020,7 @@ function Show-Create {
     Write-Host "Mode: execute"
     Write-Host "Created task: $($Result.created_task.id)"
     Write-Host "Backlog: $($Result.backlog_path)"
+    Write-Host "TaskBinding: $($Result.task_binding_path)"
     if (-not [string]::IsNullOrWhiteSpace([string]$Result.backup_path)) {
         Write-Host "Backup: $($Result.backup_path)"
     }
@@ -896,6 +1029,7 @@ function Show-Create {
     Write-Host $Result.backlog_row
     Write-List -Label "Safety" -Items @(
         "Backlog written: yes",
+        "WorkOrderTaskBinding written: yes",
         "ActiveTask not changed",
         "Approval not changed",
         "Runner not started",

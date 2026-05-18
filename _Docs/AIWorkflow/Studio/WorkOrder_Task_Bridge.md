@@ -202,6 +202,17 @@ _Docs/AIWorkflow/Studio/WorkOrders/
 
 `create --execute` appends one row to `Backlog.md`.
 
+It also writes a matching `WorkOrderTaskBinding` record under:
+
+```text
+_Docs/AIWorkflow/Studio/TaskBindings/
+```
+
+The binding is the durable trace from Studio WorkOrder to Backlog task. It
+records the authorized scope, non-goals, source evidence, and safety flags, but
+it does not approve the task or authorize source/schema/canon/asset/tool/git
+changes.
+
 It does not:
 
 - set ActiveTask

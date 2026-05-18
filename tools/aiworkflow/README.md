@@ -238,9 +238,9 @@ tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Exa
 WorkOrder record to `_Docs\AIWorkflow\Studio\WorkOrders\` by default.
 
 `create` without `--execute` is a dry-run preview. `create --execute` appends
-one Backlog row and writes a Backlog backup under `_Temp\AIWorkflowStudio\`.
-It does not set ActiveTask, approve work, start PC Runner, modify source files,
-commit, or push.
+one Backlog row, writes a Backlog backup under `_Temp\AIWorkflowStudio\`, and
+writes a matching `WorkOrderTaskBinding` record. It does not set ActiveTask,
+approve work, start PC Runner, modify source files, commit, or push.
 
 For validation smoke tests, `--store-path` may override the WorkOrder store
 only under `_Temp\`.

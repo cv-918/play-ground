@@ -627,6 +627,8 @@ Implemented now:
 - WorkOrder to Task bridge schema and rules
 - registry and dashboard inspection commands
 - governed WorkOrder, Memory, Proposal, and Decision local stores
+- WorkOrderTaskBinding record creation when a Studio WorkOrder creates a
+  Backlog task
 - governed MeetingSession lifecycle records
 - governed RoleRun envelopes and RoleRunOutput routing previews
 - ToolAdapter registry and governed ToolRunRequest planner
