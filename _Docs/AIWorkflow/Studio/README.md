@@ -60,7 +60,8 @@ This slice defines:
 - Local-only Studio Director Console server with dashboard refresh, handoff
   plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
-  WorkOrder task creation actions, and review packet links
+  WorkOrder task creation actions, Proposal/Decision/Memory browser panels,
+  and review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -161,11 +162,13 @@ records. Review packet export writes a Human Director-readable `_Temp` HTML
 view only. Studio Director Console serves a local browser UI and can call only
 allowlisted Studio actions. It can materialize staff output into governed
 draft records, record Director decisions about those drafts, and create
-Backlog tasks from reviewed WorkOrders only through explicit button clicks.
-Its handoff execution path still routes through the existing read-only staff
-pipeline. These tools do not set ActiveTask, approve task execution, start PC
-Runner, modify source files, commit, or push. Conditional automation replay
-writes only `_Temp` evaluation artifacts when `--execute` is passed.
+Backlog tasks from reviewed WorkOrders only through explicit button clicks. It
+also displays Proposal, Decision, and Memory/Canon records so the Director can
+separate ideas, decisions, and canon status. Its handoff execution path still
+routes through the existing read-only staff pipeline. These tools do not set
+ActiveTask, approve task execution, start PC Runner, modify source files,
+commit, or push. Conditional automation replay writes only `_Temp` evaluation
+artifacts when `--execute` is passed.
 
 ## Directory Map
 

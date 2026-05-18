@@ -643,7 +643,8 @@ tools\aiworkflow\studio_director_console.bat --once --json
 ```
 
 The console shows Studio metrics, handoff candidates, recent staff runs,
-materialized draft records, WorkOrders, and review packet links. It can:
+materialized draft records, WorkOrders, Proposal/Decision/Memory browser
+panels, and review packet links. It can:
 
 - refresh the static dashboard
 - preview or run the existing read-only `studio_staff_pipeline.bat`

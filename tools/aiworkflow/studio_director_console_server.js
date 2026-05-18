@@ -259,6 +259,98 @@ async function getWorkOrders(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+async function getProposals(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Proposals");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.proposal_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      proposal_id: json.proposal_id || "",
+      title: json.title || "",
+      summary: json.summary || "",
+      status: json.status || "",
+      source_agent_id: json.source_agent_id || "",
+      option_count: Array.isArray(json.options) ? json.options.length : 0,
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function getDecisions(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Decisions");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.decision_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      decision_id: json.decision_id || "",
+      decision_type: json.decision_type || "",
+      target_ref: json.target_ref || "",
+      summary: json.decision_summary || "",
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function getMemories(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/MemoryRecords");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.memory_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      memory_id: json.memory_id || "",
+      project_id: json.project_id || "",
+      scope: json.scope || "",
+      type: json.type || "",
+      status: json.status || "",
+      content: json.content || "",
+      owner_agent_id: json.owner_agent_id || "",
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
@@ -298,6 +390,9 @@ async function getSummary(repoRoot) {
   const handoffs = await getHandoffCandidates(repoRoot);
   const materializations = await getMaterializations(repoRoot);
   const workOrders = await getWorkOrders(repoRoot);
+  const proposals = await getProposals(repoRoot);
+  const decisions = await getDecisions(repoRoot);
+  const memories = await getMemories(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -330,6 +425,9 @@ async function getSummary(repoRoot) {
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
     work_orders: workOrders.slice(0, 12),
+    proposals: proposals.slice(0, 12),
+    decisions: decisions.slice(0, 12),
+    memories: memories.slice(0, 12),
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
@@ -768,6 +866,23 @@ function directorConsoleHtml() {
         <div id="handoffs" class="list"></div>
       </div>
     </section>
+    <section class="grid">
+      <div class="card">
+        <h2>Proposal Inbox</h2>
+        <p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 캐논이 아닙니다.</p>
+        <div id="proposals" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Decision Log</h2>
+        <p class="muted">Human Director가 남긴 결정 기록입니다. 어떤 제안이 승인/반려/보류됐는지 확인합니다.</p>
+        <div id="decisions" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Memory / Canon</h2>
+        <p class="muted">프로젝트 기억과 공식 설정 후보입니다. status가 canon이어야 공식 설정으로 취급합니다.</p>
+        <div id="memories" class="list"></div>
+      </div>
+    </section>
     <section class="card">
       <h2>리뷰 패킷</h2>
       <div id="packets" class="list"></div>
@@ -828,7 +943,9 @@ function directorConsoleHtml() {
         metric("리뷰 패킷", m.review_packets),
         metric("Handoff", m.handoffs),
         metric("WorkOrder", m.work_orders),
-        metric("Draft 결정", m.materializations)
+        metric("Draft 결정", m.materializations),
+        metric("Proposal", m.proposals),
+        metric("Memory", m.memories)
       ].join("");
       renderInbox();
       el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
@@ -865,6 +982,22 @@ function directorConsoleHtml() {
         '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
         '<div class="row">' + button("계획 보기", "handoff-plan", h.path) + button("직원 실행", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본</a></div></div>'
       ).join("") : '<p class="muted">Handoff 후보가 없습니다.</p>';
+      el("proposals").innerHTML = state.proposals.length ? state.proposals.map((p) =>
+        '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
+        '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
+        '<p class="small muted">source ' + esc(p.source_agent_id) + ' · options ' + esc(p.option_count) + '</p>' +
+        '<a href="' + esc(p.href) + '" target="_blank">원본 열기</a></div>'
+      ).join("") : '<p class="muted">저장된 Proposal이 없습니다.</p>';
+      el("decisions").innerHTML = state.decisions.length ? state.decisions.map((d) =>
+        '<div class="item good"><h3><code>' + esc(d.decision_id) + '</code> <span class="pill">' + esc(d.decision_type) + '</span></h3>' +
+        '<p class="small">target: ' + esc(d.target_ref) + '</p><p class="summary">' + esc(short(d.summary)) + '</p>' +
+        '<a href="' + esc(d.href) + '" target="_blank">원본 열기</a></div>'
+      ).join("") : '<p class="muted">저장된 Decision이 없습니다.</p>';
+      el("memories").innerHTML = state.memories.length ? state.memories.map((m) =>
+        '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(m.status) + '</span></h3>' +
+        '<p class="small">' + esc(m.scope) + ' · ' + esc(m.type) + ' · ' + esc(m.owner_agent_id) + '</p>' +
+        '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 열기</a></div>'
+      ).join("") : '<p class="muted">저장된 MemoryRecord가 없습니다.</p>';
       el("packets").innerHTML = state.review_packets.length ? state.review_packets.map((p) =>
         '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">리뷰 패킷 열기</a></div>'
       ).join("") : '<p class="muted">리뷰 패킷이 없습니다.</p>';
