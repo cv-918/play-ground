@@ -64,11 +64,13 @@ tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_registry_status.bat departments
 tools\aiworkflow\studio_registry_status.bat staff scenario_director
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 ```
 
 These tools validate registry references, print department/staff details, and
-preview WorkOrder-derived TaskDrafts. They do not execute agents, call LLMs,
-change task state, approve work, modify files, commit, or push.
+preview or create WorkOrder-derived Backlog tasks. They do not execute agents,
+call LLMs, set ActiveTask, approve work, start PC Runner, modify source files,
+commit, or push.
 
 ## Directory Map
 

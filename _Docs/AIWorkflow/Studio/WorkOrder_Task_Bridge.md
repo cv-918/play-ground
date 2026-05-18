@@ -178,21 +178,27 @@ The first local bridge support tool is:
 ```bat
 tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path>
 tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> --json
+tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path>
+tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path> --execute
 ```
 
 It converts a WorkOrder into a TaskDraft and Backlog row preview.
 
+`create` without `--execute` is still a dry-run.
+
+`create --execute` appends one row to `Backlog.md`.
+
 It does not:
 
-- write Backlog.md
 - set ActiveTask
 - approve work
 - start PC Runner
 - modify source files
 - commit or push
 
-The planner exists to show what would be created before the workflow writes any
-task state.
+The planner/create split exists to show what would be created before the
+workflow writes task state. Creating the Backlog task is not approval to execute
+the task.
 
 ## Example
 

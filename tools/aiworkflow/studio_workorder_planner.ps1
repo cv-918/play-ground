@@ -26,9 +26,13 @@ function ConvertTo-StudioJson {
 }
 
 function New-SafetyState {
+    param(
+        [bool]$BacklogWritten = $false
+    )
+
     return [pscustomobject]@{
-        read_only = $true
-        backlog_written = $false
+        read_only = (-not $BacklogWritten)
+        backlog_written = $BacklogWritten
         active_task_changed = $false
         approval_changed = $false
         runner_started = $false
@@ -107,6 +111,24 @@ function Resolve-RepoPath {
     }
 
     return (Resolve-Path -LiteralPath (Join-Path $Root $Path)).Path
+}
+
+function Assert-PathInsideRepo {
+    param(
+        [string]$Root,
+        [string]$Path,
+        [string]$Label
+    )
+
+    $repo = (Resolve-Path -LiteralPath $Root).Path
+    $resolved = (Resolve-Path -LiteralPath $Path).Path
+    if ($resolved -ne $repo -and -not $resolved.StartsWith($repo + [System.IO.Path]::DirectorySeparatorChar)) {
+        throw "$Label must stay inside repository root: $resolved"
+    }
+}
+
+function New-EmptyStringList {
+    return New-Object System.Collections.Generic.List[string]
 }
 
 function Convert-AgentIdToRole {
@@ -265,6 +287,223 @@ function New-BacklogRowPreview {
     return "| $placeholderId | $($TaskDraft.priority) | todo | $($TaskDraft.kind) | $($TaskDraft.title) | $reason | Studio WorkOrder -> TaskDraft -> human review | $validation |"
 }
 
+function Get-BacklogPath {
+    param(
+        [string]$Root,
+        [string]$OverridePath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($OverridePath)) {
+        return (Join-Path $Root "_Docs\AIWorkflow\Backlog.md")
+    }
+
+    $resolved = Resolve-RepoPath -Root $Root -Path $OverridePath
+    Assert-PathInsideRepo -Root $Root -Path $resolved -Label "Backlog path override"
+
+    $tempRoot = (Join-Path $Root "_Temp")
+    if (-not $resolved.StartsWith($tempRoot + [System.IO.Path]::DirectorySeparatorChar)) {
+        throw "Backlog path override is only allowed under _Temp for validation: $resolved"
+    }
+
+    return $resolved
+}
+
+function Parse-TableLine {
+    param([string]$Line)
+
+    $trimmed = ([string]$Line).Trim()
+    if (-not $trimmed.StartsWith("|") -or -not $trimmed.EndsWith("|")) {
+        return @()
+    }
+
+    $inner = $trimmed.Substring(1, $trimmed.Length - 2)
+    $values = New-Object System.Collections.Generic.List[string]
+    $current = ""
+    for ($index = 0; $index -lt $inner.Length; $index += 1) {
+        $char = $inner[$index]
+        $previous = if ($index -gt 0) { $inner[$index - 1] } else { [char]0 }
+        if ($char -eq "|" -and $previous -ne "\") {
+            $values.Add($current.Trim().Replace("\|", "|"))
+            $current = ""
+        } else {
+            $current += $char
+        }
+    }
+    $values.Add($current.Trim().Replace("\|", "|"))
+    return @($values)
+}
+
+function Format-TableCell {
+    param([object]$Value)
+
+    $cellValue = ""
+    if ($null -ne $Value) {
+        $cellValue = [string]$Value
+    }
+
+    $cellValue = $cellValue.Replace("`r", " ")
+    $cellValue = $cellValue.Replace("`n", " ")
+    $cellValue = $cellValue.Replace("|", "\|")
+    return $cellValue.Trim()
+}
+
+function Format-BacklogRow {
+    param([object]$Task)
+
+    $cells = @(
+        $Task.id,
+        $Task.priority,
+        $Task.status,
+        $Task.kind,
+        $Task.item,
+        $Task.reason,
+        $Task.tool_route,
+        $Task.validation
+    )
+
+    return "| " + (($cells | ForEach-Object { Format-TableCell -Value $_ }) -join " | ") + " |"
+}
+
+function Get-BacklogTable {
+    param([string]$Content)
+
+    $header = @("ID", "Priority", "Status", "Kind", "Item", "Reason", "Tool Route", "Validation")
+    $lines = @($Content -split "`r?`n")
+    $headerIndex = -1
+    for ($index = 0; $index -lt $lines.Count; $index += 1) {
+        $values = @(Parse-TableLine -Line $lines[$index])
+        if ($values.Count -eq $header.Count) {
+            $same = $true
+            for ($i = 0; $i -lt $header.Count; $i += 1) {
+                if ($values[$i] -ne $header[$i]) {
+                    $same = $false
+                    break
+                }
+            }
+            if ($same) {
+                $headerIndex = $index
+                break
+            }
+        }
+    }
+
+    if ($headerIndex -lt 0) {
+        throw "Backlog table header was not found."
+    }
+
+    $rowEndIndex = $headerIndex + 2
+    $rows = @()
+    while ($rowEndIndex -lt $lines.Count -and $lines[$rowEndIndex].Trim().StartsWith("|")) {
+        $values = @(Parse-TableLine -Line $lines[$rowEndIndex])
+        if ($values.Count -eq $header.Count) {
+            $rows += ,$values
+        }
+        $rowEndIndex += 1
+    }
+
+    return [pscustomobject]@{
+        lines = $lines
+        header_index = $headerIndex
+        row_end_index = $rowEndIndex
+        rows = @($rows)
+    }
+}
+
+function New-TaskId {
+    param(
+        [object]$Table,
+        [string]$Category
+    )
+
+    $existing = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($row in @($Table.rows)) {
+        if (@($row).Count -gt 0) {
+            [void]$existing.Add([string]$row[0])
+        }
+    }
+
+    $now = Get-Date
+    for ($offset = 0; $offset -lt 60; $offset += 1) {
+        $candidateTime = $now.AddSeconds($offset)
+        $candidate = ("{0}-{1}" -f $Category, $candidateTime.ToString("yyyyMMdd-HHmmss"))
+        if (-not $existing.Contains($candidate)) {
+            return $candidate
+        }
+    }
+
+    throw "Failed to generate unique task id within one minute."
+}
+
+function New-BacklogTaskFromDraft {
+    param(
+        [object]$WorkOrder,
+        [object]$Draft,
+        [string]$TaskId
+    )
+
+    $objective = ([string]$WorkOrder.objective).Trim().TrimEnd(".")
+    $reason = "Created from Studio WorkOrder $($WorkOrder.work_order_id) ($($WorkOrder.source_type) $($WorkOrder.source_ref)). Objective: $objective. Requires normal AIWorkflow review, approval, execution, completion, and git gates."
+
+    return [pscustomobject]@{
+        id = $TaskId
+        priority = $Draft.priority
+        status = "todo"
+        kind = $Draft.kind
+        item = $Draft.title
+        reason = Limit-Text -Text $reason -Max 320
+        tool_route = "Studio WorkOrder -> TaskDraft -> human review"
+        validation = "studio workorder draft: work_order=$($WorkOrder.work_order_id); risk=$($Draft.suggested_risk); workflow_path=$($Draft.workflow_path); validation pending human approval"
+    }
+}
+
+function Write-BacklogTask {
+    param(
+        [string]$Root,
+        [string]$BacklogPath,
+        [object]$WorkOrder,
+        [object]$Draft
+    )
+
+    Assert-PathInsideRepo -Root $Root -Path $BacklogPath -Label "Backlog target"
+
+    $approvedBacklog = (Join-Path $Root "_Docs\AIWorkflow\Backlog.md")
+    $tempRoot = (Join-Path $Root "_Temp")
+    $resolvedBacklog = (Resolve-Path -LiteralPath $BacklogPath).Path
+    if ($resolvedBacklog -ne (Resolve-Path -LiteralPath $approvedBacklog).Path -and -not $resolvedBacklog.StartsWith($tempRoot + [System.IO.Path]::DirectorySeparatorChar)) {
+        throw "Refusing to write outside approved Backlog.md or _Temp validation path: $resolvedBacklog"
+    }
+
+    $content = [System.IO.File]::ReadAllText($resolvedBacklog, [System.Text.Encoding]::UTF8)
+    $table = Get-BacklogTable -Content $content
+    $taskId = New-TaskId -Table $table -Category ([string]$Draft.category)
+    $task = New-BacklogTaskFromDraft -WorkOrder $WorkOrder -Draft $Draft -TaskId $taskId
+    $row = Format-BacklogRow -Task $task
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    foreach ($line in @($table.lines)) {
+        $lines.Add([string]$line)
+    }
+    $lines.Insert([int]$table.row_end_index, $row)
+    $nextContent = $lines -join "`n"
+
+    $backupPath = $null
+    if ($resolvedBacklog -eq (Resolve-Path -LiteralPath $approvedBacklog).Path) {
+        $backupDir = Join-Path $Root "_Temp\AIWorkflowStudio\backups"
+        New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
+        $backupPath = Join-Path $backupDir ("Backlog_{0}.md" -f (Get-Date).ToString("yyyyMMdd_HHmmss_fff"))
+        [System.IO.File]::Copy($resolvedBacklog, $backupPath, $false)
+    }
+
+    [System.IO.File]::WriteAllText($resolvedBacklog, $nextContent, [System.Text.Encoding]::UTF8)
+
+    return [pscustomobject]@{
+        task = $task
+        row = $row
+        backlog_path = $resolvedBacklog
+        backup_path = $backupPath
+    }
+}
+
 function New-PlanResult {
     param(
         [string]$Root,
@@ -286,6 +525,46 @@ function New-PlanResult {
         task_draft = $draft
         backlog_row_preview = $row
         safety = New-SafetyState
+    }
+}
+
+function New-CreateResult {
+    param(
+        [string]$Root,
+        [string]$WorkOrderPath,
+        [bool]$Execute,
+        [string]$BacklogPathOverride
+    )
+
+    $plan = New-PlanResult -Root $Root -WorkOrderPath $WorkOrderPath
+    $backlogPath = Get-BacklogPath -Root $Root -OverridePath $BacklogPathOverride
+
+    if (-not $Execute) {
+        return [pscustomobject]@{
+            ok = $true
+            command = "create"
+            execute = $false
+            execute_required = $true
+            message = "Dry-run only. Re-run with create <work_order_json_path> --execute to write a Backlog task."
+            work_order_id = $plan.work_order_id
+            task_draft = $plan.task_draft
+            backlog_row_preview = $plan.backlog_row_preview
+            target_backlog_path = $backlogPath
+            safety = New-SafetyState
+        }
+    }
+
+    $write = Write-BacklogTask -Root $Root -BacklogPath $backlogPath -WorkOrder (Read-JsonFile -Path $plan.work_order_path) -Draft $plan.task_draft
+    return [pscustomobject]@{
+        ok = $true
+        command = "create"
+        execute = $true
+        work_order_id = $plan.work_order_id
+        created_task = $write.task
+        backlog_row = $write.row
+        backlog_path = $write.backlog_path
+        backup_path = $write.backup_path
+        safety = New-SafetyState -BacklogWritten $true
     }
 }
 
@@ -342,10 +621,54 @@ function Show-Plan {
     )
 }
 
+function Show-Create {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio WorkOrder Task Create"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "WorkOrder: $($Result.work_order_id)"
+    if (-not $Result.execute) {
+        Write-Host "Mode: dry-run"
+        Write-Host $Result.message
+        Write-Host ""
+        Write-Host "[Backlog row preview]"
+        Write-Host $Result.backlog_row_preview
+        Write-List -Label "Safety" -Items @(
+            "Backlog not written",
+            "ActiveTask not changed",
+            "Approval not changed",
+            "Runner not started",
+            "Source not changed",
+            "Git not changed"
+        )
+        return
+    }
+
+    Write-Host "Mode: execute"
+    Write-Host "Created task: $($Result.created_task.id)"
+    Write-Host "Backlog: $($Result.backlog_path)"
+    if (-not [string]::IsNullOrWhiteSpace([string]$Result.backup_path)) {
+        Write-Host "Backup: $($Result.backup_path)"
+    }
+    Write-Host ""
+    Write-Host "[Created row]"
+    Write-Host $Result.backlog_row
+    Write-List -Label "Safety" -Items @(
+        "Backlog written: yes",
+        "ActiveTask not changed",
+        "Approval not changed",
+        "Runner not started",
+        "Source not changed",
+        "Git not changed"
+    )
+}
+
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> [--json]"
+        error = "Usage: tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> [--json] OR create <work_order_json_path> [--execute] [--json]"
         safety = New-SafetyState
     }
 }
@@ -353,17 +676,28 @@ function New-UsageResult {
 try {
     $repo = (Resolve-Path -LiteralPath $RepoRoot).Path
     $json = $false
+    $execute = $false
+    $backlogPathOverride = ""
     $cleanArgs = New-Object System.Collections.Generic.List[string]
 
-    foreach ($arg in @($CommandArgs)) {
+    for ($index = 0; $index -lt @($CommandArgs).Count; $index += 1) {
+        $arg = [string]$CommandArgs[$index]
         if ($arg -ieq "--json" -or $arg -ieq "-json") {
             $json = $true
+        } elseif ($arg -ieq "--execute") {
+            $execute = $true
+        } elseif ($arg -ieq "--backlog-path") {
+            if ($index + 1 -ge @($CommandArgs).Count) {
+                throw "--backlog-path requires a path argument."
+            }
+            $index += 1
+            $backlogPathOverride = [string]$CommandArgs[$index]
         } elseif (-not [string]::IsNullOrWhiteSpace($arg)) {
             $cleanArgs.Add([string]$arg)
         }
     }
 
-    if ($cleanArgs.Count -ne 2 -or ([string]$cleanArgs[0]).ToLowerInvariant() -ne "plan") {
+    if ($cleanArgs.Count -ne 2) {
         $result = New-UsageResult
         if ($json) {
             ConvertTo-StudioJson -Value $result
@@ -373,9 +707,25 @@ try {
         exit 1
     }
 
-    $result = New-PlanResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1])
+    $command = ([string]$cleanArgs[0]).ToLowerInvariant()
+    if ($command -eq "plan") {
+        $result = New-PlanResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1])
+    } elseif ($command -eq "create") {
+        $result = New-CreateResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1]) -Execute $execute -BacklogPathOverride $backlogPathOverride
+    } else {
+        $result = New-UsageResult
+        if ($json) {
+            ConvertTo-StudioJson -Value $result
+        } else {
+            Write-Host "[ERROR] $($result.error)"
+        }
+        exit 1
+    }
+
     if ($json) {
         ConvertTo-StudioJson -Value $result
+    } elseif ($command -eq "create") {
+        Show-Create -Result $result
     } else {
         Show-Plan -Result $result
     }

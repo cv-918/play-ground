@@ -202,17 +202,22 @@ _Docs\AIWorkflow\Studio\WorkOrder_Task_Bridge.md
 ## studio_workorder_planner.bat
 
 Converts a Studio WorkOrder JSON file into a read-only AIWorkflow TaskDraft and
-Backlog row preview.
+Backlog row preview. It can also create the Backlog task when the operator
+explicitly passes `create --execute`.
 
 Example:
 
 ```bat
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --json
+tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 ```
 
-This is a planner only. It does not create a Backlog task, set ActiveTask,
-approve work, start PC Runner, modify source files, commit, or push.
+`create` without `--execute` is a dry-run preview. `create --execute` appends
+one Backlog row and writes a Backlog backup under `_Temp\AIWorkflowStudio\`.
+It does not set ActiveTask, approve work, start PC Runner, modify source files,
+commit, or push.
 
 ---
 

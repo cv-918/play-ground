@@ -8,6 +8,7 @@ REM   TaskDraft/Backlog row preview. It does not write Backlog.md.
 REM
 REM Usage:
 REM   tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> [--json]
+REM   tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path> [--execute] [--json]
 
 for %%I in ("%~dp0..\..") do set "REPO_ROOT=%%~fI"
 cd /d "%REPO_ROOT%" || (
