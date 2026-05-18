@@ -144,10 +144,11 @@ WorkOrder candidates, memory candidates, evidence refs, and safety flags. It
 does not approve, materialize, execute, write canon, create tasks, modify
 source files, commit, or push.
 
-The read-only dashboard also lists generated review packet links from
+The read-only dashboard also lists recent staff-run records from
+`_Temp\AIWorkflowStudio\staff_runs` and generated review packet links from
 `_Temp\AIWorkflowStudio\review_packets` so the Human Director can jump from the
-Studio overview to the concrete staff-output review surfaces. The dashboard
-remains read-only and does not execute packet actions.
+Studio overview to the concrete staff-output evidence and review surfaces. The
+dashboard remains read-only and does not execute packet actions.
 
 The first local Staff pipeline is:
 
