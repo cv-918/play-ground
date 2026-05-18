@@ -34,6 +34,7 @@ studio_workorder_planner.bat
 studio_memory_store.bat
 studio_meeting_runtime.bat
 studio_staff_runtime.bat
+studio_dashboard_export.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -326,6 +327,28 @@ created tasks, approved work, changed canon, committed, or pushed.
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not call LLMs, call tools, create WorkOrders, create
 tasks, approve work, start PC Runner, modify source files, commit, or push.
+
+---
+
+## studio_dashboard_export.bat
+
+Exports a read-only AIWorkflow Studio dashboard HTML snapshot under `_Temp`.
+
+Example:
+
+```bat
+tools\aiworkflow\studio_dashboard_export.bat
+tools\aiworkflow\studio_dashboard_export.bat --json
+tools\aiworkflow\studio_dashboard_export.bat --output _Temp\AIWorkflowStudio\dashboard\studio_dashboard.html
+```
+
+The dashboard summarizes departments, staff agents, durable MemoryRecords,
+MeetingSessions, RoleRuns, the Director flow, and safety rules. It is a static
+snapshot and does not start a server.
+
+`--output` is restricted to `_Temp\`. The command does not call LLMs, call
+tools, create memory, create WorkOrders, create tasks, approve work, start PC
+Runner, modify source files, commit, or push.
 
 ---
 

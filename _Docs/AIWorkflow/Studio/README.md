@@ -39,6 +39,7 @@ This slice defines:
 - Local MemoryRecord store and validation tool
 - Local MeetingSession runtime validation and handoff tool
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
+- Read-only Studio dashboard HTML snapshot export
 
 ## Current Execution Status
 
@@ -79,13 +80,14 @@ tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examp
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_dashboard_export.bat
 ```
 
 These tools validate registry references, print department/staff details, and
 preview or create WorkOrder-derived Backlog tasks, governed MemoryRecord files,
-governed MeetingSession records, and governed RoleRun envelopes. They do not
-execute agents, call LLMs, set ActiveTask, approve work, start PC Runner,
-modify source files, commit, or push.
+governed MeetingSession records, governed RoleRun envelopes, and read-only
+dashboard snapshots. They do not execute agents, call LLMs, set ActiveTask,
+approve work, start PC Runner, modify source files, commit, or push.
 
 ## Directory Map
 
@@ -155,6 +157,8 @@ These rules are mandatory for all future implementations:
 13. Staff RoleRuns are governed runtime envelopes. Staff output may request
     approval or handoff, but it must not directly approve, write canon, create
     tasks, change source files, commit, or push.
+14. Studio UI surfaces must display governance boundaries. A dashboard may
+    summarize state, but it must not silently perform approvals or execution.
 
 ## Relationship To Existing AIWorkflow Core
 
