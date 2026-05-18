@@ -841,6 +841,88 @@ function New-HandoffOutputResult {
     }
 }
 
+function New-RouteOutputResult {
+    param(
+        [string]$Root,
+        [string]$OutputPath
+    )
+
+    $inspect = New-InspectOutputResult -Root $Root -OutputPath $OutputPath
+    $output = $inspect.output
+    $routes = @()
+
+    foreach ($question in @($output.questions)) {
+        $routes += [pscustomobject]@{
+            route_type = "director_question"
+            human_required = $true
+            summary = [string]$question.question
+            next_action = "Ask Human Director before treating this RoleRun as complete."
+            target = "human_director"
+        }
+    }
+    foreach ($item in @($output.approval_items)) {
+        $routes += [pscustomobject]@{
+            route_type = "approval_item"
+            human_required = $true
+            summary = [string]$item.plain_language_summary
+            next_action = "Create a Decision or approval record before writing canon, memory, tasks, or implementation."
+            target = "human_director"
+        }
+    }
+    foreach ($handoff in @($output.handoff_requests)) {
+        $routes += [pscustomobject]@{
+            route_type = "staff_handoff"
+            human_required = $false
+            summary = [string]$handoff.objective
+            next_action = "Prepare a StaffContextPacket for the target agent; do not execute automatically."
+            target = [string]$handoff.target_agent_id
+        }
+    }
+    foreach ($workOrder in @($output.workorder_recommendations)) {
+        $routes += [pscustomobject]@{
+            route_type = "workorder_candidate"
+            human_required = $true
+            summary = [string]$workOrder.objective
+            next_action = "Convert to WorkOrder JSON only after Human Director accepts the candidate scope."
+            target = [string]$workOrder.department_id
+        }
+    }
+    foreach ($memory in @($output.memory_write_requests)) {
+        $requiresApproval = [bool]$memory.requires_approval -or [string]$memory.status -in @("approved", "canon")
+        $routes += [pscustomobject]@{
+            route_type = "memory_candidate"
+            human_required = $requiresApproval
+            summary = [string]$memory.summary
+            next_action = if ($requiresApproval) { "Create Decision/approval evidence before writing durable memory." } else { "May be drafted through memory store; proposal is not canon." }
+            target = [string]$memory.scope
+        }
+    }
+
+    if (@($routes).Count -eq 0) {
+        $routes += [pscustomobject]@{
+            route_type = "no_followup"
+            human_required = $false
+            summary = "No questions, approval items, handoffs, WorkOrders, or memory writes were requested."
+            next_action = "Review output summary and close or archive the RoleRun evidence."
+            target = "none"
+        }
+    }
+
+    return [pscustomobject]@{
+        ok = $inspect.validation.ok
+        command = "route-output"
+        output_id = [string]$output.output_id
+        role_run_id = [string]$output.role_run_id
+        agent_id = [string]$output.agent_id
+        status = [string]$output.status
+        plain_language_summary = [string]$output.plain_language_summary
+        routes = @($routes)
+        human_required_count = @($routes | Where-Object { $_.human_required }).Count
+        validation = $inspect.validation
+        safety = New-SafetyState
+    }
+}
+
 function Write-List {
     param(
         [string]$Label,
@@ -1038,10 +1120,39 @@ function Show-HandoffOutput {
     Write-List -Label "Validation warnings" -Items $Result.validation.warnings
 }
 
+function Show-RouteOutput {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio RoleRunOutput Router"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Output: $($Result.output_id)"
+    Write-Host "Agent/status: $($Result.agent_id) / $($Result.status)"
+    Write-Host "Human-required routes: $($Result.human_required_count)"
+    Write-Host "Summary: $($Result.plain_language_summary)"
+    foreach ($route in @($Result.routes)) {
+        Write-Host ""
+        Write-Host "[$($route.route_type)] target=$($route.target)"
+        Write-Host "- human_required: $($route.human_required)"
+        Write-Host "- summary: $($route.summary)"
+        Write-Host "- next: $($route.next_action)"
+    }
+    Write-List -Label "Validation errors" -Items $Result.validation.errors
+    Write-List -Label "Validation warnings" -Items $Result.validation.warnings
+    Write-List -Label "Safety" -Items @(
+        "No LLM call",
+        "No tool call",
+        "No memory write",
+        "No WorkOrder write",
+        "No task/approval/runner/source/git change"
+    )
+}
+
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_staff_runtime.bat status|validate|list|read <role_run_id>|plan <context_packet_json>|create <context_packet_json> [--execute]|inspect-output <role_run_output_json>|handoff-output <role_run_output_json> [--json]"
+        error = "Usage: tools\aiworkflow\studio_staff_runtime.bat status|validate|list|read <role_run_id>|plan <context_packet_json>|create <context_packet_json> [--execute]|inspect-output <role_run_output_json>|handoff-output <role_run_output_json>|route-output <role_run_output_json> [--json]"
         safety = New-SafetyState
     }
 }
@@ -1093,6 +1204,8 @@ try {
         $result = New-InspectOutputResult -Root $repo -OutputPath ([string]$cleanArgs[1])
     } elseif ($command -eq "handoff-output" -and $cleanArgs.Count -eq 2) {
         $result = New-HandoffOutputResult -Root $repo -OutputPath ([string]$cleanArgs[1])
+    } elseif ($command -eq "route-output" -and $cleanArgs.Count -eq 2) {
+        $result = New-RouteOutputResult -Root $repo -OutputPath ([string]$cleanArgs[1])
     } else {
         $result = New-UsageResult
         if ($json) {
@@ -1121,6 +1234,8 @@ try {
         Show-InspectOutput -Result $result
     } elseif ($command -eq "handoff-output") {
         Show-HandoffOutput -Result $result
+    } elseif ($command -eq "route-output") {
+        Show-RouteOutput -Result $result
     }
 
     if ($result.ok) {

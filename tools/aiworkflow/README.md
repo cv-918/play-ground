@@ -340,6 +340,7 @@ tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Example
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_staff_runtime.bat handoff-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_staff_runtime.bat route-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 ```
 
 The default provider policy is `codex_cli_signed_in` with `gpt-5.5`, so the
@@ -350,6 +351,9 @@ OpenAI API billing.
 dry-run preview. `create --execute` writes one RoleRun envelope. RoleRunOutput
 inspection rejects staff output that claims it directly changed source files,
 created tasks, approved work, changed canon, committed, or pushed.
+`route-output` groups RoleRunOutput into deterministic next-route buckets:
+questions, approval items, staff handoffs, WorkOrder candidates, and memory
+candidates.
 
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not call LLMs, call tools, create WorkOrders, create

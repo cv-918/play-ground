@@ -15,6 +15,7 @@ REM   tools\aiworkflow\studio_staff_runtime.bat plan <context_packet_json_path> 
 REM   tools\aiworkflow\studio_staff_runtime.bat create <context_packet_json_path> [--execute] [--json]
 REM   tools\aiworkflow\studio_staff_runtime.bat inspect-output <role_run_output_json_path> [--json]
 REM   tools\aiworkflow\studio_staff_runtime.bat handoff-output <role_run_output_json_path> [--json]
+REM   tools\aiworkflow\studio_staff_runtime.bat route-output <role_run_output_json_path> [--json]
 
 for %%I in ("%~dp0..\..") do set "REPO_ROOT=%%~fI"
 cd /d "%REPO_ROOT%" || (

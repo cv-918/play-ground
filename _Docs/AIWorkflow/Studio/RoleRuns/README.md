@@ -32,7 +32,19 @@ RoleRunOutput files can be checked before handoff:
 ```bat
 tools\aiworkflow\studio_staff_runtime.bat inspect-output <role_run_output_json_path>
 tools\aiworkflow\studio_staff_runtime.bat handoff-output <role_run_output_json_path>
+tools\aiworkflow\studio_staff_runtime.bat route-output <role_run_output_json_path>
 ```
+
+`route-output` turns RoleRunOutput into deterministic next-route buckets:
+
+- Human Director questions
+- approval items
+- staff handoffs
+- WorkOrder candidates
+- memory candidates
+
+It is read-only. It does not create WorkOrders, write memory, approve work, run
+tools, call LLMs, or change task/git state.
 
 Safety rules:
 
