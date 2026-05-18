@@ -58,8 +58,9 @@ This slice defines:
   run timeline, and review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with dashboard refresh, handoff
-  plan, explicit read-only staff handoff execution, staff run timeline, and
-  review packet links
+  plan, explicit read-only staff handoff execution, staff run timeline,
+  RoleRunOutput materialization actions, materialized draft decision actions,
+  WorkOrder task creation actions, and review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -158,9 +159,12 @@ approval, task creation, canonization, or implementation. Materialization
 review can write Decision records only; it does not execute the accepted
 records. Review packet export writes a Human Director-readable `_Temp` HTML
 view only. Studio Director Console serves a local browser UI and can call only
-allowlisted Studio actions; its handoff execution path still routes through
-the existing read-only staff pipeline. These tools do not set ActiveTask, start
-PC Runner, modify source files, commit, or push. Conditional automation replay
+allowlisted Studio actions. It can materialize staff output into governed
+draft records, record Director decisions about those drafts, and create
+Backlog tasks from reviewed WorkOrders only through explicit button clicks.
+Its handoff execution path still routes through the existing read-only staff
+pipeline. These tools do not set ActiveTask, approve task execution, start PC
+Runner, modify source files, commit, or push. Conditional automation replay
 writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
@@ -295,8 +299,9 @@ These rules are mandatory for all future implementations:
     push.
 27. Studio Director Console may make the Studio workflow interactive, but it
     must remain local-only and route button actions through allowlisted tools.
-    It must not become an approval, canon, source-edit, commit, or push
-    authority.
+    It may record governed draft decisions and create Backlog tasks from
+    reviewed WorkOrders, but it must not become a task-execution approval,
+    canon, source-edit, runner-start, commit, or push authority.
 
 ## Relationship To Existing AIWorkflow Core
 

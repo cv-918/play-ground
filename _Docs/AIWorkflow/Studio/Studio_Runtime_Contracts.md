@@ -158,11 +158,14 @@ tools\aiworkflow\studio_director_console.bat --once --json
 ```
 
 It serves a local-only browser UI for Studio metrics, Director Inbox, handoff
-candidates, staff run timeline, and review packet links. The console may call
-only allowlisted Studio actions: refresh summary, export the static dashboard,
-preview a handoff plan, and execute the existing read-only staff handoff
-pipeline after an explicit browser button click. It does not approve work,
-create Backlog tasks, write canon, modify source files, commit, or push.
+candidates, staff run timeline, materialized draft records, WorkOrders, and
+review packet links. The console may call only allowlisted Studio actions:
+refresh summary, export the static dashboard, preview or execute the existing
+read-only staff handoff pipeline, materialize RoleRunOutput into governed
+draft records, record Human Director decisions for materialized drafts, and
+create Backlog tasks from reviewed WorkOrders after an explicit browser button
+click. It does not approve task execution, start PC Runner, write canon, modify
+source files, commit, or push.
 
 The first local Staff pipeline is:
 

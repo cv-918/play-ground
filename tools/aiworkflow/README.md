@@ -642,15 +642,20 @@ tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
 tools\aiworkflow\studio_director_console.bat --once --json
 ```
 
-The console shows Studio metrics, handoff candidates, recent staff runs, and
-review packet links. It can refresh the static dashboard, preview a handoff
-plan, or run the existing read-only `studio_staff_pipeline.bat` only after an
-explicit button click.
+The console shows Studio metrics, handoff candidates, recent staff runs,
+materialized draft records, WorkOrders, and review packet links. It can:
 
-The console is local-only. It does not approve work, create Backlog tasks,
-write canon, modify source files, commit, or push. Handoff execution uses the
-signed-in Codex App/CLI route first and does not use OpenAI API billing by
-default.
+- refresh the static dashboard
+- preview or run the existing read-only `studio_staff_pipeline.bat`
+- convert `RoleRunOutput` into governed Proposal, Memory, WorkOrder, or
+  Handoff draft records
+- record Human Director decisions for materialized drafts
+- create a Backlog task from a reviewed WorkOrder
+
+All write actions require an explicit browser button click. The console is
+local-only. It does not approve task execution, start PC Runner, write canon,
+modify source files, commit, or push. Handoff execution uses the signed-in
+Codex App/CLI route first and does not use OpenAI API billing by default.
 
 ---
 

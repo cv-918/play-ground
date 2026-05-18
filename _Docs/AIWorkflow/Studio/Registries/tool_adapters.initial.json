@@ -356,9 +356,9 @@
       "status": "available",
       "execution_owner": "aiworkflow_core",
       "provider_policy": "Local-only browser UI. It uses existing Studio tools; handoff execution uses the signed-in Codex App/CLI route first and no OpenAI API billing by default.",
-      "allowed_actions": ["serve local Studio UI", "read Studio stores", "export dashboard", "plan handoff", "execute read-only staff handoff pipeline by explicit UI action"],
-      "blocked_actions": ["approve work", "create Backlog tasks", "write canon", "modify source files", "commit or push"],
-      "approval_required_actions": ["clicking execute handoff", "using staff output to create durable downstream records or tasks"],
+      "allowed_actions": ["serve local Studio UI", "read Studio stores", "export dashboard", "plan handoff", "execute read-only staff handoff pipeline by explicit UI action", "materialize RoleRunOutput drafts by explicit UI action", "record materialization review decisions by explicit UI action", "create Backlog tasks from reviewed WorkOrders by explicit UI action"],
+      "blocked_actions": ["approve task execution", "start PC Runner", "write canon", "modify source files", "commit or push"],
+      "approval_required_actions": ["clicking execute handoff", "materializing staff output into durable draft records", "recording Human Director decisions", "creating a Backlog task from a WorkOrder", "using staff output to create downstream executable work"],
       "input_contract": ["Studio stores", "_Temp AIWorkflowStudio artifacts", "explicit local browser action"],
       "output_evidence": ["local HTTP response", "_Temp dashboard HTML", "_Temp staff run logs", "_Temp review packet HTML"],
       "can_modify_files": true,
@@ -369,7 +369,8 @@
       "notes": [
         "First interactive local UI layer for the Personal AI Development Studio.",
         "The server is local-only and exposes only allowlisted Studio actions.",
-        "It cannot approve, canonize, create tasks, modify source, commit, or push."
+        "Backlog task creation is allowed only from a reviewed WorkOrder by explicit UI action.",
+        "It cannot approve task execution, canonize, start runners, modify source, commit, or push."
       ]
     },
     {

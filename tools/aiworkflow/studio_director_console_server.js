@@ -166,6 +166,7 @@ async function getStaffRuns(repoRoot) {
     const stat = await fsp.stat(file);
     const outputPath = json.role_run_output_path || "";
     const exitCode = Number.isFinite(Number(json.exit_code)) ? Number(json.exit_code) : null;
+    const output = outputPath ? await readJsonIfExists(path.resolve(repoRoot, outputPath)) : null;
     items.push({
       role_run_id: json.role_run_id || "",
       context_packet_id: json.context_packet_id || "",
@@ -178,10 +179,83 @@ async function getStaffRuns(repoRoot) {
       staff_run_path: toRepoRelative(repoRoot, file),
       output_path: outputPath,
       output_href: outputPath ? `/file?path=${encodeURIComponent(outputPath)}` : "",
+      output_id: output ? output.output_id || "" : "",
+      output_status: output ? output.status || "" : "",
+      summary: output ? output.plain_language_summary || "" : "",
+      materializable_counts: output ? {
+        proposals: Array.isArray(output.proposals) ? output.proposals.length : 0,
+        memory: Array.isArray(output.memory_write_requests) ? output.memory_write_requests.length : 0,
+        workorders: Array.isArray(output.workorder_recommendations) ? output.workorder_recommendations.length : 0,
+        handoffs: Array.isArray(output.handoff_requests) ? output.handoff_requests.length : 0,
+      } : { proposals: 0, memory: 0, workorders: 0, handoffs: 0 },
       updated_at: stat.mtime.toISOString(),
     });
   }
 
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function getMaterializations(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Materializations");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.materialization_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      materialization_id: json.materialization_id || "",
+      source_output_id: json.source_output_id || "",
+      source_agent_id: json.source_agent_id || "",
+      created_record_count: Array.isArray(json.created_records) ? json.created_records.length : 0,
+      created_records: Array.isArray(json.created_records) ? json.created_records.map((record) => ({
+        record_id: record.record_id || "",
+        record_type: record.record_type || "",
+        human_required: Boolean(record.human_required),
+        path: record.path || "",
+      })) : [],
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function getWorkOrders(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/WorkOrders");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.work_order_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      work_order_id: json.work_order_id || "",
+      objective: json.objective || "",
+      department_id: json.department_id || "",
+      status: json.status || "",
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
@@ -222,6 +296,8 @@ async function getSummary(repoRoot) {
   const reviewPackets = await getReviewPackets(repoRoot);
   const staffRuns = await getStaffRuns(repoRoot);
   const handoffs = await getHandoffCandidates(repoRoot);
+  const materializations = await getMaterializations(repoRoot);
+  const workOrders = await getWorkOrders(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -252,11 +328,13 @@ async function getSummary(repoRoot) {
     handoffs,
     recent_staff_runs: staffRuns.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
+    materializations: materializations.slice(0, 12),
+    work_orders: workOrders.slice(0, 12),
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
       default_llm_route: "signed-in Codex App/CLI, not OpenAI API billing",
-      blocked_actions: ["approve work", "create Backlog tasks", "write canon", "modify source files", "commit", "push"],
+      blocked_actions: ["approve task execution", "write canon", "modify source files", "commit", "push"],
     },
   };
 }
@@ -582,6 +660,262 @@ function dashboardHtml() {
 </html>`;
 }
 
+function directorConsoleHtml() {
+  return `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIWorkflow Studio Director Console</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#101319;
+      --panel:#1b202a;
+      --panel2:#242b37;
+      --line:#3a4353;
+      --text:#edf1f7;
+      --muted:#aeb8c7;
+      --accent:#79a9ff;
+      --good:#28a564;
+      --warn:#f0b84d;
+      --danger:#ff6464;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+    header { padding:22px 18px; background:#171b23; border-bottom:1px solid var(--line); }
+    main { max-width:1220px; margin:0 auto; padding:18px; }
+    h1 { margin:0 0 6px; font-size:26px; letter-spacing:0; }
+    h2 { margin:0 0 10px; font-size:18px; letter-spacing:0; }
+    h3 { margin:0 0 6px; font-size:15px; letter-spacing:0; }
+    p { margin:6px 0; }
+    button, select, input { font:inherit; }
+    button { border:0; border-radius:7px; padding:8px 11px; color:white; background:#4f6cff; cursor:pointer; }
+    button.secondary { background:#2f3747; }
+    button.good { background:#168b4f; }
+    button.warn { background:#a56d10; }
+    button.danger { background:#bc2f3f; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    code { background:#12151c; border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
+    a { color:#c6d8ff; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .muted { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin:14px 0; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    .metric { font-size:28px; font-weight:700; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; background:var(--panel2); color:var(--muted); padding:2px 7px; font-size:12px; }
+    .list { display:grid; gap:10px; }
+    .item { background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:7px; padding:11px; }
+    .item.warn { border-left-color:var(--warn); }
+    .item.good { border-left-color:var(--good); }
+    .item.danger { border-left-color:var(--danger); }
+    .small { font-size:13px; }
+    .summary { color:var(--muted); font-size:13px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
+    @media (max-width: 720px) { main { padding:12px; } h1 { font-size:22px; } .metric { font-size:24px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AIWorkflow Studio Director Console</h1>
+    <p class="muted">로컬 전용 감독자 콘솔입니다. 버튼은 기존 Studio 도구만 호출하고, 소스 수정/캐논 확정/커밋/푸시는 하지 않습니다.</p>
+  </header>
+  <main>
+    <section class="card">
+      <div class="row">
+        <button id="refresh">새로고침</button>
+        <button id="export-dashboard" class="secondary">정적 대시보드 갱신</button>
+        <span id="stamp" class="muted"></span>
+      </div>
+    </section>
+    <section id="metrics" class="grid"></section>
+    <section class="grid">
+      <div class="card">
+        <h2>감독자 Inbox</h2>
+        <p class="muted">검토할 직원 산출물, draft 기록, WorkOrder 후보를 한 곳에 모읍니다.</p>
+        <div id="inbox" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>안전 경계</h2>
+        <div class="list">
+          <div class="item good"><h3>콘솔이 직접 하지 않는 일</h3><p class="small">task 실행 승인, 캐논 확정, 소스 수정, 커밋, 푸시.</p></div>
+          <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">산출물 draft 변환, draft에 대한 결정 기록, WorkOrder task 생성, read-only 직원 handoff 실행.</p></div>
+        </div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="card">
+        <h2>직원 산출물</h2>
+        <p class="muted">RoleRunOutput을 Proposal/Memory/WorkOrder/Handoff draft로 변환할 수 있습니다.</p>
+        <div id="runs" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Draft 결정</h2>
+        <p class="muted">materialization draft를 승인, 반려, 보류, 수정 요청으로 기록합니다. 이 기록은 downstream 근거일 뿐 실행 승인은 아닙니다.</p>
+        <div id="materializations" class="list"></div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="card">
+        <h2>WorkOrder</h2>
+        <p class="muted">검토된 WorkOrder를 AIWorkflow Backlog task로 만들 수 있습니다. 생성 후에도 approve/start는 별도 gate입니다.</p>
+        <div id="workorders" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Handoff</h2>
+        <p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p>
+        <div id="handoffs" class="list"></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>리뷰 패킷</h2>
+      <div id="packets" class="list"></div>
+    </section>
+    <section class="card">
+      <h2>작업 로그</h2>
+      <pre id="log">대기 중</pre>
+    </section>
+  </main>
+  <script>
+    let state = null;
+    const el = (id) => document.getElementById(id);
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+    const log = (value) => { el("log").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2); };
+
+    async function api(path, options) {
+      const res = await fetch(path, options);
+      const json = await res.json();
+      if (!res.ok || json.ok === false) throw json;
+      return json;
+    }
+    function post(path, body) {
+      return api(path, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(body || {}) });
+    }
+    function metric(label, value) {
+      return '<div class="card"><h2>' + esc(label) + '</h2><div class="metric">' + esc(value) + '</div></div>';
+    }
+    function button(label, action, filePath, className = "secondary", extra = "") {
+      return '<button class="' + esc(className) + '" data-action="' + esc(action) + '" data-path="' + esc(filePath) + '" ' + extra + '>' + esc(label) + '</button>';
+    }
+    function short(text, max = 180) {
+      const clean = String(text || "").replace(/\\s+/g, " ").trim();
+      return clean.length > max ? clean.slice(0, max - 3).trimEnd() + "..." : clean;
+    }
+    function renderInbox() {
+      const items = [];
+      const runnableOutputs = state.recent_staff_runs.filter((run) => run.output_path);
+      if (runnableOutputs.length) {
+        const run = runnableOutputs[0];
+        items.push('<div class="item warn"><h3>검토 가능한 직원 산출물</h3><p class="small"><code>' + esc(run.output_id || run.role_run_id) + '</code> · ' + esc(run.agent_id) + '</p><p class="summary">' + esc(short(run.summary)) + '</p></div>');
+      }
+      if (state.materializations.length) {
+        const item = state.materializations[0];
+        items.push('<div class="item good"><h3>결정 대기 draft</h3><p class="small"><code>' + esc(item.materialization_id) + '</code> · records ' + esc(item.created_record_count) + '</p></div>');
+      }
+      if (state.work_orders.length) {
+        const wo = state.work_orders[0];
+        items.push('<div class="item"><h3>WorkOrder 후보</h3><p class="small"><code>' + esc(wo.work_order_id) + '</code> · ' + esc(wo.status) + '</p><p class="summary">' + esc(short(wo.objective)) + '</p></div>');
+      }
+      el("inbox").innerHTML = items.length ? items.join("") : '<p class="muted">현재 표시할 Studio 항목이 없습니다.</p>';
+    }
+    function render() {
+      el("stamp").textContent = "updated " + new Date(state.generated_at).toLocaleString();
+      const m = state.metrics;
+      el("metrics").innerHTML = [
+        metric("직원", m.staff),
+        metric("직원 실행", m.staff_runs),
+        metric("리뷰 패킷", m.review_packets),
+        metric("Handoff", m.handoffs),
+        metric("WorkOrder", m.work_orders),
+        metric("Draft 결정", m.materializations)
+      ].join("");
+      renderInbox();
+      el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
+        '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(r.output_status || r.status) + '</span></h3>' +
+        '<p>' + esc(r.agent_id) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
+        '<p class="summary">' + esc(short(r.summary)) + '</p>' +
+        '<p class="small muted">proposal ' + esc(r.materializable_counts.proposals) + ' · memory ' + esc(r.materializable_counts.memory) + ' · workorder ' + esc(r.materializable_counts.workorders) + ' · handoff ' + esc(r.materializable_counts.handoffs) + '</p>' +
+        '<div class="row">' +
+        (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 열기</a>' : '') +
+        (r.output_path ? button("draft 미리보기", "materialize-plan", r.output_path) + button("draft 기록", "materialize", r.output_path, "good") : '') +
+        '</div></div>'
+      ).join("") : '<p class="muted">직원 실행 기록이 없습니다.</p>';
+      el("materializations").innerHTML = state.materializations.length ? state.materializations.map((m) =>
+        '<div class="item good"><h3><code>' + esc(m.materialization_id) + '</code></h3>' +
+        '<p class="small">source: ' + esc(m.source_output_id) + ' · records ' + esc(m.created_record_count) + '</p>' +
+        '<div class="row">' +
+        '<a href="' + esc(m.href) + '" target="_blank">원본 열기</a>' +
+        button("결정 미리보기", "decision-plan", m.path) +
+        button("승인 기록", "decision-approve", m.path, "good", 'data-decision="approve"') +
+        button("수정 요청", "decision-request-changes", m.path, "warn", 'data-decision="request_changes"') +
+        button("반려", "decision-reject", m.path, "danger", 'data-decision="reject"') +
+        '</div></div>'
+      ).join("") : '<p class="muted">아직 materialization draft가 없습니다.</p>';
+      el("workorders").innerHTML = state.work_orders.length ? state.work_orders.map((wo) =>
+        '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(wo.status) + '</span></h3>' +
+        '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
+        '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 열기</a>' +
+        button("task 미리보기", "workorder-plan", wo.path) +
+        button("Backlog task 생성", "workorder-create", wo.path, "good") +
+        '</div></div>'
+      ).join("") : '<p class="muted">저장된 WorkOrder가 없습니다.</p>';
+      el("handoffs").innerHTML = state.handoffs.length ? state.handoffs.map((h) =>
+        '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(h.status) + '</span></h3>' +
+        '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
+        '<div class="row">' + button("계획 보기", "handoff-plan", h.path) + button("직원 실행", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본</a></div></div>'
+      ).join("") : '<p class="muted">Handoff 후보가 없습니다.</p>';
+      el("packets").innerHTML = state.review_packets.length ? state.review_packets.map((p) =>
+        '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">리뷰 패킷 열기</a></div>'
+      ).join("") : '<p class="muted">리뷰 패킷이 없습니다.</p>';
+    }
+    async function refresh() {
+      state = await api("/api/summary");
+      render();
+    }
+    async function exportDashboard() {
+      log("정적 대시보드를 갱신하는 중입니다.");
+      log(await post("/api/dashboard/export", {}));
+      await refresh();
+    }
+    async function runAction(action, filePath, decision) {
+      if (action === "handoff-plan") return log(await post("/api/handoff/plan", { path:filePath }));
+      if (action === "handoff-execute") {
+        if (!confirm("서명된 Codex 직원 실행을 시작할까요? 결과는 _Temp에 기록되고 source/task/canon/git은 변경하지 않습니다.")) return;
+        log(await post("/api/handoff/execute", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+      }
+      if (action === "materialize-plan") return log(await post("/api/output/materialize-plan", { path:filePath }));
+      if (action === "materialize") {
+        if (!confirm("이 산출물을 Studio draft 기록으로 변환할까요? 캐논 확정이나 task 실행은 아닙니다.")) return;
+        log(await post("/api/output/materialize", { path:filePath }));
+        await refresh();
+      }
+      if (action === "decision-plan") return log(await post("/api/materialization/review-plan", { path:filePath, decision:"approve" }));
+      if (action.startsWith("decision-")) {
+        if (!confirm("이 draft에 대한 Human Director 결정 기록을 남길까요? downstream 실행 승인은 별도입니다.")) return;
+        log(await post("/api/materialization/review-record", { path:filePath, decision:decision || "approve", reason:"StudioConsole" }));
+        await refresh();
+      }
+      if (action === "workorder-plan") return log(await post("/api/workorder/plan", { path:filePath }));
+      if (action === "workorder-create") {
+        if (!confirm("이 WorkOrder를 Backlog task로 생성할까요? task 실행 승인과 runner start는 별도입니다.")) return;
+        log(await post("/api/workorder/create", { path:filePath }));
+        await refresh();
+      }
+    }
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("button[data-action]");
+      if (!target) return;
+      runAction(target.dataset.action, target.dataset.path, target.dataset.decision).catch(log);
+    });
+    el("refresh").addEventListener("click", () => refresh().catch(log));
+    el("export-dashboard").addEventListener("click", () => exportDashboard().catch(log));
+    refresh().catch(log);
+  </script>
+</body>
+</html>`;
+}
+
 async function handleApi(repoRoot, req, res, parsedUrl) {
   if (req.method === "GET" && parsedUrl.pathname === "/api/summary") {
     return sendJson(res, 200, await getSummary(repoRoot));
@@ -626,6 +960,60 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 
+  if (req.method === "POST" && parsedUrl.pathname === "/api/output/materialize-plan") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_output_materializer.bat");
+    const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/output/materialize") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_output_materializer.bat");
+    const result = await runTool(repoRoot, bat, ["materialize", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/materialization/review-plan") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const decision = body.decision || "approve";
+    const target = body.target || "all";
+    const reason = body.reason || "StudioConsolePlan";
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_materialization_review.bat");
+    const result = await runTool(repoRoot, bat, ["plan", body.path, "--decision", decision, "--target", target, "--reason", reason, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/materialization/review-record") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const decision = body.decision || "approve";
+    const target = body.target || "all";
+    const reason = body.reason || "StudioConsole";
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_materialization_review.bat");
+    const result = await runTool(repoRoot, bat, ["record", body.path, "--decision", decision, "--target", target, "--reason", reason, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workorder/plan") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workorder/create") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
   return sendJson(res, 404, { ok: false, error: "Not found" });
 }
 
@@ -635,7 +1023,7 @@ async function startServer(options) {
     try {
       const parsedUrl = new URL(req.url, `http://${options.host}:${options.port}`);
       if (req.method === "GET" && parsedUrl.pathname === "/") {
-        return sendHtml(res, dashboardHtml());
+        return sendHtml(res, directorConsoleHtml());
       }
       if (req.method === "GET" && parsedUrl.pathname === "/file") {
         return await serveFile(repoRoot, res, parsedUrl.searchParams.get("path") || "");
