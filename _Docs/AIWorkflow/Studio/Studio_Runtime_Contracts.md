@@ -149,6 +149,17 @@ The read-only dashboard also lists generated review packet links from
 Studio overview to the concrete staff-output review surfaces. The dashboard
 remains read-only and does not execute packet actions.
 
+The first local Staff pipeline is:
+
+```bat
+tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute --model gpt-5.5 --reasoning high --ephemeral
+```
+
+It connects the Handoff router, signed-in Codex staff executor, and review
+packet exporter for read-only staff handoff runs. It may call the signed-in
+Codex CLI when `--execute` is passed, but it does not approve work, create
+Backlog tasks, write canon, modify source files, commit, or push.
+
 ## RoleRun Lifecycle
 
 ```text
@@ -636,6 +647,7 @@ Implemented now:
 - Staff prompt exporter for signed-in Codex App/CLI execution input
 - Staff executor for signed-in Codex CLI read-only RoleRun attempts
 - Handoff router from Handoff records to target-agent StaffContextPacket
+- Staff pipeline for read-only Handoff -> staff run -> review packet chaining
 - RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
   Handoff records
 - materialization review decision recorder

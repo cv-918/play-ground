@@ -608,7 +608,7 @@ function Show-Result {
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_staff_executor.bat status|plan <context_packet_json>|run <context_packet_json> [--execute] [--model gpt-5.5] [--reasoning high] [--timeout-seconds 900] [--ephemeral] [--command codex] [--json]"
+        error = "Usage: tools\aiworkflow\studio_staff_executor.bat status|plan <context_packet_json>|run <context_packet_json> [--execute] [--model gpt-5.5] [--reasoning high] [--timeout-seconds 900] [--ephemeral] [--codex-command codex] [--json]"
     }
 }
 
@@ -644,7 +644,7 @@ try {
             if ($index + 1 -ge @($CommandArgs).Count) { throw "--timeout-seconds requires a value." }
             $index += 1
             $timeoutSeconds = [int]$CommandArgs[$index]
-        } elseif ($arg -ieq "--command") {
+        } elseif ($arg -ieq "--command" -or $arg -ieq "--codex-command") {
             if ($index + 1 -ge @($CommandArgs).Count) { throw "--command requires a value." }
             $index += 1
             $codexCommand = [string]$CommandArgs[$index]

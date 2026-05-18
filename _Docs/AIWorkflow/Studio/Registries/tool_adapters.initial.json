@@ -104,7 +104,7 @@
       "can_modify_files": true,
       "can_call_external": false,
       "can_incur_cost": false,
-      "requires_human_approval": false,
+      "requires_human_approval": true,
       "default_enabled": true,
       "notes": [
         "Validation may generate local build artifacts but must not change source."
@@ -347,6 +347,28 @@
       "notes": [
         "Makes staff output readable for the Human Director.",
         "It does not change the underlying RoleRunOutput or workflow state."
+      ]
+    },
+    {
+      "adapter_id": "studio_staff_pipeline",
+      "display_name": "Studio Staff Pipeline",
+      "category": "llm",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Uses signed-in Codex App/CLI route first; no OpenAI API billing by default.",
+      "allowed_actions": ["convert approved handoff context", "execute read-only signed-in Codex staff run", "export review packet"],
+      "blocked_actions": ["approve work", "create Backlog tasks", "write canon", "modify source files", "commit or push"],
+      "approval_required_actions": ["executing non-read-only staff runs", "using output to create durable downstream records or tasks"],
+      "input_contract": ["Handoff JSON or id", "StaffAgent registry", "Codex signed-in CLI availability"],
+      "output_evidence": ["StaffContextPacket JSON", "_Temp staff run logs", "RoleRunOutput JSON", "_Temp review packet HTML"],
+      "can_modify_files": true,
+      "can_call_external": true,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Automates the safe handoff-router -> staff-executor -> review-packet chain.",
+        "It keeps task, canon, source, and git gates outside the pipeline."
       ]
     },
     {

@@ -43,6 +43,7 @@ studio_output_materializer.bat
 studio_materialization_review.bat
 studio_dashboard_export.bat
 studio_review_packet_exporter.bat
+studio_staff_pipeline.bat
 studio_tool_registry_status.bat
 studio_tool_run_planner.bat
 studio_conditional_automation.bat
@@ -527,6 +528,33 @@ proposals, handoff requests, WorkOrder candidates, memory candidates, evidence
 refs, and safety flags with Korean labels. It writes only `_Temp` HTML and
 does not approve, materialize, execute staff, create tasks, write canon, modify
 source files, commit, or push.
+
+---
+
+## studio_staff_pipeline.bat
+
+Runs the safe handoff-to-staff chain:
+
+```text
+Handoff
+  -> StaffContextPacket
+  -> signed-in Codex staff run
+  -> RoleRunOutput
+  -> review packet HTML
+```
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_staff_pipeline.bat status
+tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --json
+tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute --model gpt-5.5 --reasoning high --ephemeral
+```
+
+Dry-run mode only plans the handoff context. `--execute` creates the context,
+calls signed-in Codex CLI for the target staff run, and exports a review
+packet if the staff output is valid. It does not approve work, create Backlog
+tasks, write canon, modify source files, commit, or push.
 
 ---
 
@@ -1217,6 +1245,7 @@ tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkf
 tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_executor.bat status
 tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
+tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --json
 tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_materialization_review.bat status
 tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json

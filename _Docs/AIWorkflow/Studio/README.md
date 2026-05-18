@@ -48,6 +48,8 @@ This slice defines:
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
 - Local Handoff router from Handoff records to target-agent StaffContextPacket
+- Local Staff pipeline for Handoff -> context -> signed-in Codex staff run ->
+  review packet
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
   Handoff drafts
@@ -115,6 +117,7 @@ tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio
 tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
 tools\aiworkflow\studio_handoff_router.bat create-context _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute
+tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute --model gpt-5.5 --reasoning high --ephemeral
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
@@ -279,6 +282,10 @@ These rules are mandatory for all future implementations:
 25. Review packet export may render staff output for Human Director review,
     but it must not change the output, approve it, materialize it, or execute
     any downstream action.
+26. Staff pipeline may connect handoff router, signed-in Codex staff executor,
+    and review packet export for read-only staff runs, but it must not approve
+    work, create Backlog tasks, write canon, modify source files, commit, or
+    push.
 
 ## Relationship To Existing AIWorkflow Core
 
