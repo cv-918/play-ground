@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StaffContextPacket.schema.json",
+  "title": "StaffContextPacket",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "context_packet_id",
+    "role_run_id",
+    "agent_id",
+    "department_id",
+    "source_type",
+    "source_ref",
+    "objective",
+    "current_project_profile",
+    "director_intent",
+    "approved_scope",
+    "non_goals",
+    "memory_context",
+    "relevant_decision_refs",
+    "relevant_evidence_refs",
+    "allowed_tools",
+    "blocked_tools",
+    "approval_required_tools",
+    "required_outputs",
+    "quality_criteria",
+    "stop_conditions",
+    "safety"
+  ],
+  "properties": {
+    "context_packet_id": {
+      "type": "string",
+      "pattern": "^SCP-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "role_run_id": {
+      "type": "string",
+      "pattern": "^RR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "agent_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "department_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "director_goal",
+        "meeting_session",
+        "work_order",
+        "task",
+        "proposal",
+        "decision",
+        "manual"
+      ]
+    },
+    "source_ref": { "type": "string", "minLength": 1 },
+    "objective": { "type": "string", "minLength": 1 },
+    "current_project_profile": { "type": "string", "minLength": 1 },
+    "director_intent": { "type": "string", "minLength": 1 },
+    "approved_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "non_goals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "memory_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canon_refs",
+        "approved_decision_refs",
+        "proposal_refs",
+        "rejected_refs",
+        "lesson_refs",
+        "evidence_refs"
+      ],
+      "properties": {
+        "canon_refs": { "type": "array", "items": { "type": "string" } },
+        "approved_decision_refs": { "type": "array", "items": { "type": "string" } },
+        "proposal_refs": { "type": "array", "items": { "type": "string" } },
+        "rejected_refs": { "type": "array", "items": { "type": "string" } },
+        "lesson_refs": { "type": "array", "items": { "type": "string" } },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "relevant_decision_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "relevant_evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allowed_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blocked_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "approval_required_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_outputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "quality_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "stop_conditions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_write_allowed",
+        "canon_write_allowed",
+        "task_creation_allowed",
+        "approval_allowed",
+        "commit_allowed",
+        "external_tool_allowed"
+      ],
+      "properties": {
+        "source_write_allowed": { "type": "boolean" },
+        "canon_write_allowed": { "type": "boolean" },
+        "task_creation_allowed": { "type": "boolean" },
+        "approval_allowed": { "type": "boolean" },
+        "commit_allowed": { "type": "boolean" },
+        "external_tool_allowed": { "type": "boolean" }
+      }
+    }
+  }
+}

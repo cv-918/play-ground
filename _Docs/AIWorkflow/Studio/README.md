@@ -26,10 +26,13 @@ This slice defines:
 - RoleRun schema
 - ToolRun schema
 - WorkOrderTaskBinding schema
+- StaffContextPacket schema
+- RoleRunOutput schema
 - Memory status policy
 - Initial read-only department and staff registries
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
+- Staff context and structured output contract
 
 ## Current Execution Status
 
@@ -70,11 +73,14 @@ _Docs/AIWorkflow/Studio/
 +-- README.md
 +-- WorkOrder_Task_Bridge.md
 +-- Studio_Runtime_Contracts.md
++-- Staff_Context_And_Output_Contract.md
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
 |   +-- WorkOrder.schema.json
 |   +-- WorkOrderTaskBinding.schema.json
+|   +-- StaffContextPacket.schema.json
+|   +-- RoleRunOutput.schema.json
 |   +-- MeetingSession.schema.json
 |   +-- MemoryRecord.schema.json
 |   +-- Proposal.schema.json

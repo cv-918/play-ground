@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/RoleRunOutput.schema.json",
+  "title": "RoleRunOutput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_id",
+    "role_run_id",
+    "agent_id",
+    "status",
+    "plain_language_summary",
+    "proposals",
+    "objections",
+    "questions",
+    "approval_items",
+    "handoff_requests",
+    "workorder_recommendations",
+    "evidence_refs",
+    "memory_write_requests",
+    "safety"
+  ],
+  "properties": {
+    "output_id": {
+      "type": "string",
+      "pattern": "^RRO-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "role_run_id": {
+      "type": "string",
+      "pattern": "^RR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+    },
+    "agent_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "output_ready",
+        "needs_director_decision",
+        "needs_evidence",
+        "handoff_requested",
+        "blocked",
+        "failed"
+      ]
+    },
+    "plain_language_summary": { "type": "string", "minLength": 1 },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "summary", "status", "risks", "evidence_required"],
+        "properties": {
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "proposed", "recommended", "not_recommended"]
+          },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "evidence_required": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "objections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["summary", "reason", "severity", "blocks_progress"],
+        "properties": {
+          "summary": { "type": "string" },
+          "reason": { "type": "string" },
+          "severity": { "type": "string", "enum": ["info", "minor", "major", "blocking"] },
+          "blocks_progress": { "type": "boolean" }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question", "why_needed", "blocks_progress"],
+        "properties": {
+          "question": { "type": "string" },
+          "why_needed": { "type": "string" },
+          "blocks_progress": { "type": "boolean" }
+        }
+      }
+    },
+    "approval_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "plain_language_summary",
+          "what_will_change",
+          "what_will_not_change",
+          "risks",
+          "evidence_required"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "scope",
+              "canon",
+              "implementation",
+              "asset_import",
+              "external_tool",
+              "completion",
+              "git"
+            ]
+          },
+          "plain_language_summary": { "type": "string" },
+          "what_will_change": { "type": "array", "items": { "type": "string" } },
+          "what_will_not_change": { "type": "array", "items": { "type": "string" } },
+          "files_or_memory_affected": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "rollback_plan": { "type": "array", "items": { "type": "string" } },
+          "evidence_required": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "handoff_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_agent_id", "objective", "required_context", "expected_output"],
+        "properties": {
+          "target_agent_id": { "type": "string" },
+          "objective": { "type": "string" },
+          "required_context": { "type": "array", "items": { "type": "string" } },
+          "expected_output": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "workorder_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["objective", "department_id", "scope", "non_goals", "expected_outputs"],
+        "properties": {
+          "objective": { "type": "string" },
+          "department_id": { "type": "string" },
+          "scope": { "type": "array", "items": { "type": "string" } },
+          "non_goals": { "type": "array", "items": { "type": "string" } },
+          "expected_outputs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "memory_write_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "scope", "summary", "requires_approval"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["draft", "proposed", "approved", "canon", "rejected", "deprecated", "superseded", "evidence", "lesson"]
+          },
+          "scope": { "type": "string" },
+          "summary": { "type": "string" },
+          "requires_approval": { "type": "boolean" }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_changed",
+        "task_created",
+        "approval_changed",
+        "canon_changed",
+        "commit_or_push_performed"
+      ],
+      "properties": {
+        "source_changed": { "type": "boolean" },
+        "task_created": { "type": "boolean" },
+        "approval_changed": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "commit_or_push_performed": { "type": "boolean" }
+      }
+    }
+  }
+}

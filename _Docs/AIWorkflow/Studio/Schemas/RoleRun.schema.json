@@ -7,6 +7,7 @@
   "required": [
     "role_run_id",
     "agent_id",
+    "context_packet_ref",
     "work_order_id",
     "meeting_id",
     "input_context_refs",
@@ -22,6 +23,7 @@
   "properties": {
     "role_run_id": { "type": "string", "pattern": "^RR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
     "agent_id": { "type": "string" },
+    "context_packet_ref": { "type": "string" },
     "work_order_id": { "type": "string" },
     "meeting_id": { "type": ["string", "null"] },
     "input_context_refs": { "type": "array", "items": { "type": "string" } },
@@ -32,6 +34,22 @@
     "output_refs": { "type": "array", "items": { "type": "string" } },
     "tool_run_refs": { "type": "array", "items": { "type": "string" } },
     "evidence_refs": { "type": "array", "items": { "type": "string" } },
-    "status": { "type": "string", "enum": ["queued", "running", "completed", "failed", "cancelled"] }
+    "status": {
+      "type": "string",
+      "enum": [
+        "created",
+        "context_loaded",
+        "planning",
+        "tool_review",
+        "running",
+        "handoff_pending",
+        "output_ready",
+        "needs_director_decision",
+        "completed",
+        "blocked",
+        "failed",
+        "cancelled"
+      ]
+    }
   }
 }

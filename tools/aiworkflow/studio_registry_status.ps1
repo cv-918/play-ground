@@ -147,6 +147,8 @@ function Test-StudioRegistry {
         "Department.schema.json",
         "WorkOrder.schema.json",
         "WorkOrderTaskBinding.schema.json",
+        "StaffContextPacket.schema.json",
+        "RoleRunOutput.schema.json",
         "MeetingSession.schema.json",
         "MemoryRecord.schema.json",
         "Proposal.schema.json",

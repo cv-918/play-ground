@@ -44,6 +44,14 @@ A StaffAgent runtime invocation must be built from:
 
 The runtime must produce structured output, not only free-form chat.
 
+The concrete input/output contracts are defined in:
+
+```text
+_Docs/AIWorkflow/Studio/Staff_Context_And_Output_Contract.md
+_Docs/AIWorkflow/Studio/Schemas/StaffContextPacket.schema.json
+_Docs/AIWorkflow/Studio/Schemas/RoleRunOutput.schema.json
+```
+
 ## Staff Context Packet
 
 Every RoleRun must receive a context packet with these fields:
