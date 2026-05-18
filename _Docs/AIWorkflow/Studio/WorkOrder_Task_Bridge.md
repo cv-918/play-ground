@@ -176,13 +176,27 @@ change.
 The first local bridge support tool is:
 
 ```bat
+tools\aiworkflow\studio_workorder_planner.bat status
+tools\aiworkflow\studio_workorder_planner.bat list
+tools\aiworkflow\studio_workorder_planner.bat read <work_order_id>
+tools\aiworkflow\studio_workorder_planner.bat store <work_order_json_path>
+tools\aiworkflow\studio_workorder_planner.bat store <work_order_json_path> --execute
 tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path>
 tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> --json
 tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path>
 tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path> --execute
 ```
 
-It converts a WorkOrder into a TaskDraft and Backlog row preview.
+It stores, reads, lists, and converts WorkOrders into TaskDraft and Backlog row
+previews.
+
+`store` without `--execute` is a dry-run.
+
+`store --execute` writes one WorkOrder JSON record to:
+
+```text
+_Docs/AIWorkflow/Studio/WorkOrders/
+```
 
 `create` without `--execute` is still a dry-run.
 

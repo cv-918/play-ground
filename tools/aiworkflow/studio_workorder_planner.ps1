@@ -27,11 +27,13 @@ function ConvertTo-StudioJson {
 
 function New-SafetyState {
     param(
-        [bool]$BacklogWritten = $false
+        [bool]$BacklogWritten = $false,
+        [bool]$WorkOrderWritten = $false
     )
 
     return [pscustomobject]@{
-        read_only = (-not $BacklogWritten)
+        read_only = (-not $BacklogWritten -and -not $WorkOrderWritten)
+        workorder_written = $WorkOrderWritten
         backlog_written = $BacklogWritten
         active_task_changed = $false
         approval_changed = $false
@@ -111,6 +113,19 @@ function Resolve-RepoPath {
     }
 
     return (Resolve-Path -LiteralPath (Join-Path $Root $Path)).Path
+}
+
+function Get-FullPathNoResolve {
+    param(
+        [string]$Root,
+        [string]$Path
+    )
+
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        return [System.IO.Path]::GetFullPath($Path)
+    }
+
+    return [System.IO.Path]::GetFullPath((Join-Path $Root $Path))
 }
 
 function Assert-PathInsideRepo {
@@ -306,6 +321,230 @@ function Get-BacklogPath {
     }
 
     return $resolved
+}
+
+function Get-WorkOrderStorePath {
+    param(
+        [string]$Root,
+        [string]$OverridePath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($OverridePath)) {
+        return (Join-Path $Root "_Docs\AIWorkflow\Studio\WorkOrders")
+    }
+
+    $resolved = Get-FullPathNoResolve -Root $Root -Path $OverridePath
+    $repo = (Resolve-Path -LiteralPath $Root).Path
+    if ($resolved -ne $repo -and -not $resolved.StartsWith($repo + [System.IO.Path]::DirectorySeparatorChar)) {
+        throw "WorkOrder store override must stay inside repository root: $resolved"
+    }
+
+    $tempRoot = [System.IO.Path]::GetFullPath((Join-Path $Root "_Temp"))
+    if (-not $resolved.StartsWith($tempRoot + [System.IO.Path]::DirectorySeparatorChar)) {
+        throw "WorkOrder store override is only allowed under _Temp for validation: $resolved"
+    }
+
+    return $resolved
+}
+
+function Get-WorkOrderFiles {
+    param([string]$StorePath)
+
+    if (-not (Test-Path -LiteralPath $StorePath)) {
+        return @()
+    }
+
+    return @(Get-ChildItem -LiteralPath $StorePath -Filter "WO-*.json" -File | Sort-Object Name)
+}
+
+function Test-WorkOrderShape {
+    param([object]$WorkOrder)
+
+    $errors = New-Object System.Collections.Generic.List[string]
+    $required = @(
+        "work_order_id",
+        "source_type",
+        "source_ref",
+        "objective",
+        "department_id",
+        "assigned_agents",
+        "scope",
+        "non_goals",
+        "expected_outputs",
+        "approval_items",
+        "evidence_requirements",
+        "verification_plan",
+        "handoff_plan",
+        "target_project_profile",
+        "status"
+    )
+    foreach ($field in $required) {
+        if ($null -eq $WorkOrder.PSObject.Properties[$field]) {
+            Add-Unique -List $errors -Value "Missing required field: $field"
+        }
+    }
+
+    $workOrderId = [string]$WorkOrder.work_order_id
+    if ($workOrderId -notmatch "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$") {
+        Add-Unique -List $errors -Value "Invalid work_order_id: $workOrderId"
+    }
+    if (@("draft", "proposed", "director_review", "approved_for_tasking", "tasking", "tasks_open", "completion_review", "completed", "blocked", "rejected", "superseded") -notcontains ([string]$WorkOrder.status)) {
+        Add-Unique -List $errors -Value "Invalid status: $($WorkOrder.status)"
+    }
+
+    return [pscustomobject]@{
+        ok = ($errors.Count -eq 0)
+        work_order_id = $workOrderId
+        errors = @($errors)
+    }
+}
+
+function New-StoreStatusResult {
+    param(
+        [string]$Root,
+        [string]$StorePathOverride
+    )
+
+    $storePath = Get-WorkOrderStorePath -Root $Root -OverridePath $StorePathOverride
+    $files = Get-WorkOrderFiles -StorePath $storePath
+    return [pscustomobject]@{
+        ok = $true
+        command = "status"
+        store_path = $storePath
+        work_order_count = @($files).Count
+        safety = New-SafetyState
+    }
+}
+
+function New-ListResult {
+    param(
+        [string]$Root,
+        [string]$StorePathOverride
+    )
+
+    $storePath = Get-WorkOrderStorePath -Root $Root -OverridePath $StorePathOverride
+    $items = @()
+    foreach ($file in (Get-WorkOrderFiles -StorePath $storePath)) {
+        try {
+            $workOrder = Read-JsonFile -Path $file.FullName
+            $items += [pscustomobject]@{
+                work_order_id = [string]$workOrder.work_order_id
+                status = [string]$workOrder.status
+                department_id = [string]$workOrder.department_id
+                objective = [string]$workOrder.objective
+                file = $file.Name
+            }
+        } catch {
+            $items += [pscustomobject]@{
+                work_order_id = "(parse failed)"
+                status = "invalid"
+                department_id = ""
+                objective = $_.Exception.Message
+                file = $file.Name
+            }
+        }
+    }
+
+    return [pscustomobject]@{
+        ok = $true
+        command = "list"
+        store_path = $storePath
+        work_orders = @($items)
+        safety = New-SafetyState
+    }
+}
+
+function New-ReadResult {
+    param(
+        [string]$Root,
+        [string]$WorkOrderId,
+        [string]$StorePathOverride
+    )
+
+    $storePath = Get-WorkOrderStorePath -Root $Root -OverridePath $StorePathOverride
+    $target = Join-Path $storePath ($WorkOrderId + ".json")
+    if (-not (Test-Path -LiteralPath $target)) {
+        return [pscustomobject]@{
+            ok = $false
+            command = "read"
+            error = "WorkOrder not found: $WorkOrderId"
+            store_path = $storePath
+            safety = New-SafetyState
+        }
+    }
+
+    $workOrder = Read-JsonFile -Path $target
+    $shape = Test-WorkOrderShape -WorkOrder $workOrder
+    return [pscustomobject]@{
+        ok = $shape.ok
+        command = "read"
+        store_path = $storePath
+        work_order = $workOrder
+        validation = $shape
+        safety = New-SafetyState
+    }
+}
+
+function New-StoreResult {
+    param(
+        [string]$Root,
+        [string]$WorkOrderPath,
+        [bool]$Execute,
+        [string]$StorePathOverride
+    )
+
+    $resolvedPath = Resolve-RepoPath -Root $Root -Path $WorkOrderPath
+    $workOrder = Read-JsonFile -Path $resolvedPath
+    $shape = Test-WorkOrderShape -WorkOrder $workOrder
+    $storePath = Get-WorkOrderStorePath -Root $Root -OverridePath $StorePathOverride
+    $targetPath = Join-Path $storePath ([string]$workOrder.work_order_id + ".json")
+
+    if (-not $shape.ok) {
+        return [pscustomobject]@{
+            ok = $false
+            command = "store"
+            execute = $Execute
+            work_order_path = $resolvedPath
+            target_path = $targetPath
+            validation = $shape
+            safety = New-SafetyState
+        }
+    }
+
+    if (-not $Execute) {
+        return [pscustomobject]@{
+            ok = $true
+            command = "store"
+            execute = $false
+            execute_required = $true
+            message = "Dry-run only. Re-run with store <work_order_json_path> --execute to write the WorkOrder record."
+            work_order_id = [string]$workOrder.work_order_id
+            target_path = $targetPath
+            validation = $shape
+            safety = New-SafetyState
+        }
+    }
+
+    if (Test-Path -LiteralPath $targetPath) {
+        throw "WorkOrder already exists in store: $targetPath"
+    }
+    if (-not (Test-Path -LiteralPath $storePath)) {
+        New-Item -ItemType Directory -Path $storePath -Force | Out-Null
+    }
+
+    $json = ($workOrder | ConvertTo-Json -Depth 64) + [Environment]::NewLine
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($targetPath, $json, $encoding)
+
+    return [pscustomobject]@{
+        ok = $true
+        command = "store"
+        execute = $true
+        work_order_id = [string]$workOrder.work_order_id
+        target_path = $targetPath
+        validation = $shape
+        safety = New-SafetyState -WorkOrderWritten $true
+    }
 }
 
 function Parse-TableLine {
@@ -665,10 +904,118 @@ function Show-Create {
     )
 }
 
+function Show-StoreStatus {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio WorkOrder Store"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Store: $($Result.store_path)"
+    Write-Host "WorkOrders: $($Result.work_order_count)"
+    Write-List -Label "Safety" -Items @(
+        "Read-only",
+        "Backlog not written",
+        "ActiveTask not changed",
+        "Approval not changed",
+        "Runner not started",
+        "Source not changed",
+        "Git not changed"
+    )
+}
+
+function Show-List {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio WorkOrders"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Store: $($Result.store_path)"
+    if (@($Result.work_orders).Count -eq 0) {
+        Write-Host "No WorkOrders stored yet."
+        return
+    }
+    foreach ($item in @($Result.work_orders)) {
+        Write-Host ""
+        Write-Host "$($item.work_order_id) [$($item.status)]"
+        Write-Host "- department: $($item.department_id)"
+        Write-Host "- objective: $(Limit-Text -Text ([string]$item.objective) -Max 180)"
+        Write-Host "- file: $($item.file)"
+    }
+}
+
+function Show-Read {
+    param([object]$Result)
+
+    if (-not $Result.ok) {
+        Write-Host "[ERROR] $($Result.error)"
+        return
+    }
+
+    $workOrder = $Result.work_order
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio WorkOrder"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "ID: $($workOrder.work_order_id)"
+    Write-Host "Status: $($workOrder.status)"
+    Write-Host "Department: $($workOrder.department_id)"
+    Write-Host "Objective: $($workOrder.objective)"
+    Write-List -Label "Assigned agents" -Items (Get-StringArray -Value $workOrder.assigned_agents)
+    Write-List -Label "Scope" -Items (Get-StringArray -Value $workOrder.scope)
+    Write-List -Label "Non-goals" -Items (Get-StringArray -Value $workOrder.non_goals)
+    Write-List -Label "Expected outputs" -Items (Get-StringArray -Value $workOrder.expected_outputs)
+    Write-List -Label "Verification plan" -Items (Get-StringArray -Value $workOrder.verification_plan)
+    Write-List -Label "Evidence requirements" -Items (Get-StringArray -Value $workOrder.evidence_requirements)
+    Write-List -Label "Validation errors" -Items $Result.validation.errors
+}
+
+function Show-Store {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio WorkOrder Store Write"
+    Write-Host "============================================================"
+    Write-Host ""
+    if (-not $Result.ok) {
+        Write-Host "[ERROR] WorkOrder validation failed."
+        Write-List -Label "Validation errors" -Items $Result.validation.errors
+        return
+    }
+    Write-Host "WorkOrder: $($Result.work_order_id)"
+    if (-not $Result.execute) {
+        Write-Host "Mode: dry-run"
+        Write-Host $Result.message
+        Write-Host "Target: $($Result.target_path)"
+        Write-List -Label "Safety" -Items @(
+            "WorkOrder not written",
+            "Backlog not written",
+            "ActiveTask not changed",
+            "Approval not changed",
+            "Runner not started",
+            "Source not changed",
+            "Git not changed"
+        )
+        return
+    }
+    Write-Host "Mode: execute"
+    Write-Host "Stored: $($Result.target_path)"
+    Write-List -Label "Safety" -Items @(
+        "WorkOrder written: yes",
+        "Backlog not written",
+        "ActiveTask not changed",
+        "Approval not changed",
+        "Runner not started",
+        "Source not changed",
+        "Git not changed"
+    )
+}
+
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> [--json] OR create <work_order_json_path> [--execute] [--json]"
+        error = "Usage: tools\aiworkflow\studio_workorder_planner.bat status|list|read <work_order_id>|store <work_order_json_path> [--execute]|plan <work_order_json_path>|create <work_order_json_path> [--execute] [--json]"
         safety = New-SafetyState
     }
 }
@@ -678,6 +1025,7 @@ try {
     $json = $false
     $execute = $false
     $backlogPathOverride = ""
+    $storePathOverride = ""
     $cleanArgs = New-Object System.Collections.Generic.List[string]
 
     for ($index = 0; $index -lt @($CommandArgs).Count; $index += 1) {
@@ -692,12 +1040,18 @@ try {
             }
             $index += 1
             $backlogPathOverride = [string]$CommandArgs[$index]
+        } elseif ($arg -ieq "--store-path") {
+            if ($index + 1 -ge @($CommandArgs).Count) {
+                throw "--store-path requires a path argument."
+            }
+            $index += 1
+            $storePathOverride = [string]$CommandArgs[$index]
         } elseif (-not [string]::IsNullOrWhiteSpace($arg)) {
             $cleanArgs.Add([string]$arg)
         }
     }
 
-    if ($cleanArgs.Count -ne 2) {
+    if ($cleanArgs.Count -lt 1) {
         $result = New-UsageResult
         if ($json) {
             ConvertTo-StudioJson -Value $result
@@ -708,9 +1062,17 @@ try {
     }
 
     $command = ([string]$cleanArgs[0]).ToLowerInvariant()
-    if ($command -eq "plan") {
+    if ($command -eq "status" -and $cleanArgs.Count -eq 1) {
+        $result = New-StoreStatusResult -Root $repo -StorePathOverride $storePathOverride
+    } elseif ($command -eq "list" -and $cleanArgs.Count -eq 1) {
+        $result = New-ListResult -Root $repo -StorePathOverride $storePathOverride
+    } elseif ($command -eq "read" -and $cleanArgs.Count -eq 2) {
+        $result = New-ReadResult -Root $repo -WorkOrderId ([string]$cleanArgs[1]) -StorePathOverride $storePathOverride
+    } elseif ($command -eq "store" -and $cleanArgs.Count -eq 2) {
+        $result = New-StoreResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1]) -Execute $execute -StorePathOverride $storePathOverride
+    } elseif ($command -eq "plan" -and $cleanArgs.Count -eq 2) {
         $result = New-PlanResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1])
-    } elseif ($command -eq "create") {
+    } elseif ($command -eq "create" -and $cleanArgs.Count -eq 2) {
         $result = New-CreateResult -Root $repo -WorkOrderPath ([string]$cleanArgs[1]) -Execute $execute -BacklogPathOverride $backlogPathOverride
     } else {
         $result = New-UsageResult
@@ -726,6 +1088,14 @@ try {
         ConvertTo-StudioJson -Value $result
     } elseif ($command -eq "create") {
         Show-Create -Result $result
+    } elseif ($command -eq "status") {
+        Show-StoreStatus -Result $result
+    } elseif ($command -eq "list") {
+        Show-List -Result $result
+    } elseif ($command -eq "read") {
+        Show-Read -Result $result
+    } elseif ($command -eq "store") {
+        Show-Store -Result $result
     } else {
         Show-Plan -Result $result
     }

@@ -207,23 +207,34 @@ _Docs\AIWorkflow\Studio\WorkOrder_Task_Bridge.md
 
 ## studio_workorder_planner.bat
 
-Converts a Studio WorkOrder JSON file into a read-only AIWorkflow TaskDraft and
-Backlog row preview. It can also create the Backlog task when the operator
-explicitly passes `create --execute`.
+Stores, reads, lists, and converts Studio WorkOrder JSON files into AIWorkflow
+TaskDraft and Backlog row previews. It can also create the Backlog task when
+the operator explicitly passes `create --execute`.
 
 Example:
 
 ```bat
+tools\aiworkflow\studio_workorder_planner.bat status
+tools\aiworkflow\studio_workorder_planner.bat list
+tools\aiworkflow\studio_workorder_planner.bat read WO-20260518-143000-scenario-pitch
+tools\aiworkflow\studio_workorder_planner.bat store _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_workorder_planner.bat store _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --json
 tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 ```
 
+`store` without `--execute` is a dry-run preview. `store --execute` writes one
+WorkOrder record to `_Docs\AIWorkflow\Studio\WorkOrders\` by default.
+
 `create` without `--execute` is a dry-run preview. `create --execute` appends
 one Backlog row and writes a Backlog backup under `_Temp\AIWorkflowStudio\`.
 It does not set ActiveTask, approve work, start PC Runner, modify source files,
 commit, or push.
+
+For validation smoke tests, `--store-path` may override the WorkOrder store
+only under `_Temp\`.
 
 ---
 

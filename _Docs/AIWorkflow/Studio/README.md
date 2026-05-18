@@ -39,6 +39,7 @@ This slice defines:
 - Scenario Director context/output examples
 - Creative MeetingSession to WorkOrder to TaskBinding examples
 - Canon decision flow and proposal/decision/memory examples
+- Local WorkOrder store and read/list/store tool
 - Local MemoryRecord store and validation tool
 - Local MeetingSession runtime validation and handoff tool
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
@@ -73,7 +74,10 @@ tools\aiworkflow\studio_registry_status.bat
 tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_registry_status.bat departments
 tools\aiworkflow\studio_registry_status.bat staff scenario_director
+tools\aiworkflow\studio_workorder_planner.bat status
+tools\aiworkflow\studio_workorder_planner.bat list
 tools\aiworkflow\studio_workorder_planner.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_workorder_planner.bat store _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_memory_store.bat status
 tools\aiworkflow\studio_memory_store.bat validate
@@ -94,12 +98,12 @@ tools\aiworkflow\studio_conditional_automation.bat test --execute
 ```
 
 These tools validate registry references, print department/staff details, and
-preview or create WorkOrder-derived Backlog tasks, governed MemoryRecord files,
-governed MeetingSession records, governed RoleRun envelopes, read-only
-dashboard snapshots, and tool adapter policy displays. They do not execute
-agents, call LLMs, set ActiveTask, approve work, start PC Runner, modify source
-files, commit, or push. Conditional automation replay writes only `_Temp`
-evaluation artifacts when `--execute` is passed.
+preview or create WorkOrder-derived Backlog tasks, store governed WorkOrder
+records, governed MemoryRecord files, governed MeetingSession records, governed
+RoleRun envelopes, read-only dashboard snapshots, and tool adapter policy
+displays. They do not execute agents, call LLMs, set ActiveTask, approve work,
+start PC Runner, modify source files, commit, or push. Conditional automation
+replay writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -111,6 +115,8 @@ _Docs/AIWorkflow/Studio/
 +-- Staff_Context_And_Output_Contract.md
 +-- Canon_Decision_Flow.md
 +-- MemoryRecords/
+|   +-- README.md
++-- WorkOrders/
 |   +-- README.md
 +-- MeetingSessions/
 |   +-- README.md

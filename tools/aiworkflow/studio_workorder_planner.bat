@@ -3,10 +3,14 @@ setlocal EnableExtensions
 
 REM AIWorkflow studio_workorder_planner.bat
 REM Purpose:
-REM   Convert a Studio WorkOrder JSON file into a read-only AIWorkflow
-REM   TaskDraft/Backlog row preview. It does not write Backlog.md.
+REM   Store/read/list Studio WorkOrders and convert WorkOrder JSON files into
+REM   AIWorkflow TaskDraft/Backlog row previews.
 REM
 REM Usage:
+REM   tools\aiworkflow\studio_workorder_planner.bat status [--json]
+REM   tools\aiworkflow\studio_workorder_planner.bat list [--json]
+REM   tools\aiworkflow\studio_workorder_planner.bat read <work_order_id> [--json]
+REM   tools\aiworkflow\studio_workorder_planner.bat store <work_order_json_path> [--execute] [--json]
 REM   tools\aiworkflow\studio_workorder_planner.bat plan <work_order_json_path> [--json]
 REM   tools\aiworkflow\studio_workorder_planner.bat create <work_order_json_path> [--execute] [--json]
 
