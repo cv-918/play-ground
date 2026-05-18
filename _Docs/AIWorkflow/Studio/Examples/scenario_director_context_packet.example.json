@@ -1,0 +1,68 @@
+{
+  "context_packet_id": "SCP-20260518-150000-scenario",
+  "role_run_id": "RR-20260518-150000-scenario",
+  "agent_id": "scenario_director",
+  "department_id": "narrative",
+  "source_type": "director_goal",
+  "source_ref": "director-goal-20260518-ai-studio-example",
+  "objective": "Propose a small-scope scenario direction for a 2D prototype without changing approved canon.",
+  "current_project_profile": "playground",
+  "director_intent": "Keep the player-facing story lightweight and tied to gameplay motivation. Do not lock canon without approval.",
+  "approved_scope": [
+    "Draft scenario direction options only.",
+    "Identify approval items for canon-sensitive choices.",
+    "Recommend follow-up WorkOrders if more design work is needed."
+  ],
+  "non_goals": [
+    "Do not write canon.",
+    "Do not create implementation tasks.",
+    "Do not change source, data, assets, or workflow state."
+  ],
+  "memory_context": {
+    "canon_refs": [],
+    "approved_decision_refs": [],
+    "proposal_refs": [],
+    "rejected_refs": [],
+    "lesson_refs": [],
+    "evidence_refs": []
+  },
+  "relevant_decision_refs": [],
+  "relevant_evidence_refs": [],
+  "allowed_tools": [
+    "memory_search",
+    "document_search",
+    "proposal_writer"
+  ],
+  "blocked_tools": [
+    "source_write",
+    "git_push",
+    "canon_write"
+  ],
+  "approval_required_tools": [
+    "canon_update_request"
+  ],
+  "required_outputs": [
+    "ScenarioPitch",
+    "StoryArcPlan",
+    "CharacterBrief",
+    "ApprovalItems"
+  ],
+  "quality_criteria": [
+    "canon status is labeled",
+    "approval items are explicit",
+    "story supports gameplay"
+  ],
+  "stop_conditions": [
+    "Stop if canon status is unclear and the answer would require canon claims.",
+    "Stop if implementation work is requested.",
+    "Stop if source, data, asset, commit, or push permission is needed."
+  ],
+  "safety": {
+    "source_write_allowed": false,
+    "canon_write_allowed": false,
+    "task_creation_allowed": false,
+    "approval_allowed": false,
+    "commit_allowed": false,
+    "external_tool_allowed": false
+  }
+}

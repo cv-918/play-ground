@@ -92,6 +92,7 @@ function Get-StudioPaths {
     return [pscustomobject]@{
         studio_root = $studioRoot
         schema_root = Join-Path $studioRoot "Schemas"
+        example_root = Join-Path $studioRoot "Examples"
         departments = Join-Path $studioRoot "Registries\departments.initial.json"
         staff = Join-Path $studioRoot "Registries\staff_agents.initial.json"
     }
@@ -109,6 +110,11 @@ function Get-StudioRegistry {
         $schemas = @(Get-ChildItem -LiteralPath $paths.schema_root -Filter "*.schema.json" | Sort-Object Name)
     }
 
+    $examples = @()
+    if (Test-Path -LiteralPath $paths.example_root) {
+        $examples = @(Get-ChildItem -LiteralPath $paths.example_root -Filter "*.example.json" | Sort-Object Name)
+    }
+
     return [pscustomobject]@{
         paths = $paths
         departments_data = $departmentsData
@@ -117,6 +123,7 @@ function Get-StudioRegistry {
         staff_agents = @($staffData.staff_agents)
         planned_staff_agents = Get-StringArray -Value $staffData.planned_staff_agents
         schemas = @($schemas)
+        examples = @($examples)
     }
 }
 
@@ -170,6 +177,26 @@ function Test-StudioRegistry {
     foreach ($schemaName in $expectedSchemas) {
         if ($schemaNames -notcontains $schemaName) {
             $errors.Add("Missing schema file: $schemaName")
+        }
+    }
+
+    $expectedExamples = @(
+        "scenario_director_context_packet.example.json",
+        "scenario_director_role_run_output.example.json"
+    )
+
+    $exampleNames = @($Registry.examples | ForEach-Object { $_.Name })
+    foreach ($exampleName in $expectedExamples) {
+        if ($exampleNames -notcontains $exampleName) {
+            $warnings.Add("Missing recommended example file: $exampleName")
+        }
+    }
+
+    foreach ($example in @($Registry.examples)) {
+        try {
+            [void](Read-JsonFile -Path $example.FullName)
+        } catch {
+            $errors.Add("Example JSON failed to parse: $($example.Name) - $($_.Exception.Message)")
         }
     }
 
@@ -252,6 +279,7 @@ function Test-StudioRegistry {
             concrete_staff_agents = @($Registry.staff_agents).Count
             planned_staff_agents = @($Registry.planned_staff_agents).Count
             schemas = @($Registry.schemas).Count
+            examples = @($Registry.examples).Count
         }
         safety = New-SafetyState
     }
@@ -290,6 +318,7 @@ function Show-Status {
     Write-Host "Departments: $($Result.counts.departments)"
     Write-Host "Staff agents: $($Result.counts.concrete_staff_agents) concrete, $($Result.counts.planned_staff_agents) planned"
     Write-Host "Schemas: $($Result.counts.schemas)"
+    Write-Host "Examples: $($Result.counts.examples)"
 
     if (@($Result.validation_errors).Count -gt 0) {
         Write-Items -Label "Errors" -Items $Result.validation_errors
@@ -625,6 +654,7 @@ try {
             Write-Host "Departments: $($result.counts.departments)"
             Write-Host "Staff agents: $($result.counts.concrete_staff_agents) concrete, $($result.counts.planned_staff_agents) planned"
             Write-Host "Schemas: $($result.counts.schemas)"
+            Write-Host "Examples: $($result.counts.examples)"
             Write-Items -Label "Errors" -Items $result.errors
             Write-Items -Label "Warnings" -Items $result.warnings
         }

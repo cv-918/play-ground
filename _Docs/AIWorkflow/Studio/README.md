@@ -33,6 +33,7 @@ This slice defines:
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
 - Staff context and structured output contract
+- Scenario Director context/output examples
 
 ## Current Execution Status
 
@@ -74,6 +75,9 @@ _Docs/AIWorkflow/Studio/
 +-- WorkOrder_Task_Bridge.md
 +-- Studio_Runtime_Contracts.md
 +-- Staff_Context_And_Output_Contract.md
++-- Examples/
+|   +-- scenario_director_context_packet.example.json
+|   +-- scenario_director_role_run_output.example.json
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json

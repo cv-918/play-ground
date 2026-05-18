@@ -139,3 +139,23 @@ This separation makes later auditing possible:
 - what it recommended
 - what it asked approval for
 - what evidence it used
+
+## Examples
+
+Example records are stored under:
+
+```text
+_Docs/AIWorkflow/Studio/Examples/
+```
+
+Current examples:
+
+```text
+scenario_director_context_packet.example.json
+scenario_director_role_run_output.example.json
+```
+
+These examples are read-only contract fixtures. They demonstrate how a
+Scenario Director receives sealed context, refuses to canonize unsupported
+story facts, creates explicit approval items, and recommends a follow-up
+WorkOrder without changing source, task state, canon, commit, or push state.

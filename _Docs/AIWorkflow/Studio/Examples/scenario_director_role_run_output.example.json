@@ -1,0 +1,118 @@
+{
+  "output_id": "RRO-20260518-150000-scenario",
+  "role_run_id": "RR-20260518-150000-scenario",
+  "agent_id": "scenario_director",
+  "status": "needs_director_decision",
+  "plain_language_summary": "A lightweight scenario direction can be proposed, but core worldbuilding and protagonist motivation must remain approval items before they become canon.",
+  "proposals": [
+    {
+      "title": "Early conflict scenario pitch",
+      "summary": "Show the player's conflict in the first playable loop instead of explaining it through lore.",
+      "status": "recommended",
+      "risks": [
+        "If the core loop changes later, this pitch may need revision.",
+        "Without approved canon, character names and world facts must stay provisional."
+      ],
+      "evidence_required": [
+        "Approved director decision for protagonist motivation.",
+        "Approved tone or canon memory before writing final scenario text."
+      ]
+    }
+  ],
+  "objections": [
+    {
+      "summary": "Do not canonize the world premise yet.",
+      "reason": "The context packet contains no approved canon refs.",
+      "severity": "major",
+      "blocks_progress": false
+    }
+  ],
+  "questions": [
+    {
+      "question": "Should the protagonist motivation be personal survival, rescue, or escape?",
+      "why_needed": "This choice affects character motivation and early conflict framing.",
+      "blocks_progress": true
+    }
+  ],
+  "approval_items": [
+    {
+      "type": "canon",
+      "plain_language_summary": "Approve the protagonist's core motivation before it is recorded as canon.",
+      "what_will_change": [
+        "The approved motivation will become the reference point for later scenario drafts."
+      ],
+      "what_will_not_change": [
+        "No source code, data, or assets will change.",
+        "No implementation task will be created by this RoleRun."
+      ],
+      "files_or_memory_affected": [
+        "future canon memory record only after approval"
+      ],
+      "risks": [
+        "Choosing too late may force later scenario rewrites.",
+        "Choosing without gameplay alignment may detach story from play."
+      ],
+      "rollback_plan": [
+        "Keep this as proposed memory until Human Director approval.",
+        "Mark rejected directions as rejected memory if a different motivation is chosen."
+      ],
+      "evidence_required": [
+        "Human Director decision reference.",
+        "Updated canon or approved decision memory reference."
+      ]
+    }
+  ],
+  "handoff_requests": [
+    {
+      "target_agent_id": "game_designer",
+      "objective": "Check whether the proposed early conflict reinforces the core loop.",
+      "required_context": [
+        "Scenario pitch summary",
+        "Current gameplay loop notes",
+        "Director tone preference"
+      ],
+      "expected_output": [
+        "GameDesignProposal",
+        "RiskList",
+        "ApprovalItems"
+      ]
+    }
+  ],
+  "workorder_recommendations": [
+    {
+      "objective": "Develop a canon-safe scenario pitch and protagonist motivation approval packet.",
+      "department_id": "narrative",
+      "scope": [
+        "Draft 2-3 scenario pitch options.",
+        "Identify canon decisions required.",
+        "Prepare Human Director approval items."
+      ],
+      "non_goals": [
+        "No implementation.",
+        "No source/data/asset edits.",
+        "No canon write without approval."
+      ],
+      "expected_outputs": [
+        "ScenarioPitch",
+        "CharacterBrief",
+        "ApprovalItems"
+      ]
+    }
+  ],
+  "evidence_refs": [],
+  "memory_write_requests": [
+    {
+      "status": "proposed",
+      "scope": "proposal",
+      "summary": "Early conflict should appear inside the first playable loop.",
+      "requires_approval": false
+    }
+  ],
+  "safety": {
+    "source_changed": false,
+    "task_created": false,
+    "approval_changed": false,
+    "canon_changed": false,
+    "commit_or_push_performed": false
+  }
+}
