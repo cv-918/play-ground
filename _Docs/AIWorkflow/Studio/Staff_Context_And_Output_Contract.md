@@ -153,9 +153,24 @@ Current examples:
 ```text
 scenario_director_context_packet.example.json
 scenario_director_role_run_output.example.json
+creative_meeting_session.example.json
+scenario_pitch_work_order.example.json
+scenario_pitch_task_binding.example.json
 ```
 
 These examples are read-only contract fixtures. They demonstrate how a
 Scenario Director receives sealed context, refuses to canonize unsupported
 story facts, creates explicit approval items, and recommends a follow-up
 WorkOrder without changing source, task state, canon, commit, or push state.
+
+The meeting/work order examples demonstrate the next handoff:
+
+```text
+Scenario Director RoleRunOutput
+  -> Creative MeetingSession
+  -> scenario pitch WorkOrder
+  -> proposed AIWorkflow Task binding
+```
+
+This shows the Studio layer producing structured follow-up work without
+bypassing existing AIWorkflow task approval, runner, completion, or git gates.

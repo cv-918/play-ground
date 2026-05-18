@@ -1,0 +1,35 @@
+{
+  "binding_id": "WOTB-20260518-152000-scenario",
+  "work_order_id": "WO-20260518-151500-scenario",
+  "task_id": "DOC-20260518-SCENARIO-PITCH",
+  "relationship": "documentation_task",
+  "creation_source": "meeting_follow_up",
+  "status": "proposed",
+  "authorized_scope": [
+    "Create a document-only task for scenario pitch options and approval items.",
+    "Link the task back to the originating MeetingSession and WorkOrder.",
+    "Require Human Director approval before any canon write."
+  ],
+  "non_goals": [
+    "No source code change.",
+    "No data or schema change.",
+    "No asset generation or import.",
+    "No task done, commit, or push authorization."
+  ],
+  "approval_refs": [],
+  "evidence_refs": [
+    "MEET-20260518-151000-scenario",
+    "WO-20260518-151500-scenario"
+  ],
+  "runner_run_ids": [],
+  "completion_report_refs": [],
+  "finalization_refs": [],
+  "safety": {
+    "source_write_authorized": false,
+    "schema_change_authorized": false,
+    "canon_change_authorized": false,
+    "asset_import_authorized": false,
+    "external_tool_authorized": false,
+    "commit_authorized": false
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "work_order_id": "WO-20260518-151500-scenario",
+  "source_type": "meeting",
+  "source_ref": "MEET-20260518-151000-scenario",
+  "objective": "Develop a canon-safe scenario pitch and protagonist motivation approval packet.",
+  "department_id": "narrative",
+  "assigned_agents": [
+    "scenario_director",
+    "creative_director",
+    "game_designer"
+  ],
+  "scope": [
+    "Draft 2-3 lightweight scenario pitch options.",
+    "Identify which story choices require Human Director approval.",
+    "Explain how each pitch supports the first playable loop.",
+    "Prepare approval items for protagonist motivation and any canon-sensitive premise."
+  ],
+  "non_goals": [
+    "No source code changes.",
+    "No game data changes.",
+    "No asset generation or import.",
+    "No canon write without Human Director approval.",
+    "No implementation task creation from staff consensus alone."
+  ],
+  "expected_outputs": [
+    "ScenarioPitch",
+    "StoryArcPlan",
+    "CharacterBrief",
+    "ApprovalItems"
+  ],
+  "approval_items": [
+    {
+      "type": "canon",
+      "plain_language_summary": "Choose whether the protagonist motivation becomes approved project canon.",
+      "what_will_change": [
+        "Approved motivation will guide later scenario, quest, and presentation work."
+      ],
+      "what_will_not_change": [
+        "No source files will change.",
+        "No JSON data or schema will change.",
+        "No assets will be generated or imported."
+      ],
+      "files_or_memory_affected": [
+        "future MemoryRecord with status=canon only after approval"
+      ],
+      "risks": [
+        "If approved too early, later gameplay direction may conflict with story motivation.",
+        "If left undecided, scenario work remains provisional."
+      ],
+      "rollback_plan": [
+        "Keep rejected motivations as rejected memory.",
+        "Supersede approved motivation only through a later Human Director decision."
+      ],
+      "evidence_required": [
+        "Human Director decision reference.",
+        "Canon or approved decision memory reference."
+      ]
+    }
+  ],
+  "evidence_requirements": [
+    "MeetingSession reference.",
+    "Scenario Director RoleRunOutput reference.",
+    "Human Director approval decision for canon-sensitive items."
+  ],
+  "verification_plan": [
+    "Confirm all options label canon status clearly.",
+    "Confirm no implementation, data, asset, commit, or push action is implied.",
+    "Confirm approval items explain what changes and what does not change."
+  ],
+  "handoff_plan": [
+    "Scenario Director drafts pitch options.",
+    "Game Designer checks gameplay-loop fit.",
+    "Creative Director summarizes director-facing choice."
+  ],
+  "target_project_profile": "playground",
+  "status": "director_review"
+}

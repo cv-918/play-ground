@@ -1,0 +1,83 @@
+{
+  "meeting_id": "MEET-20260518-151000-scenario",
+  "topic": "Decide whether the prototype needs a small scenario direction before implementation.",
+  "meeting_type": "creative",
+  "participants": [
+    "creative_director",
+    "game_designer",
+    "scenario_director",
+    "art_director",
+    "executive_producer"
+  ],
+  "chair_agent_id": "creative_director",
+  "director_user_id": "human_director",
+  "agenda": [
+    "Clarify whether narrative direction is needed for the next prototype slice.",
+    "Identify which choices are safe proposals and which require director approval.",
+    "Decide whether to create a follow-up WorkOrder."
+  ],
+  "known_constraints": [
+    "Do not create implementation tasks from meeting consensus alone.",
+    "Do not write canon without Human Director approval.",
+    "Keep scope small enough for a solo prototype workflow."
+  ],
+  "loaded_context_refs": [
+    "SCP-20260518-150000-scenario",
+    "RRO-20260518-150000-scenario"
+  ],
+  "discussion_turns": [
+    {
+      "turn_id": "turn-001",
+      "speaker_id": "game_designer",
+      "turn_type": "brief",
+      "content": "The story direction should serve the first playable loop. If it does not affect player motivation, it should stay optional.",
+      "source_refs": []
+    },
+    {
+      "turn_id": "turn-002",
+      "speaker_id": "scenario_director",
+      "turn_type": "proposal",
+      "content": "Use early conflict inside the first playable loop, but keep protagonist motivation as an approval item until canon is decided.",
+      "source_refs": [
+        "RRO-20260518-150000-scenario"
+      ]
+    },
+    {
+      "turn_id": "turn-003",
+      "speaker_id": "art_director",
+      "turn_type": "objection",
+      "content": "Do not create new visual style requirements from this meeting. Story pitch can mention tone, but asset direction needs a separate approval item.",
+      "source_refs": []
+    },
+    {
+      "turn_id": "turn-004",
+      "speaker_id": "executive_producer",
+      "turn_type": "synthesis",
+      "content": "Recommend one follow-up WorkOrder for a canon-safe scenario pitch packet. No implementation and no asset import are authorized.",
+      "source_refs": []
+    }
+  ],
+  "proposals": [
+    "Create a narrative WorkOrder for a small scenario pitch and protagonist motivation approval packet."
+  ],
+  "objections": [
+    "Do not treat the early conflict pitch as approved canon.",
+    "Do not create implementation, data, or asset tasks from this meeting."
+  ],
+  "unresolved_questions": [
+    "Human Director must choose or reject protagonist motivation before canon memory can be written."
+  ],
+  "director_decisions": [],
+  "accepted_directions": [
+    "Prepare a proposal packet, not canon or implementation."
+  ],
+  "rejected_directions": [
+    "No full narrative bible.",
+    "No asset style expansion from this meeting."
+  ],
+  "follow_up_workorders": [
+    "WO-20260518-151500-scenario"
+  ],
+  "minutes_artifact": "_Docs/AIWorkflow/Studio/Examples/creative_meeting_session.example.json",
+  "status": "follow_up_tasking"
+}

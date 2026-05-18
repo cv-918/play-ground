@@ -58,6 +58,19 @@
     "rejected_directions": { "type": "array", "items": { "type": "string" } },
     "follow_up_workorders": { "type": "array", "items": { "type": "string" } },
     "minutes_artifact": { "type": "string" },
-    "status": { "type": "string", "enum": ["draft", "active", "waiting_director", "finalized", "archived"] }
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "context_loaded",
+        "in_progress",
+        "director_decision_needed",
+        "follow_up_tasking",
+        "closed",
+        "blocked",
+        "cancelled"
+      ]
+    }
   }
 }

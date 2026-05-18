@@ -34,6 +34,7 @@ This slice defines:
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
 - Staff context and structured output contract
 - Scenario Director context/output examples
+- Creative MeetingSession to WorkOrder to TaskBinding examples
 
 ## Current Execution Status
 
@@ -78,6 +79,9 @@ _Docs/AIWorkflow/Studio/
 +-- Examples/
 |   +-- scenario_director_context_packet.example.json
 |   +-- scenario_director_role_run_output.example.json
+|   +-- creative_meeting_session.example.json
+|   +-- scenario_pitch_work_order.example.json
+|   +-- scenario_pitch_task_binding.example.json
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
