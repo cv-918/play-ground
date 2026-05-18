@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/Department.schema.json",
+  "title": "Department",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "department_id",
+    "name",
+    "mission",
+    "staff_agents",
+    "department_lead",
+    "default_meeting_roles",
+    "default_review_gates",
+    "owned_artifacts",
+    "escalation_rules"
+  ],
+  "properties": {
+    "department_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "mission": { "type": "string", "minLength": 1 },
+    "staff_agents": { "type": "array", "items": { "type": "string" } },
+    "department_lead": { "type": "string" },
+    "default_meeting_roles": { "type": "array", "items": { "type": "string" } },
+    "default_review_gates": { "type": "array", "items": { "type": "string" } },
+    "owned_artifacts": { "type": "array", "items": { "type": "string" } },
+    "escalation_rules": { "type": "array", "items": { "type": "string" } }
+  }
+}

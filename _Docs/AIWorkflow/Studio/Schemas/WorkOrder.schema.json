@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/WorkOrder.schema.json",
+  "title": "WorkOrder",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work_order_id",
+    "source_type",
+    "source_ref",
+    "objective",
+    "department_id",
+    "assigned_agents",
+    "scope",
+    "non_goals",
+    "expected_outputs",
+    "approval_items",
+    "evidence_requirements",
+    "verification_plan",
+    "handoff_plan",
+    "target_project_profile",
+    "status"
+  ],
+  "properties": {
+    "work_order_id": { "type": "string", "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "source_type": { "type": "string", "enum": ["director_goal", "meeting", "proposal", "bug", "follow_up", "manual"] },
+    "source_ref": { "type": "string" },
+    "objective": { "type": "string", "minLength": 1 },
+    "department_id": { "type": "string" },
+    "assigned_agents": { "type": "array", "items": { "type": "string" } },
+    "scope": { "type": "array", "items": { "type": "string" } },
+    "non_goals": { "type": "array", "items": { "type": "string" } },
+    "expected_outputs": { "type": "array", "items": { "type": "string" } },
+    "approval_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "plain_language_summary", "what_will_change", "what_will_not_change", "risks", "evidence_required"],
+        "properties": {
+          "type": { "type": "string", "enum": ["scope", "canon", "implementation", "asset_import", "external_tool", "completion", "git"] },
+          "plain_language_summary": { "type": "string" },
+          "what_will_change": { "type": "array", "items": { "type": "string" } },
+          "what_will_not_change": { "type": "array", "items": { "type": "string" } },
+          "files_or_memory_affected": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "rollback_plan": { "type": "array", "items": { "type": "string" } },
+          "evidence_required": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "evidence_requirements": { "type": "array", "items": { "type": "string" } },
+    "verification_plan": { "type": "array", "items": { "type": "string" } },
+    "handoff_plan": { "type": "array", "items": { "type": "string" } },
+    "target_project_profile": { "type": "string" },
+    "status": { "type": "string", "enum": ["proposed", "approved", "active", "review", "completed", "blocked", "rejected"] }
+  }
+}

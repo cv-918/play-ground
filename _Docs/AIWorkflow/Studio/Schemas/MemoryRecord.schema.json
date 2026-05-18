@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/MemoryRecord.schema.json",
+  "title": "MemoryRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memory_id",
+    "project_id",
+    "scope",
+    "type",
+    "status",
+    "content",
+    "source_refs",
+    "confidence",
+    "owner_agent_id",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "memory_id": { "type": "string", "pattern": "^MEM-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "project_id": { "type": "string" },
+    "scope": { "type": "string", "enum": ["global", "project", "agent", "department", "meeting", "task", "canon"] },
+    "type": { "type": "string", "enum": ["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"] },
+    "status": { "type": "string", "enum": ["draft", "proposed", "approved", "canon", "rejected", "deprecated", "superseded"] },
+    "content": { "type": "string", "minLength": 1 },
+    "source_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "owner_agent_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "replacement_ref": { "type": "string" },
+    "rejection_reason": { "type": "string" }
+  }
+}

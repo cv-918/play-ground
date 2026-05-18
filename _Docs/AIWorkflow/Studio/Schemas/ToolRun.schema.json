@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ToolRun.schema.json",
+  "title": "ToolRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_run_id",
+    "tool_adapter_id",
+    "initiated_by",
+    "work_order_id",
+    "command_id",
+    "permission_class",
+    "approval_ref",
+    "inputs_ref",
+    "outputs_ref",
+    "exit_code",
+    "status"
+  ],
+  "properties": {
+    "tool_run_id": { "type": "string", "pattern": "^TR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "tool_adapter_id": { "type": "string" },
+    "initiated_by": { "type": "string" },
+    "work_order_id": { "type": "string" },
+    "command_id": { "type": "string" },
+    "permission_class": { "type": "string", "enum": ["read", "write", "execute", "external", "destructive"] },
+    "approval_ref": { "type": ["string", "null"] },
+    "inputs_ref": { "type": "string" },
+    "outputs_ref": { "type": "string" },
+    "exit_code": { "type": ["number", "null"] },
+    "status": { "type": "string", "enum": ["queued", "running", "succeeded", "failed", "cancelled", "timed_out"] }
+  }
+}

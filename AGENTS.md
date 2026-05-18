@@ -115,6 +115,7 @@ _Docs/AIWorkflow/Unity_Workflow_Context.md
 _Docs/AIWorkflow/Task_State_Model.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md
+_Docs/AIWorkflow/Studio/README.md
 _Docs/AIWorkflow/ActiveTask_Template.md
 _Docs/AIWorkflow/Project_Profile_Schema.md
 _Docs/AIWorkflow/Discord_Orchestrator_Safety_Rules.md

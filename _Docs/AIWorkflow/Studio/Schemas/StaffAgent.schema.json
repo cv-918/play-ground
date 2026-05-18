@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StaffAgent.schema.json",
+  "title": "StaffAgent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "agent_id",
+    "display_name",
+    "department_id",
+    "role_title",
+    "seniority",
+    "identity",
+    "role_charter",
+    "expertise",
+    "memory_policy",
+    "tool_policy",
+    "output_contracts",
+    "meeting_behavior",
+    "handoff_behavior",
+    "evidence_responsibility",
+    "quality_criteria"
+  ],
+  "properties": {
+    "agent_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "department_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "role_title": { "type": "string", "minLength": 1 },
+    "seniority": { "type": "string", "enum": ["junior", "regular", "senior", "lead", "director"] },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["persona_style", "stable_preferences", "collaboration_style"],
+      "properties": {
+        "persona_style": { "type": "string" },
+        "stable_preferences": { "type": "array", "items": { "type": "string" } },
+        "collaboration_style": { "type": "string" }
+      }
+    },
+    "role_charter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mission", "responsibilities", "authority", "approval_required_actions", "forbidden_actions"],
+      "properties": {
+        "mission": { "type": "string" },
+        "responsibilities": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "authority": { "type": "array", "items": { "type": "string" } },
+        "approval_required_actions": { "type": "array", "items": { "type": "string" } },
+        "forbidden_actions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "expertise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domains", "project_specialties", "anti_patterns"],
+      "properties": {
+        "domains": { "type": "array", "items": { "type": "string" } },
+        "project_specialties": { "type": "array", "items": { "type": "string" } },
+        "anti_patterns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "memory_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readable_memory_scopes", "writable_memory_scopes", "canon_write_permission"],
+      "properties": {
+        "readable_memory_scopes": { "type": "array", "items": { "type": "string" } },
+        "writable_memory_scopes": { "type": "array", "items": { "type": "string" } },
+        "canon_write_permission": { "type": "string", "enum": ["none", "propose_only", "approval_required"] }
+      }
+    },
+    "tool_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_tools", "blocked_tools", "approval_required_tools"],
+      "properties": {
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "blocked_tools": { "type": "array", "items": { "type": "string" } },
+        "approval_required_tools": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "output_contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_outputs", "optional_outputs", "structured_schemas"],
+      "properties": {
+        "required_outputs": { "type": "array", "items": { "type": "string" } },
+        "optional_outputs": { "type": "array", "items": { "type": "string" } },
+        "structured_schemas": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "meeting_behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participation_style", "must_object_when", "must_ask_when", "must_defer_when"],
+      "properties": {
+        "participation_style": { "type": "string" },
+        "must_object_when": { "type": "array", "items": { "type": "string" } },
+        "must_ask_when": { "type": "array", "items": { "type": "string" } },
+        "must_defer_when": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "handoff_behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["can_handoff_to", "handoff_requires"],
+      "properties": {
+        "can_handoff_to": { "type": "array", "items": { "type": "string" } },
+        "handoff_requires": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "evidence_responsibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_evidence", "cannot_claim_without_evidence"],
+      "properties": {
+        "required_evidence": { "type": "array", "items": { "type": "string" } },
+        "cannot_claim_without_evidence": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "quality_criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pass_conditions", "failure_patterns"],
+      "properties": {
+        "pass_conditions": { "type": "array", "items": { "type": "string" } },
+        "failure_patterns": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

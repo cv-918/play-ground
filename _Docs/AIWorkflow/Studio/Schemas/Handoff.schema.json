@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/Handoff.schema.json",
+  "title": "Handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "handoff_id",
+    "from_agent_id",
+    "to_agent_id",
+    "reason",
+    "input_contract",
+    "expected_output",
+    "constraints",
+    "evidence_refs",
+    "status"
+  ],
+  "properties": {
+    "handoff_id": { "type": "string", "pattern": "^HAND-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "from_agent_id": { "type": "string" },
+    "to_agent_id": { "type": "string" },
+    "reason": { "type": "string" },
+    "input_contract": { "type": "array", "items": { "type": "string" } },
+    "expected_output": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["proposed", "accepted", "completed", "rejected"] }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/Proposal.schema.json",
+  "title": "Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id",
+    "source_agent_id",
+    "source_meeting_id",
+    "title",
+    "summary",
+    "rationale",
+    "options",
+    "risks",
+    "dependencies",
+    "approval_items",
+    "evidence_refs",
+    "status"
+  ],
+  "properties": {
+    "proposal_id": { "type": "string", "pattern": "^PROP-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "source_agent_id": { "type": "string" },
+    "source_meeting_id": { "type": "string" },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string" },
+    "rationale": { "type": "string" },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["option_id", "title", "summary", "tradeoffs"],
+        "properties": {
+          "option_id": { "type": "string" },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "tradeoffs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "approval_items": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["draft", "submitted", "accepted", "rejected", "superseded"] }
+  }
+}

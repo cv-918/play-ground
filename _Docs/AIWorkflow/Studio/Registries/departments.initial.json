@@ -1,0 +1,94 @@
+{
+  "schema_version": "studio-department-registry-v0.1",
+  "status": "read_only_foundation",
+  "departments": [
+    {
+      "department_id": "executive_production",
+      "name": "Executive / Production",
+      "mission": "Protect director intent, scope, priority, approvals, and delivery flow.",
+      "staff_agents": ["executive_producer", "project_manager", "release_manager"],
+      "department_lead": "executive_producer",
+      "default_meeting_roles": ["chair", "scope_guard", "decision_tracker"],
+      "default_review_gates": ["scope", "approval", "completion", "git"],
+      "owned_artifacts": ["WorkOrder", "Decision", "ApprovalItem", "FinalizationLog"],
+      "escalation_rules": ["Escalate unclear scope to Human Director.", "Escalate commit, push, release, and canon decisions."]
+    },
+    {
+      "department_id": "creative_direction",
+      "name": "Creative Direction",
+      "mission": "Keep product identity, tone, and player experience coherent across departments.",
+      "staff_agents": ["creative_director", "game_director"],
+      "department_lead": "creative_director",
+      "default_meeting_roles": ["creative_synthesis", "tone_guard"],
+      "default_review_gates": ["direction", "canon", "player_experience"],
+      "owned_artifacts": ["CreativeBrief", "DirectionDecision", "RejectedDirection"],
+      "escalation_rules": ["Escalate direction changes that contradict Human Director intent."]
+    },
+    {
+      "department_id": "game_design",
+      "name": "Game Design",
+      "mission": "Design core loops, systems, progression, encounters, and player motivation.",
+      "staff_agents": ["game_designer", "system_designer", "level_encounter_designer"],
+      "department_lead": "game_designer",
+      "default_meeting_roles": ["mechanic_proposer", "loop_reviewer", "system_risk_reviewer"],
+      "default_review_gates": ["core_loop", "system_fit", "balance_risk"],
+      "owned_artifacts": ["GameDesignProposal", "SystemDesignBrief", "BalanceRiskList"],
+      "escalation_rules": ["Escalate feature changes that alter genre, core loop, or milestone scope."]
+    },
+    {
+      "department_id": "narrative",
+      "name": "Narrative / Scenario",
+      "mission": "Develop story, worldbuilding, characters, tone, dialogue, and canon-safe narrative proposals.",
+      "staff_agents": ["scenario_director", "scenario_writer"],
+      "department_lead": "scenario_director",
+      "default_meeting_roles": ["story_direction", "canon_guard", "dialogue_drafter"],
+      "default_review_gates": ["canon", "tone", "character_motivation"],
+      "owned_artifacts": ["ScenarioPitch", "StoryArcPlan", "CharacterBrief", "CanonProposal"],
+      "escalation_rules": ["Escalate canon changes, protagonist changes, ending direction, and genre-conflicting story changes."]
+    },
+    {
+      "department_id": "engineering",
+      "name": "Engineering",
+      "mission": "Design and implement approved technical work while preserving architecture and validation evidence.",
+      "staff_agents": ["technical_architect", "gameplay_programmer", "ui_programmer", "tools_engineer"],
+      "department_lead": "technical_architect",
+      "default_meeting_roles": ["architecture_guard", "implementation_planner", "tooling_owner"],
+      "default_review_gates": ["architecture", "runtime", "data_schema", "build"],
+      "owned_artifacts": ["TechnicalDesignBrief", "ImplementationPlan", "DiffReview", "BuildEvidence"],
+      "escalation_rules": ["Escalate schema, save/load, lifecycle, runtime, broad refactor, and build setting changes."]
+    },
+    {
+      "department_id": "art_assets",
+      "name": "Art / Assets",
+      "mission": "Create, review, curate, and import visual assets with source, license, and visual validation evidence.",
+      "staff_agents": ["art_director", "concept_artist", "pixel_artist", "vfx_artist", "asset_curator"],
+      "department_lead": "art_director",
+      "default_meeting_roles": ["style_guard", "asset_candidate_creator", "import_readiness_reviewer"],
+      "default_review_gates": ["style_fit", "license_source", "asset_import"],
+      "owned_artifacts": ["ArtDirectionBrief", "AssetRequest", "GeneratedAssetReview", "ImportDecision"],
+      "escalation_rules": ["Escalate generated asset import, style canon changes, and license/source uncertainty."]
+    },
+    {
+      "department_id": "qa_testing",
+      "name": "QA / Testing",
+      "mission": "Reproduce, test, validate, and protect against regressions with explicit evidence.",
+      "staff_agents": ["qa_tester", "balance_tester", "bug_reproducer", "regression_tester"],
+      "department_lead": "qa_tester",
+      "default_meeting_roles": ["test_planner", "risk_reproducer", "regression_guard"],
+      "default_review_gates": ["smoke", "runtime", "regression", "evidence"],
+      "owned_artifacts": ["QAReport", "BugRepro", "RegressionChecklist", "VerificationEvidence"],
+      "escalation_rules": ["Escalate missing validation, unverified runtime behavior, and unresolved failures."]
+    },
+    {
+      "department_id": "documentation_release",
+      "name": "Documentation / Release",
+      "mission": "Keep durable records, guides, DevLogs, release notes, and commit/release boundaries accurate.",
+      "staff_agents": ["documentation_keeper", "release_manager"],
+      "department_lead": "documentation_keeper",
+      "default_meeting_roles": ["record_keeper", "guide_update_checker", "release_gate_reviewer"],
+      "default_review_gates": ["doc_drift", "devlog", "release_readiness"],
+      "owned_artifacts": ["DevLog", "UserGuide", "ReleaseNote", "DocumentMap"],
+      "escalation_rules": ["Escalate workflow-affecting changes without guide update decision."]
+    }
+  ]
+}

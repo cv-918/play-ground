@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/Decision.schema.json",
+  "title": "Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "decision_maker",
+    "decision_type",
+    "target_ref",
+    "decision_summary",
+    "accepted_scope",
+    "rejected_scope",
+    "conditions",
+    "timestamp",
+    "evidence_refs"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "pattern": "^DEC-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "decision_maker": { "type": "string", "enum": ["human_director", "delegated_policy"] },
+    "decision_type": { "type": "string", "enum": ["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"] },
+    "target_ref": { "type": "string" },
+    "decision_summary": { "type": "string" },
+    "accepted_scope": { "type": "array", "items": { "type": "string" } },
+    "rejected_scope": { "type": "array", "items": { "type": "string" } },
+    "conditions": { "type": "array", "items": { "type": "string" } },
+    "timestamp": { "type": "string" },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  }
+}
