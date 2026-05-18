@@ -34,6 +34,7 @@ studio_workorder_planner.bat
 studio_decision_store.bat
 studio_memory_store.bat
 studio_meeting_runtime.bat
+studio_context_builder.bat
 studio_staff_runtime.bat
 studio_dashboard_export.bat
 studio_tool_registry_status.bat
@@ -352,6 +353,35 @@ decision.
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not create WorkOrders, create tasks, approve work,
 start PC Runner, modify source files, commit, or push.
+
+---
+
+## studio_context_builder.bat
+
+Builds governed `StaffContextPacket` JSON files from a concrete StaffAgent and
+a WorkOrder. This removes manual context copy/paste before a RoleRun.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_context_builder.bat status
+tools\aiworkflow\studio_context_builder.bat validate
+tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
+```
+
+`plan` and `create` do not call an LLM or run the staff agent. `create`
+without `--execute` is a dry-run preview. `create --execute` writes one sealed
+StaffContextPacket record under `_Docs\AIWorkflow\Studio\ContextPackets\` by
+default.
+
+For validation smoke tests, `--store-path` may override the ContextPacket
+store only under `_Temp\`. Use `--memory-query <text>` to include matching
+MemoryRecord refs in the context packet.
+
+The command does not create RoleRuns, call LLMs, call tools, create tasks,
+approve work, write memory, write canon, modify source files, commit, or push.
 
 ---
 
@@ -1031,6 +1061,7 @@ tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
 tools\aiworkflow\studio_decision_store.bat validate
+tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json

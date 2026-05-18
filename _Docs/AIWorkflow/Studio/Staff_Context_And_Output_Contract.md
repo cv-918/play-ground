@@ -33,6 +33,17 @@ The schema is:
 _Docs/AIWorkflow/Studio/Schemas/StaffContextPacket.schema.json
 ```
 
+The first local builder is:
+
+```bat
+tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
+```
+
+The builder reads the StaffAgent registry, a WorkOrder, and optional matching
+MemoryRecord refs. It creates a sealed context packet, not a loose prompt. It
+does not run the staff agent or call an LLM.
+
 ## RoleRunOutput
 
 `RoleRunOutput` is the structured answer from a StaffAgent.

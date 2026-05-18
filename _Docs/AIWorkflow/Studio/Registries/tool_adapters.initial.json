@@ -175,6 +175,28 @@
       ]
     },
     {
+      "adapter_id": "studio_context_builder",
+      "display_name": "Studio Staff Context Builder",
+      "category": "workflow_core",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local context assembly. No LLM, API, or subscription call is required.",
+      "allowed_actions": ["status", "validate", "list", "read", "plan context packet", "explicit create context packet"],
+      "blocked_actions": ["execute staff agent", "call LLM", "create RoleRun", "create tasks", "approve work", "write canon", "modify source", "commit or push"],
+      "approval_required_actions": ["using context packet for real LLM execution", "adding write permissions to context safety", "including external tool permission"],
+      "input_contract": ["StaffAgent registry", "WorkOrder JSON", "MemoryRecord refs"],
+      "output_evidence": ["StaffContextPacket JSON", "context validation result", "source WorkOrder path", "memory query used"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": false,
+      "default_enabled": true,
+      "notes": [
+        "Writes only StaffContextPacket records when --execute is explicit.",
+        "Context packet creation does not run the staff agent."
+      ]
+    },
+    {
       "adapter_id": "studio_dashboard_export",
       "display_name": "Studio Dashboard Export",
       "category": "ui_export",

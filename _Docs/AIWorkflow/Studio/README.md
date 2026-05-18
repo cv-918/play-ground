@@ -44,6 +44,7 @@ This slice defines:
 - Local Proposal/Decision store, validation, and canon handoff planner
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Local MeetingSession runtime validation and handoff tool
+- Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
@@ -98,6 +99,8 @@ tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examp
 tools\aiworkflow\studio_meeting_runtime.bat start MEET-20260518-151000-scenario --execute
 tools\aiworkflow\studio_meeting_runtime.bat add-turn MEET-20260518-151000-scenario scenario_director synthesis "Summarize current direction." --execute
 tools\aiworkflow\studio_meeting_runtime.bat finalize MEET-20260518-151000-scenario --execute
+tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
@@ -140,6 +143,8 @@ _Docs/AIWorkflow/Studio/
 +-- Decisions/
 |   +-- README.md
 +-- MeetingSessions/
+|   +-- README.md
++-- ContextPackets/
 |   +-- README.md
 +-- RoleRuns/
 |   +-- README.md
@@ -205,17 +210,20 @@ These rules are mandatory for all future implementations:
 13. Staff RoleRuns are governed runtime envelopes. Staff output may request
     approval or handoff, but it must not directly approve, write canon, create
     tasks, change source files, commit, or push.
-14. Studio UI surfaces must display governance boundaries. A dashboard may
+14. StaffContextPacket is the sealed input to a staff runtime. It must be built
+    from registry, source work, memory, tool policy, and safety rules instead
+    of loose role prompts.
+15. Studio UI surfaces must display governance boundaries. A dashboard may
     summarize state, but it must not silently perform approvals or execution.
-15. ToolAdapter registry entries must state file impact, external calls, cost
+16. ToolAdapter registry entries must state file impact, external calls, cost
     possibility, approval requirements, and evidence outputs before use.
-16. ToolRunRequest is the pre-execution governance record. It may evaluate
+17. ToolRunRequest is the pre-execution governance record. It may evaluate
     adapter policy, approval needs, cost risk, and evidence needs, but it must
     not execute the adapter.
-17. Proposal/Decision stores must keep ideas, approvals, rejections, and canon
+18. Proposal/Decision stores must keep ideas, approvals, rejections, and canon
     handoffs separate. A Proposal is not approval, and a Decision does not
     write canon memory by itself.
-18. Conditional automation decisions must be deterministic, replayable, and
+19. Conditional automation decisions must be deterministic, replayable, and
     auditable. A staff agent, LLM, or tool adapter may propose automation
     eligibility, but the policy test/replay result is the authority.
 

@@ -81,6 +81,19 @@ stop_conditions
 If any required field is missing, the agent must ask a question or return a
 blocked output instead of inventing missing context.
 
+The first local context builder is:
+
+```bat
+tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
+```
+
+It builds a sealed StaffContextPacket from a concrete StaffAgent registry entry
+and a WorkOrder. It may include matching MemoryRecord refs through
+`--memory-query`, but it does not call an LLM, create a RoleRun, execute the
+staff agent, create tasks, approve work, write memory, write canon, modify
+source files, commit, or push.
+
 ## RoleRun Lifecycle
 
 ```text
