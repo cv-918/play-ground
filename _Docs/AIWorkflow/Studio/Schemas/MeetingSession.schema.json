@@ -26,7 +26,7 @@
     "status"
   ],
   "properties": {
-    "meeting_id": { "type": "string", "pattern": "^MEET-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "meeting_id": { "type": "string", "pattern": "^MEET-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "topic": { "type": "string", "minLength": 1 },
     "meeting_type": { "type": "string", "enum": ["creative", "technical", "production", "review", "qa_triage", "postmortem", "release_readiness"] },
     "participants": { "type": "array", "items": { "type": "string" }, "minItems": 1 },

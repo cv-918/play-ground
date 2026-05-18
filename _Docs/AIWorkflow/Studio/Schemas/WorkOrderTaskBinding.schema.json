@@ -23,11 +23,11 @@
   "properties": {
     "binding_id": {
       "type": "string",
-      "pattern": "^WOTB-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+      "pattern": "^WOTB-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$"
     },
     "work_order_id": {
       "type": "string",
-      "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9]+$"
+      "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$"
     },
     "task_id": {
       "type": "string",

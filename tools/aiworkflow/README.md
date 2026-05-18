@@ -32,6 +32,7 @@ role_router_status.bat
 studio_registry_status.bat
 studio_workorder_planner.bat
 studio_memory_store.bat
+studio_meeting_runtime.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -255,6 +256,38 @@ durable memory:
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not create tasks, approve work, start PC Runner,
 modify source files, commit, or push.
+
+---
+
+## studio_meeting_runtime.bat
+
+Inspects, validates, summarizes, and explicitly creates AIWorkflow Studio
+`MeetingSession` JSON files. The default durable store is:
+
+```text
+_Docs\AIWorkflow\Studio\MeetingSessions\
+```
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_meeting_runtime.bat status
+tools\aiworkflow\studio_meeting_runtime.bat validate
+tools\aiworkflow\studio_meeting_runtime.bat list
+tools\aiworkflow\studio_meeting_runtime.bat inspect _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
+tools\aiworkflow\studio_meeting_runtime.bat handoff _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
+tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
+tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json --execute
+```
+
+`create` without `--execute` is a dry-run preview. `handoff` explains accepted
+directions, rejected directions, unresolved questions, and follow-up WorkOrder
+ids, but it does not create WorkOrders or tasks. Meeting consensus is not
+approval, and proposals are not canon.
+
+For validation smoke tests, `--store-path` may override the store only under
+`_Temp\`. The command does not create WorkOrders, create tasks, approve work,
+start PC Runner, modify source files, commit, or push.
 
 ---
 

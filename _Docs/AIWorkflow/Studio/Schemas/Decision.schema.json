@@ -17,7 +17,7 @@
     "evidence_refs"
   ],
   "properties": {
-    "decision_id": { "type": "string", "pattern": "^DEC-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "decision_id": { "type": "string", "pattern": "^DEC-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "decision_maker": { "type": "string", "enum": ["human_director", "delegated_policy"] },
     "decision_type": { "type": "string", "enum": ["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"] },
     "target_ref": { "type": "string" },

@@ -21,7 +21,7 @@
     "status"
   ],
   "properties": {
-    "role_run_id": { "type": "string", "pattern": "^RR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "role_run_id": { "type": "string", "pattern": "^RR-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "agent_id": { "type": "string" },
     "context_packet_ref": { "type": "string" },
     "work_order_id": { "type": "string" },

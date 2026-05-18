@@ -19,7 +19,7 @@
     "status"
   ],
   "properties": {
-    "proposal_id": { "type": "string", "pattern": "^PROP-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "proposal_id": { "type": "string", "pattern": "^PROP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "source_agent_id": { "type": "string" },
     "source_meeting_id": { "type": "string" },
     "title": { "type": "string", "minLength": 1 },

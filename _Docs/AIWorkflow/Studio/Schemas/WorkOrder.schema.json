@@ -22,7 +22,7 @@
     "status"
   ],
   "properties": {
-    "work_order_id": { "type": "string", "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "work_order_id": { "type": "string", "pattern": "^WO-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "source_type": { "type": "string", "enum": ["director_goal", "meeting", "proposal", "bug", "follow_up", "manual"] },
     "source_ref": { "type": "string" },
     "objective": { "type": "string", "minLength": 1 },

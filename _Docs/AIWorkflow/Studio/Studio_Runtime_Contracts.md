@@ -291,6 +291,19 @@ Meeting output is incomplete unless it records:
 - what requires Human Director approval
 - what WorkOrders should be created next
 
+The local meeting runtime tool provides the first deterministic implementation
+slice for this contract:
+
+```bat
+tools\aiworkflow\studio_meeting_runtime.bat inspect <meeting_json_path>
+tools\aiworkflow\studio_meeting_runtime.bat handoff <meeting_json_path>
+tools\aiworkflow\studio_meeting_runtime.bat create <meeting_json_path> --execute
+```
+
+It validates staff participation, chair membership, discussion turn speakers,
+unresolved questions, and follow-up WorkOrder ids. It does not create
+WorkOrders or tasks by itself.
+
 ## Handoff Contract
 
 Handoff is a structured transfer of responsibility between staff agents or

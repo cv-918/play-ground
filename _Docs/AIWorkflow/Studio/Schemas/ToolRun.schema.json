@@ -18,7 +18,7 @@
     "status"
   ],
   "properties": {
-    "tool_run_id": { "type": "string", "pattern": "^TR-[0-9]{8}-[0-9]{6}-[a-z0-9]+$" },
+    "tool_run_id": { "type": "string", "pattern": "^TR-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
     "tool_adapter_id": { "type": "string" },
     "initiated_by": { "type": "string" },
     "work_order_id": { "type": "string" },
