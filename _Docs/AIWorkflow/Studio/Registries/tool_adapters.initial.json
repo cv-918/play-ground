@@ -1,0 +1,177 @@
+{
+  "schema_version": "studio-tool-adapter-registry-v0.1",
+  "status": "read_only_foundation",
+  "tool_adapters": [
+    {
+      "adapter_id": "codex_cli_signed_in",
+      "display_name": "Codex CLI Signed-In Executor",
+      "category": "llm",
+      "status": "available",
+      "execution_owner": "codex_app_cli",
+      "provider_policy": "Use the signed-in Codex App/CLI route first. Do not require OpenAI API billing by default.",
+      "allowed_actions": ["structured reasoning", "bounded implementation when approved", "review", "summarization"],
+      "blocked_actions": ["unapproved source changes", "unapproved canon writes", "unapproved commit or push", "secret exposure"],
+      "approval_required_actions": ["source write", "runtime behavior change", "schema change", "external network dependency", "commit or push"],
+      "input_contract": ["StaffContextPacket", "AIWorkflow Goal Request", "approved scope", "non-goals", "validation plan"],
+      "output_evidence": ["RoleRunOutput", "changed file list", "diff summary", "validation evidence when available"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Primary route for LLM-required work under the current user policy.",
+        "Must stay under workflow governance and approval gates."
+      ]
+    },
+    {
+      "adapter_id": "chatgpt_codex_app",
+      "display_name": "ChatGPT / Codex App Interactive Route",
+      "category": "llm",
+      "status": "available",
+      "execution_owner": "human_director",
+      "provider_policy": "Use ChatGPT/Codex subscription capabilities before considering API providers.",
+      "allowed_actions": ["planning", "architecture", "review", "prompted implementation through Codex App"],
+      "blocked_actions": ["untracked workflow state mutation", "silent approval", "silent canonization"],
+      "approval_required_actions": ["source write", "canon decision", "task finalization", "commit or push"],
+      "input_contract": ["director goal", "context packet", "workflow state", "approved scope"],
+      "output_evidence": ["assistant summary", "diff evidence if repository changed", "validation notes"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Interactive fallback or high-context route.",
+        "Not treated as raw API access."
+      ]
+    },
+    {
+      "adapter_id": "codex_image_generation",
+      "display_name": "Codex Image Generation Route",
+      "category": "asset_generation",
+      "status": "planned",
+      "execution_owner": "codex_app_cli",
+      "provider_policy": "Use Codex/image generation first for generated images. Consider other providers only if quality is insufficient.",
+      "allowed_actions": ["generate draft visual assets", "generate concept references", "prepare reviewable asset candidates"],
+      "blocked_actions": ["direct asset import without approval", "overwrite shipped assets", "claim final art without review"],
+      "approval_required_actions": ["asset import", "licensed/reference-sensitive generation", "replacement of tracked game assets"],
+      "input_contract": ["creative brief", "style constraints", "asset dimensions", "usage intent"],
+      "output_evidence": ["generated asset preview", "prompt/settings summary", "review notes"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": false,
+      "notes": [
+        "Asset generation does not mean asset import.",
+        "Generated assets must pass Human Director review before project adoption."
+      ]
+    },
+    {
+      "adapter_id": "local_cli_allowlist",
+      "display_name": "Local CLI Allowlist Executor",
+      "category": "local_cli",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Use allowlisted command_id values only.",
+      "allowed_actions": ["safe validation commands", "local smoke checks", "read-only diagnostics"],
+      "blocked_actions": ["arbitrary shell commands", "destructive commands", "secret reads"],
+      "approval_required_actions": ["commands that modify files", "build setting changes", "external tool invocation"],
+      "input_contract": ["command_id", "task_id", "approved profile"],
+      "output_evidence": ["exit code", "stdout/stderr log", "runtime report path"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Existing AIWorkflow local_cli_adapter remains the controlled execution route."
+      ]
+    },
+    {
+      "adapter_id": "build_test_runner",
+      "display_name": "Build/Test Runner",
+      "category": "build_test",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Use project profile build/test commands with evidence capture.",
+      "allowed_actions": ["build", "test", "validation smoke"],
+      "blocked_actions": ["release deploy", "unapproved config mutation"],
+      "approval_required_actions": ["new build configuration", "external dependency install", "runtime-affecting test setup"],
+      "input_contract": ["project_profile", "command_id", "task_id"],
+      "output_evidence": ["exit code", "build log", "test report", "VerificationReport input"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": false,
+      "default_enabled": true,
+      "notes": [
+        "Validation may generate local build artifacts but must not change source."
+      ]
+    },
+    {
+      "adapter_id": "git_gate",
+      "display_name": "Git Gate",
+      "category": "git",
+      "status": "available",
+      "execution_owner": "human_director",
+      "provider_policy": "Commit and push remain explicit finalization decisions.",
+      "allowed_actions": ["status", "diff", "stage approved files", "commit approved diff", "push approved branch"],
+      "blocked_actions": ["silent commit", "silent push", "history rewrite without explicit instruction"],
+      "approval_required_actions": ["stage", "commit", "push", "amend", "force update"],
+      "input_contract": ["approved diff", "commit message or generated commit message request", "branch state"],
+      "output_evidence": ["commit sha", "push result", "diff summary"],
+      "can_modify_files": false,
+      "can_call_external": true,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Git is a governance gate, not a background side effect."
+      ]
+    },
+    {
+      "adapter_id": "studio_memory_store",
+      "display_name": "Studio Memory Store",
+      "category": "memory",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local JSON store.",
+      "allowed_actions": ["status", "validate", "list", "read", "explicit create"],
+      "blocked_actions": ["silent canon write", "memory write without source refs"],
+      "approval_required_actions": ["canon memory write", "memory supersession", "rejected memory finalization"],
+      "input_contract": ["MemoryRecord JSON", "source refs", "approval refs when required"],
+      "output_evidence": ["MemoryRecord path", "validation result"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Tool writes only when --execute is explicit."
+      ]
+    },
+    {
+      "adapter_id": "studio_dashboard_export",
+      "display_name": "Studio Dashboard Export",
+      "category": "ui_export",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Read-only local HTML snapshot.",
+      "allowed_actions": ["export _Temp dashboard HTML"],
+      "blocked_actions": ["approval", "execution", "task creation", "source change"],
+      "approval_required_actions": [],
+      "input_contract": ["Studio registries", "MemoryRecord store", "MeetingSession store", "RoleRun store"],
+      "output_evidence": ["_Temp HTML path"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": false,
+      "default_enabled": true,
+      "notes": [
+        "Writes only _Temp dashboard output."
+      ]
+    }
+  ]
+}

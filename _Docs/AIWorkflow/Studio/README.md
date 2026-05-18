@@ -40,6 +40,7 @@ This slice defines:
 - Local MeetingSession runtime validation and handoff tool
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export
+- ToolAdapter schema and read-only tool adapter registry
 
 ## Current Execution Status
 
@@ -81,13 +82,16 @@ tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_dashboard_export.bat
+tools\aiworkflow\studio_tool_registry_status.bat validate
+tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
 ```
 
 These tools validate registry references, print department/staff details, and
 preview or create WorkOrder-derived Backlog tasks, governed MemoryRecord files,
-governed MeetingSession records, governed RoleRun envelopes, and read-only
-dashboard snapshots. They do not execute agents, call LLMs, set ActiveTask,
-approve work, start PC Runner, modify source files, commit, or push.
+governed MeetingSession records, governed RoleRun envelopes, read-only
+dashboard snapshots, and tool adapter policy displays. They do not execute
+agents, call LLMs, set ActiveTask, approve work, start PC Runner, modify source
+files, commit, or push.
 
 ## Directory Map
 
@@ -128,9 +132,11 @@ _Docs/AIWorkflow/Studio/
 |   +-- Handoff.schema.json
 |   +-- RoleRun.schema.json
 |   +-- ToolRun.schema.json
+|   +-- ToolAdapter.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json
+|   +-- tool_adapters.initial.json
 +-- Policies/
     +-- Memory_Status_Policy.md
 ```
@@ -159,6 +165,8 @@ These rules are mandatory for all future implementations:
     tasks, change source files, commit, or push.
 14. Studio UI surfaces must display governance boundaries. A dashboard may
     summarize state, but it must not silently perform approvals or execution.
+15. ToolAdapter registry entries must state file impact, external calls, cost
+    possibility, approval requirements, and evidence outputs before use.
 
 ## Relationship To Existing AIWorkflow Core
 

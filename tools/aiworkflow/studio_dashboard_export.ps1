@@ -259,6 +259,7 @@ function New-DashboardHtml {
       <div class="card"><h2>Memory</h2><div class="metric">$(Html ([string]$Data.memory_count))</div><p class="muted">durable MemoryRecord 수</p></div>
       <div class="card"><h2>Meetings</h2><div class="metric">$(Html ([string]$Data.meeting_count))</div><p class="muted">durable MeetingSession 수</p></div>
       <div class="card"><h2>RoleRuns</h2><div class="metric">$(Html ([string]$Data.role_run_count))</div><p class="muted">durable RoleRun 수</p></div>
+      <div class="card"><h2>Tool Adapters</h2><div class="metric">$(Html ([string]$Data.tool_adapter_count))</div><p class="muted">registered ToolAdapter 수</p></div>
     </section>
 
     <section class="card">
@@ -282,6 +283,7 @@ function New-DashboardHtml {
       <div class="card"><h2>Memory Records</h2>$(Render-List -Items $Data.memories)</div>
       <div class="card"><h2>Meeting Sessions</h2>$(Render-List -Items $Data.meetings)</div>
       <div class="card"><h2>RoleRuns</h2>$(Render-List -Items $Data.role_runs)</div>
+      <div class="card"><h2>Tool Adapters</h2>$(Render-List -Items $Data.tool_adapters)</div>
     </section>
 
     <section class="card">
@@ -308,6 +310,17 @@ function New-DashboardData {
     $memoryPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MemoryRecords"
     $meetingPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MeetingSessions"
     $roleRunPath = Join-Path $Root "_Docs\AIWorkflow\Studio\RoleRuns"
+    $toolPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Registries\tool_adapters.initial.json"
+    $toolData = Read-JsonFile -Path $toolPath
+    $toolItems = @()
+    foreach ($adapter in @($toolData.tool_adapters)) {
+        $toolItems += [pscustomobject]@{
+            id = [string]$adapter.adapter_id
+            status = [string]$adapter.status
+            title = [string]$adapter.display_name
+            file = "tool_adapters.initial.json"
+        }
+    }
 
     return [pscustomobject]@{
         department_count = @($deptData.departments).Count
@@ -316,11 +329,13 @@ function New-DashboardData {
         memory_count = (Get-StoreCount -Path $memoryPath)
         meeting_count = (Get-StoreCount -Path $meetingPath)
         role_run_count = (Get-StoreCount -Path $roleRunPath)
+        tool_adapter_count = @($toolData.tool_adapters).Count
         departments = @($deptData.departments)
         staff = @($staffData.staff_agents)
         memories = (Get-RecordSummaries -Path $memoryPath -IdField "memory_id" -StatusField "status" -TitleField "content")
         meetings = (Get-RecordSummaries -Path $meetingPath -IdField "meeting_id" -StatusField "status" -TitleField "topic")
         role_runs = (Get-RecordSummaries -Path $roleRunPath -IdField "role_run_id" -StatusField "status" -TitleField "agent_id")
+        tool_adapters = @($toolItems)
     }
 }
 
@@ -370,6 +385,7 @@ try {
         memory_count = $data.memory_count
         meeting_count = $data.meeting_count
         role_run_count = $data.role_run_count
+        tool_adapter_count = $data.tool_adapter_count
         safety = [pscustomobject]@{
             temp_html_written = $true
             llm_called = $false
@@ -389,7 +405,7 @@ try {
         Write-Host "output: $outputPath"
         Write-Host "departments: $($data.department_count)"
         Write-Host "staff: $($data.staff_count) concrete, $($data.planned_staff_count) planned"
-        Write-Host "memory/meetings/roleRuns: $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count)"
+        Write-Host "memory/meetings/roleRuns/tools: $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_adapter_count)"
         Write-Host "safety: _Temp HTML only; no LLM/tool/task/source/git changes"
     }
     exit 0

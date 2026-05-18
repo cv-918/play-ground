@@ -393,6 +393,33 @@ checks RoleRunOutput safety flags. It does not call LLMs, call tools, create
 WorkOrders, create tasks, approve work, write canon, modify source files,
 commit, or push.
 
+## Tool Adapter Governance
+
+Tool adapters are registered before use. A registered adapter must disclose:
+
+- whether it can modify files
+- whether it can call external systems
+- whether it can incur cost
+- whether Human Director approval is required
+- which actions are allowed
+- which actions are blocked
+- which evidence outputs are required
+
+The first read-only registry tool is:
+
+```bat
+tools\aiworkflow\studio_tool_registry_status.bat validate
+tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
+```
+
+The registry includes the current LLM policy:
+
+- Codex App/CLI signed-in routes are the default LLM execution path.
+- ChatGPT/Codex subscription capabilities are preferred over raw API billing.
+- Codex image generation is the first planned image-generation route.
+- Other providers are considered only after Codex/ChatGPT quality is
+  insufficient for the specific task.
+
 Provider-specific behavior must stay behind adapters.
 
 The core records must remain provider-independent:

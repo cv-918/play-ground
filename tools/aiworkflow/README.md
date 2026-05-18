@@ -35,6 +35,7 @@ studio_memory_store.bat
 studio_meeting_runtime.bat
 studio_staff_runtime.bat
 studio_dashboard_export.bat
+studio_tool_registry_status.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -349,6 +350,35 @@ snapshot and does not start a server.
 `--output` is restricted to `_Temp\`. The command does not call LLMs, call
 tools, create memory, create WorkOrders, create tasks, approve work, start PC
 Runner, modify source files, commit, or push.
+
+---
+
+## studio_tool_registry_status.bat
+
+Reads and validates the AIWorkflow Studio tool adapter registry:
+
+```text
+_Docs\AIWorkflow\Studio\Registries\tool_adapters.initial.json
+```
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_tool_registry_status.bat status
+tools\aiworkflow\studio_tool_registry_status.bat validate
+tools\aiworkflow\studio_tool_registry_status.bat list
+tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
+tools\aiworkflow\studio_tool_registry_status.bat adapter codex_image_generation
+```
+
+The registry records which adapters can modify files, call external systems,
+incur cost, require Human Director approval, and what evidence they must
+produce. It also records the current provider policy: use Codex App/CLI
+signed-in routes first and do not require OpenAI API billing by default.
+
+This command is read-only. It does not execute adapters, call LLMs, create
+memory, create WorkOrders, create tasks, approve work, modify source files,
+commit, or push.
 
 ---
 

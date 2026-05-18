@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ToolAdapter.schema.json",
+  "title": "ToolAdapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "adapter_id",
+    "display_name",
+    "category",
+    "status",
+    "execution_owner",
+    "provider_policy",
+    "allowed_actions",
+    "blocked_actions",
+    "approval_required_actions",
+    "input_contract",
+    "output_evidence",
+    "can_modify_files",
+    "can_call_external",
+    "can_incur_cost",
+    "requires_human_approval",
+    "default_enabled",
+    "notes"
+  ],
+  "properties": {
+    "adapter_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "category": {
+      "type": "string",
+      "enum": [
+        "llm",
+        "local_cli",
+        "browser",
+        "asset_generation",
+        "game_runner",
+        "build_test",
+        "git",
+        "workflow_core",
+        "memory",
+        "ui_export"
+      ]
+    },
+    "status": { "type": "string", "enum": ["available", "planned", "disabled"] },
+    "execution_owner": {
+      "type": "string",
+      "enum": ["aiworkflow_core", "human_director", "codex_app_cli", "external_app"]
+    },
+    "provider_policy": { "type": "string" },
+    "allowed_actions": { "type": "array", "items": { "type": "string" } },
+    "blocked_actions": { "type": "array", "items": { "type": "string" } },
+    "approval_required_actions": { "type": "array", "items": { "type": "string" } },
+    "input_contract": { "type": "array", "items": { "type": "string" } },
+    "output_evidence": { "type": "array", "items": { "type": "string" } },
+    "can_modify_files": { "type": "boolean" },
+    "can_call_external": { "type": "boolean" },
+    "can_incur_cost": { "type": "boolean" },
+    "requires_human_approval": { "type": "boolean" },
+    "default_enabled": { "type": "boolean" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}
