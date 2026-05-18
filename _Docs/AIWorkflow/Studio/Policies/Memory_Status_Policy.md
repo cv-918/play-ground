@@ -67,3 +67,25 @@ When an agent uses memory, it must distinguish:
 - "uncertain or missing"
 
 If the distinction is unclear, the agent must ask or defer.
+
+## Retrieval Behavior
+
+Memory retrieval must return use guidance with the record.
+
+The local retrieval surface is:
+
+```bat
+tools\aiworkflow\studio_memory_store.bat canon
+tools\aiworkflow\studio_memory_store.bat query <text>
+tools\aiworkflow\studio_memory_store.bat query <text> --status canon
+```
+
+Retrieval output must preserve these rules:
+
+- canon memory is official only when the record is `status=canon` and
+  `type=canon` with an approving decision reference.
+- approved memory is scoped and is not automatically global canon.
+- proposed memory is an idea only.
+- rejected memory is negative memory and should prevent repeated rejected
+  suggestions.
+- evidence memory supports claims but does not approve work.

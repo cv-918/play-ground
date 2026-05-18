@@ -254,6 +254,9 @@ tools\aiworkflow\studio_memory_store.bat status
 tools\aiworkflow\studio_memory_store.bat validate
 tools\aiworkflow\studio_memory_store.bat list
 tools\aiworkflow\studio_memory_store.bat list --status canon
+tools\aiworkflow\studio_memory_store.bat canon
+tools\aiworkflow\studio_memory_store.bat query protagonist
+tools\aiworkflow\studio_memory_store.bat query protagonist --status canon
 tools\aiworkflow\studio_memory_store.bat read MEM-20260518-154000-motivation
 tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json
 tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json --execute
@@ -267,6 +270,9 @@ durable memory:
 - `rejected` memory must include `rejection_reason`.
 - `superseded` memory must include `replacement_ref`.
 - duplicate `memory_id` values are rejected.
+- `canon` and `query` provide read-only retrieval with explicit use guidance:
+  canon is official, proposal is not canon, rejected memory is negative memory,
+  and evidence is not approval.
 
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not create tasks, approve work, start PC Runner,

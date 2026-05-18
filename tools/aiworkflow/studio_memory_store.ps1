@@ -132,6 +132,36 @@ function Limit-Text {
     return $clean.Substring(0, [Math]::Max(0, $Max - 3)).TrimEnd() + "..."
 }
 
+function Get-MemoryUseGuidance {
+    param([object]$Record)
+
+    $status = [string]$Record.status
+    $type = [string]$Record.type
+
+    if ($status -eq "canon" -and $type -eq "canon") {
+        return "canon: may be used as an official project fact when source_refs include the approving decision."
+    }
+    if ($status -eq "approved") {
+        return "approved: may guide the scoped WorkOrder/task, but is not global canon unless separately canonized."
+    }
+    if ($status -eq "proposed" -or $type -eq "proposal") {
+        return "proposal: idea only; do not treat as approved or canon."
+    }
+    if ($status -eq "rejected" -or $type -eq "rejection") {
+        return "rejected: negative memory; avoid repeating unless the Human Director reopens it."
+    }
+    if ($status -eq "evidence" -or $type -eq "evidence") {
+        return "evidence: supports claims, but does not approve work by itself."
+    }
+    if ($status -eq "lesson" -or $type -eq "lesson") {
+        return "lesson: reusable guidance, but lower authority than current canon or approval gates."
+    }
+    if ($status -eq "deprecated" -or $status -eq "superseded") {
+        return "outdated: keep searchable, but do not use for new direction without checking replacement refs."
+    }
+    return "draft/unknown: context only; ask or defer before relying on it."
+}
+
 function New-StringList {
     return ,(New-Object "System.Collections.Generic.List[string]")
 }
@@ -197,6 +227,7 @@ function New-MemorySummary {
         confidence = [string]$Record.confidence
         content_preview = (Limit-Text -Text ([string]$Record.content) -Max 140)
         source_refs = (Get-StringArray -Value $Record.source_refs)
+        use_guidance = (Get-MemoryUseGuidance -Record $Record)
         path = $Path
     }
 }
@@ -496,6 +527,78 @@ function New-ListResult {
     }
 }
 
+function Test-QueryMatch {
+    param(
+        [object]$Record,
+        [string]$Query
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Query)) {
+        return $true
+    }
+
+    $haystack = @(
+        [string]$Record.memory_id
+        [string]$Record.project_id
+        [string]$Record.scope
+        [string]$Record.type
+        [string]$Record.status
+        [string]$Record.owner_agent_id
+        [string]$Record.content
+        ((Get-StringArray -Value $Record.source_refs) -join " ")
+        [string]$Record.replacement_ref
+        [string]$Record.rejection_reason
+    ) -join " "
+
+    return ($haystack.IndexOf($Query, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+}
+
+function New-QueryResult {
+    param(
+        [string]$Root,
+        [string]$StorePath,
+        [string]$Query,
+        [string]$StatusFilter,
+        [string]$TypeFilter
+    )
+
+    $staffIds = Read-StaffIdSet -Root $Root
+    $store = Read-StoreRecords -StorePath $StorePath -StaffIds $staffIds
+    $items = New-Object System.Collections.Generic.List[object]
+
+    foreach ($item in @($store.records)) {
+        $record = $item.record
+        if (-not [string]::IsNullOrWhiteSpace($StatusFilter) -and ([string]$record.status) -ne $StatusFilter) {
+            continue
+        }
+        if (-not [string]::IsNullOrWhiteSpace($TypeFilter) -and ([string]$record.type) -ne $TypeFilter) {
+            continue
+        }
+        if (-not (Test-QueryMatch -Record $record -Query $Query)) {
+            continue
+        }
+        $items.Add((New-MemorySummary -Record $record -Path $item.path))
+    }
+
+    return [pscustomobject]@{
+        ok = $true
+        command = "query"
+        store_path = $StorePath
+        query = $Query
+        status_filter = $StatusFilter
+        type_filter = $TypeFilter
+        count = $items.Count
+        items = $items.ToArray()
+        retrieval_contract = [pscustomobject]@{
+            canon_is_official = $true
+            proposal_is_not_canon = $true
+            rejected_memory_is_negative_memory = $true
+            evidence_is_not_approval = $true
+        }
+        safety = New-SafetyState
+    }
+}
+
 function New-ReadResult {
     param(
         [string]$Root,
@@ -712,7 +815,37 @@ function Show-List {
         Write-Host "- scope/project: $($item.scope) / $($item.project_id)"
         Write-Host "- owner/confidence: $($item.owner_agent_id) / $($item.confidence)"
         Write-Host "- content: $($item.content_preview)"
+        Write-Host "- use: $($item.use_guidance)"
     }
+}
+
+function Show-Query {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio Memory Retrieval"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Store: $($Result.store_path)"
+    Write-Host "Query: $($Result.query)"
+    Write-Host "Count: $($Result.count)"
+    foreach ($item in @($Result.items)) {
+        Write-Host ""
+        Write-Host "$($item.memory_id) [$($item.status)/$($item.type)]"
+        Write-Host "- scope/project: $($item.scope) / $($item.project_id)"
+        Write-Host "- content: $($item.content_preview)"
+        Write-Host "- use: $($item.use_guidance)"
+        Write-Host "- source_refs: $((Get-StringArray -Value $item.source_refs) -join ', ')"
+    }
+    if (@($Result.items).Count -eq 0) {
+        Write-Host "No matching memory records found."
+    }
+    Write-List -Label "Retrieval contract" -Items @(
+        "canon is official only when the record is status/type canon and cites approval refs",
+        "proposal is not canon",
+        "rejected memory is negative memory",
+        "evidence is not approval"
+    )
 }
 
 function Show-Read {
@@ -792,7 +925,7 @@ function Show-Create {
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_memory_store.bat status|validate|list|read <memory_id>|create <memory_json_path> [--execute] [--json]"
+        error = "Usage: tools\aiworkflow\studio_memory_store.bat status|validate|list|canon|query <text>|read <memory_id>|create <memory_json_path> [--execute] [--json]"
         safety = New-SafetyState
     }
 }
@@ -848,6 +981,11 @@ try {
         $result = New-ValidateResult -Root $repo -StorePath $storePath
     } elseif ($command -eq "list" -and $cleanArgs.Count -eq 1) {
         $result = New-ListResult -Root $repo -StorePath $storePath -StatusFilter $statusFilter -TypeFilter $typeFilter
+    } elseif ($command -eq "canon" -and $cleanArgs.Count -eq 1) {
+        $result = New-QueryResult -Root $repo -StorePath $storePath -Query "" -StatusFilter "canon" -TypeFilter ""
+        $result.command = "canon"
+    } elseif ($command -eq "query" -and $cleanArgs.Count -eq 2) {
+        $result = New-QueryResult -Root $repo -StorePath $storePath -Query ([string]$cleanArgs[1]) -StatusFilter $statusFilter -TypeFilter $typeFilter
     } elseif ($command -eq "read" -and $cleanArgs.Count -eq 2) {
         $result = New-ReadResult -Root $repo -StorePath $storePath -MemoryId ([string]$cleanArgs[1])
     } elseif ($command -eq "create" -and $cleanArgs.Count -eq 2) {
@@ -870,6 +1008,8 @@ try {
         Show-Validate -Result $result
     } elseif ($command -eq "list") {
         Show-List -Result $result
+    } elseif ($command -eq "canon" -or $command -eq "query") {
+        Show-Query -Result $result
     } elseif ($command -eq "read") {
         Show-Read -Result $result
     } elseif ($command -eq "create") {

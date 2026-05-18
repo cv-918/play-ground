@@ -10,6 +10,8 @@ REM Usage:
 REM   tools\aiworkflow\studio_memory_store.bat status [--json]
 REM   tools\aiworkflow\studio_memory_store.bat validate [--json]
 REM   tools\aiworkflow\studio_memory_store.bat list [--status <status>] [--type <type>] [--json]
+REM   tools\aiworkflow\studio_memory_store.bat canon [--json]
+REM   tools\aiworkflow\studio_memory_store.bat query <text> [--status <status>] [--type <type>] [--json]
 REM   tools\aiworkflow\studio_memory_store.bat read <memory_id> [--json]
 REM   tools\aiworkflow\studio_memory_store.bat create <memory_json_path> [--execute] [--json]
 

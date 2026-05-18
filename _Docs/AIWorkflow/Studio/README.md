@@ -40,7 +40,7 @@ This slice defines:
 - Creative MeetingSession to WorkOrder to TaskBinding examples
 - Canon decision flow and proposal/decision/memory examples
 - Local WorkOrder store and read/list/store tool
-- Local MemoryRecord store and validation tool
+- Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Local MeetingSession runtime validation and handoff tool
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export
@@ -82,6 +82,8 @@ tools\aiworkflow\studio_workorder_planner.bat create _Docs\AIWorkflow\Studio\Exa
 tools\aiworkflow\studio_memory_store.bat status
 tools\aiworkflow\studio_memory_store.bat validate
 tools\aiworkflow\studio_memory_store.bat list
+tools\aiworkflow\studio_memory_store.bat canon
+tools\aiworkflow\studio_memory_store.bat query protagonist
 tools\aiworkflow\studio_memory_store.bat read MEM-20260518-154000-motivation
 tools\aiworkflow\studio_memory_store.bat create _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_canon_memory.example.json --execute
 tools\aiworkflow\studio_meeting_runtime.bat inspect _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
