@@ -1,0 +1,25 @@
+{
+  "handoff_id": "HAND-20260518-150000-scenario-game-designer",
+  "from_agent_id": "scenario_director",
+  "to_agent_id": "game_designer",
+  "reason": "Check whether the proposed early conflict reinforces the current prototype core loop.",
+  "input_contract": [
+    "Scenario pitch summary from Scenario Director",
+    "Known gameplay loop notes",
+    "Human Director tone preference if available"
+  ],
+  "expected_output": [
+    "GameDesignProposal",
+    "RiskList",
+    "ApprovalItems"
+  ],
+  "constraints": [
+    "Do not create implementation tasks.",
+    "Do not write canon.",
+    "Keep output as a design review and handoff recommendation."
+  ],
+  "evidence_refs": [
+    "RRO-20260518-150000-scenario"
+  ],
+  "status": "proposed"
+}

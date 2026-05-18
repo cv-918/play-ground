@@ -47,6 +47,7 @@ This slice defines:
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
+- Local Handoff router from Handoff records to target-agent StaffContextPacket
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
   Handoff drafts
@@ -67,8 +68,8 @@ domain model foundation + guarded local runtime stores/builders/exporters
 
 This folder does not:
 
-- execute live staff agents
-- call LLMs
+- execute staff agents automatically
+- call OpenAI API billing by default
 - modify project source
 - approve tasks
 - mark tasks done
@@ -108,6 +109,8 @@ tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkf
 tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
 tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_executor.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
+tools\aiworkflow\studio_handoff_router.bat create-context _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
@@ -135,12 +138,14 @@ evaluate adapter permission, approval, cost, and evidence needs before any tool
 executes. Staff prompt export prepares the signed-in Codex App/CLI input but
 still does not call a model. Staff executor can call signed-in Codex CLI only
 with `run --execute`; it stores evidence under `_Temp` and uses a read-only
-sandbox. Output materialization writes draft/proposed Studio records only; it
-is not approval, task creation, canonization, or implementation.
-Materialization review can write Decision records only; it does not execute
-the accepted records. These tools do not set ActiveTask, start PC Runner,
-modify source files, commit, or push. Conditional automation replay writes
-only `_Temp` evaluation artifacts when `--execute` is passed.
+sandbox. Handoff router can turn a Handoff record into the next target
+agent's sealed StaffContextPacket, but it does not execute the target agent.
+Output materialization writes draft/proposed Studio records only; it is not
+approval, task creation, canonization, or implementation. Materialization
+review can write Decision records only; it does not execute the accepted
+records. These tools do not set ActiveTask, start PC Runner, modify source
+files, commit, or push. Conditional automation replay writes only `_Temp`
+evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -260,6 +265,9 @@ These rules are mandatory for all future implementations:
     not OpenAI API billing by default. Its default sandbox must be read-only,
     and any produced output is evidence until routed through the normal
     Proposal, Decision, Memory, WorkOrder, and Task gates.
+24. Handoff router may convert a governed Handoff into a target-agent
+    StaffContextPacket, but it must not execute the target agent, approve the
+    handoff, write canon, create tasks, modify source files, commit, or push.
 
 ## Relationship To Existing AIWorkflow Core
 

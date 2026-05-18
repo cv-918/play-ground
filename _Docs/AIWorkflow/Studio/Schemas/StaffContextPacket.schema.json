@@ -44,6 +44,7 @@
         "director_goal",
         "meeting_session",
         "work_order",
+        "handoff",
         "task",
         "proposal",
         "decision",

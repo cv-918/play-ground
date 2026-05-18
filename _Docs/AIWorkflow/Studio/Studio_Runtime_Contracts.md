@@ -118,6 +118,20 @@ policy is signed-in Codex App/CLI first, `gpt-5.5`, high reasoning, read-only
 sandbox, and no OpenAI API billing by default. It stores stdout, stderr,
 metadata, and parseable `RoleRunOutput` JSON under `_Temp`.
 
+The first local Handoff router is:
+
+```bat
+tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
+tools\aiworkflow\studio_handoff_router.bat create-context _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute
+```
+
+It validates source/target staff identity and source-to-target handoff
+permission, then produces a sealed target-agent StaffContextPacket. When
+possible, it resolves `RoleRunOutput` evidence refs into short evidence
+summaries so the next staff agent receives usable context instead of only an
+opaque artifact id. It does not execute the target agent, approve the handoff,
+write canon, create tasks, modify source files, commit, or push.
+
 ## RoleRun Lifecycle
 
 ```text
@@ -602,6 +616,7 @@ Implemented now:
 - StaffContextPacket builder
 - Staff prompt exporter for signed-in Codex App/CLI execution input
 - Staff executor for signed-in Codex CLI read-only RoleRun attempts
+- Handoff router from Handoff records to target-agent StaffContextPacket
 - RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
   Handoff records
 - materialization review decision recorder
@@ -609,12 +624,11 @@ Implemented now:
 
 Not implemented yet:
 
-- live RoleRun execution
-- live LLM staff execution from exported prompts
 - Studio UI
-- autonomous handoff router
+- autonomous staff-to-staff execution without Human Director review
+- persistent background staff scheduling
 
-Until live execution and materializers exist, Studio records are governed local
-runtime artifacts. They can prepare, store, route, and audit staff work, but
-they do not yet let AI staff autonomously execute, write canon, create tasks,
-or change project files.
+Studio records are governed local runtime artifacts. They can prepare, store,
+route, execute explicitly approved signed-in Codex RoleRuns, and audit staff
+work, but they do not let AI staff autonomously approve work, write canon,
+create tasks, commit, push, or change project files.

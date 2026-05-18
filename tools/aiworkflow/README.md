@@ -37,6 +37,7 @@ studio_meeting_runtime.bat
 studio_context_builder.bat
 studio_staff_prompt_exporter.bat
 studio_staff_executor.bat
+studio_handoff_router.bat
 studio_staff_runtime.bat
 studio_output_materializer.bat
 studio_materialization_review.bat
@@ -437,6 +438,35 @@ contains parseable `RoleRunOutput` JSON.
 
 The command does not create tasks, approve work, write canon, modify source
 files, commit, or push.
+
+---
+
+## studio_handoff_router.bat
+
+Validates governed Handoff records and converts them into sealed target-agent
+StaffContextPacket records.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_handoff_router.bat status
+tools\aiworkflow\studio_handoff_router.bat validate
+tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
+tools\aiworkflow\studio_handoff_router.bat create-context _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
+tools\aiworkflow\studio_handoff_router.bat create-context _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --execute
+```
+
+`plan` verifies source/target StaffAgent identity and source-to-target handoff
+permission. `create-context --execute` writes one StaffContextPacket for the
+target agent. When a handoff references a `RoleRunOutput` evidence id such as
+`RRO-...`, the router attempts to include short evidence summaries in the
+target context packet so the next staff agent does not receive only opaque
+artifact ids. The router does not execute the target agent, approve work, write
+canon, create tasks, modify source files, commit, or push.
+
+For validation smoke tests, `--handoff-store-path` and `--context-store-path`
+may override stores only under `_Temp\`. `--evidence-search-root` may point
+under `_Temp\` or `_Docs\AIWorkflow\Studio\`.
 
 ---
 
@@ -1167,6 +1197,7 @@ tools\aiworkflow\studio_decision_store.bat validate
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_executor.bat status
+tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
 tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_materialization_review.bat status
 tools\aiworkflow\studio_conditional_automation.bat test

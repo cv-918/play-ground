@@ -241,6 +241,28 @@
       ]
     },
     {
+      "adapter_id": "studio_handoff_router",
+      "display_name": "Studio Handoff Router",
+      "category": "workflow_core",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local routing. Does not call LLMs.",
+      "allowed_actions": ["validate Handoff records", "plan target StaffContextPacket", "write StaffContextPacket only when explicit"],
+      "blocked_actions": ["execute target staff", "create tasks", "approve work", "write canon", "modify source files", "commit or push"],
+      "approval_required_actions": ["using the generated StaffContextPacket for live staff execution"],
+      "input_contract": ["Handoff JSON", "StaffAgent registry"],
+      "output_evidence": ["StaffContextPacket preview", "_Temp or ContextPackets path when written"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Converts accepted or proposed staff handoffs into sealed target-agent context packets.",
+        "Never executes the target staff agent by itself."
+      ]
+    },
+    {
       "adapter_id": "studio_output_materializer",
       "display_name": "Studio RoleRunOutput Materializer",
       "category": "workflow_core",
