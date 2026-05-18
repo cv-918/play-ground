@@ -52,7 +52,8 @@ This slice defines:
 - Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
   Handoff drafts
 - Local materialization review tool for Human Director Decision records
-- Read-only Studio dashboard HTML snapshot export with Director Inbox
+- Read-only Studio dashboard HTML snapshot export with Director Inbox and
+  review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
