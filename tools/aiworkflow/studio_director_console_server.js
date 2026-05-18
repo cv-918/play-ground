@@ -483,6 +483,73 @@ async function getConditionalAutomation(repoRoot) {
   };
 }
 
+const DEPARTMENT_UI = {
+  executive_production: {
+    name: "총괄 / 제작",
+    mission: "감독 의도, 범위, 우선순위, 승인, 완료 흐름을 지키는 부서입니다.",
+  },
+  creative_direction: {
+    name: "크리에이티브 디렉션",
+    mission: "게임의 정체성, 톤, 플레이어 경험이 부서 사이에서 흔들리지 않게 정리합니다.",
+  },
+  game_design: {
+    name: "게임 디자인",
+    mission: "코어 루프, 시스템, 진행 구조, 전투/레벨, 플레이 동기를 설계합니다.",
+  },
+  narrative: {
+    name: "내러티브 / 시나리오",
+    mission: "스토리, 세계관, 캐릭터, 대사, 공식 설정 후보를 안전하게 제안합니다.",
+  },
+  engineering: {
+    name: "엔지니어링",
+    mission: "승인된 기술 작업을 구조와 검증 증거를 지키면서 설계하고 구현합니다.",
+  },
+  art_assets: {
+    name: "아트 / 에셋",
+    mission: "비주얼 방향, 생성 에셋, 라이선스/출처, 프로젝트 반입 준비를 검토합니다.",
+  },
+  qa_testing: {
+    name: "QA / 테스트",
+    mission: "버그 재현, 검증, 회귀 테스트, 완료 증거를 맡습니다.",
+  },
+  documentation_release: {
+    name: "문서 / 릴리즈",
+    mission: "가이드, DevLog, 릴리즈 노트, 커밋/릴리즈 경계를 정확히 기록합니다.",
+  },
+};
+
+const REVIEW_GATE_LABELS = {
+  scope: "범위",
+  approval: "승인",
+  completion: "완료",
+  git: "Git",
+  direction: "방향성",
+  canon: "공식 설정",
+  player_experience: "플레이어 경험",
+  core_loop: "코어 루프",
+  system_fit: "시스템 적합성",
+  balance_risk: "밸런스 위험",
+  tone: "톤",
+  character_motivation: "캐릭터 동기",
+  architecture: "아키텍처",
+  runtime: "런타임",
+  data_schema: "데이터 스키마",
+  build: "빌드",
+  style_fit: "스타일 적합성",
+  license_source: "라이선스/출처",
+  asset_import: "에셋 반입",
+  smoke: "스모크 테스트",
+  regression: "회귀",
+  evidence: "증거",
+  doc_drift: "문서 불일치",
+  devlog: "DevLog",
+  release_readiness: "릴리즈 준비",
+};
+
+function translateItems(values, labels) {
+  return values.map((value) => labels[value] || value);
+}
+
 async function getStaffDirectory(repoRoot) {
   const registryRoot = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Registries");
   const departmentPath = path.join(registryRoot, "departments.initial.json");
@@ -493,20 +560,30 @@ async function getStaffDirectory(repoRoot) {
   const plannedStaffAgents = Array.isArray(staffRegistry.planned_staff_agents) ? staffRegistry.planned_staff_agents : [];
   const staffById = new Map(staffAgents.map((agent) => [agent.agent_id, agent]));
 
-  const departments = (Array.isArray(departmentRegistry.departments) ? departmentRegistry.departments : []).map((department) => ({
-    department_id: department.department_id || "",
-    name: department.name || "",
-    mission: department.mission || "",
-    department_lead: department.department_lead || "",
-    staff_count: Array.isArray(department.staff_agents) ? department.staff_agents.length : 0,
-    active_staff_count: Array.isArray(department.staff_agents)
-      ? department.staff_agents.filter((agentId) => staffById.has(agentId)).length
-      : 0,
-    review_gates: Array.isArray(department.default_review_gates) ? department.default_review_gates.slice(0, 4) : [],
-    owned_artifacts: Array.isArray(department.owned_artifacts) ? department.owned_artifacts.slice(0, 4) : [],
-    path: toRepoRelative(repoRoot, departmentPath),
-    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, departmentPath))}`,
-  }));
+  const departments = (Array.isArray(departmentRegistry.departments) ? departmentRegistry.departments : []).map((department) => {
+    const departmentId = department.department_id || "";
+    const ui = DEPARTMENT_UI[departmentId] || {};
+    const lead = staffById.get(department.department_lead || "");
+    const reviewGates = Array.isArray(department.default_review_gates) ? department.default_review_gates.slice(0, 4) : [];
+    return {
+      department_id: departmentId,
+      name: department.name || "",
+      name_ko: ui.name || department.name || "",
+      mission: department.mission || "",
+      mission_ko: ui.mission || department.mission || "",
+      department_lead: department.department_lead || "",
+      department_lead_name: lead ? lead.display_name || lead.agent_id : department.department_lead || "",
+      staff_count: Array.isArray(department.staff_agents) ? department.staff_agents.length : 0,
+      active_staff_count: Array.isArray(department.staff_agents)
+        ? department.staff_agents.filter((agentId) => staffById.has(agentId)).length
+        : 0,
+      review_gates: reviewGates,
+      review_gate_labels: translateItems(reviewGates, REVIEW_GATE_LABELS),
+      owned_artifacts: Array.isArray(department.owned_artifacts) ? department.owned_artifacts.slice(0, 4) : [],
+      path: toRepoRelative(repoRoot, departmentPath),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, departmentPath))}`,
+    };
+  });
 
   const staff = staffAgents.map((agent) => ({
     agent_id: agent.agent_id || "",
@@ -996,16 +1073,16 @@ function directorConsoleHtml() {
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
         button("회의 점검", "meeting-inspect", meeting.path) +
         button("handoff 보기", "meeting-handoff", meeting.path) +
-        (meeting.is_stored ? button("?? ??", "meeting-start", meeting.meeting_id, "good") + button("?? ??", "meeting-finalize", meeting.meeting_id, "warn") : button("?? ??", "meeting-create", meeting.path, "good")) +
+        (meeting.is_stored ? button("회의 시작", "meeting-start", meeting.meeting_id, "good") + button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : button("회의 저장", "meeting-create", meeting.path, "good")) +
         '</div></div>'
       ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
       el("departments").innerHTML = state.departments.length ? state.departments.map((department) =>
-        '<div class="item"><h3><code>' + esc(department.department_id) + '</code></h3>' +
-        '<p>' + esc(department.name) + '</p>' +
-        '<p class="summary">' + esc(short(department.mission, 150)) + '</p>' +
-        '<p class="small muted">lead ' + esc(department.department_lead) + ' · active staff ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
-        '<p class="small muted">gates: ' + esc(department.review_gates.join(", ") || "(none)") + '</p>' +
-        '<div class="row"><a href="' + esc(department.href) + '" target="_blank">registry 열기</a></div></div>'
+        '<div class="item"><h3>' + esc(department.name_ko) + '</h3>' +
+        '<p class="small muted">ID <code>' + esc(department.department_id) + '</code> · 원문명 ' + esc(department.name) + '</p>' +
+        '<p class="summary">역할: ' + esc(short(department.mission_ko, 150)) + '</p>' +
+        '<p class="small muted">부서장: ' + esc(department.department_lead_name) + ' · 등록 직원 ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
+        '<p class="small muted">검토 기준: ' + esc(department.review_gate_labels.join(", ") || "(없음)") + '</p>' +
+        '<div class="row"><a href="' + esc(department.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
       ).join("") : '<p class="muted">Department가 없습니다.</p>';
       el("staffAgents").innerHTML = state.staff_agents.length ? state.staff_agents.map((agent) =>
         '<div class="item"><h3><code>' + esc(agent.agent_id) + '</code> <span class="pill">' + esc(agent.seniority) + '</span></h3>' +
