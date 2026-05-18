@@ -29,6 +29,7 @@ json_smoke_check.bat
 run_result_semantics_check.bat
 workflow_status.bat
 role_router_status.bat
+studio_registry_status.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -148,6 +149,42 @@ verdict format reminder, and next manual action.
 This command does not execute agents, approve tasks, mark tasks done, modify
 source files, change Discord command behavior, commit, push, or write local
 configuration.
+
+---
+
+## studio_registry_status.bat
+
+Reads the AIWorkflow Studio department and staff registries from:
+
+```text
+_Docs\AIWorkflow\Studio\Registries\
+```
+
+Human-readable status:
+
+```bat
+tools\aiworkflow\studio_registry_status.bat
+tools\aiworkflow\studio_registry_status.bat status
+```
+
+Validate registry references:
+
+```bat
+tools\aiworkflow\studio_registry_status.bat validate
+tools\aiworkflow\studio_registry_status.bat validate --json
+```
+
+Inspect departments and staff agents:
+
+```bat
+tools\aiworkflow\studio_registry_status.bat departments
+tools\aiworkflow\studio_registry_status.bat department narrative
+tools\aiworkflow\studio_registry_status.bat staff
+tools\aiworkflow\studio_registry_status.bat staff scenario_director
+```
+
+This command is read-only. It does not execute staff agents, call LLMs, approve
+tasks, change task lifecycle state, modify source files, commit, or push.
 
 ---
 

@@ -45,27 +45,42 @@ This folder does not:
 - mark tasks done
 - commit or push
 
+## Local Registry Inspection
+
+The first executable support tool is read-only:
+
+```bat
+tools\aiworkflow\studio_registry_status.bat
+tools\aiworkflow\studio_registry_status.bat validate
+tools\aiworkflow\studio_registry_status.bat departments
+tools\aiworkflow\studio_registry_status.bat staff scenario_director
+```
+
+It validates registry references and prints department/staff details. It does
+not execute agents, call LLMs, change task state, approve work, modify files,
+commit, or push.
+
 ## Directory Map
 
 ```text
 _Docs/AIWorkflow/Studio/
-├─ README.md
-├─ Schemas/
-│  ├─ StaffAgent.schema.json
-│  ├─ Department.schema.json
-│  ├─ WorkOrder.schema.json
-│  ├─ MeetingSession.schema.json
-│  ├─ MemoryRecord.schema.json
-│  ├─ Proposal.schema.json
-│  ├─ Decision.schema.json
-│  ├─ Handoff.schema.json
-│  ├─ RoleRun.schema.json
-│  └─ ToolRun.schema.json
-├─ Registries/
-│  ├─ departments.initial.json
-│  └─ staff_agents.initial.json
-└─ Policies/
-   └─ Memory_Status_Policy.md
++-- README.md
++-- Schemas/
+|   +-- StaffAgent.schema.json
+|   +-- Department.schema.json
+|   +-- WorkOrder.schema.json
+|   +-- MeetingSession.schema.json
+|   +-- MemoryRecord.schema.json
+|   +-- Proposal.schema.json
+|   +-- Decision.schema.json
+|   +-- Handoff.schema.json
+|   +-- RoleRun.schema.json
+|   +-- ToolRun.schema.json
++-- Registries/
+|   +-- departments.initial.json
+|   +-- staff_agents.initial.json
++-- Policies/
+    +-- Memory_Status_Policy.md
 ```
 
 ## Core Invariants
