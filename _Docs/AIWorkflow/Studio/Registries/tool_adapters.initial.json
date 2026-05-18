@@ -350,6 +350,29 @@
       ]
     },
     {
+      "adapter_id": "studio_director_console",
+      "display_name": "Studio Director Console",
+      "category": "ui_export",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Local-only browser UI. It uses existing Studio tools; handoff execution uses the signed-in Codex App/CLI route first and no OpenAI API billing by default.",
+      "allowed_actions": ["serve local Studio UI", "read Studio stores", "export dashboard", "plan handoff", "execute read-only staff handoff pipeline by explicit UI action"],
+      "blocked_actions": ["approve work", "create Backlog tasks", "write canon", "modify source files", "commit or push"],
+      "approval_required_actions": ["clicking execute handoff", "using staff output to create durable downstream records or tasks"],
+      "input_contract": ["Studio stores", "_Temp AIWorkflowStudio artifacts", "explicit local browser action"],
+      "output_evidence": ["local HTTP response", "_Temp dashboard HTML", "_Temp staff run logs", "_Temp review packet HTML"],
+      "can_modify_files": true,
+      "can_call_external": true,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "First interactive local UI layer for the Personal AI Development Studio.",
+        "The server is local-only and exposes only allowlisted Studio actions.",
+        "It cannot approve, canonize, create tasks, modify source, commit, or push."
+      ]
+    },
+    {
       "adapter_id": "studio_staff_pipeline",
       "display_name": "Studio Staff Pipeline",
       "category": "llm",

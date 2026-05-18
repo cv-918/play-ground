@@ -57,6 +57,9 @@ This slice defines:
 - Read-only Studio dashboard HTML snapshot export with Director Inbox, staff
   run timeline, and review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
+- Local-only Studio Director Console server with dashboard refresh, handoff
+  plan, explicit read-only staff handoff execution, staff run timeline, and
+  review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -127,6 +130,8 @@ tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Stu
 tools\aiworkflow\studio_materialization_review.bat plan MAT-20260518-150000-scenario --decision approve --target all
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
+tools\aiworkflow\studio_director_console.bat --once --json
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
@@ -152,9 +157,11 @@ Output materialization writes draft/proposed Studio records only; it is not
 approval, task creation, canonization, or implementation. Materialization
 review can write Decision records only; it does not execute the accepted
 records. Review packet export writes a Human Director-readable `_Temp` HTML
-view only. These tools do not set ActiveTask, start PC Runner, modify source
-files, commit, or push. Conditional automation replay writes only `_Temp`
-evaluation artifacts when `--execute` is passed.
+view only. Studio Director Console serves a local browser UI and can call only
+allowlisted Studio actions; its handoff execution path still routes through
+the existing read-only staff pipeline. These tools do not set ActiveTask, start
+PC Runner, modify source files, commit, or push. Conditional automation replay
+writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -286,6 +293,10 @@ These rules are mandatory for all future implementations:
     and review packet export for read-only staff runs, but it must not approve
     work, create Backlog tasks, write canon, modify source files, commit, or
     push.
+27. Studio Director Console may make the Studio workflow interactive, but it
+    must remain local-only and route button actions through allowlisted tools.
+    It must not become an approval, canon, source-edit, commit, or push
+    authority.
 
 ## Relationship To Existing AIWorkflow Core
 

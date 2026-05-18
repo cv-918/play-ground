@@ -43,6 +43,7 @@ studio_output_materializer.bat
 studio_materialization_review.bat
 studio_dashboard_export.bat
 studio_review_packet_exporter.bat
+studio_director_console.bat
 studio_staff_pipeline.bat
 studio_tool_registry_status.bat
 studio_tool_run_planner.bat
@@ -627,6 +628,29 @@ static snapshot and does not start a server.
 `--output` is restricted to `_Temp\`. The command does not call LLMs, call
 tools, create memory, create WorkOrders, create tasks, approve work, start PC
 Runner, modify source files, commit, or push.
+
+---
+
+## studio_director_console.bat
+
+Starts a local-only browser console for the AIWorkflow Studio Director.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
+tools\aiworkflow\studio_director_console.bat --once --json
+```
+
+The console shows Studio metrics, handoff candidates, recent staff runs, and
+review packet links. It can refresh the static dashboard, preview a handoff
+plan, or run the existing read-only `studio_staff_pipeline.bat` only after an
+explicit button click.
+
+The console is local-only. It does not approve work, create Backlog tasks,
+write canon, modify source files, commit, or push. Handoff execution uses the
+signed-in Codex App/CLI route first and does not use OpenAI API billing by
+default.
 
 ---
 
@@ -1247,6 +1271,7 @@ tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\E
 tools\aiworkflow\studio_staff_executor.bat status
 tools\aiworkflow\studio_handoff_router.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json
 tools\aiworkflow\studio_staff_pipeline.bat handoff _Docs\AIWorkflow\Studio\Examples\scenario_to_game_designer_handoff.example.json --json
+tools\aiworkflow\studio_director_console.bat --once --json
 tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_materialization_review.bat status
 tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json

@@ -150,6 +150,20 @@ The read-only dashboard also lists recent staff-run records from
 Studio overview to the concrete staff-output evidence and review surfaces. The
 dashboard remains read-only and does not execute packet actions.
 
+The first local Studio Director Console is:
+
+```bat
+tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
+tools\aiworkflow\studio_director_console.bat --once --json
+```
+
+It serves a local-only browser UI for Studio metrics, Director Inbox, handoff
+candidates, staff run timeline, and review packet links. The console may call
+only allowlisted Studio actions: refresh summary, export the static dashboard,
+preview a handoff plan, and execute the existing read-only staff handoff
+pipeline after an explicit browser button click. It does not approve work,
+create Backlog tasks, write canon, modify source files, commit, or push.
+
 The first local Staff pipeline is:
 
 ```bat
