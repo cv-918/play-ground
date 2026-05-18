@@ -29,6 +29,7 @@ This slice defines:
 - Memory status policy
 - Initial read-only department and staff registries
 - WorkOrder to Task bridge rules
+- Runtime contracts for staff agents, meetings, memory, tools, and evidence
 
 ## Current Execution Status
 
@@ -68,6 +69,7 @@ commit, or push.
 _Docs/AIWorkflow/Studio/
 +-- README.md
 +-- WorkOrder_Task_Bridge.md
++-- Studio_Runtime_Contracts.md
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
