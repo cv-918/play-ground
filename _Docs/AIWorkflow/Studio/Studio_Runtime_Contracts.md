@@ -94,6 +94,17 @@ and a WorkOrder. It may include matching MemoryRecord refs through
 staff agent, create tasks, approve work, write memory, write canon, modify
 source files, commit, or push.
 
+The first local staff prompt exporter is:
+
+```bat
+tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+```
+
+It turns a StaffContextPacket into a Codex-ready prompt that demands
+RoleRunOutput JSON and repeats governance boundaries. It writes only `_Temp`
+prompt artifacts and does not call an LLM or execute staff.
+
 ## RoleRun Lifecycle
 
 ```text
@@ -538,7 +549,7 @@ push.
 Current status:
 
 ```text
-read-only design and registry foundation
+guarded Studio runtime foundation
 ```
 
 Implemented now:
@@ -546,16 +557,25 @@ Implemented now:
 - durable StaffAgent/Department registries
 - core Studio schemas
 - WorkOrder to Task bridge schema and rules
-- read-only registry status command
+- registry and dashboard inspection commands
+- governed WorkOrder, Memory, Proposal, and Decision local stores
+- governed MeetingSession lifecycle records
+- governed RoleRun envelopes and RoleRunOutput routing previews
+- ToolAdapter registry and governed ToolRunRequest planner
+- StaffContextPacket builder
+- Staff prompt exporter for signed-in Codex App/CLI execution input
+- conditional automation replay and repair-plan support
 
 Not implemented yet:
 
 - live RoleRun execution
-- LLM staff context loader
-- memory database
-- MeetingSession runner
-- WorkOrder creation command
+- live LLM staff execution from exported prompts
+- RoleRunOutput materializers that write accepted proposals, memory, handoffs,
+  or WorkOrders
 - Studio UI
 - autonomous handoff router
 
-Until those exist, Studio records are design/registry artifacts, not live staff.
+Until live execution and materializers exist, Studio records are governed local
+runtime artifacts. They can prepare, store, route, and audit staff work, but
+they do not yet let AI staff autonomously execute, write canon, create tasks,
+or change project files.

@@ -45,6 +45,7 @@ This slice defines:
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Local MeetingSession runtime validation and handoff tool
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
+- Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
@@ -57,12 +58,12 @@ This slice defines:
 Current status:
 
 ```text
-domain model foundation + guarded WorkOrder/Memory local tools
+domain model foundation + guarded local runtime stores/builders/exporters
 ```
 
 This folder does not:
 
-- execute agents
+- execute live staff agents
 - call LLMs
 - modify project source
 - approve tasks
@@ -101,6 +102,7 @@ tools\aiworkflow\studio_meeting_runtime.bat add-turn MEET-20260518-151000-scenar
 tools\aiworkflow\studio_meeting_runtime.bat finalize MEET-20260518-151000-scenario --execute
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
 tools\aiworkflow\studio_context_builder.bat create scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json --execute
+tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
 tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
@@ -118,12 +120,14 @@ These tools validate registry references, print department/staff details, and
 preview or create WorkOrder-derived Backlog tasks, store governed WorkOrder
 records, governed Proposal and Decision records, governed MemoryRecord files,
 governed MeetingSession records, governed RoleRun envelopes, read-only
-dashboard snapshots, and tool adapter policy displays. They can also store
-ToolRunRequest records that evaluate adapter permission, approval, cost, and
-evidence needs before any tool executes. They do not execute agents, call LLMs,
-set ActiveTask, approve work, start PC Runner, modify source files, commit, or
-push. Conditional automation replay writes only `_Temp` evaluation artifacts
-when `--execute` is passed.
+dashboard snapshots, tool adapter policy displays, governed ToolRunRequest
+records, sealed StaffContextPacket records, and Codex-ready staff prompt
+artifacts. ToolRunRequest records evaluate adapter permission, approval, cost,
+and evidence needs before any tool executes. Staff prompt export prepares the
+signed-in Codex App/CLI input but still does not call a model. These tools do
+not execute live staff agents, call LLMs, set ActiveTask, approve work, start
+PC Runner, modify source files, commit, or push. Conditional automation replay
+writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -213,17 +217,19 @@ These rules are mandatory for all future implementations:
 14. StaffContextPacket is the sealed input to a staff runtime. It must be built
     from registry, source work, memory, tool policy, and safety rules instead
     of loose role prompts.
-15. Studio UI surfaces must display governance boundaries. A dashboard may
+15. Staff execution prompts must be generated from StaffContextPacket and must
+    require RoleRunOutput JSON. Prompt export is not LLM execution.
+16. Studio UI surfaces must display governance boundaries. A dashboard may
     summarize state, but it must not silently perform approvals or execution.
-16. ToolAdapter registry entries must state file impact, external calls, cost
+17. ToolAdapter registry entries must state file impact, external calls, cost
     possibility, approval requirements, and evidence outputs before use.
-17. ToolRunRequest is the pre-execution governance record. It may evaluate
+18. ToolRunRequest is the pre-execution governance record. It may evaluate
     adapter policy, approval needs, cost risk, and evidence needs, but it must
     not execute the adapter.
-18. Proposal/Decision stores must keep ideas, approvals, rejections, and canon
+19. Proposal/Decision stores must keep ideas, approvals, rejections, and canon
     handoffs separate. A Proposal is not approval, and a Decision does not
     write canon memory by itself.
-19. Conditional automation decisions must be deterministic, replayable, and
+20. Conditional automation decisions must be deterministic, replayable, and
     auditable. A staff agent, LLM, or tool adapter may propose automation
     eligibility, but the policy test/replay result is the authority.
 

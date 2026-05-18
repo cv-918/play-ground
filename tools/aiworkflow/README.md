@@ -35,6 +35,7 @@ studio_decision_store.bat
 studio_memory_store.bat
 studio_meeting_runtime.bat
 studio_context_builder.bat
+studio_staff_prompt_exporter.bat
 studio_staff_runtime.bat
 studio_dashboard_export.bat
 studio_tool_registry_status.bat
@@ -381,6 +382,31 @@ store only under `_Temp\`. Use `--memory-query <text>` to include matching
 MemoryRecord refs in the context packet.
 
 The command does not create RoleRuns, call LLMs, call tools, create tasks,
+approve work, write memory, write canon, modify source files, commit, or push.
+
+---
+
+## studio_staff_prompt_exporter.bat
+
+Exports a governed staff execution prompt from a sealed `StaffContextPacket`.
+It prepares input for the signed-in Codex App/CLI route without calling any
+model.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+```
+
+The exported prompt tells the staff agent to return only `RoleRunOutput` JSON
+and keeps source edits, task creation, approvals, canon writes, commits, and
+pushes forbidden.
+
+Prompt output is written under `_Temp\AIWorkflowStudio\staff_prompts\` by
+default. `--output` may override the path only under `_Temp\`.
+
+The command does not call LLMs, execute staff agents, call tools, create tasks,
 approve work, write memory, write canon, modify source files, commit, or push.
 
 ---
@@ -1062,6 +1088,7 @@ tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
 tools\aiworkflow\studio_decision_store.bat validate
 tools\aiworkflow\studio_context_builder.bat plan scenario_director _Docs\AIWorkflow\Studio\Examples\scenario_pitch_work_order.example.json
+tools\aiworkflow\studio_staff_prompt_exporter.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
 tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json

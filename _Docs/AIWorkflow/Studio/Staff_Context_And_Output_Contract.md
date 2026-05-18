@@ -44,6 +44,16 @@ The builder reads the StaffAgent registry, a WorkOrder, and optional matching
 MemoryRecord refs. It creates a sealed context packet, not a loose prompt. It
 does not run the staff agent or call an LLM.
 
+The first local prompt exporter is:
+
+```bat
+tools\aiworkflow\studio_staff_prompt_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+```
+
+The exporter turns a sealed context packet into a Codex-ready staff execution
+prompt that requires `RoleRunOutput` JSON. It writes only `_Temp` prompt
+artifacts and does not call an LLM.
+
 ## RoleRunOutput
 
 `RoleRunOutput` is the structured answer from a StaffAgent.
