@@ -45,6 +45,17 @@ function Read-JsonFile {
     return $text | ConvertFrom-Json
 }
 
+function Write-JsonFile {
+    param(
+        [string]$Path,
+        [object]$Value
+    )
+
+    $json = ($Value | ConvertTo-Json -Depth 64) + [Environment]::NewLine
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $json, $utf8NoBom)
+}
+
 function Get-FullPathNoResolve {
     param(
         [string]$Root,
@@ -185,6 +196,70 @@ function Resolve-MeetingInput {
     }
 
     throw "MeetingSession not found as file path or stored meeting id: $InputValue"
+}
+
+function Resolve-StoredMeetingPath {
+    param(
+        [string]$StorePath,
+        [string]$MeetingId
+    )
+
+    $stored = Join-Path $StorePath ($MeetingId + ".json")
+    if (-not (Test-Path -LiteralPath $stored)) {
+        throw "Stored MeetingSession not found: $MeetingId"
+    }
+    return (Resolve-Path -LiteralPath $stored).Path
+}
+
+function Assert-ValidMeetingStatus {
+    param([string]$Status)
+
+    $statuses = @("draft", "scheduled", "context_loaded", "in_progress", "director_decision_needed", "follow_up_tasking", "closed", "blocked", "cancelled")
+    if ($statuses -notcontains $Status) {
+        throw "Invalid meeting status: $Status"
+    }
+}
+
+function Assert-ValidTurnType {
+    param([string]$TurnType)
+
+    $types = @("brief", "proposal", "objection", "question", "answer", "synthesis", "decision_note")
+    if ($types -notcontains $TurnType) {
+        throw "Invalid turn_type: $TurnType"
+    }
+}
+
+function Get-NextTurnId {
+    param([object]$Meeting)
+
+    $max = 0
+    foreach ($turn in @($Meeting.discussion_turns)) {
+        $turnId = [string]$turn.turn_id
+        if ($turnId -match "^turn-([0-9]+)$") {
+            $value = [int]$Matches[1]
+            if ($value -gt $max) { $max = $value }
+        }
+    }
+    return ("turn-{0:000}" -f ($max + 1))
+}
+
+function Add-ArrayItem {
+    param(
+        [object]$Target,
+        [string]$PropertyName,
+        [object]$Item
+    )
+
+    $items = @()
+    if ($null -ne $Target.PSObject.Properties[$PropertyName]) {
+        $items = @($Target.$PropertyName)
+    }
+    $items += $Item
+    if ($null -ne $Target.PSObject.Properties[$PropertyName]) {
+        $Target.PSObject.Properties[$PropertyName].Value = @($items)
+    } else {
+        $Target | Add-Member -MemberType NoteProperty -Name $PropertyName -Value @($items)
+    }
 }
 
 function New-MeetingSummary {
@@ -679,6 +754,195 @@ function New-CreateResult {
     }
 }
 
+function New-TransitionResult {
+    param(
+        [string]$Root,
+        [string]$StorePath,
+        [string]$MeetingId,
+        [string]$NextStatus,
+        [bool]$Execute,
+        [string]$CommandName = "transition"
+    )
+
+    Assert-ValidMeetingStatus -Status $NextStatus
+    $path = Resolve-StoredMeetingPath -StorePath $StorePath -MeetingId $MeetingId
+    $meeting = Read-JsonFile -Path $path
+    $previousStatus = [string]$meeting.status
+    if ($CommandName -eq "start" -and @("draft", "scheduled", "context_loaded") -notcontains $previousStatus) {
+        return [pscustomobject]@{
+            ok = $false
+            command = $CommandName
+            execute = $Execute
+            meeting_id = $MeetingId
+            previous_status = $previousStatus
+            next_status = $NextStatus
+            path = $path
+            error = "start is allowed only from draft, scheduled, or context_loaded. Use transition for an explicit lifecycle override."
+            validation = [pscustomobject]@{ errors = @(); warnings = @("No change was written.") }
+            safety = New-SafetyState
+        }
+    }
+    $meeting.status = $NextStatus
+
+    $staffIds = Read-StaffIdSet -Root $Root
+    $validation = Test-MeetingSession -Meeting $meeting -Path $path -StaffIds $staffIds -SeenIds $null
+
+    if (-not $Execute) {
+        return [pscustomobject]@{
+            ok = $validation.ok
+            command = $CommandName
+            execute = $false
+            execute_required = $true
+            meeting_id = $MeetingId
+            previous_status = $previousStatus
+            next_status = $NextStatus
+            path = $path
+            validation = $validation
+            safety = New-SafetyState
+        }
+    }
+
+    if (-not $validation.ok) {
+        return [pscustomobject]@{
+            ok = $false
+            command = $CommandName
+            execute = $true
+            meeting_id = $MeetingId
+            previous_status = $previousStatus
+            next_status = $NextStatus
+            path = $path
+            error = "Meeting transition validation failed. Nothing was written."
+            validation = $validation
+            safety = New-SafetyState
+        }
+    }
+
+    Write-JsonFile -Path $path -Value $meeting
+    return [pscustomobject]@{
+        ok = $true
+        command = $CommandName
+        execute = $true
+        meeting_id = $MeetingId
+        previous_status = $previousStatus
+        next_status = $NextStatus
+        path = $path
+        validation = $validation
+        safety = New-SafetyState -MeetingWritten $true
+    }
+}
+
+function New-AddTurnResult {
+    param(
+        [string]$Root,
+        [string]$StorePath,
+        [string]$MeetingId,
+        [string]$SpeakerId,
+        [string]$TurnType,
+        [string]$Content,
+        [bool]$Execute
+    )
+
+    Assert-ValidTurnType -TurnType $TurnType
+    if ([string]::IsNullOrWhiteSpace($Content)) {
+        throw "add-turn requires non-empty content."
+    }
+
+    $path = Resolve-StoredMeetingPath -StorePath $StorePath -MeetingId $MeetingId
+    $meeting = Read-JsonFile -Path $path
+    $currentStatus = [string]$meeting.status
+    if (@("closed", "blocked", "cancelled") -contains $currentStatus) {
+        return [pscustomobject]@{
+            ok = $false
+            command = "add-turn"
+            execute = $Execute
+            meeting_id = $MeetingId
+            turn = $null
+            next_status = $currentStatus
+            path = $path
+            error = "Cannot add a discussion turn to a closed, blocked, or cancelled meeting."
+            validation = [pscustomobject]@{ errors = @(); warnings = @("No change was written.") }
+            safety = New-SafetyState
+        }
+    }
+    $turn = [pscustomobject]@{
+        turn_id = (Get-NextTurnId -Meeting $meeting)
+        speaker_id = $SpeakerId
+        turn_type = $TurnType
+        content = $Content
+        source_refs = @()
+    }
+    Add-ArrayItem -Target $meeting -PropertyName "discussion_turns" -Item $turn
+    if ([string]$meeting.status -in @("draft", "scheduled", "context_loaded")) {
+        $meeting.status = "in_progress"
+    }
+
+    $staffIds = Read-StaffIdSet -Root $Root
+    $validation = Test-MeetingSession -Meeting $meeting -Path $path -StaffIds $staffIds -SeenIds $null
+
+    if (-not $Execute) {
+        return [pscustomobject]@{
+            ok = $validation.ok
+            command = "add-turn"
+            execute = $false
+            execute_required = $true
+            meeting_id = $MeetingId
+            turn = $turn
+            next_status = [string]$meeting.status
+            path = $path
+            validation = $validation
+            safety = New-SafetyState
+        }
+    }
+
+    if (-not $validation.ok) {
+        return [pscustomobject]@{
+            ok = $false
+            command = "add-turn"
+            execute = $true
+            meeting_id = $MeetingId
+            turn = $turn
+            next_status = [string]$meeting.status
+            path = $path
+            error = "Meeting add-turn validation failed. Nothing was written."
+            validation = $validation
+            safety = New-SafetyState
+        }
+    }
+
+    Write-JsonFile -Path $path -Value $meeting
+    return [pscustomobject]@{
+        ok = $true
+        command = "add-turn"
+        execute = $true
+        meeting_id = $MeetingId
+        turn = $turn
+        next_status = [string]$meeting.status
+        path = $path
+        validation = $validation
+        safety = New-SafetyState -MeetingWritten $true
+    }
+}
+
+function New-FinalizeResult {
+    param(
+        [string]$Root,
+        [string]$StorePath,
+        [string]$MeetingId,
+        [bool]$Execute
+    )
+
+    $path = Resolve-StoredMeetingPath -StorePath $StorePath -MeetingId $MeetingId
+    $meeting = Read-JsonFile -Path $path
+    $nextStatus = "closed"
+    if (@(Get-StringArray -Value $meeting.unresolved_questions).Count -gt 0 -and @(Get-StringArray -Value $meeting.director_decisions).Count -eq 0) {
+        $nextStatus = "director_decision_needed"
+    } elseif (@(Get-StringArray -Value $meeting.follow_up_workorders).Count -gt 0) {
+        $nextStatus = "follow_up_tasking"
+    }
+
+    return (New-TransitionResult -Root $Root -StorePath $StorePath -MeetingId $MeetingId -NextStatus $nextStatus -Execute $Execute -CommandName "finalize")
+}
+
 function Write-List {
     param(
         [string]$Label,
@@ -876,10 +1140,69 @@ function Show-Create {
     )
 }
 
+function Show-Transition {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio Meeting Transition"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Meeting: $($Result.meeting_id)"
+    Write-Host "Mode: $(if ($Result.execute) { 'execute' } else { 'dry-run' })"
+    Write-Host "Status: $($Result.previous_status) -> $($Result.next_status)"
+    Write-Host "Path: $($Result.path)"
+    Write-List -Label "Validation errors" -Items $Result.validation.errors
+    Write-List -Label "Validation warnings" -Items $Result.validation.warnings
+    if (-not $Result.ok -and -not [string]::IsNullOrWhiteSpace([string]$Result.error)) {
+        Write-Host ""
+        Write-Host "[ERROR] $($Result.error)"
+    }
+    Write-List -Label "Safety" -Items @(
+        "Meeting written: $($Result.safety.meeting_written)",
+        "WorkOrder not written",
+        "Backlog not written",
+        "ActiveTask not changed",
+        "Approval not changed",
+        "Runner not started",
+        "Source not changed",
+        "Git not changed"
+    )
+}
+
+function Show-AddTurn {
+    param([object]$Result)
+
+    Write-Host "============================================================"
+    Write-Host "AIWorkflow Studio Meeting Add Turn"
+    Write-Host "============================================================"
+    Write-Host ""
+    Write-Host "Meeting: $($Result.meeting_id)"
+    Write-Host "Mode: $(if ($Result.execute) { 'execute' } else { 'dry-run' })"
+    Write-Host "Next status: $($Result.next_status)"
+    Write-Host "Turn: $($Result.turn.turn_id) / $($Result.turn.speaker_id) / $($Result.turn.turn_type)"
+    Write-Host "Content: $($Result.turn.content)"
+    Write-List -Label "Validation errors" -Items $Result.validation.errors
+    Write-List -Label "Validation warnings" -Items $Result.validation.warnings
+    if (-not $Result.ok -and -not [string]::IsNullOrWhiteSpace([string]$Result.error)) {
+        Write-Host ""
+        Write-Host "[ERROR] $($Result.error)"
+    }
+    Write-List -Label "Safety" -Items @(
+        "Meeting written: $($Result.safety.meeting_written)",
+        "WorkOrder not written",
+        "Backlog not written",
+        "ActiveTask not changed",
+        "Approval not changed",
+        "Runner not started",
+        "Source not changed",
+        "Git not changed"
+    )
+}
+
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_meeting_runtime.bat status|validate|list|read <meeting_id>|inspect <meeting_json_path|meeting_id>|handoff <meeting_json_path|meeting_id>|create <meeting_json_path> [--execute] [--json]"
+        error = "Usage: tools\aiworkflow\studio_meeting_runtime.bat status|validate|list|read <meeting_id>|inspect <meeting_json_path|meeting_id>|handoff <meeting_json_path|meeting_id>|create <meeting_json_path>|start <meeting_id>|transition <meeting_id> <status>|add-turn <meeting_id> <speaker_id> <turn_type> <content>|finalize <meeting_id> [--execute] [--json]"
         safety = New-SafetyState
     }
 }
@@ -929,6 +1252,14 @@ try {
         $result = New-HandoffResult -Root $repo -StorePath $storePath -MeetingInput ([string]$cleanArgs[1])
     } elseif ($command -eq "create" -and $cleanArgs.Count -eq 2) {
         $result = New-CreateResult -Root $repo -StorePath $storePath -MeetingPath ([string]$cleanArgs[1]) -Execute $execute
+    } elseif ($command -eq "start" -and $cleanArgs.Count -eq 2) {
+        $result = New-TransitionResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -NextStatus "in_progress" -Execute $execute -CommandName "start"
+    } elseif ($command -eq "transition" -and $cleanArgs.Count -eq 3) {
+        $result = New-TransitionResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -NextStatus ([string]$cleanArgs[2]) -Execute $execute
+    } elseif ($command -eq "add-turn" -and $cleanArgs.Count -eq 5) {
+        $result = New-AddTurnResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -SpeakerId ([string]$cleanArgs[2]) -TurnType ([string]$cleanArgs[3]) -Content ([string]$cleanArgs[4]) -Execute $execute
+    } elseif ($command -eq "finalize" -and $cleanArgs.Count -eq 2) {
+        $result = New-FinalizeResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -Execute $execute
     } else {
         $result = New-UsageResult
         if ($json) {
@@ -955,6 +1286,10 @@ try {
         Show-Handoff -Result $result
     } elseif ($command -eq "create") {
         Show-Create -Result $result
+    } elseif ($command -eq "start" -or $command -eq "transition" -or $command -eq "finalize") {
+        Show-Transition -Result $result
+    } elseif ($command -eq "add-turn") {
+        Show-AddTurn -Result $result
     }
 
     if ($result.ok) {

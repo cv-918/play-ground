@@ -299,12 +299,20 @@ tools\aiworkflow\studio_meeting_runtime.bat inspect _Docs\AIWorkflow\Studio\Exam
 tools\aiworkflow\studio_meeting_runtime.bat handoff _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
 tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json
 tools\aiworkflow\studio_meeting_runtime.bat create _Docs\AIWorkflow\Studio\Examples\creative_meeting_session.example.json --execute
+tools\aiworkflow\studio_meeting_runtime.bat start MEET-20260518-151000-scenario --execute
+tools\aiworkflow\studio_meeting_runtime.bat add-turn MEET-20260518-151000-scenario scenario_director synthesis "Summarize current direction." --execute
+tools\aiworkflow\studio_meeting_runtime.bat finalize MEET-20260518-151000-scenario --execute
 ```
 
 `create` without `--execute` is a dry-run preview. `handoff` explains accepted
 directions, rejected directions, unresolved questions, and follow-up WorkOrder
 ids, but it does not create WorkOrders or tasks. Meeting consensus is not
 approval, and proposals are not canon.
+
+`start`, `add-turn`, `transition`, and `finalize` update only the stored
+MeetingSession record and require `--execute`. `finalize` stops at
+`director_decision_needed` when unresolved questions remain without a director
+decision.
 
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not create WorkOrders, create tasks, approve work,

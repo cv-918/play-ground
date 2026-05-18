@@ -14,6 +14,10 @@ REM   tools\aiworkflow\studio_meeting_runtime.bat read <meeting_id> [--json]
 REM   tools\aiworkflow\studio_meeting_runtime.bat inspect <meeting_json_path|meeting_id> [--json]
 REM   tools\aiworkflow\studio_meeting_runtime.bat handoff <meeting_json_path|meeting_id> [--json]
 REM   tools\aiworkflow\studio_meeting_runtime.bat create <meeting_json_path> [--execute] [--json]
+REM   tools\aiworkflow\studio_meeting_runtime.bat start <meeting_id> [--execute] [--json]
+REM   tools\aiworkflow\studio_meeting_runtime.bat add-turn <meeting_id> <speaker_id> <turn_type> <content> [--execute] [--json]
+REM   tools\aiworkflow\studio_meeting_runtime.bat transition <meeting_id> <status> [--execute] [--json]
+REM   tools\aiworkflow\studio_meeting_runtime.bat finalize <meeting_id> [--execute] [--json]
 
 for %%I in ("%~dp0..\..") do set "REPO_ROOT=%%~fI"
 cd /d "%REPO_ROOT%" || (

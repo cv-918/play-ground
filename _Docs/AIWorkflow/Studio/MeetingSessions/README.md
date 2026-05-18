@@ -30,6 +30,21 @@ Writing a meeting record requires an explicit execute flag:
 tools\aiworkflow\studio_meeting_runtime.bat create <meeting_json_path> --execute
 ```
 
+Lifecycle transitions are explicit and reviewable:
+
+```bat
+tools\aiworkflow\studio_meeting_runtime.bat start <meeting_id> --execute
+tools\aiworkflow\studio_meeting_runtime.bat add-turn <meeting_id> <speaker_id> <turn_type> "<content>" --execute
+tools\aiworkflow\studio_meeting_runtime.bat transition <meeting_id> <status> --execute
+tools\aiworkflow\studio_meeting_runtime.bat finalize <meeting_id> --execute
+```
+
+`finalize` computes the next safe meeting state:
+
+- unresolved questions without director decisions -> `director_decision_needed`
+- follow-up WorkOrders present -> `follow_up_tasking`
+- otherwise -> `closed`
+
 Safety rules:
 
 - Meeting consensus is not approval.
