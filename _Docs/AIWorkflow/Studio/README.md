@@ -61,7 +61,7 @@ This slice defines:
   plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, Proposal/Decision/Memory browser panels,
-  and review packet links
+  Meeting Room inspection/actions, and review packet links
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -164,9 +164,11 @@ allowlisted Studio actions. It can materialize staff output into governed
 draft records, record Director decisions about those drafts, and create
 Backlog tasks from reviewed WorkOrders only through explicit button clicks. It
 also displays Proposal, Decision, and Memory/Canon records so the Director can
-separate ideas, decisions, and canon status. Its handoff execution path still
-routes through the existing read-only staff pipeline. These tools do not set
-ActiveTask, approve task execution, start PC Runner, modify source files,
+separate ideas, decisions, and canon status. It displays MeetingSessions and
+can inspect, handoff-check, or explicitly store meeting records while keeping
+meeting consensus separate from approval and canon. Its handoff execution path
+still routes through the existing read-only staff pipeline. These tools do not
+set ActiveTask, approve task execution, start PC Runner, modify source files,
 commit, or push. Conditional automation replay writes only `_Temp` evaluation
 artifacts when `--execute` is passed.
 

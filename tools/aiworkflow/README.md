@@ -644,7 +644,7 @@ tools\aiworkflow\studio_director_console.bat --once --json
 
 The console shows Studio metrics, handoff candidates, recent staff runs,
 materialized draft records, WorkOrders, Proposal/Decision/Memory browser
-panels, and review packet links. It can:
+panels, Meeting Room records, and review packet links. It can:
 
 - refresh the static dashboard
 - preview or run the existing read-only `studio_staff_pipeline.bat`
@@ -652,11 +652,13 @@ panels, and review packet links. It can:
   Handoff draft records
 - record Human Director decisions for materialized drafts
 - create a Backlog task from a reviewed WorkOrder
+- inspect, handoff-check, or explicitly store MeetingSession records
 
 All write actions require an explicit browser button click. The console is
 local-only. It does not approve task execution, start PC Runner, write canon,
-modify source files, commit, or push. Handoff execution uses the signed-in
-Codex App/CLI route first and does not use OpenAI API billing by default.
+modify source files, commit, or push. Meeting consensus remains separate from
+Director approval and canon. Handoff execution uses the signed-in Codex
+App/CLI route first and does not use OpenAI API billing by default.
 
 ---
 

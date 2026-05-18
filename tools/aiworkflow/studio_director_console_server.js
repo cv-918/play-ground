@@ -351,6 +351,40 @@ async function getMemories(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+async function getMeetings(repoRoot) {
+  const roots = [
+    repoPath(repoRoot, "_Docs/AIWorkflow/Studio/MeetingSessions"),
+    repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Examples"),
+  ];
+  const files = [];
+  for (const root of roots) {
+    files.push(...(await listFiles(root, (_full, name) => name.endsWith(".json"))));
+  }
+
+  const seen = new Set();
+  const items = [];
+  for (const file of files) {
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const json = await readJsonIfExists(file);
+    if (!json || !json.meeting_id) continue;
+    const stat = await fsp.stat(file);
+    items.push({
+      meeting_id: json.meeting_id || "",
+      topic: json.topic || "",
+      meeting_type: json.meeting_type || "",
+      status: json.status || "",
+      participant_count: Array.isArray(json.participants) ? json.participants.length : 0,
+      unresolved_count: Array.isArray(json.unresolved_questions) ? json.unresolved_questions.length : 0,
+      follow_up_count: Array.isArray(json.follow_up_workorders) ? json.follow_up_workorders.length : 0,
+      path: toRepoRelative(repoRoot, file),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
@@ -393,6 +427,7 @@ async function getSummary(repoRoot) {
   const proposals = await getProposals(repoRoot);
   const decisions = await getDecisions(repoRoot);
   const memories = await getMemories(repoRoot);
+  const meetings = await getMeetings(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -428,6 +463,7 @@ async function getSummary(repoRoot) {
     proposals: proposals.slice(0, 12),
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
+    meetings: meetings.slice(0, 12),
     safety: {
       server_changes_state_by_itself: false,
       button_actions_are_allowlisted: true,
@@ -866,6 +902,11 @@ function directorConsoleHtml() {
         <div id="handoffs" class="list"></div>
       </div>
     </section>
+    <section class="card">
+      <h2>Meeting Room</h2>
+      <p class="muted">AI 직원 회의 기록입니다. 회의 합의는 승인이나 캐논이 아니며, follow-up WorkOrder나 결정 gate로 넘어가야 합니다.</p>
+      <div id="meetings" class="list"></div>
+    </section>
     <section class="grid">
       <div class="card">
         <h2>Proposal Inbox</h2>
@@ -945,7 +986,8 @@ function directorConsoleHtml() {
         metric("WorkOrder", m.work_orders),
         metric("Draft 결정", m.materializations),
         metric("Proposal", m.proposals),
-        metric("Memory", m.memories)
+        metric("Memory", m.memories),
+        metric("Meeting", state.meetings.length)
       ].join("");
       renderInbox();
       el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
@@ -982,6 +1024,16 @@ function directorConsoleHtml() {
         '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
         '<div class="row">' + button("계획 보기", "handoff-plan", h.path) + button("직원 실행", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본</a></div></div>'
       ).join("") : '<p class="muted">Handoff 후보가 없습니다.</p>';
+      el("meetings").innerHTML = state.meetings.length ? state.meetings.map((meeting) =>
+        '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(meeting.status) + '</span></h3>' +
+        '<p>' + esc(meeting.topic) + '</p>' +
+        '<p class="small muted">participants ' + esc(meeting.participant_count) + ' · unresolved ' + esc(meeting.unresolved_count) + ' · follow-up ' + esc(meeting.follow_up_count) + '</p>' +
+        '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
+        button("회의 점검", "meeting-inspect", meeting.path) +
+        button("handoff 보기", "meeting-handoff", meeting.path) +
+        button("회의 저장", "meeting-create", meeting.path, "good") +
+        '</div></div>'
+      ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
       el("proposals").innerHTML = state.proposals.length ? state.proposals.map((p) =>
         '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
@@ -1033,6 +1085,13 @@ function directorConsoleHtml() {
       if (action === "workorder-create") {
         if (!confirm("이 WorkOrder를 Backlog task로 생성할까요? task 실행 승인과 runner start는 별도입니다.")) return;
         log(await post("/api/workorder/create", { path:filePath }));
+        await refresh();
+      }
+      if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
+      if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
+      if (action === "meeting-create") {
+        if (!confirm("이 MeetingSession을 Studio 저장소에 기록할까요? 회의 합의는 승인이나 캐논이 아닙니다.")) return;
+        log(await post("/api/meeting/create", { path:filePath }));
         await refresh();
       }
     }
@@ -1143,6 +1202,30 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const body = await readRequestJson(req);
     safeResolveReadable(repoRoot, body.path || "");
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/inspect") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    const result = await runTool(repoRoot, bat, ["inspect", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/handoff") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    const result = await runTool(repoRoot, bat, ["handoff", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/create") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
     const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
