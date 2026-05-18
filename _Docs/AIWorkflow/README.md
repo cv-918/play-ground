@@ -29,6 +29,8 @@ This README is the entry point for the document set.
 | `AIWorkflow_Flowchart_KR.md` | Korean flowchart guide for the regular path, read-only inspection path, missing-validation path, and commit decision path |
 | `AIWorkflow_Korean_Guide_Glossary.md` | Korean glossary and command usage guide for regular and optional/debug AIWorkflow commands |
 | `Guide/AIWorkflow_User_Guide_KR.html` | Complete browser-readable Korean Human Director user guide for the current Discord-first PC Runner workflow |
+| `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
+| `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |
 | `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |
 | `00_AI_Orchestrator_Overview.md` | High-level overview of the AI Orchestrator workflow |

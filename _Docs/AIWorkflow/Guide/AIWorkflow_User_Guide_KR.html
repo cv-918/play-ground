@@ -282,6 +282,7 @@
         <h2>목차</h2>
         <ol>
           <li><a href="#summary">한눈에 보기</a></li>
+          <li><a href="#workflow-core">워크플로우 본체</a></li>
           <li><a href="#visual-map">워크플로우 시각화</a></li>
           <li><a href="#roles">사용자와 하네스 역할</a></li>
           <li><a href="#normal-flow">정규 흐름</a></li>
@@ -303,6 +304,12 @@
             <strong>사용자가 목표로 하는 최종 사용감:</strong>
             작업 지시, 위험 작업 승인, 완료 결과 리뷰, 커밋/푸시 결정만 사람이 맡고 나머지는 하네스가 처리합니다.
           </div>
+          <div class="note">
+            <strong>장기 제품 목표:</strong>
+            AIWorkflow는 최종적으로 Discord bot이 아니라 <strong>Personal AI Development Studio / AI Studio Company Runtime</strong>으로 확장됩니다.
+            기존 하네스는 그 Studio의 운영, 승인, 실행, 증거, 검증, 완료, 최종화, git gate를 맡는 core가 됩니다.
+            공식 설계 문서는 <code>_Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md</code>입니다.
+          </div>
           <pre><code>1. /ai intake text:&lt;작업 요청&gt;
 2. 승인 필요 시에만 승인
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고
@@ -310,6 +317,134 @@
 5. 완료 승인 / 우려 감수 후 완료 / 수정 요청 / 반려 / 판단 보류 결정
 6. task done 및 commit/push 결정</code></pre>
           <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어봅니다.</p>
+        </section>
+
+        <section id="workflow-core">
+          <h2>워크플로우 본체</h2>
+          <p>이 항목은 Discord 명령, 버튼, 카드 같은 디스패치 UI를 제외하고도 반드시 유지되어야 하는 AIWorkflow의 전체 구조를 설명합니다.</p>
+
+          <div class="good">
+            <strong>핵심 원칙:</strong>
+            사람은 목표, 승인, 완료 판단, 커밋 결정을 맡고, 하네스는 작업 상태, 실행 상태, 증거, 검증, 최종화 기록을 분리해서 남깁니다.
+          </div>
+
+          <div class="visual" aria-label="Discord 디스패치를 제외한 AIWorkflow 본체 전체 흐름">
+            <h3>코어 워크플로우 전체 지도: 총 12단계</h3>
+            <div class="flow">
+              <div class="flow-step manual">
+                <strong>1. Work Request Intake / 작업 요청 접수</strong>
+                <span>사람이 목표, 기대 결과, 금지 범위, 검증 기대치를 제시합니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>2. Intent Structuring / 의도 구조화</strong>
+                <span>자연어 요청을 TaskDraft 또는 GoalIntent 형태로 바꾸고, 모호하면 실행하지 않습니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>3. Task Lifecycle Registration / 작업 상태 등록</strong>
+                <span>Backlog, ActiveTask 후보, category, kind, priority, risk, workflow path를 기록합니다.</span>
+              </div>
+              <div class="flow-step decision">
+                <strong>4. Risk And Approval Policy Evaluation / 위험도와 승인 정책 평가</strong>
+                <span>자동 진행 가능, 사람 승인 필요, 차단 또는 보강 필요 여부를 deterministic rule로 판단합니다.</span>
+              </div>
+              <div class="flow-step decision">
+                <strong>5. Human Approval Gate / 사람 승인 지점</strong>
+                <span>필요한 경우 실제 변경 대상, 금지 범위, 검증 조건을 보고 Human Director가 승인합니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>6. Runtime Workspace Preparation / 실행 작업공간 준비</strong>
+                <span>task_id 기준 workspace와 runner 산출물 위치를 만들고 실행 경계를 분리합니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>7. Executor Run And Session Supervision / 실행기 구동과 세션 감시</strong>
+                <span>승인된 profile과 executor만 실행하고, start/end, heartbeat, stop reason을 기록합니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>8. Evidence Collection And Diff Snapshot / 증거 수집과 diff snapshot</strong>
+                <span>로그, exit code, 변경 파일, diff, build/test 결과를 모읍니다. 이 단계는 pass/fail을 판정하지 않습니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>9. VerificationReport Generation / 검증 보고서 생성</strong>
+                <span>수집된 증거를 기준으로 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL을 판정합니다.</span>
+              </div>
+              <div class="flow-step auto">
+                <strong>10. CompletionReport And Completion Card / 완료 보고서와 완료 카드</strong>
+                <span>사람이 완료 여부를 판단할 수 있도록 결과, 남은 우려, 검증 근거를 요약합니다.</span>
+              </div>
+              <div class="flow-step decision">
+                <strong>11. Human Completion Decision And FinalizationLog / 완료 판단과 최종화 기록</strong>
+                <span>완료 승인, 우려 감수, 수정 요청, 반려, 판단 보류 중 하나를 기록합니다.</span>
+              </div>
+              <div class="flow-step manual">
+                <strong>12. Task Done And Git Gate / 작업 완료와 git 결정</strong>
+                <span>task done 여부를 확정하고, commit/push는 마지막 사람 결정으로 별도 실행합니다.</span>
+              </div>
+            </div>
+            <div class="legend">
+              <span class="manual-key">사람 명시 결정</span>
+              <span class="decision-key">정책/승인 판단 지점</span>
+              <span class="auto-key">하네스 자동 처리</span>
+            </div>
+            <div class="note">이 12단계가 워크플로우의 본체입니다. Discord는 이 단계를 조작하기 위한 UI일 뿐이며, UI가 바뀌어도 단계와 책임 경계는 유지됩니다.</div>
+          </div>
+
+          <h3>1. 작업 접수와 의도 구조화</h3>
+          <ul>
+            <li>자연어 요청은 바로 실행하지 않고 <strong>TaskDraft</strong> 또는 구조화된 작업 상태로 변환합니다.</li>
+            <li>분류에는 category, kind, priority, risk, workflow path, non-goals, validation이 포함됩니다.</li>
+            <li>모호한 요청은 실행하지 않고 사람 확인 또는 보강이 필요한 상태로 멈춥니다.</li>
+            <li>LLM은 의도 해석과 초안 생성을 도울 수 있지만, 최종 승인 권한은 갖지 않습니다.</li>
+          </ul>
+
+          <h3>2. 작업 상태와 실행 상태 분리</h3>
+          <table>
+            <thead>
+              <tr><th>상태 계층</th><th>담당하는 내용</th><th>하면 안 되는 일</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Task Lifecycle</td><td>Backlog, ActiveTask, approval, blocked/deferred/done 상태</td><td>실행 로그나 세션 성공 여부를 직접 판정하지 않음</td></tr>
+              <tr><td>Runtime Workspace</td><td>task_id 기준 작업 공간과 런타임 산출물 위치</td><td>승인 없이 소스나 데이터를 바꾸지 않음</td></tr>
+              <tr><td>Session State</td><td>실행 세션, heartbeat, progress, stop reason</td><td>검증 통과/실패를 최종 판정하지 않음</td></tr>
+              <tr><td>Evidence</td><td>로그, exit code, 변경 파일, diff snapshot, build/test 결과</td><td>증거 수집만으로 task done 처리하지 않음</td></tr>
+              <tr><td>Verification/Completion</td><td>검증 판정, 완료 보고서, 완료 카드, 남은 우려</td><td>commit/push를 자동 실행하지 않음</td></tr>
+            </tbody>
+          </table>
+
+          <h3>3. 승인 정책</h3>
+          <ul>
+            <li>저위험 반복 검증은 정책 조건이 맞을 때만 자동 착수 후보가 됩니다.</li>
+            <li>P0/P1, high-risk, source/data/schema/runtime/save/load/lifecycle 변경은 사람 승인에서 멈춥니다.</li>
+            <li>승인은 “작업 범위 안에서”라는 추상 문구가 아니라, 실제로 바뀔 파일/영역/행동과 금지 범위를 보고 결정해야 합니다.</li>
+            <li>승인 이력, 반려 사유, 우려 감수, 수정 요청은 ApprovalHistory와 FinalizationLog로 추적합니다.</li>
+          </ul>
+
+          <h3>4. 실행과 감시</h3>
+          <ul>
+            <li>PC Runner는 작업별 workspace에서 승인된 executor와 profile만 실행합니다.</li>
+            <li>실행기는 Codex CLI, Local CLI, 이후 추가될 도구처럼 교체 가능해야 하지만, start/end 감지, 로그 수집, 실패/timeout 처리, 변경 파일 추적이 가능해야 합니다.</li>
+            <li>Session Supervisor는 실행 중인지, 멈췄는지, 어떤 이유로 멈췄는지를 기록합니다.</li>
+            <li>Evidence Collector는 실행 결과와 diff를 모으지만, 통과 판정이나 완료 처리는 하지 않습니다.</li>
+          </ul>
+
+          <h3>5. 검증과 완료 판단</h3>
+          <ul>
+            <li>VerificationReport는 증거를 읽어 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL 같은 판정을 만듭니다.</li>
+            <li>CompletionReport와 Completion Card는 사람이 완료를 받아들일지 판단하기 위한 요약입니다.</li>
+            <li>CONCERNS는 실패가 아닐 수도 있지만, 사람이 무엇을 감수하는지 알아야 완료로 넘길 수 있습니다.</li>
+            <li>수정이 필요하면 원 task를 억지로 done 처리하지 않고 focused fix task로 분리합니다.</li>
+          </ul>
+
+          <h3>6. 최종화와 git gate</h3>
+          <ul>
+            <li>완료 승인, 우려 감수, 수정 요청, 반려, 판단 보류는 모두 FinalizationLog에 남깁니다.</li>
+            <li>task done은 완료 판단 이후에만 가능하며, 검증이 없거나 우려가 해결되지 않았으면 done으로 넘기지 않습니다.</li>
+            <li>commit/push는 마지막 사람 결정 gate입니다. 하네스가 메시지를 제안하거나 실행을 도울 수는 있지만, 명시적 결정 없이 자동 commit/push하면 안 됩니다.</li>
+            <li>워크플로우 규칙, 명령, 승인 정책, 완료 gate가 바뀌면 이 사용자 가이드도 같은 변경 묶음에서 갱신해야 합니다.</li>
+          </ul>
+
+          <div class="warn">
+            이 섹션은 Discord 디스패치가 바뀌거나 사라져도 유지되어야 하는 코어입니다. UI가 Discord, Codex App, 다른 도구로 바뀌어도 작업 상태, 실행 상태, 증거, 검증, 승인, 최종화, git gate의 분리는 유지해야 합니다.
+          </div>
         </section>
 
         <section id="visual-map">

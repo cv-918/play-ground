@@ -106,6 +106,43 @@ watching, diff snapshots, runtime control, and evidence collection. Phase 3 owns
 VerificationReport, CompletionReport, Completion Card, FinalizationLog,
 Follow-up Task generation, and Auto Approval Policy.
 
+### Long-Term Product Definition
+
+The long-term product is no longer defined as only a Discord-first runner
+harness.
+
+The long-term product is:
+
+```text
+Personal AI Development Studio
+AI Studio Company Runtime
+```
+
+In this target, the human user is the Human Director / Executive Producer /
+Creative Director. Persistent AI Staff Agents work as planners, designers,
+engineers, artists, QA, writers, producers, reviewers, validators, and
+documentation staff.
+
+AIWorkflow Core becomes the studio operating, governance, audit, verification,
+completion, finalization, and git-gate system.
+
+The official long-term architecture is defined in:
+
+```text
+_Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md
+_Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md
+```
+
+The controlling principle is:
+
+```text
+Agent Autonomy within Workflow Governance.
+```
+
+Agents may think, propose, object, ask questions, and hand off work within their
+role authority. They may not unilaterally approve, canonize, implement, import,
+commit, push, or release outside governance gates.
+
 ---
 
 ## 4. Initial Automation Level
