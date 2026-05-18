@@ -12,6 +12,17 @@ StaffAgent output:
 
 Materialization is not approval.
 
+Human Director review of materialized records is stored as `Decision` records
+through:
+
+```bat
+tools\aiworkflow\studio_materialization_review.bat plan <materialization_id> --decision approve --target all
+tools\aiworkflow\studio_materialization_review.bat record <materialization_id> --decision approve --target all --execute
+```
+
+Those decisions are still evidence for downstream governance. They do not run
+the accepted records by themselves.
+
 It must not:
 
 - create AIWorkflow Backlog tasks

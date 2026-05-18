@@ -13,6 +13,7 @@ official project truth.
 ```text
 RoleRunOutput
   -> RoleRunOutputMaterialization
+  -> Materialization Review Decision
   -> Proposal
   -> Human Director Decision
   -> MemoryRecord(status=canon)
@@ -39,6 +40,8 @@ Proposal
    memory.
 9. RoleRunOutput materialization may create draft/proposed records, but it is
    not approval and cannot canonize staff output.
+10. Materialization review decisions may approve use of a draft as downstream
+    input, but canon still requires a separate canon Decision.
 
 ## Proposal Requirements
 

@@ -305,6 +305,18 @@ and Handoff records, plus one materialization manifest. It does not approve
 those records, create Backlog tasks, write canon, execute tools, call LLMs,
 modify source files, commit, or push.
 
+The first local materialization review tool is:
+
+```bat
+tools\aiworkflow\studio_materialization_review.bat plan MAT-20260518-150000-scenario --decision approve --target all
+tools\aiworkflow\studio_materialization_review.bat record MAT-20260518-150000-scenario --decision approve --target all --execute
+```
+
+It records Human Director decisions about materialized draft records. Decision
+records may approve, reject, defer, request changes, or accept concerns. They
+do not create tasks, write canon, execute accepted records, modify source
+files, commit, or push.
+
 ## MeetingSession Runtime Contract
 
 A MeetingSession is a structured work session, not a loose chat transcript.
@@ -578,13 +590,13 @@ Implemented now:
 - Staff prompt exporter for signed-in Codex App/CLI execution input
 - RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
   Handoff records
+- materialization review decision recorder
 - conditional automation replay and repair-plan support
 
 Not implemented yet:
 
 - live RoleRun execution
 - live LLM staff execution from exported prompts
-- Director-reviewed materialization acceptance workflows
 - Studio UI
 - autonomous handoff router
 

@@ -49,6 +49,7 @@ This slice defines:
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Local RoleRunOutput materializer for Proposal, Memory, WorkOrder, and
   Handoff drafts
+- Local materialization review tool for Human Director Decision records
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
@@ -111,6 +112,7 @@ tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio
 tools\aiworkflow\studio_staff_runtime.bat route-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
+tools\aiworkflow\studio_materialization_review.bat plan MAT-20260518-150000-scenario --decision approve --target all
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
@@ -131,10 +133,11 @@ evaluate adapter permission, approval, cost, and evidence needs before any tool
 executes. Staff prompt export prepares the signed-in Codex App/CLI input but
 still does not call a model. Output materialization writes draft/proposed
 Studio records only; it is not approval, task creation, canonization, or
-implementation. These tools do not execute live staff agents, call LLMs, set
-ActiveTask, approve work, start PC Runner, modify source files, commit, or
-push. Conditional automation replay writes only `_Temp` evaluation artifacts
-when `--execute` is passed.
+implementation. Materialization review can write Decision records only; it
+does not execute the accepted records. These tools do not execute live staff
+agents, call LLMs, set ActiveTask, start PC Runner, modify source files,
+commit, or push. Conditional automation replay writes only `_Temp` evaluation
+artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -247,6 +250,9 @@ These rules are mandatory for all future implementations:
 21. RoleRunOutput materialization may create draft/proposed Studio records,
     but it must not treat staff output as approval. Canon, executable tasks,
     implementation, and commits still require their normal governance gates.
+22. Materialization review may record Human Director decisions about drafts,
+    but it must not execute accepted drafts. Acceptance records are evidence
+    for downstream governance, not direct permission to bypass the Core gates.
 
 ## Relationship To Existing AIWorkflow Core
 
