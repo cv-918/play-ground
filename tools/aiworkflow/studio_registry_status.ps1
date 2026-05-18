@@ -143,6 +143,49 @@ function Get-MapById {
     return $map
 }
 
+function Add-RefIfPresent {
+    param(
+        [hashtable]$Map,
+        [string]$Key,
+        [object]$Value
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($Key)) {
+        $Map[$Key] = $Value
+    }
+}
+
+function Add-ExampleIds {
+    param(
+        [hashtable]$Map,
+        [object]$Example
+    )
+
+    foreach ($propertyName in @("context_packet_id", "role_run_id", "output_id", "meeting_id", "work_order_id", "binding_id", "proposal_id", "decision_id", "memory_id")) {
+        $property = $Example.PSObject.Properties[$propertyName]
+        if ($null -ne $property) {
+            Add-RefIfPresent -Map $Map -Key ([string]$property.Value) -Value $Example
+        }
+    }
+}
+
+function Test-KnownRef {
+    param(
+        [System.Collections.Generic.List[string]]$Warnings,
+        [hashtable]$RefMap,
+        [string]$Source,
+        [string]$Ref
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) {
+        return
+    }
+
+    if ($Ref -match "^(MEET|WO|WOTB|PROP|DEC|MEM|SCP|RR|RRO)-" -and -not $RefMap.ContainsKey($Ref)) {
+        $Warnings.Add("$Source references missing example id '$Ref'.")
+    }
+}
+
 function Test-StudioRegistry {
     param([object]$Registry)
 
@@ -199,9 +242,13 @@ function Test-StudioRegistry {
         }
     }
 
+    $exampleObjects = @()
+    $exampleRefs = @{}
     foreach ($example in @($Registry.examples)) {
         try {
-            [void](Read-JsonFile -Path $example.FullName)
+            $exampleObject = Read-JsonFile -Path $example.FullName
+            $exampleObjects += $exampleObject
+            Add-ExampleIds -Map $exampleRefs -Example $exampleObject
         } catch {
             $errors.Add("Example JSON failed to parse: $($example.Name) - $($_.Exception.Message)")
         }
@@ -273,6 +320,65 @@ function Test-StudioRegistry {
             if (-not $allStaffIds.Contains($handoffId)) {
                 $warnings.Add("Staff '$staffId' can_handoff_to unknown staff id '$handoffId'.")
             }
+        }
+    }
+
+    foreach ($exampleObject in @($exampleObjects)) {
+        $agentId = [string]$exampleObject.agent_id
+        if (-not [string]::IsNullOrWhiteSpace($agentId) -and -not $allStaffIds.Contains($agentId)) {
+            $warnings.Add("Example references unknown agent_id '$agentId'.")
+        }
+
+        $departmentId = [string]$exampleObject.department_id
+        if (-not [string]::IsNullOrWhiteSpace($departmentId) -and -not $departmentIds.Contains($departmentId)) {
+            $warnings.Add("Example references unknown department_id '$departmentId'.")
+        }
+
+        foreach ($participantId in Get-StringArray -Value $exampleObject.participants) {
+            if (-not $allStaffIds.Contains($participantId) -and $participantId -ne "human_director") {
+                $warnings.Add("Meeting example references unknown participant '$participantId'.")
+            }
+        }
+
+        $chairId = [string]$exampleObject.chair_agent_id
+        if (-not [string]::IsNullOrWhiteSpace($chairId) -and -not $allStaffIds.Contains($chairId)) {
+            $warnings.Add("Meeting example references unknown chair_agent_id '$chairId'.")
+        }
+
+        foreach ($assignedAgentId in Get-StringArray -Value $exampleObject.assigned_agents) {
+            if (-not $allStaffIds.Contains($assignedAgentId)) {
+                $warnings.Add("WorkOrder example references unknown assigned agent '$assignedAgentId'.")
+            }
+        }
+
+        foreach ($handoff in @($exampleObject.handoff_requests)) {
+            $targetAgentId = [string]$handoff.target_agent_id
+            if (-not [string]::IsNullOrWhiteSpace($targetAgentId) -and -not $allStaffIds.Contains($targetAgentId)) {
+                $warnings.Add("RoleRunOutput example references unknown handoff target '$targetAgentId'.")
+            }
+        }
+
+        Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Example source_ref" -Ref ([string]$exampleObject.source_ref)
+        Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Decision target_ref" -Ref ([string]$exampleObject.target_ref)
+        Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "TaskBinding work_order_id" -Ref ([string]$exampleObject.work_order_id)
+
+        foreach ($ref in Get-StringArray -Value $exampleObject.loaded_context_refs) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Meeting loaded_context_refs" -Ref $ref
+        }
+        foreach ($ref in Get-StringArray -Value $exampleObject.follow_up_workorders) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Meeting follow_up_workorders" -Ref $ref
+        }
+        foreach ($ref in Get-StringArray -Value $exampleObject.evidence_refs) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Example evidence_refs" -Ref $ref
+        }
+        foreach ($ref in Get-StringArray -Value $exampleObject.source_refs) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "Memory source_refs" -Ref $ref
+        }
+        foreach ($ref in Get-StringArray -Value $exampleObject.approval_refs) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "TaskBinding approval_refs" -Ref $ref
+        }
+        foreach ($ref in Get-StringArray -Value $exampleObject.evidence_refs) {
+            Test-KnownRef -Warnings $warnings -RefMap $exampleRefs -Source "TaskBinding evidence_refs" -Ref $ref
         }
     }
 

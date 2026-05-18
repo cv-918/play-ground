@@ -175,6 +175,10 @@ tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_registry_status.bat validate --json
 ```
 
+Validation also parses Studio example fixtures and checks known cross-references
+between context packets, RoleRun outputs, meetings, WorkOrders, task bindings,
+proposals, decisions, and memory records.
+
 Inspect departments and staff agents:
 
 ```bat
