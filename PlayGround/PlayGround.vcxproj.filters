@@ -28,6 +28,12 @@
     <ClInclude Include="Project\App\EntryPoint.h">
       <Filter>PlayGround</Filter>
     </ClInclude>
+    <ClInclude Include="Project\App\DataUpdateService.h">
+      <Filter>PlayGround</Filter>
+    </ClInclude>
+    <ClInclude Include="Project\App\DataUpdateStatusOverlay.h">
+      <Filter>PlayGround</Filter>
+    </ClInclude>
     <ClInclude Include="Project\App\PlayGround.h">
       <Filter>PlayGround\Objects</Filter>
     </ClInclude>
@@ -190,6 +196,12 @@
     <ClCompile Include="Project\App\EntryPoint.cpp">
       <Filter>PlayGround</Filter>
     </ClCompile>
+    <ClCompile Include="Project\App\DataUpdateService.cpp">
+      <Filter>PlayGround</Filter>
+    </ClCompile>
+    <ClCompile Include="Project\App\DataUpdateStatusOverlay.cpp">
+      <Filter>PlayGround</Filter>
+    </ClCompile>
     <ClCompile Include="Project\App\PlayGround.cpp">
       <Filter>PlayGround\Objects</Filter>
     </ClCompile>
@@ -309,6 +321,9 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataUpdateConfig.json" />
+    <None Include="DataUpdater\apply_data_update.ps1" />
+    <None Include="DataUpdater\download_manifest.ps1" />
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />

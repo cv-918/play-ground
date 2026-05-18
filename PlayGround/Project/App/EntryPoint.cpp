@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "EntryPoint.h"
 
+#include "App/DataUpdateService.h"
 #include "App/PlayGround.h"
 
 #include <chrono>
@@ -101,6 +102,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_PLAYGROUND));
 
 	MSG msg = {};
+	DataUpdateService::RunStartupUpdateCheck();
+
 	if (!pg.Initialize())
 	{
 		_DEBUG_MSGBOX(L"PlayGround 초기화 실패");

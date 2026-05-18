@@ -388,6 +388,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Components\SphereCollider.h" />
     <ClInclude Include="Project\Gameplay\Components\Status.h" />
     <ClInclude Include="Project\Gameplay\Components\Transform.h" />
+    <ClInclude Include="Project\App\DataUpdateService.h" />
+    <ClInclude Include="Project\App\DataUpdateStatusOverlay.h" />
     <ClInclude Include="Project\App\EntryPoint.h" />
     <ClInclude Include="Project\Gameplay\Actors\GameObjectBase.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\GameState.h" />
@@ -482,6 +484,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Components\SphereCollider.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Status.cpp" />
     <ClCompile Include="Project\Gameplay\Components\Transform.cpp" />
+    <ClCompile Include="Project\App\DataUpdateService.cpp" />
+    <ClCompile Include="Project\App\DataUpdateStatusOverlay.cpp" />
     <ClCompile Include="Project\App\EntryPoint.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\GameObjectBase.cpp" />
     <ClCompile Include="Project\Framework\pch.cpp">
@@ -553,12 +557,22 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Actors\Stage\UnitBase.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataUpdateConfig.json" />
+    <None Include="DataUpdater\apply_data_update.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DataUpdater\download_manifest.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Data\TownNpcPlacement.json" />
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\FixLog\2026-04-12.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyDefaultDataUpdateConfigIfMissing" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)DataUpdateConfig.json" DestinationFiles="$(OutDir)DataUpdateConfig.json" Condition="!Exists('$(OutDir)DataUpdateConfig.json')" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

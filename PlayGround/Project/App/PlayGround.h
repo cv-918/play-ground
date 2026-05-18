@@ -1,4 +1,8 @@
-﻿#pragma once
+#pragma once
+
+#ifndef SHIPPING
+#include "App/DataUpdateStatusOverlay.h"
+#endif
 
 class PlayGround final
 {
@@ -20,4 +24,8 @@ private:
 
 	// 입력 매니저에 대한 포인터. 필요에 따라 입력 처리 로직을 구현할 수 있습니다.
 	class InputManager* input_manager_ = nullptr;
+
+#ifndef SHIPPING
+	DataUpdateStatusOverlay data_update_status_overlay_;
+#endif
 };

@@ -37,6 +37,10 @@ _bool PlayGround::Initialize()
 	if (!GameDataLoader::LoadAll())
 		return false;
 
+#ifndef SHIPPING
+	data_update_status_overlay_.Initialize();
+#endif
+
 	// --- 충돌 레이어 설정 ---
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyAttack, true);
 	_ColMgr.SetCollisionLayer(CollisionLayer::PlayerBody, CollisionLayer::EnemyBullet, true);
@@ -83,6 +87,10 @@ _int PlayGround::Update(_double _delta_time)
 	scene_manager_->Update(_delta_time);
 	scene_manager_->LateUpdate(_delta_time);
 
+#ifndef SHIPPING
+	data_update_status_overlay_.Update(_delta_time);
+#endif
+
 	return UPDATE_CONTINUE;
 }
 
@@ -90,6 +98,10 @@ void PlayGround::Render(_double _delta_time)
 {
 	render_chain_->Clear();
 	scene_manager_->Render(_delta_time);
+
+#ifndef SHIPPING
+	data_update_status_overlay_.Render();
+#endif
 
 	if (_GameState.debug_mode_)
 	{
