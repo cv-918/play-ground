@@ -1,0 +1,35 @@
+{
+  "tool_run_request_id": "TRQ-20260518-180000-codex-scenario-review",
+  "requester_type": "role_run",
+  "requester_ref": "RR-20260518-173000-scenario-director",
+  "work_order_id": "WO-20260518-143000-scenario-pitch",
+  "role_run_id": "RR-20260518-173000-scenario-director",
+  "tool_adapter_id": "codex_cli_signed_in",
+  "requested_action": "structured reasoning",
+  "command_id": null,
+  "permission_class": "read",
+  "purpose": "Ask the signed-in Codex route to review a ScenarioPitch draft against approved scope, canon memory, and non-goals before Director review.",
+  "input_refs": [
+    "SCP-20260518-150000-scenario-director",
+    "WO-20260518-143000-scenario-pitch",
+    "MEM-20260518-154000-motivation"
+  ],
+  "expected_outputs": [
+    "RoleRunOutput with concerns, approval items, and handoff recommendations",
+    "No source edits",
+    "No task creation",
+    "No canon write"
+  ],
+  "evidence_requirements": [
+    "ToolRunRequest evaluation result",
+    "RoleRunOutput artifact path if execution later occurs",
+    "Reviewed input refs"
+  ],
+  "approval_ref": null,
+  "status": "director_review",
+  "created_at": "2026-05-18T18:00:00+09:00",
+  "notes": [
+    "This example is a planning request only.",
+    "The planner must not call Codex CLI or any external LLM."
+  ]
+}

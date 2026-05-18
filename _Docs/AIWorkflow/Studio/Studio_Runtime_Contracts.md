@@ -143,6 +143,36 @@ ToolRun may produce evidence.
 
 ToolRun cannot decide approval, verification pass/fail, completion, or commit.
 
+## ToolRunRequest Contract
+
+ToolRunRequest is the pre-execution governance request for a future ToolRun.
+
+It records:
+
+- who requested the tool
+- which ToolAdapter is requested
+- what action is requested
+- why the action is needed
+- permission class
+- input refs
+- expected outputs
+- evidence requirements
+- approval ref when already available
+- request status
+
+ToolRunRequest planning may evaluate ToolAdapter policy and return:
+
+```text
+allowed_without_execution
+human_required
+ready_for_execution_gate
+blocked
+```
+
+ToolRunRequest planning must not execute adapters, call LLMs, create tasks,
+approve work, write canon, modify source files, mark work done, commit, or
+push.
+
 ## Memory Access Contract
 
 Memory is not a single bucket.
@@ -412,6 +442,19 @@ tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
 ```
 
+The first ToolRunRequest planner is:
+
+```bat
+tools\aiworkflow\studio_tool_run_planner.bat status
+tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
+tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json --execute
+```
+
+It validates ToolRunRequest JSON, reads the ToolAdapter registry, reports
+adapter availability, blocked actions, approval needs, cost/external/file risk,
+and required evidence. It stores request records only when `--execute` is
+explicit. It does not execute the requested adapter.
+
 The registry includes the current LLM policy:
 
 - Codex App/CLI signed-in routes are the default LLM execution path.
@@ -427,6 +470,7 @@ The core records must remain provider-independent:
 - StaffAgent
 - RoleRun
 - ToolRun
+- ToolRunRequest
 - WorkOrder
 - MeetingSession
 - Proposal

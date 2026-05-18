@@ -174,6 +174,28 @@
       ]
     },
     {
+      "adapter_id": "studio_tool_run_planner",
+      "display_name": "Studio ToolRun Request Planner",
+      "category": "workflow_core",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local request evaluation. It never executes the requested adapter.",
+      "allowed_actions": ["status", "validate", "list", "read", "plan request", "store request with explicit execute"],
+      "blocked_actions": ["execute adapter", "call LLM", "approve work", "create tasks", "write canon", "modify source", "commit or push"],
+      "approval_required_actions": ["using a human_required request for real execution", "cost-capable adapter execution", "external-capable adapter execution", "destructive tool execution"],
+      "input_contract": ["ToolRunRequest JSON", "ToolAdapter registry"],
+      "output_evidence": ["request validation result", "adapter policy evaluation", "human approval reasons", "required evidence list", "stored ToolRunRequest path when --execute is used"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": false,
+      "default_enabled": true,
+      "notes": [
+        "Writes only ToolRunRequest records when --execute is explicit.",
+        "Planning a ToolRunRequest does not execute the adapter."
+      ]
+    },
+    {
       "adapter_id": "studio_conditional_automation",
       "display_name": "Studio Conditional Automation Policy Tool",
       "category": "workflow_core",

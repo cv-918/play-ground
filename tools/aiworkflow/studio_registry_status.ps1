@@ -206,6 +206,7 @@ function Test-StudioRegistry {
         "Handoff.schema.json",
         "RoleRun.schema.json",
         "ToolRun.schema.json",
+        "ToolRunRequest.schema.json",
         "ToolAdapter.schema.json",
         "ConditionalAutomationCase.schema.json"
     )
@@ -234,7 +235,8 @@ function Test-StudioRegistry {
         "protagonist_motivation_proposal.example.json",
         "protagonist_motivation_decision.example.json",
         "protagonist_motivation_canon_memory.example.json",
-        "protagonist_motivation_rejected_memory.example.json"
+        "protagonist_motivation_rejected_memory.example.json",
+        "tool_run_request_codex_staff.example.json"
     )
 
     $exampleNames = @($Registry.examples | ForEach-Object { $_.Name })

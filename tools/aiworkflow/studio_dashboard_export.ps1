@@ -193,6 +193,17 @@ function New-InboxItems {
             }
         }
     }
+    foreach ($request in @($Data.tool_run_requests)) {
+        if (@("draft", "proposed", "director_review", "approved_for_execution") -contains [string]$request.status) {
+            $items += [pscustomobject]@{
+                type = "ToolRunRequest"
+                id = [string]$request.id
+                status = [string]$request.status
+                title = [string]$request.title
+                action = "Review adapter, permission class, approval refs, and evidence requirements before any tool executes."
+            }
+        }
+    }
     return @($items)
 }
 
@@ -328,6 +339,7 @@ function New-DashboardHtml {
       <div class="card"><h2>Memory</h2><div class="metric">$(Html ([string]$Data.memory_count))</div><p class="muted">durable MemoryRecord 수</p></div>
       <div class="card"><h2>Meetings</h2><div class="metric">$(Html ([string]$Data.meeting_count))</div><p class="muted">durable MeetingSession 수</p></div>
       <div class="card"><h2>RoleRuns</h2><div class="metric">$(Html ([string]$Data.role_run_count))</div><p class="muted">durable RoleRun 수</p></div>
+      <div class="card"><h2>ToolRun Requests</h2><div class="metric">$(Html ([string]$Data.tool_run_request_count))</div><p class="muted">governed ToolRunRequest 수</p></div>
       <div class="card"><h2>Tool Adapters</h2><div class="metric">$(Html ([string]$Data.tool_adapter_count))</div><p class="muted">registered ToolAdapter 수</p></div>
       <div class="card"><h2>Automation Cases</h2><div class="metric">$(Html ([string]$Data.conditional_case_count))</div><p class="muted">conditional automation policy test 수</p></div>
     </section>
@@ -360,6 +372,7 @@ function New-DashboardHtml {
       <div class="card"><h2>Memory Records</h2>$(Render-List -Items $Data.memories)</div>
       <div class="card"><h2>Meeting Sessions</h2>$(Render-List -Items $Data.meetings)</div>
       <div class="card"><h2>RoleRuns</h2>$(Render-List -Items $Data.role_runs)</div>
+      <div class="card"><h2>ToolRun Requests</h2>$(Render-List -Items $Data.tool_run_requests)</div>
       <div class="card"><h2>Tool Adapters</h2>$(Render-List -Items $Data.tool_adapters)</div>
     </section>
 
@@ -388,6 +401,7 @@ function New-DashboardData {
     $memoryPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MemoryRecords"
     $meetingPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MeetingSessions"
     $roleRunPath = Join-Path $Root "_Docs\AIWorkflow\Studio\RoleRuns"
+    $toolRunRequestPath = Join-Path $Root "_Docs\AIWorkflow\Studio\ToolRuns"
     $toolPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Registries\tool_adapters.initial.json"
     $toolData = Read-JsonFile -Path $toolPath
     $conditionalCasesPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Examples\conditional_automation_cases.example.json"
@@ -414,6 +428,7 @@ function New-DashboardData {
         memory_count = (Get-StoreCount -Path $memoryPath)
         meeting_count = (Get-StoreCount -Path $meetingPath)
         role_run_count = (Get-StoreCount -Path $roleRunPath)
+        tool_run_request_count = (Get-StoreCount -Path $toolRunRequestPath)
         tool_adapter_count = @($toolData.tool_adapters).Count
         conditional_case_count = $conditionalCaseCount
         departments = @($deptData.departments)
@@ -422,6 +437,7 @@ function New-DashboardData {
         memories = (Get-RecordSummaries -Path $memoryPath -IdField "memory_id" -StatusField "status" -TitleField "content")
         meetings = (Get-RecordSummaries -Path $meetingPath -IdField "meeting_id" -StatusField "status" -TitleField "topic")
         role_runs = (Get-RecordSummaries -Path $roleRunPath -IdField "role_run_id" -StatusField "status" -TitleField "agent_id")
+        tool_run_requests = (Get-RecordSummaries -Path $toolRunRequestPath -IdField "tool_run_request_id" -StatusField "status" -TitleField "purpose")
         tool_adapters = @($toolItems)
         director_inbox = @()
     }
@@ -476,6 +492,7 @@ try {
         memory_count = $data.memory_count
         meeting_count = $data.meeting_count
         role_run_count = $data.role_run_count
+        tool_run_request_count = $data.tool_run_request_count
         tool_adapter_count = $data.tool_adapter_count
         conditional_case_count = $data.conditional_case_count
         safety = [pscustomobject]@{
@@ -497,7 +514,7 @@ try {
         Write-Host "output: $outputPath"
         Write-Host "departments: $($data.department_count)"
         Write-Host "staff: $($data.staff_count) concrete, $($data.planned_staff_count) planned"
-        Write-Host "workOrders/memory/meetings/roleRuns/tools: $($data.work_order_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_adapter_count)"
+        Write-Host "workOrders/memory/meetings/roleRuns/toolRunRequests/tools: $($data.work_order_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_run_request_count) / $($data.tool_adapter_count)"
         Write-Host "conditional automation cases: $($data.conditional_case_count)"
         Write-Host "safety: _Temp HTML only; no LLM/tool/task/source/git changes"
     }

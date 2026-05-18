@@ -36,6 +36,7 @@ studio_meeting_runtime.bat
 studio_staff_runtime.bat
 studio_dashboard_export.bat
 studio_tool_registry_status.bat
+studio_tool_run_planner.bat
 studio_conditional_automation.bat
 project_profile_status.bat
 active_project_status.bat
@@ -410,6 +411,38 @@ signed-in routes first and do not require OpenAI API billing by default.
 This command is read-only. It does not execute adapters, call LLMs, create
 memory, create WorkOrders, create tasks, approve work, modify source files,
 commit, or push.
+
+---
+
+## studio_tool_run_planner.bat
+
+Plans, reads, lists, validates, and explicitly stores governed Studio
+ToolRunRequest JSON files. It evaluates a request against the ToolAdapter
+registry before any adapter is allowed to run.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_tool_run_planner.bat status
+tools\aiworkflow\studio_tool_run_planner.bat validate
+tools\aiworkflow\studio_tool_run_planner.bat list
+tools\aiworkflow\studio_tool_run_planner.bat read TRQ-20260518-180000-codex-scenario-review
+tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
+tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
+tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json --execute
+```
+
+`plan` and `create` do not execute the requested adapter. `create` without
+`--execute` is a dry-run preview. `create --execute` writes one
+ToolRunRequest record under `_Docs\AIWorkflow\Studio\ToolRuns\` by default.
+
+For validation smoke tests, `--store-path` may override the ToolRunRequest
+store only under `_Temp\`.
+
+The planner reports whether the request is allowed without execution, needs
+Human Director approval, is ready for a separate execution gate, or is blocked.
+It does not call LLMs, create tasks, approve work, start PC Runner, write
+canon, modify source files, commit, or push.
 
 ---
 
@@ -962,6 +995,7 @@ tools\aiworkflow\role_router_status.bat
 tools\aiworkflow\role_router_status.bat --json
 tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat validate
+tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
 tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json

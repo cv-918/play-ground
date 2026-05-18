@@ -25,6 +25,7 @@ This slice defines:
 - Handoff schema
 - RoleRun schema
 - ToolRun schema
+- ToolRunRequest schema
 - WorkOrderTaskBinding schema
 - StaffContextPacket schema
 - RoleRunOutput schema
@@ -45,6 +46,7 @@ This slice defines:
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
+- ToolRunRequest store and deterministic adapter-governance planner
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 
@@ -99,6 +101,8 @@ tools\aiworkflow\studio_staff_runtime.bat route-output _Docs\AIWorkflow\Studio\E
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
+tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
+tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json --execute
 tools\aiworkflow\studio_conditional_automation.bat validate
 tools\aiworkflow\studio_conditional_automation.bat test --execute
 ```
@@ -107,9 +111,11 @@ These tools validate registry references, print department/staff details, and
 preview or create WorkOrder-derived Backlog tasks, store governed WorkOrder
 records, governed MemoryRecord files, governed MeetingSession records, governed
 RoleRun envelopes, read-only dashboard snapshots, and tool adapter policy
-displays. They do not execute agents, call LLMs, set ActiveTask, approve work,
-start PC Runner, modify source files, commit, or push. Conditional automation
-replay writes only `_Temp` evaluation artifacts when `--execute` is passed.
+displays. They can also store ToolRunRequest records that evaluate adapter
+permission, approval, cost, and evidence needs before any tool executes. They
+do not execute agents, call LLMs, set ActiveTask, approve work, start PC
+Runner, modify source files, commit, or push. Conditional automation replay
+writes only `_Temp` evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -139,6 +145,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- protagonist_motivation_canon_memory.example.json
 |   +-- protagonist_motivation_rejected_memory.example.json
 |   +-- conditional_automation_cases.example.json
+|   +-- tool_run_request_codex_staff.example.json
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
@@ -153,12 +160,15 @@ _Docs/AIWorkflow/Studio/
 |   +-- Handoff.schema.json
 |   +-- RoleRun.schema.json
 |   +-- ToolRun.schema.json
+|   +-- ToolRunRequest.schema.json
 |   +-- ToolAdapter.schema.json
 |   +-- ConditionalAutomationCase.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json
 |   +-- tool_adapters.initial.json
++-- ToolRuns/
+|   +-- README.md
 +-- Policies/
     +-- Memory_Status_Policy.md
     +-- Conditional_Automation_Policy.md
@@ -190,7 +200,10 @@ These rules are mandatory for all future implementations:
     summarize state, but it must not silently perform approvals or execution.
 15. ToolAdapter registry entries must state file impact, external calls, cost
     possibility, approval requirements, and evidence outputs before use.
-16. Conditional automation decisions must be deterministic, replayable, and
+16. ToolRunRequest is the pre-execution governance record. It may evaluate
+    adapter policy, approval needs, cost risk, and evidence needs, but it must
+    not execute the adapter.
+17. Conditional automation decisions must be deterministic, replayable, and
     auditable. A staff agent, LLM, or tool adapter may propose automation
     eligibility, but the policy test/replay result is the authority.
 
