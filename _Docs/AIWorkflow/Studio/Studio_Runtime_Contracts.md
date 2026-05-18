@@ -372,6 +372,27 @@ If evidence is missing, output status must be `needs_evidence`, `blocked`, or
 The runtime may use OpenAI, Codex CLI, local models, browser adapters, or future
 external AI systems.
 
+Default Studio provider policy:
+
+- Use Codex App/CLI signed-in execution first.
+- Do not require OpenAI API keys or API billing by default.
+- Use other LLM providers only when the Codex/ChatGPT route cannot meet quality
+  requirements.
+- Staff runtime planning may prepare a RoleRun envelope without calling any LLM.
+
+The first local staff runtime tool is:
+
+```bat
+tools\aiworkflow\studio_staff_runtime.bat plan <context_packet_json_path>
+tools\aiworkflow\studio_staff_runtime.bat create <context_packet_json_path> --execute
+tools\aiworkflow\studio_staff_runtime.bat inspect-output <role_run_output_json_path>
+```
+
+It validates StaffContextPacket boundaries, creates RoleRun envelopes, and
+checks RoleRunOutput safety flags. It does not call LLMs, call tools, create
+WorkOrders, create tasks, approve work, write canon, modify source files,
+commit, or push.
+
 Provider-specific behavior must stay behind adapters.
 
 The core records must remain provider-independent:

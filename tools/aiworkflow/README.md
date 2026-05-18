@@ -33,6 +33,7 @@ studio_registry_status.bat
 studio_workorder_planner.bat
 studio_memory_store.bat
 studio_meeting_runtime.bat
+studio_staff_runtime.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -288,6 +289,43 @@ approval, and proposals are not canon.
 For validation smoke tests, `--store-path` may override the store only under
 `_Temp\`. The command does not create WorkOrders, create tasks, approve work,
 start PC Runner, modify source files, commit, or push.
+
+---
+
+## studio_staff_runtime.bat
+
+Plans governed AIWorkflow Studio `RoleRun` envelopes from `StaffContextPacket`
+JSON files and inspects `RoleRunOutput` JSON files. The default durable store
+is:
+
+```text
+_Docs\AIWorkflow\Studio\RoleRuns\
+```
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_staff_runtime.bat status
+tools\aiworkflow\studio_staff_runtime.bat validate
+tools\aiworkflow\studio_staff_runtime.bat plan _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json
+tools\aiworkflow\studio_staff_runtime.bat create _Docs\AIWorkflow\Studio\Examples\scenario_director_context_packet.example.json --execute
+tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_staff_runtime.bat handoff-output _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+```
+
+The default provider policy is `codex_cli_signed_in` with `gpt-5.5`, so the
+Studio path assumes Codex App/CLI signed-in subscription execution first, not
+OpenAI API billing.
+
+`plan` and `create` do not call an LLM. `create` without `--execute` is a
+dry-run preview. `create --execute` writes one RoleRun envelope. RoleRunOutput
+inspection rejects staff output that claims it directly changed source files,
+created tasks, approved work, changed canon, committed, or pushed.
+
+For validation smoke tests, `--store-path` may override the store only under
+`_Temp\`. The command does not call LLMs, call tools, create WorkOrders, create
+tasks, approve work, start PC Runner, modify source files, commit, or push.
 
 ---
 
