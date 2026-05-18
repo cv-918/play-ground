@@ -128,6 +128,74 @@ function Render-List {
     return $html
 }
 
+function Render-Inbox {
+    param([object[]]$Items)
+
+    if ($null -eq $Items -or @($Items).Count -eq 0) {
+        return "<p class='muted'>No director action items in the durable stores.</p>"
+    }
+
+    $html = "<div class='flow'>"
+    foreach ($item in @($Items)) {
+        $html += "<div class='step warning'><strong>" + (Html ([string]$item.type)) + " - <code>" + (Html ([string]$item.id)) + "</code></strong><br>"
+        $html += "<span class='pill'>" + (Html ([string]$item.status)) + "</span> " + (Html ([string]$item.title)) + "<br>"
+        $html += "<span class='muted'>" + (Html ([string]$item.action)) + "</span></div>"
+    }
+    $html += "</div>"
+    return $html
+}
+
+function New-InboxItems {
+    param([object]$Data)
+
+    $items = @()
+    foreach ($workOrder in @($Data.work_orders)) {
+        if (@("draft", "proposed", "director_review", "approved_for_tasking") -contains [string]$workOrder.status) {
+            $items += [pscustomobject]@{
+                type = "WorkOrder"
+                id = [string]$workOrder.id
+                status = [string]$workOrder.status
+                title = [string]$workOrder.title
+                action = "Review scope, non-goals, approval items, then store/plan/create task only when accepted."
+            }
+        }
+    }
+    foreach ($meeting in @($Data.meetings)) {
+        if (@("director_decision_needed", "follow_up_tasking") -contains [string]$meeting.status) {
+            $items += [pscustomobject]@{
+                type = "Meeting"
+                id = [string]$meeting.id
+                status = [string]$meeting.status
+                title = [string]$meeting.title
+                action = "Review unresolved questions, accepted/rejected directions, and follow-up WorkOrders."
+            }
+        }
+    }
+    foreach ($roleRun in @($Data.role_runs)) {
+        if (@("needs_director_decision", "handoff_pending", "output_ready") -contains [string]$roleRun.status) {
+            $items += [pscustomobject]@{
+                type = "RoleRun"
+                id = [string]$roleRun.id
+                status = [string]$roleRun.status
+                title = [string]$roleRun.title
+                action = "Inspect or route RoleRunOutput before creating WorkOrders or memory records."
+            }
+        }
+    }
+    foreach ($memory in @($Data.memories)) {
+        if (@("proposed", "approved") -contains [string]$memory.status) {
+            $items += [pscustomobject]@{
+                type = "Memory"
+                id = [string]$memory.id
+                status = [string]$memory.status
+                title = [string]$memory.title
+                action = "Decide whether this stays proposed, becomes scoped approved memory, or becomes canon through Decision refs."
+            }
+        }
+    }
+    return @($items)
+}
+
 function New-DashboardHtml {
     param(
         [string]$Root,
@@ -276,6 +344,12 @@ function New-DashboardHtml {
       </div>
     </section>
 
+    <section class="card">
+      <h2>Director Inbox</h2>
+      <p class="muted">Human-owned decisions gathered from durable Studio stores. This dashboard does not approve, execute, or write state.</p>
+      $(Render-Inbox -Items $Data.director_inbox)
+    </section>
+
     <section class="grid">
       <div class="card"><h2>Departments</h2>$departmentsHtml</div>
       <div class="card"><h2>Staff Agents</h2>$staffHtml</div>
@@ -332,7 +406,7 @@ function New-DashboardData {
         }
     }
 
-    return [pscustomobject]@{
+    $data = [pscustomobject]@{
         department_count = @($deptData.departments).Count
         staff_count = @($staffData.staff_agents).Count
         planned_staff_count = @($staffData.planned_staff_agents).Count
@@ -349,7 +423,10 @@ function New-DashboardData {
         meetings = (Get-RecordSummaries -Path $meetingPath -IdField "meeting_id" -StatusField "status" -TitleField "topic")
         role_runs = (Get-RecordSummaries -Path $roleRunPath -IdField "role_run_id" -StatusField "status" -TitleField "agent_id")
         tool_adapters = @($toolItems)
+        director_inbox = @()
     }
+    $data.director_inbox = @(New-InboxItems -Data $data)
+    return $data
 }
 
 try {

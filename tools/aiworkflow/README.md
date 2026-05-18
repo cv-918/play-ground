@@ -373,9 +373,10 @@ tools\aiworkflow\studio_dashboard_export.bat --json
 tools\aiworkflow\studio_dashboard_export.bat --output _Temp\AIWorkflowStudio\dashboard\studio_dashboard.html
 ```
 
-The dashboard summarizes departments, staff agents, durable MemoryRecords,
-MeetingSessions, RoleRuns, the Director flow, and safety rules. It is a static
-snapshot and does not start a server.
+The dashboard summarizes departments, staff agents, durable WorkOrders,
+MemoryRecords, MeetingSessions, RoleRuns, tool adapters, the Director flow, a
+read-only Director Inbox, and safety rules. It is a static snapshot and does
+not start a server.
 
 `--output` is restricted to `_Temp\`. The command does not call LLMs, call
 tools, create memory, create WorkOrders, create tasks, approve work, start PC

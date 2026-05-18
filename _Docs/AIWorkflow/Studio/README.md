@@ -43,7 +43,7 @@ This slice defines:
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Local MeetingSession runtime validation and handoff tool
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
-- Read-only Studio dashboard HTML snapshot export
+- Read-only Studio dashboard HTML snapshot export with Director Inbox
 - ToolAdapter schema and read-only tool adapter registry
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
