@@ -132,6 +132,18 @@ summaries so the next staff agent receives usable context instead of only an
 opaque artifact id. It does not execute the target agent, approve the handoff,
 write canon, create tasks, modify source files, commit, or push.
 
+The first local Human Director review packet exporter is:
+
+```bat
+tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+```
+
+It renders a RoleRunOutput into `_Temp` HTML with Korean review labels for
+summary, questions, approval items, objections, proposals, handoffs,
+WorkOrder candidates, memory candidates, evidence refs, and safety flags. It
+does not approve, materialize, execute, write canon, create tasks, modify
+source files, commit, or push.
+
 ## RoleRun Lifecycle
 
 ```text
@@ -620,11 +632,12 @@ Implemented now:
 - RoleRunOutput materializer for draft Proposal, Memory, WorkOrder, and
   Handoff records
 - materialization review decision recorder
+- review packet exporter for Human Director-readable RoleRunOutput HTML
 - conditional automation replay and repair-plan support
 
 Not implemented yet:
 
-- Studio UI
+- interactive Studio UI
 - autonomous staff-to-staff execution without Human Director review
 - persistent background staff scheduling
 

@@ -53,6 +53,7 @@ This slice defines:
   Handoff drafts
 - Local materialization review tool for Human Director Decision records
 - Read-only Studio dashboard HTML snapshot export with Director Inbox
+- Read-only RoleRunOutput review packet HTML export for Human Director review
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
 - Conditional automation case suite, deterministic policy test, replay, and
@@ -119,6 +120,7 @@ tools\aiworkflow\studio_output_materializer.bat plan _Docs\AIWorkflow\Studio\Exa
 tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json --execute
 tools\aiworkflow\studio_materialization_review.bat plan MAT-20260518-150000-scenario --decision approve --target all
 tools\aiworkflow\studio_dashboard_export.bat
+tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
@@ -143,7 +145,8 @@ agent's sealed StaffContextPacket, but it does not execute the target agent.
 Output materialization writes draft/proposed Studio records only; it is not
 approval, task creation, canonization, or implementation. Materialization
 review can write Decision records only; it does not execute the accepted
-records. These tools do not set ActiveTask, start PC Runner, modify source
+records. Review packet export writes a Human Director-readable `_Temp` HTML
+view only. These tools do not set ActiveTask, start PC Runner, modify source
 files, commit, or push. Conditional automation replay writes only `_Temp`
 evaluation artifacts when `--execute` is passed.
 
@@ -268,6 +271,9 @@ These rules are mandatory for all future implementations:
 24. Handoff router may convert a governed Handoff into a target-agent
     StaffContextPacket, but it must not execute the target agent, approve the
     handoff, write canon, create tasks, modify source files, commit, or push.
+25. Review packet export may render staff output for Human Director review,
+    but it must not change the output, approve it, materialize it, or execute
+    any downstream action.
 
 ## Relationship To Existing AIWorkflow Core
 
