@@ -36,6 +36,7 @@ studio_meeting_runtime.bat
 studio_staff_runtime.bat
 studio_dashboard_export.bat
 studio_tool_registry_status.bat
+studio_conditional_automation.bat
 project_profile_status.bat
 active_project_status.bat
 task_workspace_manager.bat
@@ -379,6 +380,32 @@ signed-in routes first and do not require OpenAI API billing by default.
 This command is read-only. It does not execute adapters, call LLMs, create
 memory, create WorkOrders, create tasks, approve work, modify source files,
 commit, or push.
+
+---
+
+## studio_conditional_automation.bat
+
+Evaluates, tests, replays, and repair-plans Studio conditional automation
+policy decisions.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_conditional_automation.bat status
+tools\aiworkflow\studio_conditional_automation.bat validate
+tools\aiworkflow\studio_conditional_automation.bat test
+tools\aiworkflow\studio_conditional_automation.bat test --execute
+tools\aiworkflow\studio_conditional_automation.bat replay _Temp\AIWorkflowStudio\conditional_automation\conditional-automation-test-YYYYMMDD-HHMMSS-fff.json
+tools\aiworkflow\studio_conditional_automation.bat repair-plan _Temp\AIWorkflowStudio\conditional_automation\conditional-automation-test-YYYYMMDD-HHMMSS-fff.json
+```
+
+`test` is read-only. `test --execute` writes a replayable evaluation JSON under
+`_Temp\AIWorkflowStudio\conditional_automation\`. Replay recomputes decisions
+from the recorded input, and repair-plan explains what must change before a
+blocked or human-gated action can safely proceed.
+
+This command does not call LLMs, create tasks, approve work, start PC Runner,
+write memory, write canon, modify source files, commit, or push.
 
 ---
 
@@ -903,6 +930,9 @@ tools\aiworkflow\status.bat
 tools\aiworkflow\workflow_status.bat
 tools\aiworkflow\role_router_status.bat
 tools\aiworkflow\role_router_status.bat --json
+tools\aiworkflow\studio_registry_status.bat validate
+tools\aiworkflow\studio_tool_registry_status.bat validate
+tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json
 tools\aiworkflow\project_profile_status.bat

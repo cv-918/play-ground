@@ -438,6 +438,30 @@ The core records must remain provider-independent:
 - Completion
 - Finalization
 
+## Conditional Automation Governance
+
+Conditional automation is a policy test, not a staff privilege.
+
+Automation may proceed only when a deterministic policy evaluation returns
+`auto_allowed`. If the result is `human_required`, the Human Director must
+approve the specific scope first. If the result is `blocked`, the system must
+produce a repair plan instead of running the action.
+
+The first local policy tool is:
+
+```bat
+tools\aiworkflow\studio_conditional_automation.bat validate
+tools\aiworkflow\studio_conditional_automation.bat test
+tools\aiworkflow\studio_conditional_automation.bat test --execute
+tools\aiworkflow\studio_conditional_automation.bat replay <evaluation_json_path>
+tools\aiworkflow\studio_conditional_automation.bat repair-plan <evaluation_json_path>
+```
+
+`test --execute` writes an evaluation record under `_Temp` so later policy
+changes can be replayed. The tool does not approve tasks, create tasks, start
+runners, call LLMs, write memory, write canon, modify source files, commit, or
+push.
+
 ## Current Implementation Status
 
 Current status:

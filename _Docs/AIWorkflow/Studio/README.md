@@ -28,7 +28,10 @@ This slice defines:
 - WorkOrderTaskBinding schema
 - StaffContextPacket schema
 - RoleRunOutput schema
+- ToolAdapter schema
+- ConditionalAutomationCase schema
 - Memory status policy
+- Conditional automation policy
 - Initial read-only department and staff registries
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
@@ -41,6 +44,8 @@ This slice defines:
 - Local Staff RoleRun planning and RoleRunOutput inspection tool
 - Read-only Studio dashboard HTML snapshot export
 - ToolAdapter schema and read-only tool adapter registry
+- Conditional automation case suite, deterministic policy test, replay, and
+  repair-plan tool
 
 ## Current Execution Status
 
@@ -84,6 +89,8 @@ tools\aiworkflow\studio_staff_runtime.bat inspect-output _Docs\AIWorkflow\Studio
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
+tools\aiworkflow\studio_conditional_automation.bat validate
+tools\aiworkflow\studio_conditional_automation.bat test --execute
 ```
 
 These tools validate registry references, print department/staff details, and
@@ -91,7 +98,8 @@ preview or create WorkOrder-derived Backlog tasks, governed MemoryRecord files,
 governed MeetingSession records, governed RoleRun envelopes, read-only
 dashboard snapshots, and tool adapter policy displays. They do not execute
 agents, call LLMs, set ActiveTask, approve work, start PC Runner, modify source
-files, commit, or push.
+files, commit, or push. Conditional automation replay writes only `_Temp`
+evaluation artifacts when `--execute` is passed.
 
 ## Directory Map
 
@@ -118,6 +126,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- protagonist_motivation_decision.example.json
 |   +-- protagonist_motivation_canon_memory.example.json
 |   +-- protagonist_motivation_rejected_memory.example.json
+|   +-- conditional_automation_cases.example.json
 +-- Schemas/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
@@ -133,12 +142,14 @@ _Docs/AIWorkflow/Studio/
 |   +-- RoleRun.schema.json
 |   +-- ToolRun.schema.json
 |   +-- ToolAdapter.schema.json
+|   +-- ConditionalAutomationCase.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json
 |   +-- tool_adapters.initial.json
 +-- Policies/
     +-- Memory_Status_Policy.md
+    +-- Conditional_Automation_Policy.md
 ```
 
 ## Core Invariants
@@ -167,6 +178,9 @@ These rules are mandatory for all future implementations:
     summarize state, but it must not silently perform approvals or execution.
 15. ToolAdapter registry entries must state file impact, external calls, cost
     possibility, approval requirements, and evidence outputs before use.
+16. Conditional automation decisions must be deterministic, replayable, and
+    auditable. A staff agent, LLM, or tool adapter may propose automation
+    eligibility, but the policy test/replay result is the authority.
 
 ## Relationship To Existing AIWorkflow Core
 

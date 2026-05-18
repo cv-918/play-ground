@@ -1,0 +1,146 @@
+{
+  "schema_version": "conditional-automation-cases-v0.1",
+  "policy_version": "studio-conditional-automation-v0.1",
+  "cases": [
+    {
+      "case_id": "AUTOCASE-20260518-210000-safe-validation",
+      "title": "Safe validation smoke can be automation-eligible",
+      "description": "Low-risk validation-only work with explicit scope, non-goals, and validation plan.",
+      "input": {
+        "source_type": "intake",
+        "category": "VAL",
+        "kind": "validation",
+        "priority": "P2",
+        "risk": "low",
+        "status": "ready",
+        "requested_actions": ["validate", "report"],
+        "safety": {
+          "source_write": false,
+          "data_write": false,
+          "schema_change": false,
+          "canon_write": false,
+          "asset_import": false,
+          "external_call": false,
+          "cost_possible": false,
+          "commit_or_push": false,
+          "destructive": false
+        },
+        "evidence": {
+          "has_scope": true,
+          "has_non_goals": true,
+          "has_validation_plan": true,
+          "has_rollback_plan": false,
+          "has_decision_ref": false,
+          "has_completion_report": false
+        }
+      },
+      "expected_decision": "auto_allowed",
+      "expected_reasons": ["low_risk_priority", "safe_actions", "scope_ready", "validation_ready"]
+    },
+    {
+      "case_id": "AUTOCASE-20260518-210100-canon-needs-human",
+      "title": "Canon write needs Human Director approval",
+      "description": "Canon-changing work has low priority but still requires a decision gate.",
+      "input": {
+        "source_type": "role_run_output",
+        "category": "DOC",
+        "kind": "documentation",
+        "priority": "P2",
+        "risk": "low",
+        "status": "needs_director_decision",
+        "requested_actions": ["write_memory", "canonize"],
+        "safety": {
+          "source_write": false,
+          "data_write": false,
+          "schema_change": false,
+          "canon_write": true,
+          "asset_import": false,
+          "external_call": false,
+          "cost_possible": false,
+          "commit_or_push": false,
+          "destructive": false
+        },
+        "evidence": {
+          "has_scope": true,
+          "has_non_goals": true,
+          "has_validation_plan": true,
+          "has_rollback_plan": true,
+          "has_decision_ref": false,
+          "has_completion_report": false
+        }
+      },
+      "expected_decision": "human_required",
+      "expected_reasons": ["canon_write_requires_human", "status_needs_director_decision"]
+    },
+    {
+      "case_id": "AUTOCASE-20260518-210200-schema-blocked",
+      "title": "Schema change without decision is blocked",
+      "description": "Schema-affecting work cannot proceed through automation without a decision reference.",
+      "input": {
+        "source_type": "work_order",
+        "category": "GAME",
+        "kind": "data",
+        "priority": "P2",
+        "risk": "medium",
+        "status": "ready",
+        "requested_actions": ["schema_change", "implementation"],
+        "safety": {
+          "source_write": true,
+          "data_write": true,
+          "schema_change": true,
+          "canon_write": false,
+          "asset_import": false,
+          "external_call": false,
+          "cost_possible": false,
+          "commit_or_push": false,
+          "destructive": false
+        },
+        "evidence": {
+          "has_scope": true,
+          "has_non_goals": true,
+          "has_validation_plan": true,
+          "has_rollback_plan": true,
+          "has_decision_ref": false,
+          "has_completion_report": false
+        }
+      },
+      "expected_decision": "blocked",
+      "expected_reasons": ["schema_change_without_decision"]
+    },
+    {
+      "case_id": "AUTOCASE-20260518-210300-cost-human",
+      "title": "Possible cost requires Human Director approval",
+      "description": "External/cost-capable asset generation stays human-controlled.",
+      "input": {
+        "source_type": "work_order",
+        "category": "ART",
+        "kind": "asset_generation",
+        "priority": "P2",
+        "risk": "low",
+        "status": "ready",
+        "requested_actions": ["asset_generation"],
+        "safety": {
+          "source_write": false,
+          "data_write": false,
+          "schema_change": false,
+          "canon_write": false,
+          "asset_import": false,
+          "external_call": true,
+          "cost_possible": true,
+          "commit_or_push": false,
+          "destructive": false
+        },
+        "evidence": {
+          "has_scope": true,
+          "has_non_goals": true,
+          "has_validation_plan": true,
+          "has_rollback_plan": false,
+          "has_decision_ref": false,
+          "has_completion_report": false
+        }
+      },
+      "expected_decision": "human_required",
+      "expected_reasons": ["external_call_requires_human", "cost_requires_human"]
+    }
+  ]
+}

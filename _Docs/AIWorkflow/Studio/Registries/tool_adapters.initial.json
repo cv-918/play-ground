@@ -172,6 +172,28 @@
       "notes": [
         "Writes only _Temp dashboard output."
       ]
+    },
+    {
+      "adapter_id": "studio_conditional_automation",
+      "display_name": "Studio Conditional Automation Policy Tool",
+      "category": "workflow_core",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local policy evaluation. No LLM, API, or subscription call is required.",
+      "allowed_actions": ["status", "validate cases", "test policy cases", "write _Temp evaluation with --execute", "replay evaluation", "repair-plan evaluation"],
+      "blocked_actions": ["approve work", "create tasks", "start runners", "write canon", "modify source", "commit or push"],
+      "approval_required_actions": ["using human_required result to proceed with real work", "changing blocked policy rules"],
+      "input_contract": ["ConditionalAutomationCase JSON", "recorded evaluation JSON"],
+      "output_evidence": ["policy decision", "reasons", "human-required reasons", "blockers", "_Temp evaluation record when --execute is used", "repair plan"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": false,
+      "default_enabled": true,
+      "notes": [
+        "Writes only replayable evaluation artifacts under _Temp when --execute is explicit.",
+        "It can say automation is eligible, but it cannot perform the action."
+      ]
     }
   ]
 }

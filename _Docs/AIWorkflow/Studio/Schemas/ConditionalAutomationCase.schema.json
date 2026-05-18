@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ConditionalAutomationCase.schema.json",
+  "title": "ConditionalAutomationCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "title",
+    "description",
+    "input",
+    "expected_decision",
+    "expected_reasons"
+  ],
+  "properties": {
+    "case_id": { "type": "string", "pattern": "^AUTOCASE-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_type",
+        "category",
+        "kind",
+        "priority",
+        "risk",
+        "status",
+        "requested_actions",
+        "safety",
+        "evidence"
+      ],
+      "properties": {
+        "source_type": { "type": "string", "enum": ["intake", "work_order", "role_run_output", "meeting_handoff", "completion", "manual"] },
+        "category": { "type": "string" },
+        "kind": { "type": "string" },
+        "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string" },
+        "requested_actions": { "type": "array", "items": { "type": "string" } },
+        "safety": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_write",
+            "data_write",
+            "schema_change",
+            "canon_write",
+            "asset_import",
+            "external_call",
+            "cost_possible",
+            "commit_or_push",
+            "destructive"
+          ],
+          "properties": {
+            "source_write": { "type": "boolean" },
+            "data_write": { "type": "boolean" },
+            "schema_change": { "type": "boolean" },
+            "canon_write": { "type": "boolean" },
+            "asset_import": { "type": "boolean" },
+            "external_call": { "type": "boolean" },
+            "cost_possible": { "type": "boolean" },
+            "commit_or_push": { "type": "boolean" },
+            "destructive": { "type": "boolean" }
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "has_scope",
+            "has_non_goals",
+            "has_validation_plan",
+            "has_rollback_plan",
+            "has_decision_ref",
+            "has_completion_report"
+          ],
+          "properties": {
+            "has_scope": { "type": "boolean" },
+            "has_non_goals": { "type": "boolean" },
+            "has_validation_plan": { "type": "boolean" },
+            "has_rollback_plan": { "type": "boolean" },
+            "has_decision_ref": { "type": "boolean" },
+            "has_completion_report": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "expected_decision": {
+      "type": "string",
+      "enum": ["auto_allowed", "human_required", "blocked"]
+    },
+    "expected_reasons": { "type": "array", "items": { "type": "string" } }
+  }
+}

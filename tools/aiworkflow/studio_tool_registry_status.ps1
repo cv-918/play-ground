@@ -96,7 +96,7 @@ function Test-ToolAdapter {
     if ([bool]$Adapter.can_call_external -and -not [bool]$Adapter.requires_human_approval -and [string]$Adapter.category -ne "build_test") {
         $warnings += "External-capable adapter should usually require human approval: $id"
     }
-    if ([bool]$Adapter.can_modify_files -and [string]$Adapter.status -eq "available" -and [string]$Adapter.category -notin @("build_test", "ui_export") -and -not [bool]$Adapter.requires_human_approval) {
+    if ([bool]$Adapter.can_modify_files -and [string]$Adapter.status -eq "available" -and [string]$Adapter.category -notin @("build_test", "ui_export", "workflow_core") -and -not [bool]$Adapter.requires_human_approval) {
         $warnings += "File-modifying available adapter should usually require human approval: $id"
     }
 

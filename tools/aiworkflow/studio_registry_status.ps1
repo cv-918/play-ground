@@ -205,7 +205,9 @@ function Test-StudioRegistry {
         "Decision.schema.json",
         "Handoff.schema.json",
         "RoleRun.schema.json",
-        "ToolRun.schema.json"
+        "ToolRun.schema.json",
+        "ToolAdapter.schema.json",
+        "ConditionalAutomationCase.schema.json"
     )
 
     if ([string]::IsNullOrWhiteSpace([string]$Registry.departments_data.schema_version)) {

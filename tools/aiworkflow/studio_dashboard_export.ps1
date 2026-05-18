@@ -260,6 +260,7 @@ function New-DashboardHtml {
       <div class="card"><h2>Meetings</h2><div class="metric">$(Html ([string]$Data.meeting_count))</div><p class="muted">durable MeetingSession 수</p></div>
       <div class="card"><h2>RoleRuns</h2><div class="metric">$(Html ([string]$Data.role_run_count))</div><p class="muted">durable RoleRun 수</p></div>
       <div class="card"><h2>Tool Adapters</h2><div class="metric">$(Html ([string]$Data.tool_adapter_count))</div><p class="muted">registered ToolAdapter 수</p></div>
+      <div class="card"><h2>Automation Cases</h2><div class="metric">$(Html ([string]$Data.conditional_case_count))</div><p class="muted">conditional automation policy test 수</p></div>
     </section>
 
     <section class="card">
@@ -312,6 +313,12 @@ function New-DashboardData {
     $roleRunPath = Join-Path $Root "_Docs\AIWorkflow\Studio\RoleRuns"
     $toolPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Registries\tool_adapters.initial.json"
     $toolData = Read-JsonFile -Path $toolPath
+    $conditionalCasesPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Examples\conditional_automation_cases.example.json"
+    $conditionalCaseCount = 0
+    if (Test-Path -LiteralPath $conditionalCasesPath) {
+        $conditionalCaseData = Read-JsonFile -Path $conditionalCasesPath
+        $conditionalCaseCount = @($conditionalCaseData.cases).Count
+    }
     $toolItems = @()
     foreach ($adapter in @($toolData.tool_adapters)) {
         $toolItems += [pscustomobject]@{
@@ -330,6 +337,7 @@ function New-DashboardData {
         meeting_count = (Get-StoreCount -Path $meetingPath)
         role_run_count = (Get-StoreCount -Path $roleRunPath)
         tool_adapter_count = @($toolData.tool_adapters).Count
+        conditional_case_count = $conditionalCaseCount
         departments = @($deptData.departments)
         staff = @($staffData.staff_agents)
         memories = (Get-RecordSummaries -Path $memoryPath -IdField "memory_id" -StatusField "status" -TitleField "content")
@@ -386,6 +394,7 @@ try {
         meeting_count = $data.meeting_count
         role_run_count = $data.role_run_count
         tool_adapter_count = $data.tool_adapter_count
+        conditional_case_count = $data.conditional_case_count
         safety = [pscustomobject]@{
             temp_html_written = $true
             llm_called = $false
@@ -406,6 +415,7 @@ try {
         Write-Host "departments: $($data.department_count)"
         Write-Host "staff: $($data.staff_count) concrete, $($data.planned_staff_count) planned"
         Write-Host "memory/meetings/roleRuns/tools: $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_adapter_count)"
+        Write-Host "conditional automation cases: $($data.conditional_case_count)"
         Write-Host "safety: _Temp HTML only; no LLM/tool/task/source/git changes"
     }
     exit 0
