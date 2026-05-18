@@ -255,6 +255,20 @@ Canon changes require an ApprovalItem that clearly states:
 
 No StaffAgent may silently canonize its own output.
 
+The first local proposal/decision store is:
+
+```bat
+tools\aiworkflow\studio_decision_store.bat status
+tools\aiworkflow\studio_decision_store.bat create-proposal _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_proposal.example.json --execute
+tools\aiworkflow\studio_decision_store.bat create-decision _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_decision.example.json --execute
+tools\aiworkflow\studio_decision_store.bat canon-plan DEC-20260518-153500-motivation
+```
+
+It stores Proposal and Decision records only when `--execute` is explicit.
+`canon-plan` prepares the memory/canon handoff but does not write memory or
+canon. Proposal storage is not approval. Decision storage is not task
+execution approval.
+
 ## MeetingSession Runtime Contract
 
 A MeetingSession is a structured work session, not a loose chat transcript.

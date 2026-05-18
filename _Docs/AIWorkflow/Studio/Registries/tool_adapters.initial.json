@@ -153,6 +153,28 @@
       ]
     },
     {
+      "adapter_id": "studio_decision_store",
+      "display_name": "Studio Proposal and Decision Store",
+      "category": "workflow_core",
+      "status": "available",
+      "execution_owner": "aiworkflow_core",
+      "provider_policy": "Deterministic local proposal/decision storage. No LLM, API, or subscription call is required.",
+      "allowed_actions": ["status", "validate", "list proposals", "list decisions", "read proposal", "read decision", "explicit create proposal", "explicit create decision", "canon plan"],
+      "blocked_actions": ["silent approval", "silent canon write", "create tasks", "start runners", "modify source", "commit or push"],
+      "approval_required_actions": ["canonize decision", "delegated policy decision changes", "using decision as task execution approval"],
+      "input_contract": ["Proposal JSON", "Decision JSON", "stored proposal refs"],
+      "output_evidence": ["Proposal path", "Decision path", "validation result", "canon/memory handoff plan"],
+      "can_modify_files": true,
+      "can_call_external": false,
+      "can_incur_cost": false,
+      "requires_human_approval": true,
+      "default_enabled": true,
+      "notes": [
+        "Writes only proposal/decision records when --execute is explicit.",
+        "A decision record is not a MemoryRecord and does not write canon by itself."
+      ]
+    },
+    {
       "adapter_id": "studio_dashboard_export",
       "display_name": "Studio Dashboard Export",
       "category": "ui_export",

@@ -160,6 +160,28 @@ function New-InboxItems {
             }
         }
     }
+    foreach ($proposal in @($Data.proposals)) {
+        if (@("draft", "submitted") -contains [string]$proposal.status) {
+            $items += [pscustomobject]@{
+                type = "Proposal"
+                id = [string]$proposal.id
+                status = [string]$proposal.status
+                title = [string]$proposal.title
+                action = "Review the proposal options, risks, approval items, and decide approve/reject/defer/request changes."
+            }
+        }
+    }
+    foreach ($decision in @($Data.decisions)) {
+        if (@("canonize", "approve", "request_changes", "accept_concerns") -contains [string]$decision.status) {
+            $items += [pscustomobject]@{
+                type = "Decision"
+                id = [string]$decision.id
+                status = [string]$decision.status
+                title = [string]$decision.title
+                action = "If this decision should affect memory or tasks, create the explicit follow-up record through the governed store."
+            }
+        }
+    }
     foreach ($meeting in @($Data.meetings)) {
         if (@("director_decision_needed", "follow_up_tasking") -contains [string]$meeting.status) {
             $items += [pscustomobject]@{
@@ -336,6 +358,8 @@ function New-DashboardHtml {
       <div class="card"><h2>Departments</h2><div class="metric">$(Html ([string]$Data.department_count))</div><p class="muted">Studio 부서 수</p></div>
       <div class="card"><h2>Staff</h2><div class="metric">$(Html ([string]$Data.staff_count))</div><p class="muted">구체 staff agent 수</p></div>
       <div class="card"><h2>WorkOrders</h2><div class="metric">$(Html ([string]$Data.work_order_count))</div><p class="muted">durable WorkOrder 수</p></div>
+      <div class="card"><h2>Proposals</h2><div class="metric">$(Html ([string]$Data.proposal_count))</div><p class="muted">durable Proposal 수</p></div>
+      <div class="card"><h2>Decisions</h2><div class="metric">$(Html ([string]$Data.decision_count))</div><p class="muted">durable Decision 수</p></div>
       <div class="card"><h2>Memory</h2><div class="metric">$(Html ([string]$Data.memory_count))</div><p class="muted">durable MemoryRecord 수</p></div>
       <div class="card"><h2>Meetings</h2><div class="metric">$(Html ([string]$Data.meeting_count))</div><p class="muted">durable MeetingSession 수</p></div>
       <div class="card"><h2>RoleRuns</h2><div class="metric">$(Html ([string]$Data.role_run_count))</div><p class="muted">durable RoleRun 수</p></div>
@@ -369,6 +393,8 @@ function New-DashboardHtml {
 
     <section class="grid">
       <div class="card"><h2>WorkOrders</h2>$(Render-List -Items $Data.work_orders)</div>
+      <div class="card"><h2>Proposals</h2>$(Render-List -Items $Data.proposals)</div>
+      <div class="card"><h2>Decisions</h2>$(Render-List -Items $Data.decisions)</div>
       <div class="card"><h2>Memory Records</h2>$(Render-List -Items $Data.memories)</div>
       <div class="card"><h2>Meeting Sessions</h2>$(Render-List -Items $Data.meetings)</div>
       <div class="card"><h2>RoleRuns</h2>$(Render-List -Items $Data.role_runs)</div>
@@ -398,6 +424,8 @@ function New-DashboardData {
     $deptData = Read-JsonFile -Path $deptPath
     $staffData = Read-JsonFile -Path $staffPath
     $workOrderPath = Join-Path $Root "_Docs\AIWorkflow\Studio\WorkOrders"
+    $proposalPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Proposals"
+    $decisionPath = Join-Path $Root "_Docs\AIWorkflow\Studio\Decisions"
     $memoryPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MemoryRecords"
     $meetingPath = Join-Path $Root "_Docs\AIWorkflow\Studio\MeetingSessions"
     $roleRunPath = Join-Path $Root "_Docs\AIWorkflow\Studio\RoleRuns"
@@ -425,6 +453,8 @@ function New-DashboardData {
         staff_count = @($staffData.staff_agents).Count
         planned_staff_count = @($staffData.planned_staff_agents).Count
         work_order_count = (Get-StoreCount -Path $workOrderPath)
+        proposal_count = (Get-StoreCount -Path $proposalPath)
+        decision_count = (Get-StoreCount -Path $decisionPath)
         memory_count = (Get-StoreCount -Path $memoryPath)
         meeting_count = (Get-StoreCount -Path $meetingPath)
         role_run_count = (Get-StoreCount -Path $roleRunPath)
@@ -434,6 +464,8 @@ function New-DashboardData {
         departments = @($deptData.departments)
         staff = @($staffData.staff_agents)
         work_orders = (Get-RecordSummaries -Path $workOrderPath -IdField "work_order_id" -StatusField "status" -TitleField "objective")
+        proposals = (Get-RecordSummaries -Path $proposalPath -IdField "proposal_id" -StatusField "status" -TitleField "title")
+        decisions = (Get-RecordSummaries -Path $decisionPath -IdField "decision_id" -StatusField "decision_type" -TitleField "target_ref")
         memories = (Get-RecordSummaries -Path $memoryPath -IdField "memory_id" -StatusField "status" -TitleField "content")
         meetings = (Get-RecordSummaries -Path $meetingPath -IdField "meeting_id" -StatusField "status" -TitleField "topic")
         role_runs = (Get-RecordSummaries -Path $roleRunPath -IdField "role_run_id" -StatusField "status" -TitleField "agent_id")
@@ -489,6 +521,8 @@ try {
         staff_count = $data.staff_count
         planned_staff_count = $data.planned_staff_count
         work_order_count = $data.work_order_count
+        proposal_count = $data.proposal_count
+        decision_count = $data.decision_count
         memory_count = $data.memory_count
         meeting_count = $data.meeting_count
         role_run_count = $data.role_run_count
@@ -514,7 +548,7 @@ try {
         Write-Host "output: $outputPath"
         Write-Host "departments: $($data.department_count)"
         Write-Host "staff: $($data.staff_count) concrete, $($data.planned_staff_count) planned"
-        Write-Host "workOrders/memory/meetings/roleRuns/toolRunRequests/tools: $($data.work_order_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_run_request_count) / $($data.tool_adapter_count)"
+        Write-Host "workOrders/proposals/decisions/memory/meetings/roleRuns/toolRunRequests/tools: $($data.work_order_count) / $($data.proposal_count) / $($data.decision_count) / $($data.memory_count) / $($data.meeting_count) / $($data.role_run_count) / $($data.tool_run_request_count) / $($data.tool_adapter_count)"
         Write-Host "conditional automation cases: $($data.conditional_case_count)"
         Write-Host "safety: _Temp HTML only; no LLM/tool/task/source/git changes"
     }

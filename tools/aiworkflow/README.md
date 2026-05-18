@@ -31,6 +31,7 @@ workflow_status.bat
 role_router_status.bat
 studio_registry_status.bat
 studio_workorder_planner.bat
+studio_decision_store.bat
 studio_memory_store.bat
 studio_meeting_runtime.bat
 studio_staff_runtime.bat
@@ -236,6 +237,39 @@ commit, or push.
 
 For validation smoke tests, `--store-path` may override the WorkOrder store
 only under `_Temp\`.
+
+---
+
+## studio_decision_store.bat
+
+Stores, reads, lists, validates, and plans follow-up for Studio `Proposal` and
+`Decision` JSON files. It preserves the boundary that a proposal is not a
+decision, and a decision is not canon memory until a separate MemoryRecord is
+created through the memory store.
+
+Examples:
+
+```bat
+tools\aiworkflow\studio_decision_store.bat status
+tools\aiworkflow\studio_decision_store.bat validate
+tools\aiworkflow\studio_decision_store.bat list-proposals
+tools\aiworkflow\studio_decision_store.bat list-decisions
+tools\aiworkflow\studio_decision_store.bat create-proposal _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_proposal.example.json
+tools\aiworkflow\studio_decision_store.bat create-proposal _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_proposal.example.json --execute
+tools\aiworkflow\studio_decision_store.bat create-decision _Docs\AIWorkflow\Studio\Examples\protagonist_motivation_decision.example.json --execute
+tools\aiworkflow\studio_decision_store.bat canon-plan DEC-20260518-153500-motivation
+```
+
+`create-proposal` and `create-decision` without `--execute` are dry-run
+previews. With `--execute`, they write only Proposal or Decision JSON files.
+
+For validation smoke tests, `--store-root` may override both stores only under
+`_Temp\`.
+
+`canon-plan` explains what MemoryRecord status should be created next
+(`canon`, `approved`, or `rejected`) but does not write memory or canon. The
+command does not call LLMs, create WorkOrders, create tasks, approve
+implementation, start PC Runner, modify source files, commit, or push.
 
 ---
 
@@ -996,6 +1030,7 @@ tools\aiworkflow\role_router_status.bat --json
 tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
+tools\aiworkflow\studio_decision_store.bat validate
 tools\aiworkflow\studio_conditional_automation.bat test
 tools\aiworkflow\active_project_status.bat
 tools\aiworkflow\active_project_status.bat --json
