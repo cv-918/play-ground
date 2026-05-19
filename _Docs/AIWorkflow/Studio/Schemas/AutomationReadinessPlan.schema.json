@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/AutomationReadinessPlan.schema.json",
+  "title": "AutomationReadinessPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "automation_readiness_plan_id",
+    "task_id",
+    "current_meaning",
+    "can_auto_handoff",
+    "can_auto_finalize",
+    "can_auto_commit_or_push",
+    "blockers",
+    "allowed_auto_steps",
+    "always_human_steps",
+    "policy_inputs",
+    "recommended_next_actions",
+    "safety",
+    "created_at"
+  ],
+  "properties": {
+    "automation_readiness_plan_id": { "type": "string", "pattern": "^ARP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "task_id": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "can_auto_handoff": { "type": "boolean" },
+    "can_auto_finalize": { "type": "boolean" },
+    "can_auto_commit_or_push": { "type": "boolean" },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "allowed_auto_steps": { "type": "array", "items": { "type": "string" } },
+    "always_human_steps": { "type": "array", "items": { "type": "string" } },
+    "policy_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conditional_case_count", "evaluation_count", "latest_evaluation_id"],
+      "properties": {
+        "conditional_case_count": { "type": "integer" },
+        "evaluation_count": { "type": "integer" },
+        "latest_evaluation_id": { "type": "string" }
+      }
+    },
+    "recommended_next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_only", "auto_approval_applied", "runner_started", "task_state_changed", "commit_or_push"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "auto_approval_applied": { "type": "boolean" },
+        "runner_started": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}

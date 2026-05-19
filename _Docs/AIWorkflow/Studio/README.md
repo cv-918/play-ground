@@ -39,6 +39,7 @@ This slice defines:
 - ToolAdapter schema
 - ProjectExecutionPlan schema
 - CompletionDecisionPlan schema
+- AutomationReadinessPlan schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -136,6 +137,10 @@ This slice defines:
   accepting/accepting concerns/requesting changes/deferring, remaining
   concerns, and Director checklist without writing finalization, marking done,
   committing, or pushing.
+- Deterministic AutomationReadinessPlan for automatic progression boundaries.
+  It explains current blockers, allowed automatic steps, always-human steps,
+  policy inputs, and recommended next actions without applying approval,
+  starting a runner, changing task state, committing, or pushing.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 

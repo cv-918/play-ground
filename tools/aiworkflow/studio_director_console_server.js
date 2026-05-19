@@ -2185,7 +2185,7 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="policy">
           <div class="page-heading"><div><h2>정책</h2><p>내부/관리자용 정책 검증 화면입니다. 자동 진행 정책을 조정하거나 디버깅할 때만 봅니다.</p></div></div>
-          <div class="card"><h2>자동 진행 정책</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
+          <div class="card"><div class="section-title"><h2>자동 진행 정책</h2><button class="secondary" data-action="automation-readiness-plan">자동 진행 준비도</button></div><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
         </section>
 
         <section class="page" data-page="evidence">
@@ -3499,6 +3499,7 @@ function directorConsoleHtml() {
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
+      if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -4171,6 +4172,65 @@ function buildCompletionDecisionPlan(core = {}) {
       read_only: true,
       task_done_changed: false,
       finalization_written: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+async function buildAutomationReadinessPlan(repoRoot) {
+  const core = await getWorkflowCore(repoRoot);
+  const automation = await getConditionalAutomation(repoRoot);
+  const task = core.active_task || {};
+  const verification = core.verification || {};
+  const completion = core.completion || {};
+  const git = core.git || {};
+  const priority = String(task.priority || "").toUpperCase();
+  const kind = String(task.kind || "").toLowerCase();
+  const blockers = [];
+
+  if (!task.task_id) blockers.push("현재 ActiveTask가 없습니다.");
+  if (["P0", "P1"].includes(priority)) blockers.push("중요 작업은 자동 진행 대상이 아닙니다.");
+  if (["implementation", "data", "runtime", "schema", "save", "source"].includes(kind)) blockers.push("소스/데이터/런타임 인접 작업은 사람 승인이 필요합니다.");
+  if (verification.verdict === "CONCERNS" || verification.verdict === "FAIL" || verification.verdict === "BLOCKED") blockers.push("검증 판정에 우려 또는 실패가 있습니다.");
+  if (completion.state === "needs_human_decision") blockers.push("완료 검토에서 사람 판단이 필요합니다.");
+  if (git.dirty) blockers.push("Git 작업대에 변경이 있어 자동 commit/push는 금지됩니다.");
+
+  return {
+    automation_readiness_plan_id: makeStudioId("ARP", task.task_id || "automation"),
+    task_id: task.task_id || "",
+    current_meaning: blockers.length
+      ? "현재 상태에서는 자동 진행보다 사람 판단 또는 명시적 버튼 실행이 우선입니다."
+      : "현재 상태는 저위험 자동 진행 후보가 될 수 있습니다.",
+    can_auto_handoff: blockers.length === 0,
+    can_auto_finalize: false,
+    can_auto_commit_or_push: false,
+    blockers,
+    allowed_auto_steps: [
+      "저위험 validation/documentation 작업의 intake 후 ActiveTask 선택",
+      "정책 조건을 만족한 저위험 작업의 approve 기록",
+      "지원 runner profile이 있는 경우 PC Runner 시작",
+      "_Temp 검증 자료 생성",
+    ],
+    always_human_steps: [
+      "P0/P1, high-risk, source/data/runtime/schema/save 인접 작업 승인",
+      "CONCERNS/FAIL/BLOCKED 완료 판정 수용",
+      "공식 설정/canon 전환",
+      "commit, push, release",
+    ],
+    policy_inputs: {
+      conditional_case_count: automation.cases?.length || 0,
+      evaluation_count: automation.evaluations?.length || 0,
+      latest_evaluation_id: automation.evaluations?.[0]?.id || "",
+    },
+    recommended_next_actions: blockers.length
+      ? ["감독자 결정함에서 차단 사유를 확인합니다.", "필요하면 완료 판단안 또는 실행 준비 점검을 먼저 봅니다.", "자동 확장 전 정책 테스트를 실행합니다."]
+      : ["정책 테스트를 실행해 자동 진행 조건을 재확인합니다.", "실제 자동 확장은 작은 validation/documentation smoke로 검증합니다."],
+    safety: {
+      read_only: true,
+      auto_approval_applied: false,
+      runner_started: false,
+      task_state_changed: false,
       commit_or_push: false,
     },
     created_at: studioTimestampParts().iso,
@@ -4949,6 +5009,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       completion_decision_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/automation/readiness-plan") {
+    const payload = await buildAutomationReadinessPlan(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      automation_readiness_plan: payload,
       safety: payload.safety,
     });
   }

@@ -138,6 +138,23 @@ Reading a CompletionDecisionPlan is read-only. It must not write a
 FinalizationLog, mark a task done, commit, or push. Those remain explicit
 finalization and git gate actions.
 
+## Automation Readiness Contract
+
+Automation should reduce repetitive clicks without taking away Director
+authority.
+
+An AutomationReadinessPlan explains:
+
+- whether the current task is eligible for automatic handoff
+- why automation is blocked
+- which steps may be automatic
+- which steps always require a Human Director
+- what policy cases and evaluations are available
+- what to check before expanding automation
+
+This plan is read-only. It must not apply approval, start a runner, change
+task lifecycle state, finalize completion, commit, or push.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.
