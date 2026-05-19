@@ -94,6 +94,28 @@ rules. A Knowledge Transition Plan explains:
 Reading a transition plan is read-only. Creating a Decision, MemoryRecord, or
 canon MemoryRecord remains an explicit button action.
 
+## Project Execution Contract
+
+Project execution depends on the active Project Profile and tool adapter
+registry.
+
+Core logic must not hard-code a specific game project path. Project Profile
+records provide source roots, data roots, build profiles, validation profiles,
+and project-specific boundaries.
+
+A ProjectExecutionPlan explains:
+
+- which Project Profile is active
+- which build and validation profiles exist
+- which tool adapters are available
+- which tools can write files
+- which tools can call external services or incur cost
+- which actions require Human Director approval before execution
+- what to check before a ToolRunRequest, build, validation, or runner action
+
+Reading a ProjectExecutionPlan is read-only. It must not run a build, run a
+tool, modify files, create a task decision, commit, or push.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

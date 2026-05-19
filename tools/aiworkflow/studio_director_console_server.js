@@ -1913,7 +1913,7 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card"><h2>프로젝트 프로필</h2><p class="muted">빌드, 데이터, 검증 진입점은 Project Profile이 제공합니다. Core는 특정 게임 경로를 직접 알지 않는 방향입니다.</p><div id="projectProfilesPublic" class="list"></div></div>
-            <div class="card"><h2>도구와 실행 경계</h2><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
+            <div class="card"><div class="section-title"><h2>도구와 실행 경계</h2><button class="secondary" data-action="project-execution-plan">실행 준비 점검</button></div><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
           </section>
         </section>
 
@@ -3496,6 +3496,7 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
+      if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -4060,6 +4061,48 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   }
 
   return base;
+}
+
+async function buildProjectExecutionPlan(repoRoot) {
+  const profiles = await getProjectProfiles(repoRoot);
+  const toolAdapters = await getToolAdapters(repoRoot);
+  const active = profiles.profiles.find((profile) => profile.project_id === profiles.active_project_id) || profiles.profiles[0] || {};
+  const enabledTools = toolAdapters.filter((adapter) => adapter.status === "available" && adapter.default_enabled);
+  const writeTools = enabledTools.filter((adapter) => adapter.can_modify_files);
+  const costTools = enabledTools.filter((adapter) => adapter.can_incur_cost || adapter.can_call_external);
+  return {
+    project_execution_plan_id: makeStudioId("PEP", active.project_id || "project"),
+    project_id: active.project_id || "",
+    active_profile_path: profiles.active_profile_path || active.path || "",
+    current_meaning: active.project_id
+      ? `${active.display_name || active.project_id} 프로젝트의 빌드/검증/도구 실행 경계를 점검합니다.`
+      : "활성 Project Profile을 찾지 못했습니다.",
+    available_validation_profiles: active.validation_profile_ids || [],
+    available_build_profiles: active.build_profile_ids || [],
+    available_tool_adapters: enabledTools.map((adapter) => adapter.adapter_id),
+    human_approval_required_for: [
+      ...writeTools.map((adapter) => `${adapter.adapter_id}: 파일을 수정할 수 있는 도구입니다.`),
+      ...costTools.map((adapter) => `${adapter.adapter_id}: 외부 호출 또는 비용 영향이 있을 수 있습니다.`),
+    ],
+    ready_to_run_checks: [
+      active.validation_profile_count ? "검증 프로필이 등록되어 있습니다." : "검증 프로필이 부족합니다.",
+      active.build_profile_count ? "빌드 프로필이 등록되어 있습니다." : "빌드 프로필이 부족합니다.",
+      enabledTools.length ? "사용 가능한 도구 어댑터가 있습니다." : "사용 가능한 도구 어댑터가 없습니다.",
+    ],
+    recommended_next_actions: [
+      "작업 전 Project Profile이 현재 목표와 맞는지 확인합니다.",
+      "실행이 필요한 경우 ToolRunRequest를 먼저 만들고 권한/비용/파일 수정 가능성을 확인합니다.",
+      "빌드나 검증은 검증 자료로 남기고 완료 판단은 별도 gate에서 처리합니다.",
+    ],
+    safety: {
+      read_only: true,
+      source_changed: false,
+      task_state_changed: false,
+      tool_executed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
 }
 
 async function readStudioRecordFromBody(repoRoot, body, label) {
@@ -4815,6 +4858,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       knowledge_transition_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/project/execution-plan") {
+    const payload = await buildProjectExecutionPlan(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      project_execution_plan: payload,
       safety: payload.safety,
     });
   }

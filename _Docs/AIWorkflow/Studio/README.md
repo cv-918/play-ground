@@ -37,6 +37,7 @@ This slice defines:
 - StaffContextPacket schema
 - RoleRunOutput schema
 - ToolAdapter schema
+- ProjectExecutionPlan schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -125,6 +126,10 @@ This slice defines:
   task
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
+- Deterministic ProjectExecutionPlan for the active Project Profile. It shows
+  build/validation profiles, enabled tool adapters, human-approval-required
+  tool effects such as file writes, external calls, and cost, and recommended
+  next checks without executing tools or changing workflow state.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 

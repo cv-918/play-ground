@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ProjectExecutionPlan.schema.json",
+  "title": "ProjectExecutionPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_execution_plan_id",
+    "project_id",
+    "active_profile_path",
+    "current_meaning",
+    "available_validation_profiles",
+    "available_build_profiles",
+    "available_tool_adapters",
+    "human_approval_required_for",
+    "ready_to_run_checks",
+    "recommended_next_actions",
+    "safety",
+    "created_at"
+  ],
+  "properties": {
+    "project_execution_plan_id": { "type": "string", "pattern": "^PEP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "project_id": { "type": "string" },
+    "active_profile_path": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "available_validation_profiles": { "type": "array", "items": { "type": "string" } },
+    "available_build_profiles": { "type": "array", "items": { "type": "string" } },
+    "available_tool_adapters": { "type": "array", "items": { "type": "string" } },
+    "human_approval_required_for": { "type": "array", "items": { "type": "string" } },
+    "ready_to_run_checks": { "type": "array", "items": { "type": "string" } },
+    "recommended_next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_only", "source_changed", "task_state_changed", "tool_executed", "commit_or_push"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "tool_executed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}
