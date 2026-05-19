@@ -269,6 +269,7 @@ tools\aiworkflow\studio_output_materializer.bat materialize _Docs\AIWorkflow\Stu
 tools\aiworkflow\studio_materialization_review.bat plan MAT-20260518-150000-scenario --decision approve --target all
 tools\aiworkflow\studio_dashboard_export.bat
 tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studio\Examples\scenario_director_role_run_output.example.json
+tools\aiworkflow\studio_start_here.bat
 tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
 tools\aiworkflow\studio_director_console.bat --once --json
 tools\aiworkflow\studio_tool_registry_status.bat validate
@@ -326,6 +327,10 @@ ToolRunRequest says which adapter is requested, why it is needed, what
 permission class it needs, and what evidence must be collected. It is not tool
 execution, does not call external systems, and does not grant approval by
 itself.
+For daily use, prefer `tools\aiworkflow\studio_start_here.bat`. It starts the
+local console if needed and opens `http://127.0.0.1:47831/` in the default
+browser. It does not modify workflow state, run staff, modify files, commit, or
+push.
 Meeting Room lifecycle buttons may create, start, or finalize MeetingSession
 records only through explicit UI actions; meeting lifecycle state is not
 approval, canon, task execution, or git finalization.
