@@ -1836,7 +1836,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-recovery-plan">복구 점검</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
               </div>
             </div>
           </div>
@@ -3549,6 +3549,7 @@ function directorConsoleHtml() {
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
       if (action === "traceability-map") return log(await post("/api/studio/traceability/map", {}));
       if (action === "studio-surface-map") return log(await post("/api/studio/ui/surface-map", {}));
+      if (action === "studio-recovery-plan") return log(await post("/api/studio/recovery/plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
@@ -4752,6 +4753,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "AutomationReadinessPlan.schema.json",
     "DirectorSurfaceMap.schema.json",
     "TraceabilityMap.schema.json",
+    "StudioRecoveryPlan.schema.json",
   ];
   const schemaResults = [];
   for (const schema of expectedSchemas) {
@@ -4906,6 +4908,47 @@ async function buildTraceabilityMap(repoRoot) {
       : ["검증 자료 화면에서 완료 판단을 확인합니다.", "변경 검토 화면에서 commit/push 범위를 확인합니다."],
     safety: {
       read_only: true,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+async function buildStudioRecoveryPlan(repoRoot) {
+  const summary = await getSummary(repoRoot);
+  const smoke = await buildStudioSmokeReport(repoRoot);
+  const core = summary.workflow_core || {};
+  const issues = [];
+  if (core.git?.dirty) issues.push(`${core.git.changed_count || 0}개 git 변경이 있습니다. 커밋 전 범위 분리가 필요합니다.`);
+  if (smoke.schema_checks.some((item) => !item.exists)) issues.push("누락된 Studio schema가 있습니다.");
+  if (!summary.metrics?.staff) issues.push("AI 직원 registry를 읽지 못했습니다.");
+  if (!summary.metrics?.departments) issues.push("부서 registry를 읽지 못했습니다.");
+  if (core.runner?.stop_reason === "completion_review_required") issues.push("완료 검토 gate에서 멈춘 실행이 있습니다.");
+  if (core.runner?.status === "running") issues.push("실행 중인 Runner가 있습니다. 중복 실행 전에 상태 확인이 필요합니다.");
+  const recoverySteps = [
+    "홈에서 판단 대기 항목을 먼저 확인합니다.",
+    "추적 지도에서 task, runner, 검증 자료 연결이 끊겼는지 확인합니다.",
+    "완료 gate에서 멈췄다면 검증 자료 화면의 완료 근거 점검과 완료 판단안을 봅니다.",
+    "git 변경이 섞였으면 변경 검토 화면에서 선택 파일만 commit/push합니다.",
+    "화면 또는 schema가 이상하면 Studio 점검을 실행하고 서버를 재시작합니다.",
+  ];
+  return {
+    studio_recovery_plan_id: makeStudioId("SRP", "studio-recovery"),
+    current_meaning: "Studio 사용 중 멈춤, 누락, 혼합 변경이 생겼을 때 어디부터 확인할지 정리하는 읽기 전용 복구 계획입니다.",
+    health: issues.length ? "needs_attention" : "ok",
+    issues,
+    recovery_steps: recoverySteps,
+    safe_restart_command: "tools\\aiworkflow\\studio_director_console.bat --host 127.0.0.1 --port 47831",
+    smoke_summary: {
+      missing_schema_count: smoke.schema_checks.filter((item) => !item.exists).length,
+      warning_count: smoke.warnings.length,
+      page_count: smoke.console_pages.length,
+    },
+    safety: {
+      read_only: true,
+      process_restarted: false,
       source_changed: false,
       task_state_changed: false,
       commit_or_push: false,
@@ -5820,6 +5863,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       traceability_map: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/recovery/plan") {
+    const payload = await buildStudioRecoveryPlan(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      studio_recovery_plan: payload,
       safety: payload.safety,
     });
   }

@@ -273,6 +273,23 @@ A TraceabilityMap explains:
 Reading a TraceabilityMap is read-only. It must not create records, change
 task state, execute staff, commit, or push.
 
+## Studio Recovery Plan Contract
+
+The Studio must provide a safe first step when the Director feels the workflow
+is stuck, mixed, or unclear.
+
+A StudioRecoveryPlan explains:
+
+- whether the current Studio state needs attention
+- dirty git state and mixed-change risks
+- missing schema or registry risks
+- active completion gates or running sessions
+- safe recovery steps
+- the normal local restart command
+
+Reading a StudioRecoveryPlan is read-only. It must not restart processes,
+modify files, change task state, commit, or push.
+
 ## Staff Operating Plan Contract
 
 A persistent AI staff agent must be reviewable before it is trusted with work.

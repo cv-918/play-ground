@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StudioRecoveryPlan.schema.json",
+  "title": "StudioRecoveryPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "studio_recovery_plan_id",
+    "current_meaning",
+    "health",
+    "issues",
+    "recovery_steps",
+    "safe_restart_command",
+    "smoke_summary",
+    "safety"
+  ],
+  "properties": {
+    "studio_recovery_plan_id": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "health": { "type": "string" },
+    "issues": { "type": "array", "items": { "type": "string" } },
+    "recovery_steps": { "type": "array", "items": { "type": "string" } },
+    "safe_restart_command": { "type": "string" },
+    "smoke_summary": { "type": "object" },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "process_restarted",
+        "source_changed",
+        "task_state_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}
