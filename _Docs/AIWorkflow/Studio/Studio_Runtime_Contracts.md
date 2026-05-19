@@ -157,20 +157,23 @@ tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
 tools\aiworkflow\studio_director_console.bat --once --json
 ```
 
-It serves a local-only browser UI for Studio metrics, Director Inbox, handoff
-candidates, staff run timeline, materialized draft records, WorkOrders,
-MeetingSessions, Department and StaffAgent directories, Project Profiles, Tool
-Adapters, Proposal/Decision/Memory browser panels, Conditional Automation
-policy evidence, and review packet links. The console may call only allowlisted
-Studio actions: refresh summary, export the static dashboard, preview or
-execute the existing read-only staff handoff pipeline, materialize
-RoleRunOutput into governed draft records, record Human Director decisions for
-materialized drafts, create Backlog tasks from reviewed WorkOrders, and inspect
-or explicitly create, start, and finalize MeetingSession records after a
-browser button click. It may also run Conditional Automation status, validate,
-test, `_Temp` test-write, replay, and repair-plan commands. It does not approve
-task execution, start PC Runner, write canon, modify source files, commit, or
-push.
+It serves a local-only browser UI for Studio metrics, Project Dashboard,
+Director Inbox / 감독자 결정함, handoff candidates, execution timeline,
+materialized draft records, WorkOrders, MeetingSessions, Department and
+StaffAgent directories, Project Profiles, Tool Adapters,
+Proposal/Decision/Memory browser panels, Diff / 변경 검토, Evidence / 검증 자료,
+DevLog, Conditional Automation policy evidence, and review packet links. The
+console may call only allowlisted Studio actions: refresh summary, export the
+static dashboard, preview or execute the existing read-only staff handoff
+pipeline, materialize RoleRunOutput into governed draft records, record Human
+Director decisions for materialized drafts, create Backlog tasks from reviewed
+WorkOrders, explicitly create/start/finalize MeetingSession records after a
+browser button click, route approved workflow tasks to PC Runner, record
+completion finalization decisions, and run selected-file Git commit or
+commit+push gate operations. It may also run Conditional Automation status,
+validate, test, `_Temp` test-write, replay, and repair-plan commands. It does
+not let AI staff autonomously approve task execution, start PC Runner, write
+canon, modify source files, commit, or push.
 
 The first local Staff pipeline is:
 
@@ -681,10 +684,12 @@ Implemented now:
 - review packet exporter for Human Director-readable RoleRunOutput HTML
 - conditional automation replay and repair-plan support
 - interactive Studio Director Console with Korean-labeled Director-facing
-  Home, Departments, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge,
-  and Evidence / 검증 자료 pages: `홈`, `부서`, `AI 직원`, `회의실`,
-  `직원 보고서`, `업무 지시`, `지식/결정`, and `검증 자료`; Systems and Policy remain
-  internal/admin pages hidden under `내부 도구` by default
+  Home, Project Dashboard, Director Inbox, Departments, Staff, Meeting Room,
+  Staff Runs, Work Orders, Knowledge, Timeline, Diff Review, Evidence / 검증 자료,
+  and DevLog pages: `홈`, `프로젝트`, `감독자 결정함`, `부서`, `AI 직원`, `회의실`,
+  `직원 보고서`, `업무 지시`, `지식/결정`, `실행 타임라인`, `변경 검토`, `검증 자료`,
+  and `DevLog`; Systems and Policy remain internal/admin pages hidden under
+  `내부 도구` by default
 - Studio Console actions for MeetingSession creation/turns, AI staff meeting
   contribution plan/run, WorkOrder to StaffContextPacket plan/store, WorkOrder
   staff run plan/run, Proposal to Decision, Decision to Memory/canon Memory,

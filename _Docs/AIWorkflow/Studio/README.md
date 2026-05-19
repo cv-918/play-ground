@@ -64,9 +64,11 @@ This slice defines:
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The normal Director-facing pages are Korean-labeled Home,
-  Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, and
-  Evidence / 검증 자료 pages: `홈`, `부서`, `AI 직원`, `회의실`,
-  `직원 보고서`, `업무 지시`, `지식/결정`, and `검증 자료`.
+  Project Dashboard, Director Inbox, Department, Staff, Meeting Room, Staff
+  Runs, Work Orders, Knowledge, Timeline, Diff Review, Evidence / 검증 자료, and
+  DevLog pages: `홈`, `프로젝트`, `감독자 결정함`, `부서`, `AI 직원`, `회의실`,
+  `직원 보고서`, `업무 지시`, `지식/결정`, `실행 타임라인`, `변경 검토`,
+  `검증 자료`, and `DevLog`.
   Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
   default. Home is the Director situation board for recent work,
@@ -76,7 +78,8 @@ This slice defines:
   / 검증 자료
   links collapsed under internal/debug inspection details instead of exposing
   them as normal Director actions. The other Director-facing pages expose dashboard refresh,
-  handoff plan, explicit read-only staff handoff execution, staff run timeline,
+  project profile overview, consolidated Director decisions, handoff plan,
+  explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput review packet export actions, governed record-candidate
   materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, direct MeetingSession creation and turn
@@ -87,7 +90,8 @@ This slice defines:
   follow-up WorkOrder/Decision actions, WorkOrder to StaffContextPacket
   planning/storage actions, WorkOrder to signed-in Codex staff-run plan/run
   actions, Proposal to Decision actions, Decision to Memory/canon Memory
-  actions, and review packet links. The internal/admin pages expose Project
+  actions, Diff Review selected-file Git gate actions, DevLog links, and review
+  packet links. The internal/admin pages expose Project
   Profile and Tool Adapter browser panels, governed ToolRun Request
   planning/storage actions, and Conditional Automation policy test actions.
   The evidence / 검증 자료 review surfaces translate common completion concerns into
@@ -244,16 +248,16 @@ not a task, and not a source or git change.
 It exposes Conditional Automation status, validation, dry-run test, `_Temp`
 evaluation write, replay, and repair-plan actions as policy evidence only. Its
 handoff execution path still routes through the existing read-only staff
-pipeline. These tools do not set ActiveTask, approve task execution, start PC
-Runner, modify source files, commit, or push. Conditional automation test-write
-writes only `_Temp` evaluation artifacts when `--execute` is passed.
+pipeline. These policy tools do not set ActiveTask, approve task execution,
+start PC Runner, modify source files, commit, or push. Conditional automation
+test-write writes only `_Temp` evaluation artifacts when `--execute` is passed.
 The Home page also reads the AIWorkflow Core state directly from ActiveTask,
 Backlog, PC Runner runtime artifacts, verification/completion reports, and Git
 status. This makes Studio Console the default workbench even when Discord is
 not used as the normal UI. The Core state display is read-oriented by default:
-it explains the current task, latest runner gate, evidence links, and Git
-state before asking the Director to act. Explicit Home buttons may then perform
-bounded workflow actions:
+it explains the current task, latest runner gate, evidence links, and Git state
+before asking the Director to act. Explicit Home, Director Inbox, and Diff
+Review buttons may then perform bounded workflow actions:
 
 - create an intake task from a Studio request
 - approve and start the selected task through PC Runner

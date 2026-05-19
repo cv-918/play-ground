@@ -57,6 +57,11 @@ function slash(value) {
   return String(value || "").replace(/\\/g, "/");
 }
 
+function shortText(value, max = 180) {
+  const clean = String(value || "").replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, max - 3).trimEnd()}...` : clean;
+}
+
 function repoPath(repoRoot, relativePath) {
   return path.resolve(repoRoot, relativePath);
 }
@@ -79,6 +84,7 @@ function safeResolveReadable(repoRoot, relativePath) {
   const resolved = path.resolve(repoRoot, clean);
   const allowedRoots = [
     repoPath(repoRoot, "_Docs/AIWorkflow"),
+    repoPath(repoRoot, "_DevLog"),
     repoPath(repoRoot, "_Temp/AIWorkflowRuntime"),
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio"),
     repoPath(repoRoot, "_Temp/AIWorkflowStudio"),
@@ -163,6 +169,30 @@ async function getReviewPackets(repoRoot) {
       updated_at: stat.mtime.toISOString(),
     });
   }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function getDevLogs(repoRoot) {
+  const root = repoPath(repoRoot, "_DevLog");
+  const files = await listFiles(root, (_full, name) => name.endsWith(".md"));
+  const items = [];
+
+  for (const file of files) {
+    const stat = await fsp.stat(file);
+    const text = await readTextIfExists(file);
+    const titleMatch = text.match(/^#\s+(.+)$/m);
+    const rel = toRepoRelative(repoRoot, file);
+    items.push({
+      id: path.basename(file, ".md"),
+      title: titleMatch ? titleMatch[1].trim() : path.basename(file),
+      group: slash(path.relative(root, path.dirname(file))).split("/")[0] || "DevLog",
+      path: rel,
+      href: `/file?path=${encodeURIComponent(rel)}`,
+      summary: shortText(text.replace(/^#\s+.+$/m, "").trim(), 220),
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
@@ -1387,6 +1417,7 @@ async function getSummary(repoRoot) {
   const conditionalAutomation = await getConditionalAutomation(repoRoot);
   const staffDirectory = await getStaffDirectory(repoRoot);
   const workflowCore = await getWorkflowCore(repoRoot);
+  const devLogs = await getDevLogs(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -1398,6 +1429,7 @@ async function getSummary(repoRoot) {
     role_runs: await countJsonFiles(path.join(studioRoot, "RoleRuns")),
     materializations: await countJsonFiles(path.join(studioRoot, "Materializations")),
     task_bindings: await countJsonFiles(path.join(studioRoot, "TaskBindings")),
+    dev_logs: devLogs.length,
   };
 
   return {
@@ -1428,6 +1460,7 @@ async function getSummary(repoRoot) {
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
     meetings: meetings.slice(0, 12),
+    dev_logs: devLogs.slice(0, 24),
     project_profiles: projectProfiles.profiles.slice(0, 12),
     active_project: {
       project_id: projectProfiles.active_project_id,
@@ -1677,13 +1710,18 @@ function directorConsoleHtml() {
       </div>
       <nav class="nav" aria-label="Studio navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
+        <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
+        <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
         <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
         <button data-nav="meetings">회의실 <span class="count" id="nav-meetings-count"></span></button>
         <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
         <button data-nav="work">업무 지시 <span class="count" id="nav-work-count"></span></button>
         <button data-nav="knowledge">지식/결정 <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="timeline">실행 타임라인 <span class="count" id="nav-timeline-count"></span></button>
+        <button data-nav="diff">변경 검토 <span class="count" id="nav-diff-count"></span></button>
         <button data-nav="evidence">검증 자료 <span class="count" id="nav-evidence-count"></span></button>
+        <button data-nav="devlog">DevLog <span class="count" id="nav-devlog-count"></span></button>
       </nav>
       <button id="internalNavToggle" class="internal-toggle">내부 도구 <span id="internalNavState">숨김</span></button>
       <nav id="internalNav" class="nav internal-nav" aria-label="Internal Studio navigation" hidden>
@@ -1774,6 +1812,76 @@ function directorConsoleHtml() {
           <section class="card">
             <div class="section-title"><h2>최근 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
             <div id="homeEvidence" class="compact-list"></div>
+          </section>
+        </section>
+
+        <section class="page" data-page="project">
+          <div class="page-heading"><div><h2>프로젝트</h2><p>현재 Studio가 어떤 프로젝트를 보고 있고, 어떤 검증/빌드/작업 경계를 쓰는지 확인합니다.</p></div></div>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>현재 프로젝트</h2><span id="projectActiveBadge" class="pill"></span></div>
+              <div id="projectActiveSummary" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>AIWorkflow 상태</h2><button class="secondary" data-nav-jump="inbox">감독자 결정함</button></div>
+              <div id="projectWorkflowSummary" class="compact-list"></div>
+            </div>
+          </section>
+          <section class="grid">
+            <div class="card"><h2>프로젝트 프로필</h2><p class="muted">빌드, 데이터, 검증 진입점은 Project Profile이 제공합니다. Core는 특정 게임 경로를 직접 알지 않는 방향입니다.</p><div id="projectProfilesPublic" class="list"></div></div>
+            <div class="card"><h2>도구와 실행 경계</h2><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
+          </section>
+        </section>
+
+        <section class="page" data-page="inbox">
+          <div class="page-heading"><div><h2>감독자 결정함</h2><p>지금 사람이 판단해야 할 승인, 완료, 기록, 커밋 후보만 모아서 봅니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>무엇을 승인하거나 반려해야 하는지 먼저 확인합니다.</li>
+              <li>버튼을 누르면 어떤 상태가 바뀌는지 확인하고 결정합니다.</li>
+              <li>승인, 완료, 기록 채택, 커밋/푸시를 한 화면에서 이어갑니다.</li>
+            </ul>
+          </div>
+          <div id="directorInboxFull" class="list"></div>
+        </section>
+
+        <section class="page" data-page="timeline">
+          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 기록 후보를 시간순으로 훑어봅니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>최근 어떤 일이 어떤 순서로 일어났는지 확인합니다.</li>
+              <li>멈춘 실행, 직원 보고서, 회의 후속 작업을 빠르게 찾아갑니다.</li>
+              <li>세부 판단은 각 항목의 원래 화면에서 진행합니다.</li>
+            </ul>
+          </div>
+          <div id="timelineList" class="list"></div>
+        </section>
+
+        <section class="page" data-page="diff">
+          <div class="page-heading"><div><h2>변경 검토</h2><p>현재 Git 작업대의 변경 파일을 사람 말로 확인하고, 커밋 전 범위를 고릅니다.</p></div></div>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>변경 파일</h2><span id="diffChangedCount" class="pill"></span></div>
+              <div id="diffChangedFiles" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>커밋 범위 선택</h2><span class="pill">Git Gate</span></div>
+              <p class="muted">Home의 Studio Git Gate와 같은 안전 규칙을 사용합니다. unrelated 변경은 선택하지 마세요.</p>
+              <div id="diffGitFileSelect" class="file-select"></div>
+              <input id="diffGitCommitMessage" placeholder="커밋 메시지 비우면 자동 제안">
+              <div class="row">
+                <button class="secondary" id="diffGitSelectWorkflow">Workflow만 선택</button>
+                <button class="secondary" id="diffGitClearSelection">선택 해제</button>
+                <button class="good" id="diffGitCommitSelected">선택 커밋</button>
+                <button class="good" id="diffGitCommitPushSelected">선택 커밋+푸시</button>
+              </div>
+            </div>
+          </section>
+          <section class="card">
+            <h2>diff 통계</h2>
+            <pre id="diffStatView">대기 중</pre>
           </section>
         </section>
 
@@ -2012,6 +2120,19 @@ function directorConsoleHtml() {
             <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
           </div>
         </section>
+
+        <section class="page" data-page="devlog">
+          <div class="page-heading"><div><h2>DevLog</h2><p>의미 있는 작업의 배경, 변경 범위, 검증, 남은 위험을 확인합니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>최근 작업 로그를 확인해 어떤 맥락으로 변경됐는지 봅니다.</li>
+              <li>FixLog, WorkLog, Retrospective를 구분해 작업 기록을 추적합니다.</li>
+              <li>검증이 실제로 수행됐는지, 남은 위험이 문서화됐는지 확인합니다.</li>
+            </ul>
+          </div>
+          <div id="devLogList" class="list"></div>
+        </section>
       </main>
     </div>
   </div>
@@ -2020,15 +2141,20 @@ function directorConsoleHtml() {
     let activePage = "home";
     const PAGES = {
       home: ["홈", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
+      project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
+      inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
       staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
       meetings: ["회의실", "AI 직원 회의, 후속 작업, 미해결 질문을 관리합니다."],
       runs: ["직원 보고서", "AI 직원 보고서와 기록 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
       knowledge: ["지식/결정", "제안, 결정, 기억, 공식 설정 후보를 확인합니다."],
+      timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
+      diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
       policy: ["정책", "내부/관리자용 자동 진행 정책을 확인합니다."],
       evidence: ["검증 자료", "완료 판단에 필요한 검토 보고서와 콘솔 작업 로그를 확인합니다."],
+      devlog: ["DevLog", "작업 기록과 남은 위험을 확인합니다."],
     };
     const filters = {
       departmentSearch: "",
@@ -2092,7 +2218,7 @@ function directorConsoleHtml() {
       return values.length ? values.slice(0, 3).join(", ") + (values.length > 3 ? " +" + (values.length - 3) : "") : emptyText;
     }
     function selectedGitFiles() {
-      return Array.from(document.querySelectorAll('input[data-git-file]:checked')).map((input) => input.dataset.gitFile);
+      return Array.from(new Set(Array.from(document.querySelectorAll('input[data-git-file]:checked')).map((input) => input.dataset.gitFile)));
     }
     function isWorkflowPath(filePath) {
       return String(filePath || "").startsWith("_Docs/AIWorkflow/") || String(filePath || "").startsWith("tools/aiworkflow/");
@@ -2301,15 +2427,190 @@ function directorConsoleHtml() {
     function renderNavCounts() {
       const m = state.metrics;
       setNavCount("home", m.staff_runs + m.materializations + m.work_orders);
+      setNavCount("project", state.project_profiles.length);
+      setNavCount("inbox", buildDirectorDecisionItems().length);
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
       setNavCount("meetings", state.meetings.length);
       setNavCount("runs", state.recent_staff_runs.length + state.materializations.length + state.context_packets.length);
       setNavCount("work", state.work_orders.length + state.handoffs.length);
       setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
+      setNavCount("timeline", buildTimelineItems().length);
+      setNavCount("diff", state.workflow_core?.git?.changed_count || "");
       setNavCount("systems", state.project_profiles.length + state.tool_adapters.length + state.tool_run_requests.length);
       setNavCount("policy", state.conditional_automation.evaluations.length);
       setNavCount("evidence", state.review_packets.length);
+      setNavCount("devlog", state.dev_logs.length);
+    }
+    function buildDirectorDecisionItems() {
+      const core = state.workflow_core || {};
+      const activeTask = core.active_task || {};
+      const runner = core.runner || {};
+      const completion = core.completion || {};
+      const git = core.git || {};
+      const items = [];
+
+      const runnerGate = runner.stop_reason || "";
+      const completionGateOpen = runnerGate === "completion_review_required" || runnerGate === "done_or_commit_decision" || completion.state === "needs_human_decision";
+      if (activeTask.task_id && !completionGateOpen && ["todo", "ready_for_implementation", "awaiting_approval", "partial_done"].includes(activeTask.status)) {
+        items.push({
+          kind: "작업 착수 승인",
+          title: activeTask.task_id + " · " + (activeTask.title || "(제목 없음)"),
+          meaning: "이 작업을 실제 실행 대상으로 선택할지 결정합니다.",
+          effect: "승인하면 ActiveTask 선택, 승인 기록, PC Runner 시작이 이어집니다. task done, commit, push는 하지 않습니다.",
+          risk: "우선순위/위험도/데이터·런타임 경계가 있으면 사람 승인에서 멈추는 것이 정상입니다.",
+          actions: [workflowStartButton("승인+실행", activeTask.task_id, "good"), '<button class="secondary" data-nav-jump="work">업무 지시 보기</button>'],
+        });
+      }
+      if (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision") {
+        items.push({
+          kind: "완료 검토",
+          title: activeTask.task_id ? activeTask.task_id + " 완료 판단" : "완료 판단",
+          meaning: "작업 결과와 검증 자료를 보고 완료로 받을지, 수정 요청할지 결정합니다.",
+          effect: "완료 승인/우려 감수는 FinalizationLog를 남기고 Runner를 계속 진행합니다. markDone이면 task done까지 처리합니다. 커밋/푸시는 별도입니다.",
+          risk: (completion.remaining_concerns || []).length ? "우려 사항이 남아 있습니다. 감수할 수 있는 문제인지 먼저 확인해야 합니다." : "표시된 우려 사항은 없습니다.",
+          actions: [
+            completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : "",
+            completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">결과 보기</a>' : "",
+            workflowActionButton("완료 승인", "accept", "good", true),
+            workflowActionButton("우려 감수 후 완료", "accept-concerns", "warn", true),
+            workflowActionButton("수정 요청", "request-changes", "danger", false),
+            workflowActionButton("판단 보류", "defer", "secondary", false),
+          ],
+        });
+      }
+      state.materializations.slice(0, 5).forEach((item) => {
+        items.push({
+          kind: "직원 보고서 기록 후보",
+          title: item.materialization_id,
+          meaning: "AI 직원 보고서에서 제안/기억/업무 지시 후보를 뽑아둔 상태입니다.",
+          effect: "승인 기록을 남겨도 바로 실행되지는 않습니다. 이후 업무 지시나 결정/기억으로 따로 넘깁니다.",
+          risk: "직원 제안이 공식 설정처럼 굳지 않게, 채택 범위와 제외 범위를 분리해야 합니다.",
+          actions: [
+            button("결정 전 확인", "decision-plan", item.path),
+            button("승인 결정 기록", "decision-approve", item.path, "good", 'data-decision="approve"'),
+            button("수정 요청", "decision-request-changes", item.path, "warn", 'data-decision="request_changes"'),
+            button("반려", "decision-reject", item.path, "danger", 'data-decision="reject"'),
+          ],
+        });
+      });
+      state.proposals.slice(0, 4).forEach((proposal) => {
+        items.push({
+          kind: "제안 판단",
+          title: proposal.proposal_id + " · " + (proposal.title || proposal.summary || "(제안)"),
+          meaning: "아이디어를 채택/수정/반려할지 결정합니다. 제안 자체는 공식 설정이 아닙니다.",
+          effect: "결정 기록을 만들 수 있습니다. 공식 설정으로 저장하는 것은 별도 선택입니다.",
+          risk: "공식 설정화 버튼은 프로젝트 기억에 강하게 남으므로, 승인된 설정일 때만 사용하세요.",
+          actions: [
+            button("제안 채택 기록", "proposal-approve", proposal.path, "good"),
+            button("공식 설정으로 기록", "proposal-canonize", proposal.path, "warn"),
+            button("수정 요청", "proposal-request-changes", proposal.path),
+            button("제안 반려 기록", "proposal-reject", proposal.path, "danger"),
+          ],
+        });
+      });
+      if (git.changed_count) {
+        items.push({
+          kind: "커밋/푸시 결정",
+          title: git.changed_count + "개 변경 파일",
+          meaning: "현재 작업대에서 어떤 파일을 같은 커밋으로 묶을지 결정합니다.",
+          effect: "선택 커밋은 고른 파일만 stage/commit합니다. 선택 커밋+푸시는 commit 후 push까지 합니다.",
+          risk: "게임/파티클/리소스 변경처럼 다른 채팅 작업일 수 있는 파일은 섞지 마세요.",
+          actions: ['<button class="secondary" data-nav-jump="diff">변경 검토로 이동</button>'],
+        });
+      }
+      return items;
+    }
+    function renderDecisionCard(item) {
+      return '<div class="item warn"><h3>' + esc(item.kind) + '</h3>' +
+        '<p><strong>' + esc(short(item.title, 160)) + '</strong></p>' +
+        '<ul class="small">' +
+        '<li>의미: ' + esc(item.meaning) + '</li>' +
+        '<li>결정하면 바뀌는 것: ' + esc(item.effect) + '</li>' +
+        '<li>주의: ' + esc(item.risk) + '</li>' +
+        '</ul>' +
+        actionsHtml(item.actions) + '</div>';
+    }
+    function renderDirectorInboxFull() {
+      const items = buildDirectorDecisionItems();
+      el("directorInboxFull").innerHTML = items.length
+        ? items.map(renderDecisionCard).join("")
+        : '<div class="item good"><h3>지금 사람이 결정할 항목 없음</h3><p class="summary">새 완료 검토, 직원 보고서 후보, 제안, Git 변경이 생기면 여기에 모입니다.</p></div>';
+    }
+    function renderProjectDashboard() {
+      const core = state.workflow_core || {};
+      const activeTask = core.active_task || {};
+      const projectStatus = core.project_status || {};
+      const activeProfile = state.project_profiles.find((profile) => profile.project_id === state.active_project.project_id) || state.project_profiles[0] || {};
+      el("projectActiveBadge").textContent = state.active_project.project_id || "미선택";
+      el("projectActiveSummary").innerHTML =
+        '<div class="item good"><h3>' + esc(activeProfile.display_name || state.active_project.project_id || "활성 프로젝트 없음") + '</h3>' +
+        '<ul class="small">' +
+        '<li>엔진/유형: ' + esc([activeProfile.engine, activeProfile.project_type].filter(Boolean).join(" · ") || "(없음)") + '</li>' +
+        '<li>검증 프로필: ' + esc((activeProfile.validation_profile_ids || []).join(", ") || "(없음)") + '</li>' +
+        '<li>빌드 프로필: ' + esc(activeProfile.build_profile_count ?? 0) + '개</li>' +
+        '</ul>' + internalLinksHtml([activeProfile.href ? link("프로필 원본", activeProfile.href) : ""]) + '</div>';
+      el("projectWorkflowSummary").innerHTML = [
+        ["운영 단계", projectStatus.phase || "(없음)"],
+        ["현재 목표", projectStatus.current_goal || "(없음)"],
+        ["현재 초점", projectStatus.current_focus || "(없음)"],
+        ["ActiveTask", activeTask.task_id ? activeTask.task_id + " · " + optionLabel(activeTask.status) : "(없음)"],
+        ["Backlog", "open " + (core.backlog?.open_count ?? 0) + " · blocked " + (core.backlog?.blocked_count ?? 0)],
+      ].map(([label, value]) => '<div class="compact-line"><span>' + esc(label) + '</span><span>' + esc(value) + '</span></div>').join("");
+      el("projectProfilesPublic").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
+        '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(optionLabel(profile.status)) + '</span></h3>' +
+        '<p>' + esc(profile.display_name) + ' · ' + esc(profile.engine) + ' · ' + esc(profile.project_type) + '</p>' +
+        '<ul class="small"><li>source root ' + esc(profile.source_root_count) + '개</li><li>data root ' + esc(profile.data_root_count) + '개</li><li>validation ' + esc(profile.validation_profile_count) + '개</li></ul>' +
+        internalLinksHtml([link("프로필 원본", profile.href)]) + '</div>'
+      ).join("") : renderEmpty("Project Profile이 없습니다.");
+      el("projectToolSummary").innerHTML = state.tool_adapters.slice(0, 6).map((adapter) =>
+        '<div class="item ' + (adapter.status === "available" ? "good" : "warn") + '"><h3>' + esc(adapter.display_name) + ' <span class="pill">' + esc(optionLabel(adapter.status)) + '</span></h3>' +
+        '<ul class="small"><li>파일 수정: ' + esc(adapter.can_modify_files ? "가능" : "읽기 중심") + '</li><li>외부 호출/비용: ' + esc(adapter.can_call_external ? "가능" : "없음") + ' / ' + esc(adapter.can_incur_cost ? "가능" : "없음") + '</li><li>사람 승인: ' + esc(adapter.requires_human_approval ? "필요" : "조건부 생략 가능") + '</li></ul>' +
+        '</div>'
+      ).join("") || renderEmpty("등록된 도구 어댑터가 없습니다.");
+    }
+    function buildTimelineItems() {
+      const core = state.workflow_core || {};
+      const items = [];
+      if (core.runner?.runner_run_id) {
+        items.push({ when: core.runner.updated_at || state.generated_at, kind: "Runner", title: core.runner.runner_run_id, detail: core.runner.stop_reason || core.runner.status, page: "evidence" });
+      }
+      state.recent_staff_runs.forEach((run) => items.push({ when: run.updated_at, kind: "직원 보고서", title: run.output_id || run.role_run_id, detail: staffName(run.agent_id) + " · " + optionLabel(run.output_status || run.status), page: "runs" }));
+      state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "회의", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "meetings" }));
+      state.work_orders.forEach((wo) => items.push({ when: wo.updated_at || wo.created_at || "", kind: "업무 지시", title: wo.work_order_id, detail: wo.objective || wo.status, page: "work" }));
+      state.materializations.forEach((m) => items.push({ when: m.updated_at || "", kind: "기록 후보", title: m.materialization_id, detail: "records " + m.created_record_count, page: "runs" }));
+      state.dev_logs.slice(0, 8).forEach((logItem) => items.push({ when: logItem.updated_at, kind: "DevLog", title: logItem.title, detail: logItem.group, page: "devlog" }));
+      return items.sort((a, b) => String(b.when || "").localeCompare(String(a.when || ""))).slice(0, 24);
+    }
+    function renderTimelinePage() {
+      const items = buildTimelineItems();
+      el("timelineList").innerHTML = items.length ? items.map((item) =>
+        '<div class="item"><h3>' + esc(item.kind) + ' · ' + esc(short(item.title, 150)) + '</h3>' +
+        '<p class="summary">' + esc(short(item.detail, 180)) + '</p>' +
+        '<p class="small muted">' + esc(item.when || "(시간 정보 없음)") + '</p>' +
+        '<div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">관련 화면 보기</button></div></div>'
+      ).join("") : renderEmpty("표시할 활동이 없습니다.");
+    }
+    function renderDiffPage() {
+      const git = state.workflow_core?.git || {};
+      const entries = git.changed_entries || [];
+      el("diffChangedCount").textContent = entries.length ? entries.length + "개" : "깨끗함";
+      el("diffChangedFiles").innerHTML = entries.length ? entries.map((entry) =>
+        '<div class="item ' + (isWorkflowPath(entry.path) ? "good" : "warn") + '"><h3><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</h3>' +
+        '<p class="summary">' + esc(filePurpose(entry.path)) + '</p></div>'
+      ).join("") : '<div class="item good"><h3>Git 변경 없음</h3><p class="summary">현재 작업대가 깨끗합니다.</p></div>';
+      el("diffGitFileSelect").innerHTML = entries.length ? entries.map((entry) =>
+        '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
+      ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
+      el("diffStatView").textContent = git.diff_stat || "diff 통계가 없습니다.";
+    }
+    function renderDevLogPage() {
+      el("devLogList").innerHTML = state.dev_logs.length ? state.dev_logs.map((item) =>
+        '<div class="item"><h3>' + esc(item.title) + ' <span class="pill">' + esc(item.group) + '</span></h3>' +
+        '<p class="summary">' + esc(short(item.summary, 240)) + '</p>' +
+        '<p class="small muted">' + esc(item.updated_at) + '</p>' +
+        '<div class="row"><a href="' + esc(item.href) + '" target="_blank">DevLog 열기</a></div></div>'
+      ).join("") : renderEmpty("DevLog 파일이 없습니다.");
     }
     function renderHomePanels() {
       const core = state.workflow_core || {};
@@ -2454,10 +2755,16 @@ function directorConsoleHtml() {
         metric("기억", m.memories),
         metric("회의", state.meetings.length),
         metric("프로젝트", m.project_profiles),
-        metric("정책 평가", m.automation_evaluations)
+        metric("정책 평가", m.automation_evaluations),
+        metric("DevLog", m.dev_logs)
       ].join("");
       renderInbox();
       renderHomePanels();
+      renderProjectDashboard();
+      renderDirectorInboxFull();
+      renderTimelinePage();
+      renderDiffPage();
+      renderDevLogPage();
       renderNavCounts();
       el("contextPackets").innerHTML = state.context_packets.length ? state.context_packets.map((packet) =>
         '<div class="item"><h3><code>' + esc(packet.context_packet_id) + '</code> <span class="pill">' + esc(packet.is_durable ? "durable" : "temp") + '</span></h3>' +
@@ -2789,7 +3096,7 @@ function directorConsoleHtml() {
     }
     async function commitSelected(pushAfter = false) {
       const files = selectedGitFiles();
-      const message = el("gitCommitMessage").value.trim();
+      const message = (fieldValue("gitCommitMessage") || fieldValue("diffGitCommitMessage"));
       if (files.length === 0) {
         alert("커밋할 파일을 선택하세요.");
         return;
@@ -3088,6 +3395,14 @@ function directorConsoleHtml() {
     el("gitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
     el("gitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
     el("gitPushOnly").addEventListener("click", () => pushOnly().catch(log));
+    el("diffGitSelectWorkflow").addEventListener("click", () => {
+      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
+    });
+    el("diffGitClearSelection").addEventListener("click", () => {
+      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = false; });
+    });
+    el("diffGitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
+    el("diffGitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
     el("meetingCreateSubmit").addEventListener("click", () => createMeetingFromForm().catch(log));
     el("meetingTurnSubmit").addEventListener("click", () => addMeetingTurnFromForm().catch(log));
     el("workCreateSubmit").addEventListener("click", () => createWorkOrderFromForm().catch(log));
