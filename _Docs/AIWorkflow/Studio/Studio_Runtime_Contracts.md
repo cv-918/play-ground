@@ -155,6 +155,17 @@ An AutomationReadinessPlan explains:
 This plan is read-only. It must not apply approval, start a runner, change
 task lifecycle state, finalize completion, commit, or push.
 
+## Studio Smoke Contract
+
+The Studio console should be testable as a Director-facing product surface.
+
+A StudioSmokeReport checks whether key pages, schemas, counts, and manual smoke
+steps are visible to the local console.
+
+It is read-only and exists to help validate the UI after feature changes. It
+must not create tasks, execute staff, modify source files, finalize completion,
+commit, or push.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

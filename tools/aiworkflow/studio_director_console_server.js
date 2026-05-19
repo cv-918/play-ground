@@ -1805,7 +1805,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button></div></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
               </div>
             </div>
           </div>
@@ -3500,6 +3500,7 @@ function directorConsoleHtml() {
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
+      if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -4234,6 +4235,79 @@ async function buildAutomationReadinessPlan(repoRoot) {
       commit_or_push: false,
     },
     created_at: studioTimestampParts().iso,
+  };
+}
+
+async function buildStudioSmokeReport(repoRoot) {
+  const summary = await getSummary(repoRoot);
+  const expectedSchemas = [
+    "DirectorGoalPlan.schema.json",
+    "MeetingFacilitationPlan.schema.json",
+    "KnowledgeTransitionPlan.schema.json",
+    "ProjectExecutionPlan.schema.json",
+    "CompletionDecisionPlan.schema.json",
+    "AutomationReadinessPlan.schema.json",
+  ];
+  const schemaResults = [];
+  for (const schema of expectedSchemas) {
+    const full = repoPath(repoRoot, `_Docs/AIWorkflow/Studio/Schemas/${schema}`);
+    schemaResults.push({
+      schema,
+      exists: fs.existsSync(full),
+      path: `_Docs/AIWorkflow/Studio/Schemas/${schema}`,
+    });
+  }
+  const pageChecks = [
+    "home",
+    "goals",
+    "project",
+    "inbox",
+    "departments",
+    "staff",
+    "meetings",
+    "runs",
+    "work",
+    "knowledge",
+    "timeline",
+    "diff",
+    "evidence",
+    "devlog",
+  ].map((page) => ({ page, expected_visible: true }));
+  const warnings = [];
+  if (summary.workflow_core?.git?.dirty) warnings.push("Git 작업대에 Studio 외 변경이 있을 수 있습니다. 커밋 전 선택 파일을 확인하세요.");
+  if (!summary.metrics?.staff) warnings.push("Staff registry를 읽지 못했습니다.");
+  if (!summary.metrics?.departments) warnings.push("Department registry를 읽지 못했습니다.");
+  if (!schemaResults.every((item) => item.exists)) warnings.push("일부 Studio schema 파일이 없습니다.");
+
+  return {
+    studio_smoke_report_id: makeStudioId("SSR", "studio-smoke"),
+    generated_at: studioTimestampParts().iso,
+    console_pages: pageChecks,
+    schema_checks: schemaResults,
+    core_counts: {
+      departments: summary.metrics.departments,
+      staff: summary.metrics.staff,
+      project_profiles: summary.metrics.project_profiles,
+      tool_adapters: summary.metrics.tool_adapters,
+      director_goal_plans: summary.metrics.director_goal_plans,
+      review_packets: summary.metrics.review_packets,
+    },
+    warnings,
+    recommended_manual_smoke: [
+      "홈에서 현재 할 일을 확인합니다.",
+      "목표 기획에서 기획안 미리보기를 실행합니다.",
+      "회의실에서 회의 진행안을 봅니다.",
+      "지식/결정에서 전환 계획을 봅니다.",
+      "프로젝트에서 실행 준비 점검을 봅니다.",
+      "검증 자료에서 완료 판단안을 봅니다.",
+      "정책에서 자동 진행 준비도를 봅니다.",
+    ],
+    safety: {
+      read_only: true,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
   };
 }
 
@@ -5018,6 +5092,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       automation_readiness_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/smoke/status") {
+    const payload = await buildStudioSmokeReport(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      studio_smoke_report: payload,
       safety: payload.safety,
     });
   }

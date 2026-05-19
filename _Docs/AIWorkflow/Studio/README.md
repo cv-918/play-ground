@@ -40,6 +40,7 @@ This slice defines:
 - ProjectExecutionPlan schema
 - CompletionDecisionPlan schema
 - AutomationReadinessPlan schema
+- StudioSmokeReport schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -141,6 +142,9 @@ This slice defines:
   It explains current blockers, allowed automatic steps, always-human steps,
   policy inputs, and recommended next actions without applying approval,
   starting a runner, changing task state, committing, or pushing.
+- Read-only StudioSmokeReport for final UI smoke checks. It verifies expected
+  Director-facing pages, newly added Studio schemas, core counts, warnings, and
+  recommended manual smoke steps without changing source, task state, or git.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 

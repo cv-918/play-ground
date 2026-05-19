@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StudioSmokeReport.schema.json",
+  "title": "StudioSmokeReport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "studio_smoke_report_id",
+    "generated_at",
+    "console_pages",
+    "schema_checks",
+    "core_counts",
+    "warnings",
+    "recommended_manual_smoke",
+    "safety"
+  ],
+  "properties": {
+    "studio_smoke_report_id": { "type": "string", "pattern": "^SSR-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "generated_at": { "type": "string" },
+    "console_pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["page", "expected_visible"],
+        "properties": {
+          "page": { "type": "string" },
+          "expected_visible": { "type": "boolean" }
+        }
+      }
+    },
+    "schema_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "exists", "path"],
+        "properties": {
+          "schema": { "type": "string" },
+          "exists": { "type": "boolean" },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    "core_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["departments", "staff", "project_profiles", "tool_adapters", "director_goal_plans", "review_packets"],
+      "properties": {
+        "departments": { "type": "integer" },
+        "staff": { "type": "integer" },
+        "project_profiles": { "type": "integer" },
+        "tool_adapters": { "type": "integer" },
+        "director_goal_plans": { "type": "integer" },
+        "review_packets": { "type": "integer" }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "recommended_manual_smoke": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_only", "source_changed", "task_state_changed", "commit_or_push"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    }
+  }
+}
