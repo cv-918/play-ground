@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/MeetingFacilitationPlan.schema.json",
+  "title": "MeetingFacilitationPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meeting_facilitation_plan_id",
+    "meeting_id",
+    "topic",
+    "status",
+    "current_meaning",
+    "next_speaker_recommendation",
+    "next_speaker_reason",
+    "recommended_actions",
+    "director_decision_options",
+    "blockers",
+    "safety",
+    "created_at"
+  ],
+  "properties": {
+    "meeting_facilitation_plan_id": { "type": "string", "pattern": "^MFP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "meeting_id": { "type": "string" },
+    "topic": { "type": "string" },
+    "status": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "next_speaker_recommendation": { "type": "string" },
+    "next_speaker_reason": { "type": "string" },
+    "recommended_actions": { "type": "array", "items": { "type": "string" } },
+    "director_decision_options": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["meeting_written", "source_changed", "task_state_changed", "canon_changed", "commit_or_push"],
+      "properties": {
+        "meeting_written": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}

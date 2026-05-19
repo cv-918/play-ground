@@ -2482,6 +2482,14 @@ function directorConsoleHtml() {
     function renderEmpty(text) {
       return '<div class="empty">' + esc(text) + '</div>';
     }
+    function meetingNextActionText(meeting) {
+      if (!meeting.is_stored) return "예시 회의입니다. 계속 쓰려면 먼저 회의 저장을 누르세요.";
+      if (meeting.status === "draft") return "회의 시작 또는 AI 의견 받기로 첫 관점을 모으세요.";
+      if (meeting.unresolved_count) return "남은 질문을 정리하고 담당 직원의 답변을 받으세요.";
+      if (meeting.follow_up_count) return "후속 업무 지시를 확인하고 진행 여부를 결정하세요.";
+      if (asArray(meeting.proposals).length) return "제안을 결정 기록 또는 후속 업무로 넘길지 판단하세요.";
+      return "회의 진행안을 보고 다음 발언, 후속 업무, 종료 중 하나를 고르세요.";
+    }
     function setPage(page) {
       activePage = PAGES[page] ? page : "home";
       if (activePage === "systems" || activePage === "policy") {
@@ -2973,6 +2981,7 @@ function directorConsoleHtml() {
         '<p>' + esc(meeting.topic) + '</p>' +
         '<p class="small muted">종류 ' + esc(optionLabel(meeting.meeting_type || "(none)")) + ' · 출처 ' + esc(meeting.is_stored ? "저장됨" : "예시") + '</p>' +
         '<p class="small muted">참석자 ' + esc(meeting.participant_count) + ' · 남은 질문 ' + esc(meeting.unresolved_count) + ' · 후속 작업 ' + esc(meeting.follow_up_count) + '</p>' +
+        '<p class="summary"><strong>다음 회의 행동:</strong> ' + esc(meetingNextActionText(meeting)) + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>참석자</span><span class="pill">' + esc(inlineList(asArray(meeting.participants).map(staffName))) + '</span></div>' +
         '<div class="compact-line"><span>제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
@@ -2982,6 +2991,7 @@ function directorConsoleHtml() {
         '</div>' +
         actionsHtml([
           '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>',
+          button("회의 진행안", "meeting-facilitation-plan", meeting.path),
           button("AI 발언 계획", "meeting-agent-plan", meeting.path),
           meeting.is_stored ? button("AI 의견 받기", "meeting-agent-run", meeting.path, "warn") : "",
           button("후속 작업 만들기", "meeting-create-workorder", meeting.path, "good"),
@@ -3451,6 +3461,7 @@ function directorConsoleHtml() {
         log(await post("/api/studio/meeting/create-decision", { path:filePath, decision_type:"approve" }));
         await refresh();
       }
+      if (action === "meeting-facilitation-plan") return log(await post("/api/studio/meeting/facilitation-plan", { path:filePath }));
       if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "meeting-agent-run") {
         if (!confirm("이 회의에 AI 직원 의견을 요청할까요? Codex 직원 실행을 호출하고, 저장된 회의라면 결과 요약을 새 발언으로 추가합니다. 결정/공식 설정/작업/git은 변경하지 않습니다.")) return;
@@ -3896,6 +3907,68 @@ function buildMemoryPayload(body = {}) {
     owner_agent_id: String(body.owner_agent_id || "documentation_keeper").trim(),
     created_at: studioTimestampParts().iso,
     updated_at: studioTimestampParts().iso,
+  };
+}
+
+function buildMeetingFacilitationPlan(meeting = {}) {
+  const meetingId = meeting.meeting_id || "";
+  const topic = meeting.topic || meetingId || "meeting";
+  const participants = stringList(meeting.participants);
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const spoken = new Set(turns.map((turn) => String(turn.speaker_id || "").trim()).filter(Boolean));
+  const staffParticipants = participants.filter((id) => !["human_director", "executive_producer"].includes(id));
+  const nextSpeaker = staffParticipants.find((id) => !spoken.has(id)) || staffParticipants[0] || participants[0] || "creative_director";
+  const unresolved = stringList(meeting.unresolved_questions);
+  const proposals = stringList(meeting.proposals);
+  const accepted = stringList(meeting.accepted_directions);
+  const objections = stringList(meeting.objections);
+  const status = meeting.status || "draft";
+  const recommendedActions = [];
+
+  if (status === "draft") {
+    recommendedActions.push("회의를 시작하고 각 역할이 무엇을 판단해야 하는지 먼저 확인합니다.");
+  }
+  if (!turns.length) {
+    recommendedActions.push(`${nextSpeaker}에게 첫 관점 정리를 요청합니다.`);
+  } else if (unresolved.length) {
+    recommendedActions.push("남은 질문을 정리하고 답할 담당 직원을 지정합니다.");
+  } else if (proposals.length && !accepted.length) {
+    recommendedActions.push("제안 중 채택/반려/보류할 항목을 Human Director 결정으로 넘깁니다.");
+  } else {
+    recommendedActions.push("회의 결과를 후속 WorkOrder 또는 Decision으로 넘길지 결정합니다.");
+  }
+
+  return {
+    meeting_facilitation_plan_id: makeStudioId("MFP", meetingId || topic),
+    meeting_id: meetingId,
+    topic,
+    status,
+    current_meaning: status === "draft"
+      ? "아직 회의가 시작되기 전입니다. 주제와 참석자를 확인할 차례입니다."
+      : "회의 기록을 보고 다음 발언, 후속 업무, 감독자 결정 중 무엇으로 넘길지 판단하는 단계입니다.",
+    next_speaker_recommendation: nextSpeaker,
+    next_speaker_reason: spoken.has(nextSpeaker)
+      ? "이미 발언한 직원이지만 현재 참석자 중 다음 관점 정리에 가장 적합합니다."
+      : "아직 발언하지 않은 참석자라서 먼저 관점을 받을 수 있습니다.",
+    recommended_actions: recommendedActions,
+    director_decision_options: [
+      "회의를 계속한다: AI 직원 발언을 더 받거나 사람이 직접 발언을 추가합니다.",
+      "후속 업무로 넘긴다: 회의 결과를 WorkOrder 후보로 만듭니다.",
+      "결정으로 기록한다: 채택/반려/보류 판단을 Decision으로 남깁니다.",
+      "회의를 종료한다: 더 논의하지 않고 회의 상태를 closed로 바꿉니다.",
+    ],
+    blockers: [
+      ...unresolved.map((item) => `남은 질문: ${item}`),
+      ...objections.map((item) => `반론/우려: ${item}`),
+    ],
+    safety: {
+      meeting_written: false,
+      source_changed: false,
+      task_state_changed: false,
+      canon_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
   };
 }
 
@@ -4535,6 +4608,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
     const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/facilitation-plan") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const payload = buildMeetingFacilitationPlan(meeting);
+    return sendJson(res, 200, {
+      ok: true,
+      meeting_facilitation_plan: payload,
+      safety: payload.safety,
+    });
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/agent-turn-plan") {

@@ -52,6 +52,26 @@ The deterministic console route is intentionally conservative. LLM staff runs
 may later refine the plan, but they must still produce structured proposals
 and approval items rather than silently changing project state.
 
+## Meeting Facilitation Contract
+
+Creative and technical meetings are not scripts. They are structured
+collaboration sessions with participants, agenda, discussion turns, proposals,
+objections, unresolved questions, Director decisions, accepted directions,
+rejected directions, and follow-up work.
+
+A Meeting Facilitation Plan may summarize the current meeting and recommend:
+
+- what the current meeting state means
+- which staff agent should speak next
+- why that staff agent is recommended
+- whether to keep discussing, create follow-up work, record a decision, or end
+  the meeting
+- blockers such as unresolved questions or objections
+
+The facilitation plan is advisory. It must not append a meeting turn, run a
+staff agent, create work, record a decision, canonize memory, commit, or push.
+Those actions remain separate buttons and governance gates.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

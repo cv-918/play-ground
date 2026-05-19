@@ -24,6 +24,7 @@ This slice defines:
 - Department schema
 - WorkOrder schema
 - MeetingSession schema
+- MeetingFacilitationPlan schema
 - MemoryRecord schema
 - Proposal schema
 - Decision schema
@@ -55,6 +56,10 @@ This slice defines:
 - Local Proposal/Decision store, validation, and canon handoff planner
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Local MeetingSession runtime validation and handoff tool
+- Deterministic Meeting Facilitation Plan that explains the current meeting
+  state, recommends the next speaker/action, lists Director decision options,
+  and keeps AI staff discussion separate from canon, implementation, task
+  lifecycle, and git decisions
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
