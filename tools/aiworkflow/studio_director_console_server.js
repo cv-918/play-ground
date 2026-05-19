@@ -1964,6 +1964,9 @@ function directorConsoleHtml() {
     .file-select input { margin-top:2px; }
     .empty { color:var(--muted); border:1px dashed var(--line); border-radius:8px; padding:16px; }
     pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
+    .log-output { display:grid; gap:10px; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:460px; overflow:auto; }
+    .log-json { margin:0; max-height:none; border:0; padding:0; background:transparent; }
+    .log-message { color:var(--muted); white-space:pre-wrap; word-break:break-word; }
     @media (max-width: 920px) {
       .app-shell { grid-template-columns:1fr; }
       .sidebar { position:static; height:auto; }
@@ -2429,7 +2432,7 @@ function directorConsoleHtml() {
           <div class="grid">
             <div class="card"><div class="section-title"><h2>워크플로우 검토</h2><div class="row"><button class="secondary" data-action="completion-evidence-checklist">완료 근거 점검</button><button class="secondary" data-action="completion-decision-plan">완료 판단안</button></div></div><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
-            <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
+            <div class="card"><h2>작업 로그</h2><div id="log" class="log-output">대기 중</div></div>
           </div>
         </section>
 
@@ -2485,7 +2488,60 @@ function directorConsoleHtml() {
     };
     const el = (id) => document.getElementById(id);
     const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
-    const log = (value) => { el("log").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2); };
+    function compactListHtml(items, emptyText = "없음") {
+      const values = asArray(items).slice(0, 6);
+      if (!values.length) return '<p class="small muted">' + esc(emptyText) + '</p>';
+      const more = asArray(items).length > values.length ? '<li>+' + esc(asArray(items).length - values.length) + '개 더 있음</li>' : "";
+      return '<ul class="small">' + values.map((item) => '<li>' + esc(short(item, 150)) + '</li>').join("") + more + '</ul>';
+    }
+    function formatCompanyRuntimeReadinessLog(value) {
+      const report = value.company_runtime_readiness_report || value.company_runtime || value;
+      if (!report || !report.stage_summary || !Array.isArray(report.gates)) return "";
+      const stage = report.stage_summary || {};
+      const boundary = report.conceptual_completion_boundary || {};
+      const passed = stage.passed_gate_count ?? report.gates.filter((gate) => gate.status === "pass").length;
+      const total = stage.total_gate_count ?? report.gates.length;
+      const cPassed = stage.c_passed_gate_count ?? report.gates.filter((gate) => gate.stage === "C" && gate.status === "pass").length;
+      const cTotal = stage.c_gate_count ?? report.gates.filter((gate) => gate.stage === "C").length;
+      const attention = report.gates.filter((gate) => gate.status !== "pass");
+      const cardClass = attention.length ? "warn" : "good";
+      const gateLines = report.gates.map((gate) =>
+        String(gate.stage || "") + " · " + String(gate.label || "") + ": " + (gate.status === "pass" ? "통과" : "확인 필요")
+      );
+      return '<div class="item ' + cardClass + '">' +
+        '<h3>' + esc(report.overall_label || report.overall_status || "Company Runtime 점검") + '</h3>' +
+        '<p class="summary">' + esc(boundary.definition || "Studio 회사 런타임 준비 상태를 점검했습니다.") + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>전체 gate</span><span class="pill">' + esc(passed + "/" + total) + '</span></div>' +
+        '<div class="compact-line"><span>C gate</span><span class="pill">' + esc(cPassed + "/" + cTotal) + '</span></div>' +
+        '<div class="compact-line"><span>고정 기준</span><span class="pill">' + esc(boundary.fixed_standard || "C: Personal AI Company v1") + '</span></div>' +
+        '</div>' +
+        '<h3>Gate 결과</h3>' + compactListHtml(gateLines) +
+        (attention.length ? '<h3>확인 필요</h3>' + compactListHtml(attention.flatMap((gate) => gate.missing_or_weak_items || [])) : '<h3>확인 필요</h3><p class="small good">현재 C 기준에서 막힌 항목은 없습니다.</p>') +
+        '<h3>다음 분류</h3>' + compactListHtml(report.next_actions || []) +
+        '<h3>안전 상태</h3>' + compactListHtml([
+          "읽기 전용: " + (report.safety?.read_only ? "yes" : "no"),
+          "task 상태 변경 없음: " + (!report.safety || report.safety.task_state_changed === false ? "yes" : "no"),
+          "소스 변경 없음: " + (!report.safety || report.safety.source_changed === false ? "yes" : "no"),
+          "commit/push 없음: " + (!report.safety || report.safety.commit_or_push === false ? "yes" : "no"),
+        ]) +
+        '</div>';
+    }
+    function formatGenericLogObject(value) {
+      if (value?.company_runtime_readiness_report || value?.company_runtime || value?.gates?.some?.((gate) => gate.id && String(gate.id).includes("runtime"))) {
+        const formatted = formatCompanyRuntimeReadinessLog(value);
+        if (formatted) return formatted;
+      }
+      if (value?.ok === false || value?.error || value?.reason) {
+        return '<div class="item danger"><h3>실행 실패</h3><p class="summary">' + esc(value.reason || value.error || "작업 중 오류가 발생했습니다.") + '</p><pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre></div>';
+      }
+      return '<pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre>';
+    }
+    const log = (value) => {
+      el("log").innerHTML = typeof value === "string"
+        ? '<div class="log-message">' + esc(value) + '</div>'
+        : formatGenericLogObject(value);
+    };
 
     async function api(path, options) {
       const res = await fetch(path, options);
@@ -3058,6 +3114,7 @@ function directorConsoleHtml() {
       const companyStage = company.stage_summary || {};
       const operations = [
         ["Company Runtime", company.overall_label || company.overall_status || "(unknown)"],
+        ["All gates", (companyStage.passed_gate_count ?? 0) + "/" + (companyStage.total_gate_count ?? 0)],
         ["C gates", (companyStage.c_passed_gate_count ?? 0) + "/" + (companyStage.c_gate_count ?? 0)],
         ["활성 프로젝트", state.active_project.project_id || "(none)"],
         ["부서 / 직원", state.metrics.departments + " / " + state.metrics.staff],

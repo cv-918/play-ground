@@ -209,6 +209,9 @@ This slice defines:
   Company v1 gates so future work does not move the conceptual completion
   target after C is reached. It does not run staff, create tasks, change
   workflow state, modify source files, commit, or push.
+- The Studio Home "C readiness" action renders the report as a Human Director
+  card first: overall/C gate counts, attention items, next classification, and
+  safety status. Raw JSON remains available only as the fallback log format.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 
