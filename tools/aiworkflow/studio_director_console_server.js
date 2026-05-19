@@ -6,6 +6,7 @@ const fsp = require("fs/promises");
 const http = require("http");
 const path = require("path");
 const { spawn } = require("child_process");
+const { pathToFileURL } = require("url");
 
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 47831;
@@ -719,6 +720,194 @@ function runGit(repoRoot, args, timeoutMs = 10000) {
   });
 }
 
+function parseGitShortStatus(text) {
+  return String(text || "")
+    .split(/\r?\n/u)
+    .filter(Boolean)
+    .map((line) => {
+      const match = String(line).match(/^(.{1,2})\s+(.+)$/u);
+      const status = (match ? match[1] : line.slice(0, 2)).trim() || "??";
+      const rawPath = (match ? match[2] : line.slice(2)).trim();
+      const filePath = rawPath.includes(" -> ") ? rawPath.split(" -> ").pop().trim() : rawPath;
+      return {
+        status,
+        path: slash(filePath),
+        label: `${status} ${slash(filePath)}`,
+      };
+    })
+    .filter((entry) => entry.path);
+}
+
+function isForbiddenGitPath(filePath) {
+  const normalized = slash(filePath).toLowerCase();
+  const baseName = path.posix.basename(normalized);
+  return normalized.startsWith("_temp/")
+    || normalized.startsWith("_local/")
+    || normalized === "node_modules"
+    || normalized.startsWith("node_modules/")
+    || normalized.includes("/node_modules/")
+    || baseName === ".env"
+    || baseName.startsWith(".env.")
+    || normalized.endsWith(".local.json");
+}
+
+function suggestCommitMessage(files = []) {
+  const paths = files.map((file) => slash(file));
+  if (paths.length === 0) return "No selected workflow changes";
+  const all = (predicate) => paths.every(predicate);
+  const any = (predicate) => paths.some(predicate);
+  if (all((filePath) => filePath.startsWith("_Docs/AIWorkflow/") || filePath.startsWith("tools/aiworkflow/"))) {
+    return "Update AIWorkflow Studio";
+  }
+  if (any((filePath) => filePath.startsWith("tools/aiworkflow/"))) {
+    return "Update AIWorkflow tooling";
+  }
+  if (all((filePath) => filePath.startsWith("_Docs/") || filePath.startsWith("_DevLog/"))) {
+    return "Update project documentation";
+  }
+  if (any((filePath) => filePath.startsWith("PlayGround/"))) {
+    return "Update PlayGround game files";
+  }
+  return "Update selected project files";
+}
+
+function validateSelectedGitFiles(currentEntries, files = []) {
+  const current = new Set(currentEntries.map((entry) => slash(entry.path)));
+  const selected = Array.from(new Set((Array.isArray(files) ? files : [])
+    .map((file) => slash(file).trim())
+    .filter(Boolean)));
+  if (selected.length === 0) {
+    throw new Error("No files selected.");
+  }
+  for (const filePath of selected) {
+    if (!current.has(filePath)) {
+      throw new Error(`Selected file is not in current git status: ${filePath}`);
+    }
+    if (filePath.includes("..") || path.isAbsolute(filePath) || isForbiddenGitPath(filePath)) {
+      throw new Error(`Refusing to stage forbidden or unsafe path: ${filePath}`);
+    }
+  }
+  return selected;
+}
+
+async function getGitStatusEntries(repoRoot) {
+  const status = await runGit(repoRoot, ["status", "--short"]);
+  if (!status.ok) {
+    throw new Error(status.stderr || "git status --short failed.");
+  }
+  return parseGitShortStatus(status.stdout);
+}
+
+async function commitSelectedFiles(repoRoot, input = {}) {
+  const entries = await getGitStatusEntries(repoRoot);
+  const files = validateSelectedGitFiles(entries, input.files);
+  const message = String(input.message || "").replace(/\s+/g, " ").trim() || suggestCommitMessage(files);
+  if (message.length > 180) {
+    throw new Error("Commit message must be 180 characters or fewer.");
+  }
+
+  const selected = new Set(files);
+  const preStaged = await runGit(repoRoot, ["diff", "--cached", "--name-only"], 30000);
+  const preStagedFiles = preStaged.stdout ? preStaged.stdout.split(/\r?\n/u).filter(Boolean).map(slash) : [];
+  const unexpectedPreStaged = preStagedFiles.filter((filePath) => !selected.has(filePath));
+  if (unexpectedPreStaged.length > 0) {
+    throw new Error(`Refusing selected commit while unrelated files are already staged: ${unexpectedPreStaged.join(", ")}`);
+  }
+
+  const add = await runGit(repoRoot, ["add", "--", ...files], 30000);
+  if (!add.ok) {
+    throw new Error(add.stderr || "git add failed.");
+  }
+  const diffCheck = await runGit(repoRoot, ["diff", "--cached", "--check"], 30000);
+  if (!diffCheck.ok) {
+    throw new Error(diffCheck.stderr || "git diff --cached --check failed.");
+  }
+  const staged = await runGit(repoRoot, ["diff", "--cached", "--name-only"], 30000);
+  const stagedFiles = staged.stdout ? staged.stdout.split(/\r?\n/u).filter(Boolean).map(slash) : [];
+  const unexpectedStaged = stagedFiles.filter((filePath) => !selected.has(filePath));
+  if (unexpectedStaged.length > 0) {
+    throw new Error(`Refusing to commit files outside current Studio selection: ${unexpectedStaged.join(", ")}`);
+  }
+  if (stagedFiles.length === 0) {
+    return { committed: false, message, staged_files: [], note: "No staged changes after selection." };
+  }
+  const commit = await runGit(repoRoot, ["commit", "-m", message], 60000);
+  if (!commit.ok) {
+    throw new Error(commit.stderr || commit.stdout || "git commit failed.");
+  }
+  const head = await runGit(repoRoot, ["rev-parse", "--short", "HEAD"], 10000);
+  return {
+    committed: true,
+    pushed: false,
+    message,
+    staged_files: stagedFiles,
+    commit_sha: head.ok ? head.stdout.trim() : "",
+    git: commit,
+  };
+}
+
+async function pushCurrentBranch(repoRoot) {
+  const branch = await runGit(repoRoot, ["branch", "--show-current"], 10000);
+  if (!branch.ok) {
+    throw new Error(branch.stderr || "git branch --show-current failed.");
+  }
+  const push = await runGit(repoRoot, ["push"], 120000);
+  if (!push.ok) {
+    throw new Error(push.stderr || push.stdout || "git push failed.");
+  }
+  return {
+    pushed: true,
+    branch: branch.stdout.trim(),
+    git: push,
+  };
+}
+
+async function importDiscordService(repoRoot, relativePath) {
+  const fileUrl = pathToFileURL(repoPath(repoRoot, relativePath)).href;
+  return import(fileUrl);
+}
+
+function studioServiceConfig(repoRoot) {
+  return {
+    repoRoot,
+    defaultProjectId: "dustland_custom_cpp_prototype",
+    llmIntake: {
+      enabled: true,
+      provider: "codex_cli",
+      command: "codex",
+      args: [],
+      model: "gpt-5.5",
+      reasoningEffort: "medium",
+      ephemeral: true,
+      modelRoutes: [],
+      sandbox: "read-only",
+      approvalPolicy: "never",
+      timeoutMs: 60000,
+      fallbackOnError: false,
+      outputDir: "_Temp/AIWorkflowDiscordBot/intake",
+    },
+    intakeAutoHandoff: {
+      enabled: true,
+      autoStartLowRisk: true,
+    },
+    autoApprovalApply: {
+      enabled: false,
+    },
+    limits: {
+      scriptTimeoutMs: 15000,
+      maxDiscordChars: 1800,
+    },
+  };
+}
+
+function safeWorkflowId(value, label = "workflow id") {
+  const normalized = String(value || "").trim();
+  if (!/^[A-Za-z][A-Za-z0-9_-]*-[A-Za-z0-9][A-Za-z0-9_.-]*$/u.test(normalized) || normalized.includes("..")) {
+    throw new Error(`Invalid ${label}.`);
+  }
+  return normalized;
+}
+
 async function getLatestJsonInDirectory(dir) {
   let entries = [];
   try {
@@ -841,7 +1030,8 @@ async function getWorkflowCore(repoRoot) {
   const branch = await runGit(repoRoot, ["branch", "--show-current"]);
   const status = await runGit(repoRoot, ["status", "--short"]);
   const diffStat = await runGit(repoRoot, ["diff", "--stat"]);
-  const changedFiles = status.stdout ? status.stdout.split(/\r?\n/u).filter(Boolean).map((line) => line.trim()) : [];
+  const changedEntries = parseGitShortStatus(status.stdout);
+  const changedFiles = changedEntries.map((entry) => entry.label);
 
   const runnerJson = runnerArtifact ? runnerArtifact.json || {} : {};
   const completionJson = completionArtifact ? completionArtifact.json || {} : {};
@@ -883,6 +1073,8 @@ async function getWorkflowCore(repoRoot) {
       state: completionJson.completion_state || taskRunState?.completion_report?.completion_state || "",
       readiness: completionJson.completion_readiness?.level || taskRunState?.completion_report?.readiness_level || "",
       summary: completionJson.completion_readiness?.summary || "",
+      remaining_concerns: Array.isArray(completionJson.remaining_risks?.concerns) ? completionJson.remaining_risks.concerns : [],
+      remaining_warnings: Array.isArray(completionJson.remaining_risks?.warnings) ? completionJson.remaining_risks.warnings : [],
       href: completionArtifact ? completionArtifact.href : "",
       path: completionArtifact ? completionArtifact.path : "",
       card_href: completionCardArtifact ? completionCardArtifact.href : "",
@@ -892,6 +1084,7 @@ async function getWorkflowCore(repoRoot) {
       branch: branch.stdout || "(unknown)",
       dirty: changedFiles.length > 0,
       changed_count: changedFiles.length,
+      changed_entries: changedEntries.slice(0, 80),
       changed_files: changedFiles.slice(0, 12),
       diff_stat: diffStat.stdout || "",
     },
@@ -1156,6 +1349,10 @@ function directorConsoleHtml() {
     .control-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
     .control-bar input, .control-bar select { min-height:36px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
     .control-bar input { min-width:240px; }
+    textarea { width:100%; min-height:92px; resize:vertical; border:1px solid var(--line); border-radius:8px; padding:10px; background:#121722; color:var(--text); font:inherit; }
+    .file-select { display:grid; gap:6px; margin:10px 0; max-height:220px; overflow:auto; padding-right:4px; }
+    .file-select label { display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--muted); }
+    .file-select input { margin-top:2px; }
     .empty { color:var(--muted); border:1px dashed var(--line); border-radius:8px; padding:16px; }
     pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
     @media (max-width: 920px) {
@@ -1216,8 +1413,8 @@ function directorConsoleHtml() {
             <div class="card">
               <div class="section-title"><h2>안전 경계</h2><span class="pill">local only</span></div>
               <div class="list">
-                <div class="item good"><h3>콘솔이 직접 하지 않는 일</h3><p class="small">task 실행 승인, 캐논 확정, 소스 수정, 커밋, 푸시.</p></div>
-                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">draft 변환, 결정 기록, WorkOrder task 생성, read-only handoff 실행.</p></div>
+                <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
+                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">작업 접수, 승인+실행, 완료 최종화, WorkOrder task 생성, 선택 파일 commit/push.</p></div>
               </div>
             </div>
           </div>
@@ -1229,6 +1426,26 @@ function directorConsoleHtml() {
             <div class="card">
               <div class="section-title"><h2>Git / Evidence</h2><button class="secondary" data-nav-jump="evidence">Evidence 보기</button></div>
               <div id="homeWorkflowEvidence" class="compact-list"></div>
+            </div>
+          </section>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>새 작업 접수</h2><span class="pill">Studio intake</span></div>
+              <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
+              <div class="row"><button class="good" id="studioIntakeSubmit">작업 접수</button></div>
+              <p class="small muted">접수는 TaskDraft와 Backlog task를 만들 수 있습니다. 저위험 작업만 정책에 따라 자동 handoff됩니다.</p>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Studio Git Gate</h2><span id="gitGateCount" class="pill"></span></div>
+              <div id="gitFileSelect" class="file-select"></div>
+              <input id="gitCommitMessage" placeholder="커밋 메시지 비우면 자동 제안">
+              <div class="row">
+                <button class="secondary" id="gitSelectWorkflow">Workflow만 선택</button>
+                <button class="secondary" id="gitClearSelection">선택 해제</button>
+                <button class="good" id="gitCommitSelected">선택 커밋</button>
+                <button class="good" id="gitCommitPushSelected">선택 커밋+푸시</button>
+                <button class="secondary" id="gitPushOnly">푸시만</button>
+              </div>
             </div>
           </section>
           <section id="metrics" class="grid"></section>
@@ -1341,6 +1558,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="evidence">
           <div class="page-heading"><div><h2>Evidence</h2><p>리뷰 패킷과 콘솔 작업 로그를 확인합니다.</p></div></div>
           <div class="grid">
+            <div class="card"><h2>Workflow Review</h2><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>리뷰 패킷</h2><div id="packets" class="list"></div></div>
             <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
           </div>
@@ -1398,6 +1616,47 @@ function directorConsoleHtml() {
     function short(text, max = 180) {
       const clean = String(text || "").replace(/\\s+/g, " ").trim();
       return clean.length > max ? clean.slice(0, max - 3).trimEnd() + "..." : clean;
+    }
+    function selectedGitFiles() {
+      return Array.from(document.querySelectorAll('input[data-git-file]:checked')).map((input) => input.dataset.gitFile);
+    }
+    function isWorkflowPath(filePath) {
+      return String(filePath || "").startsWith("_Docs/AIWorkflow/") || String(filePath || "").startsWith("tools/aiworkflow/");
+    }
+    function explainConcern(text) {
+      const value = String(text || "");
+      if (/failed or cancelled session/i.test(value)) return "실행 세션 중 실패/취소 기록이 있습니다. 어떤 실행이 멈췄는지 Runner 기록을 확인해야 합니다.";
+      if (/outside expected task category/i.test(value)) return "승인된 작업 범위 밖 파일 변경 신호입니다. 해당 파일이 이번 작업에 정말 필요한지 확인해야 합니다.";
+      if (/mixed/i.test(value)) return "실행 결과가 성공/실패 신호를 함께 갖고 있습니다. 완료로 볼지 사람이 판단해야 합니다.";
+      return value;
+    }
+    function translateConcernDetail(text) {
+      const value = String(text || "");
+      const failed = value.match(/failed or cancelled session\\(s\\):\\s*(.+)$/i);
+      if (failed) return "실패 또는 취소된 실행 세션: " + failed[1];
+      const outside = value.match(/outside expected task category:\\s*(.+)$/i);
+      if (outside) return "승인 범위 밖 변경 신호: " + outside[1];
+      if (/observed exit state is mixed/i.test(value)) return "실행 결과에 성공 신호와 실패/취소 신호가 함께 있습니다.";
+      return value;
+    }
+    function translateCompletionSummary(text) {
+      const value = String(text || "");
+      if (/Verification reported concerns/i.test(value)) return "검증에서 우려 사항이 보고되었습니다. 완료 처리 전에 Human Director의 결정이 필요합니다.";
+      if (/Verification passed/i.test(value)) return "검증이 통과했습니다. 완료 검토를 진행할 수 있습니다.";
+      if (/Completion review can proceed/i.test(value)) return "완료 검토를 진행할 수 있습니다.";
+      return value;
+    }
+    function workflowActionButton(label, decision, className, markDone = false) {
+      const core = state.workflow_core || {};
+      const task = core.active_task || {};
+      const runner = core.runner || {};
+      const completion = core.completion || {};
+      if (!task.task_id || !runner.runner_run_id || !completion.path) return "";
+      return '<button class="' + esc(className) + '" data-workflow-finalize="' + esc(decision) + '" data-mark-done="' + esc(markDone ? "true" : "false") + '">' + esc(label) + '</button>';
+    }
+    function workflowStartButton(label, taskId, className = "good") {
+      if (!taskId) return "";
+      return '<button class="' + esc(className) + '" data-workflow-start="' + esc(taskId) + '">' + esc(label) + '</button>';
     }
     function includesText(value, query) {
       return !query || String(value || "").toLowerCase().includes(String(query || "").toLowerCase());
@@ -1478,10 +1737,23 @@ function directorConsoleHtml() {
           '<p class="summary">' + esc((runner.stop_reason || runner.current_step || runner.status || "상태 없음")) + '</p>' +
           '<div class="row">' + (runner.href ? '<a href="' + esc(runner.href) + '" target="_blank">Runner 기록</a>' : '') + '</div></div>'
         : '<div class="item"><h3>Runner 기록 없음</h3><p class="summary">현재 ActiveTask 기준 실행 기록을 찾지 못했습니다.</p></div>';
+      const actionButtons = (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision")
+        ? '<div class="row">' +
+          (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') +
+          (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">결과 보기</a>' : '') +
+          workflowActionButton("완료 승인", "accept", "good", true) +
+          workflowActionButton("우려 감수 후 완료", "accept-concerns", "warn", true) +
+          workflowActionButton("수정 요청", "request-changes", "danger", false) +
+          workflowActionButton("판단 보류", "defer", "secondary", false) +
+          '</div>'
+        : ((activeTask.status === "ready_for_implementation" || activeTask.status === "awaiting_approval" || activeTask.status === "todo")
+          ? '<div class="row">' + workflowStartButton("승인+실행", activeTask.task_id, "good") + '</div>'
+          : '');
       el("homeWorkflowCore").innerHTML =
         '<div class="item good"><h3>지금 할 일</h3><p class="summary">' + esc(nextAction.detail || "즉시 처리할 gate가 보이지 않습니다.") + '</p></div>' +
         activeTaskHtml +
-        runnerHtml;
+        runnerHtml +
+        actionButtons;
       const evidenceLines = [
         ["branch", git.branch || "(unknown)"],
         ["변경 파일", (git.changed_count || 0) + "개"],
@@ -1498,18 +1770,24 @@ function directorConsoleHtml() {
           '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
         ).join("") +
         (git.changed_files && git.changed_files.length
-          ? '<div class="item warn"><h3>변경 파일 미리보기</h3><p class="summary">' + esc(git.changed_files.slice(0, 6).join(", ")) + (git.changed_files.length > 6 ? ' 외 ' + esc(git.changed_files.length - 6) + '개' : '') + '</p></div>'
+          ? '<div class="item warn"><h3>변경 파일 미리보기</h3><p class="summary">' + esc(git.changed_files.slice(0, 6).join(", ")) + ((git.changed_count || git.changed_files.length) > 6 ? ' 외 ' + esc((git.changed_count || git.changed_files.length) - 6) + '개' : '') + '</p></div>'
           : '<div class="item good"><h3>Git 변경 없음</h3><p class="summary">현재 Git 작업대가 깨끗합니다.</p></div>') +
         (evidenceLinks ? '<div class="row">' + evidenceLinks + '</div>' : '');
+      const gitEntries = git.changed_entries || [];
+      el("gitGateCount").textContent = gitEntries.length ? gitEntries.length + "개" : "깨끗함";
+      el("gitFileSelect").innerHTML = gitEntries.length ? gitEntries.map((entry) =>
+        '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
+      ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
       const queue = [
         ...state.materializations.slice(0, 3).map((item) => ({ label:"Draft 결정", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
         ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 산출물", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),
         ...state.work_orders.slice(0, 3).map((wo) => ({ label:"WorkOrder 후보", title:wo.work_order_id, detail:wo.status, page:"work" })),
+        ...(core.backlog?.top_items || []).slice(0, 3).map((task) => ({ label:"Backlog 후보", title:task.id, detail:task.item, page:"home", task_id:task.id })),
         ...state.meetings.filter((meeting) => meeting.unresolved_count || meeting.follow_up_count).slice(0, 2).map((meeting) => ({ label:"회의 후속", title:meeting.meeting_id, detail:"미해결 " + meeting.unresolved_count + " · 후속 " + meeting.follow_up_count, page:"meetings" })),
       ].slice(0, 6);
       el("homeQueueCount").textContent = queue.length ? String(queue.length) : "없음";
       el("homeDecisionQueue").innerHTML = queue.length ? queue.map((item) =>
-        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><button class="secondary" data-nav-jump="' + esc(item.page) + '">열기</button></div>'
+        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">열기</button>' + (item.task_id ? workflowStartButton("승인+실행", item.task_id, "good") : "") + '</div></div>'
       ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 산출물, draft 결정, WorkOrder 후보가 생기면 여기에 올라옵니다.</p></div>';
       el("homeStaffStatus").innerHTML = state.staff_agents.length ? state.staff_agents.slice(0, 6).map((agent) =>
         '<div class="compact-line"><span>' + esc(agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_id) + '</span></div>'
@@ -1728,6 +2006,18 @@ function directorConsoleHtml() {
         '<p class="small">' + esc(m.scope) + ' · ' + esc(m.type) + ' · ' + esc(m.owner_agent_id) + '</p>' +
         '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 열기</a></div>'
       ).join("") : renderEmpty("조건에 맞는 MemoryRecord가 없습니다.");
+      const core = state.workflow_core || {};
+      const completion = core.completion || {};
+      const verification = core.verification || {};
+      const concerns = completion.remaining_concerns || [];
+      el("workflowReview").innerHTML =
+        '<div class="item ' + (verification.verdict === "CONCERNS" ? "warn" : verification.verdict === "FAIL" ? "danger" : "good") + '"><h3>현재 판정 <span class="pill">' + esc(verification.verdict || "없음") + '</span></h3>' +
+        '<p class="summary">' + esc(translateCompletionSummary(completion.summary) || "완료 보고서 요약이 없습니다.") + '</p>' +
+        '<p class="small muted">warnings ' + esc(verification.warning_count ?? "-") + ' · concerns ' + esc(verification.concern_count ?? "-") + '</p>' +
+        '<div class="row">' + (verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '') + (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '') + (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') + '</div></div>' +
+        (concerns.length ? concerns.slice(0, 8).map((concern) =>
+          '<div class="item warn"><h3>우려 사항</h3><p class="summary">' + esc(explainConcern(concern)) + '</p><p class="small muted">' + esc(translateConcernDetail(concern)) + '</p></div>'
+        ).join("") : '<div class="item good"><h3>표시할 우려 사항 없음</h3><p class="summary">현재 완료 보고서에서 별도 concern 목록을 찾지 못했습니다.</p></div>');
       el("packets").innerHTML = state.review_packets.length ? state.review_packets.map((p) =>
         '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">리뷰 패킷 열기</a></div>'
       ).join("") : '<p class="muted">리뷰 패킷이 없습니다.</p>';
@@ -1739,6 +2029,67 @@ function directorConsoleHtml() {
     async function exportDashboard() {
       log("정적 대시보드를 갱신하는 중입니다.");
       log(await post("/api/dashboard/export", {}));
+      await refresh();
+    }
+    async function submitStudioIntake() {
+      const text = el("studioIntakeText").value.trim();
+      if (!text) {
+        alert("작업 요청을 입력하세요.");
+        return;
+      }
+      if (!confirm("이 요청으로 TaskDraft와 Backlog task를 생성할까요? 저위험 작업만 자동 handoff됩니다.")) return;
+      log("Studio intake 실행 중...");
+      log(await post("/api/workflow/intake", { text }));
+      el("studioIntakeText").value = "";
+      await refresh();
+    }
+    async function finalizeWorkflow(decision, markDone) {
+      const core = state.workflow_core || {};
+      const task = core.active_task || {};
+      const runner = core.runner || {};
+      const completion = core.completion || {};
+      const labels = {
+        accept: "완료 승인",
+        "accept-concerns": "우려 감수 후 완료",
+        "request-changes": "수정 요청",
+        reject: "반려",
+        defer: "판단 보류",
+      };
+      const effects = decision === "accept" || decision === "accept-concerns"
+        ? "FinalizationLog를 기록하고 Runner를 계속 진행합니다. markDone이면 task done까지 처리합니다. 커밋/푸시는 하지 않습니다."
+        : "FinalizationLog만 기록합니다. task done, Runner continue, commit/push는 하지 않습니다.";
+      if (!confirm(labels[decision] + "\\n\\n바뀌는 것: " + effects)) return;
+      log(await post("/api/workflow/finalize", {
+        task_id: task.task_id,
+        runner_run_id: runner.runner_run_id,
+        completion_report_id: (completion.path || "").split("/").pop().replace(/\\.json$/i, ""),
+        decision,
+        mark_done: markDone === true,
+      }));
+      await refresh();
+    }
+    async function startWorkflowTask(taskId) {
+      const core = state.workflow_core || {};
+      const task = taskId === core.active_task?.task_id ? core.active_task : (core.backlog?.top_items || []).find((item) => item.id === taskId) || { task_id: taskId };
+      const title = task.title || task.item || taskId;
+      if (!confirm("이 작업을 ActiveTask로 선택하고 승인 기록 후 PC Runner를 시작할까요?\\n\\n승인 대상: " + title + "\\n\\n바뀌는 것: ActiveTask/Backlog 승인 기록과 Runner 시작 기록이 생깁니다. task done, commit, push는 하지 않습니다.")) return;
+      log(await post("/api/workflow/task/approve-start", { task_id: taskId }));
+      await refresh();
+    }
+    async function commitSelected(pushAfter = false) {
+      const files = selectedGitFiles();
+      const message = el("gitCommitMessage").value.trim();
+      if (files.length === 0) {
+        alert("커밋할 파일을 선택하세요.");
+        return;
+      }
+      if (!confirm("선택한 " + files.length + "개 파일만 커밋" + (pushAfter ? "+푸시" : "") + "합니다. 선택하지 않은 변경은 그대로 둡니다.")) return;
+      log(await post("/api/workflow/git/commit", { files, message, push: pushAfter }));
+      await refresh();
+    }
+    async function pushOnly() {
+      if (!confirm("현재 branch를 push할까요? 새 커밋은 만들지 않습니다.")) return;
+      log(await post("/api/workflow/git/push", {}));
       await refresh();
     }
     async function runAction(action, filePath, decision) {
@@ -1794,6 +2145,16 @@ function directorConsoleHtml() {
       }
     }
     document.addEventListener("click", (event) => {
+      const startTarget = event.target.closest("button[data-workflow-start]");
+      if (startTarget) {
+        startWorkflowTask(startTarget.dataset.workflowStart).catch(log);
+        return;
+      }
+      const finalizeTarget = event.target.closest("button[data-workflow-finalize]");
+      if (finalizeTarget) {
+        finalizeWorkflow(finalizeTarget.dataset.workflowFinalize, finalizeTarget.dataset.markDone === "true").catch(log);
+        return;
+      }
       const target = event.target.closest("button[data-action]");
       if (target) {
         runAction(target.dataset.action, target.dataset.path, target.dataset.decision).catch(log);
@@ -1829,6 +2190,16 @@ function directorConsoleHtml() {
         render();
       }
     });
+    el("studioIntakeSubmit").addEventListener("click", () => submitStudioIntake().catch(log));
+    el("gitSelectWorkflow").addEventListener("click", () => {
+      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
+    });
+    el("gitClearSelection").addEventListener("click", () => {
+      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = false; });
+    });
+    el("gitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
+    el("gitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
+    el("gitPushOnly").addEventListener("click", () => pushOnly().catch(log));
     function bindFilter(id, key) {
       el(id).addEventListener("input", (event) => { filters[key] = event.target.value; render(); });
       el(id).addEventListener("change", (event) => { filters[key] = event.target.value; render(); });
@@ -2036,6 +2407,103 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
     const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/intake") {
+    const body = await readRequestJson(req);
+    const text = String(body.text || "").trim();
+    if (!text) throw new Error("Missing intake text.");
+    const { createTaskFromIntake } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/intakeTaskCreationService.js");
+    const result = await createTaskFromIntake(studioServiceConfig(repoRoot), { text });
+    return sendJson(res, result.ok ? 200 : 500, result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/finalize") {
+    const body = await readRequestJson(req);
+    const taskId = safeWorkflowId(body.task_id, "task id");
+    const decision = String(body.decision || "").trim();
+    const runnerRunId = String(body.runner_run_id || "").trim();
+    const completionReportId = String(body.completion_report_id || "").trim();
+    const config = studioServiceConfig(repoRoot);
+
+    if (decision === "accept" || decision === "accept-concerns") {
+      const { acceptCompletionAndContinueRunner } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/runnerCompletionService.js");
+      const result = await acceptCompletionAndContinueRunner(config, {
+        id: taskId,
+        decision,
+        runnerRunId,
+        completionReportId,
+        markDone: body.mark_done === true,
+        actor: "studio_console",
+      });
+      return sendJson(res, result.ok ? 200 : 500, result);
+    }
+
+    const commandByDecision = {
+      "request-changes": "request-changes",
+      reject: "reject",
+      defer: "defer",
+    };
+    if (!commandByDecision[decision]) {
+      throw new Error("Unsupported finalization decision.");
+    }
+    const { recordFinalizationDecision } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/finalizationService.js");
+    const result = await recordFinalizationDecision(config, {
+      id: taskId,
+      command: commandByDecision[decision],
+      completionReportId,
+      actor: "studio_console",
+    });
+    return sendJson(res, result.ok ? 200 : 500, result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/task/approve-start") {
+    const body = await readRequestJson(req);
+    const taskId = safeWorkflowId(body.task_id, "task id");
+    const config = studioServiceConfig(repoRoot);
+    const { setActiveTask, approveTask } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/taskService.js");
+    const { startPcRunnerDetached } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/pcRunnerService.js");
+    const activation = await setActiveTask(config, taskId);
+    if (!activation.ok) return sendJson(res, 500, activation);
+    const approval = await approveTask(config, {
+      id: taskId,
+      note: body.note || "Studio Console approved selected task scope for PC Runner execution.",
+    });
+    if (!approval.ok) return sendJson(res, 500, approval);
+    const runner = await startPcRunnerDetached(config, {
+      id: taskId,
+      profile: body.profile || "",
+      executor: body.executor || "",
+    });
+    return sendJson(res, runner.ok ? 200 : 500, {
+      ok: runner.ok,
+      command: "approve-start",
+      data: { activation, approval, runner },
+      error: runner.error || "",
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/git/commit") {
+    const body = await readRequestJson(req);
+    const commit = await commitSelectedFiles(repoRoot, body);
+    let push = null;
+    if (body.push === true && commit.committed === true) {
+      push = await pushCurrentBranch(repoRoot);
+    }
+    return sendJson(res, 200, {
+      ok: true,
+      command: body.push === true ? "commit-push-selected" : "commit-selected",
+      data: { commit, push },
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/git/push") {
+    const push = await pushCurrentBranch(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      command: "push",
+      data: push,
+    });
   }
 
   return sendJson(res, 404, { ok: false, error: "Not found" });

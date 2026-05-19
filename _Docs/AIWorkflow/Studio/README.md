@@ -188,9 +188,20 @@ writes only `_Temp` evaluation artifacts when `--execute` is passed.
 The Home page also reads the AIWorkflow Core state directly from ActiveTask,
 Backlog, PC Runner runtime artifacts, verification/completion reports, and Git
 status. This makes Studio Console the default workbench even when Discord is
-not used as the normal UI. The Core panel is read-only: it explains the current
-task, latest runner gate, evidence links, and Git state without approving,
-executing, finalizing, committing, or pushing.
+not used as the normal UI. The Core state display is read-oriented by default:
+it explains the current task, latest runner gate, evidence links, and Git
+state before asking the Director to act. Explicit Home buttons may then perform
+bounded workflow actions:
+
+- create an intake task from a Studio request
+- approve and start the selected task through PC Runner
+- record completion finalization decisions
+- commit or commit+push only the files selected in Studio Git Gate
+
+These actions still use the existing workflow services. They do not bypass
+approval policy, runner gates, evidence records, completion review, or git
+selection. Selected-file commit refuses `_Temp`, `_Local`, `node_modules`,
+`.env`, `*.local.json`, and unrelated already-staged files.
 
 ## Directory Map
 
