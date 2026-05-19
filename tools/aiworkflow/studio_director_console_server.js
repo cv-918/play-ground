@@ -2100,7 +2100,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="goals">
           <div class="page-heading"><div><h2>목표 기획</h2><p>큰 목표를 부서, AI 직원, 회의, 업무 지시, 승인 항목으로 안전하게 쪼갭니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>감독자가 원하는 큰 목표를 입력하고 Studio식 기획안으로 바꿉니다.</li>
               <li>추천 부서, 추천 직원, 회의 후보, 업무 후보, 승인 항목을 한 번에 봅니다.</li>
@@ -2151,7 +2151,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="inbox">
           <div class="page-heading"><div><h2>감독자 결정함</h2><p>지금 사람이 판단해야 할 승인, 완료, 기록, 커밋 후보만 모아서 봅니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>무엇을 승인하거나 반려해야 하는지 먼저 확인합니다.</li>
               <li>버튼을 누르면 어떤 상태가 바뀌는지 확인하고 결정합니다.</li>
@@ -2164,7 +2164,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="timeline">
           <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 기록 후보를 시간순으로 훑어봅니다.</p></div><button class="secondary" data-action="traceability-map">추적 지도</button></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>최근 어떤 일이 어떤 순서로 일어났는지 확인합니다.</li>
               <li>멈춘 실행, 직원 보고서, 회의 후속 작업을 빠르게 찾아갑니다.</li>
@@ -2203,7 +2203,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="departments">
           <div class="page-heading"><div><h2>부서</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>부서별 책임과 검토 기준을 확인합니다.</li>
               <li>어떤 AI 직원이 어떤 부서에 속하는지 확인하고 직원 화면으로 이동합니다.</li>
@@ -2230,7 +2230,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="meetings">
           <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 후속 작업이나 결정 기록으로 넘겨야 합니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>회의를 만들고 Human Director 또는 AI 직원 발언을 회의록에 남깁니다.</li>
               <li>AI 직원 의견을 받아 회의 안에서 제안, 반론, 질문을 모읍니다.</li>
@@ -2269,7 +2269,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="runs">
           <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 필요한 내용만 기록 후보로 넘깁니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>AI 직원이 만든 보고서를 사람이 읽기 좋은 HTML 검토 자료로 내보냅니다.</li>
               <li>보고서 안에서 제안, 기억, 업무 지시로 남길 후보가 있는지 미리 봅니다.</li>
@@ -2295,7 +2295,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="work">
           <div class="page-heading"><div><h2>업무 지시</h2><p>Studio 업무 후보와 AI 직원 인수인계를 AIWorkflow task로 연결합니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>업무 지시서를 만들어 AI 직원에게 줄 일의 목표, 범위, 제외 범위, 검증 계획을 정리합니다.</li>
               <li>직원 자료 미리보기/저장으로 AI 직원에게 전달될 실행 문맥을 확인합니다.</li>
@@ -2331,7 +2331,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="knowledge">
           <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
           <div class="card">
-            <div class="section-title"><h2>이 화면에서 할 수 있는 일</h2><button class="secondary" data-action="canon-conflict-report">Canon 충돌 점검</button></div>
+            <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">Canon 충돌 점검</button></div>
             <ul class="small">
               <li>제안은 아이디어입니다. 채택하거나 반려해도 곧바로 공식 설정이나 구현 승인이 되지는 않습니다.</li>
               <li>결정은 Human Director가 어떤 방향을 받아들였는지 남기는 기록입니다.</li>
@@ -2420,7 +2420,7 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="evidence">
-          <div class="page-heading"><div><h2>검증 자료</h2><p>완료 판단에 필요한 검토 보고서와 콘솔 작업 로그를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>검증 자료</h2><p>완료 판단에 필요한 검토 보고서와 버튼 실행 결과를 확인합니다.</p></div></div>
           <div class="card">
             <h2>보고서 구분</h2>
             <ul class="small">
@@ -2432,14 +2432,14 @@ function directorConsoleHtml() {
           <div class="grid">
             <div class="card"><div class="section-title"><h2>워크플로우 검토</h2><div class="row"><button class="secondary" data-action="completion-evidence-checklist">완료 근거 점검</button><button class="secondary" data-action="completion-decision-plan">완료 판단안</button></div></div><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
-            <div class="card"><h2>작업 로그</h2><div id="log" class="log-output">대기 중</div></div>
+            <div class="card"><h2>버튼 실행 결과</h2><div id="log" class="log-output">대기 중</div></div>
           </div>
         </section>
 
         <section class="page" data-page="devlog">
           <div class="page-heading"><div><h2>DevLog</h2><p>의미 있는 작업의 배경, 변경 범위, 검증, 남은 위험을 확인합니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>최근 작업 로그를 확인해 어떤 맥락으로 변경됐는지 봅니다.</li>
               <li>FixLog, WorkLog, Retrospective를 구분해 작업 기록을 추적합니다.</li>
@@ -2470,7 +2470,7 @@ function directorConsoleHtml() {
       diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
       policy: ["정책", "내부/관리자용 자동 진행 정책을 확인합니다."],
-      evidence: ["검증 자료", "완료 판단에 필요한 검토 보고서와 콘솔 작업 로그를 확인합니다."],
+      evidence: ["검증 자료", "완료 판단에 필요한 검토 보고서와 버튼 실행 결과를 확인합니다."],
       devlog: ["DevLog", "작업 기록과 남은 위험을 확인합니다."],
     };
     const filters = {
@@ -2509,7 +2509,7 @@ function directorConsoleHtml() {
         String(gate.stage || "") + " · " + String(gate.label || "") + ": " + (gate.status === "pass" ? "통과" : "확인 필요")
       );
       return '<div class="item ' + cardClass + '">' +
-        '<h3>' + esc(report.overall_label || report.overall_status || "Company Runtime 점검") + '</h3>' +
+        '<h3>' + esc(report.overall_label || report.overall_status || "회사 런타임 점검") + '</h3>' +
         '<p class="summary">' + esc(boundary.definition || "Studio 회사 런타임 준비 상태를 점검했습니다.") + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>전체 gate</span><span class="pill">' + esc(passed + "/" + total) + '</span></div>' +
@@ -3113,9 +3113,9 @@ function directorConsoleHtml() {
       const company = state.company_runtime || {};
       const companyStage = company.stage_summary || {};
       const operations = [
-        ["Company Runtime", company.overall_label || company.overall_status || "(unknown)"],
-        ["All gates", (companyStage.passed_gate_count ?? 0) + "/" + (companyStage.total_gate_count ?? 0)],
-        ["C gates", (companyStage.c_passed_gate_count ?? 0) + "/" + (companyStage.c_gate_count ?? 0)],
+        ["회사 런타임", company.overall_label || company.overall_status || "(unknown)"],
+        ["전체 gate", (companyStage.passed_gate_count ?? 0) + "/" + (companyStage.total_gate_count ?? 0)],
+        ["C gate", (companyStage.c_passed_gate_count ?? 0) + "/" + (companyStage.c_gate_count ?? 0)],
         ["활성 프로젝트", state.active_project.project_id || "(none)"],
         ["부서 / 직원", state.metrics.departments + " / " + state.metrics.staff],
         ["도구 어댑터", state.metrics.tool_adapters],

@@ -152,6 +152,8 @@ This slice defines:
   (`목표 기획`) is the Director-facing intake for broad goals; it produces a
   deterministic DirectorGoalPlan preview and can store the plan or create
   governed MeetingSession, WorkOrder, and Proposal candidates. Director-facing
+  action results should render known workflow reports as Human Director cards
+  first, with raw JSON used only as a fallback for unknown/debug responses.
   page cards explain
   what the Director can do on that page, translate department/staff/artifact
   identifiers into Korean labels, and keep raw JSON, registry, and run evidence
