@@ -5,6 +5,27 @@
 #include "DWE_Text.h"
 #include "DWE_CheckBox.h"
 #include "DWE_Button.h"
+#include "DWE_Controls.h"
+
+namespace
+{
+	_bool IsValidWindowAndKey(const std::wstring& _window_name, const std::wstring& _key, const wchar_t* _element_name)
+	{
+		if (_window_name.empty())
+		{
+			_SYSTEM_LOG_ERROR(L"Attempted to add %s to a debug window with an empty name.", _element_name);
+			return false;
+		}
+
+		if (_key.empty())
+		{
+			_SYSTEM_LOG_ERROR(L"Attempted to add %s with an empty key.", _element_name);
+			return false;
+		}
+
+		return true;
+	}
+}
 
 RunTimeDebuggingAssistant::~RunTimeDebuggingAssistant()
 {
@@ -12,6 +33,7 @@ RunTimeDebuggingAssistant::~RunTimeDebuggingAssistant()
 		SAFE_DELETE(pair.second);
 
 	debug_window_map_.clear();
+	keyboard_capture_owner_ = nullptr;
 }
 
 _bool RunTimeDebuggingAssistant::Initialize()
@@ -23,8 +45,14 @@ _bool RunTimeDebuggingAssistant::Initialize()
 
 void RunTimeDebuggingAssistant::BeginFrame()
 {
+	if (debug_window_map_.empty())
+		return;
+
 	if (!is_drawing_windows_)
 	{
+		if (front_window_iter_ == debug_window_map_.end())
+			front_window_iter_ = debug_window_map_.begin();
+
 		front_window_iter_->second->BeginFrame(); // 최소한 하나의 창은 BeginFrame을 호출하여 프레임 요소를 초기화하도록 한다.
 		return;
 	}
@@ -38,8 +66,14 @@ void RunTimeDebuggingAssistant::BeginFrame()
 
 _int RunTimeDebuggingAssistant::Update(_double _delta_time)
 {
+	if (debug_window_map_.empty())
+		return UPDATE_CONTINUE;
+
 	if (!is_drawing_windows_)
 	{
+		if (front_window_iter_ == debug_window_map_.end())
+			front_window_iter_ = debug_window_map_.begin();
+
 		front_window_iter_->second->Update(_delta_time); // 최소한 하나의 창은 Update를 호출하여 프레임 요소를 업데이트하도록 한다.
 		return UPDATE_CONTINUE;
 	}
@@ -55,8 +89,14 @@ _int RunTimeDebuggingAssistant::Update(_double _delta_time)
 
 void RunTimeDebuggingAssistant::Render(_double _delta_time)
 {
+	if (debug_window_map_.empty())
+		return;
+
 	if (!is_drawing_windows_)
 	{
+		if (front_window_iter_ == debug_window_map_.end())
+			front_window_iter_ = debug_window_map_.begin();
+
 		front_window_iter_->second->Render(_delta_time); // 최소한 하나의 창은 Render를 호출하여 프레임 요소를 렌더링하도록 한다.
 		return;
 	}
@@ -66,6 +106,33 @@ void RunTimeDebuggingAssistant::Render(_double _delta_time)
 		if (debug_window.second)
 			debug_window.second->Render(_delta_time);
 	}
+}
+
+void RunTimeDebuggingAssistant::CaptureKeyboard(const void* _owner)
+{
+	if (_owner == nullptr)
+		return;
+
+	keyboard_capture_owner_ = _owner;
+}
+
+void RunTimeDebuggingAssistant::ReleaseKeyboard(const void* _owner)
+{
+	if (_owner == nullptr || keyboard_capture_owner_ != _owner)
+		return;
+
+	keyboard_capture_owner_ = nullptr;
+}
+
+void RunTimeDebuggingAssistant::RemoveWindow(const std::wstring& _window_name)
+{
+	auto iter = debug_window_map_.find(_window_name);
+	if (iter == debug_window_map_.end())
+		return;
+
+	SAFE_DELETE(iter->second);
+	debug_window_map_.erase(iter);
+	front_window_iter_ = debug_window_map_.begin();
 }
 
 void RunTimeDebuggingAssistant::Text(const std::wstring& _window_name, const DweTextData& _data)
@@ -82,17 +149,8 @@ void RunTimeDebuggingAssistant::Text(const std::wstring& _window_name, const Dwe
 
 void RunTimeDebuggingAssistant::PersistentText(const std::wstring& _window_name, const std::wstring& _key, const DweTextData& _data)
 {
-	if (_window_name.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add persistent text to a debug window with an empty name."));
+	if (!IsValidWindowAndKey(_window_name, _key, L"persistent text"))
 		return;
-	}
-
-	if (_key.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add persistent text with an empty key."));
-		return;
-	}
 
 	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
 	window->AddPersistentElement(_key, new DWE_Text(_data));
@@ -100,17 +158,8 @@ void RunTimeDebuggingAssistant::PersistentText(const std::wstring& _window_name,
 
 void RunTimeDebuggingAssistant::CheckBox(const std::wstring& _window_name, const std::wstring& _key, const std::wstring& _label, _bool* _value_ptr)
 {
-	if (_window_name.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add checkbox to a debug window with an empty name."));
+	if (!IsValidWindowAndKey(_window_name, _key, L"checkbox"))
 		return;
-	}
-
-	if (_key.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add checkbox with an empty key."));
-		return;
-	}
 
 	if (_value_ptr == nullptr)
 	{
@@ -124,20 +173,101 @@ void RunTimeDebuggingAssistant::CheckBox(const std::wstring& _window_name, const
 
 void RunTimeDebuggingAssistant::Button(const std::wstring& _window_name, const std::wstring& _key, const std::wstring& _label, std::function<void()> _on_click)
 {
-	if (_window_name.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add button to a debug window with an empty name."));
+	if (!IsValidWindowAndKey(_window_name, _key, L"button"))
 		return;
-	}
-
-	if (_key.empty())
-	{
-		_SYSTEM_LOG_ERROR(_T("Attempted to add button with an empty key."));
-		return;
-	}
 
 	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
 	window->AddPersistentElement(_key, new DWE_Button(_label, std::move(_on_click)));
+}
+
+void RunTimeDebuggingAssistant::DynamicText(const std::wstring& _window_name, const std::wstring& _key, DweDynamicTextData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"dynamic text"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_DynamicText(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::Separator(const std::wstring& _window_name, const std::wstring& _key, DweSeparatorData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"separator"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_Separator(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::ButtonRow(const std::wstring& _window_name, const std::wstring& _key, DweButtonRowData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"button row"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_ButtonRow(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::SelectableList(const std::wstring& _window_name, const std::wstring& _key, DweSelectableListData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"selectable list"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_SelectableList(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::SliderFloat(const std::wstring& _window_name, const std::wstring& _key, DweSliderFloatData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"float slider"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_SliderFloat(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::SliderInt(const std::wstring& _window_name, const std::wstring& _key, DweSliderIntData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"integer slider"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_SliderInt(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::ComboBox(const std::wstring& _window_name, const std::wstring& _key, DweComboBoxData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"combo box"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_ComboBox(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::InputText(const std::wstring& _window_name, const std::wstring& _key, DweInputTextData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"input text"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_InputText(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::ColorEdit(const std::wstring& _window_name, const std::wstring& _key, DweColorEditData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"color edit"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_ColorEdit(std::move(_data)));
+}
+
+void RunTimeDebuggingAssistant::Vector2Field(const std::wstring& _window_name, const std::wstring& _key, DweVector2FieldData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"vector2 field"))
+		return;
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_Vector2Field(std::move(_data)));
 }
 
 RunTimeDebugWindow* RunTimeDebuggingAssistant::GetOrCreateWindow(const std::wstring& _window_name)

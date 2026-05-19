@@ -50,15 +50,15 @@ _bool IntroScene::Initialize()
 	}
 
 #ifndef SHIPPING
-	Button::CreateInfo workstation_button_info;
-	workstation_button_info.rect = _Rect{ _Point{ 24, 24 }, _Size{ 180, 42 } };
-	workstation_button_info.text = L"WorkStation";
-	workstation_button_info.on_lclick = [this]()
+	Button::CreateInfo particle_station_button_info;
+	particle_station_button_info.rect = _Rect{ _Point{ 24, 24 }, _Size{ 220, 42 } };
+	particle_station_button_info.text = L"ParticleStation";
+	particle_station_button_info.on_lclick = [this]()
 	{
-		_SceneMgr.ChangeScene(SceneType::WorkStation);
+		_SceneMgr.ChangeScene(SceneType::ParticleStation);
 	};
 
-	debug_workstation_button_ = ui_manager_->CreateUI<Button>(workstation_button_info);
+	debug_particle_station_button_ = ui_manager_->CreateUI<Button>(particle_station_button_info);
 #endif // SHIPPING
 
 	MAKE_INITIALIZED;

@@ -1,0 +1,84 @@
+[
+  {
+    "id_": 3001,
+    "name_": "Default Particle Event Set",
+    "events_": [
+      {
+        "id_": 1,
+        "name_": "Smoke Burst",
+        "playback_type_": 0,
+        "delay_sec_": 0.0,
+        "local_offset_x_": 0.0,
+        "local_offset_y_": 0.0,
+        "direction_mode_": 0,
+        "base_direction_deg_": 0.0,
+        "direction_influence_": 0.0,
+        "burst_count_": 8,
+        "particle_setting_": {
+          "id_": 1001,
+          "shape": 1,
+          "shapeRadius": 5.0,
+          "arcAngle": 360.0,
+          "minLife": 0.5,
+          "maxLife": 1.0,
+          "minSpeed": 200.0,
+          "maxSpeed": 400.0,
+          "startScale": 1.5,
+          "sizeEase": 2,
+          "endScale": 0.5,
+          "colorEase": 2,
+          "startColor": 4294901760,
+          "endColor": 2164228096,
+          "airResistance": 6.0,
+          "gravityScale": 0.0,
+          "textureKey": "Data/Resources/Textures/Particles/Smoke_Puff_White.png"
+        },
+        "emitter_spec_": {
+          "id_": 1,
+          "particle_setting_id_": 1001,
+          "emit_interval_sec_": 0.03,
+          "emit_count_per_tick_": 8,
+          "duration_sec_": 0.4
+        }
+      },
+      {
+        "id_": 2,
+        "name_": "Flare Follow Up",
+        "playback_type_": 0,
+        "delay_sec_": 0.08,
+        "local_offset_x_": 0.0,
+        "local_offset_y_": 0.0,
+        "direction_mode_": 0,
+        "base_direction_deg_": 0.0,
+        "direction_influence_": 0.0,
+        "burst_count_": 10,
+        "particle_setting_": {
+          "id_": 1004,
+          "shape": 0,
+          "shapeRadius": 80.0,
+          "arcAngle": 360.0,
+          "minLife": 0.12,
+          "maxLife": 0.2,
+          "minSpeed": 120.0,
+          "maxSpeed": 220.0,
+          "startScale": 0.8,
+          "sizeEase": 2,
+          "endScale": 0.0,
+          "colorEase": 2,
+          "startColor": 4294967295,
+          "endColor": 16777215,
+          "airResistance": 5.5,
+          "gravityScale": 0.0,
+          "textureKey": "Data/Resources/Textures/Particles/Flare_White.png"
+        },
+        "emitter_spec_": {
+          "id_": 2,
+          "particle_setting_id_": 1004,
+          "emit_interval_sec_": 0.03,
+          "emit_count_per_tick_": 10,
+          "duration_sec_": 0.2
+        }
+      }
+    ]
+  }
+]

@@ -56,6 +56,9 @@ mono_crash.*
 
 # Build results
 [Dd]ebug/
+!PlayGround/Project/EngineSystems/Debug/
+!PlayGround/Project/EngineSystems/Debug/*.cpp
+!PlayGround/Project/EngineSystems/Debug/*.h
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/

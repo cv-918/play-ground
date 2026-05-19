@@ -6,6 +6,15 @@ class GameObjectBase;
 
 using ParticleEmitterHandle = _uint;
 
+struct ParticlePoolStats
+{
+	_uint pool_size_ = 0;
+	_uint active_count_ = 0;
+	_uint peak_active_count_ = 0;
+	_uint dropped_this_frame_ = 0;
+	_uint dropped_total_ = 0;
+};
+
 enum class ParticleEmitterStopReason
 {
 	Explicit,
@@ -26,18 +35,20 @@ public:
 	void Render(_double _delta_time) override;
 
 	// Immediate one-shot burst emission.
-	void Emit(const ParticleSetting& _setting, const _Vector2& _pos, _uint _count = 1);
+	void Emit(const ParticleSetting& _setting, const _Vector2& _pos, _uint _count = 1, _float _direction_radian = 0.f);
 	void EmitCustom(
 		const ParticleSetting& _setting,
 		const _Vector2& _pos,
 		const _Vector2& _velocity,
 		_float _life_time_override = -1.f,
 		_float _start_scale_override = -1.f);
-	ParticleEmitterHandle PlayEmitterAt(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos);
-	ParticleEmitterHandle PlayEmitterAttached(const ParticleEmitterSpec& _spec, GameObjectBase* _owner, const _Vector2& _local_offset = _Vector2::Zero());
+	ParticleEmitterHandle PlayEmitterAt(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos, _float _direction_radian = 0.f);
+	ParticleEmitterHandle PlayEmitterAt(const ParticleEmitterSpec& _spec, const ParticleSetting& _setting, const _Vector2& _world_pos, _float _direction_radian = 0.f);
+	ParticleEmitterHandle PlayEmitterAttached(const ParticleEmitterSpec& _spec, GameObjectBase* _owner, const _Vector2& _local_offset = _Vector2::Zero(), _float _direction_radian = 0.f);
 	void StopEmitter(ParticleEmitterHandle _handle);
 	void StopAllEmittersByOwner(GameObjectBase* _owner);
 	void ClearSceneState();
+	const ParticlePoolStats& GetPoolStats() const { return pool_stats_; }
 
 private:
 	void _ActivateParticle(
@@ -51,11 +62,13 @@ private:
 	{
 		ParticleEmitterHandle handle_ = 0;
 		ParticleEmitterSpec spec_;
-		const ParticleSetting* resolved_particle_setting_ = nullptr;
+		ParticleSetting resolved_particle_setting_;
+		_bool has_resolved_particle_setting_ = false;
 		GameObjectBase* owner_ = nullptr;
 		IDestroyable::DestructionCallbackId owner_callback_id_ = IDestroyable::kInvalidDestructionCallbackId;
 		_Vector2 fixed_world_position_ = _Vector2::Zero();
 		_Vector2 local_offset_ = _Vector2::Zero();
+		_float emission_direction_radian_ = 0.f;
 		_float elapsed_sec_ = 0.f;
 		_float emit_accumulator_sec_ = 0.f;
 		_bool pending_stop_ = false;
@@ -63,12 +76,13 @@ private:
 	};
 
 	ParticleEmitterHandle _CreateEmitterHandle();
-	ParticleEmitterHandle _PlayEmitterInternal(const ParticleEmitterSpec& _spec, const _Vector2& _world_pos, GameObjectBase* _owner, const _Vector2& _local_offset);
+	ParticleEmitterHandle _PlayEmitterInternal(const ParticleEmitterSpec& _spec, const ParticleSetting* _setting_override, const _Vector2& _world_pos, GameObjectBase* _owner, const _Vector2& _local_offset, _float _direction_radian);
 	const ParticleSetting* _ResolveParticleSetting(const ParticleEmitterSpec& _spec) const;
 	_bool _ValidateEmitterSpec(const ParticleEmitterSpec& _spec, const ParticleSetting* _setting) const;
 	void _SetEmitterPendingStop(ActiveEmitter& _emitter, ParticleEmitterStopReason _reason);
 	void _UpdateEmitters(_float _dt);
 	_Vector2 _GetEmitterWorldPosition(ActiveEmitter& _emitter);
+	_float _GetEmitterEmissionDirectionRadian(ActiveEmitter& _emitter);
 	void _ClearEmitters(ParticleEmitterStopReason _reason);
 	void _ClearParticles();
 	void _DetachEmitterOwner(ActiveEmitter& _emitter);
@@ -78,6 +92,8 @@ private:
 	std::list<_uint> active_indices_;
 	std::vector<_uint> free_indices_;
 	_uint pool_size_ = 0;
+	ParticlePoolStats pool_stats_;
+	_float pool_exhaustion_log_cooldown_sec_ = 0.f;
 	std::unordered_map<ParticleEmitterHandle, ActiveEmitter> active_emitters_;
 	ParticleEmitterHandle next_emitter_handle_ = 1;
 };

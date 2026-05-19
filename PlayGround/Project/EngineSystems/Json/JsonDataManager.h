@@ -17,6 +17,9 @@ public:
 
 	const std::unordered_map<_uint, T>& GetTable() const { return data_table_; }
 	const _uint GetDataCount() const { return data_table_.size(); }
+	void SetData(const T& _data) { data_table_[_data.id_] = _data; }
+	_bool RemoveData(_uint _id) { return data_table_.erase(_id) > 0; }
+	void Clear() { data_table_.clear(); }
 
 	// ID로 데이터 찾기
 	const T* GetData(_uint _id) const

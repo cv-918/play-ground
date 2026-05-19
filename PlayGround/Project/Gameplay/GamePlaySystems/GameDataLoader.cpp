@@ -12,6 +12,7 @@
 #include "GamePlaySystems/Json/StageJsonDataManager.h"
 #include "GamePlaySystems/Json/ParticleDataManager.h"
 #include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
+#include "GamePlaySystems/Json/ParticleEventSetDataManager.h"
 #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
 #include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
 
@@ -22,6 +23,7 @@ namespace
 	constexpr char kSkillPath[] = "Data/Skill.json";
 	constexpr char kParticlePath[] = "Data/Particle.json";
 	constexpr char kParticleEmitterPath[] = "Data/ParticleEmitter.json";
+	constexpr char kParticleEventSetPath[] = "Data/ParticleEventSet.json";
 	constexpr char kEnemyPath[] = "Data/Enemy.json";
 	constexpr char kAttributeNodePath[] = "Data/AttributeNode.json";
 	constexpr char kStagePath[] = "Data/Stage.json";
@@ -78,6 +80,12 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 	if (!_ParticleEmitterDataMgr.Load(kParticleEmitterPath))
 	{
 		_DEBUG_MSGBOX(_T("Failed to load particle emitter data from JSON."));
+		return false;
+	}
+
+	if (!_ParticleEventSetDataMgr.Load(kParticleEventSetPath))
+	{
+		_DEBUG_MSGBOX(_T("Failed to load particle event set data from JSON."));
 		return false;
 	}
 

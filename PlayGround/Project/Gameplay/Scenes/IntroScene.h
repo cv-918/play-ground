@@ -43,7 +43,7 @@ private:
 	_bool is_press_any_key_fading_in_ = false;
 
 #ifndef SHIPPING
-	class Button* debug_workstation_button_ = nullptr;
+	class Button* debug_particle_station_button_ = nullptr;
 #endif // SHIPPING
 };
 

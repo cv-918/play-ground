@@ -26,7 +26,7 @@ enum class SceneType
 	Loading,
 	OutGame,
 	InGame,
-	WorkStation,
+	ParticleStation,
 	Count,
 };
 

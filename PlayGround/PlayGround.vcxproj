@@ -280,6 +280,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Debug\DebugWindowElement.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Button.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_CheckBox.h" />
+    <ClInclude Include="Project\EngineSystems\Debug\DWE_Controls.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Text.h" />
     <ClInclude Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.h" />
     <ClInclude Include="Project\EngineSystems\Debug\RunTimeDebugWindow.h" />
@@ -287,6 +288,8 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\EngineSystems\Render\CameraManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\GraphicResourceManager.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleData.h" />
+    <ClInclude Include="Project\EngineSystems\Render\ParticleEventSetData.h" />
+    <ClInclude Include="Project\EngineSystems\Render\ParticleEventSetPlayer.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleService.h" />
     <ClInclude Include="Project\EngineSystems\Render\ScreenSystem.h" />
     <ClInclude Include="Project\EngineSystems\Render\VideoSettings.h" />
@@ -327,6 +330,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
@@ -401,7 +405,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
-    <ClInclude Include="Project\Gameplay\Scenes\WorkStationScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\ParticleStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\Scene.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SceneManager.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
@@ -435,12 +439,14 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\EngineSystems\Debug\DebugWindowElement.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Button.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_CheckBox.cpp" />
+    <ClCompile Include="Project\EngineSystems\Debug\DWE_Controls.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Text.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\RunTimeDebugWindow.cpp" />
     <ClCompile Include="Project\EngineSystems\Input\InputDisplayText.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\CameraManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\GraphicResourceManager.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\ParticleEventSetPlayer.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ScreenSystem.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Projectile\Bullet.cpp" />
@@ -499,6 +505,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameState.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\GameDataLoader.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />
@@ -521,7 +528,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
-    <ClCompile Include="Project\Gameplay\Scenes\WorkStationScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\ParticleStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\Scene.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Grid.cpp" />

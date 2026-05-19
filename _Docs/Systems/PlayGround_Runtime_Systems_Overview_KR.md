@@ -89,7 +89,7 @@ Render
 - `LoadingScene`
 - `OutGameScene`
 - `InGameScene`
-- `WorkStationScene`
+- `ParticleStationScene`
 
 주의점:
 

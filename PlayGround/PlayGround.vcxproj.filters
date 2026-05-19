@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Default">
@@ -76,7 +76,7 @@
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\InGameScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
-    <ClInclude Include="Project\Gameplay\Scenes\WorkStationScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\ParticleStationScene.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Button.h" />
     <ClInclude Include="Project\Core\Base\DrawFunctions.h" />
@@ -124,6 +124,8 @@
     <ClInclude Include="Project\EngineSystems\Render\ParticleService.h" />
     <ClInclude Include="Project\Core\Math\Vector2.h" />
     <ClInclude Include="Project\EngineSystems\Render\ParticleData.h" />
+    <ClInclude Include="Project\EngineSystems\Render\ParticleEventSetData.h" />
+    <ClInclude Include="Project\EngineSystems\Render\ParticleEventSetPlayer.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
     <ClInclude Include="Project\Gameplay\Components\EllipseCollider.h" />
     <ClInclude Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.h" />
@@ -133,6 +135,7 @@
     <ClInclude Include="Project\EngineSystems\Debug\DebugAssistantHeader.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_CheckBox.h" />
     <ClInclude Include="Project\EngineSystems\Debug\DWE_Button.h" />
+    <ClInclude Include="Project\EngineSystems\Debug\DWE_Controls.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownPlayer.h" />
     <ClInclude Include="Project\Gameplay\Components\TownInteraction.h" />
     <ClInclude Include="Project\Gameplay\Actors\Town\TownNpc.h" />
@@ -158,6 +161,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.h" />
@@ -238,7 +242,7 @@
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
-    <ClCompile Include="Project\Gameplay\Scenes\WorkStationScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\ParticleStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />
     <ClCompile Include="Project\Core\Base\DrawFunctions.cpp" />
@@ -283,6 +287,7 @@
     <ClCompile Include="Project\EngineSystems\Render\CameraManager.cpp" />
     <ClCompile Include="Project\EngineSystems\Render\ParticleService.cpp" />
     <ClCompile Include="Project\Core\Math\Vector2.cpp" />
+    <ClCompile Include="Project\EngineSystems\Render\ParticleEventSetPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\Components\EllipseCollider.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\RunTimeDebuggingAssistant.cpp" />
@@ -291,6 +296,7 @@
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Text.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_CheckBox.cpp" />
     <ClCompile Include="Project\EngineSystems\Debug\DWE_Button.cpp" />
+    <ClCompile Include="Project\EngineSystems\Debug\DWE_Controls.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownPlayer.cpp" />
     <ClCompile Include="Project\Gameplay\Components\TownInteraction.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Town\TownNpc.cpp" />
@@ -307,6 +313,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueJsonConverter.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Dialogue\DialogueTextLayouter.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />

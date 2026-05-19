@@ -11,9 +11,11 @@ The particle system is a lightweight, data-driven visual effect system built on 
 This document covers:
 
 - Particle data definitions and JSON loading
+- Particle event set definitions and JSON loading
 - Runtime particle pool management
 - Burst emission
 - Continuous emitter playback
+- Multi-event set playback
 - Scene lifecycle cleanup
 - Current integration points and known limitations
 
@@ -23,14 +25,14 @@ This document does not define a new data schema or request runtime behavior chan
 
 | Area | Files |
 | --- | --- |
-| Runtime data model | `PlayGround/Project/EngineSystems/Render/ParticleData.h` |
-| Runtime service | `PlayGround/Project/EngineSystems/Render/ParticleService.h`, `PlayGround/Project/EngineSystems/Render/ParticleService.cpp` |
-| JSON managers | `PlayGround/Project/Gameplay/GamePlaySystems/Json/ParticleDataManager.h`, `PlayGround/Project/Gameplay/GamePlaySystems/Json/ParticleEmitterDataManager.h` |
-| Data files | `PlayGround/Data/Particle.json`, `PlayGround/Data/ParticleEmitter.json` |
+| Runtime data model | `PlayGround/Project/EngineSystems/Render/ParticleData.h`, `PlayGround/Project/EngineSystems/Render/ParticleEventSetData.h` |
+| Runtime service | `PlayGround/Project/EngineSystems/Render/ParticleService.h`, `PlayGround/Project/EngineSystems/Render/ParticleService.cpp`, `PlayGround/Project/EngineSystems/Render/ParticleEventSetPlayer.h`, `PlayGround/Project/EngineSystems/Render/ParticleEventSetPlayer.cpp` |
+| JSON managers | `PlayGround/Project/Gameplay/GamePlaySystems/Json/ParticleDataManager.h`, `PlayGround/Project/Gameplay/GamePlaySystems/Json/ParticleEmitterDataManager.h`, `PlayGround/Project/Gameplay/GamePlaySystems/Json/ParticleEventSetDataManager.h` |
+| Data files | `PlayGround/Data/Particle.json`, `PlayGround/Data/ParticleEmitter.json`, `PlayGround/Data/ParticleEventSet.json` |
 | Data loading | `PlayGround/Project/Gameplay/GamePlaySystems/GameDataLoader.cpp` |
 | Scene update/render integration | `PlayGround/Project/Gameplay/Scenes/Scene.cpp`, `PlayGround/Project/Gameplay/Scenes/InGameScene.cpp` |
 | Scene cleanup | `PlayGround/Project/Gameplay/GamePlaySystems/SceneManager.cpp` |
-| Debug/sample usage | `PlayGround/Project/Gameplay/Scenes/WorkStationScene.cpp`, `PlayGround/Project/Gameplay/Actors/Stage/DashAbility.cpp` |
+| Debug/editor usage | `PlayGround/Project/Gameplay/Scenes/ParticleStationScene.cpp`, `PlayGround/Project/EngineSystems/Debug/DWE_Controls.*`, `PlayGround/Project/Gameplay/Actors/Stage/DashAbility.cpp` |
 
 ## High-Level Model
 
@@ -44,9 +46,14 @@ JSON data
     -> ParticleEmitterSpec
     -> ParticleEmitterDataManager
 
+  ParticleEventSet.json
+    -> ParticleEventSet
+    -> ParticleEventSetDataManager
+
 Runtime
   Gameplay code chooses when to play an effect
     -> ParticleService::Emit / EmitCustom / PlayEmitterAt / PlayEmitterAttached
+    -> ParticleEventSetPlayer::Play for multi-event effects
     -> ParticleService updates active emitters
     -> ParticleService updates active particle instances
     -> ParticleService renders particles through the custom renderer
@@ -59,8 +66,10 @@ Runtime
 | Deciding when an effect should happen | Gameplay systems, scenes, abilities |
 | Defining reusable particle behavior | `ParticleSetting` in `Particle.json` |
 | Defining continuous emitter playback | `ParticleEmitterSpec` in `ParticleEmitter.json` |
-| Loading JSON data by id | `ParticleDataManager`, `ParticleEmitterDataManager` |
+| Grouping multiple particle events | `ParticleEventSet` in `ParticleEventSet.json` |
+| Loading JSON data by id | `ParticleDataManager`, `ParticleEmitterDataManager`, `ParticleEventSetDataManager` |
 | Owning active particles and emitters | `ParticleService` |
+| Scheduling event-set playback | `ParticleEventSetPlayer` |
 | Drawing particles | `ParticleService::Render` through `_DrawFunc` and `_GraphicSourceMgr` |
 | Scene transition cleanup | `SceneManager::_CleanupCurrentScene` via `ParticleService::ClearSceneState` |
 
@@ -74,7 +83,7 @@ This separation is important: gameplay state should trigger visual effects, but 
 
 - `Point`: a single point
 - `Circle`: random offset inside a radius
-- `Box`: declared in the enum, but not currently implemented in `ParticleService::Emit`
+- `Box`: random offset inside a square centered on the emission position
 
 ### `ParticleSetting`
 
@@ -84,8 +93,8 @@ Key fields:
 
 - `id_`: unique data id used by `ParticleDataManager`
 - `shape`: spawn shape enum value
-- `shapeRadius`: radius used by circle emission
-- `arcAngle`: random velocity angle spread around the current world +X direction
+- `shapeRadius`: Circle radius, or Box half extent
+- `arcAngle`: random velocity angle spread around the explicit emission direction passed to `ParticleService`; the default direction is world +X
 - `minLife`, `maxLife`: random lifetime range
 - `minSpeed`, `maxSpeed`: random velocity speed range
 - `startScale`, `endScale`: scale over lifetime
@@ -93,7 +102,7 @@ Key fields:
 - `startColor`, `endColor`: color over lifetime
 - `colorEase`: easing mode for color interpolation
 - `airResistance`: velocity damping applied each update
-- `gravityScale`: declared in data, but not currently applied during update
+- `gravityScale`: vertical acceleration multiplier applied during particle update
 - `textureKey`: texture path key; empty value uses a filled circle fallback
 
 ### `ParticleEmitterSpec`
@@ -107,6 +116,38 @@ Key fields:
 - `emit_interval_sec_`: time between emission ticks; must be greater than `0`
 - `emit_count_per_tick_`: number of particles emitted per tick; must be greater than `0`
 - `duration_sec_`: emitter duration; `0` means infinite duration, negative values are invalid
+
+### `ParticleEventSet`
+
+`ParticleEventSet` is a reusable group of particle events loaded from `ParticleEventSet.json`.
+
+Key fields:
+
+- `id_`: unique event set id used by `ParticleEventSetDataManager`
+- `name_`: human-readable set label
+- `events_`: ordered list of `ParticleEventSpec` entries
+
+### `ParticleEventSpec`
+
+`ParticleEventSpec` defines one event inside a set.
+
+Key fields:
+
+- `id_`: event-local id for editing and debugging
+- `name_`: human-readable event label
+- `playback_type_`: `Burst` or `Emitter`
+- `delay_sec_`: delay from set playback start
+- `local_offset_x_`, `local_offset_y_`: offset from the set playback origin
+- `direction_mode_`: `World` or `PlayContext`
+- `base_direction_deg_`: authored event direction in degrees
+- `direction_influence_`: `0..1` multiplier for the play context direction when `direction_mode_` is `PlayContext`
+- `burst_count_`: particle count for burst playback
+- `particle_setting_`: inline `ParticleSetting` copy used by this event
+- `emitter_spec_`: emitter timing/count data used when `playback_type_` is `Emitter`
+
+The event set keeps an inline `ParticleSetting` per event so station edits can be previewed and saved without mutating global `Particle.json` entries. The `ParticleStationScene` DebugAssistant combo box can copy an existing `Particle.json` setting into the selected event as a starting point.
+
+Event direction is explicit. `base_direction_deg_` is always applied. `PlayContext` mode additionally adds `play_context.direction_deg_ * direction_influence_` when the caller provides a direction. No event-set playback path infers direction from an owner object.
 
 ### `Particle`
 
@@ -136,10 +177,11 @@ Public API:
 - `Initialize(pool_size)`: allocates the particle pool and resets runtime state
 - `Update(delta_time)`: updates emitters first, then active particles
 - `Render(delta_time)`: draws active particles
-- `Emit(setting, pos, count)`: emits an immediate burst using the setting's random ranges
+- `Emit(setting, pos, count, direction_radian)`: emits an immediate burst using the setting's random ranges
 - `EmitCustom(setting, pos, velocity, life_time_override, start_scale_override)`: emits one particle with explicit motion overrides
-- `PlayEmitterAt(spec, world_pos)`: starts a continuous emitter at a fixed world position
-- `PlayEmitterAttached(spec, owner, local_offset)`: starts a continuous emitter attached to an owner object
+- `PlayEmitterAt(spec, world_pos, direction_radian)`: starts a continuous emitter at a fixed world position
+- `PlayEmitterAt(spec, setting, world_pos, direction_radian)`: starts a continuous emitter with an inline setting copy
+- `PlayEmitterAttached(spec, owner, local_offset, direction_radian)`: starts a continuous emitter attached to an owner object
 - `StopEmitter(handle)`: marks one emitter for stop
 - `StopAllEmittersByOwner(owner)`: marks all emitters attached to an owner for stop
 - `ClearSceneState()`: clears active emitters and active particles
@@ -152,7 +194,7 @@ The service uses a fixed-size pool:
 - `active_indices_`: active particle indices
 - `free_indices_`: reusable particle indices
 
-If `free_indices_` is empty, `_ActivateParticle` returns without spawning. This avoids allocation during runtime, but currently drops particles silently when the pool is exhausted.
+If `free_indices_` is empty, `_ActivateParticle` drops the new particle instead of allocating. This keeps runtime memory fixed. The service records `dropped_this_frame_`, `dropped_total_`, `active_count_`, `peak_active_count_`, and `pool_size_`, and emits a throttled warning while exhaustion continues.
 
 ### Active Emitters
 
@@ -166,9 +208,10 @@ std::unordered_map<ParticleEmitterHandle, ActiveEmitter> active_emitters_;
 
 - The generated handle
 - The emitter spec
-- The resolved `ParticleSetting*`
+- A copied resolved `ParticleSetting`
 - Optional owner pointer and destruction callback id
 - Fixed world position or local owner offset
+- Explicit emission direction in radians
 - Elapsed time and emit accumulator
 - Pending stop state and stop reason
 
@@ -193,10 +236,11 @@ Emitter handles use `0` as invalid and increment from `1`.
 
 - `Data/Particle.json` into `_ParticleDataMgr`
 - `Data/ParticleEmitter.json` into `_ParticleEmitterDataMgr`
+- `Data/ParticleEventSet.json` into `_ParticleEventSetDataMgr`
 
 Both managers inherit `JsonDataManager<T>`, which stores data in an `unordered_map` keyed by `id_`.
 
-`GameDataLoader::ReloadAll` clears active particle runtime state before reloading data. This keeps old active emitters and particles from referencing stale data after a JSON reload.
+`GameDataLoader::ReloadAll` clears active particle runtime state before reloading data. Active particles and emitters copy the resolved particle setting at activation time, and clearing before reload keeps runtime state predictable for station preview and scene transitions.
 
 ### Update Order
 
@@ -255,8 +299,9 @@ During static shutdown, `SceneManager::~SceneManager` calls `Shutdown(false)` to
 Current behavior:
 
 - Circle shape randomizes spawn position inside `shapeRadius`
-- Point and Box currently use the input position directly
-- Velocity angle is randomized within `arcAngle`, centered around world +X
+- Box shape randomizes spawn position inside a square using `shapeRadius` as half extent
+- Point uses the input position directly
+- Velocity angle is randomized within `arcAngle`, centered around the explicit direction argument. Existing callers that omit the argument use world +X.
 - Speed and lifetime are randomized from the setting's ranges
 
 ### Custom Single Particle
@@ -269,13 +314,16 @@ Current usage:
 
 ### Continuous Emitter
 
-`ParticleService::PlayEmitterAt` starts an emitter at a fixed world position.
+`ParticleService::PlayEmitterAt` starts an emitter at a fixed world position with an explicit emission direction.
+
+The overload `PlayEmitterAt(spec, setting, world_pos)` starts an emitter from an inline setting. `ParticleEventSetPlayer` uses this path so event sets do not require every edited station event to be written back to `Particle.json`.
 
 `ParticleService::PlayEmitterAttached` starts an emitter attached to a `GameObjectBase`. Attached emitters:
 
 - Reject null, pending-destruction, or transform-less owners
 - Register an owner destruction callback
 - Resolve world position from owner position, right/forward vectors, and local offset
+- Keep emission direction as the explicit direction passed at creation time
 - Mark themselves pending stop if the owner becomes invalid
 
 `_ValidateEmitterSpec` rejects emitter specs when:
@@ -287,20 +335,51 @@ Current usage:
 
 Invalid specs are logged with id, setting id, interval, count, and duration.
 
+### Event Set Playback
+
+`ParticleEventSetPlayer` plays a copied `ParticleEventSet` with a `ParticleEventSetPlayContext`. It tracks elapsed time per active playback, fires each event after its `delay_sec_`, resolves event direction from `base_direction_deg_` plus optional play-context influence, and delegates actual burst/emitter execution to `ParticleService`.
+
+For burst events, the player calls `ParticleService::Emit` with the event's inline setting, `burst_count_`, and resolved direction.
+
+For emitter events, the player calls `ParticleService::PlayEmitterAt(spec, setting, world_pos, direction)` and stores returned emitter handles so `StopAll` can stop them explicitly. Finite emitter playbacks are retired after their duration and max particle lifetime. Infinite emitter playbacks remain active until stopped.
+
 ## Current Usage Points
 
 ### Debug InGame sample
 
 `InGameScene` uses `F6` in non-paused gameplay to play `ParticleEmitter.json` id `2001` at the mouse world position.
 
-### WorkStation sample scene
+### ParticleStation editor scene
 
-`WorkStationScene` provides debug-only sample playback:
+`ParticleStationScene` replaces the old `WorkStationScene` debug sample scene. It provides a DebugAssistant-based editor for `ParticleEventSet.json`.
+
+The `ParticleStation / EventSet` window owns set-level workflow:
+
+- Create a new set, load an existing set, reload JSON data, and save current event-set data.
+- Rename the current set.
+- Select, add, and remove ordered particle events.
+- Preview the current set at the mouse cursor or screen center.
+- Adjust station-only preview direction.
+- Read pool active/peak/drop counters and run a station-only pool stress preview.
+- Read the selected event's resolved preview direction.
+
+The `ParticleStation / Event` window owns selected-event editing:
+
+- Rename the event.
+- Change playback type, source `Particle.json` setting, texture, shape, size/color easing, and inline colors.
+- Adjust direction mode, base direction, direction influence, delay, offset, burst count, lifetime, speed, scale, air resistance, gravity scale, and emitter playback values.
+
+Keyboard shortcuts are intentionally limited to scene-level actions:
 
 - `F5`: reload all JSON data
-- `1`: select `ParticleEmitter.json` id `2001`
-- `2`: select `Particle.json` id `1001`
-- Left click: play selected sample at the mouse cursor
+- `F8`: preview current set at the mouse cursor
+- `Space`: preview current set at the screen center
+- `F9`: save current event set data
+- `Esc`: return to `IntroScene`
+
+Station preview can enable or disable individual events without writing that state to `ParticleEventSet.json`. Disabled events are skipped only for the current station preview session.
+
+The scene also draws a center-screen direction guide. The yellow guide shows the current station `Preview Dir`; the light-blue guide shows the selected event's resolved direction after base direction and influence are applied. These guides make direction and influence changes visible even when the particle texture or `arcAngle` would otherwise make the effect hard to read.
 
 ### Dash charge effect
 
@@ -324,12 +403,10 @@ Immediate burst emission does not currently validate data ranges beyond clamping
 
 ## Known Limitations
 
-- `EmitterShape::Box` exists in the enum but is not implemented in `ParticleService::Emit`.
-- `gravityScale` exists in `ParticleSetting` but is not applied in `ParticleService::Update`.
-- `arcAngle` is centered on world +X and is not tied to an owner orientation or gameplay direction.
-- Pool exhaustion silently drops new particles.
+- `EmitterShape::Point` intentionally ignores `shapeRadius` because it has no spawn spread.
+- Pool exhaustion still drops new particles by policy; the drop is observable through stats and throttled warning logs.
 - `ParticleService::Render` asks `_GraphicSourceMgr` for the texture each particle render; any caching behavior depends on the graphic source manager.
-- `ParticleEmitterSpec` stores a raw pointer to the resolved `ParticleSetting`. Runtime reload clears particle state before reloading data, which is important because the pointer would otherwise become stale.
+- `ParticleEventSet` currently stores inline particle settings per event; edits in `ParticleStationScene` do not automatically update `Particle.json`.
 - `ParticleSetting::textureKey` empty mode renders a filled circle with radius `currentScale * 5.0f`; textured mode uses texture dimensions multiplied by `currentScale`.
 
 ## Extension Notes
@@ -338,15 +415,15 @@ Future particle work should preserve these boundaries:
 
 - Gameplay and AI decide when an effect is triggered.
 - `ParticleService` executes particle playback and rendering.
-- JSON data defines reusable particle and emitter behavior.
+- `ParticleEventSetPlayer` schedules grouped particle events and delegates playback to `ParticleService`.
+- JSON data defines reusable particle, emitter, and event-set behavior.
 - Scene lifecycle owns cleanup timing, not individual gameplay actors.
 
 Potential future additions should be treated as explicit schema or runtime behavior changes:
 
-- Box emitter shape behavior
-- Directional emission based on owner transform
-- Gravity application
-- Pool exhaustion logging or metrics
+- Non-square Box emitter dimensions if rectangular emission becomes necessary
+- Data validation rules for direction fields if stricter authoring constraints become necessary
+- Configurable pool exhaustion policy if a future effect class should reserve particles or preempt older particles
 - Texture or material caching policy
 - Data validation pass for particle JSON ranges
 
@@ -356,6 +433,6 @@ Potential future additions should be treated as explicit schema or runtime behav
 
 `Particle.json`은 개별 파티클의 수명, 속도, 크기, 색상, 텍스처 같은 재사용 설정을 정의하고, `ParticleEmitter.json`은 특정 파티클 설정을 일정 간격으로 반복 생성하는 emitter 설정을 정의합니다. 런타임에서는 `ParticleService`가 고정 크기 풀을 관리하면서 burst 파티클과 지속 emitter를 업데이트하고 렌더링합니다.
 
-파티클은 월드 오브젝트 렌더링 뒤, UI 렌더링 전에 그려집니다. 씬 전환 시 `SceneManager`가 `ParticleService::ClearSceneState`를 호출해 활성 emitter와 particle을 정리합니다. `InGameScene`에서는 일시정지 중 파티클 업데이트가 멈추고, `WorkStationScene`과 `DashAbility`에서 현재 사용 예시를 확인할 수 있습니다.
+파티클은 월드 오브젝트 렌더링 뒤, UI 렌더링 전에 그려집니다. 씬 전환 시 `SceneManager`가 `ParticleService::ClearSceneState`를 호출해 활성 emitter와 particle을 정리합니다. `InGameScene`에서는 일시정지 중 파티클 업데이트가 멈추고, `ParticleStationScene`과 `DashAbility`에서 현재 사용 예시를 확인할 수 있습니다.
 
-주의할 점은 `EmitterShape::Box`와 `gravityScale`은 데이터에는 존재하지만 현재 런타임 동작에는 반영되지 않는다는 점입니다. 또한 파티클 풀이 가득 차면 새 파티클은 조용히 드롭됩니다.
+`EmitterShape::Box`는 `shapeRadius`를 half extent로 사용하는 정사각형 생성 범위로 처리되고, `gravityScale`은 수직 가속도 배율로 적용됩니다. 이벤트 세트 방향은 명시적 `PlayContext` 영향도로 계산되며, 파티클 풀이 가득 차면 새 파티클은 고정 풀 정책에 따라 드롭되고 통계와 제한된 경고 로그로 관측됩니다.

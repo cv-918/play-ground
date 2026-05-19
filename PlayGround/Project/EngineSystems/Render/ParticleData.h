@@ -17,7 +17,7 @@ struct ParticleSetting {
 
 	// [발생기 설정]
 	EmitterShape shape = EmitterShape::Circle;
-	_float shapeRadius = 5.0f;     // Circle일 때 반지름
+	_float shapeRadius = 5.0f;     // Circle radius. Box uses this as half extent.
 	_float arcAngle = 360.0f;      // 분사 각도 (360도면 전방향)
 
 	// [초기값 범위] 파티클 생성 시 이 사이값으로 랜덤하게 결정됨
