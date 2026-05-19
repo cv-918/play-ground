@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ModelRoutingPlan.schema.json",
+  "title": "ModelRoutingPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "model_routing_plan_id",
+    "task_id",
+    "task_title",
+    "current_meaning",
+    "selected_route",
+    "subscription_policy",
+    "route_rules",
+    "permission_gates",
+    "adapter_summary",
+    "safety"
+  ],
+  "properties": {
+    "model_routing_plan_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "task_title": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "selected_route": { "type": "object" },
+    "subscription_policy": { "type": "object" },
+    "route_rules": { "type": "array", "items": { "type": "string" } },
+    "permission_gates": { "type": "array", "items": { "type": "string" } },
+    "adapter_summary": { "type": "array", "items": { "type": "object" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "model_called",
+        "external_call",
+        "cost_incurred",
+        "source_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}

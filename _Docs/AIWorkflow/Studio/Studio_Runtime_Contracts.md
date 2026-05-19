@@ -158,6 +158,22 @@ A ProjectExecutionPlan explains:
 Reading a ProjectExecutionPlan is read-only. It must not run a build, run a
 tool, modify files, create a task decision, commit, or push.
 
+## Model Routing Contract
+
+The Studio should prefer signed-in Codex/ChatGPT subscription routes before
+introducing separate API billing.
+
+A ModelRoutingPlan explains:
+
+- the recommended model and reasoning level for the current task
+- whether the route uses signed-in Codex/ChatGPT rather than OpenAI API billing
+- which external, cost-capable, or file-writing adapters require approval
+- which routing rules apply to low-risk routine work versus complex work
+- which permission gates remain even when a model route is recommended
+
+Reading a ModelRoutingPlan is read-only. It must not call a model, call an
+external service, incur cost, modify files, commit, or push.
+
 ## Completion Decision Contract
 
 Completion review is a Human Director decision point.

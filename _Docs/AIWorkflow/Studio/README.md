@@ -42,6 +42,7 @@ This slice defines:
 - RoleRunOutput schema
 - ToolAdapter schema
 - ProjectExecutionPlan schema
+- ModelRoutingPlan schema
 - CompletionEvidenceChecklist schema
 - CompletionDecisionPlan schema
 - ApprovalImpactPlan schema
@@ -184,6 +185,9 @@ This slice defines:
   adapters, tool risk matrix, safe start candidates, human-approval-required
   tool effects such as file writes, external calls, and cost, and recommended
   next checks without executing tools or changing workflow state.
+- Read-only ModelRoutingPlan that keeps signed-in Codex/ChatGPT subscription
+  routing, model/reasoning selection, external cost boundaries, and permission
+  gates visible before any staff or tool execution occurs.
 - Deterministic CompletionDecisionPlan for the current AIWorkflow completion
   gate. It explains the current verdict, decision options, effects of
   accepting/accepting concerns/requesting changes/deferring, remaining
@@ -420,6 +424,8 @@ _Docs/AIWorkflow/Studio/
 |   +-- ToolRun.schema.json
 |   +-- ToolRunRequest.schema.json
 |   +-- ToolAdapter.schema.json
+|   +-- ProjectExecutionPlan.schema.json
+|   +-- ModelRoutingPlan.schema.json
 |   +-- CompletionEvidenceChecklist.schema.json
 |   +-- ApprovalImpactPlan.schema.json
 |   +-- ConditionalAutomationCase.schema.json

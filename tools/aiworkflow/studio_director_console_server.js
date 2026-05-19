@@ -1944,7 +1944,7 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card"><h2>프로젝트 프로필</h2><p class="muted">빌드, 데이터, 검증 진입점은 Project Profile이 제공합니다. Core는 특정 게임 경로를 직접 알지 않는 방향입니다.</p><div id="projectProfilesPublic" class="list"></div></div>
-            <div class="card"><div class="section-title"><h2>도구와 실행 경계</h2><button class="secondary" data-action="project-execution-plan">실행 준비 점검</button></div><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
+            <div class="card"><div class="section-title"><h2>도구와 실행 경계</h2><div class="row"><button class="secondary" data-action="model-routing-plan">모델/권한 라우팅</button><button class="secondary" data-action="project-execution-plan">실행 준비 점검</button></div></div><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
           </section>
         </section>
 
@@ -3542,6 +3542,7 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
+      if (action === "model-routing-plan") return log(await post("/api/studio/model/routing-plan", {}));
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
       if (action === "completion-evidence-checklist") return log(await post("/api/studio/completion/evidence-checklist", {}));
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
@@ -4457,6 +4458,64 @@ async function buildProjectExecutionPlan(repoRoot) {
   };
 }
 
+async function buildModelRoutingPlan(repoRoot) {
+  const core = await getWorkflowCore(repoRoot);
+  const toolAdapters = await getToolAdapters(repoRoot);
+  const task = core.active_task || {};
+  const risk = String(task.risk || "").toLowerCase();
+  const kind = String(task.kind || "").toLowerCase();
+  const isLowRiskRoutine = ["low"].includes(risk) && ["documentation", "validation", "review"].includes(kind);
+  const route = isLowRiskRoutine
+    ? { model: "gpt-5.4-mini", reasoning: "low", route: "fast_low_risk_signed_in_codex" }
+    : { model: "gpt-5.5", reasoning: "high", route: "default_final_form_signed_in_codex" };
+  const externalOrCostAdapters = toolAdapters.filter((adapter) => adapter.can_call_external || adapter.can_incur_cost);
+  const writeAdapters = toolAdapters.filter((adapter) => adapter.can_modify_files);
+  const gateLines = Array.from(new Set([
+    ...writeAdapters.map((adapter) => `${adapter.adapter_id}: 파일 수정 가능성이 있어 승인 필요`),
+    ...externalOrCostAdapters.map((adapter) => `${adapter.adapter_id}: 외부 호출 또는 비용 영향 가능성이 있어 승인 필요`),
+  ]));
+  const summarizedGateLines = gateLines.length > 12
+    ? [...gateLines.slice(0, 12), `+${gateLines.length - 12}개 추가 gate 있음`]
+    : gateLines;
+  return {
+    model_routing_plan_id: makeStudioId("MRP", task.task_id || "studio"),
+    task_id: task.task_id || "",
+    task_title: task.title || "",
+    current_meaning: "현재 작업을 어떤 signed-in Codex/ChatGPT 계열 모델과 권한 경계로 처리할지 보여주는 읽기 전용 라우팅 계획입니다.",
+    selected_route: route,
+    subscription_policy: {
+      default_ai_path: "signed-in Codex / ChatGPT plan",
+      openai_api_required: false,
+      image_generation_path: "Codex/ChatGPT plan first; external provider only after explicit approval",
+      paid_external_tools_require_approval: true,
+    },
+    route_rules: [
+      "복잡한 설계, 구현, 리뷰, 장기 구조 판단은 gpt-5.5 high를 기본으로 사용합니다.",
+      "저위험 문서/검증/읽기 중심 반복 작업은 빠른 모델/낮은 추론 강도를 후보로 둘 수 있습니다.",
+      "외부 API, 별도 과금, 파일 쓰기, runtime 영향이 있으면 사람 승인 gate를 유지합니다.",
+      "LLM은 제안과 실행 보조를 담당하고 승인권은 갖지 않습니다.",
+    ],
+    permission_gates: summarizedGateLines,
+    adapter_summary: toolAdapters.slice(0, 16).map((adapter) => ({
+      adapter_id: adapter.adapter_id,
+      display_name: adapter.display_name || adapter.adapter_id,
+      can_modify_files: Boolean(adapter.can_modify_files),
+      can_call_external: Boolean(adapter.can_call_external),
+      can_incur_cost: Boolean(adapter.can_incur_cost),
+      requires_human_approval: Boolean(adapter.requires_human_approval),
+    })),
+    safety: {
+      read_only: true,
+      model_called: false,
+      external_call: false,
+      cost_incurred: false,
+      source_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
 function buildCompletionDecisionPlan(core = {}) {
   const task = core.active_task || {};
   const runner = core.runner || {};
@@ -4747,6 +4806,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "CanonConflictReport.schema.json",
     "WorkOrderHandoffPlan.schema.json",
     "ProjectExecutionPlan.schema.json",
+    "ModelRoutingPlan.schema.json",
     "CompletionEvidenceChecklist.schema.json",
     "CompletionDecisionPlan.schema.json",
     "ApprovalImpactPlan.schema.json",
@@ -5805,6 +5865,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       project_execution_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/model/routing-plan") {
+    const payload = await buildModelRoutingPlan(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      model_routing_plan: payload,
       safety: payload.safety,
     });
   }
