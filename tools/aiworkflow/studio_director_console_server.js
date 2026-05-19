@@ -1773,6 +1773,14 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="departments">
           <div class="page-heading"><div><h2>부서</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>부서별 책임과 검토 기준을 확인합니다.</li>
+              <li>어떤 AI 직원이 어떤 부서에 속하는지 확인하고 직원 화면으로 이동합니다.</li>
+              <li>부서가 담당하는 결과물 종류를 보고 업무 지시나 회의 범위를 정리합니다.</li>
+            </ul>
+          </div>
           <div class="control-bar">
             <input id="departmentSearch" placeholder="부서명, 역할, 검토 기준 검색">
             <span id="departmentSummary" class="pill"></span>
@@ -1792,6 +1800,14 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="meetings">
           <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 후속 작업이나 결정 기록으로 넘겨야 합니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>회의를 만들고 Human Director 또는 AI 직원 발언을 회의록에 남깁니다.</li>
+              <li>AI 직원 의견을 받아 회의 안에서 제안, 반론, 질문을 모읍니다.</li>
+              <li>회의 결과를 후속 업무 지시나 감독자 결정 기록으로 넘깁니다.</li>
+            </ul>
+          </div>
           <div class="card">
             <div class="section-title"><h2>새 회의 만들기</h2><span class="pill">회의 세션</span></div>
             <div class="form-grid">
@@ -1823,6 +1839,14 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="runs">
           <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 필요한 내용만 기록 후보로 넘깁니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>AI 직원이 만든 보고서를 사람이 읽기 좋은 HTML 검토 자료로 내보냅니다.</li>
+              <li>보고서 안에서 제안, 기억, 업무 지시로 남길 후보가 있는지 미리 봅니다.</li>
+              <li>필요한 후보만 기록함에 넣습니다. 이것은 실행 승인이나 공식 설정 확정이 아닙니다.</li>
+            </ul>
+          </div>
           <div class="control-bar">
             <input id="runSearch" placeholder="직원, 실행 ID, 요약 검색">
             <select id="runStatusFilter"></select>
@@ -2160,34 +2184,6 @@ function directorConsoleHtml() {
       ReleaseNote: "릴리즈 노트",
       DocumentMap: "문서 지도",
     };
-    const ACTION_HINTS = {
-      departments: [
-        "부서 책임 확인: 이 부서가 어떤 결정을 봐야 하는지 확인합니다.",
-        "직원 보기: 이 부서의 AI 직원 역할과 승인 필요 항목으로 이동합니다.",
-        "관련 업무 보기: 이 부서에 배정된 업무 지시만 모아봅니다.",
-      ],
-      meetings: [
-        "발언 추가: Human Director나 직원 발언을 회의록에 남깁니다.",
-        "AI 의견 받기: 선택한 회의 맥락으로 AI 직원 의견을 생성합니다.",
-        "후속 작업 만들기: 회의에서 나온 일을 업무 지시서로 분리합니다.",
-        "결정으로 기록: 회의 결론을 Human Director 결정 기록으로 남깁니다.",
-      ],
-      work: [
-        "직원 자료 미리보기: AI 직원에게 전달될 맥락을 실행 전에 확인합니다.",
-        "직원에게 맡기기: 담당 AI 직원이 검토/제안을 만들게 합니다.",
-        "작업 목록에 넣기: 업무 지시를 AIWorkflow task 후보로 넘깁니다.",
-      ],
-      knowledge: [
-        "제안 채택 기록: 좋은 제안이라는 결정을 남깁니다. 공식 설정 확정은 별도입니다.",
-        "공식 설정으로 기록: 이후 AI 직원이 확정 설정처럼 참고하게 만듭니다.",
-        "수정 요청/반려: 제안이나 결정을 그대로 쓰지 않겠다는 기록을 남깁니다.",
-      ],
-      evidence: [
-        "검증 보고서: 어떤 검증 신호가 있었는지 보는 원본에 가까운 자료입니다.",
-        "완료 보고서: 이 작업을 완료로 봐도 되는지 판단한 요약입니다.",
-        "완료 카드: 사람이 가장 먼저 보는 짧은 완료 판단 카드입니다.",
-      ],
-    };
     function staffName(agentId) {
       const agent = (state?.staff_agents || []).find((item) => item.agent_id === agentId);
       return agent ? agent.display_name_ko || agent.display_name || agent.agent_id : optionLabel(agentId || "");
@@ -2201,9 +2197,6 @@ function directorConsoleHtml() {
     }
     function mappedListHtml(items, mapper, emptyText = "") {
       return listHtml(asArray(items).map(mapper), emptyText);
-    }
-    function actionHintsHtml(type) {
-      return '<div class="staff-detail"><strong>이 화면에서 할 수 있는 일</strong>' + listHtml(ACTION_HINTS[type] || [], "(없음)") + '</div>';
     }
     function fixedOptionList(values) {
       return values.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
@@ -2453,7 +2446,6 @@ function directorConsoleHtml() {
         '<p>' + esc(staffName(r.agent_id)) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
         '<p class="summary">' + esc(short(r.summary)) + '</p>' +
         '<p class="small muted">제안 ' + esc(r.materializable_counts.proposals) + ' · 기억 ' + esc(r.materializable_counts.memory) + ' · 업무 지시 ' + esc(r.materializable_counts.workorders) + ' · 인수인계 ' + esc(r.materializable_counts.handoffs) + '</p>' +
-        '<div class="staff-detail"><strong>이 보고서에서 할 수 있는 일</strong>' + listHtml(["보고서 만들기: 사람이 읽기 좋은 검토용 HTML로 내보냅니다.", "기록 후보 보기: 제안/기억/업무 지시로 남길 수 있는 항목을 미리 봅니다.", "기록함에 넣기: 선택 판단 전 단계의 기록 후보를 만듭니다. 실행 승인은 아닙니다."]) + '</div>' +
         '<div class="row">' +
         '<a href="/file?path=' + encodeURIComponent(r.staff_run_path) + '" target="_blank">실행 기록(내부)</a>' +
         (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 JSON(내부)</a>' : '') +
@@ -2486,7 +2478,6 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>승인 항목</span><span class="pill">' + esc(asArray(wo.approval_items).length ? "필요" : "없음") + '</span></div>' +
         listHtml(wo.approval_items) +
         '</div>' +
-        actionHintsHtml("work") +
         '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 보기(내부)</a>' +
         button("직원 자료 미리보기", "workorder-context-plan", wo.path) +
         button("직원 자료 저장", "workorder-context-create", wo.path, "good") +
@@ -2520,7 +2511,6 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(meeting.unresolved_count) + '</span></div>' +
         listHtml(meeting.unresolved_questions) +
         '</div>' +
-        actionHintsHtml("meetings") +
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 보기(내부)</a>' +
         '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>' +
         button("발언 전 확인", "meeting-agent-plan", meeting.path) +
@@ -2548,7 +2538,6 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>담당 결과물</span><span class="pill">' + esc(asArray(department.owned_artifacts).length) + '</span></div>' +
         mappedListHtml(department.owned_artifacts, artifactLabel, "(없음)") +
         '</div>' +
-        actionHintsHtml("departments") +
         '<div class="row">' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
@@ -2644,7 +2633,6 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>위험/의존성</span><span class="pill">' + esc(asArray(p.risks).length + asArray(p.dependencies).length) + '</span></div>' +
         listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
         '</div>' +
-        actionHintsHtml("knowledge") +
         '<div class="row"><a href="' + esc(p.href) + '" target="_blank">원본 보기(내부)</a>' +
         button("제안 채택 기록", "proposal-approve", p.path, "good") +
         button("공식 설정으로 기록", "proposal-canonize", p.path, "warn") +
@@ -2687,7 +2675,6 @@ function directorConsoleHtml() {
         '<div class="item ' + (verification.verdict === "CONCERNS" ? "warn" : verification.verdict === "FAIL" ? "danger" : "good") + '"><h3>현재 판정 <span class="pill">' + esc(verification.verdict || "없음") + '</span></h3>' +
         '<p class="summary">' + esc(translateCompletionSummary(completion.summary) || "완료 보고서 요약이 없습니다.") + '</p>' +
         '<p class="small muted">warnings ' + esc(verification.warning_count ?? "-") + ' · concerns ' + esc(verification.concern_count ?? "-") + '</p>' +
-        actionHintsHtml("evidence") +
         '<div class="row">' + (verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '') + (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '') + (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') + '</div></div>' +
         (concerns.length ? concerns.slice(0, 8).map((concern) =>
           '<div class="item warn"><h3>우려 사항</h3><p class="summary">' + esc(explainConcern(concern)) + '</p><p class="small muted">' + esc(translateConcernDetail(concern)) + '</p></div>'
