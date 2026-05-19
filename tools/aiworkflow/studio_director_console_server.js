@@ -2199,7 +2199,7 @@ function directorConsoleHtml() {
             </ul>
           </div>
           <div class="grid">
-            <div class="card"><h2>워크플로우 검토</h2><div id="workflowReview" class="list"></div></div>
+            <div class="card"><div class="section-title"><h2>워크플로우 검토</h2><button class="secondary" data-action="completion-decision-plan">완료 판단안</button></div><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
             <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
           </div>
@@ -2761,7 +2761,8 @@ function directorConsoleHtml() {
           '<div class="row">' + (runner.href ? '<a href="' + esc(runner.href) + '" target="_blank">Runner 기록</a>' : '') + '</div></div>'
         : '<div class="item"><h3>Runner 기록 없음</h3><p class="summary">현재 ActiveTask 기준 실행 기록을 찾지 못했습니다.</p></div>';
       const actionButtons = (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision")
-        ? '<div class="row">' +
+          ? '<div class="row">' +
+          '<button class="secondary" data-action="completion-decision-plan">완료 판단안</button>' +
           (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') +
           (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">결과 보기</a>' : '') +
           workflowActionButton("완료 승인", "accept", "good", true) +
@@ -3497,6 +3498,7 @@ function directorConsoleHtml() {
       }
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
+      if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -4099,6 +4101,76 @@ async function buildProjectExecutionPlan(repoRoot) {
       source_changed: false,
       task_state_changed: false,
       tool_executed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+function buildCompletionDecisionPlan(core = {}) {
+  const task = core.active_task || {};
+  const runner = core.runner || {};
+  const verification = core.verification || {};
+  const completion = core.completion || {};
+  const concerns = stringList(completion.remaining_concerns);
+  const warnings = stringList(completion.remaining_warnings);
+  const verdict = verification.verdict || completion.readiness || "";
+  let recommended = "defer";
+  if (verdict === "PASS") recommended = "accept";
+  else if (verdict === "PASS_WITH_NOTES") recommended = warnings.length ? "accept" : "accept";
+  else if (verdict === "CONCERNS") recommended = "request_changes_or_accept_concerns";
+  else if (verdict === "FAIL" || verdict === "BLOCKED") recommended = "request_changes";
+
+  return {
+    completion_decision_plan_id: makeStudioId("CDP", task.task_id || "completion"),
+    task_id: task.task_id || "",
+    task_title: task.title || "",
+    runner_run_id: runner.runner_run_id || "",
+    verdict,
+    completion_state: completion.state || "",
+    current_meaning: runner.stop_reason === "completion_review_required"
+      ? "완료 카드와 검증 자료를 보고 완료 승인, 우려 감수, 수정 요청, 보류 중 하나를 결정해야 합니다."
+      : runner.stop_reason === "done_or_commit_decision"
+        ? "완료 최종화는 끝났고 task done 또는 commit/push 판단이 남은 상태입니다."
+        : "현재 완료 판단 gate가 열려 있는지 확인해야 합니다.",
+    recommended_decision: recommended,
+    decision_options: [
+      {
+        decision: "accept",
+        label: "완료 승인",
+        when_to_use: "검증 결과가 통과했고 남은 우려가 없거나 사소한 메모 수준일 때 사용합니다.",
+        effect: "FinalizationLog를 남기고 Runner를 계속 진행합니다. markDone이면 task done까지 처리합니다. commit/push는 별도입니다.",
+      },
+      {
+        decision: "accept-concerns",
+        label: "우려 감수 후 완료",
+        when_to_use: "우려를 확인했지만 이번 작업 완료를 막을 정도는 아니라고 사람이 판단할 때 사용합니다.",
+        effect: "우려를 폐기하지 않고 '알고 감수했다'는 기록을 남긴 뒤 완료 흐름을 진행합니다. commit/push는 별도입니다.",
+      },
+      {
+        decision: "request-changes",
+        label: "수정 요청",
+        when_to_use: "검증 실패, 범위 이탈, 설명 부족, 남은 문제 때문에 완료로 받을 수 없을 때 사용합니다.",
+        effect: "task done을 하지 않고 수정 필요 FinalizationLog를 남깁니다. 후속 focused fix 작업으로 이어집니다.",
+      },
+      {
+        decision: "defer",
+        label: "판단 보류",
+        when_to_use: "지금 판단할 근거가 부족해서 더 확인해야 할 때 사용합니다.",
+        effect: "완료/반려/수정 결정을 미루는 기록만 남깁니다. task done, commit/push는 하지 않습니다.",
+      },
+    ],
+    concerns_to_review: concerns,
+    warnings_to_review: warnings,
+    director_checklist: [
+      "검증 자료가 이번 작업 범위를 실제로 다루는가?",
+      "남은 우려가 task 완료를 막는 문제인가, 감수 가능한 경고인가?",
+      "완료 승인 후에도 commit/push는 별도 판단이라는 점을 확인했는가?",
+    ],
+    safety: {
+      read_only: true,
+      task_done_changed: false,
+      finalization_written: false,
       commit_or_push: false,
     },
     created_at: studioTimestampParts().iso,
@@ -4867,6 +4939,16 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       project_execution_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/completion/decision-plan") {
+    const core = await getWorkflowCore(repoRoot);
+    const payload = buildCompletionDecisionPlan(core);
+    return sendJson(res, 200, {
+      ok: true,
+      completion_decision_plan: payload,
       safety: payload.safety,
     });
   }

@@ -38,6 +38,7 @@ This slice defines:
 - RoleRunOutput schema
 - ToolAdapter schema
 - ProjectExecutionPlan schema
+- CompletionDecisionPlan schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -130,6 +131,11 @@ This slice defines:
   build/validation profiles, enabled tool adapters, human-approval-required
   tool effects such as file writes, external calls, and cost, and recommended
   next checks without executing tools or changing workflow state.
+- Deterministic CompletionDecisionPlan for the current AIWorkflow completion
+  gate. It explains the current verdict, decision options, effects of
+  accepting/accepting concerns/requesting changes/deferring, remaining
+  concerns, and Director checklist without writing finalization, marking done,
+  committing, or pushing.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 

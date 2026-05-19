@@ -116,6 +116,28 @@ A ProjectExecutionPlan explains:
 Reading a ProjectExecutionPlan is read-only. It must not run a build, run a
 tool, modify files, create a task decision, commit, or push.
 
+## Completion Decision Contract
+
+Completion review is a Human Director decision point.
+
+The system may collect validation material and summarize completion state, but
+it must not decide that work is complete without the appropriate policy gate or
+human decision.
+
+A CompletionDecisionPlan explains:
+
+- the current task and runner run
+- the verification verdict
+- what the completion gate means
+- when to use accept, accept-concerns, request-changes, or defer
+- what changes after each decision
+- remaining concerns and warnings
+- what the Director should check before finalization
+
+Reading a CompletionDecisionPlan is read-only. It must not write a
+FinalizationLog, mark a task done, commit, or push. Those remain explicit
+finalization and git gate actions.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

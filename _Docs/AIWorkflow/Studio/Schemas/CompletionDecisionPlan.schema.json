@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/CompletionDecisionPlan.schema.json",
+  "title": "CompletionDecisionPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "completion_decision_plan_id",
+    "task_id",
+    "task_title",
+    "runner_run_id",
+    "verdict",
+    "completion_state",
+    "current_meaning",
+    "recommended_decision",
+    "decision_options",
+    "concerns_to_review",
+    "warnings_to_review",
+    "director_checklist",
+    "safety",
+    "created_at"
+  ],
+  "properties": {
+    "completion_decision_plan_id": { "type": "string", "pattern": "^CDP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "task_id": { "type": "string" },
+    "task_title": { "type": "string" },
+    "runner_run_id": { "type": "string" },
+    "verdict": { "type": "string" },
+    "completion_state": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "recommended_decision": { "type": "string" },
+    "decision_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "label", "when_to_use", "effect"],
+        "properties": {
+          "decision": { "type": "string" },
+          "label": { "type": "string" },
+          "when_to_use": { "type": "string" },
+          "effect": { "type": "string" }
+        }
+      }
+    },
+    "concerns_to_review": { "type": "array", "items": { "type": "string" } },
+    "warnings_to_review": { "type": "array", "items": { "type": "string" } },
+    "director_checklist": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_only", "task_done_changed", "finalization_written", "commit_or_push"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "task_done_changed": { "type": "boolean" },
+        "finalization_written": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}
