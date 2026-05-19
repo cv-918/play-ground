@@ -57,13 +57,16 @@ This slice defines:
 - Read-only Studio dashboard HTML snapshot export with Director Inbox, staff
   run timeline, and review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
-- Local-only Studio Director Console server with dashboard refresh, handoff
-  plan, explicit read-only staff handoff execution, staff run timeline,
+- Local-only Studio Director Console server with a sidebar-based Home,
+  Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, Systems,
+  Policy, and Evidence workspace. Home is the Director situation board for
+  recent work and staff status; the other pages expose dashboard refresh,
+  handoff plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
-  WorkOrder task creation actions, Department/StaffAgent directory panels,
+  WorkOrder task creation actions, Department/StaffAgent directory cards,
   Proposal/Decision/Memory browser panels, Meeting Room inspection/lifecycle
   actions, Project Profile and Tool Adapter browser panels, Conditional
-  Automation policy test actions, and review packet links
+  Automation policy test actions, and review packet links.
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry

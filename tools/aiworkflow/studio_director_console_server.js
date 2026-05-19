@@ -815,21 +815,35 @@ function directorConsoleHtml() {
   <style>
     :root {
       color-scheme: dark;
-      --bg:#101319;
+      --bg:#0f1218;
+      --sidebar:#141923;
       --panel:#1b202a;
       --panel2:#242b37;
+      --panel3:#202735;
       --line:#3a4353;
       --text:#edf1f7;
       --muted:#aeb8c7;
       --accent:#79a9ff;
+      --accent2:#b7ccff;
       --good:#28a564;
       --warn:#f0b84d;
       --danger:#ff6464;
     }
     * { box-sizing: border-box; }
     body { margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
-    header { padding:22px 18px; background:#171b23; border-bottom:1px solid var(--line); }
-    main { max-width:1220px; margin:0 auto; padding:18px; }
+    .app-shell { min-height:100vh; display:grid; grid-template-columns:260px minmax(0, 1fr); }
+    .sidebar { position:sticky; top:0; height:100vh; display:flex; flex-direction:column; gap:16px; padding:18px 14px; background:linear-gradient(180deg, #151b25, #10141c); border-right:1px solid var(--line); }
+    .brand { padding:8px 8px 12px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .brand-title { margin:0; font-size:18px; font-weight:800; letter-spacing:0; }
+    .brand-subtitle { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .nav { display:grid; gap:6px; }
+    .nav button { width:100%; display:flex; justify-content:space-between; align-items:center; border:1px solid transparent; border-radius:8px; padding:9px 10px; color:var(--muted); background:transparent; text-align:left; }
+    .nav button:hover { background:#202735; color:var(--text); }
+    .nav button.active { background:#27344a; border-color:#48648f; color:var(--text); }
+    .nav .count { min-width:22px; text-align:center; color:var(--accent2); font-size:12px; }
+    .workspace { min-width:0; }
+    header { position:sticky; top:0; z-index:4; padding:18px 22px; background:rgba(16,19,25,.88); border-bottom:1px solid var(--line); backdrop-filter:blur(12px); }
+    main { max-width:1280px; margin:0 auto; padding:20px; }
     h1 { margin:0 0 6px; font-size:26px; letter-spacing:0; }
     h2 { margin:0 0 10px; font-size:18px; letter-spacing:0; }
     h3 { margin:0 0 6px; font-size:15px; letter-spacing:0; }
@@ -844,10 +858,16 @@ function directorConsoleHtml() {
     code { background:#12151c; border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
     a { color:#c6d8ff; text-decoration:none; }
     a:hover { text-decoration:underline; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
     .muted { color:var(--muted); }
     .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin:14px 0; }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    .card { background:linear-gradient(180deg, var(--panel), #171c25); border:1px solid var(--line); border-radius:8px; padding:14px; box-shadow:0 10px 28px rgba(0,0,0,.16); }
+    .hero { display:grid; grid-template-columns:minmax(0, 1.5fr) minmax(280px, .8fr); gap:14px; align-items:stretch; margin-bottom:14px; }
+    .hero-card { min-height:176px; padding:18px; border-color:#4b6590; background:linear-gradient(135deg, #202b3e, #171d29 70%); }
+    .hero-card h2 { font-size:24px; }
     .metric { font-size:28px; font-weight:700; }
+    .metric-card { min-height:96px; }
+    .metric-label { color:var(--muted); font-size:12px; }
     .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; background:var(--panel2); color:var(--muted); padding:2px 7px; font-size:12px; }
     .list { display:grid; gap:10px; }
@@ -857,124 +877,229 @@ function directorConsoleHtml() {
     .item.danger { border-left-color:var(--danger); }
     .small { font-size:13px; }
     .summary { color:var(--muted); font-size:13px; }
+    .page { display:none; }
+    .page.active { display:block; }
+    .page-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin:0 0 16px; }
+    .page-heading h2 { margin:0; font-size:24px; }
+    .page-heading p { max-width:720px; margin:4px 0 0; color:var(--muted); }
+    .section-title { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:10px; }
+    .kicker { color:var(--accent2); font-size:12px; font-weight:700; text-transform:uppercase; }
+    .compact-list { display:grid; gap:7px; }
+    .compact-line { display:flex; justify-content:space-between; gap:12px; border-bottom:1px solid rgba(255,255,255,.06); padding:6px 0; }
+    .compact-line:last-child { border-bottom:0; }
+    .control-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
+    .control-bar input, .control-bar select { min-height:36px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
+    .control-bar input { min-width:240px; }
+    .empty { color:var(--muted); border:1px dashed var(--line); border-radius:8px; padding:16px; }
     pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
-    @media (max-width: 720px) { main { padding:12px; } h1 { font-size:22px; } .metric { font-size:24px; } }
+    @media (max-width: 920px) {
+      .app-shell { grid-template-columns:1fr; }
+      .sidebar { position:static; height:auto; }
+      .nav { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .hero { grid-template-columns:1fr; }
+    }
+    @media (max-width: 720px) {
+      main { padding:12px; }
+      h1 { font-size:22px; }
+      .metric { font-size:24px; }
+      .nav { grid-template-columns:1fr; }
+      .page-heading { display:block; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>AIWorkflow Studio Director Console</h1>
-    <p class="muted">로컬 전용 감독자 콘솔입니다. 버튼은 기존 Studio 도구만 호출하고, 소스 수정/캐논 확정/커밋/푸시는 하지 않습니다.</p>
-  </header>
-  <main>
-    <section class="card">
-      <div class="row">
-        <button id="refresh">새로고침</button>
-        <button id="export-dashboard" class="secondary">정적 대시보드 갱신</button>
-        <span id="stamp" class="muted"></span>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <p class="brand-title">AIWorkflow Studio</p>
+        <p class="brand-subtitle">Human Director 운영 콘솔</p>
       </div>
-    </section>
-    <section id="metrics" class="grid"></section>
-    <section class="grid">
-      <div class="card">
-        <h2>감독자 Inbox</h2>
-        <p class="muted">검토할 직원 산출물, draft 기록, WorkOrder 후보를 한 곳에 모읍니다.</p>
-        <div id="inbox" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>안전 경계</h2>
-        <div class="list">
-          <div class="item good"><h3>콘솔이 직접 하지 않는 일</h3><p class="small">task 실행 승인, 캐논 확정, 소스 수정, 커밋, 푸시.</p></div>
-          <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">산출물 draft 변환, draft에 대한 결정 기록, WorkOrder task 생성, read-only 직원 handoff 실행.</p></div>
+      <nav class="nav" aria-label="Studio navigation">
+        <button class="active" data-nav="home">Home <span class="count" id="nav-home-count"></span></button>
+        <button data-nav="departments">Departments <span class="count" id="nav-departments-count"></span></button>
+        <button data-nav="staff">Staff <span class="count" id="nav-staff-count"></span></button>
+        <button data-nav="meetings">Meeting Room <span class="count" id="nav-meetings-count"></span></button>
+        <button data-nav="runs">Staff Runs <span class="count" id="nav-runs-count"></span></button>
+        <button data-nav="work">Work Orders <span class="count" id="nav-work-count"></span></button>
+        <button data-nav="knowledge">Knowledge <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="systems">Systems <span class="count" id="nav-systems-count"></span></button>
+        <button data-nav="policy">Policy <span class="count" id="nav-policy-count"></span></button>
+        <button data-nav="evidence">Evidence <span class="count" id="nav-evidence-count"></span></button>
+      </nav>
+      <p class="small muted">이 콘솔은 로컬 전용입니다. 버튼은 allowlist된 Studio 도구만 호출합니다.</p>
+    </aside>
+    <div class="workspace">
+      <header>
+        <h1 id="pageTitle">Studio Home</h1>
+        <p id="pageSubtitle" class="muted">최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다.</p>
+        <div class="toolbar">
+          <button id="refresh">새로고침</button>
+          <button id="export-dashboard" class="secondary">정적 대시보드 갱신</button>
+          <span id="stamp" class="muted"></span>
         </div>
-      </div>
-    </section>
-    <section class="grid">
-      <div class="card">
-        <h2>직원 산출물</h2>
-        <p class="muted">RoleRunOutput을 Proposal/Memory/WorkOrder/Handoff draft로 변환할 수 있습니다.</p>
-        <div id="runs" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Draft 결정</h2>
-        <p class="muted">materialization draft를 승인, 반려, 보류, 수정 요청으로 기록합니다. 이 기록은 downstream 근거일 뿐 실행 승인은 아닙니다.</p>
-        <div id="materializations" class="list"></div>
-      </div>
-    </section>
-    <section class="grid">
-      <div class="card">
-        <h2>WorkOrder</h2>
-        <p class="muted">검토된 WorkOrder를 AIWorkflow Backlog task로 만들 수 있습니다. 생성 후에도 approve/start는 별도 gate입니다.</p>
-        <div id="workorders" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Handoff</h2>
-        <p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p>
-        <div id="handoffs" class="list"></div>
-      </div>
-    </section>
-    <section class="card">
-      <h2>Meeting Room</h2>
-      <p class="muted">AI 직원 회의 기록입니다. 회의 합의는 승인이나 캐논이 아니며, follow-up WorkOrder나 결정 gate로 넘어가야 합니다.</p>
-      <div id="meetings" class="list"></div>
-    </section>
-    <section class="grid">
-      <div class="card">
-        <h2>Departments</h2>
-        <p class="muted">AI 회사의 부서 목록입니다. 각 부서가 어떤 산출물과 검토 게이트를 맡는지 확인합니다.</p>
-        <div id="departments" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Staff Agents</h2>
-        <p class="muted">영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p>
-        <div id="staffAgents" class="list"></div>
-      </div>
-    </section>
-    <section class="grid">
-      <div class="card">
-        <h2>Project Profile</h2>
-        <p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다. Core는 프로젝트 경로를 직접 하드코딩하지 않고 이 profile을 읽어야 합니다.</p>
-        <div id="projectProfiles" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Tool Adapters</h2>
-        <p class="muted">AI 직원과 Runner가 사용할 수 있는 장비 목록입니다. 비용, 외부 호출, 파일 수정, 승인 필요 여부를 한눈에 확인합니다.</p>
-        <div id="toolAdapters" class="list"></div>
-      </div>
-    </section>
-    <section class="card">
-      <h2>Automation Policy</h2>
-      <p class="muted">자동 진행 가능 여부를 재현 가능한 정책 케이스로 확인합니다. 이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p>
-      <div id="automationPolicy" class="list"></div>
-    </section>
-    <section class="grid">
-      <div class="card">
-        <h2>Proposal Inbox</h2>
-        <p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 캐논이 아닙니다.</p>
-        <div id="proposals" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Decision Log</h2>
-        <p class="muted">Human Director가 남긴 결정 기록입니다. 어떤 제안이 승인/반려/보류됐는지 확인합니다.</p>
-        <div id="decisions" class="list"></div>
-      </div>
-      <div class="card">
-        <h2>Memory / Canon</h2>
-        <p class="muted">프로젝트 기억과 공식 설정 후보입니다. status가 canon이어야 공식 설정으로 취급합니다.</p>
-        <div id="memories" class="list"></div>
-      </div>
-    </section>
-    <section class="card">
-      <h2>리뷰 패킷</h2>
-      <div id="packets" class="list"></div>
-    </section>
-    <section class="card">
-      <h2>작업 로그</h2>
-      <pre id="log">대기 중</pre>
-    </section>
-  </main>
+      </header>
+      <main>
+        <section class="page active" data-page="home">
+          <div class="hero">
+            <div class="card hero-card">
+              <span class="kicker">Director Overview</span>
+              <h2>지금 Studio에서 봐야 할 것</h2>
+              <p class="muted">최근 직원 산출물, draft 결정, WorkOrder 후보, 회의 상태를 한 화면에서 확인합니다.</p>
+              <div id="inbox" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>안전 경계</h2><span class="pill">local only</span></div>
+              <div class="list">
+                <div class="item good"><h3>콘솔이 직접 하지 않는 일</h3><p class="small">task 실행 승인, 캐논 확정, 소스 수정, 커밋, 푸시.</p></div>
+                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">draft 변환, 결정 기록, WorkOrder task 생성, read-only handoff 실행.</p></div>
+              </div>
+            </div>
+          </div>
+          <section id="metrics" class="grid"></section>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>판단 대기</h2><span id="homeQueueCount" class="pill"></span></div>
+              <div id="homeDecisionQueue" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>직원 현황</h2><button class="secondary" data-nav-jump="staff">전체 보기</button></div>
+              <div id="homeStaffStatus" class="compact-list"></div>
+            </div>
+          </section>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>최근 활동</h2><button class="secondary" data-nav-jump="runs">산출물 보기</button></div>
+              <div id="homeActivity" class="compact-list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>운영 상태</h2><button class="secondary" data-nav-jump="systems">시스템 보기</button></div>
+              <div id="homeOperations" class="compact-list"></div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="section-title"><h2>최근 증거</h2><button class="secondary" data-nav-jump="evidence">Evidence 보기</button></div>
+            <div id="homeEvidence" class="compact-list"></div>
+          </section>
+        </section>
+
+        <section class="page" data-page="departments">
+          <div class="page-heading"><div><h2>Departments</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="departmentSearch" placeholder="부서명, 역할, 검토 기준 검색">
+            <span id="departmentSummary" class="pill"></span>
+          </div>
+          <div id="departments" class="grid"></div>
+        </section>
+
+        <section class="page" data-page="staff">
+          <div class="page-heading"><div><h2>Staff Agents</h2><p>영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="staffSearch" placeholder="직원명, 역할, 산출물 검색">
+            <select id="staffDepartmentFilter"></select>
+            <button class="secondary" data-clear-filter="staff">필터 해제</button>
+          </div>
+          <div id="staffAgents" class="grid"></div>
+        </section>
+
+        <section class="page" data-page="meetings">
+          <div class="page-heading"><div><h2>Meeting Room</h2><p>회의 합의는 바로 승인이나 캐논이 아닙니다. follow-up WorkOrder나 결정 gate로 넘어가야 합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="meetingSearch" placeholder="회의 주제, ID 검색">
+            <select id="meetingStatusFilter"></select>
+          </div>
+          <div id="meetings" class="list"></div>
+        </section>
+
+        <section class="page" data-page="runs">
+          <div class="page-heading"><div><h2>Staff Runs</h2><p>직원 실행 결과와 draft 변환 후보를 검토합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="runSearch" placeholder="직원, 실행 ID, 요약 검색">
+            <select id="runStatusFilter"></select>
+            <button class="secondary" data-clear-filter="runs">필터 해제</button>
+          </div>
+          <div class="grid">
+            <div class="card"><h2>직원 산출물</h2><p class="muted">RoleRunOutput을 Proposal/Memory/WorkOrder/Handoff draft로 변환할 수 있습니다.</p><div id="runs" class="list"></div></div>
+            <div class="card"><h2>Draft 결정</h2><p class="muted">draft를 승인, 반려, 보류, 수정 요청으로 기록합니다. 이 기록은 downstream 근거일 뿐 실행 승인은 아닙니다.</p><div id="materializations" class="list"></div></div>
+          </div>
+        </section>
+
+        <section class="page" data-page="work">
+          <div class="page-heading"><div><h2>Work Orders</h2><p>Studio 업무 후보와 AI 직원 handoff를 AIWorkflow task로 연결합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="workSearch" placeholder="WorkOrder, handoff, 부서 검색">
+            <select id="workDepartmentFilter"></select>
+            <button class="secondary" data-clear-filter="work">필터 해제</button>
+          </div>
+          <div class="grid">
+            <div class="card"><h2>WorkOrder</h2><p class="muted">검토된 WorkOrder를 Backlog task로 만들 수 있습니다. 생성 후 approve/start는 별도 gate입니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>Handoff</h2><p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
+          </div>
+        </section>
+
+        <section class="page" data-page="knowledge">
+          <div class="page-heading"><div><h2>Knowledge</h2><p>제안, 결정, 기억과 canon 후보를 확인합니다.</p></div></div>
+          <div class="control-bar">
+            <input id="knowledgeSearch" placeholder="제안, 결정, 기억 검색">
+            <select id="memoryStatusFilter"></select>
+          </div>
+          <div class="grid">
+            <div class="card"><h2>Proposal Inbox</h2><p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 캐논이 아닙니다.</p><div id="proposals" class="list"></div></div>
+            <div class="card"><h2>Decision Log</h2><p class="muted">Human Director가 남긴 결정 기록입니다.</p><div id="decisions" class="list"></div></div>
+            <div class="card"><h2>Memory / Canon</h2><p class="muted">status가 canon이어야 공식 설정으로 취급합니다.</p><div id="memories" class="list"></div></div>
+          </div>
+        </section>
+
+        <section class="page" data-page="systems">
+          <div class="page-heading"><div><h2>Systems</h2><p>프로젝트 profile과 실행 장비 adapter를 확인합니다.</p></div></div>
+          <div class="grid">
+            <div class="card"><h2>Project Profile</h2><p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다.</p><div id="projectProfiles" class="list"></div></div>
+            <div class="card"><h2>Tool Adapters</h2><p class="muted">비용, 외부 호출, 파일 수정, 승인 필요 여부를 확인합니다.</p><div id="toolAdapters" class="list"></div></div>
+          </div>
+        </section>
+
+        <section class="page" data-page="policy">
+          <div class="page-heading"><div><h2>Policy</h2><p>자동 진행 가능 여부를 재현 가능한 정책 케이스로 확인합니다.</p></div></div>
+          <div class="card"><h2>Automation Policy</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
+        </section>
+
+        <section class="page" data-page="evidence">
+          <div class="page-heading"><div><h2>Evidence</h2><p>리뷰 패킷과 콘솔 작업 로그를 확인합니다.</p></div></div>
+          <div class="grid">
+            <div class="card"><h2>리뷰 패킷</h2><div id="packets" class="list"></div></div>
+            <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
   <script>
     let state = null;
+    let activePage = "home";
+    const PAGES = {
+      home: ["Studio Home", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
+      departments: ["Departments", "부서별 책임, 직원, 검토 기준을 확인합니다."],
+      staff: ["Staff Agents", "AI 직원의 역할, 권한, 산출물 책임을 확인합니다."],
+      meetings: ["Meeting Room", "AI 직원 회의, 후속 작업, 미해결 질문을 관리합니다."],
+      runs: ["Staff Runs", "직원 실행 결과와 draft 변환 후보를 검토합니다."],
+      work: ["Work Orders", "Studio 업무 후보와 handoff를 AIWorkflow task로 연결합니다."],
+      knowledge: ["Knowledge", "제안, 결정, 기억, canon 후보를 확인합니다."],
+      systems: ["Systems", "프로젝트 profile과 tool adapter 경계를 확인합니다."],
+      policy: ["Policy", "자동 진행 정책과 재현 가능한 평가 결과를 확인합니다."],
+      evidence: ["Evidence", "리뷰 패킷과 콘솔 작업 로그를 확인합니다."],
+    };
+    const filters = {
+      departmentSearch: "",
+      staffSearch: "",
+      staffDepartment: "",
+      meetingSearch: "",
+      meetingStatus: "",
+      runSearch: "",
+      runStatus: "",
+      workSearch: "",
+      workDepartment: "",
+      knowledgeSearch: "",
+      memoryStatus: "",
+    };
     const el = (id) => document.getElementById(id);
     const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
     const log = (value) => { el("log").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2); };
@@ -989,7 +1114,7 @@ function directorConsoleHtml() {
       return api(path, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(body || {}) });
     }
     function metric(label, value) {
-      return '<div class="card"><h2>' + esc(label) + '</h2><div class="metric">' + esc(value) + '</div></div>';
+      return '<div class="card metric-card"><div class="metric-label">' + esc(label) + '</div><div class="metric">' + esc(value) + '</div></div>';
     }
     function button(label, action, filePath, className = "secondary", extra = "") {
       return '<button class="' + esc(className) + '" data-action="' + esc(action) + '" data-path="' + esc(filePath) + '" ' + extra + '>' + esc(label) + '</button>';
@@ -997,6 +1122,106 @@ function directorConsoleHtml() {
     function short(text, max = 180) {
       const clean = String(text || "").replace(/\\s+/g, " ").trim();
       return clean.length > max ? clean.slice(0, max - 3).trimEnd() + "..." : clean;
+    }
+    function includesText(value, query) {
+      return !query || String(value || "").toLowerCase().includes(String(query || "").toLowerCase());
+    }
+    function optionList(values, allLabel) {
+      const unique = Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
+      return '<option value="">' + esc(allLabel) + '</option>' + unique.map((value) => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join("");
+    }
+    function syncFilterControls() {
+      el("staffDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
+      el("workDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
+      el("meetingStatusFilter").innerHTML = optionList(state.meetings.map((meeting) => meeting.status), "모든 회의 상태");
+      el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
+      el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
+      el("departmentSearch").value = filters.departmentSearch;
+      el("staffSearch").value = filters.staffSearch;
+      el("staffDepartmentFilter").value = filters.staffDepartment;
+      el("meetingSearch").value = filters.meetingSearch;
+      el("meetingStatusFilter").value = filters.meetingStatus;
+      el("runSearch").value = filters.runSearch;
+      el("runStatusFilter").value = filters.runStatus;
+      el("workSearch").value = filters.workSearch;
+      el("workDepartmentFilter").value = filters.workDepartment;
+      el("knowledgeSearch").value = filters.knowledgeSearch;
+      el("memoryStatusFilter").value = filters.memoryStatus;
+    }
+    function renderEmpty(text) {
+      return '<div class="empty">' + esc(text) + '</div>';
+    }
+    function setPage(page) {
+      activePage = PAGES[page] ? page : "home";
+      document.querySelectorAll(".page").forEach((section) => {
+        section.classList.toggle("active", section.dataset.page === activePage);
+      });
+      document.querySelectorAll("button[data-nav]").forEach((buttonEl) => {
+        buttonEl.classList.toggle("active", buttonEl.dataset.nav === activePage);
+      });
+      el("pageTitle").textContent = PAGES[activePage][0];
+      el("pageSubtitle").textContent = PAGES[activePage][1];
+      const nextHash = activePage === "home" ? "" : "#" + activePage;
+      if (location.hash !== nextHash) {
+        history.replaceState(null, "", location.pathname + location.search + nextHash);
+      }
+    }
+    function setNavCount(page, value) {
+      const target = el("nav-" + page + "-count");
+      if (target) target.textContent = value ? String(value) : "";
+    }
+    function renderNavCounts() {
+      const m = state.metrics;
+      setNavCount("home", m.staff_runs + m.materializations + m.work_orders);
+      setNavCount("departments", m.departments);
+      setNavCount("staff", m.staff);
+      setNavCount("meetings", state.meetings.length);
+      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length);
+      setNavCount("work", state.work_orders.length + state.handoffs.length);
+      setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
+      setNavCount("systems", state.project_profiles.length + state.tool_adapters.length);
+      setNavCount("policy", state.conditional_automation.evaluations.length);
+      setNavCount("evidence", state.review_packets.length);
+    }
+    function renderHomePanels() {
+      const queue = [
+        ...state.materializations.slice(0, 3).map((item) => ({ label:"Draft 결정", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
+        ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 산출물", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),
+        ...state.work_orders.slice(0, 3).map((wo) => ({ label:"WorkOrder 후보", title:wo.work_order_id, detail:wo.status, page:"work" })),
+        ...state.meetings.filter((meeting) => meeting.unresolved_count || meeting.follow_up_count).slice(0, 2).map((meeting) => ({ label:"회의 후속", title:meeting.meeting_id, detail:"미해결 " + meeting.unresolved_count + " · 후속 " + meeting.follow_up_count, page:"meetings" })),
+      ].slice(0, 6);
+      el("homeQueueCount").textContent = queue.length ? String(queue.length) : "없음";
+      el("homeDecisionQueue").innerHTML = queue.length ? queue.map((item) =>
+        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><button class="secondary" data-nav-jump="' + esc(item.page) + '">열기</button></div>'
+      ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 산출물, draft 결정, WorkOrder 후보가 생기면 여기에 올라옵니다.</p></div>';
+      el("homeStaffStatus").innerHTML = state.staff_agents.length ? state.staff_agents.slice(0, 6).map((agent) =>
+        '<div class="compact-line"><span>' + esc(agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_id) + '</span></div>'
+      ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
+      const activity = [
+        ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 실행", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
+        ...state.meetings.slice(0, 2).map((meeting) => ({ label:"회의", value:meeting.meeting_id, status:meeting.status })),
+        ...state.work_orders.slice(0, 2).map((wo) => ({ label:"WorkOrder", value:wo.work_order_id, status:wo.status })),
+      ].slice(0, 6);
+      el("homeActivity").innerHTML = activity.length ? activity.map((item) =>
+        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><span class="pill">' + esc(item.status || "") + '</span></div>'
+      ).join("") : '<p class="muted">최근 Studio 활동이 없습니다.</p>';
+      const operations = [
+        ["활성 프로젝트", state.active_project.project_id || "(none)"],
+        ["부서 / 직원", state.metrics.departments + " / " + state.metrics.staff],
+        ["Tool Adapter", state.metrics.tool_adapters],
+        ["정책 평가", state.metrics.automation_evaluations],
+        ["안전 경계", "commit/push 없음"],
+      ];
+      el("homeOperations").innerHTML = operations.map(([label, value]) =>
+        '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
+      ).join("");
+      const evidence = [
+        ...state.review_packets.slice(0, 3).map((packet) => ({ label:"리뷰 패킷", value:packet.id, href:packet.href })),
+        ...state.conditional_automation.evaluations.slice(0, 2).map((evaluation) => ({ label:"정책 평가", value:evaluation.id, href:evaluation.href })),
+      ].slice(0, 5);
+      el("homeEvidence").innerHTML = evidence.length ? evidence.map((item) =>
+        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><a href="' + esc(item.href) + '" target="_blank">열기</a></div>'
+      ).join("") : '<p class="muted">최근 증거 파일이 없습니다.</p>';
     }
     function renderInbox() {
       const items = [];
@@ -1018,6 +1243,7 @@ function directorConsoleHtml() {
     function render() {
       el("stamp").textContent = "updated " + new Date(state.generated_at).toLocaleString();
       const m = state.metrics;
+      syncFilterControls();
       el("metrics").innerHTML = [
         metric("직원", m.staff),
         metric("직원 실행", m.staff_runs),
@@ -1032,16 +1258,23 @@ function directorConsoleHtml() {
         metric("Policy Eval", m.automation_evaluations)
       ].join("");
       renderInbox();
-      el("runs").innerHTML = state.recent_staff_runs.length ? state.recent_staff_runs.map((r) =>
+      renderHomePanels();
+      renderNavCounts();
+      const visibleRuns = state.recent_staff_runs.filter((r) =>
+        (!filters.runStatus || (r.output_status || r.status) === filters.runStatus) &&
+        includesText([r.role_run_id, r.output_id, r.agent_id, r.model, r.reasoning, r.summary, r.output_status, r.status].join(" "), filters.runSearch)
+      );
+      el("runs").innerHTML = visibleRuns.length ? visibleRuns.map((r) =>
         '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(r.output_status || r.status) + '</span></h3>' +
         '<p>' + esc(r.agent_id) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
         '<p class="summary">' + esc(short(r.summary)) + '</p>' +
         '<p class="small muted">proposal ' + esc(r.materializable_counts.proposals) + ' · memory ' + esc(r.materializable_counts.memory) + ' · workorder ' + esc(r.materializable_counts.workorders) + ' · handoff ' + esc(r.materializable_counts.handoffs) + '</p>' +
         '<div class="row">' +
+        '<a href="/file?path=' + encodeURIComponent(r.staff_run_path) + '" target="_blank">실행 기록</a>' +
         (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 열기</a>' : '') +
         (r.output_path ? button("draft 미리보기", "materialize-plan", r.output_path) + button("draft 기록", "materialize", r.output_path, "good") : '') +
         '</div></div>'
-      ).join("") : '<p class="muted">직원 실행 기록이 없습니다.</p>';
+      ).join("") : renderEmpty("조건에 맞는 직원 실행 기록이 없습니다.");
       el("materializations").innerHTML = state.materializations.length ? state.materializations.map((m) =>
         '<div class="item good"><h3><code>' + esc(m.materialization_id) + '</code></h3>' +
         '<p class="small">source: ' + esc(m.source_output_id) + ' · records ' + esc(m.created_record_count) + '</p>' +
@@ -1053,45 +1286,72 @@ function directorConsoleHtml() {
         button("반려", "decision-reject", m.path, "danger", 'data-decision="reject"') +
         '</div></div>'
       ).join("") : '<p class="muted">아직 materialization draft가 없습니다.</p>';
-      el("workorders").innerHTML = state.work_orders.length ? state.work_orders.map((wo) =>
+      const visibleWorkOrders = state.work_orders.filter((wo) =>
+        (!filters.workDepartment || wo.department_id === filters.workDepartment) &&
+        includesText([wo.work_order_id, wo.objective, wo.department_id, wo.status].join(" "), filters.workSearch)
+      );
+      el("workorders").innerHTML = visibleWorkOrders.length ? visibleWorkOrders.map((wo) =>
         '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(wo.status) + '</span></h3>' +
+        '<p class="small muted">부서: ' + esc(wo.department_id || "(none)") + '</p>' +
         '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
         '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 열기</a>' +
         button("task 미리보기", "workorder-plan", wo.path) +
         button("Backlog task 생성", "workorder-create", wo.path, "good") +
         '</div></div>'
-      ).join("") : '<p class="muted">저장된 WorkOrder가 없습니다.</p>';
-      el("handoffs").innerHTML = state.handoffs.length ? state.handoffs.map((h) =>
+      ).join("") : renderEmpty("조건에 맞는 WorkOrder가 없습니다.");
+      const visibleHandoffs = state.handoffs.filter((h) =>
+        includesText([h.handoff_id, h.from_agent_id, h.to_agent_id, h.reason, h.status].join(" "), filters.workSearch)
+      );
+      el("handoffs").innerHTML = visibleHandoffs.length ? visibleHandoffs.map((h) =>
         '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(h.status) + '</span></h3>' +
         '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
         '<div class="row">' + button("계획 보기", "handoff-plan", h.path) + button("직원 실행", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본</a></div></div>'
-      ).join("") : '<p class="muted">Handoff 후보가 없습니다.</p>';
-      el("meetings").innerHTML = state.meetings.length ? state.meetings.map((meeting) =>
+      ).join("") : renderEmpty("조건에 맞는 Handoff 후보가 없습니다.");
+      const visibleMeetings = state.meetings.filter((meeting) =>
+        (!filters.meetingStatus || meeting.status === filters.meetingStatus) &&
+        includesText([meeting.meeting_id, meeting.topic, meeting.meeting_type, meeting.status].join(" "), filters.meetingSearch)
+      );
+      el("meetings").innerHTML = visibleMeetings.length ? visibleMeetings.map((meeting) =>
         '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(meeting.status) + '</span></h3>' +
         '<p>' + esc(meeting.topic) + '</p>' +
+        '<p class="small muted">type ' + esc(meeting.meeting_type || "(none)") + ' · source ' + esc(meeting.is_stored ? "stored" : "example") + '</p>' +
         '<p class="small muted">participants ' + esc(meeting.participant_count) + ' · unresolved ' + esc(meeting.unresolved_count) + ' · follow-up ' + esc(meeting.follow_up_count) + '</p>' +
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
         button("회의 점검", "meeting-inspect", meeting.path) +
         button("handoff 보기", "meeting-handoff", meeting.path) +
         (meeting.is_stored ? button("회의 시작", "meeting-start", meeting.meeting_id, "good") + button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : button("회의 저장", "meeting-create", meeting.path, "good")) +
         '</div></div>'
-      ).join("") : '<p class="muted">저장된 MeetingSession이 없습니다.</p>';
-      el("departments").innerHTML = state.departments.length ? state.departments.map((department) =>
+      ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.");
+      const visibleDepartments = state.departments.filter((department) =>
+        includesText([department.name_ko, department.name, department.department_id, department.mission_ko, department.review_gate_labels.join(" ")].join(" "), filters.departmentSearch)
+      );
+      el("departmentSummary").textContent = "표시 " + visibleDepartments.length + "/" + state.departments.length;
+      el("departments").innerHTML = visibleDepartments.length ? visibleDepartments.map((department) =>
         '<div class="item"><h3>' + esc(department.name_ko) + '</h3>' +
         '<p class="small muted">ID <code>' + esc(department.department_id) + '</code> · 원문명 ' + esc(department.name) + '</p>' +
         '<p class="summary">역할: ' + esc(short(department.mission_ko, 150)) + '</p>' +
         '<p class="small muted">부서장: ' + esc(department.department_lead_name) + ' · 등록 직원 ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
         '<p class="small muted">검토 기준: ' + esc(department.review_gate_labels.join(", ") || "(없음)") + '</p>' +
-        '<div class="row"><a href="' + esc(department.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
-      ).join("") : '<p class="muted">Department가 없습니다.</p>';
-      el("staffAgents").innerHTML = state.staff_agents.length ? state.staff_agents.map((agent) =>
+        '<p class="small muted">담당 산출물: ' + esc(department.owned_artifacts.join(", ") || "(없음)") + '</p>' +
+        '<div class="row">' +
+        '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
+        '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
+        '<button class="secondary" data-nav-jump="meetings">회의 보기</button>' +
+        '<a href="' + esc(department.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
+      ).join("") : renderEmpty("조건에 맞는 Department가 없습니다.");
+      const visibleStaff = state.staff_agents.filter((agent) =>
+        (!filters.staffDepartment || agent.department_id === filters.staffDepartment) &&
+        includesText([agent.agent_id, agent.display_name, agent.role_title, agent.department_id, agent.mission, agent.output_contracts.join(" "), agent.approval_required_actions.join(" ")].join(" "), filters.staffSearch)
+      );
+      el("staffAgents").innerHTML = visibleStaff.length ? visibleStaff.map((agent) =>
         '<div class="item"><h3><code>' + esc(agent.agent_id) + '</code> <span class="pill">' + esc(agent.seniority) + '</span></h3>' +
         '<p>' + esc(agent.display_name) + ' · ' + esc(agent.role_title) + ' · ' + esc(agent.department_id) + '</p>' +
         '<p class="summary">' + esc(short(agent.mission, 150)) + '</p>' +
+        '<p class="small muted">권한: ' + esc(agent.authority.join(", ") || "(none)") + '</p>' +
         '<p class="small muted">outputs: ' + esc(agent.output_contracts.join(", ") || "(none)") + '</p>' +
         '<p class="small muted">approval: ' + esc(agent.approval_required_actions.join(", ") || "(none)") + '</p>' +
-        '<div class="row"><a href="' + esc(agent.href) + '" target="_blank">registry 열기</a></div></div>'
-      ).join("") : '<p class="muted">StaffAgent가 없습니다.</p>';
+        '<div class="row"><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 산출물</button><button class="secondary" data-nav-jump="meetings">회의 보기</button><a href="' + esc(agent.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
+      ).join("") : renderEmpty("조건에 맞는 StaffAgent가 없습니다.");
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
         '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(profile.status) + '</span></h3>' +
         '<p>' + esc(profile.display_name) + ' · ' + esc(profile.engine) + ' · ' + esc(profile.project_type) + '</p>' +
@@ -1105,7 +1365,7 @@ function directorConsoleHtml() {
         '<p class="small muted">owner ' + esc(adapter.execution_owner) + ' · default ' + esc(adapter.default_enabled ? "yes" : "no") + ' · approval ' + esc(adapter.requires_human_approval ? "yes" : "no") + '</p>' +
         '<p class="small muted">files ' + esc(adapter.can_modify_files ? "write-capable" : "read-only") + ' · external ' + esc(adapter.can_call_external ? "yes" : "no") + ' · cost ' + esc(adapter.can_incur_cost ? "yes" : "no") + '</p>' +
         '<p class="summary">' + esc(short(adapter.provider_policy, 140)) + '</p>' +
-        '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">registry 열기</a></div></div>'
+        '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
       ).join("") : '<p class="muted">Tool Adapter가 없습니다.</p>';
       const automation = state.conditional_automation;
       el("automationPolicy").innerHTML =
@@ -1125,22 +1385,32 @@ function directorConsoleHtml() {
           button("repair plan", "automation-repair", evaluation.path) +
           '</div></div>'
         ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
-      el("proposals").innerHTML = state.proposals.length ? state.proposals.map((p) =>
+      const visibleProposals = state.proposals.filter((p) =>
+        includesText([p.proposal_id, p.title, p.summary, p.status, p.source_agent_id].join(" "), filters.knowledgeSearch)
+      );
+      el("proposals").innerHTML = visibleProposals.length ? visibleProposals.map((p) =>
         '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
         '<p class="small muted">source ' + esc(p.source_agent_id) + ' · options ' + esc(p.option_count) + '</p>' +
         '<a href="' + esc(p.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : '<p class="muted">저장된 Proposal이 없습니다.</p>';
-      el("decisions").innerHTML = state.decisions.length ? state.decisions.map((d) =>
+      ).join("") : renderEmpty("조건에 맞는 Proposal이 없습니다.");
+      const visibleDecisions = state.decisions.filter((d) =>
+        includesText([d.decision_id, d.decision_type, d.target_ref, d.summary].join(" "), filters.knowledgeSearch)
+      );
+      el("decisions").innerHTML = visibleDecisions.length ? visibleDecisions.map((d) =>
         '<div class="item good"><h3><code>' + esc(d.decision_id) + '</code> <span class="pill">' + esc(d.decision_type) + '</span></h3>' +
         '<p class="small">target: ' + esc(d.target_ref) + '</p><p class="summary">' + esc(short(d.summary)) + '</p>' +
         '<a href="' + esc(d.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : '<p class="muted">저장된 Decision이 없습니다.</p>';
-      el("memories").innerHTML = state.memories.length ? state.memories.map((m) =>
+      ).join("") : renderEmpty("조건에 맞는 Decision이 없습니다.");
+      const visibleMemories = state.memories.filter((m) =>
+        (!filters.memoryStatus || m.status === filters.memoryStatus) &&
+        includesText([m.memory_id, m.scope, m.type, m.status, m.content, m.owner_agent_id].join(" "), filters.knowledgeSearch)
+      );
+      el("memories").innerHTML = visibleMemories.length ? visibleMemories.map((m) =>
         '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(m.status) + '</span></h3>' +
         '<p class="small">' + esc(m.scope) + ' · ' + esc(m.type) + ' · ' + esc(m.owner_agent_id) + '</p>' +
         '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : '<p class="muted">저장된 MemoryRecord가 없습니다.</p>';
+      ).join("") : renderEmpty("조건에 맞는 MemoryRecord가 없습니다.");
       el("packets").innerHTML = state.review_packets.length ? state.review_packets.map((p) =>
         '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">리뷰 패킷 열기</a></div>'
       ).join("") : '<p class="muted">리뷰 패킷이 없습니다.</p>';
@@ -1191,28 +1461,76 @@ function directorConsoleHtml() {
       if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
       if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
       if (action === "meeting-start") {
-        if (!confirm("? ??? in_progress ??? ?????? ?? ??? ??? task ??? ???? ????.")) return;
+        if (!confirm("이 회의를 in_progress 상태로 시작할까요? 회의 시작은 task 실행이나 canon 확정이 아닙니다.")) return;
         log(await post("/api/meeting/start", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-finalize") {
-        if (!confirm("? ??? finalized ??? ?????? ?? ??? ??? ??/canon/task ??? ?????.")) return;
+        if (!confirm("이 회의를 finalized 상태로 닫을까요? 결정, canon, task 생성은 별도 gate에서 처리합니다.")) return;
         log(await post("/api/meeting/finalize", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-create") {
-        if (!confirm("? MeetingSession? Studio ???? ?????? ?? ??? ???? ??? ????.")) return;
+        if (!confirm("이 MeetingSession을 Studio 저장소에 기록할까요? 저장만 하며 실행이나 canon 확정은 하지 않습니다.")) return;
         log(await post("/api/meeting/create", { path:filePath }));
         await refresh();
       }
     }
     document.addEventListener("click", (event) => {
       const target = event.target.closest("button[data-action]");
-      if (!target) return;
-      runAction(target.dataset.action, target.dataset.path, target.dataset.decision).catch(log);
+      if (target) {
+        runAction(target.dataset.action, target.dataset.path, target.dataset.decision).catch(log);
+        return;
+      }
+      const navTarget = event.target.closest("button[data-nav], button[data-nav-jump]");
+      if (navTarget) {
+        setPage(navTarget.dataset.nav || navTarget.dataset.navJump);
+        return;
+      }
+      const departmentTarget = event.target.closest("button[data-filter-department]");
+      if (departmentTarget) {
+        const page = departmentTarget.dataset.targetPage || "staff";
+        if (page === "staff") filters.staffDepartment = departmentTarget.dataset.filterDepartment;
+        if (page === "work") filters.workDepartment = departmentTarget.dataset.filterDepartment;
+        setPage(page);
+        render();
+        return;
+      }
+      const agentTarget = event.target.closest("button[data-filter-agent]");
+      if (agentTarget) {
+        filters.runSearch = agentTarget.dataset.filterAgent;
+        setPage(agentTarget.dataset.targetPage || "runs");
+        render();
+        return;
+      }
+      const clearTarget = event.target.closest("button[data-clear-filter]");
+      if (clearTarget) {
+        const scope = clearTarget.dataset.clearFilter;
+        if (scope === "staff") { filters.staffSearch = ""; filters.staffDepartment = ""; }
+        if (scope === "runs") { filters.runSearch = ""; filters.runStatus = ""; }
+        if (scope === "work") { filters.workSearch = ""; filters.workDepartment = ""; }
+        render();
+      }
     });
+    function bindFilter(id, key) {
+      el(id).addEventListener("input", (event) => { filters[key] = event.target.value; render(); });
+      el(id).addEventListener("change", (event) => { filters[key] = event.target.value; render(); });
+    }
+    bindFilter("departmentSearch", "departmentSearch");
+    bindFilter("staffSearch", "staffSearch");
+    bindFilter("staffDepartmentFilter", "staffDepartment");
+    bindFilter("meetingSearch", "meetingSearch");
+    bindFilter("meetingStatusFilter", "meetingStatus");
+    bindFilter("runSearch", "runSearch");
+    bindFilter("runStatusFilter", "runStatus");
+    bindFilter("workSearch", "workSearch");
+    bindFilter("workDepartmentFilter", "workDepartment");
+    bindFilter("knowledgeSearch", "knowledgeSearch");
+    bindFilter("memoryStatusFilter", "memoryStatus");
     el("refresh").addEventListener("click", () => refresh().catch(log));
     el("export-dashboard").addEventListener("click", () => exportDashboard().catch(log));
+    setPage((location.hash || "").replace("#", "") || "home");
+    window.addEventListener("hashchange", () => setPage((location.hash || "").replace("#", "") || "home"));
     refresh().catch(log);
   </script>
 </body>

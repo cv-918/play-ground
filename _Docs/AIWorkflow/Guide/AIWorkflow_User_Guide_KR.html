@@ -311,6 +311,12 @@
             공식 설계 문서는 <code>_Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md</code>입니다.
             첫 구현 조각은 <code>_Docs/AIWorkflow/Studio/README.md</code>에 있는 StaffAgent, Department, WorkOrder, MeetingSession, MemoryRecord, Proposal, Decision, Handoff, RoleRun, ToolRun 모델입니다.
           </div>
+          <div class="note">
+            <strong>Studio Console 사용:</strong>
+            로컬 Studio Director Console은 왼쪽 사이드바로 <code>Home</code>, <code>Departments</code>, <code>Staff</code>, <code>Meeting Room</code>, <code>Work Orders</code>, <code>Knowledge</code>, <code>Systems</code>, <code>Policy</code>, <code>Evidence</code> 페이지를 전환합니다.
+            <code>Home</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 페이지는 각 부서/직원/회의/산출물/정책을 조작하는 작업 공간입니다.
+            <code>원본 설정(JSON) 보기</code>는 일반 진행 버튼이 아니라 registry 원본을 확인하는 관리자/디버그용 링크입니다.
+          </div>
           <pre><code>1. /ai intake text:&lt;작업 요청&gt;
 2. 승인 필요 시에만 승인
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고
