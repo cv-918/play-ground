@@ -867,6 +867,57 @@ async function importDiscordService(repoRoot, relativePath) {
   return import(fileUrl);
 }
 
+function slugifyId(value, fallback = "item") {
+  const slug = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/gu, "-")
+    .replace(/-+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 36);
+  return slug || fallback;
+}
+
+function studioTimestampParts() {
+  const now = new Date();
+  const local = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+  const compact = local.toISOString().replace(/[-:T]/g, "").slice(0, 14);
+  return {
+    date: compact.slice(0, 8),
+    time: compact.slice(8, 14),
+    iso: now.toISOString(),
+  };
+}
+
+function makeStudioId(prefix, label) {
+  const stamp = studioTimestampParts();
+  return `${prefix}-${stamp.date}-${stamp.time}-${slugifyId(label)}`;
+}
+
+function listFromText(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  return String(value || "")
+    .split(/\r?\n|,/u)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function requireStudioText(value, label) {
+  const text = String(value || "").trim();
+  if (!text) throw new Error(`${label} is required.`);
+  return text;
+}
+
+async function writeTempStudioInput(repoRoot, prefix, payload) {
+  const dir = repoPath(repoRoot, "_Temp/AIWorkflowStudio/console_inputs");
+  await fsp.mkdir(dir, { recursive: true });
+  const safeName = slugifyId(payload.meeting_id || payload.work_order_id || payload.proposal_id || payload.decision_id || payload.memory_id || prefix);
+  const full = path.join(dir, `${safeName}.json`);
+  await fsp.writeFile(full, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return toRepoRelative(repoRoot, full);
+}
+
 function studioServiceConfig(repoRoot) {
   return {
     repoRoot,
@@ -1349,6 +1400,10 @@ function directorConsoleHtml() {
     .control-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
     .control-bar input, .control-bar select { min-height:36px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
     .control-bar input { min-width:240px; }
+    .form-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); margin:10px 0; }
+    .form-grid label { display:grid; gap:5px; color:var(--muted); font-size:12px; }
+    .form-grid input, .form-grid select { min-height:36px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
+    .form-grid textarea { min-height:82px; }
     textarea { width:100%; min-height:92px; resize:vertical; border:1px solid var(--line); border-radius:8px; padding:10px; background:#121722; color:var(--text); font:inherit; }
     .file-select { display:grid; gap:6px; margin:10px 0; max-height:220px; overflow:auto; padding-right:4px; }
     .file-select label { display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--muted); }
@@ -1414,7 +1469,8 @@ function directorConsoleHtml() {
               <div class="section-title"><h2>안전 경계</h2><span class="pill">local only</span></div>
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
-                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">작업 접수, 승인+실행, 완료 최종화, WorkOrder task 생성, 선택 파일 commit/push.</p></div>
+                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, WorkOrder task 생성, 선택 파일 commit/push.</p></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button></div></div>
               </div>
             </div>
           </div>
@@ -1496,6 +1552,28 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="meetings">
           <div class="page-heading"><div><h2>Meeting Room</h2><p>회의 합의는 바로 승인이나 캐논이 아닙니다. follow-up WorkOrder나 결정 gate로 넘어가야 합니다.</p></div></div>
+          <div class="card">
+            <div class="section-title"><h2>새 회의 만들기</h2><span class="pill">MeetingSession</span></div>
+            <div class="form-grid">
+              <label>회의 주제<input id="meetingCreateTopic" placeholder="예: 초반 10분 플레이 루프 방향 회의"></label>
+              <label>회의 종류<select id="meetingCreateType"></select></label>
+              <label>참가 직원<input id="meetingCreateParticipants" placeholder="game_designer, scenario_director, producer"></label>
+              <label>의장<select id="meetingCreateChair"></select></label>
+            </div>
+            <textarea id="meetingCreateAgenda" placeholder="안건을 줄바꿈으로 입력하세요. 예:&#10;현재 플레이 루프의 약점 확인&#10;후속 WorkOrder 후보 정리"></textarea>
+            <textarea id="meetingCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 없는 canon 확정 금지&#10;구현 task 직접 생성 금지"></textarea>
+            <div class="row"><button class="good" id="meetingCreateSubmit">회의 생성</button></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h2>회의 발언 추가</h2><span class="pill">turn</span></div>
+            <div class="form-grid">
+              <label>회의 ID<input id="meetingTurnId" placeholder="MEET-..."></label>
+              <label>발언자<select id="meetingTurnSpeaker"></select></label>
+              <label>발언 종류<select id="meetingTurnType"></select></label>
+            </div>
+            <textarea id="meetingTurnContent" placeholder="회의 발언, 질문, 반박, 합성 메모를 입력하세요."></textarea>
+            <div class="row"><button class="good" id="meetingTurnSubmit">발언 추가</button></div>
+          </div>
           <div class="control-bar">
             <input id="meetingSearch" placeholder="회의 주제, ID 검색">
             <select id="meetingStatusFilter"></select>
@@ -1518,6 +1596,21 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="work">
           <div class="page-heading"><div><h2>Work Orders</h2><p>Studio 업무 후보와 AI 직원 handoff를 AIWorkflow task로 연결합니다.</p></div></div>
+          <div class="card">
+            <div class="section-title"><h2>새 WorkOrder 만들기</h2><span class="pill">업무 지시서</span></div>
+            <div class="form-grid">
+              <label>목표<input id="workCreateObjective" placeholder="예: Skill.json runtime loader 검증 계획 수립"></label>
+              <label>담당 부서<select id="workCreateDepartment"></select></label>
+              <label>담당 직원<input id="workCreateAgents" placeholder="technical_architect, qa_tester"></label>
+              <label>상태<select id="workCreateStatus"></select></label>
+            </div>
+            <textarea id="workCreateScope" placeholder="포함 범위를 줄바꿈으로 입력하세요."></textarea>
+            <textarea id="workCreateNonGoals" placeholder="금지/제외 범위를 줄바꿈으로 입력하세요."></textarea>
+            <textarea id="workCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력하세요."></textarea>
+            <textarea id="workCreateApproval" placeholder="승인이 필요한 핵심 판단을 한 문장으로 입력하세요."></textarea>
+            <textarea id="workCreateValidation" placeholder="검증 계획을 줄바꿈으로 입력하세요."></textarea>
+            <div class="row"><button class="good" id="workCreateSubmit">WorkOrder 저장</button></div>
+          </div>
           <div class="control-bar">
             <input id="workSearch" placeholder="WorkOrder, handoff, 부서 검색">
             <select id="workDepartmentFilter"></select>
@@ -1531,6 +1624,43 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="knowledge">
           <div class="page-heading"><div><h2>Knowledge</h2><p>제안, 결정, 기억과 canon 후보를 확인합니다.</p></div></div>
+          <div class="grid">
+            <div class="card">
+              <div class="section-title"><h2>Proposal 만들기</h2><span class="pill">제안</span></div>
+              <div class="form-grid">
+                <label>제안 제목<input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
+                <label>제안자<select id="proposalCreateAgent"></select></label>
+              </div>
+              <textarea id="proposalCreateSummary" placeholder="제안 요약"></textarea>
+              <textarea id="proposalCreateRationale" placeholder="왜 이 제안이 필요한지"></textarea>
+              <textarea id="proposalCreateRisks" placeholder="위험/주의점을 줄바꿈으로 입력"></textarea>
+              <div class="row"><button class="good" id="proposalCreateSubmit">Proposal 저장</button></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Decision 만들기</h2><span class="pill">결정</span></div>
+              <div class="form-grid">
+                <label>대상 ref<input id="decisionCreateTarget" placeholder="PROP-..., MEET-..., WO-..."></label>
+                <label>결정 종류<select id="decisionCreateType"></select></label>
+              </div>
+              <textarea id="decisionCreateSummary" placeholder="결정 요약"></textarea>
+              <textarea id="decisionCreateAccepted" placeholder="받아들이는 범위"></textarea>
+              <textarea id="decisionCreateRejected" placeholder="받아들이지 않는 범위"></textarea>
+              <textarea id="decisionCreateConditions" placeholder="조건/주의 사항"></textarea>
+              <div class="row"><button class="good" id="decisionCreateSubmit">Decision 저장</button></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Memory 만들기</h2><span class="pill">기억</span></div>
+              <div class="form-grid">
+                <label>범위<select id="memoryCreateScope"></select></label>
+                <label>종류<select id="memoryCreateType"></select></label>
+                <label>상태<select id="memoryCreateStatus"></select></label>
+                <label>담당 직원<select id="memoryCreateOwner"></select></label>
+              </div>
+              <textarea id="memoryCreateContent" placeholder="기억할 내용"></textarea>
+              <input id="memoryCreateRefs" placeholder="근거 refs. 예: DEC-..., MEET-...">
+              <div class="row"><button class="good" id="memoryCreateSubmit">Memory 저장</button></div>
+            </div>
+          </div>
           <div class="control-bar">
             <input id="knowledgeSearch" placeholder="제안, 결정, 기억 검색">
             <select id="memoryStatusFilter"></select>
@@ -1665,12 +1795,28 @@ function directorConsoleHtml() {
       const unique = Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
       return '<option value="">' + esc(allLabel) + '</option>' + unique.map((value) => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join("");
     }
+    function fixedOptionList(values) {
+      return values.map((value) => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join("");
+    }
     function syncFilterControls() {
       el("staffDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
       el("workDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
       el("meetingStatusFilter").innerHTML = optionList(state.meetings.map((meeting) => meeting.status), "모든 회의 상태");
       el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
       el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
+      const staffIds = state.staff_agents.map((agent) => agent.agent_id);
+      el("meetingCreateType").innerHTML = fixedOptionList(["creative", "technical", "production", "review", "qa_triage", "postmortem", "release_readiness"]);
+      el("meetingCreateChair").innerHTML = optionList(staffIds, "의장 선택");
+      el("meetingTurnSpeaker").innerHTML = optionList(staffIds, "발언자 선택");
+      el("meetingTurnType").innerHTML = fixedOptionList(["brief", "proposal", "objection", "question", "answer", "synthesis", "decision_note"]);
+      el("workCreateDepartment").innerHTML = optionList(state.departments.map((department) => department.department_id), "담당 부서 선택");
+      el("workCreateStatus").innerHTML = fixedOptionList(["director_review", "proposed", "draft", "approved_for_tasking"]);
+      el("proposalCreateAgent").innerHTML = optionList(staffIds, "제안자 선택");
+      el("decisionCreateType").innerHTML = fixedOptionList(["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"]);
+      el("memoryCreateScope").innerHTML = fixedOptionList(["project", "canon", "global", "agent", "department", "meeting", "task"]);
+      el("memoryCreateType").innerHTML = fixedOptionList(["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"]);
+      el("memoryCreateStatus").innerHTML = fixedOptionList(["proposed", "approved", "canon", "draft", "rejected", "evidence", "lesson"]);
+      el("memoryCreateOwner").innerHTML = optionList(staffIds, "담당 직원 선택");
       el("departmentSearch").value = filters.departmentSearch;
       el("staffSearch").value = filters.staffSearch;
       el("staffDepartmentFilter").value = filters.staffDepartment;
@@ -1912,6 +2058,7 @@ function directorConsoleHtml() {
         '<p class="small muted">type ' + esc(meeting.meeting_type || "(none)") + ' · source ' + esc(meeting.is_stored ? "stored" : "example") + '</p>' +
         '<p class="small muted">participants ' + esc(meeting.participant_count) + ' · unresolved ' + esc(meeting.unresolved_count) + ' · follow-up ' + esc(meeting.follow_up_count) + '</p>' +
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
+        '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>' +
         button("회의 점검", "meeting-inspect", meeting.path) +
         button("handoff 보기", "meeting-handoff", meeting.path) +
         (meeting.is_stored ? button("회의 시작", "meeting-start", meeting.meeting_id, "good") + button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : button("회의 저장", "meeting-create", meeting.path, "good")) +
@@ -2092,6 +2239,97 @@ function directorConsoleHtml() {
       log(await post("/api/workflow/git/push", {}));
       await refresh();
     }
+    function fieldValue(id) {
+      return (el(id)?.value || "").trim();
+    }
+    async function createMeetingFromForm() {
+      const topic = fieldValue("meetingCreateTopic");
+      if (!topic) return alert("회의 주제를 입력하세요.");
+      if (!confirm("새 MeetingSession을 저장할까요? 회의 생성은 승인, canon, task 실행을 하지 않습니다.")) return;
+      log(await post("/api/studio/meeting/create", {
+        topic,
+        meeting_type: fieldValue("meetingCreateType") || "creative",
+        participants: fieldValue("meetingCreateParticipants"),
+        chair_agent_id: fieldValue("meetingCreateChair"),
+        agenda: fieldValue("meetingCreateAgenda"),
+        known_constraints: fieldValue("meetingCreateConstraints"),
+      }));
+      await refresh();
+    }
+    async function addMeetingTurnFromForm() {
+      const meetingId = fieldValue("meetingTurnId");
+      const speaker = fieldValue("meetingTurnSpeaker");
+      const content = fieldValue("meetingTurnContent");
+      if (!meetingId || !speaker || !content) return alert("회의 ID, 발언자, 발언 내용을 입력하세요.");
+      if (!confirm("회의 발언을 추가할까요? 발언 추가는 승인, canon, task 실행을 하지 않습니다.")) return;
+      log(await post("/api/studio/meeting/add-turn", {
+        meeting_id: meetingId,
+        speaker_id: speaker,
+        turn_type: fieldValue("meetingTurnType") || "synthesis",
+        content,
+      }));
+      await refresh();
+    }
+    async function createWorkOrderFromForm() {
+      const objective = fieldValue("workCreateObjective");
+      if (!objective) return alert("WorkOrder 목표를 입력하세요.");
+      if (!confirm("새 WorkOrder를 저장할까요? Backlog task 생성과 runner 실행은 별도 버튼에서 처리합니다.")) return;
+      log(await post("/api/studio/workorder/create", {
+        objective,
+        department_id: fieldValue("workCreateDepartment"),
+        assigned_agents: fieldValue("workCreateAgents"),
+        status: fieldValue("workCreateStatus") || "director_review",
+        scope: fieldValue("workCreateScope"),
+        non_goals: fieldValue("workCreateNonGoals"),
+        expected_outputs: fieldValue("workCreateOutputs"),
+        approval_summary: fieldValue("workCreateApproval"),
+        verification_plan: fieldValue("workCreateValidation"),
+      }));
+      await refresh();
+    }
+    async function createProposalFromForm() {
+      const title = fieldValue("proposalCreateTitle");
+      const summary = fieldValue("proposalCreateSummary");
+      if (!title || !summary) return alert("제안 제목과 요약을 입력하세요.");
+      if (!confirm("새 Proposal을 저장할까요? Proposal은 아이디어/제안이며 공식 결정이나 canon이 아닙니다.")) return;
+      log(await post("/api/studio/proposal/create", {
+        title,
+        source_agent_id: fieldValue("proposalCreateAgent"),
+        summary,
+        rationale: fieldValue("proposalCreateRationale"),
+        risks: fieldValue("proposalCreateRisks"),
+      }));
+      await refresh();
+    }
+    async function createDecisionFromForm() {
+      const targetRef = fieldValue("decisionCreateTarget");
+      const summary = fieldValue("decisionCreateSummary");
+      if (!targetRef || !summary) return alert("대상 ref와 결정 요약을 입력하세요.");
+      if (!confirm("Human Director Decision을 저장할까요? 결정 기록은 근거가 되지만 구현/커밋은 하지 않습니다.")) return;
+      log(await post("/api/studio/decision/create", {
+        target_ref: targetRef,
+        decision_type: fieldValue("decisionCreateType") || "approve",
+        decision_summary: summary,
+        accepted_scope: fieldValue("decisionCreateAccepted"),
+        rejected_scope: fieldValue("decisionCreateRejected"),
+        conditions: fieldValue("decisionCreateConditions"),
+      }));
+      await refresh();
+    }
+    async function createMemoryFromForm() {
+      const content = fieldValue("memoryCreateContent");
+      if (!content) return alert("기억할 내용을 입력하세요.");
+      if (!confirm("MemoryRecord를 저장할까요? status=canon은 공식 설정처럼 취급되므로 근거 ref가 필요합니다.")) return;
+      log(await post("/api/studio/memory/create", {
+        scope: fieldValue("memoryCreateScope") || "project",
+        type: fieldValue("memoryCreateType") || "fact",
+        status: fieldValue("memoryCreateStatus") || "proposed",
+        owner_agent_id: fieldValue("memoryCreateOwner"),
+        content,
+        source_refs: fieldValue("memoryCreateRefs"),
+      }));
+      await refresh();
+    }
     async function runAction(action, filePath, decision) {
       if (action === "handoff-plan") return log(await post("/api/handoff/plan", { path:filePath }));
       if (action === "handoff-execute") {
@@ -2181,6 +2419,12 @@ function directorConsoleHtml() {
         render();
         return;
       }
+      const meetingTurnTarget = event.target.closest("button[data-meeting-turn]");
+      if (meetingTurnTarget) {
+        el("meetingTurnId").value = meetingTurnTarget.dataset.meetingTurn;
+        setPage("meetings");
+        return;
+      }
       const clearTarget = event.target.closest("button[data-clear-filter]");
       if (clearTarget) {
         const scope = clearTarget.dataset.clearFilter;
@@ -2200,6 +2444,12 @@ function directorConsoleHtml() {
     el("gitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
     el("gitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
     el("gitPushOnly").addEventListener("click", () => pushOnly().catch(log));
+    el("meetingCreateSubmit").addEventListener("click", () => createMeetingFromForm().catch(log));
+    el("meetingTurnSubmit").addEventListener("click", () => addMeetingTurnFromForm().catch(log));
+    el("workCreateSubmit").addEventListener("click", () => createWorkOrderFromForm().catch(log));
+    el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
+    el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
+    el("memoryCreateSubmit").addEventListener("click", () => createMemoryFromForm().catch(log));
     function bindFilter(id, key) {
       el(id).addEventListener("input", (event) => { filters[key] = event.target.value; render(); });
       el(id).addEventListener("change", (event) => { filters[key] = event.target.value; render(); });
@@ -2223,6 +2473,127 @@ function directorConsoleHtml() {
   </script>
 </body>
 </html>`;
+}
+
+function buildMeetingPayload(body = {}) {
+  const topic = requireStudioText(body.topic, "meeting topic");
+  const participants = listFromText(body.participants);
+  const chair = String(body.chair_agent_id || participants[0] || "executive_producer").trim();
+  const finalParticipants = Array.from(new Set([chair, ...participants].filter(Boolean)));
+  const meetingId = makeStudioId("MEET", topic);
+  return {
+    meeting_id: meetingId,
+    topic,
+    meeting_type: String(body.meeting_type || "creative").trim() || "creative",
+    participants: finalParticipants,
+    chair_agent_id: chair,
+    director_user_id: "human_director",
+    agenda: listFromText(body.agenda).length ? listFromText(body.agenda) : ["Clarify the Director goal.", "List proposals, objections, and follow-up work."],
+    known_constraints: listFromText(body.known_constraints),
+    loaded_context_refs: listFromText(body.loaded_context_refs),
+    discussion_turns: [],
+    proposals: [],
+    objections: [],
+    unresolved_questions: [],
+    director_decisions: [],
+    accepted_directions: [],
+    rejected_directions: [],
+    follow_up_workorders: [],
+    minutes_artifact: `_Docs/AIWorkflow/Studio/MeetingSessions/${meetingId}.json`,
+    status: "draft",
+  };
+}
+
+function buildWorkOrderPayload(body = {}) {
+  const objective = requireStudioText(body.objective, "work order objective");
+  const approvalSummary = String(body.approval_summary || "").trim();
+  const scope = listFromText(body.scope).length ? listFromText(body.scope) : [objective];
+  const verification = listFromText(body.verification_plan).length ? listFromText(body.verification_plan) : ["Review generated task scope before execution."];
+  return {
+    work_order_id: makeStudioId("WO", objective),
+    source_type: "manual",
+    source_ref: "studio_console",
+    objective,
+    department_id: String(body.department_id || "executive_production").trim(),
+    assigned_agents: listFromText(body.assigned_agents),
+    scope,
+    non_goals: listFromText(body.non_goals),
+    expected_outputs: listFromText(body.expected_outputs).length ? listFromText(body.expected_outputs) : ["WorkOrder-derived TaskDraft or reviewable artifact"],
+    approval_items: approvalSummary ? [{
+      type: "scope",
+      plain_language_summary: approvalSummary,
+      what_will_change: scope,
+      what_will_not_change: listFromText(body.non_goals),
+      files_or_memory_affected: listFromText(body.files_or_memory_affected),
+      risks: listFromText(body.risks),
+      rollback_plan: listFromText(body.rollback_plan),
+      evidence_required: listFromText(body.evidence_requirements).length ? listFromText(body.evidence_requirements) : verification,
+    }] : [],
+    evidence_requirements: listFromText(body.evidence_requirements),
+    verification_plan: verification,
+    handoff_plan: listFromText(body.handoff_plan),
+    target_project_profile: String(body.target_project_profile || "dustland_custom_cpp_prototype").trim(),
+    status: String(body.status || "director_review").trim() || "director_review",
+  };
+}
+
+function buildProposalPayload(body = {}) {
+  const title = requireStudioText(body.title, "proposal title");
+  const summary = requireStudioText(body.summary, "proposal summary");
+  return {
+    proposal_id: makeStudioId("PROP", title),
+    source_agent_id: String(body.source_agent_id || "creative_director").trim(),
+    source_type: "manual",
+    source_ref: "studio_console",
+    title,
+    summary,
+    rationale: String(body.rationale || "Created directly from Studio Console for Human Director review.").trim(),
+    options: [{
+      option_id: "option-a",
+      title,
+      summary,
+      tradeoffs: listFromText(body.tradeoffs),
+    }],
+    risks: listFromText(body.risks),
+    dependencies: listFromText(body.dependencies),
+    approval_items: listFromText(body.approval_items).length ? listFromText(body.approval_items) : ["Human Director must approve before this proposal becomes a decision or canon."],
+    evidence_refs: listFromText(body.evidence_refs).length ? listFromText(body.evidence_refs) : ["studio_console"],
+    status: "submitted",
+  };
+}
+
+function buildDecisionPayload(body = {}) {
+  const targetRef = requireStudioText(body.target_ref, "decision target_ref");
+  return {
+    decision_id: makeStudioId("DEC", targetRef),
+    decision_maker: "human_director",
+    decision_type: String(body.decision_type || "approve").trim() || "approve",
+    target_ref: targetRef,
+    decision_summary: requireStudioText(body.decision_summary, "decision summary"),
+    accepted_scope: listFromText(body.accepted_scope),
+    rejected_scope: listFromText(body.rejected_scope),
+    conditions: listFromText(body.conditions),
+    timestamp: studioTimestampParts().iso,
+    evidence_refs: listFromText(body.evidence_refs).length ? listFromText(body.evidence_refs) : [targetRef],
+  };
+}
+
+function buildMemoryPayload(body = {}) {
+  const content = requireStudioText(body.content, "memory content");
+  const sourceRefs = listFromText(body.source_refs);
+  return {
+    memory_id: makeStudioId("MEM", content),
+    project_id: String(body.project_id || "playground").trim(),
+    scope: String(body.scope || "project").trim() || "project",
+    type: String(body.type || "fact").trim() || "fact",
+    status: String(body.status || "proposed").trim() || "proposed",
+    content,
+    source_refs: sourceRefs.length ? sourceRefs : ["studio_console"],
+    confidence: String(body.confidence || "medium").trim() || "medium",
+    owner_agent_id: String(body.owner_agent_id || "documentation_keeper").trim(),
+    created_at: studioTimestampParts().iso,
+    updated_at: studioTimestampParts().iso,
+  };
 }
 
 async function handleApi(repoRoot, req, res, parsedUrl) {
@@ -2406,6 +2777,79 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     safeResolveReadable(repoRoot, body.path || "");
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
     const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/create") {
+    const body = await readRequestJson(req);
+    const payload = buildMeetingPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "meeting", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/add-turn") {
+    const body = await readRequestJson(req);
+    const meetingId = String(body.meeting_id || "").trim();
+    const speakerId = String(body.speaker_id || "").trim();
+    const turnType = String(body.turn_type || "synthesis").trim();
+    const content = requireStudioText(body.content, "turn content");
+    if (!/^[A-Za-z0-9_.:-]+$/u.test(meetingId)) throw new Error("Invalid meeting_id.");
+    if (!/^[A-Za-z0-9_.:-]+$/u.test(speakerId)) throw new Error("Invalid speaker_id.");
+    const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.ps1");
+    const result = await runTool(repoRoot, "powershell.exe", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ps1,
+      "-RepoRoot",
+      repoRoot,
+      "add-turn",
+      meetingId,
+      speakerId,
+      turnType,
+      content,
+      "--execute",
+      "--json",
+    ], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/create") {
+    const body = await readRequestJson(req);
+    const payload = buildWorkOrderPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "workorder", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    const result = await runTool(repoRoot, bat, ["store", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/proposal/create") {
+    const body = await readRequestJson(req);
+    const payload = buildProposalPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "proposal", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
+    const result = await runTool(repoRoot, bat, ["create-proposal", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/decision/create") {
+    const body = await readRequestJson(req);
+    const payload = buildDecisionPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "decision", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
+    const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/memory/create") {
+    const body = await readRequestJson(req);
+    const payload = buildMemoryPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "memory", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
+    const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 

@@ -63,9 +63,11 @@ This slice defines:
   recent work, staff status, and AIWorkflow Core state; the other pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
-  WorkOrder task creation actions, Department/StaffAgent directory cards,
-  Proposal/Decision/Memory browser panels, Meeting Room inspection/lifecycle
-  actions, Project Profile and Tool Adapter browser panels, Conditional
+  WorkOrder task creation actions, direct MeetingSession creation and turn
+  recording, direct WorkOrder creation, direct Proposal/Decision/Memory record
+  creation, Department/StaffAgent directory cards, Proposal/Decision/Memory
+  browser panels, Meeting Room inspection/lifecycle actions, Project Profile
+  and Tool Adapter browser panels, Conditional
   Automation policy test actions, and review packet links.
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
@@ -170,9 +172,13 @@ draft records, record Director decisions about those drafts, and create
 Backlog tasks from reviewed WorkOrders only through explicit button clicks. It
 also displays Proposal, Decision, and Memory/Canon records so the Director can
 separate ideas, decisions, and canon status. It displays MeetingSessions and
-can inspect, handoff-check, or explicitly store meeting records while keeping
-meeting consensus separate from approval and canon. It also displays active
-Project Profiles and Tool Adapter policy summaries so the Director can see the
+can inspect, handoff-check, explicitly store meeting records, and append
+meeting turns while keeping meeting consensus separate from approval and canon.
+It can create manual Studio records for MeetingSession, WorkOrder, Proposal,
+Decision, and MemoryRecord through schema-backed local stores. These records
+are governed records only: creating them does not approve implementation, write
+canon by itself, start PC Runner, modify game files, commit, or push. It also
+displays active Project Profiles and Tool Adapter policy summaries so the Director can see the
 project target and available execution equipment before approving downstream
 work. It exposes Department and StaffAgent directory panels so the Director can
 see who owns a responsibility before starting a meeting, handoff, or WorkOrder.
