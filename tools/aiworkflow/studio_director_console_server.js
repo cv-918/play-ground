@@ -172,6 +172,41 @@ async function getReviewPackets(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+async function getDirectorGoalPlans(repoRoot) {
+  const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/DirectorGoals");
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    const full = path.join(dir, entry.name);
+    const json = await readJsonIfExists(full);
+    if (!json || !json.director_goal_plan_id) continue;
+    const stat = await fsp.stat(full);
+    items.push({
+      director_goal_plan_id: json.director_goal_plan_id || "",
+      goal: json.goal || "",
+      target_project_profile: json.target_project_profile || "",
+      status: json.status || "",
+      recommended_departments: stringList(json.recommended_departments),
+      recommended_staff: stringList(json.recommended_staff),
+      approval_items: approvalSummaryList(json.approval_items),
+      meeting_count: Array.isArray(json.meeting_recommendations) ? json.meeting_recommendations.length : 0,
+      work_order_count: Array.isArray(json.work_order_candidates) ? json.work_order_candidates.length : 0,
+      proposal_count: Array.isArray(json.proposal_candidates) ? json.proposal_candidates.length : 0,
+      path: toRepoRelative(repoRoot, full),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 async function getDevLogs(repoRoot) {
   const root = repoPath(repoRoot, "_DevLog");
   const files = await listFiles(root, (_full, name) => name.endsWith(".md"));
@@ -1171,6 +1206,18 @@ async function writeTempStudioInput(repoRoot, prefix, payload) {
   return toRepoRelative(repoRoot, full);
 }
 
+async function writeStudioRecord(repoRoot, relativeDir, id, payload) {
+  const dir = repoPath(repoRoot, relativeDir);
+  await fsp.mkdir(dir, { recursive: true });
+  const safeName = slugifyId(id, "studio-record");
+  const full = path.join(dir, `${safeName}.json`);
+  await fsp.writeFile(full, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return {
+    path: toRepoRelative(repoRoot, full),
+    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
+  };
+}
+
 function studioServiceConfig(repoRoot) {
   return {
     repoRoot,
@@ -1402,6 +1449,7 @@ async function getSummary(repoRoot) {
   const registry = (await readJsonIfExists(path.join(studioRoot, "Registries", "staff_agents.initial.json"))) || {};
   const toolRegistry = (await readJsonIfExists(path.join(studioRoot, "Registries", "tool_adapters.initial.json"))) || {};
   const reviewPackets = await getReviewPackets(repoRoot);
+  const directorGoalPlans = await getDirectorGoalPlans(repoRoot);
   const staffRuns = await getStaffRuns(repoRoot);
   const contextPackets = await getContextPackets(repoRoot);
   const handoffs = await getHandoffCandidates(repoRoot);
@@ -1429,6 +1477,7 @@ async function getSummary(repoRoot) {
     role_runs: await countJsonFiles(path.join(studioRoot, "RoleRuns")),
     materializations: await countJsonFiles(path.join(studioRoot, "Materializations")),
     task_bindings: await countJsonFiles(path.join(studioRoot, "TaskBindings")),
+    director_goal_plans: await countJsonFiles(path.join(studioRoot, "DirectorGoals")),
     dev_logs: devLogs.length,
   };
 
@@ -1450,6 +1499,7 @@ async function getSummary(repoRoot) {
       ...stores,
     },
     handoffs,
+    director_goal_plans: directorGoalPlans.slice(0, 12),
     workflow_core: workflowCore,
     recent_staff_runs: staffRuns.slice(0, 12),
     context_packets: contextPackets.slice(0, 12),
@@ -1710,6 +1760,7 @@ function directorConsoleHtml() {
       </div>
       <nav class="nav" aria-label="Studio navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
+        <button data-nav="goals">목표 기획 <span class="count" id="nav-goals-count"></span></button>
         <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
@@ -1754,7 +1805,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button></div></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button></div></div>
               </div>
             </div>
           </div>
@@ -1812,6 +1863,39 @@ function directorConsoleHtml() {
           <section class="card">
             <div class="section-title"><h2>최근 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
             <div id="homeEvidence" class="compact-list"></div>
+          </section>
+        </section>
+
+        <section class="page" data-page="goals">
+          <div class="page-heading"><div><h2>목표 기획</h2><p>큰 목표를 부서, AI 직원, 회의, 업무 지시, 승인 항목으로 안전하게 쪼갭니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>감독자가 원하는 큰 목표를 입력하고 Studio식 기획안으로 바꿉니다.</li>
+              <li>추천 부서, 추천 직원, 회의 후보, 업무 후보, 승인 항목을 한 번에 봅니다.</li>
+              <li>저장하거나 후보를 생성해도 공식 설정 확정, 소스 수정, task 실행, commit/push는 하지 않습니다.</li>
+            </ul>
+          </div>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>감독자 목표 입력</h2><span class="pill">Director Goal</span></div>
+              <textarea id="goalCreateText" placeholder="예: 초반 10분 플레이 루프를 더 명확하게 만들고, 필요한 기획/구현/검증 업무를 나눠줘."></textarea>
+              <textarea id="goalCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 전 공식 설정 확정 금지&#10;승인 없는 소스/데이터 수정 금지"></textarea>
+              <div class="row">
+                <button class="secondary" id="goalPlanSubmit">기획안 미리보기</button>
+                <button class="good" id="goalStoreSubmit">기획안 저장</button>
+                <button class="warn" id="goalBundleSubmit">기획안 + 후보 생성</button>
+              </div>
+              <p class="small muted">후보 생성은 Studio 기록만 만듭니다. 실제 구현과 커밋은 별도 승인 흐름을 탑니다.</p>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>기획안 미리보기</h2><span id="goalPreviewBadge" class="pill">대기</span></div>
+              <div id="goalPreview" class="list"></div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="section-title"><h2>저장된 목표 기획안</h2><span id="goalPlanCount" class="pill"></span></div>
+            <div id="directorGoalPlans" class="list"></div>
           </section>
         </section>
 
@@ -2139,8 +2223,10 @@ function directorConsoleHtml() {
   <script>
     let state = null;
     let activePage = "home";
+    let latestGoalPreview = null;
     const PAGES = {
       home: ["홈", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
+      goals: ["목표 기획", "큰 목표를 부서, 직원, 회의, 업무 후보로 분해합니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
@@ -2427,6 +2513,7 @@ function directorConsoleHtml() {
     function renderNavCounts() {
       const m = state.metrics;
       setNavCount("home", m.staff_runs + m.materializations + m.work_orders);
+      setNavCount("goals", state.director_goal_plans.length);
       setNavCount("project", state.project_profiles.length);
       setNavCount("inbox", buildDirectorDecisionItems().length);
       setNavCount("departments", m.departments);
@@ -2536,6 +2623,40 @@ function directorConsoleHtml() {
       el("directorInboxFull").innerHTML = items.length
         ? items.map(renderDecisionCard).join("")
         : '<div class="item good"><h3>지금 사람이 결정할 항목 없음</h3><p class="summary">새 완료 검토, 직원 보고서 후보, 제안, Git 변경이 생기면 여기에 모입니다.</p></div>';
+    }
+    function renderGoalPlanCard(plan, compact = false) {
+      if (!plan) return "";
+      const departments = asArray(plan.recommended_departments).map(departmentName);
+      const staff = asArray(plan.recommended_staff).map(staffName);
+      const approvals = asArray(plan.approval_items);
+      const approvalText = approvals.map((item) => {
+        if (typeof item === "string") return item;
+        return item.plain_language_summary || item.summary || "";
+      }).filter(Boolean);
+      return '<div class="item warn"><h3><code>' + esc(plan.director_goal_plan_id || "(미저장)") + '</code> <span class="pill">' + esc(optionLabel(plan.status || "director_review")) + '</span></h3>' +
+        '<p class="summary">' + esc(short(plan.goal || "", compact ? 180 : 260)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>추천 부서</span><span class="pill">' + esc(inlineList(departments, "(없음)")) + '</span></div>' +
+        '<div class="compact-line"><span>추천 직원</span><span class="pill">' + esc(inlineList(staff, "(없음)")) + '</span></div>' +
+        '<div class="compact-line"><span>회의/업무/제안 후보</span><span class="pill">' + esc((plan.meeting_count ?? asArray(plan.meeting_recommendations).length) + " / " + (plan.work_order_count ?? asArray(plan.work_order_candidates).length) + " / " + (plan.proposal_count ?? asArray(plan.proposal_candidates).length)) + '</span></div>' +
+        '</div>' +
+        '<h4>승인할 때 보는 것</h4>' +
+        listHtml(approvalText, "승인 항목이 없습니다.") +
+        '<h4>안전 경계</h4>' +
+        listHtml(plan.non_goals || ["기획안만으로 실행, 공식 설정 확정, commit/push를 하지 않습니다."]) +
+        internalLinksHtml([plan.href ? link("기획안 JSON", plan.href) : ""]) +
+        '</div>';
+    }
+    function renderDirectorGoals() {
+      const plans = state.director_goal_plans || [];
+      el("goalPlanCount").textContent = plans.length ? String(plans.length) : "없음";
+      el("directorGoalPlans").innerHTML = plans.length
+        ? plans.map((plan) => renderGoalPlanCard(plan, true)).join("")
+        : renderEmpty("저장된 목표 기획안이 없습니다. 큰 목표를 입력해 먼저 기획안으로 쪼개보세요.");
+      el("goalPreviewBadge").textContent = latestGoalPreview ? "미리보기" : "대기";
+      el("goalPreview").innerHTML = latestGoalPreview
+        ? renderGoalPlanCard(latestGoalPreview, false)
+        : '<div class="item"><h3>아직 미리보기가 없습니다</h3><p class="summary">왼쪽에 목표를 입력하고 기획안 미리보기를 누르세요.</p></div>';
     }
     function renderProjectDashboard() {
       const core = state.workflow_core || {};
@@ -2745,6 +2866,7 @@ function directorConsoleHtml() {
       const m = state.metrics;
       syncFilterControls();
       el("metrics").innerHTML = [
+        metric("목표 기획안", m.director_goal_plans),
         metric("직원", m.staff),
         metric("직원 보고서", m.staff_runs),
         metric("보고서", m.review_packets),
@@ -2760,6 +2882,7 @@ function directorConsoleHtml() {
       ].join("");
       renderInbox();
       renderHomePanels();
+      renderDirectorGoals();
       renderProjectDashboard();
       renderDirectorInboxFull();
       renderTimelinePage();
@@ -3054,6 +3177,39 @@ function directorConsoleHtml() {
       log("Studio intake 실행 중...");
       log(await post("/api/workflow/intake", { text }));
       el("studioIntakeText").value = "";
+      await refresh();
+    }
+    function goalPayloadFromForm() {
+      return {
+        goal: fieldValue("goalCreateText"),
+        constraints: fieldValue("goalCreateConstraints"),
+        target_project_profile: state?.active_project?.project_id || "dustland_custom_cpp_prototype",
+      };
+    }
+    async function previewDirectorGoalPlan() {
+      const payload = goalPayloadFromForm();
+      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
+      const result = await post("/api/studio/director-goal/plan", payload);
+      latestGoalPreview = result.director_goal_plan;
+      log(result);
+      renderDirectorGoals();
+    }
+    async function storeDirectorGoalPlan() {
+      const payload = goalPayloadFromForm();
+      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
+      if (!confirm("기획안을 저장할까요? 저장만 하며 공식 설정 확정, 소스 수정, task 실행, commit/push는 하지 않습니다.")) return;
+      const result = await post("/api/studio/director-goal/store", payload);
+      latestGoalPreview = result.director_goal_plan;
+      log(result);
+      await refresh();
+    }
+    async function createDirectorGoalBundle() {
+      const payload = goalPayloadFromForm();
+      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
+      if (!confirm("기획안과 회의/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
+      const result = await post("/api/studio/director-goal/create-bundle", payload);
+      latestGoalPreview = result.director_goal_plan;
+      log(result);
       await refresh();
     }
     async function finalizeWorkflow(decision, markDone) {
@@ -3386,6 +3542,9 @@ function directorConsoleHtml() {
       }
     });
     el("studioIntakeSubmit").addEventListener("click", () => submitStudioIntake().catch(log));
+    el("goalPlanSubmit").addEventListener("click", () => previewDirectorGoalPlan().catch(log));
+    el("goalStoreSubmit").addEventListener("click", () => storeDirectorGoalPlan().catch(log));
+    el("goalBundleSubmit").addEventListener("click", () => createDirectorGoalBundle().catch(log));
     el("gitSelectWorkflow").addEventListener("click", () => {
       document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
     });
@@ -3435,6 +3594,188 @@ function directorConsoleHtml() {
   </script>
 </body>
 </html>`;
+}
+
+function hasAnyText(text, keywords) {
+  const lower = String(text || "").toLowerCase();
+  return keywords.some((keyword) => lower.includes(String(keyword).toLowerCase()));
+}
+
+function uniqueList(items) {
+  return Array.from(new Set(items.map((item) => String(item || "").trim()).filter(Boolean)));
+}
+
+function inferDirectorGoalRoute(goal, constraints = []) {
+  const text = `${goal}\n${constraints.join("\n")}`;
+  const departments = ["executive_production"];
+  const staff = ["executive_producer"];
+  const reasons = [];
+
+  if (hasAnyText(text, ["story", "scenario", "narrative", "canon", "world", "character", "plot", "시나리오", "스토리", "세계관", "설정", "캐릭터", "서사"])) {
+    departments.push("creative_direction", "narrative");
+    staff.push("creative_director", "scenario_director", "scenario_writer");
+    reasons.push("서사, 세계관, 캐릭터, canon 판단이 필요할 수 있습니다.");
+  }
+  if (hasAnyText(text, ["design", "loop", "balance", "combat", "system", "reward", "skill", "게임 디자인", "루프", "밸런스", "전투", "보상", "스킬"])) {
+    departments.push("game_design");
+    staff.push("game_designer", "system_designer", "balance_designer");
+    reasons.push("게임 규칙, 루프, 밸런스 방향을 먼저 정리해야 합니다.");
+  }
+  if (hasAnyText(text, ["code", "runtime", "build", "loader", "schema", "save", "data", "json", "bug", "fix", "구현", "런타임", "빌드", "로더", "스키마", "저장", "데이터", "버그", "수정"])) {
+    departments.push("engineering", "qa_testing");
+    staff.push("technical_architect", "gameplay_programmer", "qa_tester");
+    reasons.push("소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다.");
+  }
+  if (hasAnyText(text, ["art", "asset", "sprite", "vfx", "image", "concept", "ui", "아트", "에셋", "스프라이트", "이펙트", "이미지", "컨셉"])) {
+    departments.push("art_assets", "creative_direction");
+    staff.push("art_director", "concept_artist", "asset_curator");
+    reasons.push("생성 에셋, 라이선스, 반입 승인 경계가 필요합니다.");
+  }
+  if (hasAnyText(text, ["doc", "guide", "manual", "devlog", "release", "문서", "가이드", "매뉴얼", "릴리즈", "기록"])) {
+    departments.push("documentation_release");
+    staff.push("documentation_keeper", "release_manager");
+    reasons.push("사용자 가이드, 기록, 릴리즈 노트 갱신 여부를 봐야 합니다.");
+  }
+  if (hasAnyText(text, ["test", "verify", "qa", "smoke", "validation", "검증", "테스트", "스모크", "확인"])) {
+    departments.push("qa_testing");
+    staff.push("qa_tester", "regression_tester");
+    reasons.push("검증 자료와 완료 판단 기준을 먼저 세워야 합니다.");
+  }
+
+  if (staff.length < 3) {
+    departments.push("creative_direction", "qa_testing");
+    staff.push("creative_director", "qa_tester", "documentation_keeper");
+    reasons.push("목표가 넓으므로 방향 결정, 검증, 기록 담당을 함께 세웁니다.");
+  }
+
+  return {
+    departments: uniqueList(departments),
+    staff: uniqueList(staff),
+    reasons: uniqueList(reasons),
+  };
+}
+
+function meetingTypeForRoute(route) {
+  if (route.departments.includes("engineering")) return "technical";
+  if (route.departments.includes("qa_testing")) return "qa_triage";
+  if (route.departments.includes("creative_direction") || route.departments.includes("narrative") || route.departments.includes("art_assets")) return "creative";
+  return "production";
+}
+
+function buildDirectorGoalPlanPayload(body = {}) {
+  const goal = requireStudioText(body.goal || body.text, "director goal");
+  const constraints = listFromText(body.constraints);
+  const targetProject = String(body.target_project_profile || "dustland_custom_cpp_prototype").trim() || "dustland_custom_cpp_prototype";
+  const route = inferDirectorGoalRoute(goal, constraints);
+  const goalId = makeStudioId("DGP", goal);
+  const meetingType = meetingTypeForRoute(route);
+  const coreScope = [
+    `감독자 목표를 실행 가능한 업무 후보로 분해: ${goal}`,
+    "부서/직원/회의/업무지시/승인 항목을 분리해서 제안합니다.",
+    "승인 전에는 공식 설정, 소스 수정, task 실행, commit/push를 하지 않습니다.",
+  ];
+  const nonGoals = [
+    "이 기획안만으로 공식 설정을 확정하지 않습니다.",
+    "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+    "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+    ...constraints.map((item) => `감독자 제약 유지: ${item}`),
+  ];
+  const approvalItems = [
+    {
+      type: "scope",
+      plain_language_summary: "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다.",
+      what_will_change: [
+        "회의 후보, 업무 지시 후보, 제안 후보가 Studio 기록으로 만들어질 수 있습니다.",
+        "선택한 후보만 다음 단계의 WorkOrder 또는 MeetingSession으로 넘어갑니다.",
+      ],
+      what_will_not_change: nonGoals,
+      files_or_memory_affected: ["_Docs/AIWorkflow/Studio/DirectorGoals", "_Docs/AIWorkflow/Studio/MeetingSessions", "_Docs/AIWorkflow/Studio/WorkOrders", "_Docs/AIWorkflow/Studio/Proposals"],
+      risks: route.reasons.length ? route.reasons : ["목표 범위가 넓으면 후속 업무가 과하게 커질 수 있습니다."],
+      rollback_plan: ["생성된 Studio 기록 후보를 superseded/rejected로 처리하거나 삭제 전 검토합니다."],
+      evidence_required: ["DirectorGoalPlan JSON", "생성된 MeetingSession/WorkOrder/Proposal 후보"],
+    },
+  ];
+  const meeting = buildMeetingPayload({
+    topic: `Director goal planning: ${goal}`,
+    meeting_type: meetingType,
+    participants: route.staff.join(", "),
+    chair_agent_id: route.staff.includes("executive_producer") ? "executive_producer" : route.staff[0],
+    agenda: [
+      "감독자 목표를 한 문장으로 재정의합니다.",
+      "필요한 부서와 AI 직원 역할을 나눕니다.",
+      "승인이 필요한 선택지를 분리합니다.",
+      "후속 WorkOrder 후보를 정리합니다.",
+    ],
+    known_constraints: constraints,
+    loaded_context_refs: [goalId, targetProject],
+  });
+  const workOrder = {
+    ...buildWorkOrderPayload({
+      objective: `Plan and scope Director goal: ${goal}`,
+      department_id: route.departments[0] || "executive_production",
+      assigned_agents: route.staff.join(", "),
+      scope: coreScope,
+      non_goals: nonGoals,
+      expected_outputs: [
+        "감독자가 읽을 수 있는 목표 분해안",
+        "승인 필요 항목 목록",
+        "후속 회의/업무/제안 후보",
+        "검증 자료 요구사항",
+      ],
+      approval_summary: "감독자 목표를 Studio 업무 후보로 분해하는 것만 승인합니다.",
+      verification_plan: [
+        "후보가 승인 전 실행/공식 설정/소스 수정/commit/push를 하지 않는지 확인합니다.",
+        "부서/직원/승인 항목이 목표와 직접 연결되는지 확인합니다.",
+        "후속 업무가 너무 크면 더 작은 WorkOrder로 나눕니다.",
+      ],
+      target_project_profile: targetProject,
+      status: "director_review",
+    }),
+    source_type: "director_goal",
+    source_ref: goalId,
+  };
+  const proposal = {
+    ...buildProposalPayload({
+      title: `Director goal direction: ${goal}`,
+      source_agent_id: route.staff.includes("creative_director") ? "creative_director" : "executive_producer",
+      summary: `이 목표는 ${route.departments.join(", ")} 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.`,
+      rationale: route.reasons.join(" ") || "Studio가 감독자 목표를 안전하게 업무 후보로 분해하기 위한 초기 제안입니다.",
+      risks: approvalItems[0].risks,
+      approval_items: approvalItems.map((item) => item.plain_language_summary),
+      evidence_refs: [goalId],
+    }),
+    source_type: "director_goal",
+    source_ref: goalId,
+  };
+
+  return {
+    director_goal_plan_id: goalId,
+    goal,
+    target_project_profile: targetProject,
+    status: "director_review",
+    recommended_departments: route.departments,
+    recommended_staff: route.staff,
+    routing_reasons: route.reasons,
+    constraints,
+    approval_items: approvalItems,
+    non_goals: nonGoals,
+    meeting_recommendations: [meeting],
+    work_order_candidates: [workOrder],
+    proposal_candidates: [proposal],
+    next_steps: [
+      "기획안을 저장해 검토 기록으로 남깁니다.",
+      "필요하면 기획안 + 후보 생성을 눌러 회의/업무/제안 후보를 함께 만듭니다.",
+      "생성된 후보 중 실제로 진행할 항목만 감독자가 승인합니다.",
+    ],
+    safety: {
+      source_changed: false,
+      task_state_changed: false,
+      canon_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+    updated_at: studioTimestampParts().iso,
+  };
 }
 
 function buildMeetingPayload(body = {}) {
@@ -4044,6 +4385,72 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
     const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/director-goal/plan") {
+    const body = await readRequestJson(req);
+    const payload = buildDirectorGoalPlanPayload(body);
+    return sendJson(res, 200, {
+      ok: true,
+      director_goal_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/director-goal/store") {
+    const body = await readRequestJson(req);
+    const payload = buildDirectorGoalPlanPayload(body);
+    const record = await writeStudioRecord(repoRoot, "_Docs/AIWorkflow/Studio/DirectorGoals", payload.director_goal_plan_id, payload);
+    return sendJson(res, 200, {
+      ok: true,
+      director_goal_plan: payload,
+      path: record.path,
+      href: record.href,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/director-goal/create-bundle") {
+    const body = await readRequestJson(req);
+    const payload = buildDirectorGoalPlanPayload(body);
+    const goalRecord = await writeStudioRecord(repoRoot, "_Docs/AIWorkflow/Studio/DirectorGoals", payload.director_goal_plan_id, payload);
+    const results = {
+      director_goal_plan: goalRecord,
+      meetings: [],
+      work_orders: [],
+      proposals: [],
+    };
+
+    const meetingBat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
+    for (const meeting of payload.meeting_recommendations || []) {
+      const inputPath = await writeTempStudioInput(repoRoot, "meeting", meeting);
+      const result = await runTool(repoRoot, meetingBat, ["create", inputPath, "--execute", "--json"], 120000);
+      results.meetings.push(result.json || result);
+      if (!result.ok) return sendJson(res, 500, { ok: false, stage: "meeting", results, error: result.json || result });
+    }
+
+    const workOrderBat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    for (const workOrder of payload.work_order_candidates || []) {
+      const inputPath = await writeTempStudioInput(repoRoot, "workorder", workOrder);
+      const result = await runTool(repoRoot, workOrderBat, ["store", inputPath, "--execute", "--json"], 120000);
+      results.work_orders.push(result.json || result);
+      if (!result.ok) return sendJson(res, 500, { ok: false, stage: "work_order", results, error: result.json || result });
+    }
+
+    const decisionBat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
+    for (const proposal of payload.proposal_candidates || []) {
+      const inputPath = await writeTempStudioInput(repoRoot, "proposal", proposal);
+      const result = await runTool(repoRoot, decisionBat, ["create-proposal", inputPath, "--execute", "--json"], 120000);
+      results.proposals.push(result.json || result);
+      if (!result.ok) return sendJson(res, 500, { ok: false, stage: "proposal", results, error: result.json || result });
+    }
+
+    return sendJson(res, 200, {
+      ok: true,
+      director_goal_plan: payload,
+      results,
+      safety: payload.safety,
+    });
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/add-turn") {

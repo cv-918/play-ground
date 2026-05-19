@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/DirectorGoalPlan.schema.json",
+  "title": "DirectorGoalPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "director_goal_plan_id",
+    "goal",
+    "target_project_profile",
+    "status",
+    "recommended_departments",
+    "recommended_staff",
+    "routing_reasons",
+    "constraints",
+    "approval_items",
+    "non_goals",
+    "meeting_recommendations",
+    "work_order_candidates",
+    "proposal_candidates",
+    "next_steps",
+    "safety",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "director_goal_plan_id": { "type": "string", "pattern": "^DGP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "goal": { "type": "string", "minLength": 1 },
+    "target_project_profile": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "director_review", "stored", "candidates_created", "superseded", "rejected"]
+    },
+    "recommended_departments": { "type": "array", "items": { "type": "string" } },
+    "recommended_staff": { "type": "array", "items": { "type": "string" } },
+    "routing_reasons": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "approval_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "plain_language_summary", "what_will_change", "what_will_not_change", "files_or_memory_affected", "risks", "rollback_plan", "evidence_required"],
+        "properties": {
+          "type": { "type": "string" },
+          "plain_language_summary": { "type": "string" },
+          "what_will_change": { "type": "array", "items": { "type": "string" } },
+          "what_will_not_change": { "type": "array", "items": { "type": "string" } },
+          "files_or_memory_affected": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "rollback_plan": { "type": "array", "items": { "type": "string" } },
+          "evidence_required": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "non_goals": { "type": "array", "items": { "type": "string" } },
+    "meeting_recommendations": { "type": "array", "items": { "type": "object" } },
+    "work_order_candidates": { "type": "array", "items": { "type": "object" } },
+    "proposal_candidates": { "type": "array", "items": { "type": "object" } },
+    "next_steps": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_changed", "task_state_changed", "canon_changed", "commit_or_push"],
+      "properties": {
+        "source_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

@@ -19,6 +19,7 @@ User-facing Korean UI and guide text should label `Evidence` as
 
 This slice defines:
 
+- DirectorGoalPlan schema
 - StaffAgent schema
 - Department schema
 - WorkOrder schema
@@ -38,6 +39,11 @@ This slice defines:
 - Memory status policy
 - Conditional automation policy
 - Initial read-only department and staff registries
+- Director goal planning intake that turns a broad Human Director goal into
+  recommended departments, staff, meeting candidates, WorkOrder candidates,
+  Proposal candidates, approval items, non-goals, and next steps without
+  executing implementation, canonizing memory, modifying source files, or
+  committing/pushing
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
   / 검증 자료
@@ -72,7 +78,11 @@ This slice defines:
   Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
   default. Home is the Director situation board for recent work,
-  staff status, and AIWorkflow Core state. Director-facing page cards explain
+  staff status, and AIWorkflow Core state. The Goal Planning page
+  (`목표 기획`) is the Director-facing intake for broad goals; it produces a
+  deterministic DirectorGoalPlan preview and can store the plan or create
+  governed MeetingSession, WorkOrder, and Proposal candidates. Director-facing
+  page cards explain
   what the Director can do on that page, translate department/staff/artifact
   identifiers into Korean labels, and keep raw JSON, registry, and run evidence
   / 검증 자료

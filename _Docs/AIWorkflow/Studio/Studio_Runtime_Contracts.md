@@ -21,6 +21,37 @@ staff inside their role charter.
 They may not directly approve, canonize, implement, import, commit, push, or
 release outside governance.
 
+## Director Goal Planning Contract
+
+The Human Director may start with a broad goal instead of a fully scoped task.
+
+That goal must first become a `DirectorGoalPlan` before it is handed to
+meetings, staff agents, or AIWorkflow task execution.
+
+A DirectorGoalPlan records:
+
+- the original Director goal
+- target project profile
+- recommended departments
+- recommended staff agents
+- routing reasons
+- Director constraints
+- approval items
+- non-goals
+- meeting candidates
+- WorkOrder candidates
+- Proposal candidates
+- next steps
+- safety flags
+
+Planning a goal does not execute work. It may create Studio planning records
+only. It must not canonize memory, modify source/data/assets/docs, create a
+task lifecycle decision, mark a task done, commit, or push.
+
+The deterministic console route is intentionally conservative. LLM staff runs
+may later refine the plan, but they must still produce structured proposals
+and approval items rather than silently changing project state.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.
