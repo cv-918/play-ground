@@ -66,8 +66,9 @@ This slice defines:
   default. Home is the Director situation board for recent work,
   staff status, and AIWorkflow Core state. Director-facing page cards explain
   what the Director can do on that page, translate department/staff/artifact
-  identifiers into Korean labels, and keep raw JSON or registry links marked as
-  internal/debug inspection links. The other Director-facing pages expose dashboard refresh,
+  identifiers into Korean labels, and keep raw JSON, registry, and run evidence
+  links collapsed under internal/debug inspection details instead of exposing
+  them as normal Director actions. The other Director-facing pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput review packet export actions, governed record-candidate
   materialization actions, materialized draft decision actions,
@@ -82,6 +83,12 @@ This slice defines:
   actions, and review packet links. The internal/admin pages expose Project
   Profile and Tool Adapter browser panels, governed ToolRun Request
   planning/storage actions, and Conditional Automation policy test actions.
+  The evidence/review surfaces translate common completion concerns into
+  human-readable meaning: failed/cancelled sessions explain that a previous
+  runner or staff execution stopped, and file-category warnings explain whether
+  the signal touches workflow state, workflow tooling, game data, or game
+  source. Finalization confirmations distinguish accepting clean results,
+  accepting known concerns, requesting fixes, rejecting, and deferring.
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
