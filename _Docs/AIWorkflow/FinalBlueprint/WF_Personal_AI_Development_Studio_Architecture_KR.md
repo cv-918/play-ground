@@ -26,7 +26,7 @@ AI들은 역할을 흉내내는 prompt가 아니라, 책임, 기억, 권한, 도
 승인 규칙, handoff 규칙을 가진 Persistent AI Staff Agent가 되어야 한다.
 
 기존 AIWorkflow 하네스는 버리지 않는다. 기존 하네스는 AI 회사의 운영,
-승인, 실행, 증거, 검증, 기록, 최종화, git gate를 담당하는 회사 운영
+승인, 실행, 검증 자료, 검증, 기록, 최종화, git gate를 담당하는 회사 운영
 시스템으로 격상된다.
 
 ---
@@ -38,7 +38,7 @@ AI들은 역할을 흉내내는 prompt가 아니라, 책임, 기억, 권한, 도
 시스템 = 회사
 AI = 직원
 도구 = 장비
-AIWorkflow Core = 업무 관리, 승인, 실행, 증거, 검증, 기록, 최종화 시스템
+AIWorkflow Core = 업무 관리, 승인, 실행, 검증 자료, 검증, 기록, 최종화 시스템
 ```
 
 핵심 철학:
@@ -70,7 +70,7 @@ commit/push/release는 governance와 approval gate를 통과해야 한다.
 - Task lifecycle
 - Approval gate
 - PC Runner
-- Evidence collection
+- Evidence collection / 검증 자료 수집
 - VerificationReport
 - CompletionReport
 - Completion Card
@@ -102,7 +102,7 @@ Personal AI Development Studio
 │  ├─ Mobile control panel
 │  ├─ Meeting room
 │  ├─ Approval inbox
-│  ├─ Evidence viewer
+│  ├─ Evidence viewer / 검증 자료 보기
 │  ├─ Completion review screen
 │  ├─ Memory / Canon browser
 │  └─ Agent / Department settings
@@ -114,7 +114,7 @@ Personal AI Development Studio
 │  ├─ AgentRun API
 │  ├─ Memory API
 │  ├─ Approval API
-│  ├─ Evidence API
+│  ├─ Evidence API / 검증 자료 API
 │  └─ ProjectProfile API
 │
 ├─ AIWorkflow Core
@@ -122,7 +122,7 @@ Personal AI Development Studio
 │  ├─ WorkOrder
 │  ├─ RoleRun
 │  ├─ ToolRun
-│  ├─ Evidence
+│  ├─ Evidence / 검증 자료
 │  ├─ Approval
 │  ├─ Verification
 │  ├─ Completion
@@ -153,7 +153,7 @@ Personal AI Development Studio
 │  ├─ Canon memory
 │  ├─ Proposal memory
 │  ├─ Decision memory
-│  ├─ Evidence index
+│  ├─ Evidence index / 검증 자료 인덱스
 │  └─ Retrieval / search
 │
 ├─ Tool Adapter Layer
@@ -410,7 +410,7 @@ Director Goal
 -> WorkOrder
 -> AIWorkflow Task
 -> Execution
--> Evidence
+-> Evidence / 검증 자료
 -> Verification
 -> Completion
 -> Finalization
@@ -434,7 +434,7 @@ L2 Plan
 - WorkOrder 초안, 구현 계획, asset request
 
 L3 Execute Read-Only
-- 안전한 read-only 검증, 증거 수집
+- 안전한 read-only 검증, 검증 자료 수집
 
 L4 Execute Write
 - 승인된 파일 수정, 승인된 asset 생성/수정
@@ -507,7 +507,7 @@ Meeting Room
 WorkOrder Board
 Approval Inbox
 Run Timeline
-Evidence Viewer
+Evidence Viewer / 검증 자료 보기
 Verification Report View
 Completion Review Screen
 Diff / Review Screen
@@ -524,9 +524,9 @@ UI 원칙:
 
 - 사용자가 명령어를 외우지 않아야 한다.
 - 카드 하나는 “이게 뭔지, 왜 봐야 하는지, 승인하면 뭐가 바뀌는지, 다음에 뭘 할지”를 보여줘야 한다.
-- 긴 로그는 첫 화면에 쏟아내지 않고 evidence viewer로 내려야 한다.
+- 긴 로그는 첫 화면에 쏟아내지 않고 evidence viewer / 검증 자료 보기로 내려야 한다.
 - mobile에서는 승인/완료/우려/수정 요청 판단을 최우선으로 보여준다.
-- proposal, decision, canon, work order, task, run, evidence, completion, commit은 UI에서 명확히 구분한다.
+- proposal, decision, canon, work order, task, run, evidence(검증 자료), completion, commit은 UI에서 명확히 구분한다.
 
 ---
 
@@ -577,7 +577,7 @@ AI 직원들이 제안, 반박, 위험, 질문을 준비한다.
 나는 방향을 승인한다.
 Studio가 WorkOrder를 만든다.
 승인된 직원이 작업하거나 작업을 감독한다.
-증거와 검증이 수집된다.
+검증 자료와 검증 결과가 수집된다.
 나는 완료 결과를 리뷰한다.
 Studio가 최종화 기록을 남긴다.
 나는 commit/push/release를 결정한다.
@@ -610,7 +610,7 @@ AIWorkflow Studio는 개인 AI 개발 회사 런타임이다.
 - WorkOrder
 - Handoff
 - Governed execution
-- Evidence
+- Evidence / 검증 자료
 - Verification
 - Completion
 - Finalization

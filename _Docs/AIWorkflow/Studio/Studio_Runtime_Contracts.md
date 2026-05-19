@@ -526,6 +526,10 @@ Evidence required: JSON smoke, loader readability check, Debug x64 build.
 
 Evidence must be attached to claims.
 
+User-facing Korean UI and guide text should call this `검증 자료`, not the
+older literal Korean label. Internal schema names, path names, and JSON fields such as
+`evidence_refs` remain `evidence` for compatibility.
+
 Examples:
 
 - proposal claim -> source memory or decision refs
@@ -534,7 +538,7 @@ Examples:
 - completion claim -> CompletionReport and FinalizationLog refs
 - canon claim -> approved Decision refs
 
-If evidence is missing, output status must be `needs_evidence`, `blocked`, or
+If evidence / 검증 자료 is missing, output status must be `needs_evidence`, `blocked`, or
 `concerns`, not `pass`.
 
 ## Provider Independence
@@ -573,7 +577,7 @@ Tool adapters are registered before use. A registered adapter must disclose:
 - whether Human Director approval is required
 - which actions are allowed
 - which actions are blocked
-- which evidence outputs are required
+- which evidence / 검증 자료 outputs are required
 
 The first read-only registry tool is:
 
@@ -592,7 +596,7 @@ tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Exam
 
 It validates ToolRunRequest JSON, reads the ToolAdapter registry, reports
 adapter availability, blocked actions, approval needs, cost/external/file risk,
-and required evidence. It stores request records only when `--execute` is
+and required evidence / 검증 자료. It stores request records only when `--execute` is
 explicit. It does not execute the requested adapter.
 
 The registry includes the current LLM policy:
@@ -616,7 +620,7 @@ The core records must remain provider-independent:
 - Proposal
 - Decision
 - MemoryRecord
-- Evidence
+- Evidence / 검증 자료
 - Approval
 - Verification
 - Completion
@@ -678,8 +682,8 @@ Implemented now:
 - conditional automation replay and repair-plan support
 - interactive Studio Director Console with Korean-labeled Director-facing
   Home, Departments, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge,
-  and Evidence pages: `홈`, `부서`, `AI 직원`, `회의실`, `직원 보고서`,
-  `업무 지시`, `지식/결정`, and `증거`; Systems and Policy remain
+  and Evidence / 검증 자료 pages: `홈`, `부서`, `AI 직원`, `회의실`,
+  `직원 보고서`, `업무 지시`, `지식/결정`, and `검증 자료`; Systems and Policy remain
   internal/admin pages hidden under `내부 도구` by default
 - Studio Console actions for MeetingSession creation/turns, AI staff meeting
   contribution plan/run, WorkOrder to StaffContextPacket plan/store, WorkOrder

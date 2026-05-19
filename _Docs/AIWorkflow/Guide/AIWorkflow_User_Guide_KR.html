@@ -299,7 +299,7 @@
       <main>
         <section id="summary">
           <h2>한눈에 보기</h2>
-          <p>이 프로젝트의 워크플로우는 Studio Console을 기본 작업대처럼 쓰고, PC Runner가 로컬 실행, 감시, 증거 수집, 검증 보고, 완료 카드를 담당하는 개발 작업 하네스입니다. Discord는 필요할 때만 쓰는 보조 UI입니다.</p>
+          <p>이 프로젝트의 워크플로우는 Studio Console을 기본 작업대처럼 쓰고, PC Runner가 로컬 실행, 감시, 검증 자료 수집, 검증 보고, 완료 카드를 담당하는 개발 작업 하네스입니다. Discord는 필요할 때만 쓰는 보조 UI입니다.</p>
           <div class="good">
             <strong>사용자가 목표로 하는 최종 사용감:</strong>
             작업 지시, 위험 작업 승인, 완료 결과 리뷰, 커밋/푸시 결정만 사람이 맡고 나머지는 하네스가 처리합니다.
@@ -307,18 +307,18 @@
           <div class="note">
             <strong>장기 제품 목표:</strong>
             AIWorkflow는 최종적으로 Discord bot이 아니라 <strong>Personal AI Development Studio / AI Studio Company Runtime</strong>으로 확장됩니다.
-            기존 하네스는 그 Studio의 운영, 승인, 실행, 증거, 검증, 완료, 최종화, git gate를 맡는 core가 됩니다.
+            기존 하네스는 그 Studio의 운영, 승인, 실행, 검증 자료, 검증, 완료, 최종화, git gate를 맡는 core가 됩니다.
             공식 설계 문서는 <code>_Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md</code>입니다.
             첫 구현 조각은 <code>_Docs/AIWorkflow/Studio/README.md</code>에 있는 StaffAgent, Department, WorkOrder, MeetingSession, MemoryRecord, Proposal, Decision, Handoff, RoleRun, ToolRun 모델입니다.
           </div>
           <div class="note">
             <strong>Studio Console 사용:</strong>
-            로컬 Studio Director Console은 왼쪽 사이드바로 <code>홈</code>, <code>부서</code>, <code>AI 직원</code>, <code>회의실</code>, <code>직원 보고서</code>, <code>업무 지시</code>, <code>지식/결정</code>, <code>증거</code> 페이지를 전환합니다.
-            <code>홈</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 기본 페이지는 부서/직원/회의/직원 보고서/업무 지시/지식/증거를 다루는 감독자용 작업 공간입니다.
+            로컬 Studio Director Console은 왼쪽 사이드바로 <code>홈</code>, <code>부서</code>, <code>AI 직원</code>, <code>회의실</code>, <code>직원 보고서</code>, <code>업무 지시</code>, <code>지식/결정</code>, <code>검증 자료</code> 페이지를 전환합니다.
+            <code>홈</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 기본 페이지는 부서/직원/회의/직원 보고서/업무 지시/지식/검증 자료를 다루는 감독자용 작업 공간입니다.
             각 페이지의 카드에는 <code>이 화면에서 할 수 있는 일</code>이 표시됩니다. 이 항목은 버튼을 누르면 무엇이 바뀌는지 빠르게 판단하기 위한 안내입니다.
             <code>AI 직원</code> 페이지는 각 직원의 한국어 직책, 역할, 할 수 있는 일, 담당 산출물, 승인이 필요한 일을 보여줍니다.
             <code>시스템</code>과 <code>정책</code>은 <code>내부 도구</code> 아래에 접혀 있는 관리자/디버그용 화면입니다. 평소 작업에서는 신경 쓰지 않아도 됩니다.
-            <code>내부 원본 보기</code>, <code>registry 원본</code>, <code>실행 기록</code>, <code>원본 JSON</code>은 일반 진행 버튼이 아니라 registry와 증거 원본을 확인하는 관리자/디버그용 링크입니다. 일반 화면에서는 접힌 영역 안에 들어가며, 평소에는 열지 않아도 됩니다.
+            <code>내부 원본 보기</code>, <code>registry 원본</code>, <code>실행 기록</code>, <code>원본 JSON</code>은 일반 진행 버튼이 아니라 registry와 검증 자료 원본을 확인하는 관리자/디버그용 링크입니다. 일반 화면에서는 접힌 영역 안에 들어가며, 평소에는 열지 않아도 됩니다.
           </div>
           <div class="note">
             <strong>Studio에서 직접 할 수 있는 일:</strong>
@@ -328,8 +328,8 @@
             <code>업무 지시</code>에서는 업무 지시서를 만들 수 있고, 직원 자료 미리보기/저장, 직원 실행 계획, 명시적 직원 실행, 작업 목록 생성을 할 수 있습니다.
             <code>직원 보고서</code>에서는 AI 직원이 만든 결과를 <code>보고서 만들기</code>로 읽기 좋게 내보내고, 필요한 내용만 <code>기록 후보 보기</code> 또는 <code>기록함에 넣기</code>로 넘길 수 있습니다.
             <code>지식/결정</code>에서는 제안, 결정, 기억을 기록해 아이디어, 감독자 결정, 프로젝트 기억을 분리해서 관리합니다. 제안은 결정으로, 결정은 기억 또는 공식 설정 기억으로 넘길 수 있습니다.
-            <code>증거</code>에서는 결과 보기, 검증 보고서, 완료 보고서, 완료 카드의 차이를 보고 완료 판단 근거를 확인합니다. 우려 사항은 “무엇을 하다 멈췄는지”, “어떤 파일 신호가 범위를 벗어났는지”처럼 사람이 판단할 수 있는 문장으로 표시됩니다.
-            <code>시스템</code>에서는 프로젝트 프로필, 도구 어댑터, 도구 요청서를 확인하고, 도구 실행 전에 어떤 도구를 왜 쓰려는지와 어떤 증거가 필요한지 요청서로 남길 수 있습니다. 이 화면은 내부/관리자용입니다.
+            <code>검증 자료</code>에서는 결과 보기, 검증 보고서, 완료 보고서, 완료 카드의 차이를 보고 완료 판단 근거를 확인합니다. 우려 사항은 “무엇을 하다 멈췄는지”, “어떤 파일 신호가 범위를 벗어났는지”처럼 사람이 판단할 수 있는 문장으로 표시됩니다.
+            <code>시스템</code>에서는 프로젝트 프로필, 도구 어댑터, 도구 요청서를 확인하고, 도구 실행 전에 어떤 도구를 왜 쓰려는지와 어떤 검증 자료가 필요한지 요청서로 남길 수 있습니다. 이 화면은 내부/관리자용입니다.
             이 버튼들은 기존 AIWorkflow gate를 우회하지 않고, 선택한 task와 선택한 파일에 대해서만 동작합니다.
           </div>
           <div class="note">
@@ -337,7 +337,7 @@
             <code>직원 자료 미리보기</code>는 업무 지시를 특정 AI 직원이 읽을 실행 문맥으로 어떻게 묶을지 보여줍니다.
             <code>직원 자료 저장</code>은 그 문맥을 내부 문맥 기록에 남깁니다.
             <code>직원 실행 계획</code>은 Codex 직원 실행 전에 어떤 모델/명령/입력이 쓰일지 점검합니다.
-            <code>직원 실행</code>은 signed-in Codex CLI를 read-only 직원 실행으로 호출하고 결과를 <code>_Temp</code> 증거로 남깁니다.
+            <code>직원 실행</code>은 signed-in Codex CLI를 read-only 직원 실행으로 호출하고 결과를 <code>_Temp</code> 검증 자료로 남깁니다.
             <code>보고서 만들기</code>는 직원 실행 결과를 사람이 읽기 좋은 HTML 검토 자료로 내보냅니다.
             <code>기록 후보 보기</code>는 직원 보고서에서 제안, 기억, 업무 지시, 인수인계 후보가 무엇인지 미리 보여줍니다.
             <code>기록함에 넣기</code>는 필요한 후보를 Studio 기록 후보로 남깁니다. 이것은 실행 승인, 공식 설정 확정, task 생성이 아닙니다.
@@ -346,7 +346,7 @@
             <code>결과 보기</code>는 Runner 실행 기록과 생성된 원본 보고서로 들어가는 입구입니다.
             <code>검증 보고서</code>는 무엇을 검사했고 어떤 경고가 있었는지 보는 자료입니다.
             <code>완료 카드</code>는 사람이 완료 승인, 수정 요청, 우려 감수 여부를 판단하기 위한 짧은 요약입니다.
-            <code>ToolRun Request 만들기</code>는 도구를 실행하기 전에 adapter, 권한 등급, 목적, 입력, 기대 산출물, 필수 증거를 검토 가능한 요청서로 남깁니다.
+            <code>ToolRun Request 만들기</code>는 도구를 실행하기 전에 adapter, 권한 등급, 목적, 입력, 기대 산출물, 필수 검증 자료를 검토 가능한 요청서로 남깁니다.
             이 요청서는 실행 허가가 아니며, 비용/외부 호출/파일 변경 가능성이 있는 도구는 별도 승인 gate를 거칩니다.
             이 실행은 소스 수정, 공식 설정 기록, task 승인, task done, commit, push를 직접 하지 않습니다.
           </div>
@@ -354,13 +354,13 @@
             <strong>Studio 홈의 AIWorkflow Core:</strong>
             Discord를 쓰지 않는 흐름에서는 Studio Console의 <code>홈</code>이 기본 상황판입니다.
             <code>AIWorkflow Core</code>는 현재 ActiveTask, 최근 Runner 중단 이유, 완료 검토 상태, Backlog 요약을 보여줍니다.
-            <code>Git / Evidence</code>는 현재 branch, 변경 파일 수, 검증 판정, 완료 보고서/완료 카드 링크를 보여줍니다.
+            <code>Git / 검증 자료</code>는 현재 branch, 변경 파일 수, 검증 판정, 완료 보고서/완료 카드 링크를 보여줍니다.
             즉, “지금 뭘 판단해야 하는지”는 먼저 홈의 AIWorkflow Core에서 확인합니다.
           </div>
           <pre><code>1. Studio 홈의 새 작업 접수에 작업 요청 입력
 2. 승인 필요 시에만 승인+실행
-3. PC Runner가 실행, 감시, 증거 수집, 검증 보고
-4. Studio 홈 또는 증거에서 완료 카드와 결과 확인
+3. PC Runner가 실행, 감시, 검증 자료 수집, 검증 보고
+4. Studio 홈 또는 검증 자료에서 완료 카드와 결과 확인
 5. 완료 승인 / 우려 감수 후 완료 / 수정 요청 / 반려 / 판단 보류 결정
 6. Studio Git Gate에서 선택 파일만 commit/push 결정</code></pre>
           <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. Discord adapter를 쓰는 경우 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어볼 수 있습니다.</p>
@@ -372,7 +372,7 @@
 
           <div class="good">
             <strong>핵심 원칙:</strong>
-            사람은 목표, 승인, 완료 판단, 커밋 결정을 맡고, 하네스는 작업 상태, 실행 상태, 증거, 검증, 최종화 기록을 분리해서 남깁니다.
+            사람은 목표, 승인, 완료 판단, 커밋 결정을 맡고, 하네스는 작업 상태, 실행 상태, 검증 자료, 검증, 최종화 기록을 분리해서 남깁니다.
           </div>
 
           <div class="visual" aria-label="Discord 디스패치를 제외한 AIWorkflow 본체 전체 흐름">
@@ -407,12 +407,12 @@
                 <span>승인된 profile과 executor만 실행하고, start/end, heartbeat, stop reason을 기록합니다.</span>
               </div>
               <div class="flow-step auto">
-                <strong>8. Evidence Collection And Diff Snapshot / 증거 수집과 diff snapshot</strong>
+                <strong>8. Evidence Collection And Diff Snapshot / 검증 자료 수집과 diff snapshot</strong>
                 <span>로그, exit code, 변경 파일, diff, build/test 결과를 모읍니다. 이 단계는 pass/fail을 판정하지 않습니다.</span>
               </div>
               <div class="flow-step auto">
                 <strong>9. VerificationReport Generation / 검증 보고서 생성</strong>
-                <span>수집된 증거를 기준으로 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL을 판정합니다.</span>
+                <span>수집된 검증 자료를 기준으로 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL을 판정합니다.</span>
               </div>
               <div class="flow-step auto">
                 <strong>10. CompletionReport And Completion Card / 완료 보고서와 완료 카드</strong>
@@ -452,7 +452,7 @@
               <tr><td>Task Lifecycle</td><td>Backlog, ActiveTask, approval, blocked/deferred/done 상태</td><td>실행 로그나 세션 성공 여부를 직접 판정하지 않음</td></tr>
               <tr><td>Runtime Workspace</td><td>task_id 기준 작업 공간과 런타임 산출물 위치</td><td>승인 없이 소스나 데이터를 바꾸지 않음</td></tr>
               <tr><td>Session State</td><td>실행 세션, heartbeat, progress, stop reason</td><td>검증 통과/실패를 최종 판정하지 않음</td></tr>
-              <tr><td>Evidence</td><td>로그, exit code, 변경 파일, diff snapshot, build/test 결과</td><td>증거 수집만으로 task done 처리하지 않음</td></tr>
+              <tr><td>Evidence / 검증 자료</td><td>로그, exit code, 변경 파일, diff snapshot, build/test 결과</td><td>검증 자료 수집만으로 task done 처리하지 않음</td></tr>
               <tr><td>Verification/Completion</td><td>검증 판정, 완료 보고서, 완료 카드, 남은 우려</td><td>commit/push를 자동 실행하지 않음</td></tr>
             </tbody>
           </table>
@@ -470,12 +470,12 @@
             <li>PC Runner는 작업별 workspace에서 승인된 executor와 profile만 실행합니다.</li>
             <li>실행기는 Codex CLI, Local CLI, 이후 추가될 도구처럼 교체 가능해야 하지만, start/end 감지, 로그 수집, 실패/timeout 처리, 변경 파일 추적이 가능해야 합니다.</li>
             <li>Session Supervisor는 실행 중인지, 멈췄는지, 어떤 이유로 멈췄는지를 기록합니다.</li>
-            <li>Evidence Collector는 실행 결과와 diff를 모으지만, 통과 판정이나 완료 처리는 하지 않습니다.</li>
+            <li>Evidence Collector(검증 자료 수집기)는 실행 결과와 diff 같은 검증 자료를 모으지만, 통과 판정이나 완료 처리는 하지 않습니다.</li>
           </ul>
 
           <h3>5. 검증과 완료 판단</h3>
           <ul>
-            <li>VerificationReport는 증거를 읽어 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL 같은 판정을 만듭니다.</li>
+            <li>VerificationReport는 검증 자료를 읽어 PASS, PASS_WITH_NOTES, CONCERNS, BLOCKED, FAIL 같은 판정을 만듭니다.</li>
             <li>CompletionReport와 Completion Card는 사람이 완료를 받아들일지 판단하기 위한 요약입니다.</li>
             <li>CONCERNS는 실패가 아닐 수도 있지만, 사람이 무엇을 감수하는지 알아야 완료로 넘길 수 있습니다.</li>
             <li>수정이 필요하면 원 task를 억지로 done 처리하지 않고 focused fix task로 분리합니다.</li>
@@ -490,13 +490,13 @@
           </ul>
 
           <div class="warn">
-            이 섹션은 Discord 디스패치가 바뀌거나 사라져도 유지되어야 하는 코어입니다. UI가 Discord, Codex App, 다른 도구로 바뀌어도 작업 상태, 실행 상태, 증거, 검증, 승인, 최종화, git gate의 분리는 유지해야 합니다.
+            이 섹션은 Discord 디스패치가 바뀌거나 사라져도 유지되어야 하는 코어입니다. UI가 Discord, Codex App, 다른 도구로 바뀌어도 작업 상태, 실행 상태, 검증 자료, 검증, 승인, 최종화, git gate의 분리는 유지해야 합니다.
           </div>
         </section>
 
         <section id="visual-map">
           <h2>워크플로우 시각화</h2>
-          <p>정규 목표는 사용자가 Discord에서 작업을 넣고, 하네스가 실행과 증거 수집을 맡으며, 사람은 승인과 완료 판단만 하는 흐름입니다.</p>
+          <p>정규 목표는 사용자가 Discord에서 작업을 넣고, 하네스가 실행과 검증 자료 수집을 맡으며, 사람은 승인과 완료 판단만 하는 흐름입니다.</p>
 
           <div class="visual" aria-label="정규 워크플로우 흐름도">
             <h3>전체 흐름 지도</h3>
@@ -528,7 +528,7 @@
               </div>
               <div class="flow-step auto">
                 <strong>4. Runner 실행</strong>
-                <span>workspace, session, evidence, verification을 생성합니다.</span>
+                <span>workspace, session, evidence(검증 자료), verification을 생성합니다.</span>
                 <div class="flow-command">
                   <em>확인할 때</em>
                   <code>/ai runner status id:&lt;task_id&gt;</code>
@@ -580,7 +580,7 @@
                 <div class="lane-item">숨김 복구 경로로 결과 감사</div>
               </div>
             </div>
-            <div class="note">수동 승격은 예외 경로입니다. 정상 목표는 PC Runner가 실행, 감시, 증거 수집, 검증 보고를 맡는 것입니다.</div>
+            <div class="note">수동 승격은 예외 경로입니다. 정상 목표는 PC Runner가 실행, 감시, 검증 자료 수집, 검증 보고를 맡는 것입니다.</div>
           </div>
 
           <div class="visual" aria-label="Runner 중단 이유별 다음 행동">
@@ -612,7 +612,7 @@
               <tr>
                 <td>Human Director</td>
                 <td>작업 지시, 위험 작업 승인, 완료 판단, 커밋/푸시 결정</td>
-                <td>반복 명령 수동 실행, 증거 파일 직접 조립</td>
+                <td>반복 명령 수동 실행, 검증 자료 파일 직접 조립</td>
               </tr>
               <tr>
                 <td>Discord Orchestrator</td>
@@ -621,7 +621,7 @@
               </tr>
               <tr>
                 <td>PC Runner</td>
-                <td>workspace, session, evidence, verification, completion report/card</td>
+                <td>workspace, session, evidence(검증 자료), verification, completion report/card</td>
                 <td>사람 승인 우회, 자동 commit/push</td>
               </tr>
               <tr>
@@ -687,7 +687,7 @@
           <p>백그라운드 시작 직후의 intake 응답에는 아직 <code>completion-report-id</code>와 <code>runner-run-id</code>가 없을 수 있습니다. 이때 다음 명령이 <code>/ai runner status</code>, <code>/ai runner read</code> 두 개만 나오는 것은 정상입니다. <code>/ai runner read</code>를 실행하면 완료 카드와 <code>accept-completion</code>에 필요한 실제 ID가 표시됩니다.</p>
           <p>가이드의 <code>&lt;task_id&gt;</code>, <code>&lt;completion_report_id&gt;</code>, <code>&lt;runner_run_id&gt;</code>는 예시 자리표시자입니다. Discord에 그대로 입력하지 말고 응답 카드에 표시된 실제 값으로 바꿔서 사용합니다.</p>
           <p><code>ephemeral</code>은 Discord의 “나만 보이는 메시지”가 아니라 Codex CLI <code>exec --ephemeral</code>입니다. intake 해석용 임시 실행으로, Codex 세션 기록을 오래 남기지 않는 1회성 분류 실행에 사용합니다.</p>
-          <p>그 밖의 알 수 없는 validation evidence 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
+          <p>그 밖의 알 수 없는 validation evidence(검증 자료) 요청은 자동 착수하지 않고 확인 질문에서 멈춥니다.</p>
           <div class="warn">
             GAME source/data/schema/runtime/gameplay 변경, P0/P1, medium/high risk, UNITY 작업, 명령 동작 변경은 사람 승인에서 멈춥니다.
           </div>
@@ -713,7 +713,7 @@
                 <li>TaskDraft 생성</li>
                 <li>workspace 준비</li>
                 <li>session/progress/heartbeat 기록</li>
-                <li>file watcher, diff snapshot, evidence 수집</li>
+                <li>file watcher, diff snapshot, evidence(검증 자료) 수집</li>
                 <li>VerificationReport, CompletionReport/Card 생성</li>
                 <li>Follow-up 후보 생성</li>
               </ul>
@@ -750,7 +750,7 @@
             <tbody>
               <tr><td><code>auto</code></td><td>자동 handoff 또는 <code>/ai task approve-runner</code>에서 기본 적용. 작업 종류를 보고 implementation/documentation/build/validation 경로를 자동 선택</td></tr>
               <tr><td><code>validation</code></td><td>JSON smoke, GameDataLoader readability, local validation, no-source-change 검증</td></tr>
-              <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence</td></tr>
+              <tr><td><code>build</code></td><td>Visual Studio Debug x64 build, MSBuild evidence(빌드 검증 자료)</td></tr>
               <tr><td><code>documentation</code></td><td>문서 작업</td></tr>
               <tr><td><code>implementation</code></td><td>승인된 구현 작업</td></tr>
               <tr><td><code>game-data</code></td><td>승인된 작은 GAME data 또는 data-loader 인접 수정</td></tr>
@@ -767,7 +767,7 @@
             <li>VerificationReport가 <code>PASS</code> 또는 <code>PASS_WITH_NOTES</code>인가?</li>
             <li><code>CONCERNS</code>가 있다면 사람이 받아들일 수 있는 우려인가?</li>
             <li>변경 파일이 승인 범위 안인가?</li>
-            <li>검증 증거가 실제로 존재하는가?</li>
+            <li>검증 자료가 실제로 존재하는가?</li>
           </ol>
           <p><code>PASS_WITH_NOTES</code>는 검증 통과에 가까운 상태지만 자동 완료 신호는 아닙니다. notes를 사람이 읽고 받아들일 수 있을 때만 완료 승인 또는 우려 감수 후 완료로 진행합니다.</p>
           <p>완료 카드 버튼은 명령어 복붙 대신 쓰는 기본 UI입니다. <strong>완료 승인</strong>은 accept와 task done을 처리하고, <strong>수정 요청</strong>은 request-changes를 기록하며, <strong>판단 보류</strong>는 defer를 기록합니다. <code>CONCERNS</code>가 있지만 blocker나 failed check가 없고 사람이 우려를 감수하기로 결정했다면 <strong>우려 감수 후 완료</strong>를 사용합니다. 이 결정은 작업을 폐기하거나 우려를 우회하는 뜻이 아니라, 우려를 확인했다는 기록을 남기고 task done으로 넘기는 뜻입니다.</p>

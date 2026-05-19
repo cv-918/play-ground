@@ -19,7 +19,7 @@
 | intake-create | 제거된 호환 alias | 과거 `/ai intake`와 같은 역할을 하던 명령 | 현재는 `/ai intake` 사용 |
 | set-active | 활성 작업 선택 | Backlog task를 ActiveTask로 선택 | 지금 이 작업을 진행할 때 |
 | approve | 승인 | 구현/실행 범위를 사람이 승인했다는 기록 | Codex 실행 전 |
-| runner start | Runner 시작 | PC Runner가 task workspace 실행, 증거 수집, 검증 보고 흐름을 시작 | 정규 실행 경로 |
+| runner start | Runner 시작 | PC Runner가 task workspace 실행, 검증 자료 수집, 검증 보고 흐름을 시작 | 정규 실행 경로 |
 | completion card | 완료 카드 | 실행 결과, 검증 verdict, 다음 결정을 짧게 보여주는 카드 | 완료 리뷰 시 |
 | runner accept-completion | 완료 승인 | completion review를 수락하고 Runner를 다음 gate로 진행 | 완료 카드 확인 후 |
 | prepare goal | goal 요청 생성 | Codex CLI에 붙여 넣을 request file 생성 | 수동 승격/호환 경로 |
@@ -27,7 +27,7 @@
 | done | 완료 처리 | evidence와 함께 task를 done 상태로 기록 | 사람이 완료를 받아들일 때 |
 | role routing | 역할 라우팅 | task 성격에 맞는 검토 역할 추천 | 상세 검토가 필요할 때 |
 | path-scoped rules | 경로별 규칙 | 파일 경로별 review/validation 주의사항 | source/data/tool/doc 변경 시 |
-| required validation | 필수 검증 | 완료 전에 필요한 build/test/runtime/check 증거 | done/commit 판단 전 |
+| required validation | 필수 검증 | 완료 전에 필요한 build/test/runtime/check 검증 자료 | done/commit 판단 전 |
 | human decision gate | 사람 판단 게이트 | AI가 혼자 결정하면 안 되는 지점 | 승인, schema, runtime, commit 등 |
 | commit recommendation | commit 권고 | result audit이 제안하는 commit 가능성 | 최종 commit 전 참고 |
 | rule-based intake | 규칙 기반 intake | 키워드와 고정 규칙으로 task draft를 제안하는 fallback/cross-check 방식 | LLM 실패 또는 mismatch 확인이 필요할 때 |

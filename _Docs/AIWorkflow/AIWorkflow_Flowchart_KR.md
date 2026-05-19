@@ -101,7 +101,7 @@ flowchart TD
     D -- 예 --> F["review 또는 follow-up"]
     C -- 부족 --> G["NEEDS_VALIDATION"]
     G --> H["[HUMAN/MANUAL] 누락 validation 실행"]
-    H --> I["결과 증거 정리"]
+    H --> I["결과 검증 자료 정리"]
     I --> B
 ```
 

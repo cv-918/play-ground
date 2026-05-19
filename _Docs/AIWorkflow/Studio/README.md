@@ -11,6 +11,10 @@ The goal is to define the stable domain model that future staff agents,
 meetings, work orders, memory, decisions, handoffs, tool runs, and evidence
 will use.
 
+User-facing Korean UI and guide text should label `Evidence` as
+`검증 자료`. Internal schema names, file paths, and JSON fields such as
+`evidence_refs` remain unchanged for compatibility.
+
 ## Scope
 
 This slice defines:
@@ -36,6 +40,7 @@ This slice defines:
 - Initial read-only department and staff registries
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
+  / 검증 자료
 - Staff context and structured output contract
 - Scenario Director context/output examples
 - Creative MeetingSession to WorkOrder to TaskBinding examples
@@ -60,13 +65,15 @@ This slice defines:
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The normal Director-facing pages are Korean-labeled Home,
   Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, and
-  Evidence pages: `홈`, `부서`, `AI 직원`, `회의실`, `직원 보고서`,
-  `업무 지시`, `지식/결정`, and `증거`. Systems and Policy are
+  Evidence / 검증 자료 pages: `홈`, `부서`, `AI 직원`, `회의실`,
+  `직원 보고서`, `업무 지시`, `지식/결정`, and `검증 자료`.
+  Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
   default. Home is the Director situation board for recent work,
   staff status, and AIWorkflow Core state. Director-facing page cards explain
   what the Director can do on that page, translate department/staff/artifact
   identifiers into Korean labels, and keep raw JSON, registry, and run evidence
+  / 검증 자료
   links collapsed under internal/debug inspection details instead of exposing
   them as normal Director actions. The other Director-facing pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
@@ -83,7 +90,7 @@ This slice defines:
   actions, and review packet links. The internal/admin pages expose Project
   Profile and Tool Adapter browser panels, governed ToolRun Request
   planning/storage actions, and Conditional Automation policy test actions.
-  The evidence/review surfaces translate common completion concerns into
+  The evidence / 검증 자료 review surfaces translate common completion concerns into
   human-readable meaning: failed/cancelled sessions explain that a previous
   runner or staff execution stopped, and file-category warnings explain whether
   the signal touches workflow state, workflow tooling, game data, or game
@@ -338,10 +345,10 @@ These rules are mandatory for all future implementations:
 4. Meeting consensus is not Human Director approval.
 5. Memory status must distinguish draft, proposed, approved, canon, rejected,
    deprecated, and superseded.
-6. ToolRun may produce evidence but cannot approve itself.
+6. ToolRun may produce evidence / 검증 자료 but cannot approve itself.
 7. RoleRun may call tools only through declared tool policy.
 8. WorkOrder sits above Task and may create one or more AIWorkflow tasks.
-9. Evidence collection is not verification.
+9. Evidence collection / 검증 자료 수집 is not verification.
 10. Completion is not commit.
 11. Durable memory writes must preserve memory status, source refs, and canon
     decision boundaries.
@@ -358,9 +365,9 @@ These rules are mandatory for all future implementations:
 16. Studio UI surfaces must display governance boundaries. A dashboard may
     summarize state, but it must not silently perform approvals or execution.
 17. ToolAdapter registry entries must state file impact, external calls, cost
-    possibility, approval requirements, and evidence outputs before use.
+    possibility, approval requirements, and evidence / 검증 자료 outputs before use.
 18. ToolRunRequest is the pre-execution governance record. It may evaluate
-    adapter policy, approval needs, cost risk, and evidence needs, but it must
+    adapter policy, approval needs, cost risk, and evidence / 검증 자료 needs, but it must
     not execute the adapter.
 19. Proposal/Decision stores must keep ideas, approvals, rejections, and canon
     handoffs separate. A Proposal is not approval, and a Decision does not
@@ -376,7 +383,7 @@ These rules are mandatory for all future implementations:
     for downstream governance, not direct permission to bypass the Core gates.
 23. Staff executor may call Codex CLI only through signed-in App/CLI execution,
     not OpenAI API billing by default. Its default sandbox must be read-only,
-    and any produced output is evidence until routed through the normal
+    and any produced output is evidence / 검증 자료 until routed through the normal
     Proposal, Decision, Memory, WorkOrder, and Task gates.
 24. Handoff router may convert a governed Handoff into a target-agent
     StaffContextPacket, but it must not execute the target agent, approve the
@@ -401,7 +408,7 @@ The existing AIWorkflow Core owns:
 - Task
 - Approval
 - Runner
-- Evidence
+- Evidence / 검증 자료
 - Verification
 - Completion
 - Finalization

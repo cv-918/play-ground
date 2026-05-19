@@ -39,7 +39,7 @@ DevLog는 기록용입니다. 특별히 문제가 생기지 않는 한 직접 �
 5. 필요한 경우 커밋/푸시를 승인한다.
 ```
 
-하네스가 맡아야 하는 일은 작업 구조화, 상태 관리, 실행 감시, 증거 수집,
+하네스가 맡아야 하는 일은 작업 구조화, 상태 관리, 실행 감시, 검증 자료 수집,
 검증 보고, 완료 카드, 최종화 기록, 후속 작업 후보 생성입니다.
 
 ## 현재 정규 흐름
@@ -90,7 +90,7 @@ GAME 작업은 source/data/schema/runtime 변경이 없다고 명시된 검증 �
 ```text
 1. /ai intake text:<작업 요청>
 2. 승인 필요 시에만 승인
-3. PC Runner가 실행, 감시, 증거 수집, 검증 보고를 진행
+3. PC Runner가 실행, 감시, 검증 자료 수집, 검증 보고를 진행
 4. 사용자는 completion card를 리뷰
 5. accept/accept-concerns/request changes/reject/defer 결정
 6. 필요한 경우 task done과 커밋/푸시 승인
@@ -319,7 +319,7 @@ WF-430 이후에는 실제 게임 프로젝트 작업을 한 번에 크게 넣�
 좋은 예:
 
 ```text
-/ai intake text:"GAME validation task: PlayGround/Data JSON smoke와 GameDataLoader 관련 증거를 수집하고, source/data 변경 없이 runner workflow가 완료 카드까지 도달하는지 확인해줘."
+/ai intake text:"GAME validation task: PlayGround/Data JSON smoke와 GameDataLoader 관련 검증 자료를 수집하고, source/data 변경 없이 runner workflow가 완료 카드까지 도달하는지 확인해줘."
 ```
 
 ```text

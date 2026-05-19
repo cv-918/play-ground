@@ -606,7 +606,7 @@ const DEPARTMENT_UI = {
   },
   engineering: {
     name: "엔지니어링",
-    mission: "승인된 기술 작업을 구조와 검증 증거를 지키면서 설계하고 구현합니다.",
+    mission: "승인된 기술 작업을 구조와 검증 자료를 지키면서 설계하고 구현합니다.",
   },
   art_assets: {
     name: "아트 / 에셋",
@@ -614,7 +614,7 @@ const DEPARTMENT_UI = {
   },
   qa_testing: {
     name: "QA / 테스트",
-    mission: "버그 재현, 검증, 회귀 테스트, 완료 증거를 맡습니다.",
+    mission: "버그 재현, 검증, 회귀 테스트, 완료 판단 자료를 맡습니다.",
   },
   documentation_release: {
     name: "문서 / 릴리즈",
@@ -644,7 +644,7 @@ const REVIEW_GATE_LABELS = {
   asset_import: "에셋 반입",
   smoke: "스모크 테스트",
   regression: "회귀",
-  evidence: "증거",
+  evidence: "검증 자료",
   doc_drift: "문서 불일치",
   devlog: "DevLog",
   release_readiness: "릴리즈 준비",
@@ -703,7 +703,7 @@ const STAFF_UI = {
     mission: "거버넌스를 약화하지 않으면서 워크플로우 도구와 자동화를 만듭니다.",
     authority: ["도구 명령 제안", "안전 검사 정의", "등록/재시작 검증 요청"],
     approvals: ["명령 동작 변경", "쓰기 실행 추가", "자동 승인 범위 확장"],
-    outputs: ["도구 변경 계획", "안전 경계", "검증 증거"],
+    outputs: ["도구 변경 계획", "안전 경계", "검증 자료"],
   },
   art_director: {
     name: "아트 디렉터",
@@ -716,7 +716,7 @@ const STAFF_UI = {
   qa_tester: {
     name: "QA 테스터",
     role: "QA 테스터",
-    mission: "승인된 작업이 실제로 완료 기준을 만족했는지 증거로 확인합니다.",
+    mission: "승인된 작업이 실제로 완료 기준을 만족했는지 검증 자료로 확인합니다.",
     authority: ["검증 누락 표시", "재현 정보 요청", "BLOCKED/CONCERNS 권고"],
     approvals: ["건너뛴 검증 수용", "고위험 작업 done 처리", "테스트 정책 변경"],
     outputs: ["QA 보고서", "검증 메모", "남은 위험"],
@@ -1683,7 +1683,7 @@ function directorConsoleHtml() {
         <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
         <button data-nav="work">업무 지시 <span class="count" id="nav-work-count"></span></button>
         <button data-nav="knowledge">지식/결정 <span class="count" id="nav-knowledge-count"></span></button>
-        <button data-nav="evidence">증거 <span class="count" id="nav-evidence-count"></span></button>
+        <button data-nav="evidence">검증 자료 <span class="count" id="nav-evidence-count"></span></button>
       </nav>
       <button id="internalNavToggle" class="internal-toggle">내부 도구 <span id="internalNavState">숨김</span></button>
       <nav id="internalNav" class="nav internal-nav" aria-label="Internal Studio navigation" hidden>
@@ -1726,7 +1726,7 @@ function directorConsoleHtml() {
               <div id="homeWorkflowCore" class="list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Git / 증거</h2><button class="secondary" data-nav-jump="evidence">증거 보기</button></div>
+              <div class="section-title"><h2>Git / 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
               <div id="homeWorkflowEvidence" class="compact-list"></div>
             </div>
           </section>
@@ -1772,7 +1772,7 @@ function directorConsoleHtml() {
             </div>
           </section>
           <section class="card">
-            <div class="section-title"><h2>최근 증거</h2><button class="secondary" data-nav-jump="evidence">증거 보기</button></div>
+            <div class="section-title"><h2>최근 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
             <div id="homeEvidence" class="compact-list"></div>
           </section>
         </section>
@@ -1967,7 +1967,7 @@ function directorConsoleHtml() {
           <div class="page-heading"><div><h2>시스템</h2><p>내부/관리자용 화면입니다. 평소에는 신경 쓰지 않아도 됩니다.</p></div></div>
           <div class="card">
             <div class="section-title"><h2>도구 요청서 만들기</h2><span class="pill">실행 전 요청서</span></div>
-            <p class="muted">도구를 바로 실행하지 않고, 어떤 도구를 왜 쓰려는지와 어떤 증거가 필요한지 먼저 기록합니다.</p>
+            <p class="muted">도구를 바로 실행하지 않고, 어떤 도구를 왜 쓰려는지와 어떤 검증 자료가 필요한지 먼저 기록합니다.</p>
             <div class="form-grid">
               <label>도구<select id="toolRunCreateAdapter"></select></label>
               <label>권한 등급<select id="toolRunCreatePermission"></select></label>
@@ -1978,7 +1978,7 @@ function directorConsoleHtml() {
             <textarea id="toolRunCreatePurpose" placeholder="왜 이 도구 요청이 필요한지"></textarea>
             <textarea id="toolRunCreateInputs" placeholder="입력 refs를 줄바꿈으로 입력"></textarea>
             <textarea id="toolRunCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력"></textarea>
-            <textarea id="toolRunCreateEvidence" placeholder="필수 증거를 줄바꿈으로 입력"></textarea>
+            <textarea id="toolRunCreateEvidence" placeholder="필수 검증 자료를 줄바꿈으로 입력"></textarea>
             <div class="row">
               <button class="secondary" id="toolRunPlanSubmit">요청 평가</button>
               <button class="good" id="toolRunCreateSubmit">요청 저장</button>
@@ -1993,11 +1993,11 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="policy">
           <div class="page-heading"><div><h2>정책</h2><p>내부/관리자용 정책 검증 화면입니다. 자동 진행 정책을 조정하거나 디버깅할 때만 봅니다.</p></div></div>
-          <div class="card"><h2>자동 진행 정책</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
+          <div class="card"><h2>자동 진행 정책</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
         </section>
 
         <section class="page" data-page="evidence">
-          <div class="page-heading"><div><h2>증거</h2><p>검토 보고서와 콘솔 작업 로그를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>검증 자료</h2><p>완료 판단에 필요한 검토 보고서와 콘솔 작업 로그를 확인합니다.</p></div></div>
           <div class="card">
             <h2>보고서 구분</h2>
             <ul class="small">
@@ -2028,7 +2028,7 @@ function directorConsoleHtml() {
       knowledge: ["지식/결정", "제안, 결정, 기억, 공식 설정 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
       policy: ["정책", "내부/관리자용 자동 진행 정책을 확인합니다."],
-      evidence: ["증거", "검토 보고서와 콘솔 작업 로그를 확인합니다."],
+      evidence: ["검증 자료", "완료 판단에 필요한 검토 보고서와 콘솔 작업 로그를 확인합니다."],
     };
     const filters = {
       departmentSearch: "",
@@ -2171,10 +2171,10 @@ function directorConsoleHtml() {
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
         approve:"승인", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"우려 감수", canonize:"공식 설정화",
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"회의", task:"작업",
-        fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"증거", lesson:"교훈",
+        fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
         approved:"승인됨", rejected:"반려됨",
         active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시",
-        valid_output:"유효한 보고서", output_ready:"보고서 준비됨", needs_evidence:"증거 필요", needs_director_decision:"감독자 결정 필요", completed:"완료", failed:"실패",
+        valid_output:"유효한 보고서", output_ready:"보고서 준비됨", needs_evidence:"검증 자료 필요", needs_director_decision:"감독자 결정 필요", completed:"완료", failed:"실패",
         completion_review_required:"완료 검토 필요", done_or_commit_decision:"완료/커밋 결정 필요", ready_for_implementation:"구현 준비 완료", in_progress:"진행 중", todo:"대기",
         low:"낮음", medium:"중간", high:"높음", critical:"치명적",
         validation:"검증", implementation:"구현", documentation:"문서", data:"데이터", automation:"자동화", review_task:"리뷰",
@@ -2203,7 +2203,7 @@ function directorConsoleHtml() {
       TechnicalDesignBrief: "기술 설계 문서",
       ImplementationPlan: "구현 계획",
       DiffReview: "diff 리뷰",
-      BuildEvidence: "빌드/검증 증거",
+      BuildEvidence: "빌드/검증 자료",
       ArtDirectionBrief: "아트 방향 문서",
       AssetRequest: "에셋 요청서",
       GeneratedAssetReview: "생성 에셋 검토",
@@ -2211,7 +2211,7 @@ function directorConsoleHtml() {
       QAReport: "QA 보고서",
       BugRepro: "버그 재현 기록",
       RegressionChecklist: "회귀 테스트 체크리스트",
-      VerificationEvidence: "검증 증거",
+      VerificationEvidence: "검증 자료",
       DevLog: "DevLog",
       UserGuide: "사용자 가이드",
       ReleaseNote: "릴리즈 노트",
@@ -2412,7 +2412,7 @@ function directorConsoleHtml() {
       ].slice(0, 5);
       el("homeEvidence").innerHTML = evidence.length ? evidence.map((item) =>
         '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><a href="' + esc(item.href) + '" target="_blank">열기</a></div>'
-      ).join("") : '<p class="muted">최근 증거 파일이 없습니다.</p>';
+      ).join("") : '<p class="muted">최근 검증 자료 파일이 없습니다.</p>';
     }
     function renderInbox() {
       const items = [];
@@ -2638,7 +2638,7 @@ function directorConsoleHtml() {
         '<div class="compact-list">' +
         '<div class="compact-line"><span>입력</span><span class="pill">' + esc(request.input_refs.length) + '</span></div>' +
         listHtml(request.input_refs.slice(0, 3)) +
-        '<div class="compact-line"><span>필수 증거</span><span class="pill">' + esc(request.evidence_requirements.length) + '</span></div>' +
+        '<div class="compact-line"><span>필수 검증 자료</span><span class="pill">' + esc(request.evidence_requirements.length) + '</span></div>' +
         listHtml(request.evidence_requirements.slice(0, 3)) +
         '</div>' +
         actionsHtml([button("다시 평가", "toolrun-plan", request.path)]) +
@@ -3014,7 +3014,7 @@ function directorConsoleHtml() {
       }
       if (action === "workorder-staff-plan") return log(await post("/api/studio/workorder/staff-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "workorder-staff-run") {
-        if (!confirm("선택한 업무 지시를 담당 AI 직원에게 맡길까요? Codex CLI를 호출하며 결과는 _Temp 증거로 남습니다. 소스/작업/공식 설정/git은 직접 변경하지 않습니다.")) return;
+        if (!confirm("선택한 업무 지시를 담당 AI 직원에게 맡길까요? Codex CLI를 호출하며 결과는 _Temp 검증 자료로 남습니다. 소스/작업/공식 설정/git은 직접 변경하지 않습니다.")) return;
         log(await post("/api/studio/workorder/staff-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
         await refresh();
       }
@@ -3290,7 +3290,7 @@ function buildWorkOrderFromMeetingPayload(meeting = {}) {
     assigned_agents: participants,
     scope: scope.length ? scope : [`Summarize meeting outcome for Human Director review: ${topic}`],
     non_goals: nonGoals,
-    expected_outputs: ["업무 지시 후속 계획", "승인 필요 항목", "증거 참조"],
+    expected_outputs: ["업무 지시 후속 계획", "승인 필요 항목", "검증 자료 참조"],
     approval_items: [{
       type: "scope",
       plain_language_summary: "Approve only the focused follow-up work described by this meeting.",
