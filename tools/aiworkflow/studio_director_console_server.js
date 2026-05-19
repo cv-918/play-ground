@@ -840,9 +840,19 @@ async function getStaffDirectory(repoRoot) {
     const ui = STAFF_UI[agentId] || {};
     const departmentId = agent.department_id || "";
     const departmentUi = DEPARTMENT_UI[departmentId] || {};
-    const authority = agent.role_charter && Array.isArray(agent.role_charter.authority) ? agent.role_charter.authority.slice(0, 3) : [];
-    const approvals = agent.role_charter && Array.isArray(agent.role_charter.approval_required_actions) ? agent.role_charter.approval_required_actions.slice(0, 3) : [];
-    const outputs = agent.output_contracts && Array.isArray(agent.output_contracts.required_outputs) ? agent.output_contracts.required_outputs.slice(0, 3) : [];
+    const role = agent.role_charter || {};
+    const identity = agent.identity || {};
+    const expertise = agent.expertise || {};
+    const memoryPolicy = agent.memory_policy || {};
+    const toolPolicy = agent.tool_policy || {};
+    const outputContracts = agent.output_contracts || {};
+    const meetingBehavior = agent.meeting_behavior || {};
+    const handoffBehavior = agent.handoff_behavior || {};
+    const evidenceResponsibility = agent.evidence_responsibility || {};
+    const qualityCriteria = agent.quality_criteria || {};
+    const authority = Array.isArray(role.authority) ? role.authority.slice(0, 3) : [];
+    const approvals = Array.isArray(role.approval_required_actions) ? role.approval_required_actions.slice(0, 3) : [];
+    const outputs = Array.isArray(outputContracts.required_outputs) ? outputContracts.required_outputs.slice(0, 3) : [];
     return {
       agent_id: agentId,
       display_name: agent.display_name || "",
@@ -859,8 +869,29 @@ async function getStaffDirectory(repoRoot) {
       authority_ko: ui.authority || authority,
       approval_required_actions: approvals,
       approval_required_actions_ko: ui.approvals || approvals,
+      forbidden_actions: Array.isArray(role.forbidden_actions) ? role.forbidden_actions : [],
+      responsibilities: Array.isArray(role.responsibilities) ? role.responsibilities : [],
+      stable_preferences: Array.isArray(identity.stable_preferences) ? identity.stable_preferences : [],
+      collaboration_style: identity.collaboration_style || "",
+      anti_patterns: Array.isArray(expertise.anti_patterns) ? expertise.anti_patterns : [],
+      readable_memory_scopes: Array.isArray(memoryPolicy.readable_memory_scopes) ? memoryPolicy.readable_memory_scopes : [],
+      writable_memory_scopes: Array.isArray(memoryPolicy.writable_memory_scopes) ? memoryPolicy.writable_memory_scopes : [],
+      canon_write_permission: memoryPolicy.canon_write_permission || "none",
+      allowed_tools: Array.isArray(toolPolicy.allowed_tools) ? toolPolicy.allowed_tools : [],
+      blocked_tools: Array.isArray(toolPolicy.blocked_tools) ? toolPolicy.blocked_tools : [],
+      approval_required_tools: Array.isArray(toolPolicy.approval_required_tools) ? toolPolicy.approval_required_tools : [],
       output_contracts: outputs,
       output_contracts_ko: ui.outputs || outputs,
+      optional_outputs: Array.isArray(outputContracts.optional_outputs) ? outputContracts.optional_outputs : [],
+      structured_schemas: Array.isArray(outputContracts.structured_schemas) ? outputContracts.structured_schemas : [],
+      meeting_must_object_when: Array.isArray(meetingBehavior.must_object_when) ? meetingBehavior.must_object_when : [],
+      meeting_must_ask_when: Array.isArray(meetingBehavior.must_ask_when) ? meetingBehavior.must_ask_when : [],
+      handoff_targets: Array.isArray(handoffBehavior.can_handoff_to) ? handoffBehavior.can_handoff_to : [],
+      handoff_requires: Array.isArray(handoffBehavior.handoff_requires) ? handoffBehavior.handoff_requires : [],
+      required_evidence: Array.isArray(evidenceResponsibility.required_evidence) ? evidenceResponsibility.required_evidence : [],
+      cannot_claim_without_evidence: Array.isArray(evidenceResponsibility.cannot_claim_without_evidence) ? evidenceResponsibility.cannot_claim_without_evidence : [],
+      pass_conditions: Array.isArray(qualityCriteria.pass_conditions) ? qualityCriteria.pass_conditions : [],
+      failure_patterns: Array.isArray(qualityCriteria.failure_patterns) ? qualityCriteria.failure_patterns : [],
       path: toRepoRelative(repoRoot, staffPath),
       href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, staffPath))}`,
     };
@@ -3053,7 +3084,16 @@ function directorConsoleHtml() {
         '<div class="staff-detail"><strong>할 수 있는 일</strong>' + listHtml(agent.authority_ko, "(없음)") + '</div>' +
         '<div class="staff-detail"><strong>담당 산출물</strong>' + listHtml(agent.output_contracts_ko, "(없음)") + '</div>' +
         '<div class="staff-detail"><strong>승인이 필요한 일</strong>' + listHtml(agent.approval_required_actions_ko, "(없음)") + '</div>' +
-        '<div class="row"><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">회의 보기</button></div>' +
+        '<details class="internal-links"><summary>직원 운영 기준</summary>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>기억 권한</span><span class="pill">' + esc(agent.canon_write_permission || "none") + '</span></div>' +
+        listHtml([...(agent.readable_memory_scopes || []).map((item) => "읽기: " + item), ...(agent.writable_memory_scopes || []).map((item) => "쓰기: " + item)]) +
+        '<div class="compact-line"><span>차단 도구</span><span class="pill">' + esc(asArray(agent.blocked_tools).length) + '</span></div>' +
+        listHtml(agent.blocked_tools, "(없음)") +
+        '<div class="compact-line"><span>근거 없이 주장 금지</span><span class="pill">' + esc(asArray(agent.cannot_claim_without_evidence).length) + '</span></div>' +
+        listHtml(agent.cannot_claim_without_evidence, "(없음)") +
+        '</div></details>' +
+        '<div class="row"><button class="secondary" data-action="staff-operating-plan" data-path="' + esc(agent.agent_id) + '">운영 점검</button><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">회의 보기</button></div>' +
         internalLinksHtml([link("직원 registry 원본", agent.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 AI 직원이 없습니다.");
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
@@ -3501,6 +3541,7 @@ function directorConsoleHtml() {
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
+      if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -3794,6 +3835,111 @@ function buildDirectorGoalPlanPayload(body = {}) {
     },
     created_at: studioTimestampParts().iso,
     updated_at: studioTimestampParts().iso,
+  };
+}
+
+async function buildStaffOperatingPlan(repoRoot, agentId) {
+  const directory = await getStaffDirectory(repoRoot);
+  const agent = directory.staff.find((item) => item.agent_id === agentId);
+  if (!agent) {
+    throw new Error(`Unknown staff agent: ${agentId}`);
+  }
+  const outputStates = [
+    {
+      state: "draft",
+      meaning: "직원이 만든 초안입니다. 아직 제안, 결정, 공식 설정, 업무 지시가 아닙니다.",
+      director_action: "읽고 버리거나, 기록 후보로 넘길지 결정합니다.",
+    },
+    {
+      state: "proposal",
+      meaning: "채택 여부를 판단할 아이디어입니다. 승인 전에는 canon이나 구현 범위가 아닙니다.",
+      director_action: "채택, 수정 요청, 반려, 공식 설정 후보 중 하나로 판단합니다.",
+    },
+    {
+      state: "approval_candidate",
+      meaning: "사람 승인이 있어야 다음 단계로 넘어갈 수 있는 항목입니다.",
+      director_action: "무엇이 바뀌는지 확인하고 승인하거나 수정 요청합니다.",
+    },
+    {
+      state: "accepted",
+      meaning: "Human Director가 받아들인 기록입니다. 그래도 실행, 완료, 커밋은 별도 gate입니다.",
+      director_action: "필요하면 Memory, WorkOrder, AIWorkflow task로 넘깁니다.",
+    },
+    {
+      state: "rejected",
+      meaning: "채택하지 않기로 한 기록입니다. 이후 직원이 같은 방향을 반복하지 않도록 근거로 남깁니다.",
+      director_action: "반려 이유가 충분한지 확인합니다.",
+    },
+  ];
+  return {
+    staff_operating_plan_id: makeStudioId("SOP", agent.agent_id),
+    agent_id: agent.agent_id,
+    display_name: agent.display_name_ko || agent.display_name || agent.agent_id,
+    department_id: agent.department_id,
+    department_name: agent.department_name_ko,
+    role_title: agent.role_title_ko || agent.role_title,
+    current_meaning: `${agent.display_name_ko || agent.agent_id}는 ${agent.department_name_ko || agent.department_id} 소속의 ${agent.role_title_ko || agent.role_title}입니다. 이 직원은 자기 역할 안에서 제안하고 반박할 수 있지만, 승인/공식 설정/실행/커밋 권한은 갖지 않습니다.`,
+    identity: {
+      mission: agent.mission_ko || agent.mission,
+      stable_preferences: agent.stable_preferences,
+      collaboration_style: agent.collaboration_style,
+      anti_patterns: agent.anti_patterns,
+    },
+    authority_boundary: {
+      can_do: agent.authority_ko || agent.authority,
+      must_request_approval_for: agent.approval_required_actions_ko || agent.approval_required_actions,
+      must_not_do: agent.forbidden_actions,
+    },
+    memory_boundary: {
+      readable_scopes: agent.readable_memory_scopes,
+      writable_scopes: agent.writable_memory_scopes,
+      canon_write_permission: agent.canon_write_permission,
+      plain_language_rule: agent.canon_write_permission === "none"
+        ? "이 직원은 canon을 직접 쓰지 않습니다."
+        : agent.canon_write_permission === "propose_only"
+          ? "이 직원은 canon 후보를 제안할 수 있지만 확정은 Human Director 결정이 필요합니다."
+          : "canon 기록에는 명시 승인 gate가 필요합니다.",
+    },
+    tool_boundary: {
+      allowed_tools: agent.allowed_tools,
+      approval_required_tools: agent.approval_required_tools,
+      blocked_tools: agent.blocked_tools,
+    },
+    output_contract: {
+      required_outputs: agent.output_contracts_ko || agent.output_contracts,
+      optional_outputs: agent.optional_outputs,
+      structured_schemas: agent.structured_schemas,
+      output_states: outputStates,
+    },
+    meeting_behavior: {
+      should_object_when: agent.meeting_must_object_when,
+      should_ask_when: agent.meeting_must_ask_when,
+    },
+    handoff_behavior: {
+      can_handoff_to: agent.handoff_targets,
+      handoff_requires: agent.handoff_requires,
+    },
+    evidence_and_quality: {
+      required_evidence: agent.required_evidence,
+      cannot_claim_without_evidence: agent.cannot_claim_without_evidence,
+      pass_conditions: agent.pass_conditions,
+      failure_patterns: agent.failure_patterns,
+    },
+    director_checklist: [
+      "이 직원에게 맡길 업무가 역할/부서 책임 안에 있는지 확인합니다.",
+      "승인 없이 하면 안 되는 항목이 업무 범위에 숨어 있는지 확인합니다.",
+      "산출물이 draft, proposal, approval_candidate, accepted 중 어느 상태인지 분리합니다.",
+      "근거 없이 완료나 품질을 주장하지 않았는지 확인합니다.",
+    ],
+    safety: {
+      read_only: true,
+      staff_run_started: false,
+      memory_written: false,
+      canon_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
   };
 }
 
@@ -4241,6 +4387,7 @@ async function buildAutomationReadinessPlan(repoRoot) {
 async function buildStudioSmokeReport(repoRoot) {
   const summary = await getSummary(repoRoot);
   const expectedSchemas = [
+    "StaffOperatingPlan.schema.json",
     "DirectorGoalPlan.schema.json",
     "MeetingFacilitationPlan.schema.json",
     "KnowledgeTransitionPlan.schema.json",
@@ -5101,6 +5248,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       studio_smoke_report: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/staff/operating-plan") {
+    const body = await readRequestJson(req);
+    const agentId = String(body.agent_id || "").trim();
+    const payload = await buildStaffOperatingPlan(repoRoot, agentId);
+    return sendJson(res, 200, {
+      ok: true,
+      staff_operating_plan: payload,
       safety: payload.safety,
     });
   }

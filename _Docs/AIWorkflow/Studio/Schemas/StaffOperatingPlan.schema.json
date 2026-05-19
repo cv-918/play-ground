@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StaffOperatingPlan.schema.json",
+  "title": "StaffOperatingPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "staff_operating_plan_id",
+    "agent_id",
+    "display_name",
+    "department_id",
+    "role_title",
+    "current_meaning",
+    "authority_boundary",
+    "memory_boundary",
+    "tool_boundary",
+    "output_contract",
+    "director_checklist",
+    "safety"
+  ],
+  "properties": {
+    "staff_operating_plan_id": { "type": "string" },
+    "agent_id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "department_id": { "type": "string" },
+    "department_name": { "type": "string" },
+    "role_title": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "identity": { "type": "object" },
+    "authority_boundary": {
+      "type": "object",
+      "required": ["can_do", "must_request_approval_for", "must_not_do"],
+      "properties": {
+        "can_do": { "type": "array", "items": { "type": "string" } },
+        "must_request_approval_for": { "type": "array", "items": { "type": "string" } },
+        "must_not_do": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "memory_boundary": {
+      "type": "object",
+      "required": ["readable_scopes", "writable_scopes", "canon_write_permission", "plain_language_rule"],
+      "properties": {
+        "readable_scopes": { "type": "array", "items": { "type": "string" } },
+        "writable_scopes": { "type": "array", "items": { "type": "string" } },
+        "canon_write_permission": { "type": "string" },
+        "plain_language_rule": { "type": "string" }
+      }
+    },
+    "tool_boundary": { "type": "object" },
+    "output_contract": { "type": "object" },
+    "meeting_behavior": { "type": "object" },
+    "handoff_behavior": { "type": "object" },
+    "evidence_and_quality": { "type": "object" },
+    "director_checklist": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": ["read_only", "staff_run_started", "memory_written", "canon_changed", "task_state_changed", "commit_or_push"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "staff_run_started": { "type": "boolean" },
+        "memory_written": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}

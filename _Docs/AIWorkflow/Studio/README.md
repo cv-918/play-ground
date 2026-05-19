@@ -20,6 +20,7 @@ User-facing Korean UI and guide text should label `Evidence` as
 This slice defines:
 
 - DirectorGoalPlan schema
+- StaffOperatingPlan schema
 - StaffAgent schema
 - Department schema
 - WorkOrder schema
@@ -50,6 +51,12 @@ This slice defines:
   Proposal candidates, approval items, non-goals, and next steps without
   executing implementation, canonizing memory, modifying source files, or
   committing/pushing
+- Deterministic StaffOperatingPlan for each persistent AI staff agent. It
+  explains the agent's mission, authority, approval boundaries, memory/canon
+  permission, allowed/blocked tools, output states, meeting behavior,
+  handoff requirements, evidence responsibility, and quality criteria without
+  starting a RoleRun, writing memory, changing canon, changing task state, or
+  committing/pushing.
 - WorkOrder to Task bridge rules
 - Runtime contracts for staff agents, meetings, memory, tools, and evidence
   / 검증 자료

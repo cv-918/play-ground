@@ -166,6 +166,29 @@ It is read-only and exists to help validate the UI after feature changes. It
 must not create tasks, execute staff, modify source files, finalize completion,
 commit, or push.
 
+## Staff Operating Plan Contract
+
+A persistent AI staff agent must be reviewable before it is trusted with work.
+
+A StaffOperatingPlan explains:
+
+- who the staff agent is
+- which department and role it belongs to
+- what it may do inside its role
+- what requires Human Director approval
+- what it must never do
+- which memory scopes it may read or write
+- whether it may propose or write canon
+- which tools are allowed, blocked, or approval-gated
+- which output states it can produce
+- how it should behave in meetings and handoffs
+- which evidence and quality criteria its work must satisfy
+
+Reading a StaffOperatingPlan is read-only. It must not start a staff run,
+write memory, canonize decisions, change task state, commit, or push. It exists
+so the Human Director can understand the staff member as an accountable worker
+rather than a role-playing prompt.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.
