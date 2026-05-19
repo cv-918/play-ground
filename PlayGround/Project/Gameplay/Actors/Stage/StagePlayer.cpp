@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 #include "StagePlayer.h"
 
+#include "Animation/SpriteAnimationBuilder.h"
 #include "Animation/SpriteAnimationTypes.h"
 #include "Components/PlayerMovement.h"
 #include "Common/HitReaction.h"
@@ -15,12 +16,59 @@ namespace
 	{
 		return MakeHitReactionProfile(0.35f, 36.f, 0.10f, KnockbackCurve::OutCubic, 1.0f);
 	}
+
+	const SpriteResource* TryLoadPlayableAnimationSprite(
+		const PlayableCharacterJsonInfo* _info,
+		std::wstring& _out_path)
+	{
+		_out_path.clear();
+
+		if (_info == nullptr || _info->animation_clips_.empty())
+			return nullptr;
+
+		for (const auto& clip_info : _info->animation_clips_)
+		{
+			if (clip_info.directory_.empty() || clip_info.prefix_.empty())
+				continue;
+
+			const auto frame_path = SpriteAnimationBuilder::BuildSequenceFramePath(
+				_UtilFunc::ToWString(clip_info.directory_),
+				_UtilFunc::ToWString(clip_info.prefix_),
+				clip_info.start_index_);
+
+			const auto* sprite = _GraphicSourceMgr.GetSprite(
+				frame_path,
+				SpritePivotMode::BottomCenter,
+				8);
+			if (sprite == nullptr || sprite->image == nullptr)
+				continue;
+
+			_out_path = frame_path;
+			return sprite;
+		}
+
+		return nullptr;
+	}
 }
 
 StagePlayer::StagePlayer(const PlayableCharacterJsonInfo* _info)
 	: info_(_info)
 {
-	if (!info_->image_path_.empty())
+	std::wstring animation_frame_path;
+	player_sprite_ = TryLoadPlayableAnimationSprite(info_, animation_frame_path);
+	if (player_sprite_ != nullptr && player_sprite_->image != nullptr)
+	{
+		return;
+	}
+
+	if (info_ != nullptr && !info_->animation_clips_.empty())
+	{
+		_SYSTEM_LOG_WARN(
+			L"Player animation_clips_ has no loadable first frame. Trying legacy image_path_. (Name : %s)",
+			_UtilFunc::ToWString(info_->name_).c_str());
+	}
+
+	if (info_ != nullptr && !info_->image_path_.empty())
 	{
 		const auto image_path = _UtilFunc::ToWString(info_->image_path_);
 		player_sprite_ = _GraphicSourceMgr.GetSprite(
@@ -29,15 +77,16 @@ StagePlayer::StagePlayer(const PlayableCharacterJsonInfo* _info)
 			8);
 		if (!player_sprite_ || !player_sprite_->image)
 		{
-			_NULL_DETECTION_MSGBOX_EX(
-				_T("Failed to load player image!(Path : %s)"),
+			_SYSTEM_LOG_WARN(
+				L"Legacy player image path is not loadable. Player will be rendered as a simple shape. (Path : %s)",
 				image_path.c_str());
 			return;
 		}
 	}
 	else
 	{
-		_SYSTEM_LOG_WARN(L"Player image path is empty. Player will be rendered as a simple shape. (Name : %s)", _UtilFunc::ToWString(info_->name_).c_str());
+		const auto name = (info_ != nullptr) ? _UtilFunc::ToWString(info_->name_) : L"(null)";
+		_SYSTEM_LOG_WARN(L"Player animation_clips_ and legacy image_path_ are empty. Player will be rendered as a simple shape. (Name : %s)", name.c_str());
 	}
 }
 

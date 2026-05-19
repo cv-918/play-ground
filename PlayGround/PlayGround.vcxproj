@@ -403,6 +403,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UIManager.h" />
     <ClInclude Include="Project\Gameplay\Scenes\InGameScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\IntroScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\CharacterStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\ParticleStationScene.h" />
@@ -526,6 +527,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\VideoSettingsManager.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\IntroScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\CharacterStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\ParticleStationScene.cpp" />

@@ -59,6 +59,16 @@ _bool IntroScene::Initialize()
 	};
 
 	debug_particle_station_button_ = ui_manager_->CreateUI<Button>(particle_station_button_info);
+
+	Button::CreateInfo character_station_button_info;
+	character_station_button_info.rect = _Rect{ _Point{ 24, 74 }, _Size{ 220, 42 } };
+	character_station_button_info.text = L"CharacterStation";
+	character_station_button_info.on_lclick = [this]()
+	{
+		_SceneMgr.ChangeScene(SceneType::CharacterStation);
+	};
+
+	debug_character_station_button_ = ui_manager_->CreateUI<Button>(character_station_button_info);
 #endif // SHIPPING
 
 	MAKE_INITIALIZED;

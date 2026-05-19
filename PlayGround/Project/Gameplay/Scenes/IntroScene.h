@@ -44,6 +44,6 @@ private:
 
 #ifndef SHIPPING
 	class Button* debug_particle_station_button_ = nullptr;
+	class Button* debug_character_station_button_ = nullptr;
 #endif // SHIPPING
 };
-

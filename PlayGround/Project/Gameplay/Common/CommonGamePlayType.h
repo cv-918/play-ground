@@ -27,6 +27,7 @@ enum class SceneType
 	OutGame,
 	InGame,
 	ParticleStation,
+	CharacterStation,
 	Count,
 };
 

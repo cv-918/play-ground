@@ -76,6 +76,7 @@
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\InGameScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\CharacterStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\ParticleStationScene.h" />
     <ClInclude Include="Project\Gameplay\UI\UIBase.h" />
     <ClInclude Include="Project\Gameplay\UI\Elements\Button.h" />
@@ -242,6 +243,7 @@
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\InGameScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\CharacterStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\ParticleStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\UI\UIBase.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Elements\Button.cpp" />

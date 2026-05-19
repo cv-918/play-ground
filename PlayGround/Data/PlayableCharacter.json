@@ -6,7 +6,7 @@
 		"attack_speed_": 2.75,
 		"hp_": 10.0,
 		"contact_damage_": 6.0,
-		"image_path_": "Data/Resources/Textures/Characters/Dust.png",
+		"image_path_": "",
 		"attack_range_": 80.0,
 		"collector_size_": 60.0,
 		"move_speed_max_": 300.0,
@@ -21,7 +21,7 @@
 			{
 				"clip_name_": "idle",
 				"directory_": "Data/Resources/Textures/Characters/Dusty/Dust_Idle/",
-				"prefix_": "Idle_",
+				"prefix_": "Dust_Idle_",
 				"start_index_": 1,
 				"end_index_": 16,
 				"fps_": 8.0,
@@ -30,7 +30,7 @@
 			{
 				"clip_name_": "move",
 				"directory_": "Data/Resources/Textures/Characters/Dusty/Dust_Move/",
-				"prefix_": "Move",
+				"prefix_": "Dust_move_",
 				"start_index_": 1,
 				"end_index_": 8,
 				"fps_": 8.0,
