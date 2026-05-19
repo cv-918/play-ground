@@ -317,6 +317,13 @@
             <code>Home</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 페이지는 각 부서/직원/회의/산출물/정책을 조작하는 작업 공간입니다.
             <code>원본 설정(JSON) 보기</code>는 일반 진행 버튼이 아니라 registry 원본을 확인하는 관리자/디버그용 링크입니다.
           </div>
+          <div class="note">
+            <strong>Studio Home의 AIWorkflow Core:</strong>
+            Discord를 쓰지 않는 흐름에서는 Studio Console의 <code>Home</code>이 기본 상황판입니다.
+            <code>AIWorkflow Core</code>는 현재 ActiveTask, 최근 Runner 중단 이유, 완료 검토 상태, Backlog 요약을 보여줍니다.
+            <code>Git / Evidence</code>는 현재 branch, 변경 파일 수, 검증 판정, 완료 보고서/완료 카드 링크를 보여줍니다.
+            즉, “지금 뭘 판단해야 하는지”는 먼저 Home의 AIWorkflow Core에서 확인합니다.
+          </div>
           <pre><code>1. /ai intake text:&lt;작업 요청&gt;
 2. 승인 필요 시에만 승인
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고

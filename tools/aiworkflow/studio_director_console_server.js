@@ -77,6 +77,8 @@ function safeResolveReadable(repoRoot, relativePath) {
 
   const resolved = path.resolve(repoRoot, clean);
   const allowedRoots = [
+    repoPath(repoRoot, "_Docs/AIWorkflow"),
+    repoPath(repoRoot, "_Temp/AIWorkflowRuntime"),
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio"),
     repoPath(repoRoot, "_Temp/AIWorkflowStudio"),
   ];
@@ -94,6 +96,14 @@ async function readJsonIfExists(filePath) {
     return JSON.parse(text);
   } catch {
     return null;
+  }
+}
+
+async function readTextIfExists(filePath) {
+  try {
+    return await fsp.readFile(filePath, "utf8");
+  } catch {
+    return "";
   }
 }
 
@@ -636,6 +646,260 @@ async function getHandoffCandidates(repoRoot) {
   return items.sort((a, b) => a.handoff_id.localeCompare(b.handoff_id));
 }
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getScalar(text, key, defaultValue = "") {
+  const match = String(text || "").match(new RegExp(`^${escapeRegex(key)}\\s*:\\s*(.*)$`, "mi"));
+  return match ? match[1].trim() : defaultValue;
+}
+
+function parseBacklogRows(text) {
+  const rows = [];
+  for (const line of String(text || "").split(/\r?\n/u)) {
+    if (!line.startsWith("|")) continue;
+    if (/^\|\s*-+\s*\|/u.test(line)) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 8) continue;
+    const [id, priority, status, kind, item, reason, toolRoute, validation] = cells;
+    if (!/^(WF|GAME|VAL|DOC|UNITY)-/u.test(id)) continue;
+    rows.push({
+      id,
+      priority,
+      status,
+      kind,
+      item: item.replace(/`/g, ""),
+      reason: reason.replace(/`/g, ""),
+      tool_route: toolRoute.replace(/`/g, ""),
+      validation: validation.replace(/`/g, ""),
+    });
+  }
+  return rows;
+}
+
+function normalizeWorkflowTask(row, fallback = {}) {
+  if (!row && !fallback.task_id) return null;
+  return {
+    task_id: row ? row.id : fallback.task_id || "",
+    title: row ? row.item : fallback.title || "",
+    status: row ? row.status : fallback.status || "",
+    priority: row ? row.priority : fallback.priority || "",
+    kind: row ? row.kind : fallback.kind || "",
+    risk: fallback.risk || "",
+    reason: row ? row.reason : fallback.reason || "",
+    validation: row ? row.validation : fallback.validation || "",
+    workflow_path: fallback.workflow_path || "",
+  };
+}
+
+function runGit(repoRoot, args, timeoutMs = 10000) {
+  return new Promise((resolve) => {
+    const child = spawn("git", args, {
+      cwd: repoRoot,
+      windowsHide: true,
+      shell: false,
+    });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      stderr += `\nProcess timed out after ${timeoutMs} ms.`;
+      child.kill();
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
+    child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      resolve({ ok: false, stdout, stderr: `${stderr}\n${error.message}`.trim() });
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve({ ok: code === 0, stdout: stdout.trim(), stderr: stderr.trim() });
+    });
+  });
+}
+
+async function getLatestJsonInDirectory(dir) {
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+
+  const files = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+    if (entry.name.toLowerCase().includes("manifest")) continue;
+    const full = path.join(dir, entry.name);
+    const stat = await fsp.stat(full);
+    files.push({ full, stat });
+  }
+  files.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
+  return files.length ? files[0] : null;
+}
+
+async function getLatestWorkflowArtifact(repoRoot, taskId, relativeDir) {
+  if (!taskId) return null;
+  const dir = repoPath(repoRoot, `_Temp/AIWorkflowRuntime/tasks/${taskId}/${relativeDir}`);
+  const latest = await getLatestJsonInDirectory(dir);
+  if (!latest) return null;
+  const json = await readJsonIfExists(latest.full);
+  return {
+    path: toRepoRelative(repoRoot, latest.full),
+    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, latest.full))}`,
+    updated_at: latest.stat.mtime.toISOString(),
+    json,
+  };
+}
+
+function explainNextWorkflowAction(core) {
+  const active = core.active_task || {};
+  const runner = core.runner || {};
+  const completion = core.completion || {};
+  const git = core.git || {};
+  const status = active.status || "";
+  const stopReason = runner.stop_reason || runner.current_step || "";
+  const completionState = completion.state || "";
+
+  if (!active.task_id) {
+    return {
+      label: "작업 선택 필요",
+      detail: "현재 ActiveTask가 없습니다. Work Orders나 Backlog에서 다음 작업을 골라야 합니다.",
+    };
+  }
+  if (stopReason === "completion_review_required" || completionState === "needs_human_decision") {
+    return {
+      label: "완료 검토 필요",
+      detail: "완료 카드와 검증 결과를 보고 완료 승인, 수정 요청, 우려 감수 중 하나를 결정해야 합니다.",
+    };
+  }
+  if (stopReason === "done_or_commit_decision") {
+    return {
+      label: "마무리 결정 필요",
+      detail: "작업 완료 처리와 커밋/푸시 여부를 결정하는 지점입니다.",
+    };
+  }
+  if (status === "ready_for_implementation" || status === "awaiting_approval") {
+    return {
+      label: "착수 승인 판단",
+      detail: "승인 범위와 제외 범위를 확인한 뒤 실행할지 정해야 합니다.",
+    };
+  }
+  if (status === "in_progress" || runner.status === "running") {
+    return {
+      label: "실행 감시",
+      detail: "Runner가 진행 중입니다. 진행 로그와 heartbeat를 확인하면 됩니다.",
+    };
+  }
+  if (git.dirty) {
+    return {
+      label: "Git 검토 필요",
+      detail: "변경 파일을 확인하고 작업 단위에 맞게 커밋할지 결정해야 합니다.",
+    };
+  }
+  return {
+    label: "대기",
+    detail: "현재 즉시 처리해야 할 Workflow Core gate는 보이지 않습니다.",
+  };
+}
+
+async function getWorkflowCore(repoRoot) {
+  const activeText = await readTextIfExists(repoPath(repoRoot, "_Docs/AIWorkflow/ActiveTask.md"));
+  const backlogText = await readTextIfExists(repoPath(repoRoot, "_Docs/AIWorkflow/Backlog.md"));
+  const projectStatusText = await readTextIfExists(repoPath(repoRoot, "_Docs/AIWorkflow/ProjectStatus.md"));
+  const rows = parseBacklogRows(backlogText);
+  const activeFromFile = {
+    task_id: getScalar(activeText, "task_id"),
+    title: getScalar(activeText, "title"),
+    status: getScalar(activeText, "status"),
+    priority: getScalar(activeText, "priority"),
+    risk: getScalar(activeText, "risk"),
+    kind: getScalar(activeText, "kind"),
+    workflow_path: getScalar(activeText, "workflow_path"),
+  };
+  const activeRow = rows.find((row) => row.id === activeFromFile.task_id);
+  const activeTask = normalizeWorkflowTask(activeRow, activeFromFile);
+  if (activeTask && activeFromFile.status) activeTask.status = activeFromFile.status;
+  if (activeTask && activeFromFile.title) activeTask.title = activeFromFile.title;
+  if (activeTask && activeFromFile.risk) activeTask.risk = activeFromFile.risk;
+
+  const openRows = rows.filter((row) => !["done", "deferred"].includes(row.status));
+  const blockedRows = rows.filter((row) => row.status === "blocked");
+  const priorityRank = { P0: 0, P1: 1, P2: 2, P3: 3 };
+  const topBacklog = openRows
+    .filter((row) => row.id !== activeFromFile.task_id)
+    .sort((a, b) => (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9))
+    .slice(0, 5);
+
+  const taskRunState = activeTask ? await readJsonIfExists(repoPath(repoRoot, `_Temp/AIWorkflowRuntime/tasks/${activeTask.task_id}/task_run_state.json`)) : null;
+  const runnerArtifact = activeTask ? await getLatestWorkflowArtifact(repoRoot, activeTask.task_id, "runner/runs") : null;
+  const verificationArtifact = activeTask ? await getLatestWorkflowArtifact(repoRoot, activeTask.task_id, "evidence/reports/verification/results") : null;
+  const completionArtifact = activeTask ? await getLatestWorkflowArtifact(repoRoot, activeTask.task_id, "evidence/reports/completion/reports") : null;
+  const completionCardArtifact = activeTask ? await getLatestWorkflowArtifact(repoRoot, activeTask.task_id, "evidence/reports/completion/cards") : null;
+
+  const branch = await runGit(repoRoot, ["branch", "--show-current"]);
+  const status = await runGit(repoRoot, ["status", "--short"]);
+  const diffStat = await runGit(repoRoot, ["diff", "--stat"]);
+  const changedFiles = status.stdout ? status.stdout.split(/\r?\n/u).filter(Boolean).map((line) => line.trim()) : [];
+
+  const runnerJson = runnerArtifact ? runnerArtifact.json || {} : {};
+  const completionJson = completionArtifact ? completionArtifact.json || {} : {};
+  const verificationJson = verificationArtifact ? verificationArtifact.json || {} : {};
+  const rawVerificationVerdict = verificationJson.verdict || verificationJson.verification_summary?.verdict || taskRunState?.verification_report?.latest_verdict || "";
+  const verificationVerdict = typeof rawVerificationVerdict === "object"
+    ? rawVerificationVerdict.level || rawVerificationVerdict.summary || ""
+    : rawVerificationVerdict;
+  const core = {
+    active_task: activeTask,
+    project_status: {
+      phase: getScalar(projectStatusText, "phase"),
+      current_goal: getScalar(projectStatusText, "current_goal"),
+      current_focus: getScalar(projectStatusText, "current_focus"),
+    },
+    backlog: {
+      open_count: openRows.length,
+      blocked_count: blockedRows.length,
+      top_items: topBacklog,
+    },
+    runner: {
+      status: runnerJson.status || taskRunState?.status || "",
+      runner_run_id: runnerJson.runner_run_id || "",
+      current_phase: runnerJson.current_phase || "",
+      current_step: runnerJson.current_step || "",
+      stop_reason: runnerJson.human_gate_state?.stop_reason || "",
+      updated_at: runnerJson.updated_at || taskRunState?.updated_at || "",
+      href: runnerArtifact ? runnerArtifact.href : "",
+      path: runnerArtifact ? runnerArtifact.path : "",
+    },
+    verification: {
+      verdict: verificationVerdict,
+      warning_count: verificationJson.warning_count ?? verificationJson.summary?.warning_count ?? completionJson.verification_summary?.warning_count ?? null,
+      concern_count: verificationJson.concern_count ?? verificationJson.summary?.concern_count ?? completionJson.verification_summary?.concern_count ?? null,
+      href: verificationArtifact ? verificationArtifact.href : "",
+      path: verificationArtifact ? verificationArtifact.path : "",
+    },
+    completion: {
+      state: completionJson.completion_state || taskRunState?.completion_report?.completion_state || "",
+      readiness: completionJson.completion_readiness?.level || taskRunState?.completion_report?.readiness_level || "",
+      summary: completionJson.completion_readiness?.summary || "",
+      href: completionArtifact ? completionArtifact.href : "",
+      path: completionArtifact ? completionArtifact.path : "",
+      card_href: completionCardArtifact ? completionCardArtifact.href : "",
+      card_path: completionCardArtifact ? completionCardArtifact.path : "",
+    },
+    git: {
+      branch: branch.stdout || "(unknown)",
+      dirty: changedFiles.length > 0,
+      changed_count: changedFiles.length,
+      changed_files: changedFiles.slice(0, 12),
+      diff_stat: diffStat.stdout || "",
+    },
+  };
+  core.next_action = explainNextWorkflowAction(core);
+  return core;
+}
+
 async function getSummary(repoRoot) {
   const studioRoot = repoPath(repoRoot, "_Docs/AIWorkflow/Studio");
   const registry = (await readJsonIfExists(path.join(studioRoot, "Registries", "staff_agents.initial.json"))) || {};
@@ -653,6 +917,7 @@ async function getSummary(repoRoot) {
   const toolAdapters = await getToolAdapters(repoRoot);
   const conditionalAutomation = await getConditionalAutomation(repoRoot);
   const staffDirectory = await getStaffDirectory(repoRoot);
+  const workflowCore = await getWorkflowCore(repoRoot);
 
   const stores = {
     work_orders: await countJsonFiles(path.join(studioRoot, "WorkOrders")),
@@ -683,6 +948,7 @@ async function getSummary(repoRoot) {
       ...stores,
     },
     handoffs,
+    workflow_core: workflowCore,
     recent_staff_runs: staffRuns.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
@@ -955,6 +1221,16 @@ function directorConsoleHtml() {
               </div>
             </div>
           </div>
+          <section class="grid">
+            <div class="card">
+              <div class="section-title"><h2>AIWorkflow Core</h2><span id="coreNextAction" class="pill"></span></div>
+              <div id="homeWorkflowCore" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Git / Evidence</h2><button class="secondary" data-nav-jump="evidence">Evidence 보기</button></div>
+              <div id="homeWorkflowEvidence" class="compact-list"></div>
+            </div>
+          </section>
           <section id="metrics" class="grid"></section>
           <section class="grid">
             <div class="card">
@@ -1184,6 +1460,47 @@ function directorConsoleHtml() {
       setNavCount("evidence", state.review_packets.length);
     }
     function renderHomePanels() {
+      const core = state.workflow_core || {};
+      const activeTask = core.active_task || {};
+      const runner = core.runner || {};
+      const verification = core.verification || {};
+      const completion = core.completion || {};
+      const git = core.git || {};
+      const nextAction = core.next_action || {};
+      el("coreNextAction").textContent = nextAction.label || "대기";
+      const activeTaskHtml = activeTask.task_id
+        ? '<div class="item warn"><h3><code>' + esc(activeTask.task_id) + '</code> · ' + esc(activeTask.priority || "") + ' · ' + esc(activeTask.status || "") + '</h3>' +
+          '<p class="summary">' + esc(activeTask.title || "(title 없음)") + '</p>' +
+          '<p class="small muted">kind ' + esc(activeTask.kind || "-") + ' · risk ' + esc(activeTask.risk || "-") + '</p></div>'
+        : '<div class="item warn"><h3>ActiveTask 없음</h3><p class="summary">다음에 처리할 작업을 Work Orders나 Backlog에서 선택해야 합니다.</p></div>';
+      const runnerHtml = runner.runner_run_id
+        ? '<div class="item"><h3>최근 Runner</h3><p><code>' + esc(runner.runner_run_id) + '</code></p>' +
+          '<p class="summary">' + esc((runner.stop_reason || runner.current_step || runner.status || "상태 없음")) + '</p>' +
+          '<div class="row">' + (runner.href ? '<a href="' + esc(runner.href) + '" target="_blank">Runner 기록</a>' : '') + '</div></div>'
+        : '<div class="item"><h3>Runner 기록 없음</h3><p class="summary">현재 ActiveTask 기준 실행 기록을 찾지 못했습니다.</p></div>';
+      el("homeWorkflowCore").innerHTML =
+        '<div class="item good"><h3>지금 할 일</h3><p class="summary">' + esc(nextAction.detail || "즉시 처리할 gate가 보이지 않습니다.") + '</p></div>' +
+        activeTaskHtml +
+        runnerHtml;
+      const evidenceLines = [
+        ["branch", git.branch || "(unknown)"],
+        ["변경 파일", (git.changed_count || 0) + "개"],
+        ["검증", verification.verdict || "(없음)"],
+        ["완료 상태", completion.state || completion.readiness || "(없음)"],
+      ];
+      const evidenceLinks = [
+        verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '',
+        completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '',
+        completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '',
+      ].filter(Boolean).join("");
+      el("homeWorkflowEvidence").innerHTML =
+        evidenceLines.map(([label, value]) =>
+          '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
+        ).join("") +
+        (git.changed_files && git.changed_files.length
+          ? '<div class="item warn"><h3>변경 파일 미리보기</h3><p class="summary">' + esc(git.changed_files.slice(0, 6).join(", ")) + (git.changed_files.length > 6 ? ' 외 ' + esc(git.changed_files.length - 6) + '개' : '') + '</p></div>'
+          : '<div class="item good"><h3>Git 변경 없음</h3><p class="summary">현재 Git 작업대가 깨끗합니다.</p></div>') +
+        (evidenceLinks ? '<div class="row">' + evidenceLinks + '</div>' : '');
       const queue = [
         ...state.materializations.slice(0, 3).map((item) => ({ label:"Draft 결정", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
         ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 산출물", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),

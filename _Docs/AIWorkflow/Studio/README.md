@@ -60,7 +60,7 @@ This slice defines:
 - Local-only Studio Director Console server with a sidebar-based Home,
   Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, Systems,
   Policy, and Evidence workspace. Home is the Director situation board for
-  recent work and staff status; the other pages expose dashboard refresh,
+  recent work, staff status, and AIWorkflow Core state; the other pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, Department/StaffAgent directory cards,
@@ -185,6 +185,12 @@ handoff execution path still routes through the existing read-only staff
 pipeline. These tools do not set ActiveTask, approve task execution, start PC
 Runner, modify source files, commit, or push. Conditional automation test-write
 writes only `_Temp` evaluation artifacts when `--execute` is passed.
+The Home page also reads the AIWorkflow Core state directly from ActiveTask,
+Backlog, PC Runner runtime artifacts, verification/completion reports, and Git
+status. This makes Studio Console the default workbench even when Discord is
+not used as the normal UI. The Core panel is read-only: it explains the current
+task, latest runner gate, evidence links, and Git state without approving,
+executing, finalizing, committing, or pushing.
 
 ## Directory Map
 
