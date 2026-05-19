@@ -1962,7 +1962,7 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="timeline">
-          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 기록 후보를 시간순으로 훑어봅니다.</p></div></div>
+          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 기록 후보를 시간순으로 훑어봅니다.</p></div><button class="secondary" data-action="traceability-map">추적 지도</button></div>
           <div class="card">
             <h2>이 화면에서 할 수 있는 일</h2>
             <ul class="small">
@@ -3547,6 +3547,7 @@ function directorConsoleHtml() {
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
       if (action === "approval-impact-plan") return log(await post("/api/studio/approval/impact-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
+      if (action === "traceability-map") return log(await post("/api/studio/traceability/map", {}));
       if (action === "studio-surface-map") return log(await post("/api/studio/ui/surface-map", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
@@ -4750,6 +4751,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "ApprovalImpactPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
     "DirectorSurfaceMap.schema.json",
+    "TraceabilityMap.schema.json",
   ];
   const schemaResults = [];
   for (const schema of expectedSchemas) {
@@ -4858,6 +4860,53 @@ function buildDirectorSurfaceMap() {
     safety: {
       read_only: true,
       ui_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+async function buildTraceabilityMap(repoRoot) {
+  const summary = await getSummary(repoRoot);
+  const core = summary.workflow_core || {};
+  const task = core.active_task || {};
+  const taskId = task.task_id || "";
+  const refs = [];
+  if (taskId) refs.push({ kind: "Task", label: taskId, meaning: "현재 ActiveTask입니다.", ref: "_Docs/AIWorkflow/ActiveTask.md" });
+  if (core.runner?.runner_run_id) refs.push({ kind: "Runner", label: core.runner.runner_run_id, meaning: "실제 실행 세션 기록입니다.", ref: core.runner.path || "" });
+  if (core.verification?.path) refs.push({ kind: "VerificationReport", label: core.verification.verdict || "verification", meaning: "무엇을 검증했고 어떤 판정이 났는지 보여줍니다.", ref: core.verification.path });
+  if (core.completion?.path) refs.push({ kind: "CompletionReport", label: core.completion.state || "completion", meaning: "완료 가능 여부와 남은 우려를 보여줍니다.", ref: core.completion.path });
+  if (core.completion?.card_path) refs.push({ kind: "CompletionCard", label: "completion card", meaning: "감독자가 읽는 짧은 완료 요약입니다.", ref: core.completion.card_path });
+  if (core.git?.changed_count) refs.push({ kind: "Git", label: `${core.git.changed_count} changed`, meaning: "커밋 전 확인해야 할 현재 변경입니다.", ref: core.git.changed_files?.join(", ") || "" });
+  const relatedDevLogs = (summary.dev_logs || []).filter((item) => !taskId || JSON.stringify(item).includes(taskId)).slice(0, 6);
+  relatedDevLogs.forEach((item) => refs.push({ kind: "DevLog", label: item.title || item.id || "DevLog", meaning: "작업 배경과 검증 기록 후보입니다.", ref: item.path || item.href || "" }));
+  const missing = [];
+  if (taskId && !core.runner?.runner_run_id) missing.push("Runner 실행 기록이 없습니다.");
+  if (taskId && !core.verification?.path) missing.push("VerificationReport를 찾지 못했습니다.");
+  if (taskId && !core.completion?.path) missing.push("CompletionReport를 찾지 못했습니다.");
+  if (taskId && !core.completion?.card_path) missing.push("CompletionCard를 찾지 못했습니다.");
+
+  return {
+    traceability_map_id: makeStudioId("TRM", taskId || "studio"),
+    task_id: taskId,
+    task_title: task.title || "",
+    current_meaning: "현재 작업을 기준으로 업무 상태, 실행 세션, 검증 자료, 완료 자료, git 변경, DevLog가 어떻게 이어지는지 보여주는 읽기 전용 지도입니다.",
+    linked_refs: refs,
+    missing_links: missing,
+    timeline_counts: {
+      staff_runs: summary.metrics?.staff_runs || 0,
+      work_orders: summary.metrics?.work_orders || 0,
+      meetings: summary.metrics?.meetings || 0,
+      review_packets: summary.metrics?.review_packets || 0,
+      dev_logs: summary.metrics?.dev_logs || 0,
+    },
+    recommended_next_actions: missing.length
+      ? ["빠진 연결을 만든 뒤 완료 판단이나 commit/push를 진행합니다.", "필요하면 검증 자료 화면에서 완료 근거 점검을 실행합니다."]
+      : ["검증 자료 화면에서 완료 판단을 확인합니다.", "변경 검토 화면에서 commit/push 범위를 확인합니다."],
+    safety: {
+      read_only: true,
+      source_changed: false,
       task_state_changed: false,
       commit_or_push: false,
     },
@@ -5762,6 +5811,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       director_surface_map: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/traceability/map") {
+    const payload = await buildTraceabilityMap(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      traceability_map: payload,
       safety: payload.safety,
     });
   }

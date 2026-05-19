@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/TraceabilityMap.schema.json",
+  "title": "TraceabilityMap",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "traceability_map_id",
+    "task_id",
+    "task_title",
+    "current_meaning",
+    "linked_refs",
+    "missing_links",
+    "timeline_counts",
+    "recommended_next_actions",
+    "safety"
+  ],
+  "properties": {
+    "traceability_map_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "task_title": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "linked_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "label", "meaning", "ref"],
+        "properties": {
+          "kind": { "type": "string" },
+          "label": { "type": "string" },
+          "meaning": { "type": "string" },
+          "ref": { "type": "string" }
+        }
+      }
+    },
+    "missing_links": { "type": "array", "items": { "type": "string" } },
+    "timeline_counts": { "type": "object" },
+    "recommended_next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": ["read_only", "source_changed", "task_state_changed", "commit_or_push"]
+    },
+    "created_at": { "type": "string" }
+  }
+}

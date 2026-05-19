@@ -255,6 +255,24 @@ A DirectorSurfaceMap explains:
 Reading a DirectorSurfaceMap is read-only. It must not change UI settings,
 write workflow state, execute staff, commit, or push.
 
+## Traceability Map Contract
+
+The Studio must make it easy to answer "where did this work come from, what ran,
+what evidence exists, and what remains to decide?"
+
+A TraceabilityMap explains:
+
+- the active Task
+- the latest Runner run
+- VerificationReport and CompletionReport links
+- CompletionCard link
+- current git change summary
+- related DevLog references
+- missing links that should block completion or commit decisions
+
+Reading a TraceabilityMap is read-only. It must not create records, change
+task state, execute staff, commit, or push.
+
 ## Staff Operating Plan Contract
 
 A persistent AI staff agent must be reviewable before it is trusted with work.

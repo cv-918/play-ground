@@ -48,6 +48,7 @@ This slice defines:
 - AutomationReadinessPlan schema
 - StudioSmokeReport schema
 - DirectorSurfaceMap schema
+- TraceabilityMap schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -124,6 +125,9 @@ This slice defines:
 - Read-only DirectorSurfaceMap for clarifying which Studio pages are daily
   Human Director work surfaces, which are internal/admin surfaces, and what
   each page is for.
+- Read-only TraceabilityMap for connecting the active Task, Runner run,
+  VerificationReport, CompletionReport, CompletionCard, git changes, and
+  DevLog references into one reviewable chain.
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The normal Director-facing pages are Korean-labeled Home,
@@ -416,6 +420,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- ApprovalImpactPlan.schema.json
 |   +-- ConditionalAutomationCase.schema.json
 |   +-- DirectorSurfaceMap.schema.json
+|   +-- TraceabilityMap.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json
