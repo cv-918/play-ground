@@ -1836,7 +1836,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-recovery-plan">복구 점검</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-recovery-plan">복구 점검</button><button class="secondary" data-action="studio-eval-plan">Smoke 계획</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
               </div>
             </div>
           </div>
@@ -3551,6 +3551,7 @@ function directorConsoleHtml() {
       if (action === "traceability-map") return log(await post("/api/studio/traceability/map", {}));
       if (action === "studio-surface-map") return log(await post("/api/studio/ui/surface-map", {}));
       if (action === "studio-recovery-plan") return log(await post("/api/studio/recovery/plan", {}));
+      if (action === "studio-eval-plan") return log(await post("/api/studio/smoke/eval-plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
@@ -4814,6 +4815,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "DirectorSurfaceMap.schema.json",
     "TraceabilityMap.schema.json",
     "StudioRecoveryPlan.schema.json",
+    "StudioEvalPlan.schema.json",
   ];
   const schemaResults = [];
   for (const schema of expectedSchemas) {
@@ -5009,6 +5011,56 @@ async function buildStudioRecoveryPlan(repoRoot) {
     safety: {
       read_only: true,
       process_restarted: false,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+function buildStudioEvalPlan() {
+  return {
+    studio_eval_plan_id: makeStudioId("SEP", "studio-eval"),
+    current_meaning: "Studio 변경 후 무엇을 확인해야 제품 화면을 믿고 쓸 수 있는지 정리하는 읽기 전용 smoke/eval 계획입니다.",
+    automated_checks: [
+      "node --check tools\\aiworkflow\\studio_director_console_server.js",
+      "node tools\\aiworkflow\\studio_director_console_server.js --once --json",
+      "POST /api/studio/smoke/status",
+      "POST /api/studio/ui/surface-map",
+      "POST /api/studio/recovery/plan",
+      "POST /api/studio/traceability/map",
+      "POST /api/studio/model/routing-plan",
+    ],
+    browser_smoke_routes: [
+      "/#home",
+      "/#goals",
+      "/#project",
+      "/#inbox",
+      "/#meetings",
+      "/#work",
+      "/#knowledge",
+      "/#evidence",
+      "/#timeline",
+      "/#diff",
+    ],
+    manual_director_checks: [
+      "홈에서 다음 행동이 이해되는지 확인합니다.",
+      "목표 기획에서 후보가 실행이 아니라 기획 기록으로 보이는지 확인합니다.",
+      "회의실에서 회의 운영판과 후속 업무 흐름이 보이는지 확인합니다.",
+      "업무 지시에서 인수인계 점검, 직원 자료, 직원 실행 계획 차이가 보이는지 확인합니다.",
+      "검증 자료에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
+      "변경 검토에서 선택 commit/push만 가능하다는 점이 보이는지 확인합니다.",
+    ],
+    pass_criteria: [
+      "필수 schema가 모두 존재합니다.",
+      "Home, Project, Work, Evidence, Timeline 화면의 핵심 버튼이 보입니다.",
+      "읽기 전용 계획 API는 task state, source, commit/push를 바꾸지 않습니다.",
+      "사용자-facing 문구는 검증 자료, 승인 영향, 완료 판단 의미를 명확히 설명합니다.",
+    ],
+    safety: {
+      read_only: true,
+      tests_executed: false,
       source_changed: false,
       task_state_changed: false,
       commit_or_push: false,
@@ -5941,6 +5993,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       studio_recovery_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/smoke/eval-plan") {
+    const payload = buildStudioEvalPlan();
+    return sendJson(res, 200, {
+      ok: true,
+      studio_eval_plan: payload,
       safety: payload.safety,
     });
   }

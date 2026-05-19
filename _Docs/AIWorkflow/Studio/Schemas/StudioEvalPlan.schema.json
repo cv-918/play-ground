@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/StudioEvalPlan.schema.json",
+  "title": "StudioEvalPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "studio_eval_plan_id",
+    "current_meaning",
+    "automated_checks",
+    "browser_smoke_routes",
+    "manual_director_checks",
+    "pass_criteria",
+    "safety"
+  ],
+  "properties": {
+    "studio_eval_plan_id": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "automated_checks": { "type": "array", "items": { "type": "string" } },
+    "browser_smoke_routes": { "type": "array", "items": { "type": "string" } },
+    "manual_director_checks": { "type": "array", "items": { "type": "string" } },
+    "pass_criteria": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "tests_executed",
+        "source_changed",
+        "task_state_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}

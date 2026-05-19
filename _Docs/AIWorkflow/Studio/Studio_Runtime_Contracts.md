@@ -306,6 +306,21 @@ A StudioRecoveryPlan explains:
 Reading a StudioRecoveryPlan is read-only. It must not restart processes,
 modify files, change task state, commit, or push.
 
+## Studio Eval Plan Contract
+
+Every Studio product-surface change should have a repeatable smoke/eval plan.
+
+A StudioEvalPlan explains:
+
+- automated Node and API checks
+- browser smoke routes
+- manual Director checks
+- pass criteria
+- safety boundaries for the eval itself
+
+Reading a StudioEvalPlan is read-only. It must not execute tests by itself,
+modify files, change task state, commit, or push.
+
 ## Staff Operating Plan Contract
 
 A persistent AI staff agent must be reviewable before it is trusted with work.

@@ -51,6 +51,7 @@ This slice defines:
 - DirectorSurfaceMap schema
 - TraceabilityMap schema
 - StudioRecoveryPlan schema
+- StudioEvalPlan schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -133,6 +134,8 @@ This slice defines:
 - Read-only StudioRecoveryPlan for diagnosing mixed git changes, missing
   schemas, completion gates, running sessions, and safe restart guidance
   without restarting processes or changing workflow state.
+- Read-only StudioEvalPlan for listing automated checks, browser smoke routes,
+  manual Director checks, and pass criteria after Studio feature changes.
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The normal Director-facing pages are Korean-labeled Home,
@@ -432,6 +435,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- DirectorSurfaceMap.schema.json
 |   +-- TraceabilityMap.schema.json
 |   +-- StudioRecoveryPlan.schema.json
+|   +-- StudioEvalPlan.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json
