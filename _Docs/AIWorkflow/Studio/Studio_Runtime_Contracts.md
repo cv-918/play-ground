@@ -234,6 +234,23 @@ It is read-only and exists to help validate the UI after feature changes. It
 must not create tasks, execute staff, modify source files, finalize completion,
 commit, or push.
 
+## Director Surface Map Contract
+
+The Studio UI must make it clear which screens are daily Human Director work
+surfaces and which screens are internal/admin diagnostics.
+
+A DirectorSurfaceMap explains:
+
+- every sidebar page
+- who the page is for
+- what the page is used for
+- which actions the Director can perform there
+- whether the page is internal/admin
+- which pages should appear in the normal daily flow
+
+Reading a DirectorSurfaceMap is read-only. It must not change UI settings,
+write workflow state, execute staff, commit, or push.
+
 ## Staff Operating Plan Contract
 
 A persistent AI staff agent must be reviewable before it is trusted with work.

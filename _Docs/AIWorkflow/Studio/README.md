@@ -47,6 +47,7 @@ This slice defines:
 - ApprovalImpactPlan schema
 - AutomationReadinessPlan schema
 - StudioSmokeReport schema
+- DirectorSurfaceMap schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -120,6 +121,9 @@ This slice defines:
 - Local materialization review tool for Human Director Decision records
 - Read-only Studio dashboard HTML snapshot export with Director Inbox, staff
   run timeline, and review packet links
+- Read-only DirectorSurfaceMap for clarifying which Studio pages are daily
+  Human Director work surfaces, which are internal/admin surfaces, and what
+  each page is for.
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The normal Director-facing pages are Korean-labeled Home,
@@ -410,6 +414,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- CompletionEvidenceChecklist.schema.json
 |   +-- ApprovalImpactPlan.schema.json
 |   +-- ConditionalAutomationCase.schema.json
+|   +-- DirectorSurfaceMap.schema.json
 +-- Registries/
 |   +-- departments.initial.json
 |   +-- staff_agents.initial.json

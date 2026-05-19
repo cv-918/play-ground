@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/DirectorSurfaceMap.schema.json",
+  "title": "DirectorSurfaceMap",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "director_surface_map_id",
+    "current_meaning",
+    "total_surfaces",
+    "human_director_surfaces",
+    "internal_surfaces",
+    "recommended_home_order",
+    "surfaces",
+    "product_rules",
+    "safety"
+  ],
+  "properties": {
+    "director_surface_map_id": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "total_surfaces": { "type": "number" },
+    "human_director_surfaces": { "type": "number" },
+    "internal_surfaces": { "type": "number" },
+    "recommended_home_order": { "type": "array", "items": { "type": "string" } },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "label",
+          "audience",
+          "purpose",
+          "primary_actions",
+          "internal_or_admin"
+        ],
+        "properties": {
+          "page_id": { "type": "string" },
+          "label": { "type": "string" },
+          "audience": { "type": "string" },
+          "purpose": { "type": "string" },
+          "primary_actions": { "type": "array", "items": { "type": "string" } },
+          "internal_or_admin": { "type": "boolean" }
+        }
+      }
+    },
+    "product_rules": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": ["read_only", "ui_changed", "task_state_changed", "commit_or_push"]
+    },
+    "created_at": { "type": "string" }
+  }
+}

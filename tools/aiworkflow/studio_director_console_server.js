@@ -1836,7 +1836,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
+                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
               </div>
             </div>
           </div>
@@ -3547,6 +3547,7 @@ function directorConsoleHtml() {
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
       if (action === "approval-impact-plan") return log(await post("/api/studio/approval/impact-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
+      if (action === "studio-surface-map") return log(await post("/api/studio/ui/surface-map", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
@@ -4720,6 +4721,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "CompletionDecisionPlan.schema.json",
     "ApprovalImpactPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
+    "DirectorSurfaceMap.schema.json",
   ];
   const schemaResults = [];
   for (const schema of expectedSchemas) {
@@ -4781,6 +4783,57 @@ async function buildStudioSmokeReport(repoRoot) {
       task_state_changed: false,
       commit_or_push: false,
     },
+  };
+}
+
+function buildDirectorSurfaceMap() {
+  const surfaces = [
+    ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 검증 자료 확인"], false],
+    ["goals", "목표 기획", "Human Director", "큰 목표를 부서, 직원, 회의, 업무 후보로 쪼갭니다.", ["기획안 미리보기", "기획안 저장", "후보 생성"], false],
+    ["project", "프로젝트", "Human Director / Producer", "현재 프로젝트와 실행 경계를 확인합니다.", ["실행 준비 점검", "프로젝트 프로필 확인"], false],
+    ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 기록, 커밋 판단 후보를 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "기록 후보 결정", "commit/push 판단"], false],
+    ["departments", "부서", "Human Director / Producer", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/회의 이동"], false],
+    ["staff", "AI 직원", "Human Director", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "회의/업무 이동"], false],
+    ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 후속 업무, 결정을 정리합니다.", ["회의 진행안", "회의 운영판", "발언 추가", "후속 업무 생성"], false],
+    ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 기록 후보로 넘깁니다.", ["보고서 만들기", "기록 후보 보기", "기록함에 넣기"], false],
+    ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
+    ["knowledge", "지식/결정", "Human Director / Documentation Keeper", "제안, 결정, 기억, canon 후보를 구분합니다.", ["전환 계획", "Canon 충돌 점검", "제안/기억/결정 원본 확인"], false],
+    ["timeline", "실행 타임라인", "Human Director / Producer", "회의, 업무, 직원 보고서, Runner 기록을 시간순으로 봅니다.", ["관련 화면 이동", "원본 기록 확인"], false],
+    ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
+    ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
+    ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
+    ["systems", "시스템", "관리자/내부", "도구 adapter와 도구 요청 경계를 점검합니다.", ["실행 준비 점검", "도구 요청서 작성"], true],
+    ["policy", "정책", "관리자/내부", "승인 영향과 자동 진행 준비도를 점검합니다.", ["승인 영향 점검", "자동 진행 준비도"], true],
+  ].map(([page_id, label, audience, purpose, actions, internal]) => ({
+    page_id,
+    label,
+    audience,
+    purpose,
+    primary_actions: actions,
+    internal_or_admin: internal,
+  }));
+
+  return {
+    director_surface_map_id: makeStudioId("DSM", "director-surfaces"),
+    current_meaning: "Studio 화면이 사람용 작업대인지 내부/관리자용인지 구분하고, 각 화면에서 무엇을 해야 하는지 보여주는 읽기 전용 지도입니다.",
+    total_surfaces: surfaces.length,
+    human_director_surfaces: surfaces.filter((item) => !item.internal_or_admin).length,
+    internal_surfaces: surfaces.filter((item) => item.internal_or_admin).length,
+    recommended_home_order: ["home", "goals", "inbox", "meetings", "work", "knowledge", "evidence", "diff"],
+    surfaces,
+    product_rules: [
+      "Human Director가 매일 쓰는 화면은 사이드바 기본 영역에 둡니다.",
+      "내부/관리자용 화면은 접힌 내부 도구 아래에 둡니다.",
+      "버튼은 기존 gate를 우회하지 않고, 읽기 전용 점검과 쓰기 실행을 구분합니다.",
+      "화면 설명은 사용자가 할 수 있는 일을 기준으로 짧게 유지합니다.",
+    ],
+    safety: {
+      read_only: true,
+      ui_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
   };
 }
 
@@ -5672,6 +5725,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       approval_impact_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/ui/surface-map") {
+    const payload = buildDirectorSurfaceMap();
+    return sendJson(res, 200, {
+      ok: true,
+      director_surface_map: payload,
       safety: payload.safety,
     });
   }
