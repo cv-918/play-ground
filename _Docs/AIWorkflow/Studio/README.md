@@ -154,6 +154,9 @@ This slice defines:
   governed MeetingSession, WorkOrder, and Proposal candidates. Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.
+  The first covered read-only report set is completion evidence, completion
+  decision, approval impact, automation readiness, surface map, recovery plan,
+  smoke/eval plan, and smoke status.
   page cards explain
   what the Director can do on that page, translate department/staff/artifact
   identifiers into Korean labels, and keep raw JSON, registry, and run evidence

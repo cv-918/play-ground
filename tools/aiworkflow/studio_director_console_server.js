@@ -2527,11 +2527,156 @@ function directorConsoleHtml() {
         ]) +
         '</div>';
     }
+    function rawJsonDetails(value) {
+      return '<details class="internal-links"><summary>원본 JSON</summary><pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre></details>';
+    }
+    function recordLine(item) {
+      if (item === null || item === undefined) return "";
+      if (typeof item === "string" || typeof item === "number" || typeof item === "boolean") return String(item);
+      if (Array.isArray(item)) return item.map(recordLine).filter(Boolean).join(", ");
+      const title = item.label || item.name || item.title || item.schema || item.page_id || item.decision || item.action || item.id || item.kind || item.status || item.field || "";
+      const status = item.status && item.status !== title ? " (" + item.status + ")" : "";
+      const detail = item.meaning || item.purpose || item.when_to_use || item.effect || item.summary || item.ref || item.path || item.note || "";
+      const extra = item.exists !== undefined ? "exists=" + (item.exists ? "yes" : "no") : "";
+      return [title ? title + status : "", detail, extra].filter(Boolean).join(" - ");
+    }
+    function reportLines(items) {
+      return asArray(items).map(recordLine).filter(Boolean);
+    }
+    function reportSection(title, items, emptyText = "없음") {
+      return '<h3>' + esc(title) + '</h3>' + compactListHtml(reportLines(items), emptyText);
+    }
+    function reportStatusLines(report, keys) {
+      return keys.map((entry) => {
+        const label = entry[0];
+        const key = entry[1];
+        const value = report[key];
+        if (value === undefined || value === null || value === "") return "";
+        return label + ": " + String(value);
+      }).filter(Boolean);
+    }
+    function safetySection(safety) {
+      if (!safety || typeof safety !== "object") return "";
+      return reportSection("안전 상태", Object.keys(safety).map((key) => key + ": " + (safety[key] ? "yes" : "no")));
+    }
+    function formatDirectorReportLog(value) {
+      const specs = [
+        {
+          key: "completion_evidence_checklist",
+          title: "완료 근거 점검",
+          status: [["task", "task_id"], ["runner", "runner_run_id"], ["verdict", "verdict"], ["완료 판단 가능", "ready_to_decide"]],
+          sections: [
+            ["확인할 것", "evidence_items"],
+            ["빠진 근거", "missing_items"],
+            ["우려/경고", (r) => [...asArray(r.concerns_to_review), ...asArray(r.warnings_to_review)]],
+            ["다음 행동", "recommended_next_actions"],
+          ],
+        },
+        {
+          key: "completion_decision_plan",
+          title: "완료 판단안",
+          status: [["task", "task_id"], ["runner", "runner_run_id"], ["verdict", "verdict"], ["추천 판단", "recommended_decision"]],
+          sections: [
+            ["선택지", "decision_options"],
+            ["우려/경고", (r) => [...asArray(r.concerns_to_review), ...asArray(r.warnings_to_review)]],
+            ["판단 전 확인", "director_checklist"],
+          ],
+        },
+        {
+          key: "approval_impact_plan",
+          title: "승인 영향 점검",
+          status: [["task", "task_id"], ["승인 필요", "approval_required"]],
+          sections: [
+            ["왜 필요한가", "why_approval_is_or_is_not_required"],
+            ["승인하면 허용되는 것", "approving_allows"],
+            ["승인하지 않는 것", "approving_does_not_allow"],
+            ["승인 후 바뀌는 것", "what_changes_after_approval"],
+            ["판단 전 확인", "director_checklist"],
+          ],
+        },
+        {
+          key: "automation_readiness_plan",
+          title: "자동 진행 준비도",
+          status: [["task", "task_id"], ["자동 handoff", "can_auto_handoff"], ["자동 완료", "can_auto_finalize"], ["자동 commit/push", "can_auto_commit_or_push"]],
+          sections: [
+            ["막는 이유", "blockers"],
+            ["자동 허용 후보", "allowed_auto_steps"],
+            ["항상 사람 판단", "always_human_steps"],
+            ["다음 행동", "recommended_next_actions"],
+          ],
+        },
+        {
+          key: "director_surface_map",
+          title: "화면 구조 점검",
+          status: [["전체 화면", "total_surfaces"], ["사용자 화면", "human_director_surfaces"], ["내부 화면", "internal_surfaces"]],
+          sections: [
+            ["권장 이동 순서", "recommended_home_order"],
+            ["주요 화면", "surfaces"],
+            ["제품 규칙", "product_rules"],
+          ],
+        },
+        {
+          key: "studio_recovery_plan",
+          title: "복구 점검",
+          status: [["상태", "health"], ["재시작 명령", "safe_restart_command"]],
+          sections: [
+            ["확인된 문제", "issues"],
+            ["복구 순서", "recovery_steps"],
+          ],
+        },
+        {
+          key: "studio_eval_plan",
+          title: "Smoke 계획",
+          status: [["plan", "studio_eval_plan_id"]],
+          sections: [
+            ["자동 확인", "automated_checks"],
+            ["브라우저 확인 경로", "browser_smoke_routes"],
+            ["사람 확인", "manual_director_checks"],
+            ["통과 기준", "pass_criteria"],
+          ],
+        },
+        {
+          key: "studio_smoke_report",
+          title: "Studio 점검",
+          status: [["report", "studio_smoke_report_id"], ["생성 시각", "generated_at"]],
+          sections: [
+            ["경고", "warnings"],
+            ["스키마 확인", "schema_checks"],
+            ["화면 확인", "console_pages"],
+            ["수동 smoke", "recommended_manual_smoke"],
+          ],
+        },
+      ];
+      for (const spec of specs) {
+        const report = value[spec.key];
+        if (!report || typeof report !== "object") continue;
+        const summary = report.current_meaning || report.summary || report.overall_label || spec.title;
+        const statusLines = reportStatusLines(report, spec.status || []);
+        const sections = (spec.sections || []).map((section) => {
+          const title = section[0];
+          const accessor = section[1];
+          const items = typeof accessor === "function" ? accessor(report) : report[accessor];
+          return reportSection(title, items);
+        }).join("");
+        const hasAttention = report.blockers?.length || report.missing_items?.length || report.issues?.length || report.warnings?.length;
+        return '<div class="item ' + (hasAttention ? "warn" : "good") + '">' +
+          '<h3>' + esc(spec.title) + '</h3>' +
+          '<p class="summary">' + esc(summary) + '</p>' +
+          (statusLines.length ? reportSection("현재 상태", statusLines) : "") +
+          sections +
+          safetySection(value.safety || report.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      return "";
+    }
     function formatGenericLogObject(value) {
       if (value?.company_runtime_readiness_report || value?.company_runtime || value?.gates?.some?.((gate) => gate.id && String(gate.id).includes("runtime"))) {
         const formatted = formatCompanyRuntimeReadinessLog(value);
         if (formatted) return formatted;
       }
+      const directorReport = formatDirectorReportLog(value);
+      if (directorReport) return directorReport;
       if (value?.ok === false || value?.error || value?.reason) {
         return '<div class="item danger"><h3>실행 실패</h3><p class="summary">' + esc(value.reason || value.error || "작업 중 오류가 발생했습니다.") + '</p><pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre></div>';
       }
