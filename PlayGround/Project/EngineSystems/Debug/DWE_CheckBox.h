@@ -12,6 +12,14 @@ public:
 	{
 	}
 
+	explicit DWE_CheckBox(DweCheckBoxData _data)
+		: DebugWindowElement(DebugWindowElementType::CheckBox)
+		, label_(_data.label_)
+		, value_getter_(std::move(_data.value_getter_))
+		, value_setter_(std::move(_data.value_setter_))
+	{
+	}
+
 	~DWE_CheckBox() override DEFAULT;
 
 public:
@@ -27,6 +35,8 @@ private:
 private:
 	std::wstring label_;
 	_bool* value_ptr_ = nullptr;
+	std::function<_bool()> value_getter_;
+	std::function<void(_bool)> value_setter_;
 
 	_float box_size_ = 14.f;
 	_float box_text_spacing_ = 6.f;

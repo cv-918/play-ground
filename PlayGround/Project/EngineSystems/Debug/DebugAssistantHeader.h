@@ -38,6 +38,13 @@ struct DweDynamicTextData
 	std::function<DweTextData()> text_provider_;
 };
 
+struct DweCheckBoxData
+{
+	std::wstring label_;
+	std::function<_bool()> value_getter_;
+	std::function<void(_bool)> value_setter_;
+};
+
 struct DweSeparatorData
 {
 	std::wstring label_;

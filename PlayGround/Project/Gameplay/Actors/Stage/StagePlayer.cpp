@@ -3,7 +3,10 @@
 
 #include "Animation/SpriteAnimationBuilder.h"
 #include "Animation/SpriteAnimationTypes.h"
+#include "Actors/ActorUtil.h"
 #include "Components/PlayerMovement.h"
+#include "Components/SpriteAnimatorComponent.h"
+#include "Components/SpriteRendererComponent.h"
 #include "Common/HitReaction.h"
 #include "EngineSystems/Render/ScreenSystem.h"
 #include "GamePlaySystems/SkillManager.h"
@@ -146,6 +149,25 @@ _bool StagePlayer::Initialize()
 	input_manager_ = &_InputMgr.Get();
 	skill_manager_ = &_SkillMgr.Get();
 
+	sprite_renderer_ = new SpriteRendererComponent();
+	RegisterComponent(sprite_renderer_);
+
+	sprite_animator_ = new SpriteAnimatorComponent();
+	RegisterComponent(sprite_animator_);
+
+	if (_BuildAnimationSetFromInfo())
+	{
+		sprite_animator_->SetRenderer(sprite_renderer_);
+		sprite_animator_->SetAnimationSet(&animation_set_);
+		sprite_animator_->Play(ActorUtil::GetPlayerStateName(PlayerState::Idle));
+		player_sprite_ = nullptr;
+		uses_animation_renderer_ = true;
+	}
+	else
+	{
+		_SYSTEM_LOG_WARN(L"StagePlayer animation set build failed. Static sprite fallback will be used.");
+	}
+
 	Finalize();
 	return true;
 }
@@ -186,6 +208,15 @@ _int StagePlayer::Update(_double _delta_time)
 			flip_sprite_x_ = false;
 		else if (vel.x > 0.01f)
 			flip_sprite_x_ = true;
+	}
+
+	if (uses_animation_renderer_ && sprite_animator_ != nullptr)
+	{
+		sprite_animator_->SetFlipX(flip_sprite_x_);
+
+		const auto move_velocity = movement_ != nullptr ? movement_->GetMoveVelocity() : _Vector3::Zero();
+		const _bool is_moving = std::abs(move_velocity.x) > 0.01f || std::abs(move_velocity.y) > 0.01f;
+		sprite_animator_->PlayIfNotCurrent(ActorUtil::GetPlayerStateName(is_moving ? PlayerState::Move : PlayerState::Idle));
 	}
 
 	return UPDATE_CONTINUE;
@@ -267,6 +298,9 @@ _int StagePlayer::LateUpdate(_double _delta_time)
 		//	});
 	}
 
+	if (sprite_renderer_ != nullptr)
+		sprite_renderer_->SetWhiteFlashStrength(GetHitFlashStrength());
+
 	return UPDATE_CONTINUE;
 }
 
@@ -306,6 +340,9 @@ void StagePlayer::ApplyHit(const HitContext& _hit)
 
 void StagePlayer::_DrawObjectShape()
 {
+	if (uses_animation_renderer_)
+		return;
+
 	if (!player_sprite_ || !player_sprite_->image)
 	{
 		__super::_DrawObjectShape();
@@ -334,6 +371,39 @@ void StagePlayer::_DrawObjectShape()
 	}
 
 	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
+}
+
+_bool StagePlayer::_BuildAnimationSetFromInfo()
+{
+	animation_set_ = SpriteAnimationSetData{};
+	animation_set_.set_name = L"StagePlayer";
+
+	if (info_ == nullptr || info_->animation_clips_.empty())
+		return false;
+
+	for (const auto& clip_info : info_->animation_clips_)
+	{
+		if (clip_info.clip_name_.empty() || clip_info.directory_.empty() || clip_info.prefix_.empty())
+			return false;
+
+		SpriteAnimationClipData clip{};
+		if (!SpriteAnimationBuilder::BuildSequenceClipByFps(
+			clip,
+			_UtilFunc::ToWString(clip_info.clip_name_),
+			_UtilFunc::ToWString(clip_info.directory_),
+			_UtilFunc::ToWString(clip_info.prefix_),
+			clip_info.start_index_,
+			clip_info.end_index_,
+			clip_info.fps_,
+			clip_info.loop_))
+		{
+			return false;
+		}
+
+		animation_set_.clips[clip.clip_name] = clip;
+	}
+
+	return !animation_set_.clips.empty();
 }
 
 void StagePlayer::_UpdateAttackTimer(_double _delta_time)

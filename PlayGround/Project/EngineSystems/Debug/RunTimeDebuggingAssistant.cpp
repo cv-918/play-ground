@@ -171,6 +171,21 @@ void RunTimeDebuggingAssistant::CheckBox(const std::wstring& _window_name, const
 	window->AddPersistentElement(_key, new DWE_CheckBox(_label, _value_ptr));
 }
 
+void RunTimeDebuggingAssistant::CheckBox(const std::wstring& _window_name, const std::wstring& _key, DweCheckBoxData _data)
+{
+	if (!IsValidWindowAndKey(_window_name, _key, L"checkbox"))
+		return;
+
+	if (!_data.value_getter_ || !_data.value_setter_)
+	{
+		_SYSTEM_LOG_ERROR(_T("Attempted to add checkbox with an incomplete binding."));
+		return;
+	}
+
+	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	window->AddPersistentElement(_key, new DWE_CheckBox(std::move(_data)));
+}
+
 void RunTimeDebuggingAssistant::Button(const std::wstring& _window_name, const std::wstring& _key, const std::wstring& _label, std::function<void()> _on_click)
 {
 	if (!IsValidWindowAndKey(_window_name, _key, L"button"))

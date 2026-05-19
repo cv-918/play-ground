@@ -12,7 +12,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	loop_
 )
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	PlayableCharacterJsonInfo,
 	id_,
 	name_,
@@ -44,5 +44,6 @@ public:
 	static constexpr _uint DEFAULT_PLAYABLE_CHARACTER_ID = s_uint(PlayableCharacterId::Dusty);
 
 	const PlayableCharacterJsonInfo* GetDefaultPlayableCharacterData() const;
+	_bool Save(const std::string& _file_path) override;
 };
 

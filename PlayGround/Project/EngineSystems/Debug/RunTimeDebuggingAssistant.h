@@ -27,6 +27,7 @@ public:
 	void Text(const std::wstring& _window_name, const DweTextData& _data);
 	void PersistentText(const std::wstring& _window_name, const std::wstring& _key, const DweTextData& _data);
 	void CheckBox(const std::wstring& _window_name, const std::wstring& _key, const std::wstring& _label, _bool* _value_ptr);
+	void CheckBox(const std::wstring& _window_name, const std::wstring& _key, DweCheckBoxData _data);
 	void Button(const std::wstring& _window_name, const std::wstring& _key, const std::wstring& _label, std::function<void()> _on_click);
 	void DynamicText(const std::wstring& _window_name, const std::wstring& _key, DweDynamicTextData _data);
 	void Separator(const std::wstring& _window_name, const std::wstring& _key, DweSeparatorData _data);

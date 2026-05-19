@@ -53,7 +53,9 @@
     "projectile_knockback_duration_sec_": 0.0,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.0,
-    "projectile_knockback_power_": 0.0
+    "projectile_knockback_power_": 0.0,
+    "projectile_spawn_offset_x_": 0.0,
+    "projectile_spawn_offset_y_": 0.0
   },
   {
     "id_": 2,
@@ -109,7 +111,9 @@
     "projectile_knockback_duration_sec_": 0.0,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.0,
-    "projectile_knockback_power_": 0.0
+    "projectile_knockback_power_": 0.0,
+    "projectile_spawn_offset_x_": 0.0,
+    "projectile_spawn_offset_y_": 0.0
   },
   {
     "id_": 3,
@@ -165,7 +169,9 @@
     "projectile_knockback_duration_sec_": 0.0,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.0,
-    "projectile_knockback_power_": 0.0
+    "projectile_knockback_power_": 0.0,
+    "projectile_spawn_offset_x_": 0.0,
+    "projectile_spawn_offset_y_": 0.0
   },
   {
     "id_": 4,
@@ -221,7 +227,9 @@
     "projectile_knockback_duration_sec_": 0.0,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.0,
-    "projectile_knockback_power_": 0.0
+    "projectile_knockback_power_": 0.0,
+    "projectile_spawn_offset_x_": 0.0,
+    "projectile_spawn_offset_y_": 0.0
   },
   {
     "id_": 5,
@@ -277,7 +285,9 @@
     "projectile_knockback_duration_sec_": 0.14,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.9,
-    "projectile_knockback_power_": 200.0
+    "projectile_knockback_power_": 200.0,
+    "projectile_spawn_offset_x_": 20.0,
+    "projectile_spawn_offset_y_": 0.0
   },
   {
     "id_": 6,
@@ -333,6 +343,8 @@
     "projectile_knockback_duration_sec_": 0.0,
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.0,
-    "projectile_knockback_power_": 0.0
+    "projectile_knockback_power_": 0.0,
+    "projectile_spawn_offset_x_": 0.0,
+    "projectile_spawn_offset_y_": 0.0
   }
 ]

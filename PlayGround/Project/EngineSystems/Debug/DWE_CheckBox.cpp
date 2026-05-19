@@ -31,7 +31,8 @@ _int DWE_CheckBox::Update(_double _delta_time)
 {
 	UNREFERENCED_PARAMETER(_delta_time);
 
-	if (value_ptr_ == nullptr)
+	const _bool has_bound_value = (value_ptr_ != nullptr) || (value_getter_ && value_setter_);
+	if (!has_bound_value)
 		return UPDATE_CONTINUE;
 
 	const _Vector2 mouse_pos = _InputMgr.MousePoint();
@@ -47,7 +48,16 @@ _int DWE_CheckBox::Update(_double _delta_time)
 	if (is_pressed_ && mouse_released)
 	{
 		if (is_hovered_)
-			*value_ptr_ = !(*value_ptr_);
+		{
+			const _bool current_value = (value_ptr_ != nullptr)
+				? *value_ptr_
+				: value_getter_();
+
+			if (value_ptr_ != nullptr)
+				*value_ptr_ = !current_value;
+			else
+				value_setter_(!current_value);
+		}
 
 		is_pressed_ = false;
 	}
@@ -79,11 +89,14 @@ void DWE_CheckBox::Render(_double _delta_time)
 	const _RectF text_rect = GetTextRect();
 
 	const _Color fill_color = is_hovered_ ? hover_color_ : background_color_;
+	const _bool is_checked = (value_ptr_ != nullptr)
+		? *value_ptr_
+		: (value_getter_ ? value_getter_() : false);
 
 	_DrawFunc::FillRectangle(box_rect, fill_color);
 	_DrawFunc::DrawRectangle(box_rect, border_color_, 1.f);
 
-	if (value_ptr_ != nullptr && *value_ptr_)
+	if (is_checked)
 	{
 		const _RectF inner_rect(
 			box_rect.left + 3.f,

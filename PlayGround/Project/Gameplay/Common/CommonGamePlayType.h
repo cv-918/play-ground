@@ -255,6 +255,8 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	KnockbackCurve projectile_knockback_curve_ = KnockbackCurve::OutCubic;
 	_float projectile_camera_shake_scale_ = 0.f;
 	_float projectile_knockback_power_ = 0.f;
+	_float projectile_spawn_offset_x_ = 0.f;
+	_float projectile_spawn_offset_y_ = 0.f;
 };
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo

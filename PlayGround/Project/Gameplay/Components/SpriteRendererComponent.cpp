@@ -77,6 +77,11 @@ const SpriteRenderCommand& SpriteRendererComponent::GetRenderCommand() const
 	return render_command_;
 }
 
+void SpriteRendererComponent::SetWhiteFlashStrength(_float _strength)
+{
+	white_flash_strength_ = std::clamp(_strength, 0.f, 1.f);
+}
+
 /**
  * 전체 텍스처 기준으로 렌더링한다.
  */
@@ -87,6 +92,19 @@ void SpriteRendererComponent::_DrawWholeTexture(const _RectF& _dest_rect)
 		0.f,
 		s_float(render_command_.texture->Width()),
 		s_float(render_command_.texture->Height()));
+
+	if (white_flash_strength_ > 0.f)
+	{
+		_DrawFunc::DrawTextureWhiteFlash(
+			render_command_.texture,
+			_dest_rect,
+			src_rect,
+			render_command_.flip_x,
+			render_command_.flip_y,
+			white_flash_strength_,
+			render_command_.alpha);
+		return;
+	}
 
 	_DrawFunc::DrawTexture(
 		render_command_.texture,
@@ -102,6 +120,19 @@ void SpriteRendererComponent::_DrawWholeTexture(const _RectF& _dest_rect)
  */
 void SpriteRendererComponent::_DrawTextureRegion(const _RectF& _dest_rect)
 {
+	if (white_flash_strength_ > 0.f)
+	{
+		_DrawFunc::DrawTextureWhiteFlash(
+			render_command_.texture,
+			_dest_rect,
+			render_command_.source_rect,
+			render_command_.flip_x,
+			render_command_.flip_y,
+			white_flash_strength_,
+			render_command_.alpha);
+		return;
+	}
+
 	_DrawFunc::DrawTexture(
 		render_command_.texture,
 		_dest_rect,

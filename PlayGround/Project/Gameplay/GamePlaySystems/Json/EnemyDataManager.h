@@ -1,7 +1,7 @@
 #pragma once
 #include "EngineSystems/Json/JsonDataManager.h"
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	EnemyJsonInfo,
 	id_,
 	name_,
@@ -50,7 +50,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
 	projectile_knockback_duration_sec_,
 	projectile_knockback_curve_,
 	projectile_camera_shake_scale_,
-	projectile_knockback_power_
+	projectile_knockback_power_,
+	projectile_spawn_offset_x_,
+	projectile_spawn_offset_y_
 )
 
 #define _EnemyDataMgr EnemyDataManager::Get()
@@ -59,5 +61,7 @@ class EnemyDataManager
 	: public JsonDataManager<EnemyJsonInfo>
 	, public ISingleton<EnemyDataManager>
 {
+public:
+	_bool Save(const std::string& _file_path) override;
 };
 

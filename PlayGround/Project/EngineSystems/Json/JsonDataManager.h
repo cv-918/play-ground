@@ -77,6 +77,7 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 	}
 	catch (json::exception& e)
 	{
+		(void)e;
 		_DEBUG_MSGBOX(_T("Failed to parse JSON file: %s\nError: %s"), _file_path.c_str(), e.what());
 		return false;
 	}

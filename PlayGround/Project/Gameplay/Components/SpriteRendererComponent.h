@@ -30,6 +30,8 @@ public:
 	 */
 	const SpriteRenderCommand& GetRenderCommand() const;
 
+	void SetWhiteFlashStrength(_float _strength);
+
 private:
 	/**
 	 * source rect 없이 전체 텍스처를 그린다.
@@ -47,4 +49,6 @@ private:
 
 	/** 현재 렌더 명령 */
 	SpriteRenderCommand render_command_{};
+
+	_float white_flash_strength_ = 0.f;
 };

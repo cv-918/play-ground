@@ -157,8 +157,14 @@ void ProjectileAttackAbility::_SpawnProjectile(Enemy& _enemy)
 	if (nullptr == target)
 		return;
 
-	const auto pos = _enemy.GetTransform()->Position();
 	const auto target_pos = target->GetTransform()->Position();
+	const auto enemy_pos = _enemy.GetTransform()->Position();
+	const auto fire_direction = (target_pos - enemy_pos).Normalized();
+	const _Vector3 side_direction{ -fire_direction.y, fire_direction.x, 0.f };
+	const auto muzzle_offset =
+		fire_direction * info->projectile_spawn_offset_x_ +
+		side_direction * info->projectile_spawn_offset_y_;
+	const auto pos = enemy_pos + muzzle_offset;
 
 	switch (info->projectile_pattern_)
 	{
