@@ -2543,6 +2543,13 @@ function directorConsoleHtml() {
     function reportLines(items) {
       return asArray(items).map(recordLine).filter(Boolean);
     }
+    function reportValue(report, key) {
+      if (!key || typeof key !== "string") return undefined;
+      return key.split(".").reduce((current, part) => {
+        if (current === undefined || current === null) return undefined;
+        return current[part];
+      }, report);
+    }
     function reportSection(title, items, emptyText = "없음") {
       return '<h3>' + esc(title) + '</h3>' + compactListHtml(reportLines(items), emptyText);
     }
@@ -2550,7 +2557,7 @@ function directorConsoleHtml() {
       return keys.map((entry) => {
         const label = entry[0];
         const key = entry[1];
-        const value = report[key];
+        const value = reportValue(report, key);
         if (value === undefined || value === null || value === "") return "";
         return label + ": " + String(value);
       }).filter(Boolean);
@@ -2561,6 +2568,113 @@ function directorConsoleHtml() {
     }
     function formatDirectorReportLog(value) {
       const specs = [
+        {
+          key: "director_goal_plan",
+          title: "목표 기획안",
+          status: [["plan", "director_goal_plan_id"], ["상태", "status"]],
+          sections: [
+            ["추천 부서", "recommended_departments"],
+            ["추천 직원", "recommended_staff"],
+            ["승인할 때 볼 것", "approval_items"],
+            ["안전 경계", "non_goals"],
+            ["다음 행동", "next_steps"],
+          ],
+        },
+        {
+          key: "staff_operating_plan",
+          title: "AI 직원 운영 계획",
+          status: [["직원", "agent_id"], ["부서", "department_name"], ["직책", "role_title"]],
+          sections: [
+            ["할 수 있는 일", (r) => r.authority_boundary?.can_do],
+            ["승인 필요한 일", (r) => r.authority_boundary?.must_request_approval_for],
+            ["하지 않는 일", (r) => r.authority_boundary?.must_not_do],
+            ["필수 산출물", (r) => r.output_contract?.required_outputs],
+            ["검증 자료/품질 기준", (r) => r.evidence_and_quality?.required_evidence],
+          ],
+        },
+        {
+          key: "meeting_facilitation_plan",
+          title: "회의 진행안",
+          status: [["회의", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
+          sections: [
+            ["추천 행동", "recommended_actions"],
+            ["감독자 선택지", "director_decision_options"],
+            ["막는 항목", "blockers"],
+          ],
+        },
+        {
+          key: "meeting_runbook",
+          title: "회의 운영판",
+          status: [["회의", "meeting_id"], ["상태", "status"]],
+          sections: [
+            ["다음 발언 순서", "next_turn_queue"],
+            ["판단 후보", "decision_candidates"],
+            ["인수인계 후보", "handoff_candidates"],
+            ["닫기 기준", "close_criteria"],
+            ["막는 항목", "blockers"],
+            ["감독자 체크리스트", "director_checklist"],
+          ],
+        },
+        {
+          key: "work_order_handoff_plan",
+          title: "업무 인수인계 점검",
+          status: [["업무", "work_order_id"], ["출처", "source_ref"]],
+          sections: [
+            ["추천 담당 직원", "recommended_staff"],
+            ["빠지거나 약한 항목", "missing_or_weak_items"],
+            ["필수 입력", (r) => r.handoff_contract?.inputs_required],
+            ["기대 산출물", (r) => r.handoff_contract?.expected_outputs],
+            ["승인 항목", (r) => r.handoff_contract?.approval_items],
+            ["필수 검증 자료", (r) => r.handoff_contract?.evidence_required],
+            ["다음 행동", "next_actions"],
+          ],
+        },
+        {
+          key: "knowledge_transition_plan",
+          title: "지식 전환 계획",
+          status: [["대상", "source_ref"], ["종류", "source_kind"]],
+          sections: [
+            ["가능한 행동", "possible_actions"],
+            ["받아들이면 바뀌는 것", "what_changes_if_accepted"],
+            ["바뀌지 않는 것", "what_does_not_change"],
+            ["감독자 체크리스트", "director_checklist"],
+          ],
+        },
+        {
+          key: "canon_conflict_report",
+          title: "공식 설정 충돌 점검",
+          status: [["제안", "counts.proposals"], ["결정", "counts.decisions"], ["기억", "counts.memories"]],
+          sections: [
+            ["결정 필요한 항목", "needs_director_decision"],
+            ["근거가 약한 공식 설정", "canon_records_missing_decision_evidence"],
+            ["겹침 신호", "possible_overlap_signals"],
+            ["다음 행동", "recommended_actions"],
+          ],
+        },
+        {
+          key: "project_execution_plan",
+          title: "프로젝트 실행 준비 점검",
+          status: [["project", "project_id"], ["profile", "active_profile_path"]],
+          sections: [
+            ["검증 프로필", "available_validation_profiles"],
+            ["빌드 프로필", "available_build_profiles"],
+            ["사용 가능한 도구", "available_tool_adapters"],
+            ["승인 필요한 도구", "human_approval_required_for"],
+            ["빠지거나 약한 항목", "missing_or_weak_items"],
+            ["준비 확인", "ready_to_run_checks"],
+            ["다음 행동", "recommended_next_actions"],
+          ],
+        },
+        {
+          key: "model_routing_plan",
+          title: "모델 라우팅 계획",
+          status: [["task", "task_id"], ["route", "selected_route.route"]],
+          sections: [
+            ["라우팅 규칙", "route_rules"],
+            ["권한 gate", "permission_gates"],
+            ["어댑터 요약", "adapter_summary"],
+          ],
+        },
         {
           key: "completion_evidence_checklist",
           title: "완료 근거 점검",
@@ -2616,6 +2730,16 @@ function directorConsoleHtml() {
           ],
         },
         {
+          key: "traceability_map",
+          title: "추적 지도",
+          status: [["task", "task_id"], ["제목", "task_title"]],
+          sections: [
+            ["연결된 자료", "linked_refs"],
+            ["빠진 연결", "missing_links"],
+            ["다음 행동", "recommended_next_actions"],
+          ],
+        },
+        {
           key: "studio_recovery_plan",
           title: "복구 점검",
           status: [["상태", "health"], ["재시작 명령", "safe_restart_command"]],
@@ -2655,10 +2779,16 @@ function directorConsoleHtml() {
         const sections = (spec.sections || []).map((section) => {
           const title = section[0];
           const accessor = section[1];
-          const items = typeof accessor === "function" ? accessor(report) : report[accessor];
+          const items = typeof accessor === "function" ? accessor(report) : reportValue(report, accessor);
           return reportSection(title, items);
         }).join("");
-        const hasAttention = report.blockers?.length || report.missing_items?.length || report.issues?.length || report.warnings?.length;
+        const hasAttention = asArray(report.blockers).length
+          || asArray(report.missing_items).length
+          || asArray(report.missing_or_weak_items).length
+          || asArray(report.issues).length
+          || asArray(report.warnings).length
+          || asArray(report.concerns_to_review).length
+          || asArray(report.canon_records_missing_decision_evidence).length;
         return '<div class="item ' + (hasAttention ? "warn" : "good") + '">' +
           '<h3>' + esc(spec.title) + '</h3>' +
           '<p class="summary">' + esc(summary) + '</p>' +
@@ -3231,19 +3361,11 @@ function directorConsoleHtml() {
       el("gitFileSelect").innerHTML = gitEntries.length ? gitEntries.map((entry) =>
         '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
       ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
-      const queue = [
-        ...state.materializations.slice(0, 3).map((item) => ({ label:"기록 후보", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
-        ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 보고서", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),
-        ...state.work_orders.slice(0, 3).map((wo) => ({ label:"업무 지시 후보", title:wo.work_order_id, detail:wo.status, page:"work" })),
-        ...state.proposals.slice(0, 2).map((proposal) => ({ label:"제안 검토", title:proposal.proposal_id, detail:proposal.title || proposal.status, page:"knowledge" })),
-        ...state.decisions.slice(0, 2).map((decision) => ({ label:"결정 기록", title:decision.decision_id, detail:"기억으로 전환 가능", page:"knowledge" })),
-        ...(core.backlog?.top_items || []).slice(0, 3).map((task) => ({ label:"작업 목록 후보", title:task.id, detail:task.item, page:"home", task_id:task.id })),
-        ...state.meetings.filter((meeting) => meeting.unresolved_count || meeting.follow_up_count).slice(0, 2).map((meeting) => ({ label:"회의 후속", title:meeting.meeting_id, detail:"미해결 " + meeting.unresolved_count + " · 후속 " + meeting.follow_up_count, page:"meetings" })),
-      ].slice(0, 6);
+      const queue = buildDirectorDecisionItems().slice(0, 6);
       el("homeQueueCount").textContent = queue.length ? String(queue.length) : "없음";
-      el("homeDecisionQueue").innerHTML = queue.length ? queue.map((item) =>
-        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">해당 화면 보기</button>' + (item.task_id ? workflowStartButton("승인+실행", item.task_id, "good") : "") + '</div></div>'
-      ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 보고서, 기록 후보, 업무 지시 후보가 생기면 여기에 올라옵니다.</p></div>';
+      el("homeDecisionQueue").innerHTML = queue.length
+        ? queue.map(renderDecisionCard).join("")
+        : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 완료 검토, 승인 gate, 직원 보고서 후보, 제안, Git 변경이 생기면 여기에 올라옵니다.</p></div>';
       el("homeStaffStatus").innerHTML = state.staff_agents.length ? state.staff_agents.slice(0, 6).map((agent) =>
         '<div class="compact-line"><span>' + esc(agent.display_name_ko || agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_name_ko || departmentName(agent.department_id)) + '</span></div>'
       ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
@@ -6633,11 +6755,56 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
   return sendJson(res, 404, { ok: false, error: "Not found" });
 }
 
+function listenOnce(server, host, port) {
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      server.off("error", onError);
+    };
+    const onError = (error) => {
+      cleanup();
+      reject(error);
+    };
+    server.once("error", onError);
+    server.listen(port, host, () => {
+      cleanup();
+      resolve(port);
+    });
+  });
+}
+
+async function listenWithPortFallback(server, host, requestedPort, maxAttempts = 20) {
+  let lastError = null;
+  for (let offset = 0; offset < maxAttempts; offset += 1) {
+    const port = requestedPort + offset;
+    if (port > 65535) break;
+    try {
+      await listenOnce(server, host, port);
+      return { port };
+    } catch (error) {
+      lastError = error;
+      if (error.code !== "EADDRINUSE") {
+        throw error;
+      }
+    }
+  }
+  const message = `No available Studio port from ${requestedPort} to ${Math.min(65535, requestedPort + maxAttempts - 1)}.`;
+  const error = new Error(lastError ? `${message} Last error: ${lastError.message}` : message);
+  error.code = "EADDRINUSE";
+  throw error;
+}
+
+async function writeStudioServerState(repoRoot, state) {
+  const dir = repoPath(repoRoot, "_Temp/AIWorkflowStudio");
+  await fsp.mkdir(dir, { recursive: true });
+  await fsp.writeFile(path.join(dir, "last_console_url.json"), `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
 async function startServer(options) {
   const repoRoot = path.resolve(options.repoRoot);
+  let activePort = options.port;
   const server = http.createServer(async (req, res) => {
     try {
-      const parsedUrl = new URL(req.url, `http://${options.host}:${options.port}`);
+      const parsedUrl = new URL(req.url, `http://${options.host}:${activePort}`);
       if (req.method === "GET" && parsedUrl.pathname === "/") {
         return sendHtml(res, directorConsoleHtml());
       }
@@ -6653,13 +6820,27 @@ async function startServer(options) {
     }
   });
 
-  await new Promise((resolve) => server.listen(options.port, options.host, resolve));
-  const url = `http://${options.host}:${options.port}/`;
+  const listen = await listenWithPortFallback(server, options.host, options.port);
+  activePort = listen.port;
+  const url = `http://${options.host}:${activePort}/`;
+  await writeStudioServerState(repoRoot, {
+    url,
+    host: options.host,
+    port: activePort,
+    requested_port: options.port,
+    port_fallback_used: listen.port !== options.port,
+    pid: process.pid,
+    started_at: new Date().toISOString(),
+  });
   if (options.json) {
-    console.log(JSON.stringify({ ok: true, url, repo_root: repoRoot }, null, 2));
+    console.log(JSON.stringify({ ok: true, url, repo_root: repoRoot, port: activePort, requested_port: options.port, port_fallback_used: listen.port !== options.port }, null, 2));
   } else {
     console.log("AIWorkflow Studio Director Console");
     console.log(`url: ${url}`);
+    if (listen.port !== options.port) {
+      console.log(`requested_port: ${options.port}`);
+      console.log("port_fallback_used: yes");
+    }
     console.log(`repo: ${repoRoot}`);
   }
 }
@@ -6668,6 +6849,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log("Usage: studio_director_console.bat [--host 127.0.0.1] [--port 47831] [--once] [--json]");
+    console.log("If the requested port is already busy, the server automatically tries the next available local port.");
     return;
   }
   if (options.once) {

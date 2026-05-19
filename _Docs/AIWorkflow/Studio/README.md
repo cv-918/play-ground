@@ -154,8 +154,11 @@ This slice defines:
   governed MeetingSession, WorkOrder, and Proposal candidates. Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.
-  The first covered read-only report set is completion evidence, completion
-  decision, approval impact, automation readiness, surface map, recovery plan,
+  The covered read-only report set includes DirectorGoalPlan, StaffOperatingPlan,
+  MeetingFacilitationPlan, MeetingRunbook, WorkOrderHandoffPlan,
+  KnowledgeTransitionPlan, CanonConflictReport, ProjectExecutionPlan,
+  ModelRoutingPlan, completion evidence, completion decision, approval impact,
+  automation readiness, surface map, traceability map, recovery plan,
   smoke/eval plan, and smoke status.
   page cards explain
   what the Director can do on that page, translate department/staff/artifact
@@ -286,6 +289,7 @@ tools\aiworkflow\studio_review_packet_exporter.bat export _Docs\AIWorkflow\Studi
 tools\aiworkflow\studio_start_here.bat
 tools\aiworkflow\studio_director_console.bat --host 127.0.0.1 --port 47831
 tools\aiworkflow\studio_director_console.bat --once --json
+tools\aiworkflow\studio_smoke_check.bat
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat adapter codex_cli_signed_in
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json
@@ -343,8 +347,14 @@ execution, does not call external systems, and does not grant approval by
 itself.
 For daily use, prefer `tools\aiworkflow\studio_start_here.bat`. It starts the
 local console if needed and opens `http://127.0.0.1:47831/` in the default
-browser. It does not modify workflow state, run staff, modify files, commit, or
-push.
+browser. If the default port is already occupied by another process, it selects
+the next available local port before opening the browser. It does not modify
+workflow state, run staff, modify files, commit, or push.
+For repeatable local verification, `tools\aiworkflow\studio_smoke_check.bat`
+starts a temporary local Studio server, checks the main HTML surface and
+read-only Studio report APIs, verifies read-only safety flags where available,
+prints a JSON smoke result, and then stops the temporary server unless
+`-KeepServer` is supplied.
 Meeting Room lifecycle buttons may create, start, or finalize MeetingSession
 records only through explicit UI actions; meeting lifecycle state is not
 approval, canon, task execution, or git finalization.
