@@ -24,6 +24,7 @@ This slice defines:
 - StaffAgent schema
 - Department schema
 - WorkOrder schema
+- WorkOrderHandoffPlan schema
 - MeetingSession schema
 - MeetingFacilitationPlan schema
 - MeetingRunbook schema
@@ -90,6 +91,12 @@ This slice defines:
   unresolved questions, decision candidates, handoff candidates, close
   criteria, blockers, and Director checklist without appending turns, running
   staff, creating work, writing decisions, canonizing memory, or committing.
+- Read-only WorkOrderHandoffPlan for checking whether a WorkOrder is clear
+  enough to hand to staff execution, follow-up work, or AIWorkflow task
+  creation. It summarizes the target department, recommended staff, required
+  inputs, expected outputs, approval items, verification material, weak or
+  missing handoff items, and next actions without creating staff runs, task
+  records, source changes, commits, or pushes.
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
@@ -375,6 +382,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- StaffAgent.schema.json
 |   +-- Department.schema.json
 |   +-- WorkOrder.schema.json
+|   +-- WorkOrderHandoffPlan.schema.json
 |   +-- WorkOrderTaskBinding.schema.json
 |   +-- StaffContextPacket.schema.json
 |   +-- RoleRunOutput.schema.json

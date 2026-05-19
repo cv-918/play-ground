@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/WorkOrderHandoffPlan.schema.json",
+  "title": "WorkOrderHandoffPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "work_order_handoff_plan_id",
+    "work_order_id",
+    "objective",
+    "current_meaning",
+    "target_department",
+    "recommended_staff",
+    "handoff_contract",
+    "missing_or_weak_items",
+    "next_actions",
+    "safety"
+  ],
+  "properties": {
+    "work_order_handoff_plan_id": { "type": "string" },
+    "work_order_id": { "type": "string" },
+    "source_type": { "type": "string" },
+    "source_ref": { "type": "string" },
+    "objective": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "target_department": { "type": "object" },
+    "recommended_staff": { "type": "array", "items": { "type": "object" } },
+    "handoff_contract": { "type": "object" },
+    "missing_or_weak_items": { "type": "array", "items": { "type": "string" } },
+    "next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "context_packet_written",
+        "staff_run_started",
+        "task_created",
+        "source_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}

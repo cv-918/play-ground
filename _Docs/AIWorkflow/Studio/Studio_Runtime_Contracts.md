@@ -227,6 +227,28 @@ write memory, canonize decisions, change task state, commit, or push. It exists
 so the Human Director can understand the staff member as an accountable worker
 rather than a role-playing prompt.
 
+## WorkOrder Handoff Plan Contract
+
+A WorkOrder should be reviewable before it is handed to an AI staff member,
+follow-up work, or AIWorkflow task creation.
+
+A WorkOrderHandoffPlan explains:
+
+- what the WorkOrder currently means
+- which department owns the work
+- which staff members are recommended to receive it
+- what inputs the receiving staff must get
+- what outputs the receiving staff must produce
+- which approval items must stay visible
+- which verification material is required
+- which handoff items are missing or weak
+- which next action is safe
+
+Reading a WorkOrderHandoffPlan is read-only. It must not create a
+StaffContextPacket, start a staff run, create a task, write source files,
+commit, or push. It exists so the Human Director can see whether the work is
+ready to delegate without hunting through the raw WorkOrder JSON.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

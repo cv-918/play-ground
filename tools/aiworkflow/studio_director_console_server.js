@@ -2986,6 +2986,7 @@ function directorConsoleHtml() {
         listHtml(wo.approval_items) +
         '</div>' +
         actionsHtml([
+          button("인수인계 점검", "workorder-handoff-plan", wo.path),
           button("직원 자료 미리보기", "workorder-context-plan", wo.path),
           button("직원 자료 저장", "workorder-context-create", wo.path, "good"),
           button("직원 실행 계획", "workorder-staff-plan", wo.path),
@@ -3527,6 +3528,7 @@ function directorConsoleHtml() {
         log(await post("/api/studio/decision/create-memory", { path:filePath, status }));
         await refresh();
       }
+      if (action === "workorder-handoff-plan") return log(await post("/api/studio/workorder/handoff-plan", { path:filePath }));
       if (action === "workorder-context-plan") return log(await post("/api/studio/workorder/context-plan", { path:filePath }));
       if (action === "workorder-context-create") {
         if (!confirm("이 업무 지시를 담당 직원용 실행 자료로 저장할까요? 직원 실행은 아직 시작하지 않습니다.")) return;
@@ -4560,6 +4562,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "MeetingRunbook.schema.json",
     "KnowledgeTransitionPlan.schema.json",
     "CanonConflictReport.schema.json",
+    "WorkOrderHandoffPlan.schema.json",
     "ProjectExecutionPlan.schema.json",
     "CompletionDecisionPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
@@ -4694,6 +4697,72 @@ function buildWorkOrderFromMeetingPayload(meeting = {}) {
     handoff_plan: participants.length ? participants.map((agent) => `${agent} contributes within role authority.`) : ["Assign a suitable StaffAgent before execution."],
     target_project_profile: "playground",
     status: "director_review",
+  };
+}
+
+async function buildWorkOrderHandoffPlan(repoRoot, workOrder = {}) {
+  const directory = await getStaffDirectory(repoRoot);
+  const agentIds = stringList(workOrder.assigned_agents);
+  const department = directory.departments.find((item) => item.department_id === workOrder.department_id);
+  const agents = agentIds
+    .map((agentId) => directory.staff.find((agent) => agent.agent_id === agentId))
+    .filter(Boolean);
+  const fallbackAgents = directory.staff
+    .filter((agent) => agent.department_id === workOrder.department_id)
+    .slice(0, 3);
+  const recommendedAgents = agents.length ? agents : fallbackAgents;
+  const missing = [];
+  if (!stringList(workOrder.scope).length) missing.push("포함 범위가 비어 있습니다.");
+  if (!stringList(workOrder.non_goals).length) missing.push("제외 범위가 비어 있습니다.");
+  if (!stringList(workOrder.expected_outputs).length) missing.push("기대 산출물이 비어 있습니다.");
+  if (!stringList(workOrder.verification_plan).length) missing.push("검증 계획이 비어 있습니다.");
+  if (!recommendedAgents.length) missing.push("담당 AI 직원을 찾지 못했습니다.");
+  if (!Array.isArray(workOrder.approval_items) || !workOrder.approval_items.length) missing.push("승인 항목이 없습니다. 저위험 읽기 작업이 아니라면 승인 범위를 보강해야 합니다.");
+
+  return {
+    work_order_handoff_plan_id: makeStudioId("WOH", workOrder.work_order_id || workOrder.objective || "workorder"),
+    work_order_id: workOrder.work_order_id || "",
+    source_type: workOrder.source_type || "",
+    source_ref: workOrder.source_ref || "",
+    objective: workOrder.objective || "",
+    current_meaning: "업무 지시를 실제 AI 직원 실행, 후속 업무, 또는 AIWorkflow task로 넘기기 전에 인수인계 품질을 확인합니다.",
+    target_department: {
+      department_id: workOrder.department_id || "",
+      name: department ? department.name_ko || department.name : workOrder.department_id || "",
+      review_gates: department ? department.review_gate_labels || [] : [],
+    },
+    recommended_staff: recommendedAgents.map((agent) => ({
+      agent_id: agent.agent_id,
+      display_name: agent.display_name_ko || agent.display_name || agent.agent_id,
+      role_title: agent.role_title_ko || agent.role_title,
+      why: agentIds.includes(agent.agent_id)
+        ? "업무 지시에 이미 배정된 직원입니다."
+        : "같은 부서의 대체 담당 후보입니다.",
+    })),
+    handoff_contract: {
+      inputs_required: [
+        ...(workOrder.scope || []).map((item) => `포함 범위: ${item}`),
+        ...(workOrder.non_goals || []).map((item) => `제외 범위: ${item}`),
+      ],
+      expected_outputs: stringList(workOrder.expected_outputs),
+      approval_items: approvalSummaryList(workOrder.approval_items),
+      evidence_required: stringList(workOrder.evidence_requirements).length
+        ? stringList(workOrder.evidence_requirements)
+        : stringList(workOrder.verification_plan),
+    },
+    missing_or_weak_items: missing,
+    next_actions: missing.length
+      ? ["업무 지시 내용을 보강한 뒤 직원 자료 미리보기 또는 직원 실행 계획을 다시 확인합니다."]
+      : ["직원 자료 미리보기로 전달 문맥을 확인합니다.", "직원 실행 계획으로 모델/명령/권한을 확인합니다.", "필요하면 작업 목록에 넣어 AIWorkflow gate를 통과시킵니다."],
+    safety: {
+      read_only: true,
+      context_packet_written: false,
+      staff_run_started: false,
+      task_created: false,
+      source_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
   };
 }
 
@@ -5460,6 +5529,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
     const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/handoff-plan") {
+    const body = await readRequestJson(req);
+    const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+    const payload = await buildWorkOrderHandoffPlan(repoRoot, workOrder);
+    return sendJson(res, 200, {
+      ok: true,
+      work_order_handoff_plan: payload,
+      safety: payload.safety,
+    });
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/context-plan") {
