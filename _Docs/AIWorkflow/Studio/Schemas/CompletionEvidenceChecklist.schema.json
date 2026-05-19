@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/CompletionEvidenceChecklist.schema.json",
+  "title": "CompletionEvidenceChecklist",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "completion_evidence_checklist_id",
+    "task_id",
+    "task_title",
+    "runner_run_id",
+    "current_meaning",
+    "ready_to_decide",
+    "evidence_items",
+    "missing_items",
+    "recommended_next_actions",
+    "safety"
+  ],
+  "properties": {
+    "completion_evidence_checklist_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "task_title": { "type": "string" },
+    "runner_run_id": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "ready_to_decide": { "type": "boolean" },
+    "verdict": { "type": "string" },
+    "evidence_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "meaning", "ref"],
+        "properties": {
+          "name": { "type": "string" },
+          "status": { "type": "string" },
+          "meaning": { "type": "string" },
+          "ref": { "type": "string" }
+        }
+      }
+    },
+    "missing_items": { "type": "array", "items": { "type": "string" } },
+    "concerns_to_review": { "type": "array", "items": { "type": "string" } },
+    "warnings_to_review": { "type": "array", "items": { "type": "string" } },
+    "recommended_next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": ["read_only", "finalization_written", "task_done_changed", "commit_or_push"]
+    },
+    "created_at": { "type": "string" }
+  }
+}

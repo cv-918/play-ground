@@ -42,6 +42,7 @@ This slice defines:
 - RoleRunOutput schema
 - ToolAdapter schema
 - ProjectExecutionPlan schema
+- CompletionEvidenceChecklist schema
 - CompletionDecisionPlan schema
 - AutomationReadinessPlan schema
 - StudioSmokeReport schema
@@ -97,6 +98,11 @@ This slice defines:
   inputs, expected outputs, approval items, verification material, weak or
   missing handoff items, and next actions without creating staff runs, task
   records, source changes, commits, or pushes.
+- Read-only CompletionEvidenceChecklist for checking whether the latest task
+  has the required runner record, verification report, completion report,
+  completion card, and git state before the Human Director chooses a
+  completion decision. It does not finalize completion, mark tasks done,
+  commit, or push.
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
@@ -396,6 +402,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- ToolRun.schema.json
 |   +-- ToolRunRequest.schema.json
 |   +-- ToolAdapter.schema.json
+|   +-- CompletionEvidenceChecklist.schema.json
 |   +-- ConditionalAutomationCase.schema.json
 +-- Registries/
 |   +-- departments.initial.json

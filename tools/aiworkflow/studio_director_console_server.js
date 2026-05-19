@@ -2230,7 +2230,7 @@ function directorConsoleHtml() {
             </ul>
           </div>
           <div class="grid">
-            <div class="card"><div class="section-title"><h2>워크플로우 검토</h2><button class="secondary" data-action="completion-decision-plan">완료 판단안</button></div><div id="workflowReview" class="list"></div></div>
+            <div class="card"><div class="section-title"><h2>워크플로우 검토</h2><div class="row"><button class="secondary" data-action="completion-evidence-checklist">완료 근거 점검</button><button class="secondary" data-action="completion-decision-plan">완료 판단안</button></div></div><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
             <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
           </div>
@@ -3543,6 +3543,7 @@ function directorConsoleHtml() {
       }
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
+      if (action === "completion-evidence-checklist") return log(await post("/api/studio/completion/evidence-checklist", {}));
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
@@ -4494,6 +4495,85 @@ function buildCompletionDecisionPlan(core = {}) {
   };
 }
 
+function buildCompletionEvidenceChecklist(core = {}) {
+  const task = core.active_task || {};
+  const runner = core.runner || {};
+  const verification = core.verification || {};
+  const completion = core.completion || {};
+  const git = core.git || {};
+  const items = [
+    {
+      name: "Runner 실행 기록",
+      status: runner.path ? "present" : "missing",
+      meaning: runner.path
+        ? "작업 실행이 어떤 상태로 멈췄는지 확인할 수 있습니다."
+        : "Runner 실행 기록을 찾지 못했습니다.",
+      ref: runner.path || "",
+    },
+    {
+      name: "검증 보고서",
+      status: verification.path ? "present" : "missing",
+      meaning: verification.path
+        ? `검증 판정은 ${verification.verdict || "미기록"}입니다.`
+        : "검증 보고서를 찾지 못했습니다.",
+      ref: verification.path || "",
+    },
+    {
+      name: "완료 보고서",
+      status: completion.path ? "present" : "missing",
+      meaning: completion.path
+        ? "완료 상태, 남은 우려, 경고를 확인할 수 있습니다."
+        : "완료 보고서를 찾지 못했습니다.",
+      ref: completion.path || "",
+    },
+    {
+      name: "완료 카드",
+      status: completion.card_path ? "present" : "missing",
+      meaning: completion.card_path
+        ? "감독자가 읽기 쉬운 완료 요약을 확인할 수 있습니다."
+        : "완료 카드를 찾지 못했습니다.",
+      ref: completion.card_path || "",
+    },
+    {
+      name: "Git 변경 상태",
+      status: git.dirty ? "present" : "clean",
+      meaning: git.dirty
+        ? `${git.changed_count || 0}개 변경이 있어 commit 전 diff 확인이 필요합니다.`
+        : "현재 git 변경이 없습니다.",
+      ref: git.diff_stat || "",
+    },
+  ];
+  const missing = items.filter((item) => item.status === "missing").map((item) => item.name);
+  const concerns = stringList(completion.remaining_concerns);
+  const warnings = stringList(completion.remaining_warnings);
+  const ready = !missing.length && !["FAIL", "BLOCKED"].includes(String(verification.verdict || "").toUpperCase());
+  return {
+    completion_evidence_checklist_id: makeStudioId("CEC", task.task_id || "completion"),
+    task_id: task.task_id || "",
+    task_title: task.title || "",
+    runner_run_id: runner.runner_run_id || "",
+    current_meaning: "완료 판단 전에 필요한 검증 자료가 모였는지 확인하는 읽기 전용 점검입니다.",
+    ready_to_decide: ready,
+    verdict: verification.verdict || "",
+    evidence_items: items,
+    missing_items: missing,
+    concerns_to_review: concerns.slice(0, 12),
+    warnings_to_review: warnings.slice(0, 12),
+    recommended_next_actions: missing.length
+      ? ["빠진 검증 자료를 먼저 생성하거나 Runner 상태를 다시 확인합니다.", "근거가 부족하면 완료 승인 대신 수정 요청 또는 보류를 선택합니다."]
+      : concerns.length
+        ? ["완료 판단안에서 우려 감수와 수정 요청 중 무엇이 맞는지 결정합니다.", "우려를 감수한다면 무엇을 감수하는지 FinalizationLog에 남깁니다."]
+        : ["완료 판단안에서 완료 승인 여부를 결정합니다.", "완료 후 commit/push는 별도 git gate에서 처리합니다."],
+    safety: {
+      read_only: true,
+      finalization_written: false,
+      task_done_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
 async function buildAutomationReadinessPlan(repoRoot) {
   const core = await getWorkflowCore(repoRoot);
   const automation = await getConditionalAutomation(repoRoot);
@@ -4564,6 +4644,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "CanonConflictReport.schema.json",
     "WorkOrderHandoffPlan.schema.json",
     "ProjectExecutionPlan.schema.json",
+    "CompletionEvidenceChecklist.schema.json",
     "CompletionDecisionPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
   ];
@@ -5488,6 +5569,16 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       completion_decision_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/completion/evidence-checklist") {
+    const core = await getWorkflowCore(repoRoot);
+    const payload = buildCompletionEvidenceChecklist(core);
+    return sendJson(res, 200, {
+      ok: true,
+      completion_evidence_checklist: payload,
       safety: payload.safety,
     });
   }

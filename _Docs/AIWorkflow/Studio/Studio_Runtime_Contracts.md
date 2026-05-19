@@ -162,6 +162,21 @@ The system may collect validation material and summarize completion state, but
 it must not decide that work is complete without the appropriate policy gate or
 human decision.
 
+Before the decision, a CompletionEvidenceChecklist may summarize whether the
+latest task has:
+
+- a Runner execution record
+- a VerificationReport
+- a CompletionReport
+- a CompletionCard
+- a visible git state
+- remaining concerns or warnings
+- missing material that should block completion approval
+
+Reading a CompletionEvidenceChecklist is read-only. It must not write a
+FinalizationLog, mark a task done, commit, or push. It exists to answer the
+Director question: "Do I have enough material to decide?"
+
 A CompletionDecisionPlan explains:
 
 - the current task and runner run
