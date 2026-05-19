@@ -2131,7 +2131,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="knowledge">
           <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
           <div class="card">
-            <h2>이 화면에서 할 수 있는 일</h2>
+            <div class="section-title"><h2>이 화면에서 할 수 있는 일</h2><button class="secondary" data-action="canon-conflict-report">Canon 충돌 점검</button></div>
             <ul class="small">
               <li>제안은 아이디어입니다. 채택하거나 반려해도 곧바로 공식 설정이나 구현 승인이 되지는 않습니다.</li>
               <li>결정은 Human Director가 어떤 방향을 받아들였는지 남기는 기록입니다.</li>
@@ -3520,6 +3520,7 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "knowledge-transition-plan") return log(await post("/api/studio/knowledge/transition-plan", { path:filePath }));
+      if (action === "canon-conflict-report") return log(await post("/api/studio/knowledge/canon-conflict-report", {}));
       if (action === "decision-create-memory" || action === "decision-create-canon") {
         const status = action === "decision-create-canon" ? "canon" : "approved";
         if (!confirm("이 결정을 기억 기록으로 남길까요? 공식 설정으로 저장하면 이후 Studio 직원들이 확정 설정/결정으로 참고합니다.")) return;
@@ -4294,6 +4295,91 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   return base;
 }
 
+async function buildCanonConflictReport(repoRoot) {
+  const proposals = await getProposals(repoRoot);
+  const decisions = await getDecisions(repoRoot);
+  const memories = await getMemories(repoRoot);
+  const canonMemories = memories.filter((memory) => memory.status === "canon" || memory.scope === "canon" || memory.type === "canon");
+  const activeProposals = proposals.filter((proposal) => !["rejected", "superseded"].includes(String(proposal.status || "").toLowerCase()));
+  const proposedMemories = memories.filter((memory) => !["canon", "rejected", "superseded"].includes(String(memory.status || "").toLowerCase()));
+  const sourceRefs = new Set([
+    ...decisions.map((decision) => decision.decision_id),
+    ...decisions.map((decision) => decision.target_ref),
+  ].filter(Boolean));
+  const needsDecision = [
+    ...activeProposals.map((proposal) => ({
+      kind: "proposal",
+      ref: proposal.proposal_id,
+      summary: proposal.title || proposal.summary,
+      reason: "제안은 아이디어 후보라서 공식 설정이나 구현 근거가 되려면 Human Director 결정이 필요합니다.",
+    })),
+    ...proposedMemories.map((memory) => ({
+      kind: "memory",
+      ref: memory.memory_id,
+      summary: memory.content,
+      reason: "이 기억은 canon이 아니므로 확정 설정처럼 사용하면 안 됩니다.",
+    })),
+  ].slice(0, 12);
+  const missingDecisionRefs = canonMemories
+    .filter((memory) => !stringList(memory.evidence_refs || memory.source_refs).some((ref) => sourceRefs.has(ref)))
+    .map((memory) => ({
+      kind: "canon_memory",
+      ref: memory.memory_id,
+      summary: memory.content,
+      reason: "canon 기억이지만 연결된 Decision 근거를 찾지 못했습니다. 실제 승인 근거를 확인해야 합니다.",
+    }));
+  const overlapSignals = [];
+  const canonTexts = canonMemories.map((memory) => ({
+    ref: memory.memory_id,
+    text: String(memory.content || "").toLowerCase(),
+    summary: memory.content,
+  }));
+  for (const proposal of activeProposals) {
+    const proposalText = String([proposal.title, proposal.summary, ...(proposal.risks || [])].join(" ")).toLowerCase();
+    const tokens = Array.from(new Set(proposalText.split(/[^a-z0-9가-힣_]+/u).filter((token) => token.length >= 4))).slice(0, 40);
+    for (const canon of canonTexts) {
+      const matched = tokens.filter((token) => canon.text.includes(token)).slice(0, 5);
+      if (matched.length >= 2) {
+        overlapSignals.push({
+          proposal_ref: proposal.proposal_id,
+          canon_ref: canon.ref,
+          matched_terms: matched,
+          reason: "제안과 기존 canon 기억이 같은 핵심 단어를 공유합니다. 충돌인지, 보강인지 사람이 확인해야 합니다.",
+        });
+      }
+    }
+  }
+  return {
+    canon_conflict_report_id: makeStudioId("CCR", "canon-conflict"),
+    generated_at: studioTimestampParts().iso,
+    current_meaning: "제안, 결정, 기억, 공식 설정 후보가 서로 섞이지 않았는지 확인하는 읽기 전용 점검입니다.",
+    counts: {
+      proposals: proposals.length,
+      decisions: decisions.length,
+      memories: memories.length,
+      canon_memories: canonMemories.length,
+      active_proposals: activeProposals.length,
+    },
+    needs_director_decision: needsDecision,
+    canon_records_missing_decision_evidence: missingDecisionRefs,
+    possible_overlap_signals: overlapSignals.slice(0, 12),
+    recommended_actions: [
+      "제안은 채택/수정 요청/반려/공식 설정 후보 중 하나로 Decision을 남깁니다.",
+      "canon 기억에 근거 Decision이 없으면 근거를 보강하거나 canon 상태를 재검토합니다.",
+      "제안과 canon이 겹치면 충돌인지 보강인지 확인하고 필요한 경우 수정 요청 Decision을 남깁니다.",
+    ],
+    safety: {
+      read_only: true,
+      proposal_changed: false,
+      decision_written: false,
+      memory_written: false,
+      canon_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+  };
+}
+
 async function buildProjectExecutionPlan(repoRoot) {
   const profiles = await getProjectProfiles(repoRoot);
   const toolAdapters = await getToolAdapters(repoRoot);
@@ -4473,6 +4559,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "MeetingFacilitationPlan.schema.json",
     "MeetingRunbook.schema.json",
     "KnowledgeTransitionPlan.schema.json",
+    "CanonConflictReport.schema.json",
     "ProjectExecutionPlan.schema.json",
     "CompletionDecisionPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
@@ -5304,6 +5391,15 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       knowledge_transition_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/knowledge/canon-conflict-report") {
+    const payload = await buildCanonConflictReport(repoRoot);
+    return sendJson(res, 200, {
+      ok: true,
+      canon_conflict_report: payload,
       safety: payload.safety,
     });
   }

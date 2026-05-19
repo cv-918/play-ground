@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/CanonConflictReport.schema.json",
+  "title": "CanonConflictReport",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "canon_conflict_report_id",
+    "generated_at",
+    "current_meaning",
+    "counts",
+    "needs_director_decision",
+    "canon_records_missing_decision_evidence",
+    "possible_overlap_signals",
+    "recommended_actions",
+    "safety"
+  ],
+  "properties": {
+    "canon_conflict_report_id": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "counts": { "type": "object" },
+    "needs_director_decision": { "type": "array", "items": { "type": "object" } },
+    "canon_records_missing_decision_evidence": { "type": "array", "items": { "type": "object" } },
+    "possible_overlap_signals": { "type": "array", "items": { "type": "object" } },
+    "recommended_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "proposal_changed",
+        "decision_written",
+        "memory_written",
+        "canon_changed",
+        "task_state_changed",
+        "commit_or_push"
+      ]
+    }
+  }
+}

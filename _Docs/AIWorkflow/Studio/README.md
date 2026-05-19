@@ -29,6 +29,7 @@ This slice defines:
 - MeetingRunbook schema
 - MemoryRecord schema
 - KnowledgeTransitionPlan schema
+- CanonConflictReport schema
 - Proposal schema
 - Decision schema
 - Handoff schema
@@ -73,6 +74,12 @@ This slice defines:
   Director decision, a normal memory, or canon-like memory; what changes when
   it is accepted; what does not change; and what the Human Director must check
   before turning it into memory or canon.
+- Read-only CanonConflictReport that checks Proposal, Decision, MemoryRecord,
+  and canon MemoryRecord separation. It identifies proposal or memory records
+  that still need a Director decision, canon records without visible Decision
+  evidence, and possible overlap signals between active proposals and existing
+  canon without changing proposals, writing decisions, writing memory,
+  changing canon, changing task state, or committing.
 - Local MeetingSession runtime validation and handoff tool
 - Deterministic Meeting Facilitation Plan that explains the current meeting
   state, recommends the next speaker/action, lists Director decision options,

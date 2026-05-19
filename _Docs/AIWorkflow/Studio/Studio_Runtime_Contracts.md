@@ -114,6 +114,24 @@ rules. A Knowledge Transition Plan explains:
 Reading a transition plan is read-only. Creating a Decision, MemoryRecord, or
 canon MemoryRecord remains an explicit button action.
 
+## Canon Conflict Report Contract
+
+The Studio must keep ideas, decisions, reusable memory, and official canon
+separate.
+
+A CanonConflictReport explains:
+
+- how many Proposal, Decision, MemoryRecord, and canon MemoryRecord records
+  currently exist
+- which proposals or memories still need a Director decision
+- which canon records do not show an obvious Decision reference
+- which active proposals overlap with existing canon text and may need human
+  review
+- which next actions can resolve the ambiguity
+
+This report is read-only. It must not change proposals, write Decisions, write
+MemoryRecords, change canon status, change task state, commit, or push.
+
 ## Project Execution Contract
 
 Project execution depends on the active Project Profile and tool adapter
