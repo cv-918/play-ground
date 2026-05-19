@@ -206,6 +206,39 @@ async function getStaffRuns(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+async function getContextPackets(repoRoot) {
+  const roots = [
+    repoPath(repoRoot, "_Docs/AIWorkflow/Studio/ContextPackets"),
+    repoPath(repoRoot, "_Temp/AIWorkflowStudio/console_inputs"),
+  ];
+  const files = [];
+  for (const root of roots) {
+    files.push(...(await listFiles(root, (_full, name) => name.endsWith(".json"))));
+  }
+
+  const items = [];
+  for (const file of files) {
+    const json = await readJsonIfExists(file);
+    if (!json || !json.context_packet_id) continue;
+    const stat = await fsp.stat(file);
+    items.push({
+      context_packet_id: json.context_packet_id || "",
+      role_run_id: json.role_run_id || "",
+      agent_id: json.agent_id || "",
+      department_id: json.department_id || "",
+      source_ref: json.source_ref || "",
+      objective: json.objective || "",
+      approved_scope: stringList(json.approved_scope),
+      required_outputs: stringList(json.required_outputs),
+      path: toRepoRelative(repoRoot, file),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+      is_durable: slash(file).includes("/_Docs/AIWorkflow/Studio/ContextPackets/"),
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 async function getMaterializations(repoRoot) {
   const dir = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Materializations");
   let entries = [];
@@ -262,6 +295,15 @@ async function getWorkOrders(repoRoot) {
       objective: json.objective || "",
       department_id: json.department_id || "",
       status: json.status || "",
+      source_type: json.source_type || "",
+      source_ref: json.source_ref || "",
+      assigned_agents: stringList(json.assigned_agents),
+      primary_agent_id: firstString(json.assigned_agents),
+      scope: stringList(json.scope),
+      non_goals: stringList(json.non_goals),
+      expected_outputs: stringList(json.expected_outputs),
+      approval_items: approvalSummaryList(json.approval_items),
+      verification_plan: stringList(json.verification_plan),
       path: toRepoRelative(repoRoot, full),
       href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
       updated_at: stat.mtime.toISOString(),
@@ -292,7 +334,13 @@ async function getProposals(repoRoot) {
       summary: json.summary || "",
       status: json.status || "",
       source_agent_id: json.source_agent_id || "",
+      source_type: json.source_type || "",
+      source_ref: json.source_ref || "",
       option_count: Array.isArray(json.options) ? json.options.length : 0,
+      risks: stringList(json.risks),
+      dependencies: stringList(json.dependencies),
+      approval_items: stringList(json.approval_items),
+      evidence_refs: stringList(json.evidence_refs),
       path: toRepoRelative(repoRoot, full),
       href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
       updated_at: stat.mtime.toISOString(),
@@ -322,6 +370,10 @@ async function getDecisions(repoRoot) {
       decision_type: json.decision_type || "",
       target_ref: json.target_ref || "",
       summary: json.decision_summary || "",
+      accepted_scope: stringList(json.accepted_scope),
+      rejected_scope: stringList(json.rejected_scope),
+      conditions: stringList(json.conditions),
+      evidence_refs: stringList(json.evidence_refs),
       path: toRepoRelative(repoRoot, full),
       href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, full))}`,
       updated_at: stat.mtime.toISOString(),
@@ -385,6 +437,14 @@ async function getMeetings(repoRoot) {
       topic: json.topic || "",
       meeting_type: json.meeting_type || "",
       status: json.status || "",
+      participants: stringList(json.participants),
+      agenda: stringList(json.agenda),
+      proposals: stringList(json.proposals),
+      objections: stringList(json.objections),
+      unresolved_questions: stringList(json.unresolved_questions),
+      accepted_directions: stringList(json.accepted_directions),
+      rejected_directions: stringList(json.rejected_directions),
+      follow_up_workorders: stringList(json.follow_up_workorders),
       participant_count: Array.isArray(json.participants) ? json.participants.length : 0,
       unresolved_count: Array.isArray(json.unresolved_questions) ? json.unresolved_questions.length : 0,
       follow_up_count: Array.isArray(json.follow_up_workorders) ? json.follow_up_workorders.length : 0,
@@ -459,6 +519,39 @@ async function getToolAdapters(repoRoot) {
     path: toRepoRelative(repoRoot, registryPath),
     href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, registryPath))}`,
   }));
+}
+
+async function getToolRunRequests(repoRoot) {
+  const root = repoPath(repoRoot, "_Docs/AIWorkflow/Studio/ToolRuns");
+  const files = await listFiles(root, (_full, name) => name.startsWith("TRQ-") && name.endsWith(".json"));
+  const items = [];
+
+  for (const file of files) {
+    const json = await readJsonIfExists(file);
+    if (!json || !json.tool_run_request_id) continue;
+    const stat = await fsp.stat(file);
+    items.push({
+      tool_run_request_id: json.tool_run_request_id || "",
+      requester_type: json.requester_type || "",
+      requester_ref: json.requester_ref || "",
+      work_order_id: json.work_order_id || "",
+      role_run_id: json.role_run_id || "",
+      tool_adapter_id: json.tool_adapter_id || "",
+      requested_action: json.requested_action || "",
+      permission_class: json.permission_class || "",
+      purpose: json.purpose || "",
+      input_refs: stringList(json.input_refs),
+      expected_outputs: stringList(json.expected_outputs),
+      evidence_requirements: stringList(json.evidence_requirements),
+      approval_ref: json.approval_ref || "",
+      status: json.status || "",
+      path: toRepoRelative(repoRoot, file),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, file))}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+
+  return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
 async function getConditionalAutomation(repoRoot) {
@@ -557,6 +650,87 @@ const REVIEW_GATE_LABELS = {
   release_readiness: "릴리즈 준비",
 };
 
+const SENIORITY_LABELS = {
+  director: "디렉터",
+  lead: "리드",
+  senior: "시니어",
+};
+
+const STAFF_UI = {
+  executive_producer: {
+    name: "총괄 프로듀서",
+    role: "총괄 프로듀서",
+    mission: "작업 범위, 우선순위, 승인 대기열, 완료 가능성을 관리합니다.",
+    authority: ["범위 축소 제안", "명확화 질문 요청", "업무 순서 제안"],
+    approvals: ["마일스톤 방향 변경", "고위험 유예 수용", "커밋 또는 릴리즈"],
+    outputs: ["범위 권장안", "위험 목록", "승인 필요 항목"],
+  },
+  creative_director: {
+    name: "크리에이티브 디렉터",
+    role: "크리에이티브 디렉터",
+    mission: "디자인, 스토리, 아트, 플레이 경험이 한 방향으로 맞는지 검토합니다.",
+    authority: ["크리에이티브 방향 제안", "일관성 없는 제안에 우려 제기", "회의 요청"],
+    approvals: ["공식 설정 변경", "큰 톤 변경", "장르 방향 변경"],
+    outputs: ["크리에이티브 방향 브리프", "승인 필요 항목"],
+  },
+  game_designer: {
+    name: "게임 디자이너",
+    role: "게임 디자이너",
+    mission: "방향성을 플레이 가능한 루프, 시스템, 진행 구조 제안으로 바꿉니다.",
+    authority: ["메커닉 제안", "약한 플레이 루프 지적", "프로토타입 범위 요청"],
+    approvals: ["코어 루프 변경", "진행 구조 변경", "구현 작업 생성"],
+    outputs: ["게임 디자인 제안", "위험 목록", "승인 필요 항목"],
+  },
+  scenario_director: {
+    name: "시나리오 디렉터",
+    role: "시나리오 디렉터",
+    mission: "스토리 방향, 세계관 제안, 캐릭터 갈등, 시나리오 작업 분해를 담당합니다.",
+    authority: ["세계관 제안", "약한 캐릭터 동기 지적", "공식 설정 결정 요청"],
+    approvals: ["핵심 세계관", "주인공 정의", "주요 캐릭터 공식 설정"],
+    outputs: ["시나리오 피치", "스토리 흐름 계획", "캐릭터 브리프"],
+  },
+  technical_architect: {
+    name: "기술 아키텍트",
+    role: "기술 아키텍트",
+    mission: "기술 경계, 런타임 안정성, 유지보수 가능한 구현 계획을 지킵니다.",
+    authority: ["아키텍처 제약 제안", "저장소 분석 요청", "위험한 구현 계획 차단"],
+    approvals: ["구조 리팩터", "스키마 변경", "저장/로드 동작 변경"],
+    outputs: ["기술 설계 브리프", "구현 제약", "검증 계획"],
+  },
+  tools_engineer: {
+    name: "툴 엔지니어",
+    role: "툴 엔지니어",
+    mission: "거버넌스를 약화하지 않으면서 워크플로우 도구와 자동화를 만듭니다.",
+    authority: ["도구 명령 제안", "안전 검사 정의", "등록/재시작 검증 요청"],
+    approvals: ["명령 동작 변경", "쓰기 실행 추가", "자동 승인 범위 확장"],
+    outputs: ["도구 변경 계획", "안전 경계", "검증 증거"],
+  },
+  art_director: {
+    name: "아트 디렉터",
+    role: "아트 디렉터",
+    mission: "생성 또는 반입 전에 비주얼 정체성과 에셋 품질을 검토합니다.",
+    authority: ["스타일 방향 제안", "일관성 없는 비주얼 반려", "에셋 검증 요청"],
+    approvals: ["생성 에셋 반입", "아트 스타일 공식 설정 변경", "추적 중인 에셋 교체"],
+    outputs: ["아트 방향 브리프", "에셋 승인 항목"],
+  },
+  qa_tester: {
+    name: "QA 테스터",
+    role: "QA 테스터",
+    mission: "승인된 작업이 실제로 완료 기준을 만족했는지 증거로 확인합니다.",
+    authority: ["검증 누락 표시", "재현 정보 요청", "BLOCKED/CONCERNS 권고"],
+    approvals: ["건너뛴 검증 수용", "고위험 작업 done 처리", "테스트 정책 변경"],
+    outputs: ["QA 보고서", "검증 메모", "남은 위험"],
+  },
+  documentation_keeper: {
+    name: "문서 관리자",
+    role: "문서 관리자",
+    mission: "워크플로우, 프로젝트, DevLog, 가이드 문서가 실제 동작과 맞게 유지되도록 관리합니다.",
+    authority: ["가이드 갱신 요청", "문서 불일치 지적", "알려진 위험 기록"],
+    approvals: ["워크플로우 기준 문서 변경", "영구 문서 삭제", "검증 완료 주장"],
+    outputs: ["문서 갱신", "가이드 갱신 판단", "알려진 위험"],
+  },
+};
+
 function translateItems(values, labels) {
   return values.map((value) => labels[value] || value);
 }
@@ -596,19 +770,36 @@ async function getStaffDirectory(repoRoot) {
     };
   });
 
-  const staff = staffAgents.map((agent) => ({
-    agent_id: agent.agent_id || "",
-    display_name: agent.display_name || "",
-    department_id: agent.department_id || "",
-    role_title: agent.role_title || "",
-    seniority: agent.seniority || "",
-    mission: agent.role_charter && agent.role_charter.mission ? agent.role_charter.mission : "",
-    authority: agent.role_charter && Array.isArray(agent.role_charter.authority) ? agent.role_charter.authority.slice(0, 3) : [],
-    approval_required_actions: agent.role_charter && Array.isArray(agent.role_charter.approval_required_actions) ? agent.role_charter.approval_required_actions.slice(0, 3) : [],
-    output_contracts: agent.output_contracts && Array.isArray(agent.output_contracts.required_outputs) ? agent.output_contracts.required_outputs.slice(0, 3) : [],
-    path: toRepoRelative(repoRoot, staffPath),
-    href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, staffPath))}`,
-  }));
+  const staff = staffAgents.map((agent) => {
+    const agentId = agent.agent_id || "";
+    const ui = STAFF_UI[agentId] || {};
+    const departmentId = agent.department_id || "";
+    const departmentUi = DEPARTMENT_UI[departmentId] || {};
+    const authority = agent.role_charter && Array.isArray(agent.role_charter.authority) ? agent.role_charter.authority.slice(0, 3) : [];
+    const approvals = agent.role_charter && Array.isArray(agent.role_charter.approval_required_actions) ? agent.role_charter.approval_required_actions.slice(0, 3) : [];
+    const outputs = agent.output_contracts && Array.isArray(agent.output_contracts.required_outputs) ? agent.output_contracts.required_outputs.slice(0, 3) : [];
+    return {
+      agent_id: agentId,
+      display_name: agent.display_name || "",
+      display_name_ko: ui.name || agent.display_name || agentId,
+      department_id: departmentId,
+      department_name_ko: departmentUi.name || departmentId,
+      role_title: agent.role_title || "",
+      role_title_ko: ui.role || agent.role_title || "",
+      seniority: agent.seniority || "",
+      seniority_label: SENIORITY_LABELS[agent.seniority] || agent.seniority || "",
+      mission: agent.role_charter && agent.role_charter.mission ? agent.role_charter.mission : "",
+      mission_ko: ui.mission || (agent.role_charter && agent.role_charter.mission ? agent.role_charter.mission : ""),
+      authority,
+      authority_ko: ui.authority || authority,
+      approval_required_actions: approvals,
+      approval_required_actions_ko: ui.approvals || approvals,
+      output_contracts: outputs,
+      output_contracts_ko: ui.outputs || outputs,
+      path: toRepoRelative(repoRoot, staffPath),
+      href: `/file?path=${encodeURIComponent(toRepoRelative(repoRoot, staffPath))}`,
+    };
+  });
 
   return {
     departments,
@@ -903,6 +1094,38 @@ function listFromText(value) {
     .filter(Boolean);
 }
 
+function stringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object") {
+        return String(item.plain_language_summary || item.summary || item.title || item.type || item.id || item.record_id || "").trim();
+      }
+      return String(item || "").trim();
+    })
+    .filter(Boolean);
+}
+
+function firstString(value, fallback = "") {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (Array.isArray(value)) {
+    const first = stringList(value)[0];
+    if (first) return first;
+  }
+  return fallback;
+}
+
+function approvalSummaryList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (typeof item === "string") return item.trim();
+    if (!item || typeof item !== "object") return "";
+    const type = item.type ? `[${item.type}] ` : "";
+    return `${type}${item.plain_language_summary || item.summary || item.what_will_change?.[0] || ""}`.trim();
+  }).filter(Boolean);
+}
+
 function requireStudioText(value, label) {
   const text = String(value || "").trim();
   if (!text) throw new Error(`${label} is required.`);
@@ -912,7 +1135,7 @@ function requireStudioText(value, label) {
 async function writeTempStudioInput(repoRoot, prefix, payload) {
   const dir = repoPath(repoRoot, "_Temp/AIWorkflowStudio/console_inputs");
   await fsp.mkdir(dir, { recursive: true });
-  const safeName = slugifyId(payload.meeting_id || payload.work_order_id || payload.proposal_id || payload.decision_id || payload.memory_id || prefix);
+  const safeName = slugifyId(payload.meeting_id || payload.work_order_id || payload.proposal_id || payload.decision_id || payload.memory_id || payload.context_packet_id || payload.tool_run_request_id || prefix);
   const full = path.join(dir, `${safeName}.json`);
   await fsp.writeFile(full, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return toRepoRelative(repoRoot, full);
@@ -1005,7 +1228,7 @@ function explainNextWorkflowAction(core) {
   if (!active.task_id) {
     return {
       label: "작업 선택 필요",
-      detail: "현재 ActiveTask가 없습니다. Work Orders나 Backlog에서 다음 작업을 골라야 합니다.",
+      detail: "현재 선택된 작업이 없습니다. 업무 지시나 작업 목록에서 다음 작업을 골라야 합니다.",
     };
   }
   if (stopReason === "completion_review_required" || completionState === "needs_human_decision") {
@@ -1150,6 +1373,7 @@ async function getSummary(repoRoot) {
   const toolRegistry = (await readJsonIfExists(path.join(studioRoot, "Registries", "tool_adapters.initial.json"))) || {};
   const reviewPackets = await getReviewPackets(repoRoot);
   const staffRuns = await getStaffRuns(repoRoot);
+  const contextPackets = await getContextPackets(repoRoot);
   const handoffs = await getHandoffCandidates(repoRoot);
   const materializations = await getMaterializations(repoRoot);
   const workOrders = await getWorkOrders(repoRoot);
@@ -1159,6 +1383,7 @@ async function getSummary(repoRoot) {
   const meetings = await getMeetings(repoRoot);
   const projectProfiles = await getProjectProfiles(repoRoot);
   const toolAdapters = await getToolAdapters(repoRoot);
+  const toolRunRequests = await getToolRunRequests(repoRoot);
   const conditionalAutomation = await getConditionalAutomation(repoRoot);
   const staffDirectory = await getStaffDirectory(repoRoot);
   const workflowCore = await getWorkflowCore(repoRoot);
@@ -1184,6 +1409,7 @@ async function getSummary(repoRoot) {
       staff: staffDirectory.staff.length,
       planned_staff: staffDirectory.planned_staff_count,
       tool_adapters: Array.isArray(toolRegistry.tool_adapters) ? toolRegistry.tool_adapters.length : 0,
+      tool_run_requests: toolRunRequests.length,
       project_profiles: projectProfiles.profiles.length,
       automation_evaluations: conditionalAutomation.evaluations.length,
       review_packets: reviewPackets.length,
@@ -1194,6 +1420,7 @@ async function getSummary(repoRoot) {
     handoffs,
     workflow_core: workflowCore,
     recent_staff_runs: staffRuns.slice(0, 12),
+    context_packets: contextPackets.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
     work_orders: workOrders.slice(0, 12),
@@ -1207,6 +1434,7 @@ async function getSummary(repoRoot) {
       profile_path: projectProfiles.active_profile_path,
     },
     tool_adapters: toolAdapters.slice(0, 16),
+    tool_run_requests: toolRunRequests.slice(0, 12),
     conditional_automation: conditionalAutomation,
     departments: staffDirectory.departments.slice(0, 12),
     staff_agents: staffDirectory.staff.slice(0, 16),
@@ -1351,6 +1579,12 @@ function directorConsoleHtml() {
     .nav button:hover { background:#202735; color:var(--text); }
     .nav button.active { background:#27344a; border-color:#48648f; color:var(--text); }
     .nav .count { min-width:22px; text-align:center; color:var(--accent2); font-size:12px; }
+    .internal-toggle { width:100%; margin-top:4px; display:flex; justify-content:space-between; align-items:center; background:#202735; color:var(--muted); }
+    .internal-nav { display:grid; gap:6px; }
+    .internal-nav[hidden] { display:none; }
+    .internal-panel { margin-top:12px; border:1px dashed var(--line); border-radius:8px; padding:10px; color:var(--muted); background:rgba(255,255,255,.025); }
+    .internal-panel summary { cursor:pointer; color:var(--muted); font-weight:700; }
+    .internal-panel[open] summary { margin-bottom:10px; color:var(--text); }
     .workspace { min-width:0; }
     header { position:sticky; top:0; z-index:4; padding:18px 22px; background:rgba(16,19,25,.88); border-bottom:1px solid var(--line); backdrop-filter:blur(12px); }
     main { max-width:1280px; margin:0 auto; padding:20px; }
@@ -1387,6 +1621,9 @@ function directorConsoleHtml() {
     .item.danger { border-left-color:var(--danger); }
     .small { font-size:13px; }
     .summary { color:var(--muted); font-size:13px; }
+    .staff-detail { margin:9px 0; color:var(--muted); font-size:13px; }
+    .staff-detail strong { display:block; color:var(--text); margin-bottom:3px; }
+    .staff-detail ul { margin:0; padding-left:18px; }
     .page { display:none; }
     .page.active { display:block; }
     .page-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin:0 0 16px; }
@@ -1433,22 +1670,25 @@ function directorConsoleHtml() {
         <p class="brand-subtitle">Human Director 운영 콘솔</p>
       </div>
       <nav class="nav" aria-label="Studio navigation">
-        <button class="active" data-nav="home">Home <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="departments">Departments <span class="count" id="nav-departments-count"></span></button>
-        <button data-nav="staff">Staff <span class="count" id="nav-staff-count"></span></button>
-        <button data-nav="meetings">Meeting Room <span class="count" id="nav-meetings-count"></span></button>
-        <button data-nav="runs">Staff Runs <span class="count" id="nav-runs-count"></span></button>
-        <button data-nav="work">Work Orders <span class="count" id="nav-work-count"></span></button>
-        <button data-nav="knowledge">Knowledge <span class="count" id="nav-knowledge-count"></span></button>
-        <button data-nav="systems">Systems <span class="count" id="nav-systems-count"></span></button>
-        <button data-nav="policy">Policy <span class="count" id="nav-policy-count"></span></button>
-        <button data-nav="evidence">Evidence <span class="count" id="nav-evidence-count"></span></button>
+        <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
+        <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
+        <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
+        <button data-nav="meetings">회의실 <span class="count" id="nav-meetings-count"></span></button>
+        <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
+        <button data-nav="work">업무 지시 <span class="count" id="nav-work-count"></span></button>
+        <button data-nav="knowledge">지식/결정 <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="evidence">증거 <span class="count" id="nav-evidence-count"></span></button>
+      </nav>
+      <button id="internalNavToggle" class="internal-toggle">내부 도구 <span id="internalNavState">숨김</span></button>
+      <nav id="internalNav" class="nav internal-nav" aria-label="Internal Studio navigation" hidden>
+        <button data-nav="systems">시스템 <span class="count" id="nav-systems-count"></span></button>
+        <button data-nav="policy">정책 <span class="count" id="nav-policy-count"></span></button>
       </nav>
       <p class="small muted">이 콘솔은 로컬 전용입니다. 버튼은 allowlist된 Studio 도구만 호출합니다.</p>
     </aside>
     <div class="workspace">
       <header>
-        <h1 id="pageTitle">Studio Home</h1>
+        <h1 id="pageTitle">스튜디오 홈</h1>
         <p id="pageSubtitle" class="muted">최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다.</p>
         <div class="toolbar">
           <button id="refresh">새로고침</button>
@@ -1462,14 +1702,14 @@ function directorConsoleHtml() {
             <div class="card hero-card">
               <span class="kicker">Director Overview</span>
               <h2>지금 Studio에서 봐야 할 것</h2>
-              <p class="muted">최근 직원 산출물, draft 결정, WorkOrder 후보, 회의 상태를 한 화면에서 확인합니다.</p>
+              <p class="muted">최근 직원 보고서, 기록 후보, 업무 지시 후보, 회의 상태를 한 화면에서 확인합니다.</p>
               <div id="inbox" class="list"></div>
             </div>
             <div class="card">
               <div class="section-title"><h2>안전 경계</h2><span class="pill">local only</span></div>
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
-                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, WorkOrder task 생성, 선택 파일 commit/push.</p></div>
+                <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
                 <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button></div></div>
               </div>
             </div>
@@ -1480,7 +1720,7 @@ function directorConsoleHtml() {
               <div id="homeWorkflowCore" class="list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Git / Evidence</h2><button class="secondary" data-nav-jump="evidence">Evidence 보기</button></div>
+              <div class="section-title"><h2>Git / 증거</h2><button class="secondary" data-nav-jump="evidence">증거 보기</button></div>
               <div id="homeWorkflowEvidence" class="compact-list"></div>
             </div>
           </section>
@@ -1489,7 +1729,7 @@ function directorConsoleHtml() {
               <div class="section-title"><h2>새 작업 접수</h2><span class="pill">Studio intake</span></div>
               <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
               <div class="row"><button class="good" id="studioIntakeSubmit">작업 접수</button></div>
-              <p class="small muted">접수는 TaskDraft와 Backlog task를 만들 수 있습니다. 저위험 작업만 정책에 따라 자동 handoff됩니다.</p>
+              <p class="small muted">접수는 작업 초안과 작업 목록 항목을 만들 수 있습니다. 저위험 작업만 정책에 따라 자동 착수됩니다.</p>
             </div>
             <div class="card">
               <div class="section-title"><h2>Studio Git Gate</h2><span id="gitGateCount" class="pill"></span></div>
@@ -1521,18 +1761,18 @@ function directorConsoleHtml() {
               <div id="homeActivity" class="compact-list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>운영 상태</h2><button class="secondary" data-nav-jump="systems">시스템 보기</button></div>
+              <div class="section-title"><h2>운영 상태</h2><button class="secondary" data-nav-jump="systems">내부 도구 보기</button></div>
               <div id="homeOperations" class="compact-list"></div>
             </div>
           </section>
           <section class="card">
-            <div class="section-title"><h2>최근 증거</h2><button class="secondary" data-nav-jump="evidence">Evidence 보기</button></div>
+            <div class="section-title"><h2>최근 증거</h2><button class="secondary" data-nav-jump="evidence">증거 보기</button></div>
             <div id="homeEvidence" class="compact-list"></div>
           </section>
         </section>
 
         <section class="page" data-page="departments">
-          <div class="page-heading"><div><h2>Departments</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>부서</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
           <div class="control-bar">
             <input id="departmentSearch" placeholder="부서명, 역할, 검토 기준 검색">
             <span id="departmentSummary" class="pill"></span>
@@ -1541,7 +1781,7 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="staff">
-          <div class="page-heading"><div><h2>Staff Agents</h2><p>영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>AI 직원</h2><p>영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p></div></div>
           <div class="control-bar">
             <input id="staffSearch" placeholder="직원명, 역할, 산출물 검색">
             <select id="staffDepartmentFilter"></select>
@@ -1551,7 +1791,7 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="meetings">
-          <div class="page-heading"><div><h2>Meeting Room</h2><p>회의 합의는 바로 승인이나 캐논이 아닙니다. follow-up WorkOrder나 결정 gate로 넘어가야 합니다.</p></div></div>
+          <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 후속 작업이나 결정 기록으로 넘겨야 합니다.</p></div></div>
           <div class="card">
             <div class="section-title"><h2>새 회의 만들기</h2><span class="pill">MeetingSession</span></div>
             <div class="form-grid">
@@ -1560,8 +1800,8 @@ function directorConsoleHtml() {
               <label>참가 직원<input id="meetingCreateParticipants" placeholder="game_designer, scenario_director, producer"></label>
               <label>의장<select id="meetingCreateChair"></select></label>
             </div>
-            <textarea id="meetingCreateAgenda" placeholder="안건을 줄바꿈으로 입력하세요. 예:&#10;현재 플레이 루프의 약점 확인&#10;후속 WorkOrder 후보 정리"></textarea>
-            <textarea id="meetingCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 없는 canon 확정 금지&#10;구현 task 직접 생성 금지"></textarea>
+            <textarea id="meetingCreateAgenda" placeholder="안건을 줄바꿈으로 입력하세요. 예:&#10;현재 플레이 루프의 약점 확인&#10;후속 업무 지시 후보 정리"></textarea>
+            <textarea id="meetingCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 없는 공식 설정 확정 금지&#10;구현 작업 직접 생성 금지"></textarea>
             <div class="row"><button class="good" id="meetingCreateSubmit">회의 생성</button></div>
           </div>
           <div class="card">
@@ -1582,22 +1822,27 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="runs">
-          <div class="page-heading"><div><h2>Staff Runs</h2><p>직원 실행 결과와 draft 변환 후보를 검토합니다.</p></div></div>
+          <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 필요한 내용만 기록 후보로 넘깁니다.</p></div></div>
           <div class="control-bar">
             <input id="runSearch" placeholder="직원, 실행 ID, 요약 검색">
             <select id="runStatusFilter"></select>
             <button class="secondary" data-clear-filter="runs">필터 해제</button>
           </div>
           <div class="grid">
-            <div class="card"><h2>직원 산출물</h2><p class="muted">RoleRunOutput을 Proposal/Memory/WorkOrder/Handoff draft로 변환할 수 있습니다.</p><div id="runs" class="list"></div></div>
-            <div class="card"><h2>Draft 결정</h2><p class="muted">draft를 승인, 반려, 보류, 수정 요청으로 기록합니다. 이 기록은 downstream 근거일 뿐 실행 승인은 아닙니다.</p><div id="materializations" class="list"></div></div>
+            <div class="card"><h2>직원 보고서</h2><p class="muted">AI 직원 실행 결과입니다. 보통은 보고서를 만들고, 필요한 제안만 기록 후보로 넘깁니다.</p><div id="runs" class="list"></div></div>
+            <div class="card"><h2>기록 후보 결정</h2><p class="muted">기록 후보를 승인, 반려, 보류, 수정 요청으로 정리합니다. 이 기록은 근거일 뿐 실행 승인은 아닙니다.</p><div id="materializations" class="list"></div></div>
           </div>
+          <details class="internal-panel">
+            <summary>내부 문맥 기록</summary>
+            <p class="small">AI 직원에게 전달한 실행 자료입니다. 평소에는 열어보지 않아도 됩니다.</p>
+            <div id="contextPackets" class="list"></div>
+          </details>
         </section>
 
         <section class="page" data-page="work">
-          <div class="page-heading"><div><h2>Work Orders</h2><p>Studio 업무 후보와 AI 직원 handoff를 AIWorkflow task로 연결합니다.</p></div></div>
+          <div class="page-heading"><div><h2>업무 지시</h2><p>Studio 업무 후보와 AI 직원 인수인계를 AIWorkflow task로 연결합니다.</p></div></div>
           <div class="card">
-            <div class="section-title"><h2>새 WorkOrder 만들기</h2><span class="pill">업무 지시서</span></div>
+            <div class="section-title"><h2>새 업무 지시 만들기</h2><span class="pill">업무 지시서</span></div>
             <div class="form-grid">
               <label>목표<input id="workCreateObjective" placeholder="예: Skill.json runtime loader 검증 계획 수립"></label>
               <label>담당 부서<select id="workCreateDepartment"></select></label>
@@ -1609,24 +1854,24 @@ function directorConsoleHtml() {
             <textarea id="workCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력하세요."></textarea>
             <textarea id="workCreateApproval" placeholder="승인이 필요한 핵심 판단을 한 문장으로 입력하세요."></textarea>
             <textarea id="workCreateValidation" placeholder="검증 계획을 줄바꿈으로 입력하세요."></textarea>
-            <div class="row"><button class="good" id="workCreateSubmit">WorkOrder 저장</button></div>
+            <div class="row"><button class="good" id="workCreateSubmit">업무 지시 저장</button></div>
           </div>
           <div class="control-bar">
-            <input id="workSearch" placeholder="WorkOrder, handoff, 부서 검색">
+            <input id="workSearch" placeholder="업무 지시, 인수인계, 부서 검색">
             <select id="workDepartmentFilter"></select>
             <button class="secondary" data-clear-filter="work">필터 해제</button>
           </div>
           <div class="grid">
-            <div class="card"><h2>WorkOrder</h2><p class="muted">검토된 WorkOrder를 Backlog task로 만들 수 있습니다. 생성 후 approve/start는 별도 gate입니다.</p><div id="workorders" class="list"></div></div>
-            <div class="card"><h2>Handoff</h2><p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
+            <div class="card"><h2>업무 지시</h2><p class="muted">검토된 업무 지시를 작업 목록에 넣을 수 있습니다. 생성 후 승인/실행은 별도 gate입니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>직원 인수인계</h2><p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
           </div>
         </section>
 
         <section class="page" data-page="knowledge">
-          <div class="page-heading"><div><h2>Knowledge</h2><p>제안, 결정, 기억과 canon 후보를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
           <div class="grid">
             <div class="card">
-              <div class="section-title"><h2>Proposal 만들기</h2><span class="pill">제안</span></div>
+              <div class="section-title"><h2>제안 만들기</h2><span class="pill">제안</span></div>
               <div class="form-grid">
                 <label>제안 제목<input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
                 <label>제안자<select id="proposalCreateAgent"></select></label>
@@ -1634,10 +1879,10 @@ function directorConsoleHtml() {
               <textarea id="proposalCreateSummary" placeholder="제안 요약"></textarea>
               <textarea id="proposalCreateRationale" placeholder="왜 이 제안이 필요한지"></textarea>
               <textarea id="proposalCreateRisks" placeholder="위험/주의점을 줄바꿈으로 입력"></textarea>
-              <div class="row"><button class="good" id="proposalCreateSubmit">Proposal 저장</button></div>
+              <div class="row"><button class="good" id="proposalCreateSubmit">제안 저장</button></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Decision 만들기</h2><span class="pill">결정</span></div>
+              <div class="section-title"><h2>결정 기록하기</h2><span class="pill">결정</span></div>
               <div class="form-grid">
                 <label>대상 ref<input id="decisionCreateTarget" placeholder="PROP-..., MEET-..., WO-..."></label>
                 <label>결정 종류<select id="decisionCreateType"></select></label>
@@ -1646,10 +1891,10 @@ function directorConsoleHtml() {
               <textarea id="decisionCreateAccepted" placeholder="받아들이는 범위"></textarea>
               <textarea id="decisionCreateRejected" placeholder="받아들이지 않는 범위"></textarea>
               <textarea id="decisionCreateConditions" placeholder="조건/주의 사항"></textarea>
-              <div class="row"><button class="good" id="decisionCreateSubmit">Decision 저장</button></div>
+              <div class="row"><button class="good" id="decisionCreateSubmit">결정 저장</button></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Memory 만들기</h2><span class="pill">기억</span></div>
+              <div class="section-title"><h2>기억/설정 기록하기</h2><span class="pill">기억</span></div>
               <div class="form-grid">
                 <label>범위<select id="memoryCreateScope"></select></label>
                 <label>종류<select id="memoryCreateType"></select></label>
@@ -1658,7 +1903,7 @@ function directorConsoleHtml() {
               </div>
               <textarea id="memoryCreateContent" placeholder="기억할 내용"></textarea>
               <input id="memoryCreateRefs" placeholder="근거 refs. 예: DEC-..., MEET-...">
-              <div class="row"><button class="good" id="memoryCreateSubmit">Memory 저장</button></div>
+              <div class="row"><button class="good" id="memoryCreateSubmit">기억 저장</button></div>
             </div>
           </div>
           <div class="control-bar">
@@ -1666,30 +1911,50 @@ function directorConsoleHtml() {
             <select id="memoryStatusFilter"></select>
           </div>
           <div class="grid">
-            <div class="card"><h2>Proposal Inbox</h2><p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 캐논이 아닙니다.</p><div id="proposals" class="list"></div></div>
-            <div class="card"><h2>Decision Log</h2><p class="muted">Human Director가 남긴 결정 기록입니다.</p><div id="decisions" class="list"></div></div>
-            <div class="card"><h2>Memory / Canon</h2><p class="muted">status가 canon이어야 공식 설정으로 취급합니다.</p><div id="memories" class="list"></div></div>
+            <div class="card"><h2>제안함</h2><p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
+            <div class="card"><h2>결정 기록</h2><p class="muted">Human Director가 남긴 결정 기록입니다.</p><div id="decisions" class="list"></div></div>
+            <div class="card"><h2>기억 / 공식 설정</h2><p class="muted">상태가 공식 설정이어야 확정 설정으로 취급합니다.</p><div id="memories" class="list"></div></div>
           </div>
         </section>
 
         <section class="page" data-page="systems">
-          <div class="page-heading"><div><h2>Systems</h2><p>프로젝트 profile과 실행 장비 adapter를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>시스템</h2><p>내부/관리자용 화면입니다. 평소에는 신경 쓰지 않아도 됩니다.</p></div></div>
+          <div class="card">
+            <div class="section-title"><h2>도구 요청서 만들기</h2><span class="pill">실행 전 요청서</span></div>
+            <p class="muted">도구를 바로 실행하지 않고, 어떤 도구를 왜 쓰려는지와 어떤 증거가 필요한지 먼저 기록합니다.</p>
+            <div class="form-grid">
+              <label>도구<select id="toolRunCreateAdapter"></select></label>
+              <label>권한 등급<select id="toolRunCreatePermission"></select></label>
+              <label>요청자 종류<select id="toolRunCreateRequesterType"></select></label>
+              <label>요청자 ref<input id="toolRunCreateRequesterRef" placeholder="WO-..., RR-..., MEET-..."></label>
+            </div>
+            <textarea id="toolRunCreateAction" placeholder="요청 행동. 예: 승인 범위 기준으로 직원 보고서 검토"></textarea>
+            <textarea id="toolRunCreatePurpose" placeholder="왜 이 도구 요청이 필요한지"></textarea>
+            <textarea id="toolRunCreateInputs" placeholder="입력 refs를 줄바꿈으로 입력"></textarea>
+            <textarea id="toolRunCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력"></textarea>
+            <textarea id="toolRunCreateEvidence" placeholder="필수 증거를 줄바꿈으로 입력"></textarea>
+            <div class="row">
+              <button class="secondary" id="toolRunPlanSubmit">요청 평가</button>
+              <button class="good" id="toolRunCreateSubmit">요청 저장</button>
+            </div>
+          </div>
           <div class="grid">
-            <div class="card"><h2>Project Profile</h2><p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다.</p><div id="projectProfiles" class="list"></div></div>
-            <div class="card"><h2>Tool Adapters</h2><p class="muted">비용, 외부 호출, 파일 수정, 승인 필요 여부를 확인합니다.</p><div id="toolAdapters" class="list"></div></div>
+            <div class="card"><h2>프로젝트 프로필</h2><p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다.</p><div id="projectProfiles" class="list"></div></div>
+            <div class="card"><h2>도구 어댑터</h2><p class="muted">비용, 외부 호출, 파일 수정, 승인 필요 여부를 확인합니다.</p><div id="toolAdapters" class="list"></div></div>
+            <div class="card"><h2>도구 요청서</h2><p class="muted">아직 실행이 아니라, 실행 전 검토해야 하는 도구 요청서입니다.</p><div id="toolRunRequests" class="list"></div></div>
           </div>
         </section>
 
         <section class="page" data-page="policy">
-          <div class="page-heading"><div><h2>Policy</h2><p>자동 진행 가능 여부를 재현 가능한 정책 케이스로 확인합니다.</p></div></div>
-          <div class="card"><h2>Automation Policy</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
+          <div class="page-heading"><div><h2>정책</h2><p>내부/관리자용 정책 검증 화면입니다. 자동 진행 정책을 조정하거나 디버깅할 때만 봅니다.</p></div></div>
+          <div class="card"><h2>자동 진행 정책</h2><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 증거만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
         </section>
 
         <section class="page" data-page="evidence">
-          <div class="page-heading"><div><h2>Evidence</h2><p>리뷰 패킷과 콘솔 작업 로그를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>증거</h2><p>검토 보고서와 콘솔 작업 로그를 확인합니다.</p></div></div>
           <div class="grid">
-            <div class="card"><h2>Workflow Review</h2><div id="workflowReview" class="list"></div></div>
-            <div class="card"><h2>리뷰 패킷</h2><div id="packets" class="list"></div></div>
+            <div class="card"><h2>워크플로우 검토</h2><div id="workflowReview" class="list"></div></div>
+            <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
             <div class="card"><h2>작업 로그</h2><pre id="log">대기 중</pre></div>
           </div>
         </section>
@@ -1700,16 +1965,16 @@ function directorConsoleHtml() {
     let state = null;
     let activePage = "home";
     const PAGES = {
-      home: ["Studio Home", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
-      departments: ["Departments", "부서별 책임, 직원, 검토 기준을 확인합니다."],
-      staff: ["Staff Agents", "AI 직원의 역할, 권한, 산출물 책임을 확인합니다."],
-      meetings: ["Meeting Room", "AI 직원 회의, 후속 작업, 미해결 질문을 관리합니다."],
-      runs: ["Staff Runs", "직원 실행 결과와 draft 변환 후보를 검토합니다."],
-      work: ["Work Orders", "Studio 업무 후보와 handoff를 AIWorkflow task로 연결합니다."],
-      knowledge: ["Knowledge", "제안, 결정, 기억, canon 후보를 확인합니다."],
-      systems: ["Systems", "프로젝트 profile과 tool adapter 경계를 확인합니다."],
-      policy: ["Policy", "자동 진행 정책과 재현 가능한 평가 결과를 확인합니다."],
-      evidence: ["Evidence", "리뷰 패킷과 콘솔 작업 로그를 확인합니다."],
+      home: ["홈", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
+      departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
+      staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
+      meetings: ["회의실", "AI 직원 회의, 후속 작업, 미해결 질문을 관리합니다."],
+      runs: ["직원 보고서", "AI 직원 보고서와 기록 후보를 검토합니다."],
+      work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
+      knowledge: ["지식/결정", "제안, 결정, 기억, 공식 설정 후보를 확인합니다."],
+      systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
+      policy: ["정책", "내부/관리자용 자동 진행 정책을 확인합니다."],
+      evidence: ["증거", "검토 보고서와 콘솔 작업 로그를 확인합니다."],
     };
     const filters = {
       departmentSearch: "",
@@ -1746,6 +2011,19 @@ function directorConsoleHtml() {
     function short(text, max = 180) {
       const clean = String(text || "").replace(/\\s+/g, " ").trim();
       return clean.length > max ? clean.slice(0, max - 3).trimEnd() + "..." : clean;
+    }
+    function asArray(value) {
+      return Array.isArray(value) ? value.filter(Boolean) : [];
+    }
+    function listHtml(items, emptyText = "") {
+      const values = asArray(items).slice(0, 4);
+      if (!values.length) return emptyText ? '<p class="small muted">' + esc(emptyText) + '</p>' : "";
+      const more = asArray(items).length > values.length ? '<li>+' + esc(asArray(items).length - values.length) + '개 더 있음</li>' : "";
+      return '<ul class="small">' + values.map((item) => '<li>' + esc(short(item, 110)) + '</li>').join("") + more + '</ul>';
+    }
+    function inlineList(items, emptyText = "-") {
+      const values = asArray(items);
+      return values.length ? values.slice(0, 3).join(", ") + (values.length > 3 ? " +" + (values.length - 3) : "") : emptyText;
     }
     function selectedGitFiles() {
       return Array.from(document.querySelectorAll('input[data-git-file]:checked')).map((input) => input.dataset.gitFile);
@@ -1793,30 +2071,61 @@ function directorConsoleHtml() {
     }
     function optionList(values, allLabel) {
       const unique = Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
-      return '<option value="">' + esc(allLabel) + '</option>' + unique.map((value) => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join("");
+      return '<option value="">' + esc(allLabel) + '</option>' + unique.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
+    }
+    function departmentOptionList(departments, allLabel) {
+      const sorted = asArray(departments).slice().sort((a, b) => String(a.name_ko || a.department_id).localeCompare(String(b.name_ko || b.department_id)));
+      return '<option value="">' + esc(allLabel) + '</option>' + sorted.map((department) =>
+        '<option value="' + esc(department.department_id) + '">' + esc(department.name_ko || department.department_id) + '</option>'
+      ).join("");
+    }
+    function staffOptionList(staffAgents, allLabel) {
+      const sorted = asArray(staffAgents).slice().sort((a, b) => String(a.display_name_ko || a.agent_id).localeCompare(String(b.display_name_ko || b.agent_id)));
+      return '<option value="">' + esc(allLabel) + '</option>' + sorted.map((agent) =>
+        '<option value="' + esc(agent.agent_id) + '">' + esc(agent.display_name_ko || agent.agent_id) + '</option>'
+      ).join("");
+    }
+    function optionLabel(value) {
+      const labels = {
+        creative:"크리에이티브", technical:"기술", production:"제작", review:"리뷰", qa_triage:"QA 분류", postmortem:"회고", release_readiness:"릴리즈 준비",
+        brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
+        director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인",
+        approve:"승인", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"우려 감수", canonize:"공식 설정화",
+        project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"회의", task:"작업",
+        fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"증거", lesson:"교훈",
+        approved:"승인됨", rejected:"반려됨",
+        active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시",
+        valid_output:"유효한 보고서", output_ready:"보고서 준비됨", needs_evidence:"증거 필요", needs_director_decision:"감독자 결정 필요", completed:"완료", failed:"실패",
+        completion_review_required:"완료 검토 필요", done_or_commit_decision:"완료/커밋 결정 필요", ready_for_implementation:"구현 준비 완료", in_progress:"진행 중", todo:"대기",
+        read:"읽기", write:"쓰기", execute:"실행", external:"외부 호출", destructive:"파괴적 작업",
+        human_director:"Human Director", staff_agent:"AI 직원", role_run:"직원 실행", work_order:"업무 지시", system:"시스템",
+      };
+      return labels[value] || value;
     }
     function fixedOptionList(values) {
-      return values.map((value) => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join("");
+      return values.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
     }
     function syncFilterControls() {
-      el("staffDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
-      el("workDepartmentFilter").innerHTML = optionList(state.departments.map((department) => department.department_id), "모든 부서");
+      el("staffDepartmentFilter").innerHTML = departmentOptionList(state.departments, "모든 부서");
+      el("workDepartmentFilter").innerHTML = departmentOptionList(state.departments, "모든 부서");
       el("meetingStatusFilter").innerHTML = optionList(state.meetings.map((meeting) => meeting.status), "모든 회의 상태");
       el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
       el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
-      const staffIds = state.staff_agents.map((agent) => agent.agent_id);
       el("meetingCreateType").innerHTML = fixedOptionList(["creative", "technical", "production", "review", "qa_triage", "postmortem", "release_readiness"]);
-      el("meetingCreateChair").innerHTML = optionList(staffIds, "의장 선택");
-      el("meetingTurnSpeaker").innerHTML = optionList(staffIds, "발언자 선택");
+      el("meetingCreateChair").innerHTML = staffOptionList(state.staff_agents, "의장 선택");
+      el("meetingTurnSpeaker").innerHTML = staffOptionList(state.staff_agents, "발언자 선택");
       el("meetingTurnType").innerHTML = fixedOptionList(["brief", "proposal", "objection", "question", "answer", "synthesis", "decision_note"]);
-      el("workCreateDepartment").innerHTML = optionList(state.departments.map((department) => department.department_id), "담당 부서 선택");
+      el("workCreateDepartment").innerHTML = departmentOptionList(state.departments, "담당 부서 선택");
       el("workCreateStatus").innerHTML = fixedOptionList(["director_review", "proposed", "draft", "approved_for_tasking"]);
-      el("proposalCreateAgent").innerHTML = optionList(staffIds, "제안자 선택");
+      el("proposalCreateAgent").innerHTML = staffOptionList(state.staff_agents, "제안자 선택");
       el("decisionCreateType").innerHTML = fixedOptionList(["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"]);
       el("memoryCreateScope").innerHTML = fixedOptionList(["project", "canon", "global", "agent", "department", "meeting", "task"]);
       el("memoryCreateType").innerHTML = fixedOptionList(["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"]);
       el("memoryCreateStatus").innerHTML = fixedOptionList(["proposed", "approved", "canon", "draft", "rejected", "evidence", "lesson"]);
-      el("memoryCreateOwner").innerHTML = optionList(staffIds, "담당 직원 선택");
+      el("memoryCreateOwner").innerHTML = staffOptionList(state.staff_agents, "담당 직원 선택");
+      el("toolRunCreateAdapter").innerHTML = optionList(state.tool_adapters.map((adapter) => adapter.adapter_id), "도구 선택");
+      el("toolRunCreatePermission").innerHTML = fixedOptionList(["read", "write", "execute", "external", "destructive"]);
+      el("toolRunCreateRequesterType").innerHTML = fixedOptionList(["human_director", "staff_agent", "role_run", "work_order", "system"]);
       el("departmentSearch").value = filters.departmentSearch;
       el("staffSearch").value = filters.staffSearch;
       el("staffDepartmentFilter").value = filters.staffDepartment;
@@ -1834,6 +2143,9 @@ function directorConsoleHtml() {
     }
     function setPage(page) {
       activePage = PAGES[page] ? page : "home";
+      if (activePage === "systems" || activePage === "policy") {
+        setInternalNavVisible(true);
+      }
       document.querySelectorAll(".page").forEach((section) => {
         section.classList.toggle("active", section.dataset.page === activePage);
       });
@@ -1851,16 +2163,22 @@ function directorConsoleHtml() {
       const target = el("nav-" + page + "-count");
       if (target) target.textContent = value ? String(value) : "";
     }
+    function setInternalNavVisible(visible) {
+      const nav = el("internalNav");
+      const stateLabel = el("internalNavState");
+      nav.hidden = !visible;
+      stateLabel.textContent = visible ? "표시" : "숨김";
+    }
     function renderNavCounts() {
       const m = state.metrics;
       setNavCount("home", m.staff_runs + m.materializations + m.work_orders);
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
       setNavCount("meetings", state.meetings.length);
-      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length);
+      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length + state.context_packets.length);
       setNavCount("work", state.work_orders.length + state.handoffs.length);
       setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
-      setNavCount("systems", state.project_profiles.length + state.tool_adapters.length);
+      setNavCount("systems", state.project_profiles.length + state.tool_adapters.length + state.tool_run_requests.length);
       setNavCount("policy", state.conditional_automation.evaluations.length);
       setNavCount("evidence", state.review_packets.length);
     }
@@ -1874,13 +2192,13 @@ function directorConsoleHtml() {
       const nextAction = core.next_action || {};
       el("coreNextAction").textContent = nextAction.label || "대기";
       const activeTaskHtml = activeTask.task_id
-        ? '<div class="item warn"><h3><code>' + esc(activeTask.task_id) + '</code> · ' + esc(activeTask.priority || "") + ' · ' + esc(activeTask.status || "") + '</h3>' +
+        ? '<div class="item warn"><h3><code>' + esc(activeTask.task_id) + '</code> · ' + esc(activeTask.priority || "") + ' · ' + esc(optionLabel(activeTask.status || "")) + '</h3>' +
           '<p class="summary">' + esc(activeTask.title || "(title 없음)") + '</p>' +
           '<p class="small muted">kind ' + esc(activeTask.kind || "-") + ' · risk ' + esc(activeTask.risk || "-") + '</p></div>'
-        : '<div class="item warn"><h3>ActiveTask 없음</h3><p class="summary">다음에 처리할 작업을 Work Orders나 Backlog에서 선택해야 합니다.</p></div>';
+        : '<div class="item warn"><h3>선택된 작업 없음</h3><p class="summary">다음에 처리할 작업을 업무 지시나 작업 목록에서 선택해야 합니다.</p></div>';
       const runnerHtml = runner.runner_run_id
         ? '<div class="item"><h3>최근 Runner</h3><p><code>' + esc(runner.runner_run_id) + '</code></p>' +
-          '<p class="summary">' + esc((runner.stop_reason || runner.current_step || runner.status || "상태 없음")) + '</p>' +
+          '<p class="summary">' + esc(optionLabel(runner.stop_reason || runner.current_step || runner.status || "상태 없음")) + '</p>' +
           '<div class="row">' + (runner.href ? '<a href="' + esc(runner.href) + '" target="_blank">Runner 기록</a>' : '') + '</div></div>'
         : '<div class="item"><h3>Runner 기록 없음</h3><p class="summary">현재 ActiveTask 기준 실행 기록을 찾지 못했습니다.</p></div>';
       const actionButtons = (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision")
@@ -1925,31 +2243,34 @@ function directorConsoleHtml() {
         '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
       ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
       const queue = [
-        ...state.materializations.slice(0, 3).map((item) => ({ label:"Draft 결정", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
-        ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 산출물", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),
-        ...state.work_orders.slice(0, 3).map((wo) => ({ label:"WorkOrder 후보", title:wo.work_order_id, detail:wo.status, page:"work" })),
-        ...(core.backlog?.top_items || []).slice(0, 3).map((task) => ({ label:"Backlog 후보", title:task.id, detail:task.item, page:"home", task_id:task.id })),
+        ...state.materializations.slice(0, 3).map((item) => ({ label:"기록 후보", title:item.materialization_id, detail:"records " + item.created_record_count, page:"runs" })),
+        ...state.recent_staff_runs.filter((run) => run.output_path).slice(0, 3).map((run) => ({ label:"직원 보고서", title:run.output_id || run.role_run_id, detail:run.agent_id, page:"runs" })),
+        ...state.work_orders.slice(0, 3).map((wo) => ({ label:"업무 지시 후보", title:wo.work_order_id, detail:wo.status, page:"work" })),
+        ...state.proposals.slice(0, 2).map((proposal) => ({ label:"제안 검토", title:proposal.proposal_id, detail:proposal.title || proposal.status, page:"knowledge" })),
+        ...state.decisions.slice(0, 2).map((decision) => ({ label:"결정 기록", title:decision.decision_id, detail:"기억으로 전환 가능", page:"knowledge" })),
+        ...(core.backlog?.top_items || []).slice(0, 3).map((task) => ({ label:"작업 목록 후보", title:task.id, detail:task.item, page:"home", task_id:task.id })),
         ...state.meetings.filter((meeting) => meeting.unresolved_count || meeting.follow_up_count).slice(0, 2).map((meeting) => ({ label:"회의 후속", title:meeting.meeting_id, detail:"미해결 " + meeting.unresolved_count + " · 후속 " + meeting.follow_up_count, page:"meetings" })),
       ].slice(0, 6);
       el("homeQueueCount").textContent = queue.length ? String(queue.length) : "없음";
       el("homeDecisionQueue").innerHTML = queue.length ? queue.map((item) =>
-        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">열기</button>' + (item.task_id ? workflowStartButton("승인+실행", item.task_id, "good") : "") + '</div></div>'
-      ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 산출물, draft 결정, WorkOrder 후보가 생기면 여기에 올라옵니다.</p></div>';
+        '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">해당 화면 보기</button>' + (item.task_id ? workflowStartButton("승인+실행", item.task_id, "good") : "") + '</div></div>'
+      ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 보고서, 기록 후보, 업무 지시 후보가 생기면 여기에 올라옵니다.</p></div>';
       el("homeStaffStatus").innerHTML = state.staff_agents.length ? state.staff_agents.slice(0, 6).map((agent) =>
         '<div class="compact-line"><span>' + esc(agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_id) + '</span></div>'
       ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
       const activity = [
-        ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 실행", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
+        ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 보고서", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
         ...state.meetings.slice(0, 2).map((meeting) => ({ label:"회의", value:meeting.meeting_id, status:meeting.status })),
-        ...state.work_orders.slice(0, 2).map((wo) => ({ label:"WorkOrder", value:wo.work_order_id, status:wo.status })),
+        ...state.work_orders.slice(0, 2).map((wo) => ({ label:"업무 지시", value:wo.work_order_id, status:wo.status })),
       ].slice(0, 6);
       el("homeActivity").innerHTML = activity.length ? activity.map((item) =>
-        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><span class="pill">' + esc(item.status || "") + '</span></div>'
+        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><span class="pill">' + esc(optionLabel(item.status || "")) + '</span></div>'
       ).join("") : '<p class="muted">최근 Studio 활동이 없습니다.</p>';
       const operations = [
         ["활성 프로젝트", state.active_project.project_id || "(none)"],
         ["부서 / 직원", state.metrics.departments + " / " + state.metrics.staff],
-        ["Tool Adapter", state.metrics.tool_adapters],
+        ["도구 어댑터", state.metrics.tool_adapters],
+        ["도구 요청서", state.metrics.tool_run_requests],
         ["정책 평가", state.metrics.automation_evaluations],
         ["안전 경계", "commit/push 없음"],
       ];
@@ -1957,11 +2278,11 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
       ).join("");
       const evidence = [
-        ...state.review_packets.slice(0, 3).map((packet) => ({ label:"리뷰 패킷", value:packet.id, href:packet.href })),
+        ...state.review_packets.slice(0, 3).map((packet) => ({ label:"검토 보고서", value:packet.id, href:packet.href })),
         ...state.conditional_automation.evaluations.slice(0, 2).map((evaluation) => ({ label:"정책 평가", value:evaluation.id, href:evaluation.href })),
       ].slice(0, 5);
       el("homeEvidence").innerHTML = evidence.length ? evidence.map((item) =>
-        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><a href="' + esc(item.href) + '" target="_blank">열기</a></div>'
+        '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><a href="' + esc(item.href) + '" target="_blank">증거 원본 보기</a></div>'
       ).join("") : '<p class="muted">최근 증거 파일이 없습니다.</p>';
     }
     function renderInbox() {
@@ -1969,15 +2290,23 @@ function directorConsoleHtml() {
       const runnableOutputs = state.recent_staff_runs.filter((run) => run.output_path);
       if (runnableOutputs.length) {
         const run = runnableOutputs[0];
-        items.push('<div class="item warn"><h3>검토 가능한 직원 산출물</h3><p class="small"><code>' + esc(run.output_id || run.role_run_id) + '</code> · ' + esc(run.agent_id) + '</p><p class="summary">' + esc(short(run.summary)) + '</p></div>');
+        items.push('<div class="item warn"><h3>검토 가능한 직원 보고서</h3><p class="small"><code>' + esc(run.output_id || run.role_run_id) + '</code> · ' + esc(run.agent_id) + '</p><p class="summary">' + esc(short(run.summary)) + '</p></div>');
       }
       if (state.materializations.length) {
         const item = state.materializations[0];
-        items.push('<div class="item good"><h3>결정 대기 draft</h3><p class="small"><code>' + esc(item.materialization_id) + '</code> · records ' + esc(item.created_record_count) + '</p></div>');
+        items.push('<div class="item good"><h3>결정 대기 기록 후보</h3><p class="small"><code>' + esc(item.materialization_id) + '</code> · records ' + esc(item.created_record_count) + '</p></div>');
       }
       if (state.work_orders.length) {
         const wo = state.work_orders[0];
-        items.push('<div class="item"><h3>WorkOrder 후보</h3><p class="small"><code>' + esc(wo.work_order_id) + '</code> · ' + esc(wo.status) + '</p><p class="summary">' + esc(short(wo.objective)) + '</p></div>');
+        items.push('<div class="item"><h3>업무 지시 후보</h3><p class="small"><code>' + esc(wo.work_order_id) + '</code> · ' + esc(optionLabel(wo.status)) + '</p><p class="summary">' + esc(short(wo.objective)) + '</p><div class="row">' + button("직원 자료 미리보기", "workorder-context-plan", wo.path) + button("맡기기 전 확인", "workorder-staff-plan", wo.path) + '</div></div>');
+      }
+      if (state.proposals.length) {
+        const p = state.proposals[0];
+        items.push('<div class="item warn"><h3>검토할 제안</h3><p class="small"><code>' + esc(p.proposal_id) + '</code> · ' + esc(optionLabel(p.status)) + '</p><p class="summary">' + esc(short(p.title || p.summary)) + '</p><div class="row">' + button("제안 채택 기록", "proposal-approve", p.path, "good") + button("수정 요청", "proposal-request-changes", p.path) + '</div></div>');
+      }
+      if (state.decisions.length) {
+        const d = state.decisions[0];
+        items.push('<div class="item good"><h3>기억으로 남길 결정</h3><p class="small"><code>' + esc(d.decision_id) + '</code> · ' + esc(optionLabel(d.decision_type)) + '</p><p class="summary">' + esc(short(d.summary)) + '</p><div class="row">' + button("기억으로 저장", "decision-create-memory", d.path, "good") + (d.decision_type === "canonize" ? button("공식 설정으로 저장", "decision-create-canon", d.path, "warn") : "") + '</div></div>');
       }
       el("inbox").innerHTML = items.length ? items.join("") : '<p class="muted">현재 표시할 Studio 항목이 없습니다.</p>';
     }
@@ -1987,80 +2316,113 @@ function directorConsoleHtml() {
       syncFilterControls();
       el("metrics").innerHTML = [
         metric("직원", m.staff),
-        metric("직원 실행", m.staff_runs),
-        metric("리뷰 패킷", m.review_packets),
-        metric("Handoff", m.handoffs),
-        metric("WorkOrder", m.work_orders),
-        metric("Draft 결정", m.materializations),
-        metric("Proposal", m.proposals),
-        metric("Memory", m.memories),
+        metric("직원 보고서", m.staff_runs),
+        metric("보고서", m.review_packets),
+        metric("인수인계", m.handoffs),
+        metric("업무 지시", m.work_orders),
+        metric("기록 후보", m.materializations),
+        metric("제안", m.proposals),
+        metric("기억", m.memories),
         metric("Meeting", state.meetings.length),
         metric("Project", m.project_profiles),
-        metric("Policy Eval", m.automation_evaluations)
+        metric("정책 평가", m.automation_evaluations)
       ].join("");
       renderInbox();
       renderHomePanels();
       renderNavCounts();
+      el("contextPackets").innerHTML = state.context_packets.length ? state.context_packets.map((packet) =>
+        '<div class="item"><h3><code>' + esc(packet.context_packet_id) + '</code> <span class="pill">' + esc(packet.is_durable ? "durable" : "temp") + '</span></h3>' +
+        '<p class="small muted">직원 ' + esc(packet.agent_id) + ' · 출처 ' + esc(packet.source_ref || "-") + '</p>' +
+        '<p class="summary">' + esc(short(packet.objective)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>승인 범위</span><span class="pill">' + esc(asArray(packet.approved_scope).length) + '</span></div>' +
+        listHtml(packet.approved_scope) +
+        '<div class="compact-line"><span>필수 산출물</span><span class="pill">' + esc(inlineList(packet.required_outputs)) + '</span></div>' +
+        '</div>' +
+        '<div class="row"><a href="' + esc(packet.href) + '" target="_blank">원본 보기(내부)</a></div></div>'
+      ).join("") : renderEmpty("아직 내부 문맥 기록이 없습니다. 업무 지시에서 직원 자료 저장을 누르면 여기에 나타납니다.");
       const visibleRuns = state.recent_staff_runs.filter((r) =>
         (!filters.runStatus || (r.output_status || r.status) === filters.runStatus) &&
         includesText([r.role_run_id, r.output_id, r.agent_id, r.model, r.reasoning, r.summary, r.output_status, r.status].join(" "), filters.runSearch)
       );
       el("runs").innerHTML = visibleRuns.length ? visibleRuns.map((r) =>
-        '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(r.output_status || r.status) + '</span></h3>' +
+        '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(optionLabel(r.output_status || r.status)) + '</span></h3>' +
         '<p>' + esc(r.agent_id) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
         '<p class="summary">' + esc(short(r.summary)) + '</p>' +
-        '<p class="small muted">proposal ' + esc(r.materializable_counts.proposals) + ' · memory ' + esc(r.materializable_counts.memory) + ' · workorder ' + esc(r.materializable_counts.workorders) + ' · handoff ' + esc(r.materializable_counts.handoffs) + '</p>' +
+        '<p class="small muted">제안 ' + esc(r.materializable_counts.proposals) + ' · 기억 ' + esc(r.materializable_counts.memory) + ' · 업무 지시 ' + esc(r.materializable_counts.workorders) + ' · 인수인계 ' + esc(r.materializable_counts.handoffs) + '</p>' +
         '<div class="row">' +
-        '<a href="/file?path=' + encodeURIComponent(r.staff_run_path) + '" target="_blank">실행 기록</a>' +
-        (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 열기</a>' : '') +
-        (r.output_path ? button("draft 미리보기", "materialize-plan", r.output_path) + button("draft 기록", "materialize", r.output_path, "good") : '') +
+        '<a href="/file?path=' + encodeURIComponent(r.staff_run_path) + '" target="_blank">실행 기록(내부)</a>' +
+        (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 JSON(내부)</a>' : '') +
+        (r.output_path ? button("보고서 만들기", "review-packet-export", r.output_path) + button("기록 후보 보기", "materialize-plan", r.output_path) + button("기록함에 넣기", "materialize", r.output_path, "good") : '') +
         '</div></div>'
-      ).join("") : renderEmpty("조건에 맞는 직원 실행 기록이 없습니다.");
+      ).join("") : renderEmpty("조건에 맞는 직원 보고서가 없습니다.");
       el("materializations").innerHTML = state.materializations.length ? state.materializations.map((m) =>
         '<div class="item good"><h3><code>' + esc(m.materialization_id) + '</code></h3>' +
         '<p class="small">source: ' + esc(m.source_output_id) + ' · records ' + esc(m.created_record_count) + '</p>' +
         '<div class="row">' +
-        '<a href="' + esc(m.href) + '" target="_blank">원본 열기</a>' +
-        button("결정 미리보기", "decision-plan", m.path) +
-        button("승인 기록", "decision-approve", m.path, "good", 'data-decision="approve"') +
+        '<a href="' + esc(m.href) + '" target="_blank">원본 보기(내부)</a>' +
+        button("결정 전 확인", "decision-plan", m.path) +
+        button("승인 결정 기록", "decision-approve", m.path, "good", 'data-decision="approve"') +
         button("수정 요청", "decision-request-changes", m.path, "warn", 'data-decision="request_changes"') +
         button("반려", "decision-reject", m.path, "danger", 'data-decision="reject"') +
         '</div></div>'
-      ).join("") : '<p class="muted">아직 materialization draft가 없습니다.</p>';
+      ).join("") : '<p class="muted">아직 기록 후보가 없습니다.</p>';
       const visibleWorkOrders = state.work_orders.filter((wo) =>
         (!filters.workDepartment || wo.department_id === filters.workDepartment) &&
         includesText([wo.work_order_id, wo.objective, wo.department_id, wo.status].join(" "), filters.workSearch)
       );
       el("workorders").innerHTML = visibleWorkOrders.length ? visibleWorkOrders.map((wo) =>
-        '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(wo.status) + '</span></h3>' +
-        '<p class="small muted">부서: ' + esc(wo.department_id || "(none)") + '</p>' +
+        '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(optionLabel(wo.status)) + '</span></h3>' +
+        '<p class="small muted">부서: ' + esc(wo.department_id || "(none)") + ' · 담당: ' + esc(inlineList(wo.assigned_agents)) + '</p>' +
         '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
-        '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 열기</a>' +
-        button("task 미리보기", "workorder-plan", wo.path) +
-        button("Backlog task 생성", "workorder-create", wo.path, "good") +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>포함 범위</span><span class="pill">' + esc(asArray(wo.scope).length) + '</span></div>' +
+        listHtml(wo.scope, "범위가 비어 있습니다.") +
+        '<div class="compact-line"><span>기대 산출물</span><span class="pill">' + esc(inlineList(wo.expected_outputs)) + '</span></div>' +
+        '<div class="compact-line"><span>승인 항목</span><span class="pill">' + esc(asArray(wo.approval_items).length ? "필요" : "없음") + '</span></div>' +
+        listHtml(wo.approval_items) +
+        '</div>' +
+        '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 보기(내부)</a>' +
+        button("직원 자료 미리보기", "workorder-context-plan", wo.path) +
+        button("직원 자료 저장", "workorder-context-create", wo.path, "good") +
+        button("맡기기 전 확인", "workorder-staff-plan", wo.path) +
+        button("직원에게 맡기기", "workorder-staff-run", wo.path, "warn") +
+        button("작업 생성 전 확인", "workorder-plan", wo.path) +
+        button("작업 목록에 넣기", "workorder-create", wo.path, "good") +
         '</div></div>'
-      ).join("") : renderEmpty("조건에 맞는 WorkOrder가 없습니다.");
+      ).join("") : renderEmpty("조건에 맞는 업무 지시가 없습니다.");
       const visibleHandoffs = state.handoffs.filter((h) =>
         includesText([h.handoff_id, h.from_agent_id, h.to_agent_id, h.reason, h.status].join(" "), filters.workSearch)
       );
       el("handoffs").innerHTML = visibleHandoffs.length ? visibleHandoffs.map((h) =>
-        '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(h.status) + '</span></h3>' +
+        '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(optionLabel(h.status)) + '</span></h3>' +
         '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
-        '<div class="row">' + button("계획 보기", "handoff-plan", h.path) + button("직원 실행", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본</a></div></div>'
-      ).join("") : renderEmpty("조건에 맞는 Handoff 후보가 없습니다.");
+        '<div class="row">' + button("인수인계 계획", "handoff-plan", h.path) + button("직원에게 맡기기", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본 보기(내부)</a></div></div>'
+      ).join("") : renderEmpty("조건에 맞는 인수인계 후보가 없습니다.");
       const visibleMeetings = state.meetings.filter((meeting) =>
         (!filters.meetingStatus || meeting.status === filters.meetingStatus) &&
         includesText([meeting.meeting_id, meeting.topic, meeting.meeting_type, meeting.status].join(" "), filters.meetingSearch)
       );
       el("meetings").innerHTML = visibleMeetings.length ? visibleMeetings.map((meeting) =>
-        '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(meeting.status) + '</span></h3>' +
+        '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(optionLabel(meeting.status)) + '</span></h3>' +
         '<p>' + esc(meeting.topic) + '</p>' +
-        '<p class="small muted">type ' + esc(meeting.meeting_type || "(none)") + ' · source ' + esc(meeting.is_stored ? "stored" : "example") + '</p>' +
+        '<p class="small muted">종류 ' + esc(optionLabel(meeting.meeting_type || "(none)")) + ' · 출처 ' + esc(meeting.is_stored ? "저장됨" : "예시") + '</p>' +
         '<p class="small muted">participants ' + esc(meeting.participant_count) + ' · unresolved ' + esc(meeting.unresolved_count) + ' · follow-up ' + esc(meeting.follow_up_count) + '</p>' +
-        '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 열기</a>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>참석자</span><span class="pill">' + esc(inlineList(meeting.participants)) + '</span></div>' +
+        '<div class="compact-line"><span>제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
+        listHtml(meeting.proposals) +
+        '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(meeting.unresolved_count) + '</span></div>' +
+        listHtml(meeting.unresolved_questions) +
+        '</div>' +
+        '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 보기(내부)</a>' +
         '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>' +
-        button("회의 점검", "meeting-inspect", meeting.path) +
-        button("handoff 보기", "meeting-handoff", meeting.path) +
+        button("발언 전 확인", "meeting-agent-plan", meeting.path) +
+        (meeting.is_stored ? button("AI 의견 받기", "meeting-agent-run", meeting.path, "warn") : "") +
+        button("후속 작업 만들기", "meeting-create-workorder", meeting.path, "good") +
+        button("결정으로 기록", "meeting-create-decision", meeting.path) +
+        button("회의 상태 점검", "meeting-inspect", meeting.path) +
+        button("인수인계 보기", "meeting-handoff", meeting.path) +
         (meeting.is_stored ? button("회의 시작", "meeting-start", meeting.meeting_id, "good") + button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : button("회의 저장", "meeting-create", meeting.path, "good")) +
         '</div></div>'
       ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.");
@@ -2074,85 +2436,135 @@ function directorConsoleHtml() {
         '<p class="summary">역할: ' + esc(short(department.mission_ko, 150)) + '</p>' +
         '<p class="small muted">부서장: ' + esc(department.department_lead_name) + ' · 등록 직원 ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
         '<p class="small muted">검토 기준: ' + esc(department.review_gate_labels.join(", ") || "(없음)") + '</p>' +
-        '<p class="small muted">담당 산출물: ' + esc(department.owned_artifacts.join(", ") || "(없음)") + '</p>' +
+        '<p class="small muted">담당 결과물: ' + esc(department.owned_artifacts.join(", ") || "(없음)") + '</p>' +
         '<div class="row">' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
         '<button class="secondary" data-nav-jump="meetings">회의 보기</button>' +
-        '<a href="' + esc(department.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
-      ).join("") : renderEmpty("조건에 맞는 Department가 없습니다.");
+        '<a href="' + esc(department.href) + '" target="_blank">원본 설정(JSON, 내부)</a></div></div>'
+      ).join("") : renderEmpty("조건에 맞는 부서가 없습니다.");
       const visibleStaff = state.staff_agents.filter((agent) =>
         (!filters.staffDepartment || agent.department_id === filters.staffDepartment) &&
-        includesText([agent.agent_id, agent.display_name, agent.role_title, agent.department_id, agent.mission, agent.output_contracts.join(" "), agent.approval_required_actions.join(" ")].join(" "), filters.staffSearch)
+        includesText([
+          agent.agent_id,
+          agent.display_name,
+          agent.display_name_ko,
+          agent.role_title,
+          agent.role_title_ko,
+          agent.department_id,
+          agent.department_name_ko,
+          agent.mission,
+          agent.mission_ko,
+          agent.output_contracts.join(" "),
+          agent.output_contracts_ko.join(" "),
+          agent.approval_required_actions.join(" "),
+          agent.approval_required_actions_ko.join(" "),
+          agent.authority_ko.join(" "),
+        ].join(" "), filters.staffSearch)
       );
       el("staffAgents").innerHTML = visibleStaff.length ? visibleStaff.map((agent) =>
-        '<div class="item"><h3><code>' + esc(agent.agent_id) + '</code> <span class="pill">' + esc(agent.seniority) + '</span></h3>' +
-        '<p>' + esc(agent.display_name) + ' · ' + esc(agent.role_title) + ' · ' + esc(agent.department_id) + '</p>' +
-        '<p class="summary">' + esc(short(agent.mission, 150)) + '</p>' +
-        '<p class="small muted">권한: ' + esc(agent.authority.join(", ") || "(none)") + '</p>' +
-        '<p class="small muted">outputs: ' + esc(agent.output_contracts.join(", ") || "(none)") + '</p>' +
-        '<p class="small muted">approval: ' + esc(agent.approval_required_actions.join(", ") || "(none)") + '</p>' +
-        '<div class="row"><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 산출물</button><button class="secondary" data-nav-jump="meetings">회의 보기</button><a href="' + esc(agent.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
-      ).join("") : renderEmpty("조건에 맞는 StaffAgent가 없습니다.");
+        '<div class="item"><h3>' + esc(agent.display_name_ko) + ' <span class="pill">' + esc(agent.seniority_label) + '</span></h3>' +
+        '<p class="small muted">ID <code>' + esc(agent.agent_id) + '</code> · 직책 ' + esc(agent.role_title_ko) + ' · 부서 ' + esc(agent.department_name_ko) + '</p>' +
+        '<p class="small muted">원문명: ' + esc(agent.display_name) + ' / ' + esc(agent.role_title) + '</p>' +
+        '<p class="summary">역할: ' + esc(short(agent.mission_ko, 150)) + '</p>' +
+        '<div class="staff-detail"><strong>할 수 있는 일</strong>' + listHtml(agent.authority_ko, "(없음)") + '</div>' +
+        '<div class="staff-detail"><strong>담당 산출물</strong>' + listHtml(agent.output_contracts_ko, "(없음)") + '</div>' +
+        '<div class="staff-detail"><strong>승인이 필요한 일</strong>' + listHtml(agent.approval_required_actions_ko, "(없음)") + '</div>' +
+        '<div class="row"><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">회의 보기</button><a href="' + esc(agent.href) + '" target="_blank">원본 설정(JSON, 내부)</a></div></div>'
+      ).join("") : renderEmpty("조건에 맞는 AI 직원이 없습니다.");
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
-        '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(profile.status) + '</span></h3>' +
+        '<div class="item ' + (profile.status === "active" ? "good" : "") + '"><h3><code>' + esc(profile.project_id) + '</code> <span class="pill">' + esc(optionLabel(profile.status)) + '</span></h3>' +
         '<p>' + esc(profile.display_name) + ' · ' + esc(profile.engine) + ' · ' + esc(profile.project_type) + '</p>' +
         '<p class="small muted">source ' + esc(profile.source_root_count) + ' · data ' + esc(profile.data_root_count) + ' · validation ' + esc(profile.validation_profile_count) + ' · build ' + esc(profile.build_profile_count) + '</p>' +
         '<p class="summary">validation: ' + esc(profile.validation_profile_ids.join(", ") || "(none)") + '</p>' +
-        '<div class="row"><a href="' + esc(profile.href) + '" target="_blank">profile 열기</a></div></div>'
+        '<div class="row"><a href="' + esc(profile.href) + '" target="_blank">프로필 보기(내부)</a></div></div>'
       ).join("") : '<p class="muted">Project Profile이 없습니다.</p>';
       el("toolAdapters").innerHTML = state.tool_adapters.length ? state.tool_adapters.map((adapter) =>
-        '<div class="item ' + (adapter.status === "available" ? "good" : adapter.status === "planned" ? "warn" : "") + '"><h3><code>' + esc(adapter.adapter_id) + '</code> <span class="pill">' + esc(adapter.status) + '</span></h3>' +
+        '<div class="item ' + (adapter.status === "available" ? "good" : adapter.status === "planned" ? "warn" : "") + '"><h3><code>' + esc(adapter.adapter_id) + '</code> <span class="pill">' + esc(optionLabel(adapter.status)) + '</span></h3>' +
         '<p>' + esc(adapter.display_name) + ' · ' + esc(adapter.category) + '</p>' +
         '<p class="small muted">owner ' + esc(adapter.execution_owner) + ' · default ' + esc(adapter.default_enabled ? "yes" : "no") + ' · approval ' + esc(adapter.requires_human_approval ? "yes" : "no") + '</p>' +
         '<p class="small muted">files ' + esc(adapter.can_modify_files ? "write-capable" : "read-only") + ' · external ' + esc(adapter.can_call_external ? "yes" : "no") + ' · cost ' + esc(adapter.can_incur_cost ? "yes" : "no") + '</p>' +
         '<p class="summary">' + esc(short(adapter.provider_policy, 140)) + '</p>' +
-        '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">원본 설정(JSON) 보기</a></div></div>'
-      ).join("") : '<p class="muted">Tool Adapter가 없습니다.</p>';
+        '<div class="row"><a href="' + esc(adapter.href) + '" target="_blank">원본 설정(JSON) 보기</a><button class="secondary" data-toolrun-adapter="' + esc(adapter.adapter_id) + '">이 adapter로 요청서 작성</button></div></div>'
+      ).join("") : '<p class="muted">도구 어댑터가 없습니다.</p>';
+      el("toolRunRequests").innerHTML = state.tool_run_requests.length ? state.tool_run_requests.map((request) =>
+        '<div class="item ' + (request.permission_class === "read" ? "good" : "warn") + '"><h3><code>' + esc(request.tool_run_request_id) + '</code> <span class="pill">' + esc(optionLabel(request.status)) + '</span></h3>' +
+        '<p>' + esc(request.tool_adapter_id) + ' · ' + esc(optionLabel(request.permission_class)) + ' · ' + esc(request.requested_action) + '</p>' +
+        '<p class="summary">' + esc(short(request.purpose, 170)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>입력</span><span class="pill">' + esc(request.input_refs.length) + '</span></div>' +
+        listHtml(request.input_refs.slice(0, 3)) +
+        '<div class="compact-line"><span>필수 증거</span><span class="pill">' + esc(request.evidence_requirements.length) + '</span></div>' +
+        listHtml(request.evidence_requirements.slice(0, 3)) +
+        '</div>' +
+        '<div class="row"><a href="' + esc(request.href) + '" target="_blank">요청서 보기</a>' +
+        button("다시 평가", "toolrun-plan", request.path) +
+        '</div></div>'
+      ).join("") : '<p class="muted">저장된 도구 요청서가 없습니다.</p>';
       const automation = state.conditional_automation;
       el("automationPolicy").innerHTML =
         '<div class="item"><h3><code>' + esc(automation.policy_version) + '</code></h3>' +
-        '<p class="small muted">cases ' + esc(automation.case_count) + ' · recent evaluations ' + esc(automation.evaluations.length) + '</p>' +
-        '<div class="row"><a href="' + esc(automation.cases_href) + '" target="_blank">case 열기</a>' +
-        button("status", "automation-status", "") +
-        button("validate", "automation-validate", "") +
-        button("test", "automation-test", "") +
+        '<p class="small muted">정책 사례 ' + esc(automation.case_count) + ' · 최근 평가 ' + esc(automation.evaluations.length) + '</p>' +
+        '<div class="row"><a href="' + esc(automation.cases_href) + '" target="_blank">사례 보기(내부)</a>' +
+        button("상태 확인", "automation-status", "") +
+        button("정책 검사", "automation-validate", "") +
+        button("테스트", "automation-test", "") +
         button("_Temp 평가 기록", "automation-test-write", "", "good") +
         '</div></div>' +
         (automation.evaluations.length ? automation.evaluations.map((evaluation) =>
           '<div class="item good"><h3><code>' + esc(evaluation.id) + '</code></h3>' +
-          '<p class="small muted">' + esc(evaluation.command || "evaluation") + ' · passed ' + esc(evaluation.passed_count) + ' · failed ' + esc(evaluation.failed_count) + ' · ' + esc(evaluation.updated_at) + '</p>' +
-          '<div class="row"><a href="' + esc(evaluation.href) + '" target="_blank">평가 열기</a>' +
-          button("replay", "automation-replay", evaluation.path) +
-          button("repair plan", "automation-repair", evaluation.path) +
+          '<p class="small muted">' + esc(evaluation.command || "evaluation") + ' · 통과 ' + esc(evaluation.passed_count) + ' · 실패 ' + esc(evaluation.failed_count) + ' · ' + esc(evaluation.updated_at) + '</p>' +
+          '<div class="row"><a href="' + esc(evaluation.href) + '" target="_blank">평가 보기(내부)</a>' +
+          button("재현", "automation-replay", evaluation.path) +
+          button("수정 계획", "automation-repair", evaluation.path) +
           '</div></div>'
         ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
       const visibleProposals = state.proposals.filter((p) =>
         includesText([p.proposal_id, p.title, p.summary, p.status, p.source_agent_id].join(" "), filters.knowledgeSearch)
       );
       el("proposals").innerHTML = visibleProposals.length ? visibleProposals.map((p) =>
-        '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(p.status) + '</span></h3>' +
+        '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(optionLabel(p.status)) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
         '<p class="small muted">source ' + esc(p.source_agent_id) + ' · options ' + esc(p.option_count) + '</p>' +
-        '<a href="' + esc(p.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : renderEmpty("조건에 맞는 Proposal이 없습니다.");
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>승인 필요</span><span class="pill">' + esc(asArray(p.approval_items).length) + '</span></div>' +
+        listHtml(p.approval_items) +
+        '<div class="compact-line"><span>위험/의존성</span><span class="pill">' + esc(asArray(p.risks).length + asArray(p.dependencies).length) + '</span></div>' +
+        listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
+        '</div>' +
+        '<div class="row"><a href="' + esc(p.href) + '" target="_blank">원본 보기(내부)</a>' +
+        button("제안 채택 기록", "proposal-approve", p.path, "good") +
+        button("공식 설정으로 기록", "proposal-canonize", p.path, "warn") +
+        button("수정 요청", "proposal-request-changes", p.path) +
+        button("제안 반려 기록", "proposal-reject", p.path, "danger") +
+        '</div></div>'
+      ).join("") : renderEmpty("조건에 맞는 제안이 없습니다.");
       const visibleDecisions = state.decisions.filter((d) =>
         includesText([d.decision_id, d.decision_type, d.target_ref, d.summary].join(" "), filters.knowledgeSearch)
       );
       el("decisions").innerHTML = visibleDecisions.length ? visibleDecisions.map((d) =>
-        '<div class="item good"><h3><code>' + esc(d.decision_id) + '</code> <span class="pill">' + esc(d.decision_type) + '</span></h3>' +
+        '<div class="item good"><h3><code>' + esc(d.decision_id) + '</code> <span class="pill">' + esc(optionLabel(d.decision_type)) + '</span></h3>' +
         '<p class="small">target: ' + esc(d.target_ref) + '</p><p class="summary">' + esc(short(d.summary)) + '</p>' +
-        '<a href="' + esc(d.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : renderEmpty("조건에 맞는 Decision이 없습니다.");
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>받아들인 범위</span><span class="pill">' + esc(asArray(d.accepted_scope).length) + '</span></div>' +
+        listHtml(d.accepted_scope) +
+        '<div class="compact-line"><span>제외한 범위</span><span class="pill">' + esc(asArray(d.rejected_scope).length) + '</span></div>' +
+        listHtml(d.rejected_scope) +
+        '</div>' +
+        '<div class="row"><a href="' + esc(d.href) + '" target="_blank">원본 보기(내부)</a>' +
+        button("기억으로 저장", "decision-create-memory", d.path, "good") +
+        button("공식 설정으로 저장", "decision-create-canon", d.path, "warn") +
+        '</div></div>'
+      ).join("") : renderEmpty("조건에 맞는 결정 기록이 없습니다.");
       const visibleMemories = state.memories.filter((m) =>
         (!filters.memoryStatus || m.status === filters.memoryStatus) &&
         includesText([m.memory_id, m.scope, m.type, m.status, m.content, m.owner_agent_id].join(" "), filters.knowledgeSearch)
       );
       el("memories").innerHTML = visibleMemories.length ? visibleMemories.map((m) =>
-        '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(m.status) + '</span></h3>' +
+        '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(optionLabel(m.status)) + '</span></h3>' +
         '<p class="small">' + esc(m.scope) + ' · ' + esc(m.type) + ' · ' + esc(m.owner_agent_id) + '</p>' +
-        '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 열기</a></div>'
-      ).join("") : renderEmpty("조건에 맞는 MemoryRecord가 없습니다.");
+        '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 보기(내부)</a></div>'
+      ).join("") : renderEmpty("조건에 맞는 기억 기록이 없습니다.");
       const core = state.workflow_core || {};
       const completion = core.completion || {};
       const verification = core.verification || {};
@@ -2166,8 +2578,8 @@ function directorConsoleHtml() {
           '<div class="item warn"><h3>우려 사항</h3><p class="summary">' + esc(explainConcern(concern)) + '</p><p class="small muted">' + esc(translateConcernDetail(concern)) + '</p></div>'
         ).join("") : '<div class="item good"><h3>표시할 우려 사항 없음</h3><p class="summary">현재 완료 보고서에서 별도 concern 목록을 찾지 못했습니다.</p></div>');
       el("packets").innerHTML = state.review_packets.length ? state.review_packets.map((p) =>
-        '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">리뷰 패킷 열기</a></div>'
-      ).join("") : '<p class="muted">리뷰 패킷이 없습니다.</p>';
+        '<div class="item good"><h3><code>' + esc(p.id) + '</code></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">검토 보고서 열기</a></div>'
+      ).join("") : '<p class="muted">검토 보고서가 없습니다.</p>';
     }
     async function refresh() {
       state = await api("/api/summary");
@@ -2184,7 +2596,7 @@ function directorConsoleHtml() {
         alert("작업 요청을 입력하세요.");
         return;
       }
-      if (!confirm("이 요청으로 TaskDraft와 Backlog task를 생성할까요? 저위험 작업만 자동 handoff됩니다.")) return;
+      if (!confirm("이 요청으로 작업 초안과 작업 목록 항목을 생성할까요? 저위험 작업만 자동 착수됩니다.")) return;
       log("Studio intake 실행 중...");
       log(await post("/api/workflow/intake", { text }));
       el("studioIntakeText").value = "";
@@ -2219,7 +2631,7 @@ function directorConsoleHtml() {
       const core = state.workflow_core || {};
       const task = taskId === core.active_task?.task_id ? core.active_task : (core.backlog?.top_items || []).find((item) => item.id === taskId) || { task_id: taskId };
       const title = task.title || task.item || taskId;
-      if (!confirm("이 작업을 ActiveTask로 선택하고 승인 기록 후 PC Runner를 시작할까요?\\n\\n승인 대상: " + title + "\\n\\n바뀌는 것: ActiveTask/Backlog 승인 기록과 Runner 시작 기록이 생깁니다. task done, commit, push는 하지 않습니다.")) return;
+      if (!confirm("이 작업을 현재 작업으로 선택하고 승인 기록 후 PC Runner를 시작할까요?\\n\\n승인 대상: " + title + "\\n\\n바뀌는 것: 현재 작업/작업 목록 승인 기록과 Runner 시작 기록이 생깁니다. 작업 완료 처리, commit, push는 하지 않습니다.")) return;
       log(await post("/api/workflow/task/approve-start", { task_id: taskId }));
       await refresh();
     }
@@ -2245,7 +2657,7 @@ function directorConsoleHtml() {
     async function createMeetingFromForm() {
       const topic = fieldValue("meetingCreateTopic");
       if (!topic) return alert("회의 주제를 입력하세요.");
-      if (!confirm("새 MeetingSession을 저장할까요? 회의 생성은 승인, canon, task 실행을 하지 않습니다.")) return;
+      if (!confirm("새 회의를 저장할까요? 회의 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/create", {
         topic,
         meeting_type: fieldValue("meetingCreateType") || "creative",
@@ -2261,7 +2673,7 @@ function directorConsoleHtml() {
       const speaker = fieldValue("meetingTurnSpeaker");
       const content = fieldValue("meetingTurnContent");
       if (!meetingId || !speaker || !content) return alert("회의 ID, 발언자, 발언 내용을 입력하세요.");
-      if (!confirm("회의 발언을 추가할까요? 발언 추가는 승인, canon, task 실행을 하지 않습니다.")) return;
+      if (!confirm("회의 발언을 추가할까요? 발언 추가는 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/add-turn", {
         meeting_id: meetingId,
         speaker_id: speaker,
@@ -2272,8 +2684,8 @@ function directorConsoleHtml() {
     }
     async function createWorkOrderFromForm() {
       const objective = fieldValue("workCreateObjective");
-      if (!objective) return alert("WorkOrder 목표를 입력하세요.");
-      if (!confirm("새 WorkOrder를 저장할까요? Backlog task 생성과 runner 실행은 별도 버튼에서 처리합니다.")) return;
+      if (!objective) return alert("업무 지시 목표를 입력하세요.");
+      if (!confirm("새 업무 지시를 저장할까요? 작업 목록 생성과 runner 실행은 별도 버튼에서 처리합니다.")) return;
       log(await post("/api/studio/workorder/create", {
         objective,
         department_id: fieldValue("workCreateDepartment"),
@@ -2291,7 +2703,7 @@ function directorConsoleHtml() {
       const title = fieldValue("proposalCreateTitle");
       const summary = fieldValue("proposalCreateSummary");
       if (!title || !summary) return alert("제안 제목과 요약을 입력하세요.");
-      if (!confirm("새 Proposal을 저장할까요? Proposal은 아이디어/제안이며 공식 결정이나 canon이 아닙니다.")) return;
+      if (!confirm("새 제안을 저장할까요? 제안은 아이디어이며 공식 결정이나 공식 설정이 아닙니다.")) return;
       log(await post("/api/studio/proposal/create", {
         title,
         source_agent_id: fieldValue("proposalCreateAgent"),
@@ -2305,7 +2717,7 @@ function directorConsoleHtml() {
       const targetRef = fieldValue("decisionCreateTarget");
       const summary = fieldValue("decisionCreateSummary");
       if (!targetRef || !summary) return alert("대상 ref와 결정 요약을 입력하세요.");
-      if (!confirm("Human Director Decision을 저장할까요? 결정 기록은 근거가 되지만 구현/커밋은 하지 않습니다.")) return;
+      if (!confirm("Human Director 결정을 저장할까요? 결정 기록은 근거가 되지만 구현/커밋은 하지 않습니다.")) return;
       log(await post("/api/studio/decision/create", {
         target_ref: targetRef,
         decision_type: fieldValue("decisionCreateType") || "approve",
@@ -2319,7 +2731,7 @@ function directorConsoleHtml() {
     async function createMemoryFromForm() {
       const content = fieldValue("memoryCreateContent");
       if (!content) return alert("기억할 내용을 입력하세요.");
-      if (!confirm("MemoryRecord를 저장할까요? status=canon은 공식 설정처럼 취급되므로 근거 ref가 필요합니다.")) return;
+      if (!confirm("기억 기록을 저장할까요? 공식 설정 상태로 저장하면 이후 AI 직원들이 확정 설정처럼 참고합니다.")) return;
       log(await post("/api/studio/memory/create", {
         scope: fieldValue("memoryCreateScope") || "project",
         type: fieldValue("memoryCreateType") || "fact",
@@ -2330,27 +2742,60 @@ function directorConsoleHtml() {
       }));
       await refresh();
     }
+    function toolRunPayloadFromForm() {
+      return {
+        tool_adapter_id: fieldValue("toolRunCreateAdapter"),
+        permission_class: fieldValue("toolRunCreatePermission") || "read",
+        requester_type: fieldValue("toolRunCreateRequesterType") || "human_director",
+        requester_ref: fieldValue("toolRunCreateRequesterRef") || "studio-console",
+        requested_action: fieldValue("toolRunCreateAction"),
+        purpose: fieldValue("toolRunCreatePurpose"),
+        input_refs: fieldValue("toolRunCreateInputs"),
+        expected_outputs: fieldValue("toolRunCreateOutputs"),
+        evidence_requirements: fieldValue("toolRunCreateEvidence"),
+      };
+    }
+    async function planToolRunFromForm() {
+      const payload = toolRunPayloadFromForm();
+      if (!payload.tool_adapter_id || !payload.requested_action || !payload.purpose) {
+        return alert("도구, 요청 행동, 목적은 필수입니다.");
+      }
+      log(await post("/api/studio/toolrun/plan", payload));
+    }
+    async function createToolRunFromForm() {
+      const payload = toolRunPayloadFromForm();
+      if (!payload.tool_adapter_id || !payload.requested_action || !payload.purpose) {
+        return alert("도구, 요청 행동, 목적은 필수입니다.");
+      }
+      if (!confirm("도구 요청서를 저장할까요? 이것은 도구 실행이 아니라 실행 전 검토 요청서입니다.")) return;
+      log(await post("/api/studio/toolrun/create", payload));
+      await refresh();
+    }
     async function runAction(action, filePath, decision) {
       if (action === "handoff-plan") return log(await post("/api/handoff/plan", { path:filePath }));
       if (action === "handoff-execute") {
-        if (!confirm("서명된 Codex 직원 실행을 시작할까요? 결과는 _Temp에 기록되고 source/task/canon/git은 변경하지 않습니다.")) return;
+        if (!confirm("서명된 Codex 직원 실행을 시작할까요? 결과는 _Temp에 기록되고 소스/작업/공식 설정/git은 변경하지 않습니다.")) return;
         log(await post("/api/handoff/execute", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       }
       if (action === "materialize-plan") return log(await post("/api/output/materialize-plan", { path:filePath }));
       if (action === "materialize") {
-        if (!confirm("이 산출물을 Studio draft 기록으로 변환할까요? 캐논 확정이나 task 실행은 아닙니다.")) return;
+        if (!confirm("이 직원 보고서를 Studio 기록 후보로 변환할까요? 캐논 확정이나 task 실행은 아닙니다.")) return;
         log(await post("/api/output/materialize", { path:filePath }));
+        await refresh();
+      }
+      if (action === "review-packet-export") {
+        log(await post("/api/review-packet/export", { path:filePath }));
         await refresh();
       }
       if (action === "decision-plan") return log(await post("/api/materialization/review-plan", { path:filePath, decision:"approve" }));
       if (action.startsWith("decision-")) {
-        if (!confirm("이 draft에 대한 Human Director 결정 기록을 남길까요? downstream 실행 승인은 별도입니다.")) return;
+        if (!confirm("이 기록 후보에 대한 Human Director 결정 기록을 남길까요? 이후 실행 승인은 별도입니다.")) return;
         log(await post("/api/materialization/review-record", { path:filePath, decision:decision || "approve", reason:"StudioConsole" }));
         await refresh();
       }
       if (action === "workorder-plan") return log(await post("/api/workorder/plan", { path:filePath }));
       if (action === "workorder-create") {
-        if (!confirm("이 WorkOrder를 Backlog task로 생성할까요? task 실행 승인과 runner start는 별도입니다.")) return;
+        if (!confirm("이 업무 지시를 작업 목록에 넣을까요? 작업 실행 승인과 Runner 시작은 별도입니다.")) return;
         log(await post("/api/workorder/create", { path:filePath }));
         await refresh();
       }
@@ -2358,7 +2803,7 @@ function directorConsoleHtml() {
       if (action === "automation-validate") return log(await post("/api/automation/validate", {}));
       if (action === "automation-test") return log(await post("/api/automation/test", {}));
       if (action === "automation-test-write") {
-        if (!confirm("정책 테스트 결과를 _Temp 평가 기록으로 남길까요? workflow state, source, git은 바꾸지 않습니다.")) return;
+        if (!confirm("정책 테스트 결과를 _Temp 평가 기록으로 남길까요? 워크플로우 상태, 소스, git은 바꾸지 않습니다.")) return;
         log(await post("/api/automation/test-write", {}));
         await refresh();
       }
@@ -2367,20 +2812,61 @@ function directorConsoleHtml() {
       if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
       if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
       if (action === "meeting-start") {
-        if (!confirm("이 회의를 in_progress 상태로 시작할까요? 회의 시작은 task 실행이나 canon 확정이 아닙니다.")) return;
+        if (!confirm("이 회의를 시작 상태로 바꿀까요? 회의 시작은 작업 실행이나 공식 설정 확정이 아닙니다.")) return;
         log(await post("/api/meeting/start", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-finalize") {
-        if (!confirm("이 회의를 finalized 상태로 닫을까요? 결정, canon, task 생성은 별도 gate에서 처리합니다.")) return;
+        if (!confirm("이 회의를 종료 상태로 닫을까요? 결정, 공식 설정, 작업 생성은 별도 gate에서 처리합니다.")) return;
         log(await post("/api/meeting/finalize", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-create") {
-        if (!confirm("이 MeetingSession을 Studio 저장소에 기록할까요? 저장만 하며 실행이나 canon 확정은 하지 않습니다.")) return;
+        if (!confirm("이 회의를 Studio 저장소에 기록할까요? 저장만 하며 실행이나 공식 설정 확정은 하지 않습니다.")) return;
         log(await post("/api/meeting/create", { path:filePath }));
         await refresh();
       }
+      if (action === "meeting-create-workorder") {
+        if (!confirm("이 회의 결과로 후속 업무 지시를 만들까요? 업무 지시만 저장하고, 구현/승인/실행은 별도 gate에서 처리합니다.")) return;
+        log(await post("/api/studio/meeting/create-workorder", { path:filePath }));
+        await refresh();
+      }
+      if (action === "meeting-create-decision") {
+        if (!confirm("이 회의 결과를 Human Director 결정으로 기록할까요? 결정은 근거 기록이며 공식 설정/구현/작업 실행은 별도입니다.")) return;
+        log(await post("/api/studio/meeting/create-decision", { path:filePath, decision_type:"approve" }));
+        await refresh();
+      }
+      if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+      if (action === "meeting-agent-run") {
+        if (!confirm("이 회의에 AI 직원 의견을 요청할까요? Codex 직원 실행을 호출하고, 저장된 회의라면 결과 요약을 새 발언으로 추가합니다. 결정/공식 설정/작업/git은 변경하지 않습니다.")) return;
+        log(await post("/api/studio/meeting/agent-turn-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+        await refresh();
+      }
+      if (action === "proposal-approve" || action === "proposal-canonize" || action === "proposal-request-changes" || action === "proposal-reject") {
+        const decisionType = action === "proposal-canonize" ? "canonize" : action === "proposal-request-changes" ? "request_changes" : action === "proposal-reject" ? "reject" : "approve";
+        if (!confirm("이 제안에 대한 결정을 기록할까요? 제안 채택/반려 기록만 남기며, 작업 실행과 공식 설정 기록은 별도입니다.")) return;
+        log(await post("/api/studio/proposal/create-decision", { path:filePath, decision_type:decisionType }));
+        await refresh();
+      }
+      if (action === "decision-create-memory" || action === "decision-create-canon") {
+        const status = action === "decision-create-canon" ? "canon" : "approved";
+        if (!confirm("이 결정을 기억 기록으로 남길까요? 공식 설정으로 저장하면 이후 Studio 직원들이 확정 설정/결정으로 참고합니다.")) return;
+        log(await post("/api/studio/decision/create-memory", { path:filePath, status }));
+        await refresh();
+      }
+      if (action === "workorder-context-plan") return log(await post("/api/studio/workorder/context-plan", { path:filePath }));
+      if (action === "workorder-context-create") {
+        if (!confirm("이 업무 지시를 담당 직원용 실행 자료로 저장할까요? 직원 실행은 아직 시작하지 않습니다.")) return;
+        log(await post("/api/studio/workorder/context-create", { path:filePath }));
+        await refresh();
+      }
+      if (action === "workorder-staff-plan") return log(await post("/api/studio/workorder/staff-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+      if (action === "workorder-staff-run") {
+        if (!confirm("선택한 업무 지시를 담당 AI 직원에게 맡길까요? Codex CLI를 호출하며 결과는 _Temp 증거로 남습니다. 소스/작업/공식 설정/git은 직접 변경하지 않습니다.")) return;
+        log(await post("/api/studio/workorder/staff-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+        await refresh();
+      }
+      if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));
     }
     document.addEventListener("click", (event) => {
       const startTarget = event.target.closest("button[data-workflow-start]");
@@ -2425,6 +2911,12 @@ function directorConsoleHtml() {
         setPage("meetings");
         return;
       }
+      const toolRunAdapterTarget = event.target.closest("button[data-toolrun-adapter]");
+      if (toolRunAdapterTarget) {
+        el("toolRunCreateAdapter").value = toolRunAdapterTarget.dataset.toolrunAdapter;
+        setPage("systems");
+        return;
+      }
       const clearTarget = event.target.closest("button[data-clear-filter]");
       if (clearTarget) {
         const scope = clearTarget.dataset.clearFilter;
@@ -2450,6 +2942,8 @@ function directorConsoleHtml() {
     el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
     el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
     el("memoryCreateSubmit").addEventListener("click", () => createMemoryFromForm().catch(log));
+    el("toolRunPlanSubmit").addEventListener("click", () => planToolRunFromForm().catch(log));
+    el("toolRunCreateSubmit").addEventListener("click", () => createToolRunFromForm().catch(log));
     function bindFilter(id, key) {
       el(id).addEventListener("input", (event) => { filters[key] = event.target.value; render(); });
       el(id).addEventListener("change", (event) => { filters[key] = event.target.value; render(); });
@@ -2467,6 +2961,7 @@ function directorConsoleHtml() {
     bindFilter("memoryStatusFilter", "memoryStatus");
     el("refresh").addEventListener("click", () => refresh().catch(log));
     el("export-dashboard").addEventListener("click", () => exportDashboard().catch(log));
+    el("internalNavToggle").addEventListener("click", () => setInternalNavVisible(el("internalNav").hidden));
     setPage((location.hash || "").replace("#", "") || "home");
     window.addEventListener("hashchange", () => setPage((location.hash || "").replace("#", "") || "home"));
     refresh().catch(log);
@@ -2518,7 +3013,7 @@ function buildWorkOrderPayload(body = {}) {
     assigned_agents: listFromText(body.assigned_agents),
     scope,
     non_goals: listFromText(body.non_goals),
-    expected_outputs: listFromText(body.expected_outputs).length ? listFromText(body.expected_outputs) : ["WorkOrder-derived TaskDraft or reviewable artifact"],
+    expected_outputs: listFromText(body.expected_outputs).length ? listFromText(body.expected_outputs) : ["업무 지시에서 파생된 작업 초안 또는 검토 가능한 산출물"],
     approval_items: approvalSummary ? [{
       type: "scope",
       plain_language_summary: approvalSummary,
@@ -2556,7 +3051,7 @@ function buildProposalPayload(body = {}) {
     }],
     risks: listFromText(body.risks),
     dependencies: listFromText(body.dependencies),
-    approval_items: listFromText(body.approval_items).length ? listFromText(body.approval_items) : ["Human Director must approve before this proposal becomes a decision or canon."],
+    approval_items: listFromText(body.approval_items).length ? listFromText(body.approval_items) : ["이 제안이 결정 또는 공식 설정이 되려면 Human Director 승인이 필요합니다."],
     evidence_refs: listFromText(body.evidence_refs).length ? listFromText(body.evidence_refs) : ["studio_console"],
     status: "submitted",
   };
@@ -2593,6 +3088,267 @@ function buildMemoryPayload(body = {}) {
     owner_agent_id: String(body.owner_agent_id || "documentation_keeper").trim(),
     created_at: studioTimestampParts().iso,
     updated_at: studioTimestampParts().iso,
+  };
+}
+
+async function readStudioRecordFromBody(repoRoot, body, label) {
+  const relativePath = String(body.path || "").trim();
+  const full = safeResolveReadable(repoRoot, relativePath);
+  const json = await readJsonIfExists(full);
+  if (!json) throw new Error(`Invalid ${label} JSON.`);
+  return { json, relativePath: toRepoRelative(repoRoot, full), full };
+}
+
+function inferDepartmentFromAgents(agentIds, fallback = "executive_production") {
+  const ids = stringList(agentIds).join(" ").toLowerCase();
+  if (ids.includes("scenario") || ids.includes("narrative")) return "narrative";
+  if (ids.includes("art") || ids.includes("artist")) return "art";
+  if (ids.includes("qa") || ids.includes("tester")) return "qa_testing";
+  if (ids.includes("engineer") || ids.includes("programmer") || ids.includes("technical")) return "engineering";
+  if (ids.includes("producer") || ids.includes("project_manager")) return "production";
+  return fallback;
+}
+
+function buildWorkOrderFromMeetingPayload(meeting = {}) {
+  const topic = requireStudioText(meeting.topic || meeting.meeting_id, "meeting topic");
+  const proposals = stringList(meeting.proposals);
+  const accepted = stringList(meeting.accepted_directions);
+  const unresolved = stringList(meeting.unresolved_questions);
+  const objections = stringList(meeting.objections);
+  const participants = stringList(meeting.participants);
+  const objective = proposals[0]
+    ? `Follow up meeting proposal: ${proposals[0]}`
+    : `Resolve follow-up work from meeting: ${topic}`;
+  const scope = [
+    ...accepted,
+    ...proposals.map((item) => `Prepare director-reviewable follow-up for: ${item}`),
+    ...unresolved.map((item) => `Clarify unresolved question: ${item}`),
+  ].filter(Boolean);
+  const nonGoals = [
+    "Human Director 결정 없이 회의 합의를 공식 설정으로 취급하지 않습니다.",
+    "이 업무 지시만으로 소스, 데이터, 에셋 수정, task done, commit, push를 실행하지 않습니다.",
+    ...objections.map((item) => `Respect meeting objection: ${item}`),
+  ];
+  return {
+    work_order_id: makeStudioId("WO", objective),
+    source_type: "meeting",
+    source_ref: meeting.meeting_id || "meeting",
+    objective,
+    department_id: inferDepartmentFromAgents(participants),
+    assigned_agents: participants,
+    scope: scope.length ? scope : [`Summarize meeting outcome for Human Director review: ${topic}`],
+    non_goals: nonGoals,
+    expected_outputs: ["업무 지시 후속 계획", "승인 필요 항목", "증거 참조"],
+    approval_items: [{
+      type: "scope",
+      plain_language_summary: "Approve only the focused follow-up work described by this meeting.",
+      what_will_change: scope.length ? scope : [objective],
+      what_will_not_change: nonGoals,
+      files_or_memory_affected: ["별도 task가 생성되고 승인되기 전까지는 Studio 업무 지시만 영향을 받습니다."],
+      risks: unresolved.length ? unresolved : ["Meeting output may be incomplete without Human Director review."],
+      rollback_plan: ["나중의 Human Director 결정으로 이 업무 지시를 반려하거나 대체합니다."],
+      evidence_required: [meeting.meeting_id || "meeting", meeting.minutes_artifact || "MeetingSession JSON"],
+    }],
+    evidence_requirements: [meeting.meeting_id || "meeting", meeting.minutes_artifact || "MeetingSession JSON"],
+    verification_plan: [
+      "업무 지시가 회의 후속 범위 안에 머무르는지 확인합니다.",
+      "공식 설정, 구현, task done, commit, push가 별도 gate로 남아 있는지 확인합니다.",
+      "Confirm approval items state what may change and what must not change.",
+    ],
+    handoff_plan: participants.length ? participants.map((agent) => `${agent} contributes within role authority.`) : ["Assign a suitable StaffAgent before execution."],
+    target_project_profile: "playground",
+    status: "director_review",
+  };
+}
+
+function buildDecisionFromMeetingPayload(meeting = {}, decisionType = "approve") {
+  const topic = requireStudioText(meeting.topic || meeting.meeting_id, "meeting topic");
+  const accepted = stringList(meeting.accepted_directions);
+  const rejected = [
+    ...stringList(meeting.rejected_directions),
+    ...stringList(meeting.objections),
+  ];
+  const unresolved = stringList(meeting.unresolved_questions);
+  return {
+    decision_id: makeStudioId("DEC", meeting.meeting_id || topic),
+    decision_maker: "human_director",
+    decision_type: decisionType,
+    target_ref: meeting.meeting_id || "meeting",
+    decision_summary: accepted.length
+      ? `Meeting direction accepted for director tracking: ${accepted.join("; ")}`
+      : `Director reviewed meeting outcome for: ${topic}`,
+    accepted_scope: accepted.length ? accepted : stringList(meeting.proposals),
+    rejected_scope: rejected,
+    conditions: unresolved.length ? unresolved.map((item) => `아직 미해결: ${item}`) : ["구현, 공식 설정, task done, commit, push는 별도 gate가 필요합니다."],
+    timestamp: studioTimestampParts().iso,
+    evidence_refs: [meeting.meeting_id || "meeting", meeting.minutes_artifact || ""].filter(Boolean),
+  };
+}
+
+function resolveMeetingAgent(meeting, requestedAgentId = "") {
+  const requested = String(requestedAgentId || "").trim();
+  if (requested) return requested;
+  const participants = stringList(meeting.participants);
+  return participants.find((id) => !["human_director", "executive_producer"].includes(id)) || participants[0] || "creative_director";
+}
+
+function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
+  const topic = requireStudioText(meeting.topic || meeting.meeting_id, "meeting topic");
+  const speaker = resolveMeetingAgent(meeting, agentId);
+  const agenda = stringList(meeting.agenda);
+  const constraints = stringList(meeting.known_constraints);
+  const proposals = stringList(meeting.proposals);
+  const objections = stringList(meeting.objections);
+  const unresolved = stringList(meeting.unresolved_questions);
+  const objective = `Prepare a meeting contribution from ${speaker}: ${topic}`;
+  return {
+    work_order_id: makeStudioId("WO", objective),
+    source_type: "meeting_agent_turn",
+    source_ref: meeting.meeting_id || "meeting",
+    objective,
+    department_id: inferDepartmentFromAgents([speaker]),
+    assigned_agents: [speaker],
+    scope: [
+      `Contribute to the meeting topic: ${topic}`,
+      ...agenda.map((item) => `Address agenda: ${item}`),
+      ...proposals.map((item) => `React to proposal: ${item}`),
+      ...objections.map((item) => `Respect objection: ${item}`),
+      ...unresolved.map((item) => `Clarify unresolved question: ${item}`),
+    ],
+    non_goals: [
+      "Do not finalize meeting decisions.",
+      "공식 설정을 생성하거나 승인하지 않습니다.",
+      "Do not create tasks, modify source/data/assets, mark done, commit, or push.",
+      ...constraints.map((item) => `Keep constraint: ${item}`),
+    ],
+    expected_outputs: ["MeetingTurn", "OpenQuestions", "ApprovalItemsIfNeeded"],
+    approval_items: [{
+      type: "meeting_turn",
+      plain_language_summary: `Ask ${speaker} for one role-scoped meeting contribution.`,
+      what_will_change: ["A new meeting turn may be appended to the stored MeetingSession."],
+      what_will_not_change: ["소스/데이터/공식 설정/task/git 상태 변경은 승인되지 않았습니다."],
+      files_or_memory_affected: [meeting.minutes_artifact || `_Docs/AIWorkflow/Studio/MeetingSessions/${meeting.meeting_id}.json`],
+      risks: ["The staff contribution may need Human Director review before it becomes a decision."],
+      rollback_plan: ["Remove or supersede the meeting turn through a later Director note if needed."],
+      evidence_required: [meeting.meeting_id || "meeting", speaker],
+    }],
+    evidence_requirements: [meeting.meeting_id || "meeting", speaker],
+    verification_plan: [
+      "Confirm the generated contribution stays inside the agent role and meeting topic.",
+      "결정, 공식 설정, task, 소스, commit, push 실행이 암시되지 않았는지 확인합니다.",
+    ],
+    handoff_plan: [`${speaker} contributes one meeting turn for Human Director review.`],
+    target_project_profile: "playground",
+    status: "director_review",
+  };
+}
+
+function buildDecisionFromProposalPayload(proposal = {}, decisionType = "approve") {
+  const title = requireStudioText(proposal.title || proposal.proposal_id, "proposal title");
+  const acceptedScope = decisionType === "reject"
+    ? []
+    : [proposal.summary || title, ...stringList(proposal.approval_items)];
+  const rejectedScope = decisionType === "reject"
+    ? [proposal.summary || title]
+    : [];
+  const conditions = [
+    ...stringList(proposal.risks).map((item) => `Known risk: ${item}`),
+    ...stringList(proposal.dependencies).map((item) => `Dependency: ${item}`),
+  ];
+  return {
+    decision_id: makeStudioId("DEC", proposal.proposal_id || title),
+    decision_maker: "human_director",
+    decision_type: decisionType,
+    target_ref: proposal.proposal_id || "proposal",
+    decision_summary: `${decisionType}: ${title}`,
+    accepted_scope: acceptedScope,
+    rejected_scope: rejectedScope,
+    conditions: conditions.length ? conditions : ["후속 작업은 기존 업무 지시/task/승인 gate를 그대로 거쳐야 합니다."],
+    timestamp: studioTimestampParts().iso,
+    evidence_refs: [proposal.proposal_id || "", proposal.source_ref || "", ...stringList(proposal.evidence_refs)].filter(Boolean),
+  };
+}
+
+function buildMemoryFromDecisionPayload(decision = {}, status = "") {
+  const decisionId = requireStudioText(decision.decision_id, "decision_id");
+  const memoryStatus = String(status || (decision.decision_type === "canonize" ? "canon" : "approved")).trim();
+  const memoryType = memoryStatus === "canon" ? "canon" : (decision.decision_type === "reject" ? "rejection" : "decision");
+  return {
+    memory_id: makeStudioId("MEM", decisionId),
+    project_id: "playground",
+    scope: memoryStatus === "canon" ? "canon" : "project",
+    type: memoryType,
+    status: memoryStatus,
+    content: decision.decision_summary || `${decision.decision_type} decision for ${decision.target_ref}`,
+    source_refs: [decisionId, decision.target_ref || "", ...stringList(decision.evidence_refs)].filter(Boolean),
+    confidence: "high",
+    owner_agent_id: "documentation_keeper",
+    created_at: studioTimestampParts().iso,
+    updated_at: studioTimestampParts().iso,
+  };
+}
+
+function resolveWorkOrderAgent(workOrder, requestedAgentId = "") {
+  const requested = String(requestedAgentId || "").trim();
+  if (requested) return requested;
+  const assigned = stringList(workOrder.assigned_agents);
+  if (assigned[0]) return assigned[0];
+  const department = String(workOrder.department_id || "").trim();
+  if (department === "narrative") return "scenario_director";
+  if (department === "qa_testing") return "qa_tester";
+  if (department === "engineering") return "technical_architect";
+  if (department === "art") return "art_director";
+  if (department === "production") return "producer";
+  return "executive_producer";
+}
+
+function extractMeetingTurnFromStaffRun(repoRoot, runResult) {
+  const outputPath = runResult?.role_run_output_path || "";
+  const output = outputPath ? fs.existsSync(path.resolve(repoRoot, outputPath)) ? JSON.parse(fs.readFileSync(path.resolve(repoRoot, outputPath), "utf8")) : null : null;
+  if (!output) return "";
+  const parts = [];
+  if (output.plain_language_summary) parts.push(output.plain_language_summary);
+  if (Array.isArray(output.proposals) && output.proposals.length) {
+    parts.push("Proposals: " + output.proposals.map((item) => item.title || item.summary || item.proposal_id || "").filter(Boolean).join("; "));
+  }
+  if (Array.isArray(output.approval_items) && output.approval_items.length) {
+    parts.push("Approval needed: " + output.approval_items.map((item) => item.summary || item.title || String(item)).join("; "));
+  }
+  if (Array.isArray(output.open_questions) && output.open_questions.length) {
+    parts.push("Open questions: " + output.open_questions.map((item) => item.question || String(item)).join("; "));
+  }
+  return parts.filter(Boolean).join("\n");
+}
+
+function buildToolRunRequestPayload(body) {
+  const adapterId = requireStudioText(body.tool_adapter_id, "tool_adapter_id");
+  const action = requireStudioText(body.requested_action, "requested_action");
+  const purpose = requireStudioText(body.purpose, "purpose");
+  const permission = String(body.permission_class || "read").trim() || "read";
+  const requesterType = String(body.requester_type || "human_director").trim() || "human_director";
+  const requesterRef = String(body.requester_ref || "studio-console").trim() || "studio-console";
+  const id = makeStudioId("TRQ", `${adapterId}-${permission}`);
+  return {
+    tool_run_request_id: id,
+    requester_type: requesterType,
+    requester_ref: requesterRef,
+    work_order_id: String(body.work_order_id || "").trim() || null,
+    role_run_id: String(body.role_run_id || "").trim() || null,
+    tool_adapter_id: adapterId,
+    requested_action: action,
+    command_id: String(body.command_id || "").trim() || null,
+    permission_class: permission,
+    purpose,
+    input_refs: listFromText(body.input_refs),
+    expected_outputs: listFromText(body.expected_outputs),
+    evidence_requirements: listFromText(body.evidence_requirements),
+    approval_ref: String(body.approval_ref || "").trim() || null,
+    status: String(body.status || "director_review").trim() || "director_review",
+    created_at: studioTimestampParts().iso,
+    notes: [
+      "Created from Studio Director Console.",
+      "This record is a request only. It does not execute the adapter.",
+    ],
   };
 }
 
@@ -2656,6 +3412,14 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 
+  if (req.method === "POST" && parsedUrl.pathname === "/api/review-packet/export") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_review_packet_exporter.bat");
+    const result = await runTool(repoRoot, bat, ["export", body.path, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
   if (req.method === "POST" && parsedUrl.pathname === "/api/materialization/review-plan") {
     const body = await readRequestJson(req);
     safeResolveReadable(repoRoot, body.path || "");
@@ -2691,6 +3455,32 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     safeResolveReadable(repoRoot, body.path || "");
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
     const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/plan") {
+    const body = await readRequestJson(req);
+    const payload = buildToolRunRequestPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "toolrun-request", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
+    const result = await runTool(repoRoot, bat, ["plan", inputPath, "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, { ...(result.json || result), input_path: inputPath });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/create") {
+    const body = await readRequestJson(req);
+    const payload = buildToolRunRequestPayload(body);
+    const inputPath = await writeTempStudioInput(repoRoot, "toolrun-request", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
+    const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, { ...(result.json || result), input_path: inputPath });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/plan-file") {
+    const body = await readRequestJson(req);
+    safeResolveReadable(repoRoot, body.path || "");
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
+    const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 
@@ -2851,6 +3641,203 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
     const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/create-workorder") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const payload = buildWorkOrderFromMeetingPayload(meeting);
+    const inputPath = await writeTempStudioInput(repoRoot, "workorder_from_meeting", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
+    const result = await runTool(repoRoot, bat, ["store", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/create-decision") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const payload = buildDecisionFromMeetingPayload(meeting, String(body.decision_type || "approve").trim() || "approve");
+    const inputPath = await writeTempStudioInput(repoRoot, "decision_from_meeting", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
+    const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/agent-turn-plan") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const agentId = resolveMeetingAgent(meeting, body.agent_id);
+    const workOrder = buildMeetingAgentTurnWorkOrder(meeting, agentId);
+    const workOrderPath = await writeTempStudioInput(repoRoot, "meeting_turn_workorder", workOrder);
+    const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const contextResult = await runTool(repoRoot, "powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", contextScript, "-RepoRoot", repoRoot, "plan", agentId, workOrderPath, "--memory-query", meeting.topic || "", "--json"], 120000);
+    if (!contextResult.ok || !contextResult.json?.context_packet) {
+      return sendJson(res, 500, contextResult.json || contextResult);
+    }
+    const contextPath = await writeTempStudioInput(repoRoot, "context_packet", contextResult.json.context_packet);
+    const staffExecutor = repoPath(repoRoot, "tools/aiworkflow/studio_staff_executor.bat");
+    const staffPlan = await runTool(repoRoot, staffExecutor, ["plan", contextPath, "--model", body.model || "gpt-5.5", "--reasoning", body.reasoning || "high", "--ephemeral", "--json"], 120000);
+    return sendJson(res, staffPlan.ok ? 200 : 500, {
+      ok: staffPlan.ok,
+      meeting_id: meeting.meeting_id || "",
+      agent_id: agentId,
+      work_order_path: workOrderPath,
+      context_path: contextPath,
+      context_packet: contextResult.json.context_packet,
+      staff_plan: staffPlan.json || staffPlan,
+      safety: {
+        meeting_turn_written: false,
+        source_changed: false,
+        task_state_changed: false,
+        git_changed: false,
+      },
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/agent-turn-run") {
+    const body = await readRequestJson(req);
+    const { json: meeting, relativePath } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const agentId = resolveMeetingAgent(meeting, body.agent_id);
+    const workOrder = buildMeetingAgentTurnWorkOrder(meeting, agentId);
+    const workOrderPath = await writeTempStudioInput(repoRoot, "meeting_turn_workorder", workOrder);
+    const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const contextResult = await runTool(repoRoot, "powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", contextScript, "-RepoRoot", repoRoot, "plan", agentId, workOrderPath, "--memory-query", meeting.topic || "", "--json"], 120000);
+    if (!contextResult.ok || !contextResult.json?.context_packet) {
+      return sendJson(res, 500, contextResult.json || contextResult);
+    }
+    const contextPath = await writeTempStudioInput(repoRoot, "context_packet", contextResult.json.context_packet);
+    const staffExecutor = repoPath(repoRoot, "tools/aiworkflow/studio_staff_executor.bat");
+    const staffRun = await runTool(repoRoot, staffExecutor, ["run", contextPath, "--execute", "--model", body.model || "gpt-5.5", "--reasoning", body.reasoning || "high", "--timeout-seconds", "900", "--ephemeral", "--json"], 20 * 60 * 1000);
+    const runJson = staffRun.json || {};
+    let turnResult = null;
+    const canAppendTurn = slash(relativePath).startsWith("_Docs/AIWorkflow/Studio/MeetingSessions/");
+    const turnContent = staffRun.ok ? extractMeetingTurnFromStaffRun(repoRoot, runJson) : "";
+    if (canAppendTurn && turnContent) {
+      const meetingScript = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.ps1");
+      const turn = await runTool(repoRoot, "powershell.exe", [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        meetingScript,
+        "-RepoRoot",
+        repoRoot,
+        "add-turn",
+        meeting.meeting_id || "",
+        agentId,
+        "synthesis",
+        turnContent,
+        "--execute",
+        "--json",
+      ], 120000);
+      turnResult = turn.json || turn;
+    }
+    return sendJson(res, staffRun.ok ? 200 : 500, {
+      ok: staffRun.ok,
+      meeting_id: meeting.meeting_id || "",
+      agent_id: agentId,
+      work_order_path: workOrderPath,
+      context_path: contextPath,
+      staff_run: runJson || staffRun,
+      turn_appended: Boolean(turnResult?.ok),
+      turn_result: turnResult,
+      safety: {
+        meeting_turn_written: Boolean(turnResult?.ok),
+        source_changed: false,
+        task_state_changed: false,
+        git_changed: false,
+      },
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/proposal/create-decision") {
+    const body = await readRequestJson(req);
+    const { json: proposal } = await readStudioRecordFromBody(repoRoot, body, "proposal");
+    const payload = buildDecisionFromProposalPayload(proposal, String(body.decision_type || "approve").trim() || "approve");
+    const inputPath = await writeTempStudioInput(repoRoot, "decision_from_proposal", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
+    const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/decision/create-memory") {
+    const body = await readRequestJson(req);
+    const { json: decision } = await readStudioRecordFromBody(repoRoot, body, "decision");
+    const payload = buildMemoryFromDecisionPayload(decision, String(body.status || "").trim());
+    const inputPath = await writeTempStudioInput(repoRoot, "memory_from_decision", payload);
+    const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
+    const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/context-plan") {
+    const body = await readRequestJson(req);
+    const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+    const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
+    const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
+    const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const args = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-RepoRoot", repoRoot, "plan", agentId, body.path, "--json"];
+    if (memoryQuery) args.push("--memory-query", memoryQuery);
+    const result = await runTool(repoRoot, "powershell.exe", args, 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/context-create") {
+    const body = await readRequestJson(req);
+    const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+    const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
+    const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
+    const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const args = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-RepoRoot", repoRoot, "create", agentId, body.path, "--execute", "--json"];
+    if (memoryQuery) args.push("--memory-query", memoryQuery);
+    const result = await runTool(repoRoot, "powershell.exe", args, 120000);
+    return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/staff-plan") {
+    const body = await readRequestJson(req);
+    const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+    const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
+    const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
+    const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const contextArgs = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", contextScript, "-RepoRoot", repoRoot, "plan", agentId, body.path, "--json"];
+    if (memoryQuery) contextArgs.push("--memory-query", memoryQuery);
+    const contextResult = await runTool(repoRoot, "powershell.exe", contextArgs, 120000);
+    if (!contextResult.ok || !contextResult.json?.context_packet) {
+      return sendJson(res, 500, contextResult.json || contextResult);
+    }
+    const contextPath = await writeTempStudioInput(repoRoot, "context_packet", contextResult.json.context_packet);
+    const staffExecutor = repoPath(repoRoot, "tools/aiworkflow/studio_staff_executor.bat");
+    const result = await runTool(repoRoot, staffExecutor, ["plan", contextPath, "--model", body.model || "gpt-5.5", "--reasoning", body.reasoning || "high", "--ephemeral", "--json"], 120000);
+    return sendJson(res, result.ok ? 200 : 500, {
+      ok: result.ok,
+      context_path: contextPath,
+      context_packet: contextResult.json.context_packet,
+      staff_plan: result.json || result,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/staff-run") {
+    const body = await readRequestJson(req);
+    const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+    const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
+    const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
+    const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
+    const contextArgs = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", contextScript, "-RepoRoot", repoRoot, "plan", agentId, body.path, "--json"];
+    if (memoryQuery) contextArgs.push("--memory-query", memoryQuery);
+    const contextResult = await runTool(repoRoot, "powershell.exe", contextArgs, 120000);
+    if (!contextResult.ok || !contextResult.json?.context_packet) {
+      return sendJson(res, 500, contextResult.json || contextResult);
+    }
+    const contextPath = await writeTempStudioInput(repoRoot, "context_packet", contextResult.json.context_packet);
+    const staffExecutor = repoPath(repoRoot, "tools/aiworkflow/studio_staff_executor.bat");
+    const result = await runTool(repoRoot, staffExecutor, ["run", contextPath, "--execute", "--model", body.model || "gpt-5.5", "--reasoning", body.reasoning || "high", "--timeout-seconds", "900", "--ephemeral", "--json"], 20 * 60 * 1000);
+    return sendJson(res, result.ok ? 200 : 500, {
+      ok: result.ok,
+      context_path: contextPath,
+      context_packet: contextResult.json.context_packet,
+      staff_run: result.json || result,
+    });
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/intake") {

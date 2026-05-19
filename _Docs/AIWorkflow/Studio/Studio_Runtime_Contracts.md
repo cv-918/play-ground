@@ -651,7 +651,7 @@ push.
 Current status:
 
 ```text
-guarded Studio runtime foundation
+interactive guarded Studio runtime foundation
 ```
 
 Implemented now:
@@ -676,10 +676,19 @@ Implemented now:
 - materialization review decision recorder
 - review packet exporter for Human Director-readable RoleRunOutput HTML
 - conditional automation replay and repair-plan support
+- interactive Studio Director Console with Korean-labeled Director-facing
+  Home, Departments, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge,
+  and Evidence pages: `홈`, `부서`, `AI 직원`, `회의실`, `직원 보고서`,
+  `업무 지시`, `지식/결정`, and `증거`; Systems and Policy remain
+  internal/admin pages hidden under `내부 도구` by default
+- Studio Console actions for MeetingSession creation/turns, AI staff meeting
+  contribution plan/run, WorkOrder to StaffContextPacket plan/store, WorkOrder
+  staff run plan/run, Proposal to Decision, Decision to Memory/canon Memory,
+  RoleRunOutput review packet export, guarded ToolRunRequest plan/store, and
+  selected-file Git gate operations
 
 Not implemented yet:
 
-- interactive Studio UI
 - autonomous staff-to-staff execution without Human Director review
 - persistent background staff scheduling
 

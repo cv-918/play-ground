@@ -57,18 +57,28 @@ This slice defines:
 - Read-only Studio dashboard HTML snapshot export with Director Inbox, staff
   run timeline, and review packet links
 - Read-only RoleRunOutput review packet HTML export for Human Director review
-- Local-only Studio Director Console server with a sidebar-based Home,
-  Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, Systems,
-  Policy, and Evidence workspace. Home is the Director situation board for
-  recent work, staff status, and AIWorkflow Core state; the other pages expose dashboard refresh,
+- Local-only Studio Director Console server with a sidebar-based Director
+  workspace. The normal Director-facing pages are Korean-labeled Home,
+  Department, Staff, Meeting Room, Staff Runs, Work Orders, Knowledge, and
+  Evidence pages: `홈`, `부서`, `AI 직원`, `회의실`, `직원 보고서`,
+  `업무 지시`, `지식/결정`, and `증거`. Systems and Policy are
+  internal/admin pages and are hidden under the `내부 도구` section by
+  default. Home is the Director situation board for recent work,
+  staff status, and AIWorkflow Core state; the other Director-facing pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
-  RoleRunOutput materialization actions, materialized draft decision actions,
+  RoleRunOutput review packet export actions, governed record-candidate
+  materialization actions, materialized draft decision actions,
   WorkOrder task creation actions, direct MeetingSession creation and turn
   recording, direct WorkOrder creation, direct Proposal/Decision/Memory record
   creation, Department/StaffAgent directory cards, Proposal/Decision/Memory
-  browser panels, Meeting Room inspection/lifecycle actions, Project Profile
-  and Tool Adapter browser panels, Conditional
-  Automation policy test actions, and review packet links.
+  browser panels, Meeting Room inspection/lifecycle actions, MeetingSession to
+  AI staff meeting-turn plan/run actions, MeetingSession to
+  follow-up WorkOrder/Decision actions, WorkOrder to StaffContextPacket
+  planning/storage actions, WorkOrder to signed-in Codex staff-run plan/run
+  actions, Proposal to Decision actions, Decision to Memory/canon Memory
+  actions, and review packet links. The internal/admin pages expose Project
+  Profile and Tool Adapter browser panels, governed ToolRun Request
+  planning/storage actions, and Conditional Automation policy test actions.
 - WorkOrderTaskBinding records written when WorkOrder planner creates a Backlog
   task
 - ToolAdapter schema and read-only tool adapter registry
@@ -160,15 +170,24 @@ evaluate adapter permission, approval, cost, and evidence needs before any tool
 executes. Staff prompt export prepares the signed-in Codex App/CLI input but
 still does not call a model. Staff executor can call signed-in Codex CLI only
 with `run --execute`; it stores evidence under `_Temp` and uses a read-only
-sandbox. Handoff router can turn a Handoff record into the next target
-agent's sealed StaffContextPacket, but it does not execute the target agent.
-Output materialization writes draft/proposed Studio records only; it is not
+sandbox. Studio Console exposes this through explicit WorkOrder buttons:
+Context preview, Context storage, staff execution plan, and staff execution.
+The execution button calls the signed-in Codex route and still cannot approve
+work, modify source files, write canon, mark tasks done, commit, or push.
+Handoff router can turn a Handoff record into the next target agent's sealed
+StaffContextPacket, but it does not execute the target agent.
+Output materialization writes draft/proposed Studio records only; in the
+Director UI these are shown as "record candidates." It is not
 approval, task creation, canonization, or implementation. Materialization
 review can write Decision records only; it does not execute the accepted
 records. Review packet export writes a Human Director-readable `_Temp` HTML
-view only. Studio Director Console serves a local browser UI and can call only
-allowlisted Studio actions. It can materialize staff output into governed
-draft records, record Director decisions about those drafts, and create
+view only. Studio Director Console exposes review packet export as "Make
+report" directly from Staff Runs so the Director can read staff output before
+materialization or decision recording. Raw run JSON and staff run evidence are
+internal/debug links in the UI. Studio Director Console serves a local browser
+UI and can call only allowlisted Studio actions. It can materialize staff
+output into governed draft records, record Director decisions about those
+drafts, and create
 Backlog tasks from reviewed WorkOrders only through explicit button clicks. It
 also displays Proposal, Decision, and Memory/Canon records so the Director can
 separate ideas, decisions, and canon status. It displays MeetingSessions and
@@ -182,9 +201,29 @@ displays active Project Profiles and Tool Adapter policy summaries so the Direct
 project target and available execution equipment before approving downstream
 work. It exposes Department and StaffAgent directory panels so the Director can
 see who owns a responsibility before starting a meeting, handoff, or WorkOrder.
+The Systems page is internal/admin by default. It can also plan and store governed ToolRunRequest records. A
+ToolRunRequest says which adapter is requested, why it is needed, what
+permission class it needs, and what evidence must be collected. It is not tool
+execution, does not call external systems, and does not grant approval by
+itself.
 Meeting Room lifecycle buttons may create, start, or finalize MeetingSession
 records only through explicit UI actions; meeting lifecycle state is not
 approval, canon, task execution, or git finalization.
+Meeting Room can also create a focused follow-up WorkOrder or record a
+Decision from a meeting result. These actions keep meeting consensus separate
+from execution authority: a follow-up WorkOrder must still pass WorkOrder/task
+gates, and a Decision must still be converted into Memory/canon Memory through
+the Knowledge page when appropriate. Knowledge page actions support Proposal
+to Decision and Decision to Memory/canon Memory transitions. Proposal approval
+is not implementation approval, and Decision storage is not canon until a
+MemoryRecord with `status=canon` is explicitly written with the Decision as
+evidence.
+Meeting Room can request an AI staff meeting contribution through explicit
+plan/run buttons. The plan button builds a temporary WorkOrder and
+StaffContextPacket preview. The run button calls signed-in Codex as the
+selected meeting participant and, for stored MeetingSessions only, appends a
+new synthesis turn. This is a meeting note, not a Director decision, not canon,
+not a task, and not a source or git change.
 It exposes Conditional Automation status, validation, dry-run test, `_Temp`
 evaluation write, replay, and repair-plan actions as policy evidence only. Its
 handoff execution path still routes through the existing read-only staff

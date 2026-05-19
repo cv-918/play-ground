@@ -313,29 +313,48 @@
           </div>
           <div class="note">
             <strong>Studio Console 사용:</strong>
-            로컬 Studio Director Console은 왼쪽 사이드바로 <code>Home</code>, <code>Departments</code>, <code>Staff</code>, <code>Meeting Room</code>, <code>Work Orders</code>, <code>Knowledge</code>, <code>Systems</code>, <code>Policy</code>, <code>Evidence</code> 페이지를 전환합니다.
-            <code>Home</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 페이지는 각 부서/직원/회의/산출물/정책을 조작하는 작업 공간입니다.
-            <code>원본 설정(JSON) 보기</code>는 일반 진행 버튼이 아니라 registry 원본을 확인하는 관리자/디버그용 링크입니다.
+            로컬 Studio Director Console은 왼쪽 사이드바로 <code>홈</code>, <code>부서</code>, <code>AI 직원</code>, <code>회의실</code>, <code>직원 보고서</code>, <code>업무 지시</code>, <code>지식/결정</code>, <code>증거</code> 페이지를 전환합니다.
+            <code>홈</code>은 최근 작업, 직원 현황, 감독자 판단 대기 항목을 먼저 보여주는 상황판이고, 나머지 기본 페이지는 부서/직원/회의/직원 보고서/업무 지시/지식/증거를 다루는 감독자용 작업 공간입니다.
+            <code>AI 직원</code> 페이지는 각 직원의 한국어 직책, 역할, 할 수 있는 일, 담당 산출물, 승인이 필요한 일을 보여줍니다.
+            <code>시스템</code>과 <code>정책</code>은 <code>내부 도구</code> 아래에 접혀 있는 관리자/디버그용 화면입니다. 평소 작업에서는 신경 쓰지 않아도 됩니다.
+            <code>원본 설정(JSON)</code>, <code>실행 기록(내부)</code>, <code>원본 JSON(내부)</code>은 일반 진행 버튼이 아니라 registry와 증거 원본을 확인하는 관리자/디버그용 링크입니다.
           </div>
           <div class="note">
             <strong>Studio에서 직접 할 수 있는 일:</strong>
-            <code>Home</code>에서 새 작업 접수, 승인+실행, 완료 승인/수정 요청/판단 보류, 선택 파일 commit 또는 commit+push를 할 수 있습니다.
-            <code>Meeting Room</code>에서는 회의를 만들고 발언을 추가할 수 있습니다.
-            <code>Work Orders</code>에서는 업무 지시서를 만들 수 있고, 필요하면 별도 버튼으로 Backlog task로 넘깁니다.
-            <code>Knowledge</code>에서는 Proposal, Decision, Memory를 기록해 아이디어, 감독자 결정, 프로젝트 기억을 분리해서 관리합니다.
+            <code>홈</code>에서 새 작업 접수, 승인+실행, 완료 승인/수정 요청/판단 보류, 선택 파일 commit 또는 commit+push를 할 수 있습니다.
+            <code>회의실</code>에서는 회의를 만들고 발언을 추가하며, AI 직원 발언 계획/실행을 요청하고, 회의 결과를 후속 업무 지시나 감독자 결정으로 넘길 수 있습니다.
+            <code>업무 지시</code>에서는 업무 지시서를 만들 수 있고, 직원 자료 미리보기/저장, 직원 실행 계획, 명시적 직원 실행, 작업 목록 생성을 할 수 있습니다.
+            <code>직원 보고서</code>에서는 AI 직원이 만든 결과를 <code>보고서 만들기</code>로 읽기 좋게 내보내고, 필요한 내용만 <code>기록 후보 보기</code> 또는 <code>기록함에 넣기</code>로 넘길 수 있습니다.
+            <code>지식/결정</code>에서는 제안, 결정, 기억을 기록해 아이디어, 감독자 결정, 프로젝트 기억을 분리해서 관리합니다. 제안은 결정으로, 결정은 기억 또는 공식 설정 기억으로 넘길 수 있습니다.
+            <code>시스템</code>에서는 프로젝트 프로필, 도구 어댑터, 도구 요청서를 확인하고, 도구 실행 전에 어떤 도구를 왜 쓰려는지와 어떤 증거가 필요한지 요청서로 남길 수 있습니다. 이 화면은 내부/관리자용입니다.
             이 버튼들은 기존 AIWorkflow gate를 우회하지 않고, 선택한 task와 선택한 파일에 대해서만 동작합니다.
           </div>
           <div class="note">
-            <strong>Studio Home의 AIWorkflow Core:</strong>
-            Discord를 쓰지 않는 흐름에서는 Studio Console의 <code>Home</code>이 기본 상황판입니다.
+            <strong>Studio 버튼의 의미:</strong>
+            <code>직원 자료 미리보기</code>는 업무 지시를 특정 AI 직원이 읽을 실행 문맥으로 어떻게 묶을지 보여줍니다.
+            <code>직원 자료 저장</code>은 그 문맥을 내부 문맥 기록에 남깁니다.
+            <code>직원 실행 계획</code>은 Codex 직원 실행 전에 어떤 모델/명령/입력이 쓰일지 점검합니다.
+            <code>직원 실행</code>은 signed-in Codex CLI를 read-only 직원 실행으로 호출하고 결과를 <code>_Temp</code> 증거로 남깁니다.
+            <code>보고서 만들기</code>는 직원 실행 결과를 사람이 읽기 좋은 HTML 검토 자료로 내보냅니다.
+            <code>기록 후보 보기</code>는 직원 보고서에서 제안, 기억, 업무 지시, 인수인계 후보가 무엇인지 미리 보여줍니다.
+            <code>기록함에 넣기</code>는 필요한 후보를 Studio 기록 후보로 남깁니다. 이것은 실행 승인, 공식 설정 확정, task 생성이 아닙니다.
+            <code>AI 발언 계획</code>은 회의 주제와 참가자 기준으로 직원 발언 실행 전에 어떤 문맥과 명령이 쓰일지 보여줍니다.
+            <code>AI 발언 실행</code>은 저장된 회의에 한해 AI 직원 발언을 생성하고 회의 발언으로 추가합니다.
+            <code>ToolRun Request 만들기</code>는 도구를 실행하기 전에 adapter, 권한 등급, 목적, 입력, 기대 산출물, 필수 증거를 검토 가능한 요청서로 남깁니다.
+            이 요청서는 실행 허가가 아니며, 비용/외부 호출/파일 변경 가능성이 있는 도구는 별도 승인 gate를 거칩니다.
+            이 실행은 소스 수정, 공식 설정 기록, task 승인, task done, commit, push를 직접 하지 않습니다.
+          </div>
+          <div class="note">
+            <strong>Studio 홈의 AIWorkflow Core:</strong>
+            Discord를 쓰지 않는 흐름에서는 Studio Console의 <code>홈</code>이 기본 상황판입니다.
             <code>AIWorkflow Core</code>는 현재 ActiveTask, 최근 Runner 중단 이유, 완료 검토 상태, Backlog 요약을 보여줍니다.
             <code>Git / Evidence</code>는 현재 branch, 변경 파일 수, 검증 판정, 완료 보고서/완료 카드 링크를 보여줍니다.
-            즉, “지금 뭘 판단해야 하는지”는 먼저 Home의 AIWorkflow Core에서 확인합니다.
+            즉, “지금 뭘 판단해야 하는지”는 먼저 홈의 AIWorkflow Core에서 확인합니다.
           </div>
-          <pre><code>1. Studio Home의 새 작업 접수에 작업 요청 입력
+          <pre><code>1. Studio 홈의 새 작업 접수에 작업 요청 입력
 2. 승인 필요 시에만 승인+실행
 3. PC Runner가 실행, 감시, 증거 수집, 검증 보고
-4. Studio Home 또는 Evidence에서 완료 카드와 결과 확인
+4. Studio 홈 또는 증거에서 완료 카드와 결과 확인
 5. 완료 승인 / 우려 감수 후 완료 / 수정 요청 / 반려 / 판단 보류 결정
 6. Studio Git Gate에서 선택 파일만 commit/push 결정</code></pre>
           <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. Discord adapter를 쓰는 경우 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어볼 수 있습니다.</p>
