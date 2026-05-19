@@ -52,6 +52,7 @@ This slice defines:
 - TraceabilityMap schema
 - StudioRecoveryPlan schema
 - StudioEvalPlan schema
+- CompanyRuntimeReadinessReport schema
 - ConditionalAutomationCase schema
 - Memory status policy
 - Conditional automation policy
@@ -203,6 +204,11 @@ This slice defines:
 - Read-only StudioSmokeReport for final UI smoke checks. It verifies expected
   Director-facing pages, newly added Studio schemas, core counts, warnings, and
   recommended manual smoke steps without changing source, task state, or git.
+- Read-only CompanyRuntimeReadinessReport for fixing the A/B/C completion
+  boundary. It evaluates Console MVP, Studio Runtime MVP, and Personal AI
+  Company v1 gates so future work does not move the conceptual completion
+  target after C is reached. It does not run staff, create tasks, change
+  workflow state, modify source files, commit, or push.
 - Conditional automation case suite, deterministic policy test, replay, and
   repair-plan tool
 
@@ -211,7 +217,7 @@ This slice defines:
 Current status:
 
 ```text
-domain model foundation + guarded local runtime stores/builders/exporters
+Studio Console MVP + guarded Studio Runtime bridge + C-stage readiness gate
 ```
 
 This folder does not:
@@ -545,5 +551,31 @@ The Studio layer adds:
 - RoleRun
 - ToolRun
 
-Future implementation should connect WorkOrder to the existing Task lifecycle
-instead of replacing it.
+Current implementation connects WorkOrder to the existing Task lifecycle through
+WorkOrderTaskBinding and guarded Backlog task creation. WorkOrder does not
+replace Task lifecycle state; it feeds the existing approval, Runner,
+verification, completion, finalization, and git gates.
+
+## Conceptual Completion Boundary
+
+The fixed conceptual completion target is:
+
+```text
+C: Personal AI Company v1
+```
+
+C means that AI staff, meetings, work orders, approvals, execution handoff,
+verification material, decisions, memory/canon records, completion, and git
+gates form one governed Studio runtime.
+
+After C is reached, new work must be classified as one of:
+
+- v1 stabilization
+- UX polish
+- role or department expansion
+- tool adapter expansion
+- project profile expansion
+- v2 candidate
+
+Do not reclassify post-C improvements as "v1 is still conceptually incomplete"
+unless one of the C gates in CompanyRuntimeReadinessReport regresses.

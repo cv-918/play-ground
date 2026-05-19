@@ -1772,6 +1772,32 @@ Outputs:
 - audit replay
 - rollback/repair flows
 
+### Fixed Completion Standards
+
+The roadmap is grouped into three fixed completion standards:
+
+```text
+A. Studio Console MVP
+   The Human Director can use Studio to understand and operate work status,
+   staff, meetings, verification material, and git gates.
+
+B. Studio Runtime MVP
+   Studio WorkOrders connect to the existing AIWorkflow Task lifecycle,
+   PC Runner, VerificationReport, CompletionReport, FinalizationLog, and git
+   gate without replacing those governance layers.
+
+C. Personal AI Company v1
+   Staff agents, meetings, work orders, approvals, execution handoff,
+   verification material, decisions, memory/canon, completion review, and git
+   gates form one governed company runtime.
+```
+
+After C is reached, new work must be classified as v1 stabilization, UX polish,
+role/department expansion, tool adapter expansion, project profile expansion,
+or a v2 candidate. Post-C improvements must not be reclassified as "v1 is
+conceptually incomplete" unless one of the CompanyRuntimeReadinessReport C
+gates regresses.
+
 ---
 
 ## 23. First Implementation Slice

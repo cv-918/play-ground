@@ -1511,6 +1511,13 @@ async function getSummary(repoRoot) {
     director_goal_plans: await countJsonFiles(path.join(studioRoot, "DirectorGoals")),
     dev_logs: devLogs.length,
   };
+  const companyRuntime = buildCompanyRuntimeReadinessReport(repoRoot, {
+    stores,
+    staffDirectory,
+    workflowCore,
+    projectProfiles,
+    toolRegistry,
+  });
 
   return {
     ok: true,
@@ -1527,8 +1534,10 @@ async function getSummary(repoRoot) {
       review_packets: reviewPackets.length,
       staff_runs: staffRuns.length,
       handoffs: handoffs.length,
+      company_runtime_gates: companyRuntime.stage_summary.passed_gate_count + "/" + companyRuntime.stage_summary.total_gate_count,
       ...stores,
     },
+    company_runtime: companyRuntime,
     handoffs,
     director_goal_plans: directorGoalPlans.slice(0, 12),
     workflow_core: workflowCore,
@@ -1565,6 +1574,194 @@ function quoteCmd(value) {
   const text = String(value);
   if (!/[ \t&()^|<>"]/u.test(text)) return text;
   return `"${text.replace(/"/g, '""')}"`;
+}
+
+function existsRel(repoRoot, relativePath) {
+  return fs.existsSync(repoPath(repoRoot, relativePath));
+}
+
+function readinessGate(id, stage, label, meaning, requiredItems, missingItems, nextActions) {
+  const missing = (missingItems || []).filter(Boolean);
+  return {
+    id,
+    stage,
+    label,
+    status: missing.length ? "attention" : "pass",
+    meaning,
+    required_items: requiredItems,
+    missing_or_weak_items: missing,
+    next_actions: missing.length ? nextActions : ["이 gate는 C 단계 기준을 만족합니다."],
+  };
+}
+
+function buildCompanyRuntimeReadinessReport(repoRoot, context = {}) {
+  const stores = context.stores || {};
+  const staffDirectory = context.staffDirectory || { departments: [], staff: [] };
+  const workflowCore = context.workflowCore || {};
+  const projectProfiles = context.projectProfiles || { profiles: [] };
+  const toolRegistry = context.toolRegistry || {};
+  const toolAdapters = Array.isArray(toolRegistry.tool_adapters) ? toolRegistry.tool_adapters : [];
+  const requiredFiles = {
+    consoleServer: "tools/aiworkflow/studio_director_console_server.js",
+    startBat: "tools/aiworkflow/studio_start_here.bat",
+    userGuide: "_Docs/AIWorkflow/Guide/AIWorkflow_User_Guide_KR.html",
+    staffRegistry: "_Docs/AIWorkflow/Studio/Registries/staff_agents.initial.json",
+    departmentRegistry: "_Docs/AIWorkflow/Studio/Registries/departments.initial.json",
+    workOrderPlanner: "tools/aiworkflow/studio_workorder_planner.ps1",
+    workOrderBindingSchema: "_Docs/AIWorkflow/Studio/Schemas/WorkOrderTaskBinding.schema.json",
+    pcRunner: "tools/aiworkflow/pc_runner.ps1",
+    verification: "tools/aiworkflow/verification_report.ps1",
+    completion: "tools/aiworkflow/completion_report.ps1",
+    finalization: "tools/aiworkflow/finalization_log.ps1",
+    contextBuilder: "tools/aiworkflow/studio_context_builder.ps1",
+    staffExecutor: "tools/aiworkflow/studio_staff_executor.ps1",
+    staffRuntime: "tools/aiworkflow/studio_staff_runtime.ps1",
+    meetingRuntime: "tools/aiworkflow/studio_meeting_runtime.ps1",
+    memoryStore: "tools/aiworkflow/studio_memory_store.ps1",
+    decisionStore: "tools/aiworkflow/studio_decision_store.ps1",
+    handoffRouter: "tools/aiworkflow/studio_handoff_router.ps1",
+    outputMaterializer: "tools/aiworkflow/studio_output_materializer.ps1",
+    materializationReview: "tools/aiworkflow/studio_materialization_review.ps1",
+    toolRunPlanner: "tools/aiworkflow/studio_tool_run_planner.ps1",
+    automationPolicy: "tools/aiworkflow/studio_conditional_automation.ps1",
+  };
+  const missingFiles = (keys) => keys
+    .map((key) => requiredFiles[key])
+    .filter((relativePath) => !existsRel(repoRoot, relativePath));
+
+  const gates = [
+    readinessGate(
+      "A-console-mvp",
+      "A",
+      "Studio Console MVP",
+      "Human Director가 Studio 화면만 보고 현재 작업, 직원, 회의, 검증 자료, git gate를 이해할 수 있어야 합니다.",
+      ["Director Console server", "daily Studio pages", "Korean user guide", "department/staff registries"],
+      [
+        ...missingFiles(["consoleServer", "startBat", "userGuide", "staffRegistry", "departmentRegistry"]),
+        staffDirectory.departments.length ? "" : "Department registry has no departments.",
+        staffDirectory.staff.length ? "" : "Staff registry has no active staff agents.",
+      ],
+      ["Studio server, guide, registry를 먼저 복구한 뒤 Home smoke를 다시 실행하세요."]
+    ),
+    readinessGate(
+      "B-workorder-task-runtime",
+      "B",
+      "WorkOrder to Task/Runner bridge",
+      "Studio 업무 지시가 기존 AIWorkflow Task lifecycle, PC Runner, 검증, 완료, git gate로 이어져야 합니다.",
+      ["WorkOrder store", "WorkOrderTaskBinding", "Backlog task creation", "PC Runner", "VerificationReport", "CompletionReport", "FinalizationLog"],
+      [
+        ...missingFiles(["workOrderPlanner", "workOrderBindingSchema", "pcRunner", "verification", "completion", "finalization"]),
+      ],
+      ["WorkOrder planner와 PC Runner/Verification/Completion scripts를 복구하세요."]
+    ),
+    readinessGate(
+      "C-staff-runtime",
+      "C",
+      "Persistent Staff Agent runtime",
+      "AI 직원이 역할, 권한, 기억, 업무 지시를 받아 RoleRun 산출물을 만들고 검토 가능한 기록 후보를 남길 수 있어야 합니다.",
+      ["StaffAgent registry", "StaffContextPacket builder", "Staff executor", "Staff runtime", "RoleRunOutput materializer", "materialization review"],
+      [
+        ...missingFiles(["staffRegistry", "contextBuilder", "staffExecutor", "staffRuntime", "outputMaterializer", "materializationReview"]),
+      ],
+      ["직원 registry, context builder, staff executor, materializer를 먼저 복구하세요."]
+    ),
+    readinessGate(
+      "C-meeting-loop",
+      "C",
+      "Creative Meeting loop",
+      "회의가 단순 메모가 아니라 발언, 반박, 질문, AI 직원 발언 요청, 후속 WorkOrder, Decision으로 이어져야 합니다.",
+      ["MeetingSession runtime", "meeting turn recording", "agent turn planning/run", "meeting to WorkOrder", "meeting to Decision"],
+      [
+        ...missingFiles(["meetingRuntime", "staffExecutor", "contextBuilder", "workOrderPlanner", "decisionStore"]),
+      ],
+      ["Meeting runtime, staff executor, WorkOrder/Decision store를 복구하세요."]
+    ),
+    readinessGate(
+      "C-memory-decision-governance",
+      "C",
+      "Memory / Canon / Decision governance",
+      "제안, 결정, 기억, canon이 구분되어야 하며 승인되지 않은 제안이 공식 설정처럼 굳지 않아야 합니다.",
+      ["Proposal/Decision store", "Memory store", "canon conflict report", "decision to memory/canon path"],
+      [
+        ...missingFiles(["decisionStore", "memoryStore"]),
+      ],
+      ["Decision/Memory store를 복구하고 canon conflict check를 다시 실행하세요."]
+    ),
+    readinessGate(
+      "C-tool-policy-execution-boundary",
+      "C",
+      "Tool adapter and approval boundary",
+      "AI 직원은 도구를 바로 휘두르지 않고 ToolRunRequest, permission class, approval gate, 검증 자료 책임을 거쳐야 합니다.",
+      ["ToolAdapter registry", "ToolRunRequest planner", "conditional automation policy", "approval impact plan"],
+      [
+        ...missingFiles(["toolRunPlanner", "automationPolicy"]),
+        toolAdapters.length ? "" : "ToolAdapter registry has no adapters.",
+      ],
+      ["ToolAdapter registry와 ToolRun planner/policy scripts를 복구하세요."]
+    ),
+  ];
+
+  const passCount = gates.filter((gate) => gate.status === "pass").length;
+  const cGates = gates.filter((gate) => gate.stage === "C");
+  const cPassCount = cGates.filter((gate) => gate.status === "pass").length;
+  const conceptualComplete = passCount === gates.length;
+  const activeTask = workflowCore.active_task || {};
+  const runner = workflowCore.runner || {};
+
+  return {
+    company_runtime_readiness_report_id: makeStudioId("CRR", "company-runtime"),
+    generated_at: studioTimestampParts().iso,
+    overall_status: conceptualComplete ? "conceptually_complete" : "needs_attention",
+    overall_label: conceptualComplete ? "C 단계 개념 완성" : "C 단계 점검 필요",
+    conceptual_completion_boundary: {
+      fixed_standard: "C: Personal AI Company v1",
+      definition: "AI 직원, 회의, 업무 지시, 승인, 실행, 검증, 기억이 하나의 회사 런타임으로 닫힌 상태입니다.",
+      after_c_is: "v1 안정화, 품질 개선, 역할/도구 확장, 운영 편의 개선입니다. C 이후 새 항목을 v1 미완성으로 재분류하지 않습니다.",
+    },
+    stage_summary: {
+      total_gate_count: gates.length,
+      passed_gate_count: passCount,
+      c_gate_count: cGates.length,
+      c_passed_gate_count: cPassCount,
+      console_mvp: gates.find((gate) => gate.id === "A-console-mvp")?.status || "unknown",
+      runtime_mvp: gates.find((gate) => gate.id === "B-workorder-task-runtime")?.status || "unknown",
+      company_v1: cPassCount === cGates.length ? "pass" : "attention",
+    },
+    current_operational_snapshot: {
+      active_task_id: activeTask.task_id || "",
+      active_task_status: activeTask.status || "",
+      runner_run_id: runner.runner_run_id || "",
+      runner_stop_reason: runner.stop_reason || "",
+      project_profile_count: Array.isArray(projectProfiles.profiles) ? projectProfiles.profiles.length : 0,
+      department_count: staffDirectory.departments.length,
+      staff_count: staffDirectory.staff.length,
+      work_order_count: stores.work_orders || 0,
+      meeting_count: stores.meetings || 0,
+      decision_count: stores.decisions || 0,
+      memory_count: stores.memories || 0,
+      task_binding_count: stores.task_bindings || 0,
+      role_run_count: stores.role_runs || 0,
+    },
+    gates,
+    next_actions: conceptualComplete
+      ? [
+          "Studio를 C: Personal AI Company v1 개념 완성 상태로 취급합니다.",
+          "이후 작업은 v1 안정화, UX polish, 역할/도구 확장, smoke 강화로 분류합니다.",
+          "새로운 큰 개념이 나오면 v2 후보로 분리하고 v1 미완성으로 되돌리지 않습니다.",
+        ]
+      : [
+          "attention gate의 missing_or_weak_items를 먼저 해결하세요.",
+          "해결 후 C 단계 점검과 Studio smoke를 다시 실행하세요.",
+          "C gate가 모두 pass가 되면 개념 완성으로 선언합니다.",
+        ],
+    safety: {
+      read_only: true,
+      task_state_changed: false,
+      source_changed: false,
+      staff_run_started: false,
+      commit_or_push: false,
+    },
+  };
 }
 
 function runTool(repoRoot, command, args, timeoutMs = 20 * 60 * 1000) {
@@ -2857,7 +3054,11 @@ function directorConsoleHtml() {
       el("homeActivity").innerHTML = activity.length ? activity.map((item) =>
         '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><span class="pill">' + esc(optionLabel(item.status || "")) + '</span></div>'
       ).join("") : '<p class="muted">최근 Studio 활동이 없습니다.</p>';
+      const company = state.company_runtime || {};
+      const companyStage = company.stage_summary || {};
       const operations = [
+        ["Company Runtime", company.overall_label || company.overall_status || "(unknown)"],
+        ["C gates", (companyStage.c_passed_gate_count ?? 0) + "/" + (companyStage.c_gate_count ?? 0)],
         ["활성 프로젝트", state.active_project.project_id || "(none)"],
         ["부서 / 직원", state.metrics.departments + " / " + state.metrics.staff],
         ["도구 어댑터", state.metrics.tool_adapters],
@@ -2867,7 +3068,7 @@ function directorConsoleHtml() {
       ];
       el("homeOperations").innerHTML = operations.map(([label, value]) =>
         '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
-      ).join("");
+      ).join("") + '<div class="row"><button class="secondary" data-action="company-runtime-readiness">C 단계 점검</button></div>';
       const evidence = [
         ...state.review_packets.slice(0, 3).map((packet) => ({ label:"검토 보고서", value:packet.id, href:packet.href })),
         ...state.conditional_automation.evaluations.slice(0, 2).map((evaluation) => ({ label:"정책 평가", value:evaluation.id, href:evaluation.href })),
@@ -3553,6 +3754,7 @@ function directorConsoleHtml() {
       if (action === "studio-recovery-plan") return log(await post("/api/studio/recovery/plan", {}));
       if (action === "studio-eval-plan") return log(await post("/api/studio/smoke/eval-plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
+      if (action === "company-runtime-readiness") return log(await post("/api/studio/company/runtime-readiness", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
     document.addEventListener("click", (event) => {
@@ -4816,6 +5018,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "TraceabilityMap.schema.json",
     "StudioRecoveryPlan.schema.json",
     "StudioEvalPlan.schema.json",
+    "CompanyRuntimeReadinessReport.schema.json",
   ];
   const schemaResults = [];
   for (const schema of expectedSchemas) {
@@ -5027,6 +5230,7 @@ function buildStudioEvalPlan() {
       "node --check tools\\aiworkflow\\studio_director_console_server.js",
       "node tools\\aiworkflow\\studio_director_console_server.js --once --json",
       "POST /api/studio/smoke/status",
+      "POST /api/studio/company/runtime-readiness",
       "POST /api/studio/ui/surface-map",
       "POST /api/studio/recovery/plan",
       "POST /api/studio/traceability/map",
@@ -6011,6 +6215,16 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       studio_smoke_report: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/company/runtime-readiness") {
+    const summary = await getSummary(repoRoot);
+    const payload = summary.company_runtime;
+    return sendJson(res, 200, {
+      ok: true,
+      company_runtime_readiness_report: payload,
       safety: payload.safety,
     });
   }

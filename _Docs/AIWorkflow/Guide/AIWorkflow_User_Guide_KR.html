@@ -394,6 +394,21 @@
           <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. Discord adapter를 쓰는 경우 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어볼 수 있습니다.</p>
         </section>
 
+        <section id="studio-company-runtime-completion">
+          <h2>Studio C 단계 기준</h2>
+          <p>Studio의 개념적 완성 기준은 <strong>C: Personal AI Company v1</strong>입니다. C는 AI 직원, 회의, 업무 지시, 승인, 실행 인계, 검증 자료, 완료 판단, 결정/기억, git gate가 하나의 회사 런타임으로 닫힌 상태를 말합니다.</p>
+          <div class="note">
+            <strong>C 이후의 작업 분류:</strong>
+            C 단계가 통과된 뒤 새로 나오는 일은 v1 안정화, UX polish, 역할/부서 확장, 도구 adapter 확장, 프로젝트 profile 확장, 또는 v2 후보로 분류합니다. C 이후 개선사항을 다시 "v1 개념 미완성"으로 되돌리지 않습니다.
+          </div>
+          <ol>
+            <li><strong>A: Studio Console MVP</strong> - Studio 화면만 보고 현재 작업, 직원, 회의, 검증 자료, git gate를 이해할 수 있습니다.</li>
+            <li><strong>B: Studio Runtime MVP</strong> - WorkOrder가 기존 AIWorkflow Task lifecycle, PC Runner, VerificationReport, CompletionReport, FinalizationLog, git gate로 이어집니다.</li>
+            <li><strong>C: Personal AI Company v1</strong> - StaffAgent, MeetingSession, WorkOrder, Decision, Memory/Canon, ToolRunRequest, Approval/Governance가 하나의 감독 가능한 회사 런타임으로 연결됩니다.</li>
+          </ol>
+          <p>Studio 홈의 <code>C 단계 점검</code> 버튼은 이 기준을 읽기 전용으로 확인합니다. 이 점검은 직원 실행, task 생성, 파일 수정, commit/push를 하지 않습니다.</p>
+        </section>
+
         <section id="workflow-core">
           <h2>워크플로우 본체</h2>
           <p>이 항목은 Discord 명령, 버튼, 카드 같은 디스패치 UI를 제외하고도 반드시 유지되어야 하는 AIWorkflow의 전체 구조를 설명합니다.</p>

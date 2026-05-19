@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/CompanyRuntimeReadinessReport.schema.json",
+  "title": "CompanyRuntimeReadinessReport",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "company_runtime_readiness_report_id",
+    "generated_at",
+    "overall_status",
+    "overall_label",
+    "conceptual_completion_boundary",
+    "stage_summary",
+    "current_operational_snapshot",
+    "gates",
+    "next_actions",
+    "safety"
+  ],
+  "properties": {
+    "company_runtime_readiness_report_id": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "overall_status": { "type": "string", "enum": ["conceptually_complete", "needs_attention"] },
+    "overall_label": { "type": "string" },
+    "conceptual_completion_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixed_standard", "definition", "after_c_is"],
+      "properties": {
+        "fixed_standard": { "type": "string" },
+        "definition": { "type": "string" },
+        "after_c_is": { "type": "string" }
+      }
+    },
+    "stage_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_gate_count",
+        "passed_gate_count",
+        "c_gate_count",
+        "c_passed_gate_count",
+        "console_mvp",
+        "runtime_mvp",
+        "company_v1"
+      ],
+      "properties": {
+        "total_gate_count": { "type": "integer" },
+        "passed_gate_count": { "type": "integer" },
+        "c_gate_count": { "type": "integer" },
+        "c_passed_gate_count": { "type": "integer" },
+        "console_mvp": { "type": "string" },
+        "runtime_mvp": { "type": "string" },
+        "company_v1": { "type": "string" }
+      }
+    },
+    "current_operational_snapshot": { "type": "object" },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stage",
+          "label",
+          "status",
+          "meaning",
+          "required_items",
+          "missing_or_weak_items",
+          "next_actions"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "stage": { "type": "string", "enum": ["A", "B", "C"] },
+          "label": { "type": "string" },
+          "status": { "type": "string", "enum": ["pass", "attention"] },
+          "meaning": { "type": "string" },
+          "required_items": { "type": "array", "items": { "type": "string" } },
+          "missing_or_weak_items": { "type": "array", "items": { "type": "string" } },
+          "next_actions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "next_actions": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "task_state_changed",
+        "source_changed",
+        "staff_run_started",
+        "commit_or_push"
+      ],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "staff_run_started": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -551,6 +551,28 @@ Phase I. Tool Adapter 확장
 Phase J. Conditional Automation
 ```
 
+위 구현 순서는 다음 세 개의 완료 기준으로 고정한다.
+
+```text
+A. Studio Console MVP
+   사람이 Studio를 보고 현재 작업, 직원, 회의, 검증 자료, git gate를 이해하고 조작할 수 있는 단계.
+
+B. Studio Runtime MVP
+   Studio의 WorkOrder가 기존 AIWorkflow Task lifecycle, PC Runner, VerificationReport,
+   CompletionReport, FinalizationLog, git gate로 이어지는 단계.
+
+C. Personal AI Company v1
+   AI 직원, 회의, 업무 지시, 승인, 실행 인계, 검증 자료, 결정, 기억/canon,
+   완료 판단, git gate가 하나의 회사 런타임으로 닫힌 단계.
+```
+
+C 단계 이후의 작업은 v1 안정화, UX polish, 역할/부서 확장, 도구 adapter 확장,
+프로젝트 profile 확장, 또는 v2 후보로 분류한다. C 단계 이후 발견되는 개선사항을
+다시 "v1 개념 미완성"으로 재분류하지 않는다.
+
+Studio Console의 `C 단계 점검`은 이 기준을 읽기 전용으로 확인하는
+CompanyRuntimeReadinessReport이다.
+
 가장 먼저 구현할 조각:
 
 ```text
