@@ -4392,6 +4392,11 @@ async function buildProjectExecutionPlan(repoRoot) {
   const enabledTools = toolAdapters.filter((adapter) => adapter.status === "available" && adapter.default_enabled);
   const writeTools = enabledTools.filter((adapter) => adapter.can_modify_files);
   const costTools = enabledTools.filter((adapter) => adapter.can_incur_cost || adapter.can_call_external);
+  const missing = [];
+  if (!active.project_id) missing.push("활성 Project Profile이 없습니다.");
+  if (!active.validation_profile_count) missing.push("검증 profile이 부족합니다.");
+  if (!active.build_profile_count) missing.push("빌드 profile이 부족합니다.");
+  if (!enabledTools.length) missing.push("기본 활성화된 실행 도구가 없습니다.");
   return {
     project_execution_plan_id: makeStudioId("PEP", active.project_id || "project"),
     project_id: active.project_id || "",
@@ -4399,12 +4404,35 @@ async function buildProjectExecutionPlan(repoRoot) {
     current_meaning: active.project_id
       ? `${active.display_name || active.project_id} 프로젝트의 빌드/검증/도구 실행 경계를 점검합니다.`
       : "활성 Project Profile을 찾지 못했습니다.",
+    profile_summary: {
+      display_name: active.display_name || active.project_id || "",
+      project_type: active.project_type || "",
+      source_roots: active.source_roots || [],
+      data_roots: active.data_roots || [],
+      asset_roots: active.asset_roots || [],
+      build_profile_count: active.build_profile_count || 0,
+      validation_profile_count: active.validation_profile_count || 0,
+    },
     available_validation_profiles: active.validation_profile_ids || [],
     available_build_profiles: active.build_profile_ids || [],
     available_tool_adapters: enabledTools.map((adapter) => adapter.adapter_id),
+    tool_risk_matrix: enabledTools.map((adapter) => ({
+      adapter_id: adapter.adapter_id,
+      display_name: adapter.display_name || adapter.adapter_id,
+      can_modify_files: Boolean(adapter.can_modify_files),
+      can_call_external: Boolean(adapter.can_call_external),
+      can_incur_cost: Boolean(adapter.can_incur_cost),
+      requires_human_approval: Boolean(adapter.requires_human_approval),
+      safe_for_default_read: !adapter.can_modify_files && !adapter.can_call_external && !adapter.can_incur_cost,
+    })),
     human_approval_required_for: [
       ...writeTools.map((adapter) => `${adapter.adapter_id}: 파일을 수정할 수 있는 도구입니다.`),
       ...costTools.map((adapter) => `${adapter.adapter_id}: 외부 호출 또는 비용 영향이 있을 수 있습니다.`),
+    ],
+    missing_or_weak_items: missing,
+    safe_start_candidates: [
+      ...(active.validation_profile_ids || []).slice(0, 3).map((id) => `검증 profile: ${id}`),
+      ...enabledTools.filter((adapter) => !adapter.can_modify_files).slice(0, 3).map((adapter) => `읽기 중심 도구: ${adapter.adapter_id}`),
     ],
     ready_to_run_checks: [
       active.validation_profile_count ? "검증 프로필이 등록되어 있습니다." : "검증 프로필이 부족합니다.",

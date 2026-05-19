@@ -144,10 +144,14 @@ and project-specific boundaries.
 A ProjectExecutionPlan explains:
 
 - which Project Profile is active
+- which source, data, and asset roots are in scope
 - which build and validation profiles exist
+- which profile gaps are still present
 - which tool adapters are available
+- which tools can safely be treated as read-only defaults
 - which tools can write files
 - which tools can call external services or incur cost
+- which safe start candidates exist
 - which actions require Human Director approval before execution
 - what to check before a ToolRunRequest, build, validation, or runner action
 

@@ -172,7 +172,8 @@ This slice defines:
 - ToolAdapter schema and read-only tool adapter registry
 - ToolRunRequest store and deterministic adapter-governance planner
 - Deterministic ProjectExecutionPlan for the active Project Profile. It shows
-  build/validation profiles, enabled tool adapters, human-approval-required
+  project roots, build/validation profiles, profile gaps, enabled tool
+  adapters, tool risk matrix, safe start candidates, human-approval-required
   tool effects such as file writes, external calls, and cost, and recommended
   next checks without executing tools or changing workflow state.
 - Deterministic CompletionDecisionPlan for the current AIWorkflow completion
