@@ -3115,6 +3115,7 @@ function directorConsoleHtml() {
         listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
         '</div>' +
         actionsHtml([
+          button("전환 계획", "knowledge-transition-plan", p.path),
           button("제안 채택 기록", "proposal-approve", p.path, "good"),
           button("공식 설정으로 기록", "proposal-canonize", p.path, "warn"),
           button("수정 요청", "proposal-request-changes", p.path),
@@ -3135,7 +3136,7 @@ function directorConsoleHtml() {
         listHtml(d.rejected_scope) +
         '</div>' +
         '<p class="small muted">기억으로 저장하면 이후 AI 직원이 이 결정을 참고합니다. 공식 설정으로 저장하면 확정 설정처럼 취급합니다.</p>' +
-        actionsHtml([button("기억으로 저장", "decision-create-memory", d.path, "good"), button("공식 설정으로 저장", "decision-create-canon", d.path, "warn")]) +
+        actionsHtml([button("전환 계획", "knowledge-transition-plan", d.path), button("기억으로 저장", "decision-create-memory", d.path, "good"), button("공식 설정으로 저장", "decision-create-canon", d.path, "warn")]) +
         internalLinksHtml([link("결정 원본", d.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 결정 기록이 없습니다.");
       const visibleMemories = state.memories.filter((m) =>
@@ -3146,6 +3147,7 @@ function directorConsoleHtml() {
         '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(optionLabel(m.status)) + '</span></h3>' +
         '<p class="small">' + esc(optionLabel(m.scope)) + ' · ' + esc(optionLabel(m.type)) + ' · 담당 ' + esc(staffName(m.owner_agent_id)) + '</p>' +
         '<p class="summary">' + esc(short(m.content)) + '</p>' +
+        actionsHtml([button("전환 계획", "knowledge-transition-plan", m.path)]) +
         internalLinksHtml([link("기억 원본", m.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 기억 기록이 없습니다.");
       const core = state.workflow_core || {};
@@ -3474,6 +3476,7 @@ function directorConsoleHtml() {
         log(await post("/api/studio/proposal/create-decision", { path:filePath, decision_type:decisionType }));
         await refresh();
       }
+      if (action === "knowledge-transition-plan") return log(await post("/api/studio/knowledge/transition-plan", { path:filePath }));
       if (action === "decision-create-memory" || action === "decision-create-canon") {
         const status = action === "decision-create-canon" ? "canon" : "approved";
         if (!confirm("이 결정을 기억 기록으로 남길까요? 공식 설정으로 저장하면 이후 Studio 직원들이 확정 설정/결정으로 참고합니다.")) return;
@@ -3970,6 +3973,93 @@ function buildMeetingFacilitationPlan(meeting = {}) {
     },
     created_at: studioTimestampParts().iso,
   };
+}
+
+function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
+  const kind = record.proposal_id ? "proposal" : record.decision_id ? "decision" : record.memory_id ? "memory" : "unknown";
+  const id = record.proposal_id || record.decision_id || record.memory_id || "knowledge-record";
+  const title = record.title || record.decision_summary || record.content || id;
+  const base = {
+    knowledge_transition_plan_id: makeStudioId("KTP", id),
+    source_kind: kind,
+    source_ref: id,
+    source_path: relativePath,
+    title,
+    current_meaning: "",
+    possible_actions: [],
+    what_changes_if_accepted: [],
+    what_does_not_change: [
+      "이 계획을 보는 것만으로 공식 설정, 구현, task 실행, commit/push는 일어나지 않습니다.",
+      "기록 전환 버튼을 눌러도 기존 승인/실행/완료 gate를 우회하지 않습니다.",
+    ],
+    director_checklist: [],
+    safety: {
+      record_written: false,
+      canon_changed: false,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+
+  if (kind === "proposal") {
+    base.current_meaning = "제안은 아이디어 후보입니다. 채택, 반려, 수정 요청, 공식 설정 기록 중 하나로 판단하기 전까지는 확정 사항이 아닙니다.";
+    base.possible_actions = [
+      "제안 채택 기록: 이 아이디어를 방향 후보로 받아들였다는 Decision을 남깁니다.",
+      "공식 설정으로 기록: canonize Decision을 만들고, 이후 Memory/canon으로 넘길 수 있게 합니다.",
+      "수정 요청: 더 다듬어야 한다는 Decision을 남깁니다.",
+      "제안 반려 기록: 채택하지 않는 이유를 Decision으로 남깁니다.",
+    ];
+    base.what_changes_if_accepted = [
+      "Proposal 자체가 바로 canon이 되지는 않습니다.",
+      "Decision 기록이 생기고, 필요하면 그 Decision을 Memory 또는 canon Memory로 전환합니다.",
+    ];
+    base.director_checklist = [
+      "이 제안이 기존 공식 설정과 충돌하지 않는가?",
+      "승인하면 어떤 플레이, 스토리, 아트, 기술 방향이 고정되는가?",
+      "아직 더 물어봐야 할 질문이나 검증 자료가 있는가?",
+    ];
+  } else if (kind === "decision") {
+    base.current_meaning = "Decision은 Human Director가 남긴 판단 기록입니다. 기억으로 저장하면 AI 직원이 이후 작업 맥락으로 참고합니다.";
+    base.possible_actions = [
+      "기억으로 저장: 승인된 결정이나 선호를 일반 프로젝트 기억으로 남깁니다.",
+      "공식 설정으로 저장: 캐릭터, 세계관, 규칙처럼 확정된 canon 기억으로 남깁니다.",
+    ];
+    base.what_changes_if_accepted = [
+      "MemoryRecord가 새로 생깁니다.",
+      "canon으로 저장하면 이후 AI 직원이 확정된 설정처럼 참고합니다.",
+    ];
+    base.director_checklist = [
+      "이 결정은 정말 앞으로도 따라야 할 기준인가?",
+      "canon으로 저장해도 되는 확정 설정인가, 아니면 일반 기억으로만 둘 것인가?",
+      "제외한 범위와 조건이 같이 남아 있는가?",
+    ];
+  } else if (kind === "memory") {
+    base.current_meaning = record.status === "canon"
+      ? "이 MemoryRecord는 공식 설정처럼 참고되는 기억입니다."
+      : "이 MemoryRecord는 참고용 기억입니다. 아직 canon으로 확정된 설정은 아닐 수 있습니다.";
+    base.possible_actions = [
+      "참고만 한다: 직원 컨텍스트 검색에 활용합니다.",
+      "상충 여부를 검토한다: 새 제안이나 결정이 이 기억과 충돌하는지 확인합니다.",
+      "필요하면 새 Decision을 만들어 상태를 바꿉니다.",
+    ];
+    base.what_changes_if_accepted = [
+      "현재 화면에서는 상태 변경이 없습니다.",
+      "별도 Decision/Memory 전환을 거쳐야 공식 설정 변경이 됩니다.",
+    ];
+    base.director_checklist = [
+      "이 기억이 현재 프로젝트에 여전히 맞는가?",
+      "canon 상태라면 충돌하는 새 제안이 없는가?",
+      "오래된 기억이면 superseded/rejected 처리할 필요가 있는가?",
+    ];
+  } else {
+    base.current_meaning = "알 수 없는 지식 기록입니다. 원본 JSON 구조를 확인해야 합니다.";
+    base.possible_actions = ["원본 JSON을 확인합니다."];
+    base.director_checklist = ["record id, source type, status가 있는지 확인합니다."];
+  }
+
+  return base;
 }
 
 async function readStudioRecordFromBody(repoRoot, body, label) {
@@ -4716,6 +4806,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
     const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/knowledge/transition-plan") {
+    const body = await readRequestJson(req);
+    const { json, relativePath } = await readStudioRecordFromBody(repoRoot, body, "knowledge record");
+    const payload = buildKnowledgeTransitionPlan(json, relativePath);
+    return sendJson(res, 200, {
+      ok: true,
+      knowledge_transition_plan: payload,
+      safety: payload.safety,
+    });
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/decision/create-memory") {

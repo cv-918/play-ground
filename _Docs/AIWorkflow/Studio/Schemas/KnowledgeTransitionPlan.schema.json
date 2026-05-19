@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/KnowledgeTransitionPlan.schema.json",
+  "title": "KnowledgeTransitionPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "knowledge_transition_plan_id",
+    "source_kind",
+    "source_ref",
+    "source_path",
+    "title",
+    "current_meaning",
+    "possible_actions",
+    "what_changes_if_accepted",
+    "what_does_not_change",
+    "director_checklist",
+    "safety",
+    "created_at"
+  ],
+  "properties": {
+    "knowledge_transition_plan_id": { "type": "string", "pattern": "^KTP-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$" },
+    "source_kind": { "type": "string", "enum": ["proposal", "decision", "memory", "unknown"] },
+    "source_ref": { "type": "string" },
+    "source_path": { "type": "string" },
+    "title": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "possible_actions": { "type": "array", "items": { "type": "string" } },
+    "what_changes_if_accepted": { "type": "array", "items": { "type": "string" } },
+    "what_does_not_change": { "type": "array", "items": { "type": "string" } },
+    "director_checklist": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_written", "canon_changed", "source_changed", "task_state_changed", "commit_or_push"],
+      "properties": {
+        "record_written": { "type": "boolean" },
+        "canon_changed": { "type": "boolean" },
+        "source_changed": { "type": "boolean" },
+        "task_state_changed": { "type": "boolean" },
+        "commit_or_push": { "type": "boolean" }
+      }
+    },
+    "created_at": { "type": "string" }
+  }
+}

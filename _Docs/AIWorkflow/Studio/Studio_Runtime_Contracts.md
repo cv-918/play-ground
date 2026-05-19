@@ -72,6 +72,28 @@ The facilitation plan is advisory. It must not append a meeting turn, run a
 staff agent, create work, record a decision, canonize memory, commit, or push.
 Those actions remain separate buttons and governance gates.
 
+## Knowledge Transition Contract
+
+Proposal, Decision, and MemoryRecord are different levels of commitment.
+
+- Proposal: an idea candidate. It is not approved and not canon.
+- Decision: a Human Director judgment record. It can become project memory.
+- MemoryRecord: reusable context for future staff agents.
+- Canon MemoryRecord: a memory record treated as official setting or durable
+  project truth.
+
+The Studio UI must show a transition plan before a user has to remember these
+rules. A Knowledge Transition Plan explains:
+
+- what the current record means
+- possible next actions
+- what changes if the user accepts the transition
+- what does not change
+- what the Human Director should check before memory/canon adoption
+
+Reading a transition plan is read-only. Creating a Decision, MemoryRecord, or
+canon MemoryRecord remains an explicit button action.
+
 ## Staff Agent Runtime Contract
 
 A persistent StaffAgent is not a prompt.

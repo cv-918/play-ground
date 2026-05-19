@@ -26,6 +26,7 @@ This slice defines:
 - MeetingSession schema
 - MeetingFacilitationPlan schema
 - MemoryRecord schema
+- KnowledgeTransitionPlan schema
 - Proposal schema
 - Decision schema
 - Handoff schema
@@ -55,6 +56,11 @@ This slice defines:
 - Local WorkOrder store and read/list/store tool
 - Local Proposal/Decision store, validation, and canon handoff planner
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
+- Deterministic Knowledge Transition Plan for Proposal, Decision, and
+  MemoryRecord records. It explains whether a record is only an idea, a
+  Director decision, a normal memory, or canon-like memory; what changes when
+  it is accepted; what does not change; and what the Human Director must check
+  before turning it into memory or canon.
 - Local MeetingSession runtime validation and handoff tool
 - Deterministic Meeting Facilitation Plan that explains the current meeting
   state, recommends the next speaker/action, lists Director decision options,
