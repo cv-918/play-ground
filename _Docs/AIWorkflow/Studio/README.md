@@ -64,7 +64,10 @@ This slice defines:
   `업무 지시`, `지식/결정`, and `증거`. Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
   default. Home is the Director situation board for recent work,
-  staff status, and AIWorkflow Core state; the other Director-facing pages expose dashboard refresh,
+  staff status, and AIWorkflow Core state. Director-facing page cards explain
+  what the Director can do on that page, translate department/staff/artifact
+  identifiers into Korean labels, and keep raw JSON or registry links marked as
+  internal/debug inspection links. The other Director-facing pages expose dashboard refresh,
   handoff plan, explicit read-only staff handoff execution, staff run timeline,
   RoleRunOutput review packet export actions, governed record-candidate
   materialization actions, materialized draft decision actions,

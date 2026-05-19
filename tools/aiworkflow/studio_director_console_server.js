@@ -1793,7 +1793,7 @@ function directorConsoleHtml() {
         <section class="page" data-page="meetings">
           <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 후속 작업이나 결정 기록으로 넘겨야 합니다.</p></div></div>
           <div class="card">
-            <div class="section-title"><h2>새 회의 만들기</h2><span class="pill">MeetingSession</span></div>
+            <div class="section-title"><h2>새 회의 만들기</h2><span class="pill">회의 세션</span></div>
             <div class="form-grid">
               <label>회의 주제<input id="meetingCreateTopic" placeholder="예: 초반 10분 플레이 루프 방향 회의"></label>
               <label>회의 종류<select id="meetingCreateType"></select></label>
@@ -1805,7 +1805,7 @@ function directorConsoleHtml() {
             <div class="row"><button class="good" id="meetingCreateSubmit">회의 생성</button></div>
           </div>
           <div class="card">
-            <div class="section-title"><h2>회의 발언 추가</h2><span class="pill">turn</span></div>
+            <div class="section-title"><h2>회의 발언 추가</h2><span class="pill">발언</span></div>
             <div class="form-grid">
               <label>회의 ID<input id="meetingTurnId" placeholder="MEET-..."></label>
               <label>발언자<select id="meetingTurnSpeaker"></select></label>
@@ -1842,6 +1842,14 @@ function directorConsoleHtml() {
         <section class="page" data-page="work">
           <div class="page-heading"><div><h2>업무 지시</h2><p>Studio 업무 후보와 AI 직원 인수인계를 AIWorkflow task로 연결합니다.</p></div></div>
           <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>업무 지시서를 만들어 AI 직원에게 줄 일의 목표, 범위, 제외 범위, 검증 계획을 정리합니다.</li>
+              <li>직원 자료 미리보기/저장으로 AI 직원에게 전달될 실행 문맥을 확인합니다.</li>
+              <li>직원에게 맡기기로 AI 직원 보고서를 만들고, 작업 목록에 넣기로 AIWorkflow task 후보를 만듭니다.</li>
+            </ul>
+          </div>
+          <div class="card">
             <div class="section-title"><h2>새 업무 지시 만들기</h2><span class="pill">업무 지시서</span></div>
             <div class="form-grid">
               <label>목표<input id="workCreateObjective" placeholder="예: Skill.json runtime loader 검증 계획 수립"></label>
@@ -1869,6 +1877,14 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="knowledge">
           <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
+          <div class="card">
+            <h2>이 화면에서 할 수 있는 일</h2>
+            <ul class="small">
+              <li>제안은 아이디어입니다. 채택하거나 반려해도 곧바로 공식 설정이나 구현 승인이 되지는 않습니다.</li>
+              <li>결정은 Human Director가 어떤 방향을 받아들였는지 남기는 기록입니다.</li>
+              <li>기억/공식 설정은 이후 AI 직원이 참고하는 프로젝트 기억입니다. 상태가 공식 설정일 때만 확정 설정처럼 취급합니다.</li>
+            </ul>
+          </div>
           <div class="grid">
             <div class="card">
               <div class="section-title"><h2>제안 만들기</h2><span class="pill">제안</span></div>
@@ -1952,6 +1968,14 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="evidence">
           <div class="page-heading"><div><h2>증거</h2><p>검토 보고서와 콘솔 작업 로그를 확인합니다.</p></div></div>
+          <div class="card">
+            <h2>보고서 구분</h2>
+            <ul class="small">
+              <li>결과 보기: Runner 기록과 생성된 원본 보고서를 확인합니다.</li>
+              <li>검증 보고서: 무엇을 검사했고 어떤 경고가 있었는지 확인합니다.</li>
+              <li>완료 카드: 완료 승인, 수정 요청, 우려 감수 판단에 필요한 짧은 요약입니다.</li>
+            </ul>
+          </div>
           <div class="grid">
             <div class="card"><h2>워크플로우 검토</h2><div id="workflowReview" class="list"></div></div>
             <div class="card"><h2>검토 보고서</h2><div id="packets" class="list"></div></div>
@@ -2089,7 +2113,7 @@ function directorConsoleHtml() {
       const labels = {
         creative:"크리에이티브", technical:"기술", production:"제작", review:"리뷰", qa_triage:"QA 분류", postmortem:"회고", release_readiness:"릴리즈 준비",
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
-        director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인",
+        director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
         approve:"승인", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"우려 감수", canonize:"공식 설정화",
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"회의", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"증거", lesson:"교훈",
@@ -2101,6 +2125,85 @@ function directorConsoleHtml() {
         human_director:"Human Director", staff_agent:"AI 직원", role_run:"직원 실행", work_order:"업무 지시", system:"시스템",
       };
       return labels[value] || value;
+    }
+    const ARTIFACT_LABELS = {
+      WorkOrder: "업무 지시서",
+      ApprovalItem: "승인 요청 항목",
+      FinalizationLog: "최종화 기록",
+      Decision: "결정 기록",
+      Proposal: "제안서",
+      MemoryRecord: "기억/설정 기록",
+      CreativeBrief: "크리에이티브 방향 문서",
+      DirectionDecision: "방향성 결정 기록",
+      RejectedDirection: "반려된 방향 기록",
+      GameDesignProposal: "게임 디자인 제안서",
+      SystemDesignBrief: "시스템 설계 문서",
+      BalanceRiskList: "밸런스 위험 목록",
+      ScenarioPitch: "시나리오 피치",
+      StoryArcPlan: "스토리 흐름 계획",
+      CharacterBrief: "캐릭터 브리프",
+      CanonProposal: "공식 설정 후보",
+      TechnicalDesignBrief: "기술 설계 문서",
+      ImplementationPlan: "구현 계획",
+      DiffReview: "diff 리뷰",
+      BuildEvidence: "빌드/검증 증거",
+      ArtDirectionBrief: "아트 방향 문서",
+      AssetRequest: "에셋 요청서",
+      GeneratedAssetReview: "생성 에셋 검토",
+      ImportDecision: "반입 결정 기록",
+      QAReport: "QA 보고서",
+      BugRepro: "버그 재현 기록",
+      RegressionChecklist: "회귀 테스트 체크리스트",
+      VerificationEvidence: "검증 증거",
+      DevLog: "DevLog",
+      UserGuide: "사용자 가이드",
+      ReleaseNote: "릴리즈 노트",
+      DocumentMap: "문서 지도",
+    };
+    const ACTION_HINTS = {
+      departments: [
+        "부서 책임 확인: 이 부서가 어떤 결정을 봐야 하는지 확인합니다.",
+        "직원 보기: 이 부서의 AI 직원 역할과 승인 필요 항목으로 이동합니다.",
+        "관련 업무 보기: 이 부서에 배정된 업무 지시만 모아봅니다.",
+      ],
+      meetings: [
+        "발언 추가: Human Director나 직원 발언을 회의록에 남깁니다.",
+        "AI 의견 받기: 선택한 회의 맥락으로 AI 직원 의견을 생성합니다.",
+        "후속 작업 만들기: 회의에서 나온 일을 업무 지시서로 분리합니다.",
+        "결정으로 기록: 회의 결론을 Human Director 결정 기록으로 남깁니다.",
+      ],
+      work: [
+        "직원 자료 미리보기: AI 직원에게 전달될 맥락을 실행 전에 확인합니다.",
+        "직원에게 맡기기: 담당 AI 직원이 검토/제안을 만들게 합니다.",
+        "작업 목록에 넣기: 업무 지시를 AIWorkflow task 후보로 넘깁니다.",
+      ],
+      knowledge: [
+        "제안 채택 기록: 좋은 제안이라는 결정을 남깁니다. 공식 설정 확정은 별도입니다.",
+        "공식 설정으로 기록: 이후 AI 직원이 확정 설정처럼 참고하게 만듭니다.",
+        "수정 요청/반려: 제안이나 결정을 그대로 쓰지 않겠다는 기록을 남깁니다.",
+      ],
+      evidence: [
+        "검증 보고서: 어떤 검증 신호가 있었는지 보는 원본에 가까운 자료입니다.",
+        "완료 보고서: 이 작업을 완료로 봐도 되는지 판단한 요약입니다.",
+        "완료 카드: 사람이 가장 먼저 보는 짧은 완료 판단 카드입니다.",
+      ],
+    };
+    function staffName(agentId) {
+      const agent = (state?.staff_agents || []).find((item) => item.agent_id === agentId);
+      return agent ? agent.display_name_ko || agent.display_name || agent.agent_id : optionLabel(agentId || "");
+    }
+    function departmentName(departmentId) {
+      const department = (state?.departments || []).find((item) => item.department_id === departmentId);
+      return department ? department.name_ko || department.name || department.department_id : optionLabel(departmentId || "");
+    }
+    function artifactLabel(value) {
+      return ARTIFACT_LABELS[value] || optionLabel(value || "");
+    }
+    function mappedListHtml(items, mapper, emptyText = "") {
+      return listHtml(asArray(items).map(mapper), emptyText);
+    }
+    function actionHintsHtml(type) {
+      return '<div class="staff-detail"><strong>이 화면에서 할 수 있는 일</strong>' + listHtml(ACTION_HINTS[type] || [], "(없음)") + '</div>';
     }
     function fixedOptionList(values) {
       return values.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
@@ -2256,7 +2359,7 @@ function directorConsoleHtml() {
         '<div class="item warn"><h3>' + esc(item.label) + '</h3><p><code>' + esc(item.title) + '</code></p><p class="summary">' + esc(item.detail) + '</p><div class="row"><button class="secondary" data-nav-jump="' + esc(item.page) + '">해당 화면 보기</button>' + (item.task_id ? workflowStartButton("승인+실행", item.task_id, "good") : "") + '</div></div>'
       ).join("") : '<div class="item good"><h3>지금 당장 판단할 항목 없음</h3><p class="summary">새 직원 보고서, 기록 후보, 업무 지시 후보가 생기면 여기에 올라옵니다.</p></div>';
       el("homeStaffStatus").innerHTML = state.staff_agents.length ? state.staff_agents.slice(0, 6).map((agent) =>
-        '<div class="compact-line"><span>' + esc(agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_id) + '</span></div>'
+        '<div class="compact-line"><span>' + esc(agent.display_name_ko || agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_name_ko || departmentName(agent.department_id)) + '</span></div>'
       ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
       const activity = [
         ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 보고서", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
@@ -2290,7 +2393,7 @@ function directorConsoleHtml() {
       const runnableOutputs = state.recent_staff_runs.filter((run) => run.output_path);
       if (runnableOutputs.length) {
         const run = runnableOutputs[0];
-        items.push('<div class="item warn"><h3>검토 가능한 직원 보고서</h3><p class="small"><code>' + esc(run.output_id || run.role_run_id) + '</code> · ' + esc(run.agent_id) + '</p><p class="summary">' + esc(short(run.summary)) + '</p></div>');
+        items.push('<div class="item warn"><h3>검토 가능한 직원 보고서</h3><p class="small"><code>' + esc(run.output_id || run.role_run_id) + '</code> · ' + esc(staffName(run.agent_id)) + '</p><p class="summary">' + esc(short(run.summary)) + '</p></div>');
       }
       if (state.materializations.length) {
         const item = state.materializations[0];
@@ -2323,8 +2426,8 @@ function directorConsoleHtml() {
         metric("기록 후보", m.materializations),
         metric("제안", m.proposals),
         metric("기억", m.memories),
-        metric("Meeting", state.meetings.length),
-        metric("Project", m.project_profiles),
+        metric("회의", state.meetings.length),
+        metric("프로젝트", m.project_profiles),
         metric("정책 평가", m.automation_evaluations)
       ].join("");
       renderInbox();
@@ -2332,7 +2435,7 @@ function directorConsoleHtml() {
       renderNavCounts();
       el("contextPackets").innerHTML = state.context_packets.length ? state.context_packets.map((packet) =>
         '<div class="item"><h3><code>' + esc(packet.context_packet_id) + '</code> <span class="pill">' + esc(packet.is_durable ? "durable" : "temp") + '</span></h3>' +
-        '<p class="small muted">직원 ' + esc(packet.agent_id) + ' · 출처 ' + esc(packet.source_ref || "-") + '</p>' +
+        '<p class="small muted">직원 ' + esc(staffName(packet.agent_id)) + ' · 출처 ' + esc(packet.source_ref || "-") + '</p>' +
         '<p class="summary">' + esc(short(packet.objective)) + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>승인 범위</span><span class="pill">' + esc(asArray(packet.approved_scope).length) + '</span></div>' +
@@ -2347,9 +2450,10 @@ function directorConsoleHtml() {
       );
       el("runs").innerHTML = visibleRuns.length ? visibleRuns.map((r) =>
         '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(optionLabel(r.output_status || r.status)) + '</span></h3>' +
-        '<p>' + esc(r.agent_id) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
+        '<p>' + esc(staffName(r.agent_id)) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
         '<p class="summary">' + esc(short(r.summary)) + '</p>' +
         '<p class="small muted">제안 ' + esc(r.materializable_counts.proposals) + ' · 기억 ' + esc(r.materializable_counts.memory) + ' · 업무 지시 ' + esc(r.materializable_counts.workorders) + ' · 인수인계 ' + esc(r.materializable_counts.handoffs) + '</p>' +
+        '<div class="staff-detail"><strong>이 보고서에서 할 수 있는 일</strong>' + listHtml(["보고서 만들기: 사람이 읽기 좋은 검토용 HTML로 내보냅니다.", "기록 후보 보기: 제안/기억/업무 지시로 남길 수 있는 항목을 미리 봅니다.", "기록함에 넣기: 선택 판단 전 단계의 기록 후보를 만듭니다. 실행 승인은 아닙니다."]) + '</div>' +
         '<div class="row">' +
         '<a href="/file?path=' + encodeURIComponent(r.staff_run_path) + '" target="_blank">실행 기록(내부)</a>' +
         (r.output_href ? '<a href="' + esc(r.output_href) + '" target="_blank">원본 JSON(내부)</a>' : '') +
@@ -2373,7 +2477,7 @@ function directorConsoleHtml() {
       );
       el("workorders").innerHTML = visibleWorkOrders.length ? visibleWorkOrders.map((wo) =>
         '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(optionLabel(wo.status)) + '</span></h3>' +
-        '<p class="small muted">부서: ' + esc(wo.department_id || "(none)") + ' · 담당: ' + esc(inlineList(wo.assigned_agents)) + '</p>' +
+        '<p class="small muted">부서: ' + esc(departmentName(wo.department_id) || "(없음)") + ' · 담당: ' + esc(inlineList(asArray(wo.assigned_agents).map(staffName), "(없음)")) + '</p>' +
         '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>포함 범위</span><span class="pill">' + esc(asArray(wo.scope).length) + '</span></div>' +
@@ -2382,6 +2486,7 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>승인 항목</span><span class="pill">' + esc(asArray(wo.approval_items).length ? "필요" : "없음") + '</span></div>' +
         listHtml(wo.approval_items) +
         '</div>' +
+        actionHintsHtml("work") +
         '<div class="row"><a href="' + esc(wo.href) + '" target="_blank">원본 보기(내부)</a>' +
         button("직원 자료 미리보기", "workorder-context-plan", wo.path) +
         button("직원 자료 저장", "workorder-context-create", wo.path, "good") +
@@ -2396,7 +2501,7 @@ function directorConsoleHtml() {
       );
       el("handoffs").innerHTML = visibleHandoffs.length ? visibleHandoffs.map((h) =>
         '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(optionLabel(h.status)) + '</span></h3>' +
-        '<p>' + esc(h.from_agent_id) + ' → ' + esc(h.to_agent_id) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
+        '<p>' + esc(staffName(h.from_agent_id)) + ' → ' + esc(staffName(h.to_agent_id)) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
         '<div class="row">' + button("인수인계 계획", "handoff-plan", h.path) + button("직원에게 맡기기", "handoff-execute", h.path, "good") + '<a href="/file?path=' + encodeURIComponent(h.path) + '" target="_blank">원본 보기(내부)</a></div></div>'
       ).join("") : renderEmpty("조건에 맞는 인수인계 후보가 없습니다.");
       const visibleMeetings = state.meetings.filter((meeting) =>
@@ -2407,14 +2512,15 @@ function directorConsoleHtml() {
         '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(optionLabel(meeting.status)) + '</span></h3>' +
         '<p>' + esc(meeting.topic) + '</p>' +
         '<p class="small muted">종류 ' + esc(optionLabel(meeting.meeting_type || "(none)")) + ' · 출처 ' + esc(meeting.is_stored ? "저장됨" : "예시") + '</p>' +
-        '<p class="small muted">participants ' + esc(meeting.participant_count) + ' · unresolved ' + esc(meeting.unresolved_count) + ' · follow-up ' + esc(meeting.follow_up_count) + '</p>' +
+        '<p class="small muted">참석자 ' + esc(meeting.participant_count) + ' · 남은 질문 ' + esc(meeting.unresolved_count) + ' · 후속 작업 ' + esc(meeting.follow_up_count) + '</p>' +
         '<div class="compact-list">' +
-        '<div class="compact-line"><span>참석자</span><span class="pill">' + esc(inlineList(meeting.participants)) + '</span></div>' +
+        '<div class="compact-line"><span>참석자</span><span class="pill">' + esc(inlineList(asArray(meeting.participants).map(staffName))) + '</span></div>' +
         '<div class="compact-line"><span>제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
         listHtml(meeting.proposals) +
         '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(meeting.unresolved_count) + '</span></div>' +
         listHtml(meeting.unresolved_questions) +
         '</div>' +
+        actionHintsHtml("meetings") +
         '<div class="row"><a href="' + esc(meeting.href) + '" target="_blank">원본 보기(내부)</a>' +
         '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>' +
         button("발언 전 확인", "meeting-agent-plan", meeting.path) +
@@ -2434,9 +2540,15 @@ function directorConsoleHtml() {
         '<div class="item"><h3>' + esc(department.name_ko) + '</h3>' +
         '<p class="small muted">ID <code>' + esc(department.department_id) + '</code> · 원문명 ' + esc(department.name) + '</p>' +
         '<p class="summary">역할: ' + esc(short(department.mission_ko, 150)) + '</p>' +
-        '<p class="small muted">부서장: ' + esc(department.department_lead_name) + ' · 등록 직원 ' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</p>' +
-        '<p class="small muted">검토 기준: ' + esc(department.review_gate_labels.join(", ") || "(없음)") + '</p>' +
-        '<p class="small muted">담당 결과물: ' + esc(department.owned_artifacts.join(", ") || "(없음)") + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>부서장</span><span class="pill">' + esc(staffName(department.department_lead) || department.department_lead_name || "(없음)") + '</span></div>' +
+        '<div class="compact-line"><span>등록 직원</span><span class="pill">' + esc(department.active_staff_count) + '/' + esc(department.staff_count) + '</span></div>' +
+        '<div class="compact-line"><span>검토 기준</span><span class="pill">' + esc(asArray(department.review_gate_labels).length) + '</span></div>' +
+        listHtml(department.review_gate_labels, "(없음)") +
+        '<div class="compact-line"><span>담당 결과물</span><span class="pill">' + esc(asArray(department.owned_artifacts).length) + '</span></div>' +
+        mappedListHtml(department.owned_artifacts, artifactLabel, "(없음)") +
+        '</div>' +
+        actionHintsHtml("departments") +
         '<div class="row">' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
@@ -2525,13 +2637,14 @@ function directorConsoleHtml() {
       el("proposals").innerHTML = visibleProposals.length ? visibleProposals.map((p) =>
         '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(optionLabel(p.status)) + '</span></h3>' +
         '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
-        '<p class="small muted">source ' + esc(p.source_agent_id) + ' · options ' + esc(p.option_count) + '</p>' +
+        '<p class="small muted">제안자 ' + esc(staffName(p.source_agent_id)) + ' · 선택지 ' + esc(p.option_count) + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>승인 필요</span><span class="pill">' + esc(asArray(p.approval_items).length) + '</span></div>' +
         listHtml(p.approval_items) +
         '<div class="compact-line"><span>위험/의존성</span><span class="pill">' + esc(asArray(p.risks).length + asArray(p.dependencies).length) + '</span></div>' +
         listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
         '</div>' +
+        actionHintsHtml("knowledge") +
         '<div class="row"><a href="' + esc(p.href) + '" target="_blank">원본 보기(내부)</a>' +
         button("제안 채택 기록", "proposal-approve", p.path, "good") +
         button("공식 설정으로 기록", "proposal-canonize", p.path, "warn") +
@@ -2544,13 +2657,14 @@ function directorConsoleHtml() {
       );
       el("decisions").innerHTML = visibleDecisions.length ? visibleDecisions.map((d) =>
         '<div class="item good"><h3><code>' + esc(d.decision_id) + '</code> <span class="pill">' + esc(optionLabel(d.decision_type)) + '</span></h3>' +
-        '<p class="small">target: ' + esc(d.target_ref) + '</p><p class="summary">' + esc(short(d.summary)) + '</p>' +
+        '<p class="small">대상: ' + esc(d.target_ref) + '</p><p class="summary">' + esc(short(d.summary)) + '</p>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>받아들인 범위</span><span class="pill">' + esc(asArray(d.accepted_scope).length) + '</span></div>' +
         listHtml(d.accepted_scope) +
         '<div class="compact-line"><span>제외한 범위</span><span class="pill">' + esc(asArray(d.rejected_scope).length) + '</span></div>' +
         listHtml(d.rejected_scope) +
         '</div>' +
+        '<p class="small muted">기억으로 저장하면 이후 AI 직원이 이 결정을 참고합니다. 공식 설정으로 저장하면 확정 설정처럼 취급합니다.</p>' +
         '<div class="row"><a href="' + esc(d.href) + '" target="_blank">원본 보기(내부)</a>' +
         button("기억으로 저장", "decision-create-memory", d.path, "good") +
         button("공식 설정으로 저장", "decision-create-canon", d.path, "warn") +
@@ -2562,7 +2676,7 @@ function directorConsoleHtml() {
       );
       el("memories").innerHTML = visibleMemories.length ? visibleMemories.map((m) =>
         '<div class="item ' + (m.status === "canon" ? "good" : "warn") + '"><h3><code>' + esc(m.memory_id) + '</code> <span class="pill">' + esc(optionLabel(m.status)) + '</span></h3>' +
-        '<p class="small">' + esc(m.scope) + ' · ' + esc(m.type) + ' · ' + esc(m.owner_agent_id) + '</p>' +
+        '<p class="small">' + esc(optionLabel(m.scope)) + ' · ' + esc(optionLabel(m.type)) + ' · 담당 ' + esc(staffName(m.owner_agent_id)) + '</p>' +
         '<p class="summary">' + esc(short(m.content)) + '</p><a href="' + esc(m.href) + '" target="_blank">원본 보기(내부)</a></div>'
       ).join("") : renderEmpty("조건에 맞는 기억 기록이 없습니다.");
       const core = state.workflow_core || {};
@@ -2573,6 +2687,7 @@ function directorConsoleHtml() {
         '<div class="item ' + (verification.verdict === "CONCERNS" ? "warn" : verification.verdict === "FAIL" ? "danger" : "good") + '"><h3>현재 판정 <span class="pill">' + esc(verification.verdict || "없음") + '</span></h3>' +
         '<p class="summary">' + esc(translateCompletionSummary(completion.summary) || "완료 보고서 요약이 없습니다.") + '</p>' +
         '<p class="small muted">warnings ' + esc(verification.warning_count ?? "-") + ' · concerns ' + esc(verification.concern_count ?? "-") + '</p>' +
+        actionHintsHtml("evidence") +
         '<div class="row">' + (verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '') + (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '') + (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') + '</div></div>' +
         (concerns.length ? concerns.slice(0, 8).map((concern) =>
           '<div class="item warn"><h3>우려 사항</h3><p class="summary">' + esc(explainConcern(concern)) + '</p><p class="small muted">' + esc(translateConcernDetail(concern)) + '</p></div>'
