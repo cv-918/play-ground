@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/ApprovalImpactPlan.schema.json",
+  "title": "ApprovalImpactPlan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "approval_impact_plan_id",
+    "task_id",
+    "task_title",
+    "current_meaning",
+    "approval_required",
+    "why_approval_is_or_is_not_required",
+    "approving_allows",
+    "approving_does_not_allow",
+    "what_changes_after_approval",
+    "automation_snapshot",
+    "director_checklist",
+    "safety"
+  ],
+  "properties": {
+    "approval_impact_plan_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "task_title": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "approval_required": { "type": "boolean" },
+    "why_approval_is_or_is_not_required": { "type": "array", "items": { "type": "string" } },
+    "approving_allows": { "type": "array", "items": { "type": "string" } },
+    "approving_does_not_allow": { "type": "array", "items": { "type": "string" } },
+    "what_changes_after_approval": { "type": "array", "items": { "type": "string" } },
+    "automation_snapshot": { "type": "object" },
+    "director_checklist": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "approval_written",
+        "runner_started",
+        "task_done_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}

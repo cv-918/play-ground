@@ -196,6 +196,21 @@ finalization and git gate actions.
 Automation should reduce repetitive clicks without taking away Director
 authority.
 
+An ApprovalImpactPlan explains what a Human Director approval means before the
+approval is recorded:
+
+- why approval is or is not required
+- what approval allows
+- what approval still does not allow
+- what state changes after approval
+- how current automation policy relates to the active task
+- which checks the Director should perform before approving
+
+Reading an ApprovalImpactPlan is read-only. It must not write an approval
+record, start a runner, mark a task done, commit, or push. It exists to make
+approval understandable instead of asking the Director to approve a vague
+"within scope" statement.
+
 An AutomationReadinessPlan explains:
 
 - whether the current task is eligible for automatic handoff

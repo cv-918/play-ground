@@ -2216,7 +2216,7 @@ function directorConsoleHtml() {
 
         <section class="page" data-page="policy">
           <div class="page-heading"><div><h2>정책</h2><p>내부/관리자용 정책 검증 화면입니다. 자동 진행 정책을 조정하거나 디버깅할 때만 봅니다.</p></div></div>
-          <div class="card"><div class="section-title"><h2>자동 진행 정책</h2><button class="secondary" data-action="automation-readiness-plan">자동 진행 준비도</button></div><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
+          <div class="card"><div class="section-title"><h2>자동 진행 정책</h2><div class="row"><button class="secondary" data-action="approval-impact-plan">승인 영향 점검</button><button class="secondary" data-action="automation-readiness-plan">자동 진행 준비도</button></div></div><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
         </section>
 
         <section class="page" data-page="evidence">
@@ -3545,6 +3545,7 @@ function directorConsoleHtml() {
       if (action === "project-execution-plan") return log(await post("/api/studio/project/execution-plan", {}));
       if (action === "completion-evidence-checklist") return log(await post("/api/studio/completion/evidence-checklist", {}));
       if (action === "completion-decision-plan") return log(await post("/api/studio/completion/decision-plan", {}));
+      if (action === "approval-impact-plan") return log(await post("/api/studio/approval/impact-plan", {}));
       if (action === "automation-readiness-plan") return log(await post("/api/studio/automation/readiness-plan", {}));
       if (action === "studio-smoke-status") return log(await post("/api/studio/smoke/status", {}));
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
@@ -4574,6 +4575,77 @@ function buildCompletionEvidenceChecklist(core = {}) {
   };
 }
 
+function buildApprovalImpactPlan(core = {}, automation = {}) {
+  const task = core.active_task || {};
+  const runner = core.runner || {};
+  const completion = core.completion || {};
+  const priority = String(task.priority || "").toUpperCase();
+  const risk = String(task.risk || "").toLowerCase();
+  const kind = String(task.kind || "").toLowerCase();
+  const approvalRequired = ["P0", "P1"].includes(priority)
+    || ["high", "critical"].includes(risk)
+    || ["implementation", "data", "runtime", "schema", "refactor"].includes(kind);
+  const automationEvaluations = Array.isArray(automation.evaluations) ? automation.evaluations : [];
+  const policyCases = Array.isArray(automation.cases) ? automation.cases : [];
+  const reasons = [];
+  if (!task.task_id) reasons.push("현재 ActiveTask가 없습니다.");
+  if (["P0", "P1"].includes(priority)) reasons.push(`${priority} 중요도 작업이라 시작 전 승인 대상입니다.`);
+  if (["high", "critical"].includes(risk)) reasons.push(`${task.risk} 위험도 작업이라 자동 진행보다 사람 판단이 우선입니다.`);
+  if (["implementation", "data", "runtime", "schema", "refactor"].includes(kind)) reasons.push(`${task.kind} 종류 작업은 파일/런타임 영향 가능성이 있어 범위 확인이 필요합니다.`);
+  if (runner.stop_reason === "completion_review_required") reasons.push("완료 검토 gate에서 결과 수락 여부를 결정해야 합니다.");
+  if (completion.state === "needs_human_decision") reasons.push("CompletionReport가 사람 결정을 요구합니다.");
+  if (!reasons.length) reasons.push("현재 명시 승인 없이도 읽기/검토 중심으로 진행 가능한 상태입니다.");
+
+  return {
+    approval_impact_plan_id: makeStudioId("AIP", task.task_id || "approval"),
+    task_id: task.task_id || "",
+    task_title: task.title || "",
+    current_meaning: "승인 버튼을 누르기 전에 무엇을 허용하고 무엇은 여전히 금지되는지 확인하는 읽기 전용 점검입니다.",
+    approval_required: approvalRequired,
+    why_approval_is_or_is_not_required: reasons,
+    approving_allows: task.task_id
+      ? [
+          "선택한 task를 승인된 범위 안에서 실행 대상으로 삼을 수 있습니다.",
+          "정책이 허용하면 PC Runner 또는 직원 실행 계획으로 이어갈 수 있습니다.",
+          "검증 자료와 완료 판단 gate까지 진행할 수 있습니다.",
+        ]
+      : ["승인할 ActiveTask가 없습니다."],
+    approving_does_not_allow: [
+      "승인 범위를 벗어난 파일 수정",
+      "schema/save/runtime 경계 변경을 숨겨서 진행",
+      "검증 없는 완료 선언",
+      "자동 task done, commit, push",
+      "공식 설정/canon 확정",
+    ],
+    what_changes_after_approval: [
+      "승인 기록이 남고 다음 실행 gate에서 승인 근거로 사용됩니다.",
+      "실행이 시작되더라도 완료, 최종화, commit/push는 별도 gate로 남습니다.",
+      "범위가 바뀌면 새 승인이 필요합니다.",
+    ],
+    automation_snapshot: {
+      policy_version: automation.policy_version || "unknown",
+      case_count: policyCases.length,
+      latest_evaluation_count: automationEvaluations.length,
+      can_expand_automation_without_review: false,
+      note: "자동 진행 확대는 별도 정책 검증과 Human Director 승인 후에만 가능합니다.",
+    },
+    director_checklist: [
+      "승인 대상 task 제목과 범위가 내가 의도한 일인가?",
+      "바뀔 수 있는 파일/데이터/런타임 경계가 보이는가?",
+      "승인하지 않는 항목이 충분히 명확한가?",
+      "실패 시 수정 요청이나 보류로 되돌릴 수 있는가?",
+    ],
+    safety: {
+      read_only: true,
+      approval_written: false,
+      runner_started: false,
+      task_done_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
 async function buildAutomationReadinessPlan(repoRoot) {
   const core = await getWorkflowCore(repoRoot);
   const automation = await getConditionalAutomation(repoRoot);
@@ -4646,6 +4718,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "ProjectExecutionPlan.schema.json",
     "CompletionEvidenceChecklist.schema.json",
     "CompletionDecisionPlan.schema.json",
+    "ApprovalImpactPlan.schema.json",
     "AutomationReadinessPlan.schema.json",
   ];
   const schemaResults = [];
@@ -5588,6 +5661,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       automation_readiness_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/approval/impact-plan") {
+    const core = await getWorkflowCore(repoRoot);
+    const automation = await getConditionalAutomation(repoRoot);
+    const payload = buildApprovalImpactPlan(core, automation);
+    return sendJson(res, 200, {
+      ok: true,
+      approval_impact_plan: payload,
       safety: payload.safety,
     });
   }

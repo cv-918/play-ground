@@ -44,6 +44,7 @@ This slice defines:
 - ProjectExecutionPlan schema
 - CompletionEvidenceChecklist schema
 - CompletionDecisionPlan schema
+- ApprovalImpactPlan schema
 - AutomationReadinessPlan schema
 - StudioSmokeReport schema
 - ConditionalAutomationCase schema
@@ -103,6 +104,10 @@ This slice defines:
   completion card, and git state before the Human Director chooses a
   completion decision. It does not finalize completion, mark tasks done,
   commit, or push.
+- Read-only ApprovalImpactPlan for showing what a Human Director approval
+  would allow, what remains forbidden, what state changes after approval, and
+  how current automation policy relates to the active task. It does not write
+  approval records, start runners, mark tasks done, commit, or push.
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
@@ -403,6 +408,7 @@ _Docs/AIWorkflow/Studio/
 |   +-- ToolRunRequest.schema.json
 |   +-- ToolAdapter.schema.json
 |   +-- CompletionEvidenceChecklist.schema.json
+|   +-- ApprovalImpactPlan.schema.json
 |   +-- ConditionalAutomationCase.schema.json
 +-- Registries/
 |   +-- departments.initial.json
