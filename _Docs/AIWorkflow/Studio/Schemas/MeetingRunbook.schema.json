@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiworkflow.local/studio/schemas/MeetingRunbook.schema.json",
+  "title": "MeetingRunbook",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "meeting_runbook_id",
+    "meeting_id",
+    "topic",
+    "status",
+    "current_meaning",
+    "discussion_state",
+    "next_turn_queue",
+    "decision_candidates",
+    "handoff_candidates",
+    "close_criteria",
+    "director_checklist",
+    "safety"
+  ],
+  "properties": {
+    "meeting_runbook_id": { "type": "string" },
+    "meeting_id": { "type": "string" },
+    "topic": { "type": "string" },
+    "status": { "type": "string" },
+    "current_meaning": { "type": "string" },
+    "participants": { "type": "array", "items": { "type": "string" } },
+    "discussion_state": {
+      "type": "object",
+      "required": [
+        "turn_count",
+        "silent_participants",
+        "proposal_count",
+        "objection_count",
+        "unresolved_question_count",
+        "director_decision_count",
+        "follow_up_count"
+      ]
+    },
+    "next_turn_queue": { "type": "array", "items": { "type": "string" } },
+    "decision_candidates": { "type": "array", "items": { "type": "string" } },
+    "handoff_candidates": { "type": "array", "items": { "type": "string" } },
+    "close_criteria": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "director_checklist": { "type": "array", "items": { "type": "string" } },
+    "safety": {
+      "type": "object",
+      "required": [
+        "read_only",
+        "meeting_written",
+        "staff_run_started",
+        "work_order_created",
+        "decision_written",
+        "canon_changed",
+        "commit_or_push"
+      ]
+    },
+    "created_at": { "type": "string" }
+  }
+}

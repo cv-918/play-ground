@@ -72,6 +72,26 @@ The facilitation plan is advisory. It must not append a meeting turn, run a
 staff agent, create work, record a decision, canonize memory, commit, or push.
 Those actions remain separate buttons and governance gates.
 
+## Meeting Runbook Contract
+
+A meeting should be operable without the Human Director memorizing every
+MeetingSession field.
+
+A MeetingRunbook explains:
+
+- who is participating
+- who has not spoken yet
+- how many turns, proposals, objections, unresolved questions, decisions, and
+  follow-up candidates exist
+- which turn or question should happen next
+- which proposal, objection, or question needs a Director decision
+- which items can become WorkOrder handoffs
+- what must be true before the meeting can be closed
+- which blockers remain
+
+The runbook is read-only. It must not append meeting turns, run staff, create
+WorkOrders, write Decisions, change canon, commit, or push.
+
 ## Knowledge Transition Contract
 
 Proposal, Decision, and MemoryRecord are different levels of commitment.

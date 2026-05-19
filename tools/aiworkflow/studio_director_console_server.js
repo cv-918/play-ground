@@ -3024,6 +3024,7 @@ function directorConsoleHtml() {
         actionsHtml([
           '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>',
           button("회의 진행안", "meeting-facilitation-plan", meeting.path),
+          button("회의 운영판", "meeting-runbook", meeting.path),
           button("AI 발언 계획", "meeting-agent-plan", meeting.path),
           meeting.is_stored ? button("AI 의견 받기", "meeting-agent-run", meeting.path, "warn") : "",
           button("후속 작업 만들기", "meeting-create-workorder", meeting.path, "good"),
@@ -3505,6 +3506,7 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "meeting-facilitation-plan") return log(await post("/api/studio/meeting/facilitation-plan", { path:filePath }));
+      if (action === "meeting-runbook") return log(await post("/api/studio/meeting/runbook", { path:filePath }));
       if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "meeting-agent-run") {
         if (!confirm("이 회의에 AI 직원 의견을 요청할까요? Codex 직원 실행을 호출하고, 저장된 회의라면 결과 요약을 새 발언으로 추가합니다. 결정/공식 설정/작업/git은 변경하지 않습니다.")) return;
@@ -4126,6 +4128,85 @@ function buildMeetingFacilitationPlan(meeting = {}) {
   };
 }
 
+function buildMeetingRunbook(meeting = {}) {
+  const meetingId = meeting.meeting_id || "";
+  const topic = meeting.topic || meetingId || "meeting";
+  const participants = stringList(meeting.participants);
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const proposals = stringList(meeting.proposals);
+  const objections = stringList(meeting.objections);
+  const unresolved = stringList(meeting.unresolved_questions);
+  const decisions = stringList(meeting.director_decisions);
+  const accepted = stringList(meeting.accepted_directions);
+  const followUps = stringList(meeting.follow_up_workorders);
+  const spoken = new Set(turns.map((turn) => String(turn.speaker_id || "").trim()).filter(Boolean));
+  const silentParticipants = participants.filter((id) => id && !spoken.has(id));
+  const nextTurnQueue = silentParticipants.length
+    ? silentParticipants.map((id) => `${id}: 아직 회의 관점이 기록되지 않았습니다.`)
+    : participants.slice(0, 3).map((id) => `${id}: 제안/반박/질문 중 빠진 관점을 보강합니다.`);
+  const decisionCandidates = [
+    ...proposals.map((item) => `제안 판단: ${item}`),
+    ...objections.map((item) => `우려 처리: ${item}`),
+    ...unresolved.map((item) => `질문 해소: ${item}`),
+  ];
+  const closeCriteria = [
+    "핵심 제안이 채택/반려/보류 중 하나로 분류되었습니다.",
+    "반론과 남은 질문이 후속 업무 또는 결정 후보로 이동했습니다.",
+    "후속 WorkOrder 또는 Decision으로 넘길 대상이 명확합니다.",
+    "회의 결과가 canon이나 구현으로 바로 굳지 않는다는 점이 분리되어 있습니다.",
+  ];
+  const blockers = [];
+  if (!turns.length) blockers.push("직원 발언이 아직 없습니다.");
+  if (unresolved.length) blockers.push("남은 질문이 있습니다.");
+  if (objections.length && !decisions.length) blockers.push("반론/우려가 결정으로 정리되지 않았습니다.");
+  if (proposals.length && !accepted.length && !decisions.length) blockers.push("제안의 채택/반려/보류 판단이 남아 있습니다.");
+
+  return {
+    meeting_runbook_id: makeStudioId("MRB", meetingId || topic),
+    meeting_id: meetingId,
+    topic,
+    status: meeting.status || "draft",
+    current_meaning: blockers.length
+      ? "회의가 아직 닫히기 전입니다. 발언, 질문, 우려, 제안 판단을 더 정리해야 합니다."
+      : "회의 결과를 후속 WorkOrder 또는 Decision으로 넘길 준비가 되어 있습니다.",
+    participants,
+    discussion_state: {
+      turn_count: turns.length,
+      silent_participants: silentParticipants,
+      proposal_count: proposals.length,
+      objection_count: objections.length,
+      unresolved_question_count: unresolved.length,
+      director_decision_count: decisions.length,
+      follow_up_count: followUps.length,
+    },
+    next_turn_queue: nextTurnQueue,
+    decision_candidates: decisionCandidates.length ? decisionCandidates : ["현재 회의에는 즉시 판단할 제안/우려/질문이 없습니다."],
+    handoff_candidates: followUps.length
+      ? followUps
+      : proposals.length
+        ? proposals.map((item) => `WorkOrder 후보: ${item}`)
+        : [`회의 주제 요약을 후속 WorkOrder로 만들지 검토: ${topic}`],
+    close_criteria: closeCriteria,
+    blockers,
+    director_checklist: [
+      "모든 핵심 역할이 최소 한 번은 자기 관점에서 발언했는지 확인합니다.",
+      "제안, 반론, 질문이 서로 섞이지 않고 분리되어 있는지 확인합니다.",
+      "공식 설정/canon으로 확정할 내용은 별도 Decision/Memory gate로 넘깁니다.",
+      "구현이 필요하면 회의 결과를 바로 실행하지 말고 WorkOrder로 넘깁니다.",
+    ],
+    safety: {
+      read_only: true,
+      meeting_written: false,
+      staff_run_started: false,
+      work_order_created: false,
+      decision_written: false,
+      canon_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
 function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   const kind = record.proposal_id ? "proposal" : record.decision_id ? "decision" : record.memory_id ? "memory" : "unknown";
   const id = record.proposal_id || record.decision_id || record.memory_id || "knowledge-record";
@@ -4390,6 +4471,7 @@ async function buildStudioSmokeReport(repoRoot) {
     "StaffOperatingPlan.schema.json",
     "DirectorGoalPlan.schema.json",
     "MeetingFacilitationPlan.schema.json",
+    "MeetingRunbook.schema.json",
     "KnowledgeTransitionPlan.schema.json",
     "ProjectExecutionPlan.schema.json",
     "CompletionDecisionPlan.schema.json",
@@ -5103,6 +5185,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     return sendJson(res, 200, {
       ok: true,
       meeting_facilitation_plan: payload,
+      safety: payload.safety,
+    });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/runbook") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const payload = buildMeetingRunbook(meeting);
+    return sendJson(res, 200, {
+      ok: true,
+      meeting_runbook: payload,
       safety: payload.safety,
     });
   }

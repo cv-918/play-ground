@@ -26,6 +26,7 @@ This slice defines:
 - WorkOrder schema
 - MeetingSession schema
 - MeetingFacilitationPlan schema
+- MeetingRunbook schema
 - MemoryRecord schema
 - KnowledgeTransitionPlan schema
 - Proposal schema
@@ -77,6 +78,11 @@ This slice defines:
   state, recommends the next speaker/action, lists Director decision options,
   and keeps AI staff discussion separate from canon, implementation, task
   lifecycle, and git decisions
+- Deterministic MeetingRunbook for Creative Meeting Session operations. It
+  summarizes participants, silent roles, turn count, proposals, objections,
+  unresolved questions, decision candidates, handoff candidates, close
+  criteria, blockers, and Director checklist without appending turns, running
+  staff, creating work, writing decisions, canonizing memory, or committing.
 - Local StaffContextPacket builder from StaffAgent and WorkOrder records
 - Local Staff execution prompt exporter for Codex signed-in route
 - Local Staff executor for signed-in Codex App/CLI read-only RoleRun attempts
