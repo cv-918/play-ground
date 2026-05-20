@@ -36,9 +36,9 @@ function Read-StartupJson {
 }
 
 function Invoke-StudioPost {
-  param([string]$BaseUrl, [string]$Path)
+  param([string]$BaseUrl, [string]$Path, [object]$Body = @{})
   $uri = "$BaseUrl$Path"
-  return Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/json" -Body "{}" -TimeoutSec 20
+  return Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/json" -Body ($Body | ConvertTo-Json -Depth 8) -TimeoutSec 20
 }
 
 function Get-PropertyValue {
@@ -139,6 +139,29 @@ try {
       $checks += [ordered]@{ name = $endpoint.name; ok = $false; error = $_.Exception.Message; path = $endpoint.path }
       $failures += "Endpoint failed: $($endpoint.name) - $($_.Exception.Message)"
     }
+  }
+
+  try {
+    $summary = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/summary" -TimeoutSec 20
+    $firstRun = @($summary.recent_staff_runs | Where-Object { $_.output_path } | Select-Object -First 1)[0]
+    if ($firstRun -and $firstRun.output_path) {
+      $reviewPacket = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/review-packet/export" -Body @{ path = $firstRun.output_path }
+      $reviewOk = [bool]$reviewPacket.ok -and [bool]$reviewPacket.output_path
+      $checks += [ordered]@{ name = "staff report export"; ok = $reviewOk; output_path = $reviewPacket.output_path }
+      if (-not $reviewOk) { $failures += "Staff report export did not return an output path." }
+
+      $materializePlan = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/output/materialize-plan" -Body @{ path = $firstRun.output_path }
+      $planOk = [bool]$materializePlan.ok -and ($null -ne $materializePlan.materialization)
+      $planReadOnly = [bool]$materializePlan.safety.read_only
+      $checks += [ordered]@{ name = "staff materialization plan"; ok = $planOk; read_only = $planReadOnly }
+      if (-not $planOk) { $failures += "Staff materialization plan did not return a materialization preview." }
+      if (-not $planReadOnly) { $failures += "Staff materialization plan was not read-only." }
+    } else {
+      $checks += [ordered]@{ name = "staff report buttons"; ok = $true; skipped = "No staff output available." }
+    }
+  } catch {
+    $checks += [ordered]@{ name = "staff report buttons"; ok = $false; error = $_.Exception.Message }
+    $failures += "Staff report button endpoint smoke failed: $($_.Exception.Message)"
   }
 
   $result = [ordered]@{
