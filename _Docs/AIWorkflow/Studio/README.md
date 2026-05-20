@@ -160,6 +160,13 @@ This slice defines:
   ModelRoutingPlan, completion evidence, completion decision, approval impact,
   automation readiness, surface map, traceability map, recovery plan,
   smoke/eval plan, and smoke status.
+  The `/file` viewer renders Markdown files as readable HTML documents by
+  default, with a raw source link and collapsible original Markdown for
+  debugging.
+  It also renders common runtime JSON artifacts such as CompletionCard,
+  CompletionReport, VerificationReport, and Runner run records as Human
+  Director-readable HTML cards by default, while preserving `raw=1` source
+  access and collapsible original JSON.
   page cards explain
   what the Director can do on that page, translate department/staff/artifact
   identifiers into Korean labels, and keep raw JSON, registry, and run evidence
