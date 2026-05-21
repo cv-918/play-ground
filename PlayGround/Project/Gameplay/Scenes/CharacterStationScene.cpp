@@ -1896,7 +1896,7 @@ _float CharacterStationScene::_GetRuntimeBodyCenterOffsetY() const
 	if (mode_ != CharacterStationMode::Enemy)
 		return 0.f;
 
-	return -_GetCurrentBodySize() * _GetRuntimeBodyYRatio() * 0.25f;
+	return -_GetCurrentBodySize() * _GetRuntimeBodyYRatio() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
 }
 
 _float CharacterStationScene::_GetCurrentBodySize() const

@@ -480,7 +480,7 @@ void Enemy::_ConfigureCombatColliders()
 {
 	const auto body_radius_x = std::max(1.f, info_->body_size_ * ENEMY_COMBAT_COLLIDER_WIDTH_RATIO);
 	const auto visual_y_ratio = _ResolveVisualColliderYRatio();
-	const _Vector2 center_offset(0.f, -info_->body_size_ * visual_y_ratio * 0.25f);
+	const _Vector2 center_offset(0.f, -info_->body_size_ * visual_y_ratio * _ScreenSystem.GetWorldResourceScale() * 0.5f);
 	const bool turn_on = true;
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
