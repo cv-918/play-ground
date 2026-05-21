@@ -5,13 +5,15 @@
 #include <string>
 #include <string_view>
 
+struct TextureResource;
+
 /**
  * @brief 다이얼로그 UI를 실제 화면에 렌더링하는 클래스
  *
  * - Runner의 상태를 읽어서 화면에 표현만 수행한다.
  * - 상태 변경 로직은 포함하지 않는다.
- * - 현재는 배경 텍스처가 없으므로 fallback 박스 렌더를 사용한다.
- * - 추후 배경/이름 영역 텍스처 슬롯을 추가할 수 있도록 구조를 열어둔다.
+ * - UI 텍스처가 준비되어 있으면 텍스처를 사용한다.
+ * - 텍스처 로드에 실패하면 fallback 박스 렌더를 사용한다.
  */
 class DialogueWindowView
 {
@@ -50,25 +52,25 @@ private:
     /**
      * @brief 다이얼로그 배경을 렌더링한다.
      */
-    void RenderBackground(const _RectF& _rect) const;
+    [[nodiscard]] _bool RenderBackground(const _RectF& _rect, const TextureResource* _texture) const;
 
     /**
      * @brief 이름 영역을 렌더링한다.
      */
-    void RenderNameBox(const DialogueLine& _line, const _RectF& _rect) const;
+    void RenderNameBox(const DialogueLine& _line, const _RectF& _rect, const TextureResource* _texture) const;
 
     /**
      * @brief 본문 영역을 렌더링한다.
      */
-    void RenderBodyText(const DialogueLine& _line, const _RectF& _rect, int _page_char_start, int _visible_char_count) const;
+    void RenderBodyText(const DialogueLine& _line, const _RectF& _rect, int _page_char_start, int _visible_char_count, _bool _using_texture_background) const;
 
     /**
      * @brief 선택지 영역을 렌더링한다.
      */
-    void RenderChoices(const DialogueLine& _line, const _RectF& _rect, int _selected_choice_index) const;
+    void RenderChoices(const DialogueLine& _line, const _RectF& _rect, int _selected_choice_index, _bool _using_texture_background) const;
 
     /**
      * @brief 진행 인디케이터를 렌더링한다.
      */
-    void RenderContinueIndicator(const DialogueRuntimeState& _runtime_state, const _Point& _pos) const;
+    void RenderContinueIndicator(const DialogueRuntimeState& _runtime_state, const _Point& _pos, _bool _using_texture_background) const;
 };
