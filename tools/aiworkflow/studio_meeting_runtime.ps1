@@ -1202,7 +1202,7 @@ function Show-AddTurn {
 function New-UsageResult {
     return [pscustomobject]@{
         ok = $false
-        error = "Usage: tools\aiworkflow\studio_meeting_runtime.bat status|validate|list|read <meeting_id>|inspect <meeting_json_path|meeting_id>|handoff <meeting_json_path|meeting_id>|create <meeting_json_path>|start <meeting_id>|transition <meeting_id> <status>|add-turn <meeting_id> <speaker_id> <turn_type> <content>|finalize <meeting_id> [--execute] [--json]"
+        error = "Usage: tools\aiworkflow\studio_meeting_runtime.bat status|validate|list|read <meeting_id>|inspect <meeting_json_path|meeting_id>|handoff <meeting_json_path|meeting_id>|create <meeting_json_path>|start <meeting_id>|transition <meeting_id> <status>|add-turn <meeting_id> <speaker_id> <turn_type> <content>|add-turn <meeting_id> <speaker_id> <turn_type> --content-file <utf8_text_path>|finalize <meeting_id> [--execute] [--json]"
         safety = New-SafetyState
     }
 }
@@ -1212,6 +1212,7 @@ try {
     $json = $false
     $execute = $false
     $storePathOverride = ""
+    $contentFileOverride = ""
     $cleanArgs = New-Object "System.Collections.Generic.List[string]"
 
     for ($index = 0; $index -lt @($CommandArgs).Count; $index += 1) {
@@ -1226,6 +1227,12 @@ try {
             }
             $index += 1
             $storePathOverride = [string]$CommandArgs[$index]
+        } elseif ($arg -ieq "--content-file") {
+            if ($index + 1 -ge @($CommandArgs).Count) {
+                throw "--content-file requires a path argument."
+            }
+            $index += 1
+            $contentFileOverride = [string]$CommandArgs[$index]
         } elseif (-not [string]::IsNullOrWhiteSpace($arg)) {
             $cleanArgs.Add([string]$arg)
         }
@@ -1256,8 +1263,15 @@ try {
         $result = New-TransitionResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -NextStatus "in_progress" -Execute $execute -CommandName "start"
     } elseif ($command -eq "transition" -and $cleanArgs.Count -eq 3) {
         $result = New-TransitionResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -NextStatus ([string]$cleanArgs[2]) -Execute $execute
-    } elseif ($command -eq "add-turn" -and $cleanArgs.Count -eq 5) {
-        $result = New-AddTurnResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -SpeakerId ([string]$cleanArgs[2]) -TurnType ([string]$cleanArgs[3]) -Content ([string]$cleanArgs[4]) -Execute $execute
+    } elseif ($command -eq "add-turn" -and ($cleanArgs.Count -eq 5 -or ($cleanArgs.Count -eq 4 -and -not [string]::IsNullOrWhiteSpace($contentFileOverride)))) {
+        $turnContent = ""
+        if (-not [string]::IsNullOrWhiteSpace($contentFileOverride)) {
+            $contentPath = Resolve-RepoFilePath -Root $repo -Path $contentFileOverride
+            $turnContent = [System.IO.File]::ReadAllText($contentPath, [System.Text.Encoding]::UTF8)
+        } else {
+            $turnContent = [string]$cleanArgs[4]
+        }
+        $result = New-AddTurnResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -SpeakerId ([string]$cleanArgs[2]) -TurnType ([string]$cleanArgs[3]) -Content $turnContent -Execute $execute
     } elseif ($command -eq "finalize" -and $cleanArgs.Count -eq 2) {
         $result = New-FinalizeResult -Root $repo -StorePath $storePath -MeetingId ([string]$cleanArgs[1]) -Execute $execute
     } else {

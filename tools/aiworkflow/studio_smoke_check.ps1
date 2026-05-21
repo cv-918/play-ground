@@ -72,8 +72,17 @@ try {
   $htmlText = [string]$html.Content
   $htmlTokens = @(
     "AIWorkflow Studio Director Console",
+    "data-nav=""toolbox""",
     "data-nav=""inbox""",
     "data-nav=""evidence""",
+    "meetingParticipantPicker",
+    "meetingPresetButtons",
+    "meetingTypeHelp",
+    "meetingCreateImpact",
+    "meetingResultPanel",
+    "meetingButtonGuide",
+    "meeting-board",
+    "meeting-agent-run",
     "studio-smoke-status",
     "completion-decision-plan"
   )
@@ -82,6 +91,11 @@ try {
     $checks += [ordered]@{ name = "html token: $token"; ok = $ok }
     if (-not $ok) { $failures += "Missing HTML token: $token" }
   }
+
+  $removedToken = 'id="meetingCreateParticipants"'
+  $removedOk = -not $htmlText.Contains($removedToken)
+  $checks += [ordered]@{ name = "html removed token: $removedToken"; ok = $removedOk }
+  if (-not $removedOk) { $failures += "Removed meeting participant text input is still present." }
 
   $scriptMatches = [regex]::Matches($htmlText, '(?s)<script>(.*?)</script>')
   if ($scriptMatches.Count -eq 0) {
@@ -139,6 +153,72 @@ try {
       $checks += [ordered]@{ name = $endpoint.name; ok = $false; error = $_.Exception.Message; path = $endpoint.path }
       $failures += "Endpoint failed: $($endpoint.name) - $($_.Exception.Message)"
     }
+  }
+
+  try {
+    $meetingSummary = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/summary" -TimeoutSec 20
+    $firstMeeting = @($meetingSummary.meetings | Where-Object { $_.path } | Select-Object -First 1)[0]
+    if ($firstMeeting) {
+      $meetingBody = @{ path = $firstMeeting.path; model = "gpt-5.5"; reasoning = "high" }
+      $meetingChecks = @(
+        @{ name = "meeting board"; path = "/api/studio/meeting/board"; key = "meeting_board" },
+        @{ name = "meeting facilitation"; path = "/api/studio/meeting/facilitation-plan"; key = "meeting_facilitation_plan" },
+        @{ name = "meeting runbook"; path = "/api/studio/meeting/runbook"; key = "meeting_runbook" },
+        @{ name = "meeting agent turn plan"; path = "/api/studio/meeting/agent-turn-plan"; key = "staff_plan" },
+        @{ name = "meeting inspect"; path = "/api/meeting/inspect"; key = "summary" },
+        @{ name = "meeting handoff"; path = "/api/meeting/handoff"; key = "handoff_ready" }
+      )
+      foreach ($meetingCheck in $meetingChecks) {
+        $meetingResult = Invoke-StudioPost -BaseUrl $baseUrl -Path $meetingCheck.path -Body $meetingBody
+        $payload = Get-PropertyValue -Object $meetingResult -Name $meetingCheck.key
+        $ok = [bool]$meetingResult.ok -and ($null -ne $payload)
+        if ($meetingCheck.key -eq "meeting_board" -and $ok) {
+          $hasTurnCount = $payload.PSObject.Properties.Name -contains "turn_count"
+          $hasLastTurn = $payload.PSObject.Properties.Name -contains "last_turn"
+          $hasDirectorActions = @($payload.director_next_actions).Count -gt 0
+          $ok = $ok -and $hasTurnCount -and $hasLastTurn -and $hasDirectorActions
+          $checks += [ordered]@{
+            name = $meetingCheck.name
+            ok = $ok
+            meeting = $firstMeeting.meeting_id
+            has_turn_count = $hasTurnCount
+            has_last_turn = $hasLastTurn
+            has_director_actions = $hasDirectorActions
+          }
+        } else {
+          $checks += [ordered]@{ name = $meetingCheck.name; ok = $ok; meeting = $firstMeeting.meeting_id }
+        }
+        if (-not $ok) {
+          $failures += "Meeting action did not return expected payload: $($meetingCheck.name)"
+        }
+      }
+    } else {
+      $checks += [ordered]@{ name = "meeting action smoke"; ok = $true; skipped = "no meeting records" }
+    }
+  } catch {
+    $checks += [ordered]@{ name = "meeting action smoke"; ok = $false; error = $_.Exception.Message }
+    $failures += "Meeting action smoke failed: $($_.Exception.Message)"
+  }
+
+  try {
+    $toolbox = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/toolbox/catalog" -TimeoutSec 20
+    $toolCount = [int]$toolbox.toolbox.tool_count
+    $hasRestart = [bool](@($toolbox.toolbox.primary_tools + $toolbox.toolbox.categories.tools | Where-Object { $_.id -eq "studio_restart" } | Select-Object -First 1))
+    $hasUpload = [bool](@($toolbox.toolbox.primary_tools + $toolbox.toolbox.categories.tools | Where-Object { $_.id -eq "google_drive_data_upload" } | Select-Object -First 1))
+    $checks += [ordered]@{ name = "toolbox catalog"; ok = ([bool]$toolbox.ok -and $toolCount -gt 0 -and $hasRestart -and $hasUpload); tool_count = $toolCount; has_restart = $hasRestart; has_upload = $hasUpload }
+    if (-not ([bool]$toolbox.ok -and $toolCount -gt 0 -and $hasRestart -and $hasUpload)) {
+      $failures += "Toolbox catalog did not expose expected user tools."
+    }
+
+    $toolRun = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/toolbox/run" -Body @{ tool_id = "workflow_status" }
+    $toolRunOk = [bool]$toolRun.ok -and $toolRun.toolbox_result -and $toolRun.toolbox_result.tool_id -eq "workflow_status"
+    $checks += [ordered]@{ name = "toolbox workflow status"; ok = $toolRunOk; status = $toolRun.toolbox_result.status }
+    if (-not $toolRunOk) {
+      $failures += "Toolbox workflow status did not run successfully."
+    }
+  } catch {
+    $checks += [ordered]@{ name = "toolbox"; ok = $false; error = $_.Exception.Message }
+    $failures += "Toolbox smoke failed: $($_.Exception.Message)"
   }
 
   try {

@@ -16,6 +16,7 @@ function parseArgs(argv) {
     repoRoot: path.resolve(__dirname, "..", ".."),
     host: DEFAULT_HOST,
     port: DEFAULT_PORT,
+    waitForPid: null,
     once: false,
     json: false,
     help: false,
@@ -32,6 +33,9 @@ function parseArgs(argv) {
     } else if (arg === "--port") {
       i += 1;
       result.port = Number(argv[i]);
+    } else if (arg === "--wait-for-pid") {
+      i += 1;
+      result.waitForPid = Number(argv[i]);
     } else if (arg === "--once") {
       result.once = true;
     } else if (arg === "--json") {
@@ -48,6 +52,9 @@ function parseArgs(argv) {
   }
   if (result.host !== "127.0.0.1" && result.host !== "localhost") {
     throw new Error("Studio Director Console is local-only. Use --host 127.0.0.1 or --host localhost.");
+  }
+  if (result.waitForPid !== null && (!Number.isInteger(result.waitForPid) || result.waitForPid < 1)) {
+    throw new Error(`Invalid --wait-for-pid: ${result.waitForPid}`);
   }
 
   return result;
@@ -511,6 +518,13 @@ async function getMeetings(repoRoot) {
       rejected_directions: stringList(json.rejected_directions),
       follow_up_workorders: stringList(json.follow_up_workorders),
       participant_count: Array.isArray(json.participants) ? json.participants.length : 0,
+      turn_count: Array.isArray(json.discussion_turns) ? json.discussion_turns.length : 0,
+      last_turn: Array.isArray(json.discussion_turns) && json.discussion_turns.length ? {
+        turn_id: json.discussion_turns[json.discussion_turns.length - 1]?.turn_id || "",
+        speaker_id: json.discussion_turns[json.discussion_turns.length - 1]?.speaker_id || "",
+        turn_type: json.discussion_turns[json.discussion_turns.length - 1]?.turn_type || "",
+        content: json.discussion_turns[json.discussion_turns.length - 1]?.content || "",
+      } : null,
       unresolved_count: Array.isArray(json.unresolved_questions) ? json.unresolved_questions.length : 0,
       follow_up_count: Array.isArray(json.follow_up_workorders) ? json.follow_up_workorders.length : 0,
       path: toRepoRelative(repoRoot, file),
@@ -1237,6 +1251,14 @@ async function writeTempStudioInput(repoRoot, prefix, payload) {
   return toRepoRelative(repoRoot, full);
 }
 
+async function writeTempStudioText(repoRoot, prefix, text) {
+  const dir = repoPath(repoRoot, "_Temp/AIWorkflowStudio/console_inputs");
+  await fsp.mkdir(dir, { recursive: true });
+  const full = path.join(dir, `${slugifyId(prefix, "studio-text")}-${Date.now()}.txt`);
+  await fsp.writeFile(full, String(text || ""), "utf8");
+  return toRepoRelative(repoRoot, full);
+}
+
 async function writeStudioRecord(repoRoot, relativeDir, id, payload) {
   const dir = repoPath(repoRoot, relativeDir);
   await fsp.mkdir(dir, { recursive: true });
@@ -1559,6 +1581,7 @@ async function getSummary(repoRoot) {
     tool_adapters: toolAdapters.slice(0, 16),
     tool_run_requests: toolRunRequests.slice(0, 12),
     conditional_automation: conditionalAutomation,
+    toolbox: buildToolboxCatalog(repoRoot),
     departments: staffDirectory.departments.slice(0, 12),
     staff_agents: staffDirectory.staff.slice(0, 16),
     safety: {
@@ -1768,8 +1791,9 @@ function runTool(repoRoot, command, args, timeoutMs = 20 * 60 * 1000) {
   return new Promise((resolve) => {
     const isWindowsBatch = process.platform === "win32" && /\.(bat|cmd)$/i.test(command);
     const executable = isWindowsBatch ? "cmd.exe" : command;
+    const commandLine = [quoteCmd(command), ...args.map(quoteCmd)].join(" ");
     const finalArgs = isWindowsBatch
-      ? ["/d", "/s", "/c", [quoteCmd(command), ...args.map(quoteCmd)].join(" ")]
+      ? ["/d", "/s", "/c", `chcp 65001>nul & ${commandLine}`]
       : args;
 
     const child = spawn(executable, finalArgs, {
@@ -1808,6 +1832,259 @@ function runTool(repoRoot, command, args, timeoutMs = 20 * 60 * 1000) {
       });
     });
   });
+}
+
+const TOOLBOX_TOOLS = [
+  {
+    id: "studio_restart",
+    category: "핵심 도구",
+    label: "Studio 서버 재시작",
+    purpose: "Studio 코드를 고친 뒤 현재 서버를 새로 띄웁니다.",
+    when_to_use: "화면이 예전 상태로 보이거나 서버를 다시 켜야 할 때 사용합니다.",
+    script: "tools/aiworkflow/studio_director_console.bat",
+    args: [],
+    command_display: "tools\\aiworkflow\\studio_director_console.bat --host 127.0.0.1 --port 47831",
+    kind: "restart_studio",
+    timeout_ms: 1000,
+    safety: "소스, task, git은 바꾸지 않고 Studio 서버 프로세스만 다시 시작합니다.",
+    primary: true,
+    confirm_message: "Studio 서버를 재시작할까요? 현재 페이지가 잠시 끊길 수 있고, 잠시 뒤 새로고침하면 됩니다.",
+  },
+  {
+    id: "google_drive_data_upload",
+    category: "핵심 도구",
+    label: "구글 드라이브 리소스 업로드",
+    purpose: "PlayGround/Data 스냅샷을 ZIP으로 만들어 Google Drive에 업로드합니다.",
+    when_to_use: "게임 데이터나 리소스를 외부 공유용으로 올려야 할 때 사용합니다.",
+    script: "tools/google-drive-data-upload/upload_playground_data.bat",
+    args: [],
+    command_display: "tools\\google-drive-data-upload\\upload_playground_data.bat",
+    timeout_ms: 180000,
+    safety: "외부 Google Drive 업로드가 발생합니다. 소스, task, git은 변경하지 않습니다.",
+    primary: true,
+    confirm_message: "PlayGround/Data를 Google Drive에 업로드할까요? 이 작업은 외부 업로드를 수행합니다.",
+  },
+  {
+    id: "studio_smoke",
+    category: "Studio",
+    label: "Studio 기본 점검",
+    purpose: "Studio 화면, API, 직원 보고서 버튼이 기본적으로 작동하는지 확인합니다.",
+    when_to_use: "Studio 기능을 수정한 뒤 빠르게 정상 여부를 확인할 때 사용합니다.",
+    script: "tools/aiworkflow/studio_smoke_check.bat",
+    args: [],
+    command_display: "tools\\aiworkflow\\studio_smoke_check.bat",
+    timeout_ms: 120000,
+    safety: "읽기 중심 점검입니다. _Temp 아래 smoke 결과만 만들 수 있습니다.",
+  },
+  {
+    id: "workflow_status",
+    category: "AIWorkflow",
+    label: "워크플로우 상태 확인",
+    purpose: "현재 Backlog, ActiveTask, workflow 상태를 요약해서 봅니다.",
+    when_to_use: "지금 어떤 작업이 선택되어 있고 어디서 멈췄는지 헷갈릴 때 사용합니다.",
+    script: "tools/aiworkflow/workflow_status.bat",
+    args: ["--json"],
+    command_display: "tools\\aiworkflow\\workflow_status.bat --json",
+    timeout_ms: 30000,
+    safety: "읽기 전용입니다.",
+  },
+  {
+    id: "repo_status",
+    category: "AIWorkflow",
+    label: "작업대 상태 확인",
+    purpose: "Git 변경, diff check, workflow 핵심 파일 존재 여부를 확인합니다.",
+    when_to_use: "커밋 전 또는 작업대가 섞였는지 확인할 때 사용합니다.",
+    script: "tools/aiworkflow/status.bat",
+    args: [],
+    command_display: "tools\\aiworkflow\\status.bat",
+    timeout_ms: 60000,
+    safety: "읽기 전용입니다.",
+  },
+  {
+    id: "project_profile_status",
+    category: "프로젝트",
+    label: "프로젝트 프로필 확인",
+    purpose: "현재 프로젝트의 빌드, 데이터, 검증 진입점 설정을 확인합니다.",
+    when_to_use: "게임 검증이나 빌드 경로가 맞는지 확인할 때 사용합니다.",
+    script: "tools/aiworkflow/project_profile_status.bat",
+    args: ["--json"],
+    command_display: "tools\\aiworkflow\\project_profile_status.bat --json",
+    timeout_ms: 30000,
+    safety: "읽기 전용입니다.",
+  },
+  {
+    id: "json_smoke",
+    category: "게임 검증",
+    label: "JSON 문법 점검",
+    purpose: "PlayGround/Data JSON 파일이 파싱 가능한지 확인합니다.",
+    when_to_use: "게임 데이터 JSON을 바꾼 뒤 가장 먼저 사용합니다.",
+    script: "tools/aiworkflow/json_smoke_check.bat",
+    args: [],
+    command_display: "tools\\aiworkflow\\json_smoke_check.bat",
+    timeout_ms: 60000,
+    safety: "읽기 전용입니다. 게임 데이터 파일을 수정하지 않습니다.",
+  },
+  {
+    id: "game_data_loader_readability",
+    category: "게임 검증",
+    label: "게임 데이터 로더 점검",
+    purpose: "GameDataLoader가 기대하는 JSON 파일을 읽을 수 있는지 확인합니다.",
+    when_to_use: "데이터 구조나 로더 관련 작업을 검증할 때 사용합니다.",
+    script: "tools/aiworkflow/game_data_loader_readability_check.bat",
+    args: [],
+    command_display: "tools\\aiworkflow\\game_data_loader_readability_check.bat",
+    timeout_ms: 60000,
+    safety: "읽기 전용입니다. 게임 소스나 데이터를 수정하지 않습니다.",
+  },
+  {
+    id: "discord_bot_status",
+    category: "Discord 보조",
+    label: "Discord 봇 상태 확인",
+    purpose: "Discord Orchestrator 봇이 실행 중인지 확인합니다.",
+    when_to_use: "Discord 명령 응답이 이상하거나 봇이 멈춘 것 같을 때 사용합니다.",
+    script: "tools/discord-orchestrator/status_bot.bat",
+    args: [],
+    command_display: "tools\\discord-orchestrator\\status_bot.bat",
+    timeout_ms: 30000,
+    safety: "읽기 전용입니다.",
+  },
+  {
+    id: "discord_bot_restart",
+    category: "핵심 도구",
+    label: "Discord 봇 재시작",
+    purpose: "관리 상태 파일이 있는 Discord 봇을 기존 restart script로 재시작합니다.",
+    when_to_use: "Discord 봇 코드 변경 후 봇을 다시 띄워야 할 때 사용합니다.",
+    script: "tools/discord-orchestrator/restart_bot.bat",
+    args: [],
+    command_display: "tools\\discord-orchestrator\\restart_bot.bat",
+    timeout_ms: 30000,
+    safety: "workflow task, source, git은 바꾸지 않고 봇 프로세스만 재시작합니다.",
+    primary: true,
+    confirm_message: "Discord 봇을 재시작할까요? 진행 중인 Discord 응답이 잠시 끊길 수 있습니다.",
+  },
+];
+
+function toolboxToolExists(repoRoot, tool) {
+  if (tool.kind === "restart_studio") {
+    return fs.existsSync(repoPath(repoRoot, tool.script));
+  }
+  return fs.existsSync(repoPath(repoRoot, tool.script));
+}
+
+function buildToolboxCatalog(repoRoot) {
+  const categories = [];
+  const toolView = (tool) => ({
+    id: tool.id,
+    label: tool.label,
+    purpose: tool.purpose,
+    when_to_use: tool.when_to_use,
+    command_display: tool.command_display,
+    safety: tool.safety,
+    available: toolboxToolExists(repoRoot, tool),
+    primary: tool.primary === true,
+    confirm_message: tool.confirm_message || "",
+  });
+  const primaryOrder = ["studio_restart", "discord_bot_restart", "google_drive_data_upload"];
+  const primaryTools = primaryOrder
+    .map((id) => TOOLBOX_TOOLS.find((tool) => tool.id === id))
+    .filter(Boolean)
+    .map(toolView);
+  for (const tool of TOOLBOX_TOOLS) {
+    if (tool.primary) continue;
+    let category = categories.find((item) => item.category === tool.category);
+    if (!category) {
+      category = { category: tool.category, tools: [] };
+      categories.push(category);
+    }
+    category.tools.push(toolView(tool));
+  }
+  return {
+    primary_tools: primaryTools,
+    categories,
+    tool_count: TOOLBOX_TOOLS.length,
+    safety: {
+      allowlisted_only: true,
+      arbitrary_command_execution: false,
+      source_changed_by_catalog: false,
+      task_state_changed_by_catalog: false,
+      commit_or_push: false,
+    },
+  };
+}
+
+function scheduleStudioRestart(repoRoot, context = {}) {
+  const host = context.host || DEFAULT_HOST;
+  const port = context.requestedPort || DEFAULT_PORT;
+  const child = spawn(process.execPath, [
+    __filename,
+    "--repo-root",
+    repoRoot,
+    "--host",
+    host,
+    "--port",
+    String(port),
+    "--wait-for-pid",
+    String(process.pid),
+  ], {
+    cwd: repoRoot,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.unref();
+  setTimeout(() => process.exit(0), 250);
+}
+
+async function runToolboxTool(repoRoot, toolId, context = {}) {
+  const tool = TOOLBOX_TOOLS.find((item) => item.id === toolId);
+  if (!tool) {
+    throw new Error("Unknown toolbox tool.");
+  }
+  if (!toolboxToolExists(repoRoot, tool)) {
+    throw new Error(`Tool script does not exist: ${tool.script}`);
+  }
+  if (tool.kind === "restart_studio") {
+    scheduleStudioRestart(repoRoot, context);
+    return {
+      ok: true,
+      toolbox_result: {
+        tool_id: tool.id,
+        label: tool.label,
+        status: "restart_scheduled",
+        summary: "Studio 서버 재시작을 예약했습니다. 잠시 후 브라우저를 새로고침하세요.",
+        command_display: tool.command_display,
+        stdout: "",
+        stderr: "",
+      },
+      safety: {
+        process_restart_scheduled: true,
+        source_changed: false,
+        task_state_changed: false,
+        commit_or_push: false,
+      },
+    };
+  }
+  const result = await runTool(repoRoot, repoPath(repoRoot, tool.script), tool.args || [], tool.timeout_ms || 120000);
+  return {
+    ok: result.ok,
+    toolbox_result: {
+      tool_id: tool.id,
+      label: tool.label,
+      status: result.ok ? "success" : "failed",
+      summary: result.ok ? "도구 실행이 완료되었습니다." : "도구 실행이 실패했습니다. 출력 내용을 확인하세요.",
+      command_display: tool.command_display,
+      exit_code: result.exit_code,
+      stdout: result.stdout,
+      stderr: result.stderr,
+      parsed_json: result.json,
+    },
+    safety: {
+      allowlisted_tool: true,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+  };
 }
 
 async function readRequestJson(req) {
@@ -2047,6 +2324,62 @@ function artifactStatusClass(value) {
   return "";
 }
 
+function jsonBrief(value) {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) {
+    const preview = value.slice(0, 3).map((item) => {
+      if (item && typeof item === "object") {
+        return item.title || item.name || item.id || item.type || JSON.stringify(item);
+      }
+      return String(item);
+    }).join(", ");
+    return `${value.length}개 항목${preview ? `: ${shortText(preview, 140)}` : ""}`;
+  }
+  if (typeof value === "object") {
+    const keys = Object.keys(value);
+    return `${keys.length}개 필드${keys.length ? `: ${keys.slice(0, 6).join(", ")}` : ""}`;
+  }
+  return shortText(String(value), 220);
+}
+
+function jsonListItems(value) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    return Object.entries(value).map(([key, child]) => ({
+      name: key,
+      summary: jsonBrief(child),
+    }));
+  }
+  return value === undefined || value === null || value === "" ? [] : [String(value)];
+}
+
+function renderGenericJsonSummary(relativePath, json) {
+  const entries = json && typeof json === "object" && !Array.isArray(json) ? Object.entries(json) : [];
+  const title =
+    json?.director_goal_plan_id ||
+    json?.meeting_session_id ||
+    json?.work_order_id ||
+    json?.proposal_id ||
+    json?.decision_id ||
+    json?.memory_id ||
+    json?.id ||
+    json?.title ||
+    path.basename(relativePath || "JSON");
+  return {
+    kind: "JSON 문서",
+    id: title,
+    title,
+    status: json?.status || json?.state || "읽기용",
+    summary: json?.goal || json?.summary || json?.reason || "JSON 내용을 사람이 읽기 쉬운 형태로 정리했습니다.",
+    metrics: [
+      ["경로", relativePath],
+      ["상위 필드", Array.isArray(json) ? json.length : entries.length],
+      ["원본 형식", Array.isArray(json) ? "array" : typeof json],
+    ],
+    sections: entries.map(([key, value]) => [key, jsonListItems(value)]),
+  };
+}
+
 function renderArtifactSummary(relativePath, json) {
   if (json.completion_card_id) {
     const p = json.presentation || {};
@@ -2160,8 +2493,7 @@ function renderArtifactSummary(relativePath, json) {
 }
 
 function renderJsonArtifactDocument(relativePath, json, rawText) {
-  const summary = renderArtifactSummary(relativePath, json);
-  if (!summary) return "";
+  const summary = renderArtifactSummary(relativePath, json) || renderGenericJsonSummary(relativePath, json);
   const rawUrl = `/file?path=${encodeURIComponent(relativePath)}&raw=1`;
   const statusClass = artifactStatusClass(summary.status);
   return `<!doctype html>
@@ -2287,6 +2619,8 @@ function directorConsoleHtml() {
     .nav button:hover { background:#202735; color:var(--text); }
     .nav button.active { background:#27344a; border-color:#48648f; color:var(--text); }
     .nav .count { min-width:22px; text-align:center; color:var(--accent2); font-size:12px; }
+    .nav-section-label { margin:4px 8px -4px; color:var(--muted); font-size:11px; font-weight:800; letter-spacing:0; }
+    .reference-nav { padding-top:8px; border-top:1px solid rgba(255,255,255,.08); }
     .internal-toggle { width:100%; margin-top:4px; display:flex; justify-content:space-between; align-items:center; background:#202735; color:var(--muted); }
     .internal-nav { display:grid; gap:6px; }
     .internal-nav[hidden] { display:none; }
@@ -2307,12 +2641,30 @@ function directorConsoleHtml() {
     button.warn { background:#a56d10; }
     button.danger { background:#bc2f3f; }
     button:disabled { opacity:.55; cursor:not-allowed; }
-    code { background:#12151c; border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
+    code { background:#12151c; border:1px solid var(--line); border-radius:5px; padding:1px 5px; overflow-wrap:anywhere; word-break:break-word; }
     a { color:#c6d8ff; text-decoration:none; }
     a:hover { text-decoration:underline; }
     .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
     .muted { color:var(--muted); }
     .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin:14px 0; }
+    .toolbox-layout { display:block; margin:14px 0; max-width:1240px; }
+    .toolbox-primary { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin:14px 0 18px; align-items:stretch; }
+    .toolbox-primary-card { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:10px; align-items:center; min-width:0; padding:12px; }
+    .toolbox-primary-card h3 { margin:0 0 4px; }
+    .toolbox-primary-card .summary { margin:0; font-size:13px; line-height:1.35; }
+    .toolbox-primary-card button { white-space:nowrap; font-weight:700; padding:9px 12px; }
+    .toolbox-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin:14px 0; align-items:start; max-width:1240px; }
+    .toolbox-grid.secondary { grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+    .toolbox-card { min-width:0; overflow:hidden; }
+    .toolbox-card .item { overflow:hidden; }
+    .toolbox-card code { display:inline-block; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+    .toolbox-divider { margin:20px 0 12px; padding-top:16px; border-top:1px solid var(--line); max-width:1240px; }
+    .toolbox-secondary-category { display:flex; flex-direction:column; gap:12px; }
+    @media (max-width: 980px) {
+      .toolbox-primary { grid-template-columns:1fr; }
+      .toolbox-primary-card { grid-template-columns:minmax(0, 1fr) auto; }
+      .toolbox-grid.secondary { grid-template-columns:1fr; }
+    }
     .card { background:linear-gradient(180deg, var(--panel), #171c25); border:1px solid var(--line); border-radius:8px; padding:14px; box-shadow:0 10px 28px rgba(0,0,0,.16); }
     .hero { display:grid; grid-template-columns:minmax(0, 1.5fr) minmax(280px, .8fr); gap:14px; align-items:stretch; margin-bottom:14px; }
     .hero-card { min-height:176px; padding:18px; border-color:#4b6590; background:linear-gradient(135deg, #202b3e, #171d29 70%); }
@@ -2330,10 +2682,22 @@ function directorConsoleHtml() {
     .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; background:var(--panel2); color:var(--muted); padding:2px 7px; font-size:12px; }
     .list { display:grid; gap:10px; }
     .item { background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:7px; padding:11px; }
+    .item * { min-width:0; }
     .item.warn { border-left-color:var(--warn); }
     .item.good { border-left-color:var(--good); }
     .item.danger { border-left-color:var(--danger); }
     .small { font-size:13px; }
+    .button-help { margin:10px 0 0; padding-left:1.2rem; }
+    .button-help li { margin:2px 0; }
+    .inline-help, .impact-note, .form-subsection { margin-top:10px; }
+    .inline-help, .impact-note { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:rgba(255,255,255,.03); }
+    .form-subsection h3 { margin-top:0; }
+    .preset-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .staff-picker { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; margin-top:8px; }
+    .staff-choice { display:grid; grid-template-columns:auto minmax(0, 1fr); gap:8px; align-items:start; border:1px solid var(--line); border-radius:8px; padding:9px 10px; background:rgba(255,255,255,.025); }
+    .staff-choice input { margin-top:3px; }
+    .staff-choice strong, .staff-choice span { display:block; overflow-wrap:anywhere; }
+    .staff-choice span { color:var(--muted); font-size:12px; margin-top:2px; }
     .summary { color:var(--muted); font-size:13px; }
     .staff-detail { margin:9px 0; color:var(--muted); font-size:13px; }
     .staff-detail strong { display:block; color:var(--text); margin-bottom:3px; }
@@ -2362,8 +2726,8 @@ function directorConsoleHtml() {
     .empty { color:var(--muted); border:1px dashed var(--line); border-radius:8px; padding:16px; }
     pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
     .log-output { display:grid; gap:10px; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:460px; overflow:auto; }
-    .action-result-panel[hidden] { display:none; }
-    .action-result-panel { margin-bottom:16px; border-color:#5276c8; }
+    .result-panel[hidden] { display:none; }
+    .result-panel { margin-bottom:16px; border-color:#5276c8; }
     .log-json { margin:0; max-height:none; border:0; padding:0; background:transparent; }
     .log-message { color:var(--muted); white-space:pre-wrap; word-break:break-word; }
     @media (max-width: 920px) {
@@ -2388,21 +2752,26 @@ function directorConsoleHtml() {
         <p class="brand-title">AIWorkflow Studio</p>
         <p class="brand-subtitle">Human Director 운영 콘솔</p>
       </div>
-      <nav class="nav" aria-label="Studio navigation">
+      <div class="nav-section-label">감독자 작업대</div>
+      <nav class="nav" aria-label="Human Director navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
         <button data-nav="goals">목표 기획 <span class="count" id="nav-goals-count"></span></button>
-        <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
-        <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
-        <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
         <button data-nav="meetings">회의실 <span class="count" id="nav-meetings-count"></span></button>
         <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
         <button data-nav="work">업무 지시 <span class="count" id="nav-work-count"></span></button>
         <button data-nav="knowledge">지식/결정 <span class="count" id="nav-knowledge-count"></span></button>
-        <button data-nav="timeline">실행 타임라인 <span class="count" id="nav-timeline-count"></span></button>
-        <button data-nav="diff">변경 검토 <span class="count" id="nav-diff-count"></span></button>
         <button data-nav="evidence">검증 자료 <span class="count" id="nav-evidence-count"></span></button>
+        <button data-nav="diff">변경 검토 <span class="count" id="nav-diff-count"></span></button>
         <button data-nav="devlog">DevLog <span class="count" id="nav-devlog-count"></span></button>
+        <button data-nav="toolbox">도구함 <span class="count" id="nav-toolbox-count"></span></button>
+      </nav>
+      <div class="nav-section-label">참고 / 추적</div>
+      <nav class="nav reference-nav" aria-label="Reference navigation">
+        <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
+        <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
+        <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
+        <button data-nav="timeline">실행 타임라인 <span class="count" id="nav-timeline-count"></span></button>
       </nav>
       <button id="internalNavToggle" class="internal-toggle">내부 도구 <span id="internalNavState">숨김</span></button>
       <nav id="internalNav" class="nav internal-nav" aria-label="Internal Studio navigation" hidden>
@@ -2421,9 +2790,9 @@ function directorConsoleHtml() {
           <span id="stamp" class="muted"></span>
         </div>
       </header>
-      <section id="actionResultPanel" class="card action-result-panel" hidden>
-        <div class="section-title"><h2>방금 누른 버튼 결과</h2><button class="secondary" id="actionResultClose">닫기</button></div>
-        <div id="actionResult" class="log-output">대기 중</div>
+      <section id="globalResultPanel" class="card result-panel" hidden>
+        <div class="section-title"><h2>실행 결과</h2><button id="globalResultClose" class="secondary">닫기</button></div>
+        <div id="globalResult" class="list"></div>
       </section>
       <main>
         <section class="page active" data-page="home">
@@ -2439,7 +2808,7 @@ function directorConsoleHtml() {
               <div class="list">
                 <div class="item good"><h3>자동으로 하지 않는 일</h3><p class="small">캐논 확정, 소스 수정, 전체 파일 커밋/푸시, 승인 없는 실행.</p></div>
                 <div class="item warn"><h3>버튼으로 가능한 일</h3><p class="small">회의/업무/제안/결정/기억 기록, 작업 접수, 승인+실행, 완료 최종화, 업무 지시를 작업 목록에 넣기, 선택 파일 commit/push.</p></div>
-                <div class="item"><h3>Studio 작업대 바로가기</h3><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="knowledge">지식 기록</button><button class="secondary" data-action="studio-surface-map">화면 구조 점검</button><button class="secondary" data-action="studio-recovery-plan">복구 점검</button><button class="secondary" data-action="studio-eval-plan">Smoke 계획</button><button class="secondary" data-action="studio-smoke-status">Studio 점검</button></div></div>
+                <div class="item"><h3>자주 쓰는 작업으로 이동</h3><p class="small">감독자가 직접 쓰는 핵심 작업대만 모았습니다. 내부 진단은 사이드바의 내부 도구에 접어둡니다.</p><div class="row"><button class="secondary" data-nav-jump="goals">목표 기획</button><button class="secondary" data-nav-jump="inbox">감독자 결정함</button><button class="secondary" data-nav-jump="meetings">회의실</button><button class="secondary" data-nav-jump="work">업무 지시</button><button class="secondary" data-nav-jump="evidence">검증 자료</button><button class="secondary" data-nav-jump="diff">변경 검토</button></div></div>
               </div>
             </div>
           </div>
@@ -2473,7 +2842,7 @@ function directorConsoleHtml() {
               </div>
             </div>
           </section>
-          <section id="metrics" class="grid"></section>
+          <section id="metrics" class="grid" hidden></section>
           <section class="grid">
             <div class="card">
               <div class="section-title"><h2>판단 대기</h2><span id="homeQueueCount" class="pill"></span></div>
@@ -2490,7 +2859,7 @@ function directorConsoleHtml() {
               <div id="homeActivity" class="compact-list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>운영 상태</h2><button class="secondary" data-nav-jump="systems">내부 도구 보기</button></div>
+              <div class="section-title"><h2>상태 참고</h2><span class="pill">읽기 전용</span></div>
               <div id="homeOperations" class="compact-list"></div>
             </div>
           </section>
@@ -2498,6 +2867,19 @@ function directorConsoleHtml() {
             <div class="section-title"><h2>최근 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
             <div id="homeEvidence" class="compact-list"></div>
           </section>
+        </section>
+
+        <section class="page" data-page="toolbox">
+          <div class="page-heading"><div><h2>도구함</h2><p>직접 사용할 만한 로컬 도구만 모았습니다. 스크립트 파일명을 외우지 않아도 됩니다.</p></div></div>
+          <div class="card" id="meetingButtonGuide">
+            <h2>사용 기준</h2>
+            <ul class="small">
+              <li>여기에는 allowlist된 도구만 표시합니다.</li>
+              <li>소스 수정, task 완료, commit/push는 이 도구함에서 자동으로 하지 않습니다.</li>
+              <li>긴 출력이 필요한 도구는 해당 화면의 결과 영역 또는 생성된 파일에서 확인합니다.</li>
+            </ul>
+          </div>
+          <section id="toolboxList" class="toolbox-layout"></section>
         </section>
 
         <section class="page" data-page="goals">
@@ -2520,7 +2902,11 @@ function directorConsoleHtml() {
                 <button class="good" id="goalStoreSubmit">기획안 저장</button>
                 <button class="warn" id="goalBundleSubmit">기획안 + 후보 생성</button>
               </div>
-              <p class="small muted">후보 생성은 Studio 기록만 만듭니다. 실제 구현과 커밋은 별도 승인 흐름을 탑니다.</p>
+              <ul class="small muted button-help">
+                <li><strong>미리보기:</strong> 저장하지 않고 오른쪽에서 결과만 확인합니다.</li>
+                <li><strong>저장:</strong> 기획안만 Studio 기록에 남깁니다. 후보는 만들지 않습니다.</li>
+                <li><strong>후보 생성:</strong> 기획안과 회의/업무/제안 후보를 만듭니다. 실제 구현과 커밋은 별도 승인 흐름을 탑니다.</li>
+              </ul>
             </div>
             <div class="card">
               <div class="section-title"><h2>기획안 미리보기</h2><span id="goalPreviewBadge" class="pill">대기</span></div>
@@ -2645,26 +3031,69 @@ function directorConsoleHtml() {
             <div class="form-grid">
               <label>회의 주제<input id="meetingCreateTopic" placeholder="예: 초반 10분 플레이 루프 방향 회의"></label>
               <label>회의 종류<select id="meetingCreateType"></select></label>
-              <label>참가 직원<input id="meetingCreateParticipants" placeholder="game_designer, scenario_director, producer"></label>
               <label>의장<select id="meetingCreateChair"></select></label>
             </div>
+            <div id="meetingTypeHelp" class="inline-help"></div>
+            <div class="form-subsection">
+              <h3>추천 참가자 조합</h3>
+              <p class="small muted">회의 목적에 맞는 기본 조합을 누르면 참가 직원과 의장이 자동으로 채워집니다.</p>
+              <div id="meetingPresetButtons" class="preset-row"></div>
+            </div>
+            <div class="form-subsection">
+              <h3>참가 직원</h3>
+              <p class="small muted">표시명은 한글 직책명 중심으로 보여주고, 회의 기록에는 기존 staff/role ID가 저장됩니다.</p>
+              <div id="meetingParticipantPicker" class="staff-picker"></div>
+            </div>
+            <div id="meetingCreateImpact" class="impact-note"></div>
             <textarea id="meetingCreateAgenda" placeholder="안건을 줄바꿈으로 입력하세요. 예:&#10;현재 플레이 루프의 약점 확인&#10;후속 업무 지시 후보 정리"></textarea>
             <textarea id="meetingCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 없는 공식 설정 확정 금지&#10;구현 작업 직접 생성 금지"></textarea>
             <div class="row"><button class="good" id="meetingCreateSubmit">회의 생성</button></div>
+            <p class="small muted">회의 생성은 MeetingSession 기록만 만듭니다. canon 확정, task 생성, git 변경은 하지 않습니다.</p>
           </div>
           <div class="card">
-            <div class="section-title"><h2>회의 발언 추가</h2><span class="pill">발언</span></div>
+            <div class="section-title"><h2>내 발언 기록</h2><span class="pill">Human Director</span></div>
             <div class="form-grid">
               <label>회의 ID<input id="meetingTurnId" placeholder="MEET-..."></label>
-              <label>발언자<select id="meetingTurnSpeaker"></select></label>
+              <label>기록 주체<select id="meetingTurnSpeaker"></select></label>
               <label>발언 종류<select id="meetingTurnType"></select></label>
             </div>
-            <textarea id="meetingTurnContent" placeholder="회의 발언, 질문, 반박, 합성 메모를 입력하세요."></textarea>
-            <div class="row"><button class="good" id="meetingTurnSubmit">발언 추가</button></div>
+            <p class="small muted">이 입력칸은 Human Director인 내 발언을 회의록에 남기는 곳입니다. AI 직원 발언은 아래 회의 카드의 <strong>다음 AI 발언 받기</strong>를 사용하세요.</p>
+            <textarea id="meetingTurnContent" placeholder="내 의견, 질문, 반박, 정리 메모를 입력하세요."></textarea>
+            <div class="row"><button class="good" id="meetingTurnSubmit">내 발언 기록</button></div>
           </div>
           <div class="control-bar">
             <input id="meetingSearch" placeholder="회의 주제, ID 검색">
             <select id="meetingStatusFilter"></select>
+          </div>
+          <div class="card">
+            <div class="section-title"><h2>회의 버튼 안내</h2><span class="pill">회의 기록 전용</span></div>
+            <div class="grid">
+              <div class="item">
+                <h3>회의를 살펴볼 때</h3>
+                <ul class="small">
+                  <li><strong>회의판 자세히</strong>: 다음 발언자, 다음 행동, 남은 질문, 우려, 후속 업무 후보를 한 번에 확인합니다.</li>
+                </ul>
+              </div>
+              <div class="item">
+                <h3>회의 내용을 늘릴 때</h3>
+                <ul class="small">
+                  <li><strong>다음 AI 발언 받기</strong>: AI 직원 의견을 받아 회의 발언으로 추가합니다. canon, task, git은 바꾸지 않습니다.</li>
+                  <li><strong>직접 발언 추가</strong>: 선택한 회의 ID를 위 입력칸에 넣습니다. 이 기능은 Human Director인 내 발언만 기록합니다.</li>
+                </ul>
+              </div>
+              <div class="item">
+                <h3>회의 결과를 넘길 때</h3>
+                <ul class="small">
+                  <li><strong>후속 작업 만들기</strong>: 회의 결과를 WorkOrder 후보로 저장합니다. 실제 구현 task는 별도 승인 흐름을 탑니다.</li>
+                  <li><strong>결정으로 기록</strong>: 회의 결론을 Decision 후보로 저장합니다. 공식 설정 확정은 별도 판단입니다.</li>
+                  <li><strong>회의 종료</strong>: 회의 기록의 진행 상태만 닫습니다. 소스, task, git은 바꾸지 않습니다.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div id="meetingResultPanel" class="card result-panel" hidden>
+            <div class="section-title"><h2>회의 실행 결과</h2><button id="meetingResultClose" class="secondary">닫기</button></div>
+            <div id="meetingResult" class="list"></div>
           </div>
           <div id="meetings" class="list"></div>
         </section>
@@ -2792,6 +3221,16 @@ function directorConsoleHtml() {
         <section class="page" data-page="systems">
           <div class="page-heading"><div><h2>시스템</h2><p>내부/관리자용 화면입니다. 평소에는 신경 쓰지 않아도 됩니다.</p></div></div>
           <div class="card">
+            <div class="section-title"><h2>Studio 진단 도구</h2><span class="pill">내부 도구</span></div>
+            <p class="muted">Studio 자체가 이상하거나, 새 기능을 고친 뒤 확인할 때만 쓰는 점검 도구입니다. 일반 작업을 진행할 때는 쓰지 않아도 됩니다.</p>
+            <div class="row">
+              <button class="secondary" data-action="studio-surface-map">화면 목록 점검</button>
+              <button class="secondary" data-action="studio-recovery-plan">복구 상태 점검</button>
+              <button class="secondary" data-action="studio-eval-plan">테스트 계획 보기</button>
+              <button class="secondary" data-action="studio-smoke-status">Studio 상태 점검</button>
+            </div>
+          </div>
+          <div class="card">
             <div class="section-title"><h2>도구 요청서 만들기</h2><span class="pill">실행 전 요청서</span></div>
             <p class="muted">도구를 바로 실행하지 않고, 어떤 도구를 왜 쓰려는지와 어떤 검증 자료가 필요한지 먼저 기록합니다.</p>
             <div class="form-grid">
@@ -2860,6 +3299,7 @@ function directorConsoleHtml() {
     let latestGoalPreview = null;
     const PAGES = {
       home: ["홈", "최근 작업, 직원 상태, 감독자 판단 대기 항목을 먼저 봅니다."],
+      toolbox: ["도구함", "직접 사용할 만한 유지보수 도구만 설명과 함께 실행합니다."],
       goals: ["목표 기획", "큰 목표를 부서, 직원, 회의, 업무 후보로 분해합니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
@@ -2881,7 +3321,7 @@ function directorConsoleHtml() {
       staffSearch: "",
       staffDepartment: "",
       meetingSearch: "",
-      meetingStatus: "",
+      meetingStatus: "__active__",
       runSearch: "",
       runStatus: "",
       workSearch: "",
@@ -2969,7 +3409,64 @@ function directorConsoleHtml() {
       if (!safety || typeof safety !== "object") return "";
       return reportSection("안전 상태", Object.keys(safety).map((key) => key + ": " + (safety[key] ? "yes" : "no")));
     }
+    function meaningfulMeetingItems(items) {
+      return asArray(items).filter((item) => {
+        const value = String(item || "");
+        return value && !value.includes("즉시 판단할 제안/우려/질문이 없습니다");
+      });
+    }
+    function meetingBoardLastTurnLine(turn) {
+      if (!turn || typeof turn !== "object") return "아직 기록된 발언이 없습니다.";
+      const speaker = staffName(turn.speaker_id || "");
+      const type = optionLabel(turn.turn_type || turn.type || "brief");
+      const content = short(turn.content || turn.summary || "", 160);
+      return [speaker, type, content].filter(Boolean).join(" · ");
+    }
+    function formatMeetingBoardLog(board, safety) {
+      if (!board || typeof board !== "object") return "";
+      const questions = asArray(board.remaining_questions);
+      const concerns = asArray(board.concerns_or_blockers);
+      const decisions = meaningfulMeetingItems(board.decision_candidates);
+      const handoffs = meaningfulMeetingItems(board.handoff_candidates);
+      const hasOpenItems = questions.length || concerns.length || decisions.length;
+      const nextSpeaker = board.next_speaker_id || board.next_speaker_recommendation || "";
+      const nextSpeakerLine = nextSpeaker
+        ? staffName(nextSpeaker) + (board.next_speaker_reason ? " - " + short(board.next_speaker_reason, 120) : "")
+        : "추천 발언자가 아직 없습니다.";
+      const safetyLines = [
+        "읽기 전용: 이 버튼은 회의 기록, task, git을 바꾸지 않습니다.",
+        safety?.read_only || board.safety?.read_only ? "검토용 카드입니다." : "상태 변경 가능성이 있으면 별도 버튼에서 다시 확인합니다.",
+      ];
+      return '<div class="item good">' +
+        '<h3>회의판</h3>' +
+        '<p class="summary">' + esc(board.current_meaning || "회의 상태와 다음 행동을 확인합니다.") + '</p>' +
+        reportSection("지금 상황", [
+          "회의: " + (board.meeting_id || board.topic || ""),
+          "상태: " + optionLabel(board.status || "draft"),
+          "발언 수: " + (board.turn_count ?? 0) + "개",
+          "마지막 발언: " + meetingBoardLastTurnLine(board.last_turn),
+          "다음 추천: " + nextSpeakerLine,
+        ]) +
+        reportSection("다음에 누를 것", board.director_next_actions || board.next_actions || []) +
+        (hasOpenItems
+          ? reportSection("남은 쟁점", [
+              ...questions.map((item) => "질문: " + item),
+              ...concerns.map((item) => "우려/막힘: " + item),
+              ...decisions.map((item) => "판단 후보: " + item),
+            ])
+          : reportSection("남은 쟁점", ["남은 질문, 우려, 즉시 판단할 제안이 없습니다."])) +
+        (handoffs.length ? reportSection("후속 업무 후보", handoffs) : reportSection("후속 업무 후보", ["후속 업무로 넘길 내용이 아직 명확하지 않습니다."])) +
+        reportSection("종료 전 확인", board.close_checklist || [
+          "핵심 역할이 필요한 관점을 냈는지 확인합니다.",
+          "결정할 내용과 후속 업무로 넘길 내용을 분리합니다.",
+          "공식 설정/canon 또는 구현 task로 확정하지 않았는지 확인합니다.",
+        ]) +
+        reportSection("안전 상태", safetyLines) +
+        rawJsonDetails({ meeting_board: board, safety: safety || board.safety }) +
+        '</div>';
+    }
     function formatDirectorReportLog(value) {
+      if (value?.meeting_board) return formatMeetingBoardLog(value.meeting_board, value.safety || value.meeting_board.safety);
       const specs = [
         {
           key: "director_goal_plan",
@@ -2993,6 +3490,20 @@ function directorConsoleHtml() {
             ["하지 않는 일", (r) => r.authority_boundary?.must_not_do],
             ["필수 산출물", (r) => r.output_contract?.required_outputs],
             ["검증 자료/품질 기준", (r) => r.evidence_and_quality?.required_evidence],
+          ],
+        },
+        {
+          key: "meeting_board",
+          title: "회의판",
+          status: [["회의", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
+          sections: [
+            ["다음 행동", "next_actions"],
+            ["남은 질문", "remaining_questions"],
+            ["우려/막는 항목", "concerns_or_blockers"],
+            ["판단 후보", "decision_candidates"],
+            ["후속 업무 후보", "handoff_candidates"],
+            ["회의 종료 기준", "close_criteria"],
+            ["감독자 체크리스트", "director_checklist"],
           ],
         },
         {
@@ -3124,11 +3635,11 @@ function directorConsoleHtml() {
         },
         {
           key: "director_surface_map",
-          title: "화면 구조 점검",
+          title: "Studio 화면 목록 점검",
           status: [["전체 화면", "total_surfaces"], ["사용자 화면", "human_director_surfaces"], ["내부 화면", "internal_surfaces"]],
           sections: [
-            ["권장 이동 순서", "recommended_home_order"],
-            ["주요 화면", "surfaces"],
+            ["사용자 화면", "director_surfaces"],
+            ["내부/관리자 화면", "internal_admin_surfaces"],
             ["제품 규칙", "product_rules"],
           ],
         },
@@ -3233,6 +3744,114 @@ function directorConsoleHtml() {
           rawJsonDetails(value) +
           '</div>';
       }
+      if (value?.toolbox_result) {
+        const result = value.toolbox_result;
+        const cardClass = value.ok ? "good" : "danger";
+        const outputLines = [
+          result.stdout ? "stdout:\\n" + result.stdout.trim() : "",
+          result.stderr ? "stderr:\\n" + result.stderr.trim() : "",
+        ].filter(Boolean);
+        return '<div class="item ' + cardClass + '"><h3>' + esc(result.label || "도구 실행 결과") + '</h3>' +
+          '<p class="summary">' + esc(result.summary || "") + '</p>' +
+          reportSection("실행 정보", [
+            "상태: " + (result.status || ""),
+            "명령: " + (result.command_display || ""),
+            result.exit_code !== undefined ? "종료 코드: " + result.exit_code : "",
+          ].filter(Boolean)) +
+          (outputLines.length ? '<h3>출력</h3><pre class="log-json">' + esc(outputLines.join("\\n\\n").slice(0, 12000)) + '</pre>' : "") +
+          (result.parsed_json ? '<details class="internal-links"><summary>JSON 결과</summary><pre class="log-json">' + esc(JSON.stringify(result.parsed_json, null, 2)) + '</pre></details>' : "") +
+          safetySection(value.safety) +
+          '</div>';
+      }
+      if (value?.command === "inspect" && value?.summary) {
+        const summary = value.summary || {};
+        const validation = value.validation || {};
+        return '<div class="item ' + (validation.ok ? "good" : "warn") + '"><h3>회의 상태 점검</h3>' +
+          '<p class="summary">선택한 회의 기록이 진행 가능한 상태인지 읽기 전용으로 확인했습니다.</p>' +
+          reportSection("현재 회의", [
+            "회의: " + (summary.meeting_id || ""),
+            "주제: " + (summary.topic || ""),
+            "종류: " + optionLabel(summary.meeting_type || ""),
+            "상태: " + optionLabel(summary.status || ""),
+            "의장: " + staffName(summary.chair_agent_id || ""),
+            "참가자: " + asArray(summary.participants).map(staffName).join(", "),
+          ]) +
+          reportSection("확인된 내용", [
+            "제안 " + (summary.proposal_count ?? 0) + "개",
+            "우려/반론 " + (summary.objection_count ?? 0) + "개",
+            "남은 질문 " + (summary.unresolved_question_count ?? 0) + "개",
+            "감독자 결정 " + (summary.director_decision_count ?? 0) + "개",
+          ]) +
+          reportSection("오류/경고", [...asArray(validation.errors), ...asArray(validation.warnings)], "오류나 경고가 없습니다.") +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.command === "handoff") {
+        return '<div class="item ' + (value.handoff_ready ? "good" : "warn") + '"><h3>회의 인수인계 보기</h3>' +
+          '<p class="summary">회의 결과를 후속 업무나 다른 AI 직원에게 넘길 준비가 됐는지 확인했습니다. 이 버튼은 읽기 전용이며 업무를 만들지 않습니다.</p>' +
+          reportSection("현재 회의", [
+            "회의: " + (value.meeting_id || ""),
+            "주제: " + (value.topic || ""),
+            "넘길 준비: " + (value.handoff_ready ? "가능" : "확인 필요"),
+          ]) +
+          reportSection("넘길 수 있는 내용", [
+            "후속 업무 후보 " + asArray(value.follow_up_workorders).length + "개",
+            "받아들인 방향 " + asArray(value.accepted_directions).length + "개",
+            "남은 질문 " + asArray(value.unresolved_questions).length + "개",
+            "감독자 결정 " + asArray(value.director_decisions).length + "개",
+          ]) +
+          reportSection("막는 항목", value.blocked_by, "막는 항목이 없습니다.") +
+          reportSection("다음 행동", value.next_actions) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.command === "add-turn") {
+        const turn = value.turn || {};
+        return '<div class="item good"><h3>내 발언 기록 완료</h3>' +
+          '<p class="summary">MeetingSession에 발언 1개를 저장했습니다. 이 작업은 회의 기록만 바꾸며 canon, task, git은 바꾸지 않습니다.</p>' +
+          reportSection("추가된 발언", [
+            "회의: " + (value.meeting_id || ""),
+            "기록 주체: " + staffName(turn.speaker_id || ""),
+            "종류: " + optionLabel(turn.turn_type || ""),
+            "내용: " + short(turn.content || "", 220),
+          ]) +
+          reportSection("현재 상태", [
+            "다음 회의 상태: " + optionLabel(value.next_status || ""),
+            "저장 파일: " + (value.path || ""),
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.staff_run && value?.meeting_id && Object.prototype.hasOwnProperty.call(value, "turn_appended")) {
+        const turn = value.added_turn || value.turn_result?.turn || {};
+        const appended = Boolean(value.turn_appended);
+        return '<div class="item ' + (appended ? "good" : "warn") + '"><h3>다음 AI 발언 결과</h3>' +
+          '<p class="summary">' + esc(appended
+            ? "AI 직원 의견이 MeetingSession 발언으로 추가되었습니다. canon, task, git은 바꾸지 않았습니다."
+            : "AI 직원 실행은 끝났지만 회의 발언으로 추가되지 않았습니다. 결과와 원본 JSON을 확인해야 합니다.") + '</p>' +
+          reportSection("바뀐 것", [
+            "회의: " + (value.meeting_id || ""),
+            "발언자: " + staffName(value.agent_id || turn.speaker_id || ""),
+            "발언 수: " + (value.before_turn_count ?? "?") + " -> " + (value.after_turn_count ?? "?"),
+            "AI 발언 추가: " + (appended ? "yes" : "no"),
+          ]) +
+          reportSection("추가된 발언", appended ? [
+            "종류: " + optionLabel(turn.turn_type || "synthesis"),
+            "내용: " + short(turn.content || "", 260),
+          ] : []) +
+          reportSection("바뀌지 않은 것", [
+            "공식 설정/canon 확정 없음",
+            "AIWorkflow task 생성/실행 없음",
+            "소스/데이터 수정 없음",
+            "commit/push 없음",
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
       if (value?.materialization || value?.command === "materialize") {
         const materialization = value.materialization || value;
         return '<div class="item ' + (value.command === "materialize" ? "good" : "warn") + '"><h3>' + (value.command === "materialize" ? "기록 후보를 기록함에 넣음" : "기록 후보 미리보기") + '</h3>' +
@@ -3258,14 +3877,28 @@ function directorConsoleHtml() {
       }
       return '<pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre>';
     }
+    function writeResult(html) {
+      const meetingPanel = el("meetingResultPanel");
+      const meetingBody = el("meetingResult");
+      if (activePage === "meetings" && meetingPanel && meetingBody) {
+        meetingBody.innerHTML = html;
+        meetingPanel.hidden = false;
+        meetingPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+        return;
+      }
+      const globalPanel = el("globalResultPanel");
+      const globalBody = el("globalResult");
+      if (globalPanel && globalBody) {
+        globalBody.innerHTML = html;
+        globalPanel.hidden = false;
+        globalPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+      }
+    }
     const log = (value) => {
       const rendered = typeof value === "string"
         ? '<div class="log-message">' + esc(value) + '</div>'
         : formatGenericLogObject(value);
-      el("log").innerHTML = rendered;
-      el("actionResult").innerHTML = rendered;
-      el("actionResultPanel").hidden = false;
-      el("actionResultPanel").scrollIntoView({ block:"nearest" });
+      writeResult(rendered);
     };
 
     async function api(path, options) {
@@ -3373,6 +4006,17 @@ function directorConsoleHtml() {
       const unique = Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
       return '<option value="">' + esc(allLabel) + '</option>' + unique.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
     }
+    function meetingStatusOptionList(meetings) {
+      const statuses = Array.from(new Set(asArray(meetings).map((meeting) => meeting.status).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
+      return '<option value="__active__">진행 중 회의만 보기</option>' +
+        '<option value="">전체 회의 보기</option>' +
+        statuses.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
+    }
+    function meetingMatchesStatusFilter(meeting) {
+      const status = String(meeting?.status || "");
+      if (filters.meetingStatus === "__active__") return status !== "closed" && status !== "cancelled";
+      return !filters.meetingStatus || status === filters.meetingStatus;
+    }
     function departmentOptionList(departments, allLabel) {
       const sorted = asArray(departments).slice().sort((a, b) => String(a.name_ko || a.department_id).localeCompare(String(b.name_ko || b.department_id)));
       return '<option value="">' + esc(allLabel) + '</option>' + sorted.map((department) =>
@@ -3384,6 +4028,92 @@ function directorConsoleHtml() {
       return '<option value="">' + esc(allLabel) + '</option>' + sorted.map((agent) =>
         '<option value="' + esc(agent.agent_id) + '">' + esc(agent.display_name_ko || agent.agent_id) + '</option>'
       ).join("");
+    }
+    const MEETING_TYPE_DETAILS = {
+      creative: "게임 아이디어, 세계관, 스토리, 컨셉을 논의합니다.",
+      technical: "Studio UX, 도구, 시스템, 구현 구조, 데이터/런타임을 논의합니다.",
+      production: "작업 분배, 일정, 우선순위, 진행 관리를 정리합니다.",
+      review: "결과물 검토, 완료 판단, 개선점을 정리합니다.",
+      qa_triage: "버그, 검증 이슈, 재현 조건, 우선순위를 분류합니다.",
+      postmortem: "작업 후 잘된 점, 문제, 다음 개선점을 돌아봅니다.",
+      release_readiness: "배포, 공유, 릴리즈 체크와 남은 위험을 점검합니다.",
+    };
+    const MEETING_PRESETS = [
+      { id:"studio_ux_tools", label:"Studio UX/도구 회의", type:"technical", chair:"executive_producer", participants:["executive_producer", "tools_engineer", "qa_tester"] },
+      { id:"game_design", label:"게임 기획 회의", type:"creative", chair:"game_designer", participants:["game_designer", "scenario_director", "executive_producer"] },
+      { id:"validation_bug", label:"검증/버그 회의", type:"qa_triage", chair:"qa_tester", participants:["qa_tester", "tools_engineer", "executive_producer"] },
+      { id:"release_ready", label:"릴리즈 준비 회의", type:"release_readiness", chair:"executive_producer", participants:["executive_producer", "documentation_keeper", "qa_tester"] },
+    ];
+    function meetingTypeOptionList() {
+      return Object.keys(MEETING_TYPE_DETAILS).map((value) =>
+        '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>'
+      ).join("");
+    }
+    function staffById(agentId) {
+      return (state?.staff_agents || []).find((item) => item.agent_id === agentId);
+    }
+    function staffChoiceLabel(agent) {
+      return agent?.display_name_ko || agent?.role_title_ko || agent?.display_name || agent?.role_title || agent?.agent_id || "";
+    }
+    function staffChoiceDetail(agent) {
+      const role = agent?.role_title_ko || agent?.role_title || "";
+      const department = departmentName(agent?.department_id || "");
+      return [role, department, agent?.agent_id].filter(Boolean).join(" · ");
+    }
+    function selectedMeetingParticipants() {
+      return Array.from(document.querySelectorAll("input[data-meeting-participant]:checked")).map((input) => input.value);
+    }
+    function renderMeetingTypeHelp() {
+      const type = fieldValue("meetingCreateType") || "creative";
+      el("meetingTypeHelp").innerHTML = '<strong>' + esc(optionLabel(type)) + '</strong><p class="small muted">' + esc(MEETING_TYPE_DETAILS[type] || "회의 목적에 맞게 논의 범위를 정합니다.") + '</p>';
+    }
+    function renderMeetingPresetButtons() {
+      el("meetingPresetButtons").innerHTML = MEETING_PRESETS.map((preset) =>
+        '<button class="secondary" data-meeting-preset="' + esc(preset.id) + '">' + esc(preset.label) + '</button>'
+      ).join("");
+    }
+    function renderMeetingParticipantPicker(selectedIds = selectedMeetingParticipants()) {
+      const selected = new Set(selectedIds);
+      const sorted = asArray(state.staff_agents).slice().sort((a, b) => staffChoiceLabel(a).localeCompare(staffChoiceLabel(b)));
+      el("meetingParticipantPicker").innerHTML = sorted.map((agent) =>
+        '<label class="staff-choice"><input type="checkbox" data-meeting-participant value="' + esc(agent.agent_id) + '"' + (selected.has(agent.agent_id) ? " checked" : "") + '>' +
+        '<span><strong>' + esc(staffChoiceLabel(agent)) + '</strong><span>' + esc(staffChoiceDetail(agent)) + '</span></span></label>'
+      ).join("");
+    }
+    function syncMeetingChairOptions(preferredChair = "") {
+      const participants = selectedMeetingParticipants();
+      const current = preferredChair || fieldValue("meetingCreateChair");
+      const options = participants.length
+        ? participants.map((agentId) => '<option value="' + esc(agentId) + '">' + esc(staffName(agentId)) + '</option>').join("")
+        : '<option value="">참가 직원을 먼저 선택하세요</option>';
+      el("meetingCreateChair").innerHTML = options;
+      if (participants.includes(current)) {
+        el("meetingCreateChair").value = current;
+      } else if (participants.length) {
+        el("meetingCreateChair").value = participants[0];
+      }
+      updateMeetingCreateImpact();
+    }
+    function updateMeetingCreateImpact() {
+      const participants = selectedMeetingParticipants();
+      const chair = fieldValue("meetingCreateChair");
+      const type = fieldValue("meetingCreateType") || "creative";
+      el("meetingCreateImpact").innerHTML =
+        '<strong>생성 시 기록되는 내용</strong>' +
+        '<ul class="small">' +
+        '<li>회의 종류: ' + esc(optionLabel(type)) + ' - ' + esc(MEETING_TYPE_DETAILS[type] || "") + '</li>' +
+        '<li>참가 직원: ' + esc(participants.length ? participants.map(staffName).join(", ") : "아직 선택 없음") + '</li>' +
+        '<li>의장: ' + esc(chair ? staffName(chair) : "아직 선택 없음") + '</li>' +
+        '<li>변경 범위: MeetingSession JSON만 생성합니다. canon/task/git은 바꾸지 않습니다.</li>' +
+        '</ul>';
+    }
+    function applyMeetingPreset(presetId) {
+      const preset = MEETING_PRESETS.find((item) => item.id === presetId);
+      if (!preset) return;
+      el("meetingCreateType").value = preset.type;
+      renderMeetingParticipantPicker(preset.participants);
+      syncMeetingChairOptions(preset.chair);
+      renderMeetingTypeHelp();
     }
     function optionLabel(value) {
       const labels = {
@@ -3400,7 +4130,7 @@ function directorConsoleHtml() {
         low:"낮음", medium:"중간", high:"높음", critical:"치명적",
         validation:"검증", implementation:"구현", documentation:"문서", data:"데이터", automation:"자동화", review_task:"리뷰",
         read:"읽기", write:"쓰기", execute:"실행", external:"외부 호출", destructive:"파괴적 작업",
-        human_director:"Human Director", staff_agent:"AI 직원", role_run:"직원 실행", work_order:"업무 지시", system:"시스템",
+      human_director:"Human Director (나)", staff_agent:"AI 직원", role_run:"직원 실행", work_order:"업무 지시", system:"시스템",
       };
       return labels[value] || value;
     }
@@ -3458,12 +4188,20 @@ function directorConsoleHtml() {
     function syncFilterControls() {
       el("staffDepartmentFilter").innerHTML = departmentOptionList(state.departments, "모든 부서");
       el("workDepartmentFilter").innerHTML = departmentOptionList(state.departments, "모든 부서");
-      el("meetingStatusFilter").innerHTML = optionList(state.meetings.map((meeting) => meeting.status), "모든 회의 상태");
+      el("meetingStatusFilter").innerHTML = meetingStatusOptionList(state.meetings);
       el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
       el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
-      el("meetingCreateType").innerHTML = fixedOptionList(["creative", "technical", "production", "review", "qa_triage", "postmortem", "release_readiness"]);
-      el("meetingCreateChair").innerHTML = staffOptionList(state.staff_agents, "의장 선택");
-      el("meetingTurnSpeaker").innerHTML = staffOptionList(state.staff_agents, "발언자 선택");
+      const selectedMeetingType = fieldValue("meetingCreateType") || "creative";
+      const selectedMeetingParticipantsBeforeRender = selectedMeetingParticipants();
+      const selectedMeetingChairBeforeRender = fieldValue("meetingCreateChair");
+      el("meetingCreateType").innerHTML = meetingTypeOptionList();
+      el("meetingCreateType").value = MEETING_TYPE_DETAILS[selectedMeetingType] ? selectedMeetingType : "creative";
+      renderMeetingTypeHelp();
+      renderMeetingPresetButtons();
+      renderMeetingParticipantPicker(selectedMeetingParticipantsBeforeRender);
+      syncMeetingChairOptions(selectedMeetingChairBeforeRender);
+      el("meetingTurnSpeaker").innerHTML = '<option value="human_director">Human Director (나)</option>';
+      el("meetingTurnSpeaker").value = "human_director";
       el("meetingTurnType").innerHTML = fixedOptionList(["brief", "proposal", "objection", "question", "answer", "synthesis", "decision_note"]);
       el("workCreateDepartment").innerHTML = departmentOptionList(state.departments, "담당 부서 선택");
       el("workCreateStatus").innerHTML = fixedOptionList(["director_review", "proposed", "draft", "approved_for_tasking"]);
@@ -3492,12 +4230,21 @@ function directorConsoleHtml() {
       return '<div class="empty">' + esc(text) + '</div>';
     }
     function meetingNextActionText(meeting) {
-      if (!meeting.is_stored) return "예시 회의입니다. 계속 쓰려면 먼저 회의 저장을 누르세요.";
-      if (meeting.status === "draft") return "회의 시작 또는 AI 의견 받기로 첫 관점을 모으세요.";
+      if (!meeting.is_stored) return "예시 회의입니다. 실제로 쓰려면 새 회의 만들기로 기록을 생성하세요.";
+      if (meeting.status === "draft") return "회의판을 보고 내 발언을 기록하거나 다음 AI 발언 받기로 첫 관점을 모으세요.";
       if (meeting.unresolved_count) return "남은 질문을 정리하고 담당 직원의 답변을 받으세요.";
       if (meeting.follow_up_count) return "후속 업무 지시를 확인하고 진행 여부를 결정하세요.";
       if (asArray(meeting.proposals).length) return "제안을 결정 기록 또는 후속 업무로 넘길지 판단하세요.";
-      return "회의 진행안을 보고 다음 발언, 후속 업무, 종료 중 하나를 고르세요.";
+      return "회의판을 보고 다음 발언, 후속 업무, 결정 기록, 종료 중 하나를 고르세요.";
+    }
+    function meetingLastTurnLine(meeting) {
+      const turn = meeting?.last_turn;
+      if (!turn || !turn.content) return "아직 기록된 발언이 없습니다.";
+      return staffName(turn.speaker_id || "") + " · " + optionLabel(turn.turn_type || "brief") + ": " + short(turn.content, 150);
+    }
+    function meetingCountLine(label, count, emptyLabel) {
+      const value = Number(count || 0);
+      return value ? label + " " + value + "개" : emptyLabel;
     }
     function setPage(page) {
       activePage = PAGES[page] ? page : "home";
@@ -3530,6 +4277,7 @@ function directorConsoleHtml() {
     function renderNavCounts() {
       const m = state.metrics;
       setNavCount("home", m.staff_runs + m.materializations + m.work_orders);
+      setNavCount("toolbox", state.toolbox?.tool_count || "");
       setNavCount("goals", state.director_goal_plans.length);
       setNavCount("project", state.project_profiles.length);
       setNavCount("inbox", buildDirectorDecisionItems().length);
@@ -3868,6 +4616,39 @@ function directorConsoleHtml() {
         ? items.map(renderDecisionCard).join("")
         : '<div class="item good"><h3>지금 바로 결정할 일 없음</h3><p class="summary">새 완료 검토, 승인 gate, 기록 후보, 제안, Git 변경이 생기면 여기에 우선순위와 이유가 함께 표시됩니다.</p></div>';
     }
+    function renderToolbox() {
+      const catalog = state.toolbox || { categories: [] };
+      const toolCard = (tool, primary = false) =>
+        '<div class="item toolbox-card ' + (tool.available ? "" : "danger") + '"><h3>' + esc(tool.label) + '</h3>' +
+        '<p class="summary">' + esc(tool.purpose) + '</p>' +
+        '<ul class="small">' +
+        '<li>언제 쓰나: ' + esc(tool.when_to_use) + '</li>' +
+        '<li>실행 명령: <code>' + esc(tool.command_display) + '</code></li>' +
+        '<li>안전: ' + esc(tool.safety) + '</li>' +
+        '</ul>' +
+        '<div class="row"><button class="' + (primary || tool.id.includes("restart") || tool.id.includes("upload") ? "warn" : "secondary") + '" data-toolbox-run="' + esc(tool.id) + '"' + (tool.confirm_message ? ' data-confirm="' + esc(tool.confirm_message) + '"' : '') + (tool.available ? "" : " disabled") + '>실행</button></div>' +
+        '</div>';
+      const primaryAction = (tool) =>
+        '<div class="item toolbox-primary-card ' + (tool.available ? "" : "danger") + '"><div>' +
+        '<h3>' + esc(tool.label) + '</h3>' +
+        '<p class="summary">' + esc(tool.purpose) + '</p></div>' +
+        '<button class="warn" data-toolbox-run="' + esc(tool.id) + '"' +
+        (tool.confirm_message ? ' data-confirm="' + esc(tool.confirm_message) + '"' : '') +
+        (tool.available ? "" : " disabled") + '>실행</button></div>';
+      const primaryTools = catalog.primary_tools || [];
+      const primaryHtml = primaryTools.length
+        ? '<section class="toolbox-primary">' + primaryTools.map(primaryAction).join("") + '</section>'
+        : "";
+      const secondaryHtml = catalog.categories.length
+        ? '<div class="toolbox-divider"><h2>가끔 쓰는 점검 도구</h2><p class="muted small">평소에는 거의 쓰지 않아도 됩니다. 작업대가 헷갈리거나 검증이 필요할 때만 사용하세요.</p></div>' +
+          '<section class="toolbox-grid secondary">' + catalog.categories.map((category) =>
+            '<div class="card toolbox-card toolbox-secondary-category"><h2>' + esc(category.category) + '</h2><div class="list">' +
+            category.tools.map((tool) => toolCard(tool, false)).join("") +
+            '</div></div>'
+          ).join("") + '</section>'
+        : "";
+      el("toolboxList").innerHTML = primaryHtml + secondaryHtml || renderEmpty("표시할 도구가 없습니다.");
+    }
     function render() {
       el("stamp").textContent = "updated " + new Date(state.generated_at).toLocaleString();
       const m = state.metrics;
@@ -3888,6 +4669,7 @@ function directorConsoleHtml() {
         metric("DevLog", m.dev_logs)
       ].join("");
       renderInbox();
+      renderToolbox();
       renderHomePanels();
       renderDirectorGoals();
       renderProjectDashboard();
@@ -3973,33 +4755,34 @@ function directorConsoleHtml() {
         internalLinksHtml([link("인수인계 원본", "/file?path=" + encodeURIComponent(h.path))]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 인수인계 후보가 없습니다.");
       const visibleMeetings = state.meetings.filter((meeting) =>
-        (!filters.meetingStatus || meeting.status === filters.meetingStatus) &&
+        meetingMatchesStatusFilter(meeting) &&
         includesText([meeting.meeting_id, meeting.topic, meeting.meeting_type, meeting.status].join(" "), filters.meetingSearch)
       );
       el("meetings").innerHTML = visibleMeetings.length ? visibleMeetings.map((meeting) =>
         '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(optionLabel(meeting.status)) + '</span></h3>' +
         '<p>' + esc(meeting.topic) + '</p>' +
         '<p class="small muted">종류 ' + esc(optionLabel(meeting.meeting_type || "(none)")) + ' · 출처 ' + esc(meeting.is_stored ? "저장됨" : "예시") + '</p>' +
-        '<p class="small muted">참석자 ' + esc(meeting.participant_count) + ' · 남은 질문 ' + esc(meeting.unresolved_count) + ' · 후속 작업 ' + esc(meeting.follow_up_count) + '</p>' +
-        '<p class="summary"><strong>다음 회의 행동:</strong> ' + esc(meetingNextActionText(meeting)) + '</p>' +
+        '<p class="small muted">참석자 ' + esc(meeting.participant_count) + ' · 발언 ' + esc(meeting.turn_count || 0) + ' · ' + esc(meetingCountLine("판단할 제안", asArray(meeting.proposals).length, "판단할 제안 없음")) + ' · ' + esc(meetingCountLine("미해결 질문", meeting.unresolved_count, "미해결 질문 없음")) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>최근 발언</span><span class="pill">' + esc(meeting.last_turn ? staffName(meeting.last_turn.speaker_id || "") : "없음") + '</span></div>' +
+        '<p class="summary">' + esc(meetingLastTurnLine(meeting)) + '</p>' +
+        '<div class="compact-line"><span>지금 할 일</span><span class="pill">다음 행동</span></div>' +
+        '<p class="summary">' + esc(meetingNextActionText(meeting)) + '</p>' +
+        '</div>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>참석자</span><span class="pill">' + esc(inlineList(asArray(meeting.participants).map(staffName))) + '</span></div>' +
-        '<div class="compact-line"><span>제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
+        '<div class="compact-line"><span>판단할 제안</span><span class="pill">' + esc(asArray(meeting.proposals).length ? asArray(meeting.proposals).length + "개" : "없음") + '</span></div>' +
         listHtml(meeting.proposals) +
-        '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(meeting.unresolved_count) + '</span></div>' +
+        '<div class="compact-line"><span>미해결 질문</span><span class="pill">' + esc(meeting.unresolved_count ? meeting.unresolved_count + "개" : "없음") + '</span></div>' +
         listHtml(meeting.unresolved_questions) +
         '</div>' +
         actionsHtml([
-          '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">발언 추가</button>',
-          button("회의 진행안", "meeting-facilitation-plan", meeting.path),
-          button("회의 운영판", "meeting-runbook", meeting.path),
-          button("AI 발언 계획", "meeting-agent-plan", meeting.path),
-          meeting.is_stored ? button("AI 의견 받기", "meeting-agent-run", meeting.path, "warn") : "",
-          button("후속 작업 만들기", "meeting-create-workorder", meeting.path, "good"),
+          meeting.is_stored ? button("다음 AI 발언 받기", "meeting-agent-run", meeting.path, "good") : "",
+          '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">직접 발언 추가</button>',
+          button("회의판 자세히", "meeting-board", meeting.path),
+          button("후속 작업 만들기", "meeting-create-workorder", meeting.path),
           button("결정으로 기록", "meeting-create-decision", meeting.path),
-          button("회의 상태 점검", "meeting-inspect", meeting.path),
-          button("인수인계 보기", "meeting-handoff", meeting.path),
-          meeting.is_stored ? button("회의 시작", "meeting-start", meeting.meeting_id, "good") + button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : button("회의 저장", "meeting-create", meeting.path, "good")
+          meeting.is_stored && meeting.status !== "closed" ? button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : ""
         ]) +
         internalLinksHtml([link("회의 원본", meeting.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.");
@@ -4293,12 +5076,14 @@ function directorConsoleHtml() {
     }
     async function createMeetingFromForm() {
       const topic = fieldValue("meetingCreateTopic");
+      const participants = selectedMeetingParticipants();
       if (!topic) return alert("회의 주제를 입력하세요.");
+      if (!participants.length) return alert("참가 직원을 한 명 이상 선택하세요.");
       if (!confirm("새 회의를 저장할까요? 회의 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/create", {
         topic,
         meeting_type: fieldValue("meetingCreateType") || "creative",
-        participants: fieldValue("meetingCreateParticipants"),
+        participants,
         chair_agent_id: fieldValue("meetingCreateChair"),
         agenda: fieldValue("meetingCreateAgenda"),
         known_constraints: fieldValue("meetingCreateConstraints"),
@@ -4307,10 +5092,10 @@ function directorConsoleHtml() {
     }
     async function addMeetingTurnFromForm() {
       const meetingId = fieldValue("meetingTurnId");
-      const speaker = fieldValue("meetingTurnSpeaker");
+      const speaker = "human_director";
       const content = fieldValue("meetingTurnContent");
-      if (!meetingId || !speaker || !content) return alert("회의 ID, 발언자, 발언 내용을 입력하세요.");
-      if (!confirm("회의 발언을 추가할까요? 발언 추가는 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
+      if (!meetingId || !content) return alert("회의 ID와 내 발언 내용을 입력하세요.");
+      if (!confirm("내 발언을 회의록에 기록할까요? 이 작업은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/add-turn", {
         meeting_id: meetingId,
         speaker_id: speaker,
@@ -4473,11 +5258,12 @@ function directorConsoleHtml() {
         log(await post("/api/studio/meeting/create-decision", { path:filePath, decision_type:"approve" }));
         await refresh();
       }
+      if (action === "meeting-board") return log(await post("/api/studio/meeting/board", { path:filePath }));
       if (action === "meeting-facilitation-plan") return log(await post("/api/studio/meeting/facilitation-plan", { path:filePath }));
       if (action === "meeting-runbook") return log(await post("/api/studio/meeting/runbook", { path:filePath }));
       if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "meeting-agent-run") {
-        if (!confirm("이 회의에 AI 직원 의견을 요청할까요? Codex 직원 실행을 호출하고, 저장된 회의라면 결과 요약을 새 발언으로 추가합니다. 결정/공식 설정/작업/git은 변경하지 않습니다.")) return;
+        if (!confirm("다음 AI 발언을 받을까요? Codex 직원 실행을 호출하고, 결과 요약을 새 회의 발언으로 추가합니다. 결정/공식 설정/task/git은 변경하지 않습니다.")) return;
         log(await post("/api/studio/meeting/agent-turn-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
         await refresh();
       }
@@ -4539,6 +5325,17 @@ function directorConsoleHtml() {
         runAction(target.dataset.action, target.dataset.path, target.dataset.decision).catch(log);
         return;
       }
+      const toolboxTarget = event.target.closest("button[data-toolbox-run]");
+      if (toolboxTarget) {
+        if (toolboxTarget.dataset.confirm && !confirm(toolboxTarget.dataset.confirm)) return;
+        post("/api/toolbox/run", { tool_id:toolboxTarget.dataset.toolboxRun }).then(log).catch(log);
+        return;
+      }
+      const meetingPresetTarget = event.target.closest("button[data-meeting-preset]");
+      if (meetingPresetTarget) {
+        applyMeetingPreset(meetingPresetTarget.dataset.meetingPreset);
+        return;
+      }
       const navTarget = event.target.closest("button[data-nav], button[data-nav-jump]");
       if (navTarget) {
         setPage(navTarget.dataset.nav || navTarget.dataset.navJump);
@@ -4563,7 +5360,11 @@ function directorConsoleHtml() {
       const meetingTurnTarget = event.target.closest("button[data-meeting-turn]");
       if (meetingTurnTarget) {
         el("meetingTurnId").value = meetingTurnTarget.dataset.meetingTurn;
+        el("meetingTurnSpeaker").value = "human_director";
         setPage("meetings");
+        writeResult('<div class="item"><h3>내 발언 기록 준비</h3><p class="summary">선택한 회의 ID를 입력칸에 넣었습니다. 내용을 적고 <strong>내 발언 기록</strong>을 누르면 Human Director 발언으로 MeetingSession에 저장됩니다.</p><ul class="small"><li>AI 직원에게 보내는 메시지가 아니라 회의록에 남기는 내 발언입니다.</li><li>canon 확정 없음</li><li>task 생성 없음</li><li>git 변경 없음</li></ul></div>');
+        el("meetingTurnContent").focus();
+        el("meetingTurnId").scrollIntoView({ behavior:"smooth", block:"center" });
         return;
       }
       const toolRunAdapterTarget = event.target.closest("button[data-toolrun-adapter]");
@@ -4581,6 +5382,20 @@ function directorConsoleHtml() {
         render();
       }
     });
+    document.addEventListener("change", (event) => {
+      if (event.target.matches("#meetingCreateType")) {
+        renderMeetingTypeHelp();
+        updateMeetingCreateImpact();
+        return;
+      }
+      if (event.target.matches("input[data-meeting-participant]")) {
+        syncMeetingChairOptions();
+        return;
+      }
+      if (event.target.matches("#meetingCreateChair")) {
+        updateMeetingCreateImpact();
+      }
+    });
     el("studioIntakeSubmit").addEventListener("click", () => submitStudioIntake().catch(log));
     el("goalPlanSubmit").addEventListener("click", () => previewDirectorGoalPlan().catch(log));
     el("goalStoreSubmit").addEventListener("click", () => storeDirectorGoalPlan().catch(log));
@@ -4594,7 +5409,6 @@ function directorConsoleHtml() {
     el("gitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
     el("gitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
     el("gitPushOnly").addEventListener("click", () => pushOnly().catch(log));
-    el("actionResultClose").addEventListener("click", () => { el("actionResultPanel").hidden = true; });
     el("diffGitSelectWorkflow").addEventListener("click", () => {
       document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
     });
@@ -4605,6 +5419,8 @@ function directorConsoleHtml() {
     el("diffGitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
     el("meetingCreateSubmit").addEventListener("click", () => createMeetingFromForm().catch(log));
     el("meetingTurnSubmit").addEventListener("click", () => addMeetingTurnFromForm().catch(log));
+    el("meetingResultClose").addEventListener("click", () => { el("meetingResultPanel").hidden = true; });
+    el("globalResultClose").addEventListener("click", () => { el("globalResultPanel").hidden = true; });
     el("workCreateSubmit").addEventListener("click", () => createWorkOrderFromForm().catch(log));
     el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
     el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
@@ -4926,7 +5742,9 @@ async function buildStaffOperatingPlan(repoRoot, agentId) {
 
 function buildMeetingPayload(body = {}) {
   const topic = requireStudioText(body.topic, "meeting topic");
-  const participants = listFromText(body.participants);
+  const participants = Array.isArray(body.participants)
+    ? body.participants.map((item) => String(item || "").trim()).filter(Boolean)
+    : listFromText(body.participants);
   const chair = String(body.chair_agent_id || participants[0] || "executive_producer").trim();
   const finalParticipants = Array.from(new Set([chair, ...participants].filter(Boolean)));
   const meetingId = makeStudioId("MEET", topic);
@@ -5180,6 +5998,81 @@ function buildMeetingRunbook(meeting = {}) {
       work_order_created: false,
       decision_written: false,
       canon_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
+function buildMeetingBoard(meeting = {}) {
+  const facilitation = buildMeetingFacilitationPlan(meeting);
+  const runbook = buildMeetingRunbook(meeting);
+  const participants = stringList(meeting.participants);
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const lastTurn = turns.length ? turns[turns.length - 1] : null;
+  const spoken = new Set(turns.map((turn) => String(turn.speaker_id || "").trim()).filter(Boolean));
+  const silentParticipants = participants.filter((id) => id && !spoken.has(id));
+  const nextSpeakerId = facilitation.next_speaker_recommendation || "";
+  const questions = stringList(meeting.unresolved_questions);
+  const concernsOrBlockers = Array.from(new Set([
+    ...stringList(facilitation.blockers),
+    ...stringList(runbook.blockers),
+  ]));
+  const decisionCandidates = stringList(runbook.decision_candidates);
+  const meaningfulDecisions = decisionCandidates.filter((item) => !/즉시 판단할 제안\/우려\/질문이 없습니다/.test(item));
+  const hasOpenItems = questions.length || concernsOrBlockers.length || meaningfulDecisions.length;
+  const currentMeaning = !turns.length
+    ? "아직 회의 발언이 없습니다. 먼저 첫 관점을 받을 차례입니다."
+    : silentParticipants.length
+      ? "아직 발언하지 않은 직원이 있습니다. 다음 관점을 받은 뒤 후속 업무나 결정으로 넘길지 판단합니다."
+      : hasOpenItems
+        ? "남은 질문, 우려, 판단 후보를 정리해야 합니다."
+        : "회의 결과를 후속 WorkOrder 또는 Decision으로 넘기거나 회의를 닫을지 판단하는 단계입니다.";
+  return {
+    meeting_board_id: makeStudioId("MB", meeting.meeting_id || meeting.topic || "meeting"),
+    meeting_id: meeting.meeting_id || "",
+    topic: meeting.topic || meeting.meeting_id || "meeting",
+    meeting_type: meeting.meeting_type || "",
+    status: meeting.status || "draft",
+    chair_agent_id: meeting.chair_agent_id || "",
+    participant_ids: participants,
+    turn_count: turns.length,
+    last_turn: lastTurn ? {
+      turn_id: lastTurn.turn_id || "",
+      speaker_id: lastTurn.speaker_id || "",
+      turn_type: lastTurn.turn_type || lastTurn.type || "",
+      content: lastTurn.content || lastTurn.summary || "",
+      created_at: lastTurn.created_at || lastTurn.timestamp || "",
+    } : null,
+    current_meaning: currentMeaning,
+    next_speaker_id: nextSpeakerId,
+    next_speaker_recommendation: nextSpeakerId,
+    next_speaker_reason: facilitation.next_speaker_reason,
+    director_next_actions: [
+      nextSpeakerId ? "다음 AI 발언 받기: 추천 직원의 다음 관점을 회의에 추가" : "내 발언 기록: Human Director 의견을 회의록에 기록",
+      "회의를 더 이어가려면: 직접 발언 추가 또는 다음 AI 발언 받기",
+      hasOpenItems ? "쟁점이 정리되면: 결정으로 기록 또는 후속 작업 만들기" : "논의가 충분하면: 후속 작업 만들기, 결정으로 기록, 또는 회의 종료",
+    ],
+    next_actions: facilitation.recommended_actions,
+    remaining_questions: questions,
+    concerns_or_blockers: concernsOrBlockers,
+    decision_candidates: decisionCandidates,
+    handoff_candidates: stringList(runbook.handoff_candidates),
+    close_criteria: stringList(runbook.close_criteria),
+    close_checklist: [
+      "필요한 역할의 발언이 빠지지 않았는지 확인합니다.",
+      "결정할 내용과 후속 업무로 넘길 내용을 분리합니다.",
+      "회의 결과가 바로 canon/task/git으로 굳지 않았는지 확인합니다.",
+    ],
+    director_checklist: stringList(runbook.director_checklist),
+    safety: {
+      read_only: true,
+      meeting_written: false,
+      staff_run_started: false,
+      work_order_created: false,
+      decision_written: false,
+      canon_changed: false,
+      task_state_changed: false,
       commit_or_push: false,
     },
     created_at: studioTimestampParts().iso,
@@ -5835,7 +6728,7 @@ async function buildStudioSmokeReport(repoRoot) {
     recommended_manual_smoke: [
       "홈에서 현재 할 일을 확인합니다.",
       "목표 기획에서 기획안 미리보기를 실행합니다.",
-      "회의실에서 회의 진행안을 봅니다.",
+      "회의실에서 회의판을 봅니다.",
       "지식/결정에서 전환 계획을 봅니다.",
       "프로젝트에서 실행 준비 점검을 봅니다.",
       "검증 자료에서 완료 판단안을 봅니다.",
@@ -5854,18 +6747,19 @@ function buildDirectorSurfaceMap() {
   const surfaces = [
     ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 검증 자료 확인"], false],
     ["goals", "목표 기획", "Human Director", "큰 목표를 부서, 직원, 회의, 업무 후보로 쪼갭니다.", ["기획안 미리보기", "기획안 저장", "후보 생성"], false],
-    ["project", "프로젝트", "Human Director / Producer", "현재 프로젝트와 실행 경계를 확인합니다.", ["실행 준비 점검", "프로젝트 프로필 확인"], false],
     ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 기록, 커밋 판단 후보를 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "기록 후보 결정", "commit/push 판단"], false],
-    ["departments", "부서", "Human Director / Producer", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/회의 이동"], false],
-    ["staff", "AI 직원", "Human Director", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "회의/업무 이동"], false],
-    ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 후속 업무, 결정을 정리합니다.", ["회의 진행안", "회의 운영판", "발언 추가", "후속 업무 생성"], false],
+    ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 후속 업무, 결정을 정리합니다.", ["회의판 자세히", "내 발언 기록", "다음 AI 발언 받기", "후속 업무 생성"], false],
     ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 기록 후보로 넘깁니다.", ["보고서 만들기", "기록 후보 보기", "기록함에 넣기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
     ["knowledge", "지식/결정", "Human Director / Documentation Keeper", "제안, 결정, 기억, canon 후보를 구분합니다.", ["전환 계획", "Canon 충돌 점검", "제안/기억/결정 원본 확인"], false],
-    ["timeline", "실행 타임라인", "Human Director / Producer", "회의, 업무, 직원 보고서, Runner 기록을 시간순으로 봅니다.", ["관련 화면 이동", "원본 기록 확인"], false],
-    ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
+    ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
+    ["toolbox", "도구함", "Human Director / Maintainer", "자주 쓰는 유지보수 도구만 실행합니다.", ["Studio 재시작", "Discord bot 재시작", "리소스 업로드", "점검 도구 실행"], false],
+    ["project", "프로젝트", "참고/추적", "현재 프로젝트와 실행 경계를 확인합니다.", ["실행 준비 점검", "프로젝트 프로필 확인"], false],
+    ["departments", "부서", "참고/추적", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/회의 이동"], false],
+    ["staff", "AI 직원", "참고/추적", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "회의/업무 이동"], false],
+    ["timeline", "실행 타임라인", "참고/추적", "회의, 업무, 직원 보고서, Runner 기록을 시간순으로 봅니다.", ["관련 화면 이동", "원본 기록 확인"], false],
     ["systems", "시스템", "관리자/내부", "도구 adapter와 도구 요청 경계를 점검합니다.", ["실행 준비 점검", "도구 요청서 작성"], true],
     ["policy", "정책", "관리자/내부", "승인 영향과 자동 진행 준비도를 점검합니다.", ["승인 영향 점검", "자동 진행 준비도"], true],
   ].map(([page_id, label, audience, purpose, actions, internal]) => ({
@@ -5876,15 +6770,21 @@ function buildDirectorSurfaceMap() {
     primary_actions: actions,
     internal_or_admin: internal,
   }));
+  const surfaceLine = (surface) =>
+    `${surface.label}: ${surface.purpose} 할 일: ${surface.primary_actions.join(", ")}`;
+  const directorSurfaces = surfaces.filter((item) => !item.internal_or_admin).map(surfaceLine);
+  const internalSurfaces = surfaces.filter((item) => item.internal_or_admin).map(surfaceLine);
 
   return {
     director_surface_map_id: makeStudioId("DSM", "director-surfaces"),
-    current_meaning: "Studio 화면이 사람용 작업대인지 내부/관리자용인지 구분하고, 각 화면에서 무엇을 해야 하는지 보여주는 읽기 전용 지도입니다.",
+    current_meaning: "Studio 화면 구성이 의도대로 정리되어 있는지 확인하는 내부용 점검입니다. 일반 작업 중 매번 볼 필요는 없습니다.",
     total_surfaces: surfaces.length,
     human_director_surfaces: surfaces.filter((item) => !item.internal_or_admin).length,
     internal_surfaces: surfaces.filter((item) => item.internal_or_admin).length,
-    recommended_home_order: ["home", "goals", "inbox", "meetings", "work", "knowledge", "evidence", "diff"],
+    recommended_home_order: ["home", "goals", "inbox", "meetings", "runs", "work", "knowledge", "evidence", "diff", "devlog", "toolbox"],
     surfaces,
+    director_surfaces: directorSurfaces,
+    internal_admin_surfaces: internalSurfaces,
     product_rules: [
       "Human Director가 매일 쓰는 화면은 사이드바 기본 영역에 둡니다.",
       "내부/관리자용 화면은 접힌 내부 도구 아래에 둡니다.",
@@ -6018,7 +6918,7 @@ function buildStudioEvalPlan() {
     manual_director_checks: [
       "홈에서 다음 행동이 이해되는지 확인합니다.",
       "목표 기획에서 후보가 실행이 아니라 기획 기록으로 보이는지 확인합니다.",
-      "회의실에서 회의 운영판과 후속 업무 흐름이 보이는지 확인합니다.",
+      "회의실에서 회의판과 후속 업무 흐름이 보이는지 확인합니다.",
       "업무 지시에서 인수인계 점검, 직원 자료, 직원 실행 계획 차이가 보이는지 확인합니다.",
       "검증 자료에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
       "변경 검토에서 선택 commit/push만 가능하다는 점이 보이는지 확인합니다.",
@@ -6179,20 +7079,28 @@ async function buildWorkOrderHandoffPlan(repoRoot, workOrder = {}) {
 function buildDecisionFromMeetingPayload(meeting = {}, decisionType = "approve") {
   const topic = requireStudioText(meeting.topic || meeting.meeting_id, "meeting topic");
   const accepted = stringList(meeting.accepted_directions);
+  const proposals = stringList(meeting.proposals);
   const rejected = [
     ...stringList(meeting.rejected_directions),
     ...stringList(meeting.objections),
   ];
   const unresolved = stringList(meeting.unresolved_questions);
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const lastTurn = turns[turns.length - 1] || null;
+  const fallbackAcceptedScope = [
+    `회의 주제 검토: ${topic}`,
+    lastTurn?.content ? `마지막 발언 참고: ${shortText(lastTurn.content, 240)}` : "",
+  ].filter(Boolean);
+  const acceptedScope = accepted.length ? accepted : (proposals.length ? proposals : fallbackAcceptedScope);
   return {
     decision_id: makeStudioId("DEC", meeting.meeting_id || topic),
     decision_maker: "human_director",
     decision_type: decisionType,
     target_ref: meeting.meeting_id || "meeting",
     decision_summary: accepted.length
-      ? `Meeting direction accepted for director tracking: ${accepted.join("; ")}`
-      : `Director reviewed meeting outcome for: ${topic}`,
-    accepted_scope: accepted.length ? accepted : stringList(meeting.proposals),
+      ? `회의에서 합의된 방향을 기록합니다: ${accepted.join("; ")}`
+      : `회의 결과를 감독자 판단 기록으로 남깁니다: ${topic}`,
+    accepted_scope: acceptedScope,
     rejected_scope: rejected,
     conditions: unresolved.length ? unresolved.map((item) => `아직 미해결: ${item}`) : ["구현, 공식 설정, task done, commit, push는 별도 gate가 필요합니다."],
     timestamp: studioTimestampParts().iso,
@@ -6204,7 +7112,10 @@ function resolveMeetingAgent(meeting, requestedAgentId = "") {
   const requested = String(requestedAgentId || "").trim();
   if (requested) return requested;
   const participants = stringList(meeting.participants);
-  return participants.find((id) => !["human_director", "executive_producer"].includes(id)) || participants[0] || "creative_director";
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const spoken = new Set(turns.map((turn) => String(turn.speaker_id || "").trim()).filter(Boolean));
+  const staffParticipants = participants.filter((id) => !["human_director", "executive_producer"].includes(id));
+  return staffParticipants.find((id) => !spoken.has(id)) || staffParticipants[0] || participants[0] || "creative_director";
 }
 
 function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
@@ -6225,6 +7136,7 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
     assigned_agents: [speaker],
     scope: [
       `Contribute to the meeting topic: ${topic}`,
+      "Write the meeting contribution in natural Korean for the Human Director.",
       ...agenda.map((item) => `Address agenda: ${item}`),
       ...proposals.map((item) => `React to proposal: ${item}`),
       ...objections.map((item) => `Respect objection: ${item}`),
@@ -6232,6 +7144,7 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
     ],
     non_goals: [
       "Do not finalize meeting decisions.",
+      "Do not write English meeting summaries unless an English code identifier, command, file path, or schema key is required.",
       "공식 설정을 생성하거나 승인하지 않습니다.",
       "Do not create tasks, modify source/data/assets, mark done, commit, or push.",
       ...constraints.map((item) => `Keep constraint: ${item}`),
@@ -6240,7 +7153,7 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
     approval_items: [{
       type: "meeting_turn",
       plain_language_summary: `Ask ${speaker} for one role-scoped meeting contribution.`,
-      what_will_change: ["A new meeting turn may be appended to the stored MeetingSession."],
+      what_will_change: ["A new Korean meeting turn may be appended to the stored MeetingSession."],
       what_will_not_change: ["소스/데이터/공식 설정/task/git 상태 변경은 승인되지 않았습니다."],
       files_or_memory_affected: [meeting.minutes_artifact || `_Docs/AIWorkflow/Studio/MeetingSessions/${meeting.meeting_id}.json`],
       risks: ["The staff contribution may need Human Director review before it becomes a decision."],
@@ -6250,6 +7163,7 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
     evidence_requirements: [meeting.meeting_id || "meeting", speaker],
     verification_plan: [
       "Confirm the generated contribution stays inside the agent role and meeting topic.",
+      "Confirm the meeting contribution is written in natural Korean except for required IDs, commands, paths, or schema keys.",
       "결정, 공식 설정, task, 소스, commit, push 실행이 암시되지 않았는지 확인합니다.",
     ],
     handoff_plan: [`${speaker} contributes one meeting turn for Human Director review.`],
@@ -6324,13 +7238,17 @@ function extractMeetingTurnFromStaffRun(repoRoot, runResult) {
   const parts = [];
   if (output.plain_language_summary) parts.push(output.plain_language_summary);
   if (Array.isArray(output.proposals) && output.proposals.length) {
-    parts.push("Proposals: " + output.proposals.map((item) => item.title || item.summary || item.proposal_id || "").filter(Boolean).join("; "));
+    parts.push("제안: " + output.proposals.map((item) => item.title || item.summary || item.proposal_id || "").filter(Boolean).join("; "));
   }
   if (Array.isArray(output.approval_items) && output.approval_items.length) {
-    parts.push("Approval needed: " + output.approval_items.map((item) => item.summary || item.title || String(item)).join("; "));
+    parts.push("승인 필요: " + output.approval_items.map((item) => item.plain_language_summary || item.summary || item.title || String(item)).join("; "));
   }
-  if (Array.isArray(output.open_questions) && output.open_questions.length) {
-    parts.push("Open questions: " + output.open_questions.map((item) => item.question || String(item)).join("; "));
+  const questions = Array.isArray(output.questions) ? output.questions : output.open_questions;
+  if (Array.isArray(questions) && questions.length) {
+    parts.push("남은 질문: " + questions.map((item) => item.question || String(item)).join("; "));
+  }
+  if (Array.isArray(output.objections) && output.objections.length) {
+    parts.push("우려/반론: " + output.objections.map((item) => item.summary || item.reason || String(item)).join("; "));
   }
   return parts.filter(Boolean).join("\n");
 }
@@ -6367,9 +7285,19 @@ function buildToolRunRequestPayload(body) {
   };
 }
 
-async function handleApi(repoRoot, req, res, parsedUrl) {
+async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
   if (req.method === "GET" && parsedUrl.pathname === "/api/summary") {
     return sendJson(res, 200, await getSummary(repoRoot));
+  }
+
+  if (req.method === "GET" && parsedUrl.pathname === "/api/toolbox/catalog") {
+    return sendJson(res, 200, { ok: true, toolbox: buildToolboxCatalog(repoRoot) });
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/toolbox/run") {
+    const body = await readRequestJson(req);
+    const result = await runToolboxTool(repoRoot, String(body.tool_id || ""), serverContext);
+    return sendJson(res, result.ok ? 200 : 500, result);
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/dashboard/export") {
@@ -6668,6 +7596,7 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const content = requireStudioText(body.content, "turn content");
     if (!/^[A-Za-z0-9_.:-]+$/u.test(meetingId)) throw new Error("Invalid meeting_id.");
     if (!/^[A-Za-z0-9_.:-]+$/u.test(speakerId)) throw new Error("Invalid speaker_id.");
+    const contentPath = await writeTempStudioText(repoRoot, "meeting-turn", content);
     const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.ps1");
     const result = await runTool(repoRoot, "powershell.exe", [
       "-NoProfile",
@@ -6681,10 +7610,14 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
       meetingId,
       speakerId,
       turnType,
-      content,
+      "--content-file",
+      contentPath,
       "--execute",
       "--json",
     ], 120000);
+    if (result.json?.ok && result.json?.turn) {
+      result.json.turn.content = content;
+    }
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
   }
 
@@ -6755,6 +7688,17 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     });
   }
 
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/board") {
+    const body = await readRequestJson(req);
+    const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const payload = buildMeetingBoard(meeting);
+    return sendJson(res, 200, {
+      ok: true,
+      meeting_board: payload,
+      safety: payload.safety,
+    });
+  }
+
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/runbook") {
     const body = await readRequestJson(req);
     const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
@@ -6775,19 +7719,54 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
     const contextResult = await runTool(repoRoot, "powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", contextScript, "-RepoRoot", repoRoot, "plan", agentId, workOrderPath, "--memory-query", meeting.topic || "", "--json"], 120000);
     if (!contextResult.ok || !contextResult.json?.context_packet) {
-      return sendJson(res, 500, contextResult.json || contextResult);
+      return sendJson(res, 200, {
+        ok: true,
+        meeting_id: meeting.meeting_id || "",
+        agent_id: agentId,
+        work_order_path: workOrderPath,
+        context_available: false,
+        staff_plan: {
+          ok: false,
+          status: "context_unavailable",
+          current_meaning: "직원 발언 계획에 필요한 문맥 묶음을 만들지 못했습니다. 회의 기록은 유지되며, canon/task/git은 바뀌지 않았습니다.",
+          next_actions: [
+            "회의를 계속하려면 직접 발언 추가를 사용하세요.",
+            "AI 직원 발언이 필요하면 직원 registry와 context builder 상태를 먼저 확인하세요.",
+          ],
+          error: contextResult.stderr || contextResult.stdout || "context builder plan failed",
+        },
+        safety: {
+          meeting_turn_written: false,
+          source_changed: false,
+          task_state_changed: false,
+          git_changed: false,
+        },
+      });
     }
     const contextPath = await writeTempStudioInput(repoRoot, "context_packet", contextResult.json.context_packet);
     const staffExecutor = repoPath(repoRoot, "tools/aiworkflow/studio_staff_executor.bat");
     const staffPlan = await runTool(repoRoot, staffExecutor, ["plan", contextPath, "--model", body.model || "gpt-5.5", "--reasoning", body.reasoning || "high", "--ephemeral", "--json"], 120000);
-    return sendJson(res, staffPlan.ok ? 200 : 500, {
-      ok: staffPlan.ok,
+    const safeStaffPlan = staffPlan.ok
+      ? (staffPlan.json || staffPlan)
+      : {
+          ok: false,
+          status: "executor_plan_unavailable",
+          current_meaning: "직원 실행 계획을 만들지 못했습니다. 회의 기록과 문맥 묶음은 준비됐지만, 직원 실행 도구 쪽 점검이 필요합니다.",
+          next_actions: [
+            "회의를 계속하려면 직접 발언 추가를 사용하세요.",
+            "AI 직원 발언이 꼭 필요하면 staff executor 상태를 먼저 확인하세요.",
+          ],
+          error: staffPlan.stderr || staffPlan.stdout || "staff executor plan failed",
+        };
+    return sendJson(res, 200, {
+      ok: true,
       meeting_id: meeting.meeting_id || "",
       agent_id: agentId,
       work_order_path: workOrderPath,
       context_path: contextPath,
       context_packet: contextResult.json.context_packet,
-      staff_plan: staffPlan.json || staffPlan,
+      staff_plan: safeStaffPlan,
+      executor_plan_available: staffPlan.ok,
       safety: {
         meeting_turn_written: false,
         source_changed: false,
@@ -6800,6 +7779,7 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
   if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/agent-turn-run") {
     const body = await readRequestJson(req);
     const { json: meeting, relativePath } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+    const beforeTurnCount = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns.length : 0;
     const agentId = resolveMeetingAgent(meeting, body.agent_id);
     const workOrder = buildMeetingAgentTurnWorkOrder(meeting, agentId);
     const workOrderPath = await writeTempStudioInput(repoRoot, "meeting_turn_workorder", workOrder);
@@ -6816,6 +7796,7 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
     const canAppendTurn = slash(relativePath).startsWith("_Docs/AIWorkflow/Studio/MeetingSessions/");
     const turnContent = staffRun.ok ? extractMeetingTurnFromStaffRun(repoRoot, runJson) : "";
     if (canAppendTurn && turnContent) {
+      const turnContentPath = await writeTempStudioText(repoRoot, "meeting-agent-turn", turnContent);
       const meetingScript = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.ps1");
       const turn = await runTool(repoRoot, "powershell.exe", [
         "-NoProfile",
@@ -6829,20 +7810,27 @@ async function handleApi(repoRoot, req, res, parsedUrl) {
         meeting.meeting_id || "",
         agentId,
         "synthesis",
-        turnContent,
+        "--content-file",
+        turnContentPath,
         "--execute",
         "--json",
       ], 120000);
       turnResult = turn.json || turn;
+      if (turnResult?.ok && turnResult?.turn) {
+        turnResult.turn.content = turnContent;
+      }
     }
     return sendJson(res, staffRun.ok ? 200 : 500, {
       ok: staffRun.ok,
       meeting_id: meeting.meeting_id || "",
       agent_id: agentId,
+      before_turn_count: beforeTurnCount,
+      after_turn_count: beforeTurnCount + (turnResult?.ok ? 1 : 0),
       work_order_path: workOrderPath,
       context_path: contextPath,
       staff_run: runJson || staffRun,
       turn_appended: Boolean(turnResult?.ok),
+      added_turn: turnResult?.turn || null,
       turn_result: turnResult,
       safety: {
         meeting_turn_written: Boolean(turnResult?.ok),
@@ -7236,6 +8224,25 @@ async function listenWithPortFallback(server, host, requestedPort, maxAttempts =
   throw error;
 }
 
+function processExists(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForProcessExit(pid, timeoutMs = 8000) {
+  const started = Date.now();
+  while (processExists(pid)) {
+    if (Date.now() - started > timeoutMs) {
+      throw new Error(`Timed out waiting for previous Studio process to exit: ${pid}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+}
+
 async function writeStudioServerState(repoRoot, state) {
   const dir = repoPath(repoRoot, "_Temp/AIWorkflowStudio");
   await fsp.mkdir(dir, { recursive: true });
@@ -7244,7 +8251,15 @@ async function writeStudioServerState(repoRoot, state) {
 
 async function startServer(options) {
   const repoRoot = path.resolve(options.repoRoot);
+  if (options.waitForPid) {
+    await waitForProcessExit(options.waitForPid);
+  }
   let activePort = options.port;
+  const serverContext = {
+    host: options.host,
+    requestedPort: options.port,
+    activePort: options.port,
+  };
   const server = http.createServer(async (req, res) => {
     try {
       const parsedUrl = new URL(req.url, `http://${options.host}:${activePort}`);
@@ -7257,7 +8272,7 @@ async function startServer(options) {
         });
       }
       if (parsedUrl.pathname.startsWith("/api/")) {
-        return await handleApi(repoRoot, req, res, parsedUrl);
+        return await handleApi(repoRoot, req, res, parsedUrl, serverContext);
       }
       return sendJson(res, 404, { ok: false, error: "Not found" });
     } catch (error) {
@@ -7267,6 +8282,7 @@ async function startServer(options) {
 
   const listen = await listenWithPortFallback(server, options.host, options.port);
   activePort = listen.port;
+  serverContext.activePort = activePort;
   const url = `http://${options.host}:${activePort}/`;
   await writeStudioServerState(repoRoot, {
     url,

@@ -126,7 +126,7 @@ function New-OutputSkeleton {
         role_run_id = [string]$Context.role_run_id
         agent_id = [string]$Context.agent_id
         status = "output_ready | needs_director_decision | needs_evidence | handoff_requested | blocked | failed"
-        plain_language_summary = "Short summary for the Human Director."
+        plain_language_summary = "Human Director가 바로 읽을 수 있는 짧은 한국어 요약."
         proposals = @()
         objections = @()
         questions = @()
@@ -224,6 +224,16 @@ this prompt.
 ## Required Outputs
 
 $(Render-Bullets -Items $Context.required_outputs)
+
+## Language Policy
+
+- Write all user-facing content in Korean by default.
+- Meeting turns must be natural Korean, not English summaries.
+- Keep IDs, file paths, schema keys, command names, and code identifiers in
+  their original English form.
+- If you must mention an English technical term, explain its meaning briefly
+  in Korean.
+- Do not output mojibake, replacement characters, or unreadable encoded text.
 
 ## Quality Criteria
 

@@ -110,6 +110,14 @@ function Invoke-CapturedProcess {
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.RedirectStandardInput = (-not [string]::IsNullOrEmpty($StandardInputText))
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    try { $psi.StandardOutputEncoding = $utf8NoBom } catch {}
+    try { $psi.StandardErrorEncoding = $utf8NoBom } catch {}
+    try {
+        if ($psi.RedirectStandardInput) {
+            $psi.StandardInputEncoding = $utf8NoBom
+        }
+    } catch {}
 
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $psi
@@ -209,11 +217,12 @@ function Invoke-CodexCli {
 
     $commandLiteral = ConvertTo-PowerShellSingleQuoted -Value $Command
     $argsLiteral = ConvertTo-PowerShellArrayLiteral -Values $ArgumentsList
+    $encodingSetup = "[Console]::InputEncoding = [System.Text.Encoding]::UTF8; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; `$OutputEncoding = [System.Text.Encoding]::UTF8;"
     if ([string]::IsNullOrWhiteSpace($PromptPath)) {
-        $script = "`$codexArgs = $argsLiteral; & $commandLiteral @codexArgs"
+        $script = "$encodingSetup `$codexArgs = $argsLiteral; & $commandLiteral @codexArgs"
     } else {
         $promptLiteral = ConvertTo-PowerShellSingleQuoted -Value $PromptPath
-        $script = "`$codexArgs = $argsLiteral; `$prompt = Get-Content -Raw -LiteralPath $promptLiteral; `$prompt | & $commandLiteral @codexArgs"
+        $script = "$encodingSetup `$codexArgs = $argsLiteral; `$prompt = [System.IO.File]::ReadAllText($promptLiteral, [System.Text.Encoding]::UTF8); `$prompt | & $commandLiteral @codexArgs"
     }
     $result = Invoke-CapturedProcess -FileName "powershell.exe" -ArgumentsList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $script) -WorkingDirectory $WorkingDirectory -TimeoutSeconds $TimeoutSeconds
     $result.command_line = ("powershell.exe -NoProfile -ExecutionPolicy Bypass -Command " + $script)

@@ -31,6 +31,8 @@ This README is the entry point for the document set.
 | `Guide/AIWorkflow_User_Guide_KR.html` | Complete browser-readable Korean Human Director user guide for the current Discord-first PC Runner workflow |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |
+| `FinalBlueprint/WF_Studio_Control_Plane_Repositioning_Audit.md` | Repositions Studio as the Human Director Control Plane and classifies Studio, external-tool, internal/admin, and legacy Discord responsibilities |
+| `FinalBlueprint/WF_Studio_Control_Plane_Repositioning_Audit_KR.md` | Korean Human Director companion for the Studio Control Plane repositioning audit and productivity-based redesign plan |
 | `Studio/README.md` | First durable Studio implementation slice: domain model, schemas, read-only staff registry, WorkOrder bridge, staff context/output contract, canon decision flow, memory policy, and runtime contracts |
 | `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |
