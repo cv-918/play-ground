@@ -18,15 +18,18 @@ protected:
 
 public:
 	void SetRadius(_float _radius_x, _float _y_ratio = 0.6f) { radius_x_ = _radius_x; y_ratio_ = _y_ratio; radius_y_ = radius_x_ * y_ratio_; }
+	void SetCenterOffset(const _Vector2& _offset) { center_offset_ = _offset; }
 
 	_Vector3 GetCenter() const { return center_; }
 	_float GetRadiusX() const { return radius_x_; }
 	_float GetYRatio() const { return y_ratio_; }
+	_Vector2 GetCenterOffset() const { return center_offset_; }
 
 private:
 	_float radius_x_ = 0.f;
 	_float radius_y_ = 0.f; // 내부적으로 계산되는 Y축 반지름 (radius_x_ * y_ratio_)
 	_float y_ratio_ = 0.f;
+	_Vector2 center_offset_ = _Vector2::Zero();
 	_Vector3 center_;
 };
 

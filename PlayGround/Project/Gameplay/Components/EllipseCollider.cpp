@@ -13,6 +13,8 @@ _int EllipseCollider::LateUpdate(_double _delta_time)
 
 	// 캐릭터의 발밑을 중심으로 설정 (피봇 조절)
 	_Vector3 pos = transform_->Position();
+	pos.x += center_offset_.x;
+	pos.y += center_offset_.y;
 	// 타원의 높이 절반만큼 위로 올려서 중심 잡기 (시각적 일치감)
 	//pos.y -= (radius_x_ * y_ratio_);
 	center_ = _CameraMgr.WorldToScreen(pos);

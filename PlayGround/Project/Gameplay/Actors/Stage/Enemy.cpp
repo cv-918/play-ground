@@ -17,6 +17,7 @@ namespace
 	constexpr _double ENEMY_DEATH_FADE_DURATION = 1.0;
 	constexpr _float ENEMY_FLIP_DIRECTION_EPSILON = 0.01f;
 	constexpr _float ENEMY_DEFAULT_COLLIDER_Y_RATIO = 0.6f;
+	constexpr _float ENEMY_COMBAT_COLLIDER_WIDTH_RATIO = 0.35f;
 	constexpr _float TANK_WANDER_RADIUS = 220.f;
 	constexpr _float TANK_WANDER_MIN_TARGET_DISTANCE = 42.f;
 	constexpr _float TANK_WANDER_ARRIVE_DISTANCE = 24.f;
@@ -477,14 +478,16 @@ void Enemy::_BuildAbilities()
 
 void Enemy::_ConfigureCombatColliders()
 {
-	const auto body_radius_x = std::max(1.f, info_->body_size_ * 0.5f);
+	const auto body_radius_x = std::max(1.f, info_->body_size_ * ENEMY_COMBAT_COLLIDER_WIDTH_RATIO);
 	const auto visual_y_ratio = _ResolveVisualColliderYRatio();
+	const _Vector2 center_offset(0.f, -info_->body_size_ * visual_y_ratio * 0.25f);
 	const bool turn_on = true;
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
 	if (body_collider)
 	{
 		body_collider->SetRadius(body_radius_x, visual_y_ratio);
+		body_collider->SetCenterOffset(center_offset);
 		body_collider->SetVisible(turn_on);
 	}
 
@@ -492,6 +495,7 @@ void Enemy::_ConfigureCombatColliders()
 	if (attack_collider)
 	{
 		attack_collider->SetRadius(body_radius_x, visual_y_ratio);
+		attack_collider->SetCenterOffset(center_offset);
 		attack_collider->SetVisible(turn_on);
 	}
 }

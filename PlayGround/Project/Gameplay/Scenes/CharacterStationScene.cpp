@@ -24,6 +24,7 @@ namespace
 	constexpr char kEnemyPath[] = "Data/Enemy.json";
 	const std::wstring kCharacterWindowName = L"CharacterStation / Character";
 	constexpr _int kResourceSequenceVisibleCount = 18;
+	constexpr _float kEnemyCombatColliderWidthRatio = 0.35f;
 
 	std::wstring FormatFloat(_double _value, _int _precision = 1)
 	{
@@ -1876,7 +1877,7 @@ _float CharacterStationScene::_GetRuntimeBodyRadiusX() const
 	if (mode_ == CharacterStationMode::Playable)
 		return kStagePlayerBodyRadiusX;
 
-	return unit_info->body_size_ * 0.5f;
+	return unit_info->body_size_ * kEnemyCombatColliderWidthRatio;
 }
 
 _float CharacterStationScene::_GetRuntimeBodyYRatio() const
@@ -1888,6 +1889,14 @@ _float CharacterStationScene::_GetRuntimeBodyYRatio() const
 	}
 
 	return kDefaultColliderYRatio;
+}
+
+_float CharacterStationScene::_GetRuntimeBodyCenterOffsetY() const
+{
+	if (mode_ != CharacterStationMode::Enemy)
+		return 0.f;
+
+	return -_GetCurrentBodySize() * _GetRuntimeBodyYRatio() * 0.25f;
 }
 
 _float CharacterStationScene::_GetCurrentBodySize() const
@@ -2709,14 +2718,18 @@ void CharacterStationScene::_DrawPreviewGuides(const _Point& _center) const
 {
 	const _float body_rx = _GetRuntimeBodyRadiusX();
 	const _float body_ry = body_rx * _GetRuntimeBodyYRatio();
+	const _Point body_center{
+		_center.x,
+		s_int(std::round(_center.y + _GetRuntimeBodyCenterOffsetY()))
+	};
 	if (show_body_guide_ && body_rx > 0.f && body_ry > 0.f)
 	{
 		_DrawFunc::DrawEllipse(
 			_RectF(
-				s_float(_center.x) - body_rx,
-				s_float(_center.y) - body_ry,
-				s_float(_center.x) + body_rx,
-				s_float(_center.y) + body_ry),
+				s_float(body_center.x) - body_rx,
+				s_float(body_center.y) - body_ry,
+				s_float(body_center.x) + body_rx,
+				s_float(body_center.y) + body_ry),
 			Palette::Green,
 			2.f);
 	}

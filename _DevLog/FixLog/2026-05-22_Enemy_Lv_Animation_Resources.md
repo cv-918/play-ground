@@ -7,7 +7,7 @@
 - Connected dash/projectile ability phases to attack-specific animation requests.
 - Added enemy facing flip so movement toward negative X keeps the left-facing source art and movement toward positive X flips it right.
 - Fixed enemy sprite aspect handling so enemy visuals preserve each frame's visible pixel ratio instead of forcing every enemy into the old 0.6 height ratio.
-- Resized enemy body/contact attack colliders from the old `body_size_` radius to a visual-width-based radius of `body_size_ * 0.5`, with Y ratio derived from each enemy sprite's visible bounds.
+- Resized enemy body/contact attack colliders from the old `body_size_` radius to a tighter visual-width-based radius of `body_size_ * 0.35`, with Y ratio and center offset derived from each enemy sprite's visible bounds.
 
 ## Background
 - Enemy runtime already had a lightweight state-based frame renderer.
@@ -55,8 +55,9 @@
 - Facing is updated from movement velocity first, then from the transform forward vector when horizontal movement is near zero.
 - `SpriteRenderUtils::BuildWorldSpriteDestRect` keeps its default 0.6 height ratio for existing callers, while enemy rendering passes `visible_height / visible_width` explicitly to preserve sprite proportions.
 - CharacterStation enemy preview uses the same natural visible ratio as runtime enemy rendering. Playable preview still uses the existing 0.6 body guide ratio.
-- Enemy `Body` and `Attack` colliders now treat `body_size_` as visible width, not radius. This reduces old contact hit distance by roughly half on the X axis.
-- CharacterStation's enemy body guide now mirrors the runtime collider sizing.
+- Enemy `Body` and `Attack` colliders now treat `body_size_` as visible width and use 70% of that width for contact. This reduces old contact hit distance substantially on the X axis.
+- Enemy collider centers are offset upward by one quarter of the visible sprite height so the contact region sits closer to the visible monster body without floating too high above the bottom pivot.
+- CharacterStation's enemy body guide now mirrors the runtime collider sizing and center offset.
 
 ## Review Summary
 - Checked the implementation against the plan after build.
@@ -73,8 +74,8 @@
   - Result: all enemy animation clip frames resolved.
 - Ran build:
   - `MSBuild.exe PlayGround/PlayGround.sln /t:Build /p:Configuration=Debug /p:Platform=x64 /m`
-  - Result after enemy collider follow-up: build succeeded with 0 errors and 16 warnings.
-  - Remaining warnings are existing conversion warnings in dialogue, enemy, app entry, game object, stage manager, UI, and player files.
+  - Result after enemy collider offset adjustment: build succeeded with 0 errors and 3 warnings.
+  - Remaining warnings are existing conversion warnings in `Enemy.cpp`.
 - Ran aspect-ratio check on the first move frame for each enemy Lv:
   - Lv1 natural visible H/W: 0.608.
   - Lv2 natural visible H/W: 0.548.
@@ -83,12 +84,12 @@
   - Lv5 natural visible H/W: 1.080.
   - Lv6 natural visible H/W: 0.822.
 - Ran collider sizing check on the first move frame for each enemy Lv:
-  - Lv1: old Rx 60.0 -> new Rx 30.0, new Ry 18.2.
-  - Lv2: old Rx 60.0 -> new Rx 30.0, new Ry 16.4.
-  - Lv3: old Rx 60.0 -> new Rx 30.0, new Ry 29.1.
-  - Lv4: old Rx 60.0 -> new Rx 30.0, new Ry 15.4.
-  - Lv5: old Rx 32.0 -> new Rx 16.0, new Ry 17.3.
-  - Lv6: old Rx 120.0 -> new Rx 60.0, new Ry 49.3.
+  - Lv1: previous Rx 30.0 -> new Rx 21.0, new Ry 12.8, center offset Y -9.1.
+  - Lv2: previous Rx 30.0 -> new Rx 21.0, new Ry 11.5, center offset Y -8.2.
+  - Lv3: previous Rx 30.0 -> new Rx 21.0, new Ry 20.4, center offset Y -14.6.
+  - Lv4: previous Rx 30.0 -> new Rx 21.0, new Ry 10.8, center offset Y -7.7.
+  - Lv5: previous Rx 16.0 -> new Rx 11.2, new Ry 12.1, center offset Y -8.6.
+  - Lv6: previous Rx 60.0 -> new Rx 42.0, new Ry 34.5, center offset Y -24.7.
 - Runtime visual validation was not performed in this session.
 
 ## Remaining Risks

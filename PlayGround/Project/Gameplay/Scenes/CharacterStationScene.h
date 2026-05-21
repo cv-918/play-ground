@@ -91,6 +91,7 @@ private:
 	std::wstring _GetFrameCheckSummary() const;
 	_float _GetRuntimeBodyRadiusX() const;
 	_float _GetRuntimeBodyYRatio() const;
+	_float _GetRuntimeBodyCenterOffsetY() const;
 	_float _GetCurrentBodySize() const;
 	_Vector2 _GetProjectileMuzzleOffset() const;
 
