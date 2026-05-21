@@ -64,6 +64,7 @@ public:
 	_bool CanEnterState(const Enemy& _enemy, EnemyActionState _state) const;
 	_bool ShouldSuppressHitState(const Enemy& _enemy) const;
 	_bool ShouldSuppressKnockback(const Enemy& _enemy) const;
+	_bool TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const;
 
 	/** @brief 등록된 Ability 수를 반환합니다. */
 	_uint Count() const { return s_uint(abilities_.size()); }

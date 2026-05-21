@@ -160,4 +160,11 @@ namespace SpriteRenderUtils
 			s_float(_screen_position.x) - pivot_x + draw_width,
 			s_float(_screen_position.y) - pivot_y + draw_height);
 	}
+
+	inline _float GetNaturalVisibleHeightRatio(const WorldSpriteDrawMetrics& _metrics)
+	{
+		const _float safe_visible_width = std::max(1.f, _metrics.visible_width);
+		const _float safe_visible_height = std::max(1.f, _metrics.visible_height);
+		return safe_visible_height / safe_visible_width;
+	}
 }

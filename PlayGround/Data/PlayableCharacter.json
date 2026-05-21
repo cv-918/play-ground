@@ -20,7 +20,7 @@
 		"animation_clips_": [
 			{
 				"clip_name_": "idle",
-				"directory_": "Data/Resources/Textures/Characters/Dusty/Dust_Idle/",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Idle/",
 				"prefix_": "Dust_Idle_",
 				"start_index_": 1,
 				"end_index_": 16,
@@ -29,8 +29,44 @@
 			},
 			{
 				"clip_name_": "move",
-				"directory_": "Data/Resources/Textures/Characters/Dusty/Dust_Move/",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Move/",
 				"prefix_": "Dust_move_",
+				"start_index_": 1,
+				"end_index_": 8,
+				"fps_": 8.0,
+				"loop_": true
+			},
+			{
+				"clip_name_": "hit",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Hit/",
+				"prefix_": "Dust_hit_",
+				"start_index_": 1,
+				"end_index_": 1,
+				"fps_": 8.0,
+				"loop_": false
+			},
+			{
+				"clip_name_": "die",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Die/",
+				"prefix_": "Dust_die_",
+				"start_index_": 1,
+				"end_index_": 1,
+				"fps_": 8.0,
+				"loop_": false
+			},
+			{
+				"clip_name_": "cast",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Cast/",
+				"prefix_": "Dust_casting_",
+				"start_index_": 1,
+				"end_index_": 2,
+				"fps_": 8.0,
+				"loop_": false
+			},
+			{
+				"clip_name_": "run",
+				"directory_": "Data/Resources/Textures/Characters/PlayableCharacters/Dusty/Animations/Dusty_Run/",
+				"prefix_": "Dust_run_",
 				"start_index_": 1,
 				"end_index_": 8,
 				"fps_": 8.0,

@@ -1,16 +1,6 @@
 ﻿#pragma once
+#include "AnimationClipPathInfoJson.h"
 #include "EngineSystems/Json/JsonDataManager.h"
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-	AnimationClipPathInfo,
-	clip_name_,
-	directory_,
-	prefix_,
-	start_index_,
-	end_index_,
-	fps_,
-	loop_
-)
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	PlayableCharacterJsonInfo,

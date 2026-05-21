@@ -19,6 +19,8 @@ namespace
 	constexpr _uint SPAWN_POSITION_RETRY_COUNT = 16;
 
 	constexpr _uint PROLOGUE1_DURATION = DEFAULT_STAGE_DURATION + 2;
+	constexpr _double PLAYER_DEATH_SEQUENCE_DURATION = 1.0;
+	constexpr _double PLAYER_DEATH_WORLD_TIME_SCALE = 0.35;
 }
 
 _int StageManager::Update(_double _delta_time)
@@ -31,6 +33,7 @@ _int StageManager::Update(_double _delta_time)
 	case StageState::Enter:		_OnEnter();					break;
 	case StageState::Ready:		_OnReady(_delta_time);		break;
 	case StageState::Play:		_OnPlay(_delta_time);		break;
+	case StageState::PlayerDying:	_OnPlayerDying(_delta_time);	break;
 	case StageState::Pause:		_OnPause();					break;
 	case StageState::Clear:		_OnClear();					break;
 	case StageState::Result:	_OnResult();				break;
@@ -54,6 +57,29 @@ void StageManager::Render(_double _delta_time)
 			_DrawFunc::DrawRectangle(area, Palette::Blue, 1);
 		}
 	}
+}
+
+_bool StageManager::ShouldUpdateWorld() const
+{
+	return curr_state_ == StageState::Play || curr_state_ == StageState::PlayerDying;
+}
+
+_double StageManager::GetWorldUpdateDeltaTime(_double _delta_time) const
+{
+	if (curr_state_ == StageState::PlayerDying)
+		return _delta_time * PLAYER_DEATH_WORLD_TIME_SCALE;
+
+	return _delta_time;
+}
+
+_double StageManager::GetPlayerDeathSequenceDuration() const
+{
+	return PLAYER_DEATH_SEQUENCE_DURATION;
+}
+
+_double StageManager::GetPlayerDeathWorldTimeScale() const
+{
+	return PLAYER_DEATH_WORLD_TIME_SCALE;
 }
 
 void StageManager::ChangeState(StageState _new_state)
@@ -83,6 +109,10 @@ void StageManager::ChangeState(StageState _new_state)
 	}
 	break;
 
+	case StageState::PlayerDying:
+		player_death_elapsed_time_ = 0.0;
+		play_scene_->ChangeView(InGameViewState::InGame);
+		break;
 	case StageState::Pause:
 		play_scene_->ChangeView(InGameViewState::Pause);
 		break;
@@ -151,12 +181,15 @@ void StageManager::HandlePlayerDeath()
 	if (!_RunState.IsPlayerDied())
 		_RunState.MarkAsPlayerDied();
 
-	if (curr_state_ != StageState::Result && curr_state_ != StageState::Exit)
+	if (curr_state_ != StageState::PlayerDying && curr_state_ != StageState::Result && curr_state_ != StageState::Exit)
 	{
 		if (play_scene_ && ui_manager_)
-			ChangeState(StageState::Result);
+			ChangeState(StageState::PlayerDying);
 		else
-			curr_state_ = StageState::Result;
+		{
+			player_death_elapsed_time_ = 0.0;
+			curr_state_ = StageState::PlayerDying;
+		}
 	}
 }
 
@@ -224,6 +257,7 @@ void StageManager::SetPlayScene(InGameScene* _play_scene)
 		can_progress_next_stage_ = false;
 		proceed_to_next_stage_timer_ = 0.0;
 		run_session_result_applied_ = false;
+		player_death_elapsed_time_ = 0.0;
 		return;
 	}
 
@@ -231,6 +265,7 @@ void StageManager::SetPlayScene(InGameScene* _play_scene)
 	object_manager_ = play_scene_->GetObjectManager();
 	ui_manager_ = play_scene_->GetUIManager();
 	run_session_result_applied_ = false;
+	player_death_elapsed_time_ = 0.0;
 }
 
 void StageManager::_OnEnter()
@@ -381,6 +416,17 @@ void StageManager::_OnPlay(_double _delta_time)
 	}
 }
 
+void StageManager::_OnPlayerDying(_double _delta_time)
+{
+	player_death_elapsed_time_ += std::max(0.0, _delta_time);
+
+	if (player_death_elapsed_time_ >= PLAYER_DEATH_SEQUENCE_DURATION)
+	{
+		player_death_elapsed_time_ = PLAYER_DEATH_SEQUENCE_DURATION;
+		ChangeState(StageState::Result);
+	}
+}
+
 void StageManager::_OnPause()
 {
 	// 일시정지 로직 처리
@@ -420,6 +466,8 @@ void StageManager::_OnResult()
 		break;
 	case StageState::Clear:
 		// 클리어 상태에서 결과 화면으로 전환된 경우
+		break;
+	case StageState::PlayerDying:
 		break;
 	default:
 		_SYSTEM_LOG_INFO(_T("Unexpected previous stage state: %d"), s_int(prev_state_));

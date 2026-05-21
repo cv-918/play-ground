@@ -21,6 +21,7 @@ enum class UnitDefaultColliderId
 #include "Components/EllipseCollider.h"
 #include "Components/Status.h"
 #include "Components/Combat.h"
+#include "Common/HitReaction.h"
 
 #include "UI/Elements/ProgressBar.h"
 
@@ -35,7 +36,7 @@ class UnitBase abstract
 protected:
 	_bool Initialize() override;
 	void RecordLastReceivedDamage(_float _damage) { last_received_damage_ = _damage; }
-	void ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player);
+	ResolvedHitReaction ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player);
 	void StartHitFlash();
 	void UpdateHitFlash(_double _delta_time);
 	_bool IsHitFlashing() const;

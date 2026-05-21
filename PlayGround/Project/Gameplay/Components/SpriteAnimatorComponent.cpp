@@ -102,6 +102,22 @@ _bool SpriteAnimatorComponent::Play(const std::wstring& _clip_name, _bool _resta
 }
 
 /**
+ * 지정 클립을 목표 시간에 맞춰 재생한다.
+ */
+_bool SpriteAnimatorComponent::PlayForDuration(const std::wstring& _clip_name, _float _duration)
+{
+	const _float clip_duration = GetClipDuration(_clip_name);
+	if (clip_duration <= 0.f)
+		return false;
+
+	if (!Play(_clip_name, true))
+		return false;
+
+	SetSpeed(_duration > 0.f ? clip_duration / _duration : 1.f);
+	return true;
+}
+
+/**
  * 현재 클립이 다를 때만 재생한다.
  */
 _bool SpriteAnimatorComponent::PlayIfNotCurrent(const std::wstring& _clip_name)
@@ -110,6 +126,36 @@ _bool SpriteAnimatorComponent::PlayIfNotCurrent(const std::wstring& _clip_name)
 		return true;
 
 	return Play(_clip_name, true);
+}
+
+/**
+ * 지정 클립이 애니메이션 세트에 있는지 확인한다.
+ */
+_bool SpriteAnimatorComponent::HasClip(const std::wstring& _clip_name) const
+{
+	if (animation_set_ == nullptr)
+		return false;
+
+	return animation_set_->clips.find(_clip_name) != animation_set_->clips.end();
+}
+
+/**
+ * 지정 클립의 기본 재생 시간을 반환한다.
+ */
+_float SpriteAnimatorComponent::GetClipDuration(const std::wstring& _clip_name) const
+{
+	if (animation_set_ == nullptr)
+		return 0.f;
+
+	const auto iter = animation_set_->clips.find(_clip_name);
+	if (iter == animation_set_->clips.end())
+		return 0.f;
+
+	_float duration = 0.f;
+	for (const auto& frame : iter->second.frames)
+		duration += std::max(0.0001f, frame.duration);
+
+	return duration / std::max(0.0001f, iter->second.default_speed);
 }
 
 /**

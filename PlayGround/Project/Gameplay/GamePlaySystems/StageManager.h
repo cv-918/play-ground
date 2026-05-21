@@ -27,6 +27,10 @@ public:
 
 	void SetPlayScene(InGameScene* _play_scene);
 	StageState GetCurrState() const { return curr_state_; }
+	_bool ShouldUpdateWorld() const;
+	_double GetWorldUpdateDeltaTime(_double _delta_time) const;
+	_double GetPlayerDeathSequenceDuration() const;
+	_double GetPlayerDeathWorldTimeScale() const;
 
 	_double GetStageProgress() const { return stage_duration_ > 0.0 ? stage_elapsed_time_ / stage_duration_ : 0.0; }
 	_double GetStageElapsedTime() const { return stage_elapsed_time_; }
@@ -45,6 +49,7 @@ private:
 	void _OnEnter();
 	void _OnReady(_double _delta_time);
 	void _OnPlay(_double _delta_time);
+	void _OnPlayerDying(_double _delta_time);
 	void _OnPause();
 	void _OnClear();
 	void _OnResult();
@@ -90,6 +95,7 @@ private:
 	_bool can_progress_next_stage_ = false;
 	_double proceed_to_next_stage_timer_ = 0.0;
 	_bool run_session_result_applied_ = false;
+	_double player_death_elapsed_time_ = 0.0;
 
 	// --- 스테이지 진행에 필요한 영역 정보 ---
 	const _Rect* stage_nav_mesh_ = nullptr;

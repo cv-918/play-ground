@@ -37,6 +37,7 @@ enum class StageState
 	Enter,
 	Ready,
 	Play,
+	PlayerDying,
 	Pause,
 	Clear,
 	Result,
@@ -257,6 +258,8 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	_float projectile_knockback_power_ = 0.f;
 	_float projectile_spawn_offset_x_ = 0.f;
 	_float projectile_spawn_offset_y_ = 0.f;
+
+	std::vector<AnimationClipPathInfo> animation_clips_;
 };
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo

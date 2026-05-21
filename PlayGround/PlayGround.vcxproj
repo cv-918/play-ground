@@ -327,6 +327,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\IDialogueEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueDebugEventListener.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Dialogue\Sample\DialogueSampleFactory.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AnimationClipPathInfoJson.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />

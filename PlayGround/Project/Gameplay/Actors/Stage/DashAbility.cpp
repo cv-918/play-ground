@@ -27,6 +27,7 @@ void DashAbility::OnInitialize(Enemy& _enemy)
 	phase_ = DashPhase::None;
 	charge_elapsed_ = 0.0;
 	charge_emit_acc_ = 0.0;
+	dash_animation_elapsed_ = 0.0;
 	recovery_elapsed_ = 0.0;
 
 	const auto* info = _enemy.GetEnemyInfo();
@@ -118,6 +119,7 @@ void DashAbility::OnExitState(Enemy& _enemy, EnemyActionState _state)
 	phase_ = DashPhase::None;
 	charge_elapsed_ = 0.0;
 	charge_emit_acc_ = 0.0;
+	dash_animation_elapsed_ = 0.0;
 	recovery_elapsed_ = 0.0;
 	dash_cooldown_acc_ = 0.0;
 }
@@ -132,6 +134,19 @@ _bool DashAbility::ShouldSuppressKnockback(const Enemy& _enemy) const
 {
 	(void)_enemy;
 	return DashPhase::Charging == phase_ || DashPhase::Dashing == phase_;
+}
+
+_bool DashAbility::TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const
+{
+	(void)_enemy;
+
+	if (DashPhase::Dashing != phase_)
+		return false;
+
+	_out_request.clip_name_ = L"attack";
+	_out_request.elapsed_ = dash_animation_elapsed_;
+	_out_request.duration_ = dash_duration_;
+	return true;
 }
 
 _bool DashAbility::_CanStartDash(const Enemy& _enemy) const
@@ -180,6 +195,11 @@ void DashAbility::_UpdateAttack(Enemy& _enemy, _double _delta_time)
 			phase_ = DashPhase::Recovery;
 			recovery_elapsed_ = 0.0;
 			movement->StopImmediately();
+			dash_animation_elapsed_ = 0.0;
+		}
+		else
+		{
+			dash_animation_elapsed_ = std::min(dash_duration_, dash_animation_elapsed_ + _delta_time);
 		}
 	}
 	break;
@@ -212,6 +232,7 @@ void DashAbility::_StartCharging(Enemy& _enemy)
 	phase_ = DashPhase::Charging;
 	charge_elapsed_ = 0.0;
 	charge_emit_acc_ = 0.0;
+	dash_animation_elapsed_ = 0.0;
 	recovery_elapsed_ = 0.0;
 
 	auto* target = _enemy.GetPrimaryTarget();
@@ -254,6 +275,7 @@ void DashAbility::_StartDash(Enemy& _enemy)
 	phase_ = DashPhase::Dashing;
 	charge_elapsed_ = 0.0;
 	charge_emit_acc_ = 0.0;
+	dash_animation_elapsed_ = 0.0;
 	recovery_elapsed_ = 0.0;
 }
 

@@ -39,6 +39,7 @@ public:
 	void OnExitState(Enemy& _enemy, EnemyActionState _state) override;
 	_bool ShouldSuppressHitState(const Enemy& _enemy) const override;
 	_bool ShouldSuppressKnockback(const Enemy& _enemy) const override;
+	_bool TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const override;
 
 private:
 	_bool _CanStartDash(const Enemy& _enemy) const;
@@ -55,6 +56,7 @@ private:
 	_double dash_cooldown_acc_ = 0.0;
 	_double charge_elapsed_ = 0.0;
 	_double charge_emit_acc_ = 0.0;
+	_double dash_animation_elapsed_ = 0.0;
 	_double recovery_elapsed_ = 0.0;
 
 	_double dash_cooldown_ = 0.0;

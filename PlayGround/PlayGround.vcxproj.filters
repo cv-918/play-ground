@@ -95,6 +95,7 @@
     <ClInclude Include="Project\Gameplay\UI\Widgets\HpBar.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\FloatingText.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AnimationClipPathInfoJson.h" />
     <ClInclude Include="Project\Gameplay\Actors\Projectile\Bullet.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameMainView.h" />
     <ClInclude Include="Project\Gameplay\UI\Views\OutGameAttributeView.h" />

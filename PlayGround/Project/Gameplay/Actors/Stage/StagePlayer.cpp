@@ -15,6 +15,9 @@
 
 namespace
 {
+	constexpr _double PLAYER_HIT_MIN_ANIMATION_DURATION = 0.18;
+	constexpr _float PLAYER_MOVE_ANIMATION_EPSILON = 0.01f;
+
 	HitReactionProfile MakePlayerMeleeReaction()
 	{
 		return MakeHitReactionProfile(0.35f, 36.f, 0.10f, KnockbackCurve::OutCubic, 1.0f);
@@ -111,6 +114,8 @@ _bool StagePlayer::Initialize()
 	// 플레이어 컴포넌트 설정
 	const auto attribute_stat = _UserProfile.GetAttributeStat();
 	death_processed_ = false;
+	hit_animation_active_ = false;
+	hit_animation_timer_ = 0.0;
 	status_->SetAutoReserveDestructionOnZeroHp(false);
 
 	transform_->Scale(info_->body_size_);
@@ -204,20 +209,13 @@ _int StagePlayer::Update(_double _delta_time)
 	if (movement_)
 	{
 		const auto vel = transform_->Forward2D();
-		if (vel.x < -0.01f)
+		if (vel.x < -PLAYER_MOVE_ANIMATION_EPSILON)
 			flip_sprite_x_ = false;
-		else if (vel.x > 0.01f)
+		else if (vel.x > PLAYER_MOVE_ANIMATION_EPSILON)
 			flip_sprite_x_ = true;
 	}
 
-	if (uses_animation_renderer_ && sprite_animator_ != nullptr)
-	{
-		sprite_animator_->SetFlipX(flip_sprite_x_);
-
-		const auto move_velocity = movement_ != nullptr ? movement_->GetMoveVelocity() : _Vector3::Zero();
-		const _bool is_moving = std::abs(move_velocity.x) > 0.01f || std::abs(move_velocity.y) > 0.01f;
-		sprite_animator_->PlayIfNotCurrent(ActorUtil::GetPlayerStateName(is_moving ? PlayerState::Move : PlayerState::Idle));
-	}
+	_UpdateAnimationState(_delta_time);
 
 	return UPDATE_CONTINUE;
 }
@@ -325,7 +323,7 @@ void StagePlayer::ApplyHit(const HitContext& _hit)
 		return;
 
 	StartHitFlash();
-	ApplyHitReaction(_hit, true);
+	const ResolvedHitReaction reaction = ApplyHitReaction(_hit, true);
 
 	// UI의 생성위치를 넘기는거니까 스크린 좌표로 넘기는게 맞는 것 같다
 	const auto position = _CameraMgr.WorldToScreen(transform_->Position());
@@ -336,6 +334,8 @@ void StagePlayer::ApplyHit(const HitContext& _hit)
 		_HandleDeathIfNeeded();
 		return;
 	}
+
+	_StartHitAnimation(reaction);
 }
 
 void StagePlayer::_DrawObjectShape()
@@ -373,18 +373,104 @@ void StagePlayer::_DrawObjectShape()
 	_DrawFunc::DrawTexture(player_sprite_->image, dest_rect, src_rect, flip_sprite_x_);
 }
 
+void StagePlayer::_UpdateAnimationState(_double _delta_time)
+{
+	if (!uses_animation_renderer_ || sprite_animator_ == nullptr)
+		return;
+
+	sprite_animator_->SetFlipX(flip_sprite_x_);
+
+	if (death_processed_)
+		return;
+
+	if (hit_animation_active_)
+	{
+		hit_animation_timer_ = std::max(0.0, hit_animation_timer_ - _delta_time);
+
+		const _bool is_knockback_active = movement_ != nullptr && movement_->IsKnockbackActive();
+		if (is_knockback_active || hit_animation_timer_ > 0.0)
+			return;
+
+		hit_animation_active_ = false;
+	}
+
+	_PlayLocomotionAnimation();
+}
+
+void StagePlayer::_PlayLocomotionAnimation()
+{
+	if (!uses_animation_renderer_ || sprite_animator_ == nullptr)
+		return;
+
+	const auto move_velocity = movement_ != nullptr ? movement_->GetMoveVelocity() : _Vector3::Zero();
+	const _bool is_moving =
+		std::abs(move_velocity.x) > PLAYER_MOVE_ANIMATION_EPSILON ||
+		std::abs(move_velocity.y) > PLAYER_MOVE_ANIMATION_EPSILON;
+
+	sprite_animator_->PlayIfNotCurrent(ActorUtil::GetPlayerStateName(is_moving ? PlayerState::Move : PlayerState::Idle));
+}
+
+void StagePlayer::_StartHitAnimation(const ResolvedHitReaction& _reaction)
+{
+	if (!uses_animation_renderer_ || sprite_animator_ == nullptr)
+		return;
+
+	const std::wstring clip_name = ActorUtil::GetPlayerStateName(PlayerState::Hit);
+	if (!sprite_animator_->HasClip(clip_name))
+		return;
+
+	const _double reaction_duration = std::max(
+		PLAYER_HIT_MIN_ANIMATION_DURATION,
+		s_cast(_double, _reaction.knockback_duration_sec_));
+
+	if (sprite_animator_->PlayForDuration(clip_name, s_cast(_float, reaction_duration)))
+	{
+		hit_animation_active_ = true;
+		hit_animation_timer_ = reaction_duration;
+	}
+}
+
+void StagePlayer::_StartDeathAnimation()
+{
+	hit_animation_active_ = false;
+	hit_animation_timer_ = 0.0;
+
+	if (!uses_animation_renderer_ || sprite_animator_ == nullptr)
+		return;
+
+	const std::wstring clip_name = ActorUtil::GetPlayerStateName(PlayerState::Death);
+	if (!sprite_animator_->HasClip(clip_name))
+		return;
+
+	const _double animation_delta_duration =
+		_StageMgr.GetPlayerDeathSequenceDuration() *
+		_StageMgr.GetPlayerDeathWorldTimeScale();
+
+	sprite_animator_->PlayForDuration(clip_name, s_cast(_float, animation_delta_duration));
+}
+
 _bool StagePlayer::_BuildAnimationSetFromInfo()
 {
 	animation_set_ = SpriteAnimationSetData{};
 	animation_set_.set_name = L"StagePlayer";
 
 	if (info_ == nullptr || info_->animation_clips_.empty())
+	{
+		_SYSTEM_LOG_WARN(L"StagePlayer animation build failed: animation_clips_ is empty.");
 		return false;
+	}
 
 	for (const auto& clip_info : info_->animation_clips_)
 	{
 		if (clip_info.clip_name_.empty() || clip_info.directory_.empty() || clip_info.prefix_.empty())
+		{
+			_SYSTEM_LOG_WARN(
+				L"StagePlayer animation build failed: invalid clip info. Clip: %hs, Directory: %hs, Prefix: %hs",
+				clip_info.clip_name_.c_str(),
+				clip_info.directory_.c_str(),
+				clip_info.prefix_.c_str());
 			return false;
+		}
 
 		SpriteAnimationClipData clip{};
 		if (!SpriteAnimationBuilder::BuildSequenceClipByFps(
@@ -397,6 +483,11 @@ _bool StagePlayer::_BuildAnimationSetFromInfo()
 			clip_info.fps_,
 			clip_info.loop_))
 		{
+			_SYSTEM_LOG_WARN(
+				L"StagePlayer animation build failed. Clip: %hs, Directory: %hs, Prefix: %hs",
+				clip_info.clip_name_.c_str(),
+				clip_info.directory_.c_str(),
+				clip_info.prefix_.c_str());
 			return false;
 		}
 
@@ -516,8 +607,12 @@ void StagePlayer::_HandleDeathIfNeeded()
 	}
 
 	if (movement_)
+	{
+		movement_->SetAllowNormalMove(false);
+		movement_->AddMovementLock(MovementControlLock::Root);
 		movement_->StopImmediately();
+	}
 
+	_StartDeathAnimation();
 	_StageMgr.HandlePlayerDeath();
-	ReserveDestruction();
 }

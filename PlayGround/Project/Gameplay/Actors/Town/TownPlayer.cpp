@@ -154,8 +154,17 @@ _bool TownPlayer::_BuildAnimationSetFromInfo()
 		return false;
 	}
 
+	_bool has_idle_clip = false;
+	_bool has_move_clip = false;
+	const std::wstring idle_clip_name = ActorUtil::GetPlayerStateName(PlayerState::Idle);
+	const std::wstring move_clip_name = ActorUtil::GetPlayerStateName(PlayerState::Move);
+
 	for (const auto& clip_info : info_->animation_clips_)
 	{
+		const std::wstring clip_name = _UtilFunc::ToWString(clip_info.clip_name_);
+		if (clip_name != idle_clip_name && clip_name != move_clip_name)
+			continue;
+
 		if (clip_info.clip_name_.empty())
 		{
 			_SYSTEM_LOG_WARN(L"TownPlayer animation build failed: empty clip_name.");
@@ -177,7 +186,7 @@ _bool TownPlayer::_BuildAnimationSetFromInfo()
 		SpriteAnimationClipData clip{};
 		if (SpriteAnimationBuilder::BuildSequenceClipByFps(
 			clip,
-			_UtilFunc::ToWString(clip_info.clip_name_),
+			clip_name,
 			_UtilFunc::ToWString(clip_info.directory_),
 			_UtilFunc::ToWString(clip_info.prefix_),
 			clip_info.start_index_,
@@ -194,6 +203,14 @@ _bool TownPlayer::_BuildAnimationSetFromInfo()
 		}
 
 		animation_set_.clips[clip.clip_name] = clip;
+		has_idle_clip = has_idle_clip || clip.clip_name == idle_clip_name;
+		has_move_clip = has_move_clip || clip.clip_name == move_clip_name;
+	}
+
+	if (!has_idle_clip || !has_move_clip)
+	{
+		_SYSTEM_LOG_WARN(L"TownPlayer animation build failed: idle/move clips are required.");
+		return false;
 	}
 
 	return true;

@@ -2,11 +2,11 @@
   {
     "id_": 1,
     "name_": "M001 - 플랑1",
-    "body_size_": 40.0,
+    "body_size_": 60.0,
     "attack_speed_": 0.0,
     "hp_": 6.0,
     "contact_damage_": 0.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 1,
     "role_": 0,
@@ -55,16 +55,45 @@
     "projectile_camera_shake_scale_": 0.0,
     "projectile_knockback_power_": 0.0,
     "projectile_spawn_offset_x_": 0.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.1/move/",
+        "prefix_": "Lv1_move_",
+        "start_index_": 1,
+        "end_index_": 8,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.1/",
+        "prefix_": "Lv1_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.1/die/",
+        "prefix_": "Lv1_die_",
+        "start_index_": 1,
+        "end_index_": 3,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   },
   {
     "id_": 2,
     "name_": "M002 - 플랑2",
-    "body_size_": 30.0,
+    "body_size_": 60.0,
     "attack_speed_": 0.0,
     "hp_": 8.0,
     "contact_damage_": 0.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 2,
     "role_": 0,
@@ -113,16 +142,54 @@
     "projectile_camera_shake_scale_": 0.0,
     "projectile_knockback_power_": 0.0,
     "projectile_spawn_offset_x_": 0.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "idle",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.2/Idle/",
+        "prefix_": "Lv2_Idle_",
+        "start_index_": 1,
+        "end_index_": 8,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.2/Move/",
+        "prefix_": "Lv2_move_",
+        "start_index_": 1,
+        "end_index_": 8,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.2/",
+        "prefix_": "Lv2_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.2/",
+        "prefix_": "Lv2_die_",
+        "start_index_": 1,
+        "end_index_": 3,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   },
   {
     "id_": 3,
     "name_": "M003 - 기체",
-    "body_size_": 32.0,
+    "body_size_": 60.0,
     "attack_speed_": 1.2,
     "hp_": 18.0,
     "contact_damage_": 3.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 1,
     "role_": 0,
@@ -171,16 +238,45 @@
     "projectile_camera_shake_scale_": 0.0,
     "projectile_knockback_power_": 0.0,
     "projectile_spawn_offset_x_": 0.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.3/move/",
+        "prefix_": "Lv3_move_",
+        "start_index_": 1,
+        "end_index_": 4,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.3/",
+        "prefix_": "Lv3_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.3/die/",
+        "prefix_": "Lv3_die_",
+        "start_index_": 1,
+        "end_index_": 3,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   },
   {
     "id_": 4,
     "name_": "M004 - 돌체",
-    "body_size_": 32.0,
+    "body_size_": 60.0,
     "attack_speed_": 1.4,
     "hp_": 28.0,
     "contact_damage_": 4.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 3,
     "role_": 0,
@@ -229,7 +325,45 @@
     "projectile_camera_shake_scale_": 0.0,
     "projectile_knockback_power_": 0.0,
     "projectile_spawn_offset_x_": 0.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.4/move/",
+        "prefix_": "Lv4_move_",
+        "start_index_": 1,
+        "end_index_": 4,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.4/",
+        "prefix_": "Lv4_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "attack",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.4/attack/",
+        "prefix_": "Lv4_attack_",
+        "start_index_": 1,
+        "end_index_": 20,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.4/die/",
+        "prefix_": "Lv4_die_",
+        "start_index_": 1,
+        "end_index_": 3,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   },
   {
     "id_": 5,
@@ -238,7 +372,7 @@
     "attack_speed_": 1.0,
     "hp_": 24.0,
     "contact_damage_": 3.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 4,
     "role_": 3,
@@ -287,16 +421,63 @@
     "projectile_camera_shake_scale_": 0.9,
     "projectile_knockback_power_": 200.0,
     "projectile_spawn_offset_x_": 20.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.5/move/",
+        "prefix_": "Lv5_move_",
+        "start_index_": 1,
+        "end_index_": 4,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "search",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.5/search/",
+        "prefix_": "Lv5_search_",
+        "start_index_": 1,
+        "end_index_": 4,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.5/",
+        "prefix_": "Lv5_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "attack",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.5/attack/",
+        "prefix_": "Lv5_attack_",
+        "start_index_": 1,
+        "end_index_": 9,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.5/die/",
+        "prefix_": "Lv5_die_",
+        "start_index_": 1,
+        "end_index_": 4,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   },
   {
     "id_": 6,
     "name_": "M006 - 탱커",
-    "body_size_": 60.0,
+    "body_size_": 120.0,
     "attack_speed_": 1.5,
     "hp_": 70.0,
     "contact_damage_": 3.0,
-    "image_path_": "Data/Resources/Textures/Characters/Enemy-Lv1.png",
+    "image_path_": "",
 
     "tier_": 4,
     "role_": 1,
@@ -345,6 +526,35 @@
     "projectile_camera_shake_scale_": 0.0,
     "projectile_knockback_power_": 0.0,
     "projectile_spawn_offset_x_": 0.0,
-    "projectile_spawn_offset_y_": 0.0
+    "projectile_spawn_offset_y_": 0.0,
+    "animation_clips_": [
+      {
+        "clip_name_": "move",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.6/move/",
+        "prefix_": "Lv6_move_",
+        "start_index_": 1,
+        "end_index_": 18,
+        "fps_": 8.0,
+        "loop_": true
+      },
+      {
+        "clip_name_": "hit",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.6/",
+        "prefix_": "Lv6_hit",
+        "start_index_": 1,
+        "end_index_": 1,
+        "fps_": 8.0,
+        "loop_": false
+      },
+      {
+        "clip_name_": "death",
+        "directory_": "Data/Resources/Textures/Characters/Enemies/Lv.6/die/",
+        "prefix_": "Lv6_die_",
+        "start_index_": 1,
+        "end_index_": 3,
+        "fps_": 8.0,
+        "loop_": false
+      }
+    ]
   }
 ]

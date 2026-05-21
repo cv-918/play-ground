@@ -36,9 +36,39 @@ public:
 	_bool Play(const std::wstring& _clip_name, _bool _restart = true);
 
 	/**
+	 * 지정 클립을 목표 시간에 맞춰 재생한다.
+	 */
+	_bool PlayForDuration(const std::wstring& _clip_name, _float _duration);
+
+	/**
 	 * 현재 클립과 다를 때만 재생한다.
 	 */
 	_bool PlayIfNotCurrent(const std::wstring& _clip_name);
+
+	/**
+	 * 지정 클립이 애니메이션 세트에 있는지 확인한다.
+	 */
+	_bool HasClip(const std::wstring& _clip_name) const;
+
+	/**
+	 * 지정 클립의 기본 재생 시간을 반환한다.
+	 */
+	_float GetClipDuration(const std::wstring& _clip_name) const;
+
+	/**
+	 * 현재 클립 재생이 끝났는지 반환한다.
+	 */
+	_bool IsCurrentClipFinished() const { return is_finished_; }
+
+	/**
+	 * 현재 클립 이름을 반환한다.
+	 */
+	const std::wstring& GetCurrentClipName() const { return current_clip_name_; }
+
+	/**
+	 * 현재 클립인지 확인한다.
+	 */
+	_bool IsCurrentClip(const std::wstring& _clip_name) const { return current_clip_name_ == _clip_name; }
 
 	/**
 	 * 재생을 정지한다.

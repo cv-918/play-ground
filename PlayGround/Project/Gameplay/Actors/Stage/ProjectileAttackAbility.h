@@ -30,6 +30,7 @@ public:
 	void OnEnterState(Enemy& _enemy, EnemyActionState _state) override;
 	void OnUpdate(Enemy& _enemy, _double _delta_time) override;
 	void OnExitState(Enemy& _enemy, EnemyActionState _state) override;
+	_bool TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const override;
 
 private:
 	_bool _CanStartAttack(const Enemy& _enemy) const;

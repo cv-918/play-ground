@@ -1,16 +1,22 @@
 #include "framework.h"
 #include "Enemy.h"
 
+#include "Animation/SpriteAnimationBuilder.h"
 #include "Animation/SpriteAnimationTypes.h"
 #include "ContactAttackAbility.h"
 #include "ProjectileAttackAbility.h"
 #include "DashAbility.h"
 #include "EngineSystems/Render/ScreenSystem.h"
 
+#include <filesystem>
+
 namespace
 {
 	constexpr _double ENEMY_SPAWN_FADE_DURATION = 1.0;
+	constexpr _double ENEMY_HIT_MIN_ANIMATION_DURATION = 0.18;
 	constexpr _double ENEMY_DEATH_FADE_DURATION = 1.0;
+	constexpr _float ENEMY_FLIP_DIRECTION_EPSILON = 0.01f;
+	constexpr _float ENEMY_DEFAULT_COLLIDER_Y_RATIO = 0.6f;
 	constexpr _float TANK_WANDER_RADIUS = 220.f;
 	constexpr _float TANK_WANDER_MIN_TARGET_DISTANCE = 42.f;
 	constexpr _float TANK_WANDER_ARRIVE_DISTANCE = 24.f;
@@ -28,6 +34,20 @@ namespace
 			_info.contact_knockback_duration_sec_,
 			_info.contact_knockback_curve_,
 			_info.contact_camera_shake_scale_);
+	}
+
+	std::wstring EnemyStateToClipName(EnemyActionState _state)
+	{
+		switch (_state)
+		{
+		case EnemyActionState::Spawn: return L"spawn";
+		case EnemyActionState::Idle: return L"idle";
+		case EnemyActionState::Move: return L"move";
+		case EnemyActionState::Hit: return L"hit";
+		case EnemyActionState::Attack: return L"attack";
+		case EnemyActionState::Death: return L"death";
+		default: return L"idle";
+		}
 	}
 }
 
@@ -110,16 +130,10 @@ _bool Enemy::Initialize()
 	object_description_ = _T("Lv. ") + std::to_wstring(lv);
 
 	// 콜라이더
-	const auto radius = info_->body_size_;
-	const bool turn_on = true;
+	_ConfigureCombatColliders();
 
 	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
-	body_collider->SetRadius(radius);
-	body_collider->SetVisible(turn_on);
-
 	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
-	attack_collider->SetRadius(radius);
-	attack_collider->SetVisible(turn_on);
 
 	_ColMgr.RegisterCollider(CollisionLayer::EnemyBody, body_collider);
 	if (info_->contact_damage_ > 0.f)
@@ -139,6 +153,8 @@ _bool Enemy::Initialize()
 
 	render_opacity_ = 0.f;
 	spawn_state_elapsed_ = 0.0;
+	hit_state_elapsed_ = 0.0;
+	hit_state_duration_ = ENEMY_HIT_MIN_ANIMATION_DURATION;
 	death_state_elapsed_ = 0.0;
 	death_fade_start_opacity_ = 1.f;
 	death_destruction_reserved_ = false;
@@ -166,6 +182,7 @@ _int Enemy::Update(_double _delta_time)
 
 	// 상태 흐름 갱신
 	_UpdateState(_delta_time);
+	enemy_animation_elapsed_ += std::max(0.0, _delta_time);
 
 	// 이번 프레임 공격 컨텍스트 초기화
 	attack_context_.Reset();
@@ -183,6 +200,7 @@ _int Enemy::Update(_double _delta_time)
 		return ret;
 
 	_UpdateDeferredNavigationActivation();
+	_UpdateFacingFlip();
 	UpdateHitFlash(_delta_time);
 
 	return UPDATE_CONTINUE;
@@ -235,26 +253,174 @@ void Enemy::ApplyHit(const HitContext& _hit)
 	// 동작 도중 피격 당하면 캔슬되고 Hit 상태로 전환.
 	if (EnemyActionState::Attack == action_state_ && !suppress_hit_reaction)
 	{
-		movement_->SetAllowNormalMove(false);
-		movement_->StopImmediately();
+		if (movement_)
+		{
+			movement_->SetAllowNormalMove(false);
+			movement_->StopImmediately();
 
-		movement_->EndDash();
+			movement_->EndDash();
+		}
+	}
+
+	ResolvedHitReaction reaction{};
+	if (!suppress_knockback)
+	{
+		reaction = ApplyHitReaction(_hit, false);
 	}
 
 	if (!suppress_hit_state)
 	{
+		hit_state_elapsed_ = 0.0;
+		hit_state_duration_ = std::max(
+			ENEMY_HIT_MIN_ANIMATION_DURATION,
+			s_cast(_double, reaction.knockback_duration_sec_));
 		_ChangeState(EnemyActionState::Hit);
 	}
+}
 
-	if (!suppress_knockback)
+const AnimationClipPathInfo* Enemy::_FindAnimationClipForState(EnemyActionState _state) const
+{
+	if (info_ == nullptr || info_->animation_clips_.empty())
+		return nullptr;
+
+	const auto desired_name = EnemyStateToClipName(_state);
+	if (_state != EnemyActionState::Attack)
 	{
-		ApplyHitReaction(_hit, false);
+		const auto* state_clip = _FindAnimationClipByName(desired_name);
+		if (state_clip != nullptr)
+			return state_clip;
 	}
+
+	if (_state != EnemyActionState::Move)
+	{
+		const auto* move_clip = _FindAnimationClipByName(L"move");
+		if (move_clip != nullptr)
+			return move_clip;
+	}
+
+	const auto* idle_clip = _FindAnimationClipByName(L"idle");
+	if (idle_clip != nullptr)
+		return idle_clip;
+
+	return &info_->animation_clips_.front();
+}
+
+const AnimationClipPathInfo* Enemy::_FindAnimationClipByName(const std::wstring& _clip_name) const
+{
+	if (info_ == nullptr || info_->animation_clips_.empty())
+		return nullptr;
+
+	for (const auto& clip : info_->animation_clips_)
+	{
+		if (_UtilFunc::ToWString(clip.clip_name_) == _clip_name)
+			return &clip;
+	}
+
+	return nullptr;
+}
+
+const SpriteResource* Enemy::_TryLoadAnimationFrameSprite() const
+{
+	_double animation_elapsed = enemy_animation_elapsed_;
+	_double duration_override = 0.0;
+
+	EnemyAnimationRequest animation_request;
+	const auto has_animation_request = ability_set_.TryGetAnimationRequest(*this, animation_request);
+	const auto* clip = has_animation_request ? _FindAnimationClipByName(animation_request.clip_name_) : nullptr;
+	if (clip != nullptr)
+	{
+		animation_elapsed = animation_request.elapsed_;
+		duration_override = animation_request.duration_;
+	}
+	else
+	{
+		clip = _FindAnimationClipForState(action_state_);
+	}
+
+	if (clip == nullptr)
+		return nullptr;
+
+	if (action_state_ == EnemyActionState::Hit && duration_override <= 0.0)
+		duration_override = hit_state_duration_;
+	else if (action_state_ == EnemyActionState::Death && duration_override <= 0.0)
+		duration_override = ENEMY_DEATH_FADE_DURATION;
+
+	const auto frame_path = _ResolveAnimationFramePath(
+		*clip,
+		_ResolveAnimationFrameIndex(*clip, animation_elapsed, duration_override));
+	const auto* sprite = _GraphicSourceMgr.GetSprite(frame_path, SpritePivotMode::BottomCenter, 8);
+	if (sprite == nullptr || sprite->image == nullptr)
+		return nullptr;
+
+	return sprite;
+}
+
+std::wstring Enemy::_BuildAnimationFramePath(const AnimationClipPathInfo& _clip_info, _int _frame_index) const
+{
+	return SpriteAnimationBuilder::BuildSequenceFramePath(
+		_UtilFunc::ToWString(_clip_info.directory_),
+		_UtilFunc::ToWString(_clip_info.prefix_),
+		_frame_index);
+}
+
+std::wstring Enemy::_BuildSingleFramePath(const AnimationClipPathInfo& _clip_info) const
+{
+	return _UtilFunc::ToWString(_clip_info.directory_) +
+		_UtilFunc::ToWString(_clip_info.prefix_) +
+		L".png";
+}
+
+std::wstring Enemy::_ResolveAnimationFramePath(const AnimationClipPathInfo& _clip_info, _int _frame_index) const
+{
+	const auto sequence_path = _BuildAnimationFramePath(_clip_info, _frame_index);
+	if (std::filesystem::exists(std::filesystem::path(sequence_path)))
+		return sequence_path;
+
+	const auto start = std::min(_clip_info.start_index_, _clip_info.end_index_);
+	const auto end = std::max(_clip_info.start_index_, _clip_info.end_index_);
+	if (start == end)
+	{
+		const auto single_frame_path = _BuildSingleFramePath(_clip_info);
+		if (std::filesystem::exists(std::filesystem::path(single_frame_path)))
+			return single_frame_path;
+	}
+
+	return sequence_path;
+}
+
+_int Enemy::_ResolveAnimationFrameIndex(const AnimationClipPathInfo& _clip_info, _double _elapsed_time, _double _duration_override) const
+{
+	const auto start = std::min(_clip_info.start_index_, _clip_info.end_index_);
+	const auto end = std::max(_clip_info.start_index_, _clip_info.end_index_);
+	const auto frame_count = std::max(1, end - start + 1);
+
+	if (!_clip_info.loop_ && _duration_override > 0.0)
+	{
+		const auto normalized_time = std::clamp(
+			s_cast(_float, std::max(0.0, _elapsed_time) / _duration_override),
+			0.f,
+			1.f);
+		const auto frame_offset = std::min(frame_count - 1, s_int(std::floor(normalized_time * frame_count)));
+		return start + frame_offset;
+	}
+
+	if (_clip_info.fps_ <= 0.f)
+		return start;
+
+	const auto frame_offset = s_int(std::floor(std::max(0.0, _elapsed_time) * _clip_info.fps_));
+	if (_clip_info.loop_)
+		return start + (frame_offset % frame_count);
+
+	return start + std::min(frame_offset, frame_count - 1);
 }
 
 void Enemy::_DrawObjectShape()
 {
-	if (!enemy_sprite_ || !enemy_sprite_->image)
+	const auto* sprite = _TryLoadAnimationFrameSprite();
+	if (sprite == nullptr)
+		sprite = enemy_sprite_;
+
+	if (!sprite || !sprite->image)
 	{
 		const auto original_color = color_;
 		color_.SetAlpha(render_opacity_);
@@ -265,26 +431,28 @@ void Enemy::_DrawObjectShape()
 
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
-	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*enemy_sprite_);
+	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*sprite);
+	const auto natural_height_ratio = SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		screen_pos,
 		transform_->Scale().x,
 		metrics,
-		_ScreenSystem.GetWorldResourceScale());
+		_ScreenSystem.GetWorldResourceScale(),
+		natural_height_ratio);
 
 	const _RectF src_rect(
-		enemy_sprite_->image_rect.X,
-		enemy_sprite_->image_rect.Y,
-		enemy_sprite_->image_rect.X + enemy_sprite_->image_rect.Width,
-		enemy_sprite_->image_rect.Y + enemy_sprite_->image_rect.Height);
+		sprite->image_rect.X,
+		sprite->image_rect.Y,
+		sprite->image_rect.X + sprite->image_rect.Width,
+		sprite->image_rect.Y + sprite->image_rect.Height);
 
 	if (IsHitFlashing())
 	{
-		_DrawFunc::DrawTextureWhiteFlash(enemy_sprite_->image, dest_rect, src_rect, GetHitFlashStrength());
+		_DrawFunc::DrawTextureWhiteFlash(sprite->image, dest_rect, src_rect, flip_sprite_x_, false, GetHitFlashStrength());
 		return;
 	}
 
-	_DrawFunc::DrawTexture(enemy_sprite_->image, dest_rect, src_rect, false, false, _GetRenderAlphaByte());
+	_DrawFunc::DrawTexture(sprite->image, dest_rect, src_rect, flip_sprite_x_, false, _GetRenderAlphaByte());
 }
 
 void Enemy::_BuildAbilities()
@@ -305,6 +473,40 @@ void Enemy::_BuildAbilities()
 	{
 		ability_set_.AddAbility(std::make_unique<DashAbility>());
 	}
+}
+
+void Enemy::_ConfigureCombatColliders()
+{
+	const auto body_radius_x = std::max(1.f, info_->body_size_ * 0.5f);
+	const auto visual_y_ratio = _ResolveVisualColliderYRatio();
+	const bool turn_on = true;
+
+	const auto body_collider = GetDefaultCollider(UnitDefaultColliderId::Body);
+	if (body_collider)
+	{
+		body_collider->SetRadius(body_radius_x, visual_y_ratio);
+		body_collider->SetVisible(turn_on);
+	}
+
+	const auto attack_collider = GetDefaultCollider(UnitDefaultColliderId::Attack);
+	if (attack_collider)
+	{
+		attack_collider->SetRadius(body_radius_x, visual_y_ratio);
+		attack_collider->SetVisible(turn_on);
+	}
+}
+
+_float Enemy::_ResolveVisualColliderYRatio() const
+{
+	const auto* sprite = _TryLoadAnimationFrameSprite();
+	if (sprite == nullptr)
+		sprite = enemy_sprite_;
+
+	if (sprite == nullptr || sprite->image == nullptr)
+		return ENEMY_DEFAULT_COLLIDER_Y_RATIO;
+
+	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*sprite);
+	return std::max(0.1f, SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics));
 }
 
 void Enemy::_ConfigureNavigationProfile()
@@ -389,6 +591,7 @@ void Enemy::_ChangeState(EnemyActionState _new_state)
 	ability_set_.OnExitState(*this, action_state_);
 
 	action_state_ = _new_state;
+	enemy_animation_elapsed_ = 0.0;
 
 	switch (action_state_)
 	{
@@ -420,6 +623,13 @@ void Enemy::_ChangeState(EnemyActionState _new_state)
 		{
 			movement_->SetAllowNormalMove(true);
 		}
+		break;
+
+	case EnemyActionState::Hit:
+		hit_state_elapsed_ = 0.0;
+		hit_state_duration_ = std::max(ENEMY_HIT_MIN_ANIMATION_DURATION, hit_state_duration_);
+		if (movement_)
+			movement_->SetAllowNormalMove(false);
 		break;
 
 	case EnemyActionState::Death:
@@ -509,7 +719,10 @@ void Enemy::_UpdateOnMove(_double _delta_time)
 
 void Enemy::_UpdateOnHit(_double _delta_time)
 {
-	if (!IsHitFlashing())
+	hit_state_elapsed_ = std::min(hit_state_duration_, hit_state_elapsed_ + std::max(0.0, _delta_time));
+
+	const auto is_knockback_active = movement_ != nullptr && movement_->IsKnockbackActive();
+	if (!is_knockback_active && hit_state_elapsed_ >= hit_state_duration_)
 	{
 		_ChangeState(EnemyActionState::Move);
 	}
@@ -554,6 +767,24 @@ void Enemy::_FinalizeDeathIfNeeded()
 	death_finalized_ = true;
 	const auto death_position = transform_ ? transform_->Position() : creation_info_.position_;
 	_StageMgr.HandleEnemyDeath(info_, death_position);
+}
+
+void Enemy::_UpdateFacingFlip()
+{
+	if (transform_ == nullptr)
+		return;
+
+	_Vector3 direction = _Vector3::Zero();
+	if (movement_ != nullptr)
+		direction = movement_->GetMoveVelocity();
+
+	if (std::abs(direction.x) <= ENEMY_FLIP_DIRECTION_EPSILON)
+		direction = transform_->Forward2D();
+
+	if (direction.x < -ENEMY_FLIP_DIRECTION_EPSILON)
+		flip_sprite_x_ = false;
+	else if (direction.x > ENEMY_FLIP_DIRECTION_EPSILON)
+		flip_sprite_x_ = true;
 }
 
 GameObjectBase* Enemy::GetPrimaryTarget() const

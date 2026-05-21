@@ -82,6 +82,29 @@ void ProjectileAttackAbility::OnExitState(Enemy& _enemy, EnemyActionState _state
 	fired_in_current_attack_ = false;
 }
 
+_bool ProjectileAttackAbility::TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const
+{
+	if (_enemy.GetActionState() != EnemyActionState::Attack)
+		return false;
+
+	if (attack_motion_duration_ <= 0.0)
+		return false;
+
+	const _double fire_time = attack_motion_duration_ * 0.5;
+	if (!fired_in_current_attack_ && attack_motion_elapsed_ < fire_time)
+	{
+		_out_request.clip_name_ = L"search";
+		_out_request.elapsed_ = attack_motion_elapsed_;
+		_out_request.duration_ = fire_time;
+		return true;
+	}
+
+	_out_request.clip_name_ = L"attack";
+	_out_request.elapsed_ = std::max(0.0, attack_motion_elapsed_ - fire_time);
+	_out_request.duration_ = std::max(0.0001, attack_motion_duration_ - fire_time);
+	return true;
+}
+
 _bool ProjectileAttackAbility::_CanStartAttack(const Enemy& _enemy) const
 {
 	const auto* info = _enemy.GetEnemyInfo();

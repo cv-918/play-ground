@@ -54,4 +54,7 @@ public:
 
 	/** @brief 현재 프레임에 피격 시 넉백/피격 반응을 억제할지 여부를 반환합니다. */
 	virtual _bool ShouldSuppressKnockback(const Enemy& _enemy) const { return false; }
+
+	/** @brief Ability phase에 맞춰 Enemy 기본 상태 애니메이션보다 우선할 클립을 요청합니다. */
+	virtual _bool TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const { return false; }
 };

@@ -130,6 +130,20 @@ _bool EnemyAbilitySet::ShouldSuppressKnockback(const Enemy& _enemy) const
 	return false;
 }
 
+_bool EnemyAbilitySet::TryGetAnimationRequest(const Enemy& _enemy, EnemyAnimationRequest& _out_request) const
+{
+	for (const auto& ability : abilities_)
+	{
+		if (!ability)
+			continue;
+
+		if (ability->TryGetAnimationRequest(_enemy, _out_request))
+			return true;
+	}
+
+	return false;
+}
+
 void EnemyAbilitySet::OnCollisionEnter(Enemy& _enemy, Collider* _this, Collider* _other)
 {
 	for (const auto& ability : abilities_)

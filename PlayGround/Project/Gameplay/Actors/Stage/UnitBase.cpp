@@ -40,7 +40,7 @@ _bool UnitBase::Initialize()
 	return true;
 }
 
-void UnitBase::ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player)
+ResolvedHitReaction UnitBase::ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player)
 {
 	const _float victim_max_hp = status_ ? status_->GetMaxHP() : 0.f;
 	const _bool is_fatal_hit = status_ && status_->IsDead() && last_received_damage_ > 0.f;
@@ -74,6 +74,8 @@ void UnitBase::ApplyHitReaction(const HitContext& _hit, _bool _victim_is_player)
 	{
 		_CameraMgr.AddTrauma(resolved.trauma_gain_);
 	}
+
+	return resolved;
 }
 
 void UnitBase::StartHitFlash()

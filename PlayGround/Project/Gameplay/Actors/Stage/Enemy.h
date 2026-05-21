@@ -34,6 +34,8 @@ private:
 
 private:
 	void _BuildAbilities();
+	void _ConfigureCombatColliders();
+	_float _ResolveVisualColliderYRatio() const;
 	void _ConfigureNavigationProfile();
 	void _UpdateDeferredNavigationActivation();
 	void _ChangeState(EnemyActionState _new_state);
@@ -50,11 +52,19 @@ private:
 	void _UpdateOnAttack(_double _delta_time);
 	void _UpdateOnDeath(_double _delta_time);
 	void _FinalizeDeathIfNeeded();
+	void _UpdateFacingFlip();
 	_bool _UsesTankWanderPolicy() const;
 	void _InitializeTankWanderRuntime();
 	void _UpdateTankWander(_double _delta_time);
 	_bool _TryPickTankWanderTarget();
 	_Vector3 _ClampPointToMoveBounds(const _Vector3& _point) const;
+	const struct AnimationClipPathInfo* _FindAnimationClipForState(EnemyActionState _state) const;
+	const struct AnimationClipPathInfo* _FindAnimationClipByName(const std::wstring& _clip_name) const;
+	const struct SpriteResource* _TryLoadAnimationFrameSprite() const;
+	std::wstring _BuildAnimationFramePath(const struct AnimationClipPathInfo& _clip_info, _int _frame_index) const;
+	std::wstring _BuildSingleFramePath(const struct AnimationClipPathInfo& _clip_info) const;
+	std::wstring _ResolveAnimationFramePath(const struct AnimationClipPathInfo& _clip_info, _int _frame_index) const;
+	_int _ResolveAnimationFrameIndex(const struct AnimationClipPathInfo& _clip_info, _double _elapsed_time, _double _duration_override) const;
 
 	void _DrawObjectShape() override;
 
@@ -82,6 +92,8 @@ protected:
 	EnemyAttackContext attack_context_;
 
 	_double spawn_state_elapsed_ = 0.0;
+	_double hit_state_elapsed_ = 0.0;
+	_double hit_state_duration_ = 0.0;
 	_double death_state_elapsed_ = 0.0;
 
 	_float render_opacity_ = 0.f;
@@ -90,6 +102,8 @@ protected:
 	_bool death_destruction_reserved_ = false;
 	_bool death_finalized_ = false;
 	_bool nav_boundary_activation_pending_ = false;
+	_bool flip_sprite_x_ = false;
 	TankWanderRuntime tank_wander_;
 	const SpriteResource* enemy_sprite_ = nullptr;
+	_double enemy_animation_elapsed_ = 0.0;
 };

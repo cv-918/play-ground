@@ -27,7 +27,7 @@ private:
 
 	/**
 	 * 타운 플레이어용 기본 애니메이션 세트를 구성한다.
-	 * 현재는 Dusty 기준 idle / run 시퀀스를 코드에서 조립한다.
+	 * 현재는 Dusty 기준 idle / move 시퀀스를 코드에서 조립한다.
 	 */
 	_bool _BuildAnimationSetFromInfo();
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "AnimationClipPathInfoJson.h"
 #include "EngineSystems/Json/JsonDataManager.h"
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
@@ -52,7 +53,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	projectile_camera_shake_scale_,
 	projectile_knockback_power_,
 	projectile_spawn_offset_x_,
-	projectile_spawn_offset_y_
+	projectile_spawn_offset_y_,
+	animation_clips_
 )
 
 #define _EnemyDataMgr EnemyDataManager::Get()

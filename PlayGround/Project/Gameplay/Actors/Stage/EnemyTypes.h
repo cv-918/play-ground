@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <string>
+
 #include "Common/HitReaction.h"
 
 /**
@@ -51,4 +53,11 @@ struct EnemyAttackContext
 		reaction_ = HitReactionProfile{};
 		is_dash_attack_ = false;
 	}
+};
+
+struct EnemyAnimationRequest
+{
+	std::wstring clip_name_;
+	_double elapsed_ = 0.0;
+	_double duration_ = 0.0;
 };

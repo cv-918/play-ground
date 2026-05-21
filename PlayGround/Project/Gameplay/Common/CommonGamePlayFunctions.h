@@ -55,6 +55,8 @@ namespace CommonGamePlayFunctions
 			return L"Ready";
 		case StageState::Play:
 			return L"Play";
+		case StageState::PlayerDying:
+			return L"PlayerDying";
 		case StageState::Pause:
 			return L"Pause";
 		case StageState::Clear:

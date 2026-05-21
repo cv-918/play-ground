@@ -23,6 +23,10 @@ private:
 	void _DrawObjectShape() override;
 	void _HandleDeathIfNeeded();
 	_bool _BuildAnimationSetFromInfo();
+	void _UpdateAnimationState(_double _delta_time);
+	void _PlayLocomotionAnimation();
+	void _StartHitAnimation(const ResolvedHitReaction& _reaction);
+	void _StartDeathAnimation();
 
 private:
 	void _UpdateAttackTimer(_double _delta_time);
@@ -42,6 +46,8 @@ private:
 	_bool flip_sprite_x_ = false;
 	_bool uses_animation_renderer_ = false;
 	_bool death_processed_ = false;
+	_bool hit_animation_active_ = false;
+	_double hit_animation_timer_ = 0.0;
 	_double attack_interval_ = 0.1;
 	_double attack_cooldown_acc_ = 0.0;
 };

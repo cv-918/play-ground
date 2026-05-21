@@ -71,12 +71,13 @@ _int InGameScene::Update(_double _delta_time)
 
 	stage_manager_->Update(_delta_time);
 
-	if (!_GameState.GetPause())
+	if (stage_manager_->ShouldUpdateWorld())
 	{
-		object_manager_->Update(_delta_time);
-		ui_manager_->Update(_delta_time);
+		const _double world_delta_time = stage_manager_->GetWorldUpdateDeltaTime(_delta_time);
+		object_manager_->Update(world_delta_time);
+		ui_manager_->Update(world_delta_time);
 
-		_SkillMgr.Update(_delta_time);
+		_SkillMgr.Update(world_delta_time);
 	}
 	else if (current_view_)
 	{
@@ -88,14 +89,15 @@ _int InGameScene::Update(_double _delta_time)
 
 _int InGameScene::LateUpdate(_double _delta_time)
 {
-	if (!_GameState.GetPause())
+	if (stage_manager_->ShouldUpdateWorld())
 	{
-		object_manager_->LateUpdate(_delta_time);
-		ui_manager_->LateUpdate(_delta_time);
+		const _double world_delta_time = stage_manager_->GetWorldUpdateDeltaTime(_delta_time);
+		object_manager_->LateUpdate(world_delta_time);
+		ui_manager_->LateUpdate(world_delta_time);
 
 		_ColMgr.Update();
-		_CameraMgr.Update(_delta_time);
-		_ParticleService.Update(_delta_time);
+		_CameraMgr.Update(world_delta_time);
+		_ParticleService.Update(world_delta_time);
 	}
 	else if (current_view_)
 	{
