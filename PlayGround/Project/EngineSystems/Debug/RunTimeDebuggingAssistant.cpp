@@ -9,6 +9,10 @@
 
 namespace
 {
+	constexpr wchar_t kWindowListPrefix[] = L"WindowVisible:";
+	constexpr wchar_t kManagerMasterKey[] = L"00_MasterVisible";
+	constexpr wchar_t kManagerWindowListHeaderKey[] = L"01_WindowListHeader";
+
 	_bool IsValidWindowAndKey(const std::wstring& _window_name, const std::wstring& _key, const wchar_t* _element_name)
 	{
 		if (_window_name.empty())
@@ -33,13 +37,14 @@ RunTimeDebuggingAssistant::~RunTimeDebuggingAssistant()
 		SAFE_DELETE(pair.second);
 
 	debug_window_map_.clear();
+	z_order_.clear();
+	input_window_name_.clear();
 	keyboard_capture_owner_ = nullptr;
 }
 
 _bool RunTimeDebuggingAssistant::Initialize()
 {
-	_Assist.CheckBox(__CLASS_NAME, L"AssistGlobal", L"IsDrawingWindows", &is_drawing_windows_);
-	front_window_iter_ = debug_window_map_.begin();
+	RefreshWindowManagerControls();
 	return true;
 }
 
@@ -48,19 +53,13 @@ void RunTimeDebuggingAssistant::BeginFrame()
 	if (debug_window_map_.empty())
 		return;
 
-	if (!is_drawing_windows_)
-	{
-		if (front_window_iter_ == debug_window_map_.end())
-			front_window_iter_ = debug_window_map_.begin();
+	RefreshWindowManagerControls();
 
-		front_window_iter_->second->BeginFrame(); // 최소한 하나의 창은 BeginFrame을 호출하여 프레임 요소를 초기화하도록 한다.
-		return;
-	}
-
-	for (auto& pair : debug_window_map_)
+	for (const std::wstring& window_name : z_order_)
 	{
-		if (pair.second)
-			pair.second->BeginFrame();
+		auto iter = debug_window_map_.find(window_name);
+		if (iter != debug_window_map_.end() && ShouldProcessWindow(iter->first, iter->second))
+			iter->second->BeginFrame();
 	}
 }
 
@@ -69,19 +68,37 @@ _int RunTimeDebuggingAssistant::Update(_double _delta_time)
 	if (debug_window_map_.empty())
 		return UPDATE_CONTINUE;
 
-	if (!is_drawing_windows_)
+	const _Vector2 mouse_pos = _InputMgr.MousePoint();
+	if (_InputMgr.Down(VK_LBUTTON))
 	{
-		if (front_window_iter_ == debug_window_map_.end())
-			front_window_iter_ = debug_window_map_.begin();
-
-		front_window_iter_->second->Update(_delta_time); // 최소한 하나의 창은 Update를 호출하여 프레임 요소를 업데이트하도록 한다.
-		return UPDATE_CONTINUE;
+		input_window_name_ = FindTopWindowAtPoint(mouse_pos);
+		if (!input_window_name_.empty())
+			BringWindowToFront(input_window_name_);
+	}
+	else if (!_InputMgr.Pressed(VK_LBUTTON) && !IsKeyboardCaptured())
+	{
+		input_window_name_.clear();
 	}
 
-	for (const auto& debug_window : debug_window_map_)
+	if (!input_window_name_.empty())
 	{
-		if (debug_window.second)
-			debug_window.second->Update(_delta_time);
+		auto iter = debug_window_map_.find(input_window_name_);
+		if (iter == debug_window_map_.end() || !ShouldProcessWindow(iter->first, iter->second))
+			input_window_name_.clear();
+	}
+
+	std::wstring input_window_name = input_window_name_;
+	if (input_window_name.empty())
+		input_window_name = FindTopWindowAtPoint(mouse_pos);
+
+	for (const std::wstring& window_name : z_order_)
+	{
+		auto iter = debug_window_map_.find(window_name);
+		if (iter == debug_window_map_.end() || !ShouldProcessWindow(iter->first, iter->second))
+			continue;
+
+		const _bool allow_input = (iter->first == input_window_name);
+		iter->second->Update(_delta_time, allow_input);
 	}
 
 	return UPDATE_CONTINUE;
@@ -92,19 +109,11 @@ void RunTimeDebuggingAssistant::Render(_double _delta_time)
 	if (debug_window_map_.empty())
 		return;
 
-	if (!is_drawing_windows_)
+	for (const std::wstring& window_name : z_order_)
 	{
-		if (front_window_iter_ == debug_window_map_.end())
-			front_window_iter_ = debug_window_map_.begin();
-
-		front_window_iter_->second->Render(_delta_time); // 최소한 하나의 창은 Render를 호출하여 프레임 요소를 렌더링하도록 한다.
-		return;
-	}
-
-	for (const auto& debug_window : debug_window_map_)
-	{
-		if (debug_window.second)
-			debug_window.second->Render(_delta_time);
+		auto iter = debug_window_map_.find(window_name);
+		if (iter != debug_window_map_.end() && ShouldProcessWindow(iter->first, iter->second))
+			iter->second->Render(_delta_time);
 	}
 }
 
@@ -130,9 +139,18 @@ void RunTimeDebuggingAssistant::RemoveWindow(const std::wstring& _window_name)
 	if (iter == debug_window_map_.end())
 		return;
 
+	if (!IsManagerWindowName(_window_name))
+	{
+		auto manager_iter = debug_window_map_.find(__CLASS_NAME);
+		if (manager_iter != debug_window_map_.end() && manager_iter->second != nullptr)
+			manager_iter->second->RemovePersistentElement(MakeWindowVisibilityKey(_window_name));
+	}
+
 	SAFE_DELETE(iter->second);
 	debug_window_map_.erase(iter);
-	front_window_iter_ = debug_window_map_.begin();
+	RemoveWindowFromZOrder(_window_name);
+	if (input_window_name_ == _window_name)
+		input_window_name_.clear();
 }
 
 void RunTimeDebuggingAssistant::Text(const std::wstring& _window_name, const DweTextData& _data)
@@ -144,6 +162,9 @@ void RunTimeDebuggingAssistant::Text(const std::wstring& _window_name, const Dwe
 	}
 
 	RunTimeDebugWindow* window = GetOrCreateWindow(_window_name);
+	if (!ShouldProcessWindow(_window_name, window))
+		return;
+
 	window->AddFrameElement(new DWE_Text(_data));
 }
 
@@ -298,5 +319,148 @@ RunTimeDebugWindow* RunTimeDebuggingAssistant::GetOrCreateWindow(const std::wstr
 	new_window->Position(_Vector2(30.f + window_index * 24.f, 30.f + window_index * 24.f));
 
 	debug_window_map_[_window_name] = new_window;
+	z_order_.push_back(_window_name);
 	return new_window;
+}
+
+void RunTimeDebuggingAssistant::RefreshWindowManagerControls()
+{
+	const std::wstring manager_window_name = __CLASS_NAME;
+	RunTimeDebugWindow* manager_window = GetOrCreateWindow(manager_window_name);
+	if (manager_window == nullptr)
+		return;
+
+	if (!manager_window->HasPersistentElement(kManagerMasterKey))
+	{
+		DweCheckBoxData master_data;
+		master_data.label_ = L"Debug Windows Master Visible";
+		master_data.value_getter_ = [this]() { return is_drawing_windows_; };
+		master_data.value_setter_ = [this](_bool _visible) { SetMasterWindowVisible(_visible); };
+		manager_window->AddPersistentElement(kManagerMasterKey, new DWE_CheckBox(std::move(master_data)));
+	}
+
+	if (!manager_window->HasPersistentElement(kManagerWindowListHeaderKey))
+	{
+		DweSeparatorData header_data;
+		header_data.label_ = L"Registered Windows";
+		header_data.is_header_ = true;
+		manager_window->AddPersistentElement(kManagerWindowListHeaderKey, new DWE_Separator(std::move(header_data)));
+	}
+
+	for (const auto& pair : debug_window_map_)
+	{
+		const std::wstring& window_name = pair.first;
+		if (IsManagerWindowName(window_name))
+			continue;
+
+		const std::wstring visibility_key = MakeWindowVisibilityKey(window_name);
+		if (manager_window->HasPersistentElement(visibility_key))
+			continue;
+
+		DweCheckBoxData window_data;
+		window_data.label_ = window_name;
+		window_data.value_getter_ = [this, window_name]() { return GetWindowVisible(window_name); };
+		window_data.value_setter_ = [this, window_name](_bool _visible) { SetWindowVisible(window_name, _visible); };
+		manager_window->AddPersistentElement(visibility_key, new DWE_CheckBox(std::move(window_data)));
+	}
+}
+
+_bool RunTimeDebuggingAssistant::IsManagerWindowName(const std::wstring& _window_name) const
+{
+	return _window_name == __CLASS_NAME;
+}
+
+_bool RunTimeDebuggingAssistant::ShouldProcessWindow(const std::wstring& _window_name, const RunTimeDebugWindow* _window) const
+{
+	if (_window == nullptr)
+		return false;
+
+	if (IsManagerWindowName(_window_name))
+		return true;
+
+	return is_drawing_windows_ && _window->IsVisible();
+}
+
+void RunTimeDebuggingAssistant::BringWindowToFront(const std::wstring& _window_name)
+{
+	if (_window_name.empty())
+		return;
+
+	auto iter = std::find(z_order_.begin(), z_order_.end(), _window_name);
+	if (iter == z_order_.end())
+		return;
+
+	if (std::next(iter) == z_order_.end())
+		return;
+
+	z_order_.erase(iter);
+	z_order_.push_back(_window_name);
+}
+
+std::wstring RunTimeDebuggingAssistant::FindTopWindowAtPoint(const _Vector2& _point) const
+{
+	for (auto iter = z_order_.rbegin(); iter != z_order_.rend(); ++iter)
+	{
+		const auto window_iter = debug_window_map_.find(*iter);
+		if (window_iter == debug_window_map_.end() || !ShouldProcessWindow(window_iter->first, window_iter->second))
+			continue;
+
+		if (window_iter->second->ContainsPoint(_point))
+			return window_iter->first;
+	}
+
+	return L"";
+}
+
+void RunTimeDebuggingAssistant::RemoveWindowFromZOrder(const std::wstring& _window_name)
+{
+	z_order_.erase(
+		std::remove(z_order_.begin(), z_order_.end(), _window_name),
+		z_order_.end());
+}
+
+std::wstring RunTimeDebuggingAssistant::MakeWindowVisibilityKey(const std::wstring& _window_name) const
+{
+	return std::wstring(kWindowListPrefix) + _window_name;
+}
+
+_bool RunTimeDebuggingAssistant::GetWindowVisible(const std::wstring& _window_name) const
+{
+	const auto iter = debug_window_map_.find(_window_name);
+	if (iter == debug_window_map_.end() || iter->second == nullptr)
+		return false;
+
+	return iter->second->IsVisible();
+}
+
+void RunTimeDebuggingAssistant::SetWindowVisible(const std::wstring& _window_name, _bool _visible)
+{
+	auto iter = debug_window_map_.find(_window_name);
+	if (iter == debug_window_map_.end() || iter->second == nullptr)
+		return;
+
+	if (IsManagerWindowName(_window_name))
+		return;
+
+	iter->second->SetVisible(_visible);
+	if (!_visible && input_window_name_ == _window_name)
+		input_window_name_.clear();
+}
+
+void RunTimeDebuggingAssistant::SetMasterWindowVisible(_bool _visible)
+{
+	if (is_drawing_windows_ == _visible)
+		return;
+
+	is_drawing_windows_ = _visible;
+	if (!_visible && !IsManagerWindowName(input_window_name_))
+		input_window_name_.clear();
+
+	for (auto& pair : debug_window_map_)
+	{
+		if (IsManagerWindowName(pair.first) || pair.second == nullptr)
+			continue;
+
+		pair.second->BeginFrame();
+	}
 }

@@ -64,6 +64,37 @@ void RunTimeDebugWindow::AddPersistentElement(const std::wstring& _key, DebugWin
 	persistent_elements_[_key] = _element;
 }
 
+void RunTimeDebugWindow::RemovePersistentElement(const std::wstring& _key)
+{
+	auto iter = persistent_elements_.find(_key);
+	if (iter == persistent_elements_.end())
+		return;
+
+	SAFE_DELETE(iter->second);
+	persistent_elements_.erase(iter);
+}
+
+_bool RunTimeDebugWindow::HasPersistentElement(const std::wstring& _key) const
+{
+	return persistent_elements_.find(_key) != persistent_elements_.end();
+}
+
+void RunTimeDebugWindow::SetVisible(_bool _visible)
+{
+	if (is_visible_ == _visible)
+		return;
+
+	is_visible_ = _visible;
+	ClearFrameElements();
+	content_width_ = 0.f;
+	content_height_ = 0.f;
+}
+
+_bool RunTimeDebugWindow::ContainsPoint(const _Vector2& _point) const
+{
+	return IsPointInRect(_point, GetWindowRect());
+}
+
 _RectF RunTimeDebugWindow::GetWindowRect() const
 {
 	return _RectF(
@@ -133,23 +164,46 @@ _RectF RunTimeDebugWindow::GetScrollThumbRect() const
 		thumb_top + thumb_height);
 }
 
+_RectF RunTimeDebugWindow::GetResizeGripRect() const
+{
+	const _RectF window_rect = GetWindowRect();
+
+	return _RectF(
+		window_rect.left,
+		window_rect.bottom - resize_grip_height_,
+		window_rect.right,
+		window_rect.bottom);
+}
+
 _bool RunTimeDebugWindow::IsPointInRect(const _Vector2& _point, const _RectF& _rect) const
 {
 	return (_point.x >= _rect.left && _point.x < _rect.right &&
 		_point.y >= _rect.top && _point.y < _rect.bottom);
 }
 
-_int RunTimeDebugWindow::Update(_double _delta_time)
+_int RunTimeDebugWindow::Update(_double _delta_time, _bool _allow_input)
 {
-	UpdateDragging();
+	if (_allow_input)
+	{
+		UpdateResizing();
+		UpdateDragging();
+	}
+	else
+	{
+		is_dragging_ = false;
+		is_resizing_ = false;
+	}
 
 	RebuildLayout(false);
 	UpdateAutoResize();
 
-	if (is_dragging_ == false)
-		UpdateScroll(_delta_time);
+	if (is_dragging_ == false && is_resizing_ == false)
+		UpdateScroll(_delta_time, _allow_input);
 
 	RebuildLayout(true);
+
+	if (!_allow_input)
+		return UPDATE_CONTINUE;
 
 	const _RectF content_rect = GetContentRect();
 
@@ -181,8 +235,45 @@ _int RunTimeDebugWindow::Update(_double _delta_time)
 	return UPDATE_CONTINUE;
 }
 
+void RunTimeDebugWindow::UpdateResizing()
+{
+	const _Vector2 mouse_pos = _InputMgr.MousePoint();
+	const _bool mouse_pressed = _InputMgr.Down(VK_LBUTTON);
+	const _bool mouse_down = _InputMgr.Pressed(VK_LBUTTON);
+	const _bool mouse_released = _InputMgr.Up(VK_LBUTTON);
+
+	if (mouse_pressed && IsPointInRect(mouse_pos, GetResizeGripRect()))
+	{
+		is_resizing_ = true;
+		is_dragging_ = false;
+		has_manual_height_ = true;
+		resize_start_mouse_y_ = mouse_pos.y;
+		resize_start_height_ = size_.y;
+		manual_height_ = size_.y;
+	}
+
+	if (is_resizing_)
+	{
+		if (mouse_pressed || mouse_down)
+		{
+			const _float delta_y = mouse_pos.y - resize_start_mouse_y_;
+			manual_height_ = _MathFunc::Clamp(resize_start_height_ + delta_y, min_size_.y, max_size_.y);
+		}
+		else
+		{
+			is_resizing_ = false;
+		}
+	}
+
+	if (mouse_released)
+		is_resizing_ = false;
+}
+
 void RunTimeDebugWindow::UpdateDragging()
 {
+	if (is_resizing_)
+		return;
+
 	const _Vector2 mouse_pos = _InputMgr.MousePoint();
 	const _bool mouse_pressed = _InputMgr.Down(VK_LBUTTON);
 	const _bool mouse_down = _InputMgr.Pressed(VK_LBUTTON);
@@ -208,7 +299,7 @@ void RunTimeDebugWindow::UpdateDragging()
 		is_dragging_ = false;
 }
 
-void RunTimeDebugWindow::UpdateScroll(_double _delta_time)
+void RunTimeDebugWindow::UpdateScroll(_double _delta_time, _bool _allow_input)
 {
 	visible_content_height_ = size_.y - title_bar_height_ - padding_ * 2.f;
 	if (visible_content_height_ < 0.f)
@@ -219,7 +310,7 @@ void RunTimeDebugWindow::UpdateScroll(_double _delta_time)
 	target_scroll_y_ = _MathFunc::Clamp(target_scroll_y_, 0.f, max_scroll_y_);
 	scroll_y_ = _MathFunc::Clamp(scroll_y_, 0.f, max_scroll_y_);
 
-	if (is_scrollable_ && max_scroll_y_ > 0.f)
+	if (_allow_input && is_scrollable_ && max_scroll_y_ > 0.f)
 	{
 		const _Vector2 mouse_pos = _InputMgr.MousePoint();
 		const _int wheel_delta = _InputMgr.MouseWheelDelta();
@@ -347,6 +438,12 @@ void RunTimeDebugWindow::Render(_double _delta_time)
 		_DrawFunc::FillRectangle(track_rect, scroll_track_color_);
 		_DrawFunc::FillRectangle(thumb_rect, scroll_thumb_color_);
 	}
+
+	const _float grip_right = window_rect.right - 5.f;
+	const _float grip_bottom = window_rect.bottom - 5.f;
+	_DrawFunc::DrawLine(_Point(grip_right - 12.f, grip_bottom), _Point(grip_right, grip_bottom - 12.f), resize_grip_color_, 1.f);
+	_DrawFunc::DrawLine(_Point(grip_right - 8.f, grip_bottom), _Point(grip_right, grip_bottom - 8.f), resize_grip_color_, 1.f);
+	_DrawFunc::DrawLine(_Point(grip_right - 4.f, grip_bottom), _Point(grip_right, grip_bottom - 4.f), resize_grip_color_, 1.f);
 }
 
 void RunTimeDebugWindow::RebuildLayout(_bool _apply_scroll)
@@ -409,5 +506,7 @@ void RunTimeDebugWindow::UpdateAutoResize()
 	const _float target_height = title_bar_height_ + padding_ * 2.f + content_height_;
 
 	size_.x = _MathFunc::Clamp(target_width, min_size_.x, max_size_.x);
-	size_.y = _MathFunc::Clamp(target_height, min_size_.y, max_size_.y);
+	size_.y = has_manual_height_
+		? _MathFunc::Clamp(manual_height_, min_size_.y, max_size_.y)
+		: _MathFunc::Clamp(target_height, min_size_.y, max_size_.y);
 }

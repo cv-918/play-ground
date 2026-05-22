@@ -42,11 +42,22 @@ public:
 
 private:
 	class RunTimeDebugWindow* GetOrCreateWindow(const std::wstring& _window_name);
+	void RefreshWindowManagerControls();
+	_bool IsManagerWindowName(const std::wstring& _window_name) const;
+	_bool ShouldProcessWindow(const std::wstring& _window_name, const class RunTimeDebugWindow* _window) const;
+	void BringWindowToFront(const std::wstring& _window_name);
+	std::wstring FindTopWindowAtPoint(const _Vector2& _point) const;
+	void RemoveWindowFromZOrder(const std::wstring& _window_name);
+	std::wstring MakeWindowVisibilityKey(const std::wstring& _window_name) const;
+	_bool GetWindowVisible(const std::wstring& _window_name) const;
+	void SetWindowVisible(const std::wstring& _window_name, _bool _visible);
+	void SetMasterWindowVisible(_bool _visible);
 
 private:
 	std::unordered_map<std::wstring, class RunTimeDebugWindow*> debug_window_map_;
+	std::vector<std::wstring> z_order_;
+	std::wstring input_window_name_;
 	const void* keyboard_capture_owner_ = nullptr;
 
 	_bool is_drawing_windows_ = true;
-	std::unordered_map<std::wstring, class RunTimeDebugWindow*>::iterator front_window_iter_;
 };
