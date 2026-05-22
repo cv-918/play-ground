@@ -645,6 +645,18 @@ function New-MaterializeResult {
         }
     }
 
+    $candidateCount = [int]$plan.counts.proposals + [int]$plan.counts.memory + [int]$plan.counts.work_orders + [int]$plan.counts.handoffs
+    if ($candidateCount -eq 0) {
+        return [pscustomobject]@{
+            ok = $false
+            command = "materialize"
+            execute = $Execute
+            error = "RoleRunOutput has no adoption candidates. Nothing was written."
+            plan = $plan
+            safety = New-SafetyState
+        }
+    }
+
     $output = Read-JsonFile -Path $plan.output_path
     $stores = Get-Stores -StoreRoot $plan.store_root
     $records = New-MaterializedRecords -Output $output -ProjectId $ProjectId

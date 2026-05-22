@@ -104,6 +104,50 @@ function safeResolveReadable(repoRoot, relativePath) {
   return resolved;
 }
 
+async function cleanupTemporaryStaffRun(repoRoot, relativePath) {
+  const target = safeResolveReadable(repoRoot, relativePath);
+  const staffRoot = repoPath(repoRoot, "_Temp/AIWorkflowStudio/staff_runs");
+  if (!isInside(staffRoot, target)) {
+    throw new Error("Only temporary Studio staff run artifacts can be cleaned up.");
+  }
+
+  const stat = await fsp.stat(target);
+  let current = stat.isDirectory() ? target : path.dirname(target);
+  let runDir = null;
+  while (isInside(staffRoot, current) && current !== staffRoot) {
+    const marker = path.join(current, "staff_run.json");
+    try {
+      await fsp.access(marker, fs.constants.F_OK);
+      runDir = current;
+      break;
+    } catch {
+      current = path.dirname(current);
+    }
+  }
+  if (!runDir) {
+    throw new Error("Could not find a temporary staff run folder for this report.");
+  }
+
+  const staffRun = await readJsonIfExists(path.join(runDir, "staff_run.json"));
+  const output = await readJsonIfExists(path.join(runDir, "role_run_output.json"));
+  await fsp.rm(runDir, { recursive: true, force: true });
+  return {
+    ok: true,
+    command: "staff-run-cleanup",
+    cleaned_path: toRepoRelative(repoRoot, runDir),
+    role_run_id: staffRun?.role_run_id || "",
+    output_id: output?.output_id || "",
+    agent_id: staffRun?.agent_id || output?.agent_id || "",
+    safety: {
+      temp_artifact_deleted: true,
+      source_changed: false,
+      task_state_changed: false,
+      canon_changed: false,
+      commit_or_push: false,
+    },
+  };
+}
+
 async function readJsonIfExists(filePath) {
   try {
     const text = await fsp.readFile(filePath, "utf8");
@@ -1563,7 +1607,7 @@ async function getSummary(repoRoot) {
     handoffs,
     director_goal_plans: directorGoalPlans.slice(0, 12),
     workflow_core: workflowCore,
-    recent_staff_runs: staffRuns.slice(0, 12),
+    recent_staff_runs: staffRuns.slice(0, 80),
     context_packets: contextPackets.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
@@ -1681,7 +1725,7 @@ function buildCompanyRuntimeReadinessReport(repoRoot, context = {}) {
       "C-staff-runtime",
       "C",
       "Persistent Staff Agent runtime",
-      "AI 직원이 역할, 권한, 기억, 업무 지시를 받아 RoleRun 산출물을 만들고 검토 가능한 기록 후보를 남길 수 있어야 합니다.",
+      "AI 직원이 역할, 권한, 기억, 업무 지시를 받아 RoleRun 산출물을 만들고 검토 가능한 채택 후보를 남길 수 있어야 합니다.",
       ["StaffAgent registry", "StaffContextPacket builder", "Staff executor", "Staff runtime", "RoleRunOutput materializer", "materialization review"],
       [
         ...missingFiles(["staffRegistry", "contextBuilder", "staffExecutor", "staffRuntime", "outputMaterializer", "materializationReview"]),
@@ -2692,6 +2736,11 @@ function directorConsoleHtml() {
     .inline-help, .impact-note, .form-subsection { margin-top:10px; }
     .inline-help, .impact-note { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:rgba(255,255,255,.03); }
     .form-subsection h3 { margin-top:0; }
+    .field-block { display:grid; gap:6px; margin-top:10px; color:var(--muted); font-size:12px; }
+    .field-help { display:block; color:var(--muted); font-size:12px; font-weight:400; }
+    .required-mark, .optional-mark { display:inline-flex; align-items:center; min-height:18px; padding:1px 7px; margin-left:4px; border-radius:999px; font-size:11px; font-weight:700; }
+    .required-mark { color:#dff7e8; background:rgba(35,166,93,.22); border:1px solid rgba(35,166,93,.38); }
+    .optional-mark { color:var(--muted); background:rgba(255,255,255,.05); border:1px solid var(--line); }
     .preset-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
     .staff-picker { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; margin-top:8px; }
     .staff-choice { display:grid; grid-template-columns:auto minmax(0, 1fr); gap:8px; align-items:start; border:1px solid var(--line); border-radius:8px; padding:9px 10px; background:rgba(255,255,255,.025); }
@@ -2727,7 +2776,25 @@ function directorConsoleHtml() {
     pre { white-space:pre-wrap; word-break:break-word; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:400px; overflow:auto; }
     .log-output { display:grid; gap:10px; background:#0f1218; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:460px; overflow:auto; }
     .result-panel[hidden] { display:none; }
-    .result-panel { margin-bottom:16px; border-color:#5276c8; }
+    .result-panel {
+      position:fixed;
+      top:92px;
+      left:280px;
+      right:20px;
+      z-index:40;
+      max-height:min(72vh, 760px);
+      overflow:auto;
+      margin:0;
+      border-color:#5276c8;
+      box-shadow:0 18px 48px rgba(0,0,0,.46);
+    }
+    .result-panel .section-title {
+      position:sticky;
+      top:0;
+      z-index:1;
+      padding-bottom:10px;
+      background:linear-gradient(180deg, var(--panel), rgba(26,32,43,.94));
+    }
     .log-json { margin:0; max-height:none; border:0; padding:0; background:transparent; }
     .log-message { color:var(--muted); white-space:pre-wrap; word-break:break-word; }
     @media (max-width: 920px) {
@@ -2735,6 +2802,7 @@ function directorConsoleHtml() {
       .sidebar { position:static; height:auto; }
       .nav { grid-template-columns:repeat(2, minmax(0, 1fr)); }
       .hero { grid-template-columns:1fr; }
+      .result-panel { left:12px; right:12px; top:72px; max-height:76vh; }
     }
     @media (max-width: 720px) {
       main { padding:12px; }
@@ -2951,7 +3019,7 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="timeline">
-          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 기록 후보를 시간순으로 훑어봅니다.</p></div><button class="secondary" data-action="traceability-map">추적 지도</button></div>
+          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 채택 후보를 시간순으로 훑어봅니다.</p></div><button class="secondary" data-action="traceability-map">추적 지도</button></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">
@@ -3017,13 +3085,13 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="meetings">
-          <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 후속 작업이나 결정 기록으로 넘겨야 합니다.</p></div></div>
+          <div class="page-heading"><div><h2>회의실</h2><p>회의 합의는 바로 승인이나 공식 설정이 아닙니다. 해야 할 일은 업무 후보로, 정한 방향은 판단 기록으로 넘깁니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>회의를 만들고 Human Director 또는 AI 직원 발언을 회의록에 남깁니다.</li>
               <li>AI 직원 의견을 받아 회의 안에서 제안, 반론, 질문을 모읍니다.</li>
-              <li>회의 결과를 후속 업무 지시나 감독자 결정 기록으로 넘깁니다.</li>
+              <li>회의에서 나온 해야 할 일은 업무 후보로 만들고, 정한 결론은 판단 기록으로 남깁니다.</li>
             </ul>
           </div>
           <div class="card">
@@ -3084,8 +3152,8 @@ function directorConsoleHtml() {
               <div class="item">
                 <h3>회의 결과를 넘길 때</h3>
                 <ul class="small">
-                  <li><strong>후속 작업 만들기</strong>: 회의 결과를 WorkOrder 후보로 저장합니다. 실제 구현 task는 별도 승인 흐름을 탑니다.</li>
-                  <li><strong>결정으로 기록</strong>: 회의 결론을 Decision 후보로 저장합니다. 공식 설정 확정은 별도 판단입니다.</li>
+                  <li><strong>업무 후보 만들기</strong>: 회의에서 나온 “해야 할 일”을 업무 지시 후보로 저장합니다. 구현, task 생성, git 변경은 시작하지 않습니다.</li>
+                  <li><strong>판단 기록 남기기</strong>: 회의에서 정한 결론이나 방향을 감독자 판단 기록으로 남깁니다. 공식 설정 확정이나 구현 지시는 별도입니다.</li>
                   <li><strong>회의 종료</strong>: 회의 기록의 진행 상태만 닫습니다. 소스, task, git은 바꾸지 않습니다.</li>
                 </ul>
               </div>
@@ -3099,13 +3167,13 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="runs">
-          <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 필요한 내용만 기록 후보로 넘깁니다.</p></div></div>
+          <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 쓸 만한 내용만 채택 후보로 넘깁니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">
               <li>AI 직원이 만든 보고서를 사람이 읽기 좋은 HTML 검토 자료로 내보냅니다.</li>
-              <li>보고서 안에서 제안, 기억, 업무 지시로 남길 후보가 있는지 미리 봅니다.</li>
-              <li>필요한 후보만 기록함에 넣습니다. 이것은 실행 승인이나 공식 설정 확정이 아닙니다.</li>
+              <li>보고서 안에서 아이디어, 프로젝트 기억, 업무 지시, 직원 인수인계로 쓸 만한 내용이 있는지 미리 봅니다.</li>
+              <li>필요한 내용만 채택 후보로 넘깁니다. 이것은 실행 승인이나 공식 설정 확정이 아닙니다.</li>
             </ul>
           </div>
           <div class="control-bar">
@@ -3114,8 +3182,8 @@ function directorConsoleHtml() {
             <button class="secondary" data-clear-filter="runs">필터 해제</button>
           </div>
           <div class="grid">
-            <div class="card"><h2>직원 보고서</h2><p class="muted">AI 직원 실행 결과입니다. 보통은 보고서를 만들고, 필요한 제안만 기록 후보로 넘깁니다.</p><div id="runs" class="list"></div></div>
-            <div class="card"><h2>기록 후보 결정</h2><p class="muted">기록 후보를 승인, 반려, 보류, 수정 요청으로 정리합니다. 이 기록은 근거일 뿐 실행 승인은 아닙니다.</p><div id="materializations" class="list"></div></div>
+            <div class="card"><h2>직원 보고서</h2><p class="muted">AI 직원 실행 결과입니다. 먼저 보고서를 읽고, 쓸 만한 내용만 채택 후보로 넘깁니다.</p><div id="runs" class="list"></div></div>
+            <div class="card"><h2>채택 후보 검토</h2><p class="muted">직원 보고서에서 뽑아 둔 후보를 채택, 반려, 보류, 수정 요청으로 정리합니다. 후보를 채택해도 실행 승인이나 공식 설정 확정은 별도입니다.</p><div id="materializations" class="list"></div></div>
           </div>
           <details class="internal-panel">
             <summary>내부 문맥 기록</summary>
@@ -3125,28 +3193,34 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="work">
-          <div class="page-heading"><div><h2>업무 지시</h2><p>Studio 업무 후보와 AI 직원 인수인계를 AIWorkflow task로 연결합니다.</p></div></div>
+          <div class="page-heading"><div><h2>업무 지시</h2><p>Studio에서 정리한 일을 AI 직원 실행이나 AIWorkflow 작업 목록으로 넘깁니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">
-              <li>업무 지시서를 만들어 AI 직원에게 줄 일의 목표, 범위, 제외 범위, 검증 계획을 정리합니다.</li>
-              <li>직원 자료 미리보기/저장으로 AI 직원에게 전달될 실행 문맥을 확인합니다.</li>
-              <li>직원에게 맡기기로 AI 직원 보고서를 만들고, 작업 목록에 넣기로 AIWorkflow task 후보를 만듭니다.</li>
+              <li>AI 직원에게 맡길 일의 목표, 할 일, 제약 조건, 결과물, 검증 방법을 정리합니다.</li>
+              <li>직원에게 바로 맡길지, AIWorkflow 작업 목록에 넣어 승인/실행 gate를 탈지 결정합니다.</li>
+              <li>이 화면에서 저장하는 업무 지시는 Studio 기록입니다. 소스 수정, task 실행, commit/push는 별도 버튼에서만 진행됩니다.</li>
             </ul>
           </div>
           <div class="card">
             <div class="section-title"><h2>새 업무 지시 만들기</h2><span class="pill">업무 지시서</span></div>
             <div class="form-grid">
-              <label>목표<input id="workCreateObjective" placeholder="예: Skill.json runtime loader 검증 계획 수립"></label>
-              <label>담당 부서<select id="workCreateDepartment"></select></label>
-              <label>담당 직원<input id="workCreateAgents" placeholder="technical_architect, qa_tester"></label>
+              <label>목표 <span class="required-mark">필수</span><input id="workCreateObjective" placeholder="예: Skill.json 로더 검증 계획 수립"></label>
+              <label>담당 부서 <span class="required-mark">필수</span><select id="workCreateDepartment"></select></label>
               <label>상태<select id="workCreateStatus"></select></label>
             </div>
-            <textarea id="workCreateScope" placeholder="포함 범위를 줄바꿈으로 입력하세요."></textarea>
-            <textarea id="workCreateNonGoals" placeholder="금지/제외 범위를 줄바꿈으로 입력하세요."></textarea>
-            <textarea id="workCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력하세요."></textarea>
-            <textarea id="workCreateApproval" placeholder="승인이 필요한 핵심 판단을 한 문장으로 입력하세요."></textarea>
-            <textarea id="workCreateValidation" placeholder="검증 계획을 줄바꿈으로 입력하세요."></textarea>
+            <div id="workStatusHelp" class="inline-help"></div>
+            <div class="form-subsection">
+              <h3>담당 직원 <span class="required-mark">필수</span></h3>
+              <p class="small muted">먼저 담당 부서를 고르면 그 부서의 AI 직원만 표시됩니다. 저장되는 값은 기존 직원 ID입니다.</p>
+              <div id="workAgentPicker" class="staff-picker"></div>
+            </div>
+            <div id="workCreateImpact" class="impact-note"></div>
+            <label class="field-block">할 일 <span class="required-mark">필수</span><span class="field-help">이 업무 안에서 실제로 다룰 내용을 한 줄에 하나씩 적습니다.</span><textarea id="workCreateScope" placeholder="예:&#10;Skill.json 로더가 파일을 읽는 흐름 확인&#10;검증에 필요한 최소 테스트 계획 작성"></textarea></label>
+            <label class="field-block">제약 조건 <span class="optional-mark">선택</span><span class="field-help">이번 업무에서 건드리지 말 범위와 스코프 제한을 적습니다. 일이 커지는 것을 막는 장치입니다.</span><textarea id="workCreateNonGoals" placeholder="예:&#10;JSON schema 변경 금지&#10;게임 소스 직접 수정 금지"></textarea></label>
+            <label class="field-block">기대 결과물 <span class="optional-mark">선택</span><span class="field-help">이 업무가 끝났을 때 받아야 하는 문서, 보고서, 계획, 검증 자료를 적습니다.</span><textarea id="workCreateOutputs" placeholder="예:&#10;검증 계획 요약&#10;승인 필요 항목 목록&#10;다음 작업 후보"></textarea></label>
+            <label class="field-block">승인 판단 <span class="optional-mark">선택</span><span class="field-help">Human Director가 나중에 보고 승인해야 하는 핵심 결정을 한 문장으로 적습니다.</span><textarea id="workCreateApproval" placeholder="예: Skill.json 검증을 AIWorkflow 작업 목록에 넣어 실행할지 판단해야 함"></textarea></label>
+            <label class="field-block">검증 방법 <span class="optional-mark">선택</span><span class="field-help">완료 여부를 판단할 때 확인할 검증 방법을 한 줄에 하나씩 적습니다.</span><textarea id="workCreateValidation" placeholder="예:&#10;관련 JSON 파일 파싱 확인&#10;로더가 파일을 읽을 수 있는지 확인&#10;변경 파일이 없는지 git diff 확인"></textarea></label>
             <div class="row"><button class="good" id="workCreateSubmit">업무 지시 저장</button></div>
           </div>
           <div class="control-bar">
@@ -3154,9 +3228,31 @@ function directorConsoleHtml() {
             <select id="workDepartmentFilter"></select>
             <button class="secondary" data-clear-filter="work">필터 해제</button>
           </div>
+          <div class="card">
+            <div class="section-title"><h2>업무 지시 버튼 안내</h2><span class="pill">작업 순서</span></div>
+            <div class="grid">
+              <div class="item">
+                <h3>먼저 확인</h3>
+                <ul class="small">
+                  <li><strong>인수인계 점검</strong>: 이 업무를 다른 직원이나 작업 목록으로 넘겨도 되는지 읽기 전용으로 점검합니다.</li>
+                  <li><strong>인수인계 계획</strong>: 직원 인수인계 후보에서 대상 직원, 넘길 내용, 실행 전 확인 사항을 미리 봅니다.</li>
+                  <li><strong>직원 자료 미리보기</strong>: AI 직원에게 전달될 목표, 할 일, 제약 조건, 근거를 미리 봅니다.</li>
+                  <li><strong>직원 실행 계획</strong>: Codex 직원 실행을 시작하기 전에 모델, 권한, 전달 자료를 확인합니다.</li>
+                  <li><strong>작업 생성 계획</strong>: Backlog에 쓰기 전에 어떤 task 초안이 생길지 미리 봅니다.</li>
+                </ul>
+              </div>
+              <div class="item warn">
+                <h3>실제로 넘기기</h3>
+                <ul class="small">
+                  <li><strong>직원에게 맡기기</strong>: 선택한 AI 직원에게 업무를 맡겨 보고서를 만듭니다. 소스, task, git은 직접 바꾸지 않습니다.</li>
+                  <li><strong>작업 목록에 넣기</strong>: 이 업무 지시를 AIWorkflow Backlog task로 만듭니다. 실행 승인과 Runner 시작은 별도입니다.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
           <div class="grid">
-            <div class="card"><h2>업무 지시</h2><p class="muted">검토된 업무 지시를 작업 목록에 넣을 수 있습니다. 생성 후 승인/실행은 별도 gate입니다.</p><div id="workorders" class="list"></div></div>
-            <div class="card"><h2>직원 인수인계</h2><p class="muted">다른 AI 직원에게 넘길 수 있는 업무입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
+            <div class="card"><h2>업무 지시</h2><p class="muted">저장된 업무 지시입니다. 여기서 AI 직원에게 맡기거나 AIWorkflow 작업 목록에 넣을 수 있습니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>직원 인수인계</h2><p class="muted">다른 AI 직원에게 넘길 수 있는 별도 인수인계 후보입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
           </div>
         </section>
 
@@ -3305,8 +3401,8 @@ function directorConsoleHtml() {
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
       staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
-      meetings: ["회의실", "AI 직원 회의, 후속 작업, 미해결 질문을 관리합니다."],
-      runs: ["직원 보고서", "AI 직원 보고서와 기록 후보를 검토합니다."],
+      meetings: ["회의실", "AI 직원 회의, 업무 후보, 판단 기록, 미해결 질문을 관리합니다."],
+      runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
       knowledge: ["지식/결정", "제안, 결정, 기억, 공식 설정 후보를 확인합니다."],
       timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
@@ -3385,6 +3481,30 @@ function directorConsoleHtml() {
     }
     function reportLines(items) {
       return asArray(items).map(recordLine).filter(Boolean);
+    }
+    function translateStudioMessage(message) {
+      const text = String(message || "").trim();
+      if (!text) return "";
+      const invalidOutput = text.match(/^Invalid output_id:\s*(.+)$/);
+      if (invalidOutput) return "보고서 ID 형식이 현재 규칙과 맞지 않습니다: " + invalidOutput[1];
+      const invalidRoleRun = text.match(/^Invalid role_run_id:\s*(.+)$/);
+      if (invalidRoleRun) return "직원 실행 ID 형식이 현재 규칙과 맞지 않습니다: " + invalidRoleRun[1];
+      if (text.includes("Output has no materializable proposals")) {
+        return "이 보고서에는 채택 후보로 넘길 아이디어 제안, 프로젝트 기억, 업무 지시, 직원 인수인계가 없습니다.";
+      }
+      if (text.includes("RoleRunOutput validation failed")) {
+        return "직원 보고서 검증에 실패해서 아무것도 저장하지 않았습니다.";
+      }
+      if (text.includes("RoleRunOutput has no adoption candidates")) {
+        return "채택 후보가 없어 아무것도 저장하지 않았습니다.";
+      }
+      if (text.includes("Target materialization records already exist")) {
+        return "이미 같은 채택 후보가 있어서 새로 저장하지 않았습니다.";
+      }
+      if (text.includes("Nothing was written")) {
+        return text.replace("Nothing was written.", "아무것도 저장하지 않았습니다.");
+      }
+      return text;
     }
     function reportValue(report, key) {
       if (!key || typeof key !== "string") return undefined;
@@ -3714,6 +3834,99 @@ function directorConsoleHtml() {
       }
       return "";
     }
+    function formatWorkOrderLog(value) {
+      if (value?.work_order_handoff_plan) {
+        const plan = value.work_order_handoff_plan || {};
+        const contract = plan.handoff_contract || {};
+        return '<div class="item good"><h3>인수인계 점검</h3>' +
+          '<p class="summary">이 업무 지시가 AI 직원이나 작업 목록으로 넘어가도 되는지, 빠진 정보가 있는지 먼저 확인했습니다. 아직 실행, task 생성, git 변경은 하지 않았습니다.</p>' +
+          reportSection("현재 업무", [
+            "업무: " + (plan.work_order_id || ""),
+            "의미: " + (plan.current_meaning || plan.objective || ""),
+            "대상 부서: " + optionLabel(plan.target_department || ""),
+            "추천 직원: " + asArray(plan.recommended_staff).map(staffName).join(", "),
+          ]) +
+          reportSection("넘길 때 필요한 내용", [
+            ...(asArray(contract.expected_inputs).map((item) => "입력: " + item)),
+            ...(asArray(contract.expected_outputs).map((item) => "결과물: " + item)),
+            ...(asArray(contract.approval_items).map((item) => "승인 판단: " + item)),
+          ]) +
+          reportSection("보강이 필요한 항목", plan.missing_or_weak_items || [], "보강이 필요한 항목이 없습니다.") +
+          reportSection("다음 행동", plan.next_actions || []) +
+          safetySection(value.safety || plan.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.context_packet && !value?.staff_plan && !value?.task_draft) {
+        const packet = value.context_packet || {};
+        return '<div class="item good"><h3>직원 자료 미리보기</h3>' +
+          '<p class="summary">AI 직원에게 전달될 목표, 할 일, 제약 조건, 참고 근거를 미리 묶어 본 것입니다. 직원 실행은 아직 시작하지 않았습니다.</p>' +
+          reportSection("전달 대상", [
+            "직원: " + staffName(packet.agent_id || value.agent_id || ""),
+            "부서: " + optionLabel(packet.department_id || ""),
+            "출처: " + (packet.source_ref || ""),
+          ]) +
+          reportSection("직원이 받는 일", [
+            "목표: " + (packet.objective || ""),
+            ...asArray(packet.approved_scope).map((item) => "할 일: " + item),
+            ...asArray(packet.non_goals).map((item) => "제약 조건: " + item),
+          ]) +
+          reportSection("참고 근거", [
+            "공식 설정: " + asArray(packet.memory_context?.canon_refs).length + "개",
+            "승인 결정: " + asArray(packet.memory_context?.approved_decision_refs).length + "개",
+            "검증 자료: " + asArray(packet.memory_context?.evidence_refs).length + "개",
+          ]) +
+          safetySection(value.safety || packet.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.staff_plan) {
+        const plan = value.staff_plan || {};
+        const packet = value.context_packet || {};
+        return '<div class="item warn"><h3>직원 실행 계획</h3>' +
+          '<p class="summary">AI 직원 실행을 시작하기 전에 모델, 권한, 전달 자료를 확인하는 계획입니다. 이 화면은 계획만 보여주며 실행은 별도 버튼에서만 시작됩니다.</p>' +
+          reportSection("실행 대상", [
+            "직원: " + staffName(plan.agent_id || packet.agent_id || ""),
+            "역할 실행: " + (plan.role_run_id || packet.role_run_id || ""),
+            "문맥 묶음: " + (plan.context_packet_id || packet.context_packet_id || ""),
+          ]) +
+          reportSection("실행 설정", [
+            "모델: " + (plan.model || ""),
+            "추론 강도: " + (plan.reasoning || ""),
+            "제공자: " + (plan.provider_policy || ""),
+            "명령: " + short([plan.resolved_codex_command || plan.codex_command, ...(plan.planned_args || [])].filter(Boolean).join(" "), 220),
+          ]) +
+          reportSection("다음 행동", [
+            "계획이 맞으면 직원에게 맡기기를 눌러 실행합니다.",
+            "범위가 애매하면 업무 지시를 고친 뒤 다시 계획을 확인합니다.",
+          ]) +
+          safetySection(value.safety || plan.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.task_draft) {
+        const draft = value.task_draft || {};
+        return '<div class="item good"><h3>작업 생성 계획</h3>' +
+          '<p class="summary">이 업무 지시를 AIWorkflow 작업 목록에 넣으면 어떤 task 초안이 생길지 미리 보여줍니다. 아직 Backlog에는 쓰지 않았습니다.</p>' +
+          reportSection("생성될 작업 초안", [
+            "제목: " + (draft.title || ""),
+            "분류: " + (draft.category || ""),
+            "종류: " + (draft.kind || ""),
+            "우선순위/위험도: " + [draft.priority, draft.suggested_risk].filter(Boolean).join(" / "),
+            "Workflow: " + (draft.workflow_path || ""),
+          ]) +
+          reportSection("승인 판단", draft.human_decision_gates || []) +
+          reportSection("필수 검증", draft.required_validation || []) +
+          reportSection("다음 행동", [
+            draft.suggested_next_manual_action || "내용이 맞으면 작업 목록에 넣기를 눌러 Backlog task로 만듭니다.",
+            "이 계획 자체는 승인, 실행, 완료, commit/push를 하지 않습니다.",
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      return "";
+    }
     function formatGenericLogObject(value) {
       if (value?.company_runtime_readiness_report || value?.company_runtime || value?.gates?.some?.((gate) => gate.id && String(gate.id).includes("runtime"))) {
         const formatted = formatCompanyRuntimeReadinessLog(value);
@@ -3721,6 +3934,8 @@ function directorConsoleHtml() {
       }
         const directorReport = formatDirectorReportLog(value);
         if (directorReport) return directorReport;
+      const workOrderReport = formatWorkOrderLog(value);
+      if (workOrderReport) return workOrderReport;
       if (value?.command === "export" && value?.output_path) {
         return '<div class="item good"><h3>직원 보고서 보기 자료 생성</h3>' +
           '<p class="summary">직원 실행 결과를 사람이 읽기 좋은 HTML 검토 자료로 만들었습니다. 이 작업은 소스, task, 공식 설정, git을 바꾸지 않습니다.</p>' +
@@ -3738,7 +3953,7 @@ function directorConsoleHtml() {
             "업무 지시 후보: " + (value.counts?.workorders ?? 0),
             "기억 요청: " + (value.counts?.memory_requests ?? 0),
           ]) +
-          reportSection("다음 행동", ["생성된 HTML을 열어 직원 보고서 내용을 검토합니다.", "채택할 내용이 있으면 기록 후보 보기 또는 기록함에 넣기를 사용합니다."]) +
+          reportSection("다음 행동", ["생성된 HTML을 열어 직원 보고서 내용을 검토합니다.", "채택할 내용이 있으면 채택 후보 미리보기 또는 채택 후보로 넘기기를 사용합니다."]) +
           safetySection(value.safety) +
           (value.output_path ? '<div class="row"><a href="/file?path=' + encodeURIComponent(value.output_path) + '" target="_blank">보고서 열기</a></div>' : '') +
           rawJsonDetails(value) +
@@ -3852,10 +4067,71 @@ function directorConsoleHtml() {
           rawJsonDetails(value) +
           '</div>';
       }
+      if ((value?.command === "plan" || value?.command === "materialize") && (value?.validation || value?.plan?.validation || value?.materialization || value?.plan?.materialization)) {
+        const plan = value.command === "plan" ? value : (value.plan || {});
+        const validation = value.validation || value.plan?.validation || {};
+        const materialization = value.materialization || plan.materialization || {};
+        const counts = value.counts || plan.counts || {};
+        const totalCandidates = Number(counts.proposals || 0) + Number(counts.memory || 0) + Number(counts.work_orders || 0) + Number(counts.handoffs || 0);
+        const isWrite = value.command === "materialize" && value.ok !== false;
+        const hasFailure = value.ok === false || validation.ok === false;
+        const title = hasFailure
+          ? "채택 후보로 넘길 수 없음"
+          : (isWrite ? "채택 후보로 넘김" : "채택 후보 미리보기");
+        const cardClass = hasFailure ? "danger" : (isWrite ? "good" : "warn");
+        const summary = hasFailure
+          ? "이 직원 보고서는 지금 채택 후보로 넘길 수 없습니다. 아래 이유를 확인하세요."
+          : (totalCandidates === 0
+            ? "이 직원 보고서에는 채택 후보로 넘길 제안, 기억, 업무 지시, 인수인계가 없습니다."
+            : "직원 보고서에서 채택 검토할 수 있는 후보만 뽑아 정리했습니다. 이것은 실행 승인, 공식 설정 확정, task 생성이 아닙니다.");
+        const cleanupPath = plan.output_path || value.output_path || "";
+        return '<div class="item ' + cardClass + '"><h3>' + title + '</h3>' +
+          '<p class="summary">' + esc(summary) + '</p>' +
+          reportSection("대상", [
+            "보고서: " + (plan.output_id || value.output_id || materialization.source_output_id || ""),
+            "직원 실행: " + (plan.role_run_id || value.role_run_id || materialization.source_role_run_id || ""),
+            "직원: " + staffName(plan.agent_id || value.agent_id || materialization.source_agent_id || ""),
+          ]) +
+          reportSection("채택 후보 개수", [
+            "아이디어 제안: " + (counts.proposals ?? 0) + "개",
+            "프로젝트 기억 후보: " + (counts.memory ?? 0) + "개",
+            "업무 지시 후보: " + (counts.work_orders ?? 0) + "개",
+            "직원 인수인계 후보: " + (counts.handoffs ?? 0) + "개",
+          ]) +
+          reportSection(hasFailure ? "왜 안 되는가" : "검토 결과", [
+            ...(validation.errors || []).map(translateStudioMessage),
+            ...(validation.warnings || []).map(translateStudioMessage),
+            translateStudioMessage(value.error || ""),
+          ], hasFailure ? "확인된 문제 없음" : "문제 없음") +
+          reportSection(isWrite ? "생성된 후보" : "생성 예정 후보", materialization.created_records || [], totalCandidates === 0 ? "생성할 후보 없음" : "후보 정보 없음") +
+          reportSection("다음 행동", hasFailure
+            ? ["보고서 ID 형식 또는 직원 보고서 내용을 확인하세요.", "깨진 테스트 보고서나 오래된 개발 버전 보고서라면 임시 보고서 정리로 목록에서 지울 수 있습니다."]
+            : (isWrite
+              ? ["오른쪽 채택 후보 검토 영역에서 채택, 반려, 보류, 수정 요청 중 하나로 정리합니다.", "저장된 후보는 바로 실행되거나 공식 설정으로 확정되지 않습니다."]
+              : ["내용이 맞으면 채택 후보로 넘기기를 눌러 검토 대상을 저장합니다.", "저장 전까지는 아무 파일도 바뀌지 않습니다."])) +
+          (hasFailure && cleanupPath ? actionsHtml([button("임시 보고서 정리", "staff-run-cleanup", cleanupPath, "danger")]) : "") +
+          safetySection(value.safety || plan.safety || materialization.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.command === "staff-run-cleanup") {
+        return '<div class="item good"><h3>임시 보고서 정리 완료</h3>' +
+          '<p class="summary">깨진 테스트 보고서나 더 이상 쓸 수 없는 개발 버전 직원 보고서를 목록에서 지웠습니다.</p>' +
+          reportSection("정리한 대상", [
+            "보고서: " + (value.output_id || ""),
+            "직원 실행: " + (value.role_run_id || ""),
+            "직원: " + staffName(value.agent_id || ""),
+            "경로: " + (value.cleaned_path || ""),
+          ]) +
+          reportSection("바뀌지 않은 것", ["소스 파일 변경 없음", "task 상태 변경 없음", "공식 설정 변경 없음", "commit/push 없음"]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
       if (value?.materialization || value?.command === "materialize") {
         const materialization = value.materialization || value;
-        return '<div class="item ' + (value.command === "materialize" ? "good" : "warn") + '"><h3>' + (value.command === "materialize" ? "기록 후보를 기록함에 넣음" : "기록 후보 미리보기") + '</h3>' +
-          '<p class="summary">직원 보고서에서 제안, 기억, 업무 지시, 인수인계 후보만 뽑아 Studio 기록 후보로 정리합니다. 이것은 실행 승인, 공식 설정 확정, task 생성이 아닙니다.</p>' +
+        return '<div class="item ' + (value.command === "materialize" ? "good" : "warn") + '"><h3>' + (value.command === "materialize" ? "채택 후보로 넘김" : "채택 후보 미리보기") + '</h3>' +
+          '<p class="summary">직원 보고서에서 아이디어 제안, 프로젝트 기억, 업무 지시, 직원 인수인계 후보만 뽑아 채택 검토 대상으로 정리합니다. 이것은 실행 승인, 공식 설정 확정, task 생성이 아닙니다.</p>' +
           reportSection("현재 상태", [
             "후보 묶음: " + (materialization.materialization_id || ""),
             "원본 보고서: " + (materialization.source_output_id || value.output_id || ""),
@@ -3865,7 +4141,7 @@ function directorConsoleHtml() {
           reportSection("생성/예정 후보", materialization.created_records || []) +
           reportSection("건너뛴 항목", materialization.skipped_items || []) +
           reportSection("다음 행동", [
-            value.command === "materialize" ? "오른쪽 기록 후보 결정 영역에서 승인, 반려, 보류, 수정 요청 중 하나로 정리합니다." : "내용이 맞으면 기록함에 넣기를 눌러 후보 기록을 저장합니다.",
+            value.command === "materialize" ? "오른쪽 채택 후보 검토 영역에서 채택, 반려, 보류, 수정 요청 중 하나로 정리합니다." : "내용이 맞으면 채택 후보로 넘기기를 눌러 검토 대상을 저장합니다.",
             "저장된 후보도 바로 실행되거나 공식 설정이 되지 않습니다.",
           ]) +
           safetySection(value.safety || materialization.safety) +
@@ -3877,13 +4153,20 @@ function directorConsoleHtml() {
       }
       return '<pre class="log-json">' + esc(JSON.stringify(value, null, 2)) + '</pre>';
     }
+    function revealResultPanel(panel) {
+      if (!panel || typeof panel.getBoundingClientRect !== "function") return;
+      const rect = panel.getBoundingClientRect();
+      const margin = 24;
+      const belowViewport = rect.top >= 0 && rect.bottom > window.innerHeight - margin;
+      if (belowViewport) panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }
     function writeResult(html) {
       const meetingPanel = el("meetingResultPanel");
       const meetingBody = el("meetingResult");
       if (activePage === "meetings" && meetingPanel && meetingBody) {
         meetingBody.innerHTML = html;
         meetingPanel.hidden = false;
-        meetingPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+        revealResultPanel(meetingPanel);
         return;
       }
       const globalPanel = el("globalResultPanel");
@@ -3891,7 +4174,7 @@ function directorConsoleHtml() {
       if (globalPanel && globalBody) {
         globalBody.innerHTML = html;
         globalPanel.hidden = false;
-        globalPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+        revealResultPanel(globalPanel);
       }
     }
     const log = (value) => {
@@ -4115,6 +4398,57 @@ function directorConsoleHtml() {
       syncMeetingChairOptions(preset.chair);
       renderMeetingTypeHelp();
     }
+    const WORK_ORDER_STATUS_DETAILS = {
+      director_review: "감독자가 내용을 보고 넘길지 판단하는 단계입니다. 새 업무 지시의 기본값입니다.",
+      proposed: "직원이나 회의에서 나온 제안 상태입니다. 아직 실행 대상으로 고른 것은 아닙니다.",
+      draft: "내용을 더 다듬는 초안 상태입니다. 작업 목록에 넣기 전에 보강할 때 사용합니다.",
+      approved_for_tasking: "업무 지시 내용이 충분해서 작업 목록 후보로 넘길 수 있는 상태입니다.",
+    };
+    function selectedWorkAgents() {
+      return Array.from(document.querySelectorAll("input[data-work-agent]:checked")).map((input) => input.value);
+    }
+    function workStatusOptionList() {
+      return Object.keys(WORK_ORDER_STATUS_DETAILS).map((value) =>
+        '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>'
+      ).join("");
+    }
+    function renderWorkStatusHelp() {
+      const status = fieldValue("workCreateStatus") || "director_review";
+      el("workStatusHelp").innerHTML =
+        '<strong>상태: ' + esc(optionLabel(status)) + '</strong>' +
+        '<p class="small muted">' + esc(WORK_ORDER_STATUS_DETAILS[status] || "업무 지시의 현재 검토 단계를 표시합니다.") + '</p>' +
+        '<p class="small muted">상태는 업무 지시 기록의 분류값입니다. 이 값을 고른다고 실행, 승인, task 생성, commit/push가 바로 일어나지 않습니다.</p>';
+    }
+    function renderWorkAgentPicker(selectedIds = selectedWorkAgents()) {
+      const departmentId = fieldValue("workCreateDepartment");
+      const selected = new Set(selectedIds);
+      const agents = asArray(state.staff_agents)
+        .filter((agent) => !departmentId || agent.department_id === departmentId)
+        .sort((a, b) => staffChoiceLabel(a).localeCompare(staffChoiceLabel(b)));
+      if (!departmentId) {
+        el("workAgentPicker").innerHTML = '<p class="small muted">담당 부서를 먼저 선택하면 해당 부서 직원 목록이 나타납니다.</p>';
+        updateWorkCreateImpact();
+        return;
+      }
+      el("workAgentPicker").innerHTML = agents.length ? agents.map((agent) =>
+        '<label class="staff-choice"><input type="checkbox" data-work-agent value="' + esc(agent.agent_id) + '"' + (selected.has(agent.agent_id) ? " checked" : "") + '>' +
+        '<span><strong>' + esc(staffChoiceLabel(agent)) + '</strong><span>' + esc(staffChoiceDetail(agent)) + '</span></span></label>'
+      ).join("") : '<p class="small muted">이 부서에 등록된 직원이 없습니다. 다른 부서를 선택하세요.</p>';
+      updateWorkCreateImpact();
+    }
+    function updateWorkCreateImpact() {
+      const departmentId = fieldValue("workCreateDepartment");
+      const agents = selectedWorkAgents();
+      const status = fieldValue("workCreateStatus") || "director_review";
+      el("workCreateImpact").innerHTML =
+        '<strong>저장 시 기록되는 내용</strong>' +
+        '<ul class="small">' +
+        '<li>담당 부서: ' + esc(departmentId ? departmentName(departmentId) : "아직 선택 없음") + '</li>' +
+        '<li>담당 직원: ' + esc(agents.length ? agents.map(staffName).join(", ") : "아직 선택 없음") + '</li>' +
+        '<li>상태: ' + esc(optionLabel(status)) + ' - ' + esc(WORK_ORDER_STATUS_DETAILS[status] || "") + '</li>' +
+        '<li>변경 범위: WorkOrder JSON만 생성합니다. task 생성, 직원 실행, 소스 수정, git 변경은 하지 않습니다.</li>' +
+        '</ul>';
+    }
     function optionLabel(value) {
       const labels = {
         creative:"크리에이티브", technical:"기술", production:"제작", review:"리뷰", qa_triage:"QA 분류", postmortem:"회고", release_readiness:"릴리즈 준비",
@@ -4125,7 +4459,7 @@ function directorConsoleHtml() {
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
         approved:"승인됨", rejected:"반려됨",
         active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시",
-        valid_output:"유효한 보고서", output_ready:"보고서 준비됨", needs_evidence:"검증 자료 필요", needs_director_decision:"감독자 결정 필요", completed:"완료", failed:"실패",
+        valid_output:"보고서 준비됨", output_ready:"보고서 준비됨", needs_evidence:"검증 자료 필요", needs_director_decision:"감독자 결정 필요", completed:"실행 완료", failed:"실패",
         completion_review_required:"완료 검토 필요", done_or_commit_decision:"완료/커밋 결정 필요", ready_for_implementation:"구현 준비 완료", in_progress:"진행 중", todo:"대기",
         low:"낮음", medium:"중간", high:"높음", critical:"치명적",
         validation:"검증", implementation:"구현", documentation:"문서", data:"데이터", automation:"자동화", review_task:"리뷰",
@@ -4133,6 +4467,17 @@ function directorConsoleHtml() {
       human_director:"Human Director (나)", staff_agent:"AI 직원", role_run:"직원 실행", work_order:"업무 지시", system:"시스템",
       };
       return labels[value] || value;
+    }
+    const STAFF_OUTPUT_STATUS_DETAILS = {
+      valid_output: "직원 보고서 JSON이 정상이고 읽을 준비가 된 상태입니다.",
+      output_ready: "직원 보고서가 읽을 준비가 된 상태입니다.",
+      needs_evidence: "보고서는 있지만 근거/검증 자료를 더 확인해야 하는 상태입니다.",
+      needs_director_decision: "감독자가 채택, 반려, 수정 요청 중 하나를 골라야 하는 상태입니다.",
+      completed: "직원 실행이 끝난 상태입니다.",
+      failed: "직원 실행 또는 보고서 생성에 실패한 상태입니다.",
+    };
+    function staffOutputStatusDetail(status) {
+      return STAFF_OUTPUT_STATUS_DETAILS[status] || "직원 보고서의 현재 검토 상태입니다.";
     }
     const ARTIFACT_LABELS = {
       WorkOrder: "업무 지시서",
@@ -4203,8 +4548,15 @@ function directorConsoleHtml() {
       el("meetingTurnSpeaker").innerHTML = '<option value="human_director">Human Director (나)</option>';
       el("meetingTurnSpeaker").value = "human_director";
       el("meetingTurnType").innerHTML = fixedOptionList(["brief", "proposal", "objection", "question", "answer", "synthesis", "decision_note"]);
+      const selectedWorkDepartmentBeforeRender = fieldValue("workCreateDepartment");
+      const selectedWorkAgentsBeforeRender = selectedWorkAgents();
+      const selectedWorkStatusBeforeRender = fieldValue("workCreateStatus") || "director_review";
       el("workCreateDepartment").innerHTML = departmentOptionList(state.departments, "담당 부서 선택");
-      el("workCreateStatus").innerHTML = fixedOptionList(["director_review", "proposed", "draft", "approved_for_tasking"]);
+      if (selectedWorkDepartmentBeforeRender) el("workCreateDepartment").value = selectedWorkDepartmentBeforeRender;
+      el("workCreateStatus").innerHTML = workStatusOptionList();
+      el("workCreateStatus").value = WORK_ORDER_STATUS_DETAILS[selectedWorkStatusBeforeRender] ? selectedWorkStatusBeforeRender : "director_review";
+      renderWorkStatusHelp();
+      renderWorkAgentPicker(selectedWorkAgentsBeforeRender);
       el("proposalCreateAgent").innerHTML = staffOptionList(state.staff_agents, "제안자 선택");
       el("decisionCreateType").innerHTML = fixedOptionList(["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"]);
       el("memoryCreateScope").innerHTML = fixedOptionList(["project", "canon", "global", "agent", "department", "meeting", "task"]);
@@ -4234,8 +4586,8 @@ function directorConsoleHtml() {
       if (meeting.status === "draft") return "회의판을 보고 내 발언을 기록하거나 다음 AI 발언 받기로 첫 관점을 모으세요.";
       if (meeting.unresolved_count) return "남은 질문을 정리하고 담당 직원의 답변을 받으세요.";
       if (meeting.follow_up_count) return "후속 업무 지시를 확인하고 진행 여부를 결정하세요.";
-      if (asArray(meeting.proposals).length) return "제안을 결정 기록 또는 후속 업무로 넘길지 판단하세요.";
-      return "회의판을 보고 다음 발언, 후속 업무, 결정 기록, 종료 중 하나를 고르세요.";
+      if (asArray(meeting.proposals).length) return "제안을 업무 후보로 넘길지, 판단 기록으로 남길지 결정하세요.";
+      return "회의판을 보고 다음 발언, 업무 후보 만들기, 판단 기록 남기기, 종료 중 하나를 고르세요.";
     }
     function meetingLastTurnLine(meeting) {
       const turn = meeting?.last_turn;
@@ -4247,7 +4599,14 @@ function directorConsoleHtml() {
       return value ? label + " " + value + "개" : emptyLabel;
     }
     function setPage(page) {
-      activePage = PAGES[page] ? page : "home";
+      const nextPage = PAGES[page] ? page : "home";
+      if (nextPage !== activePage) {
+        const globalPanel = el("globalResultPanel");
+        const meetingPanel = el("meetingResultPanel");
+        if (globalPanel) globalPanel.hidden = true;
+        if (meetingPanel) meetingPanel.hidden = true;
+      }
+      activePage = nextPage;
       if (activePage === "systems" || activePage === "policy") {
         setInternalNavVisible(true);
       }
@@ -4337,11 +4696,11 @@ function directorConsoleHtml() {
       }
       state.materializations.slice(0, 5).forEach((item) => {
         items.push({
-          kind: "직원 보고서 기록 후보",
+          kind: "직원 보고서 채택 후보",
           title: item.materialization_id,
-          why_now: "직원 보고서에서 뽑힌 기록 후보가 아직 채택/반려/수정 요청으로 정리되지 않았습니다.",
+          why_now: "직원 보고서에서 뽑힌 채택 후보가 아직 채택/반려/수정 요청으로 정리되지 않았습니다.",
           priority_label: "중간",
-          meaning: "AI 직원 보고서에서 제안/기억/업무 지시 후보를 뽑아둔 상태입니다.",
+          meaning: "AI 직원 보고서에서 아이디어, 프로젝트 기억, 업무 지시, 직원 인수인계 후보를 뽑아둔 상태입니다.",
           effect: "승인 기록을 남겨도 바로 실행되지는 않습니다. 이후 업무 지시나 결정/기억으로 따로 넘깁니다.",
           risk: "직원 제안이 공식 설정처럼 굳지 않게, 채택 범위와 제외 범위를 분리해야 합니다.",
           actions: [
@@ -4475,7 +4834,7 @@ function directorConsoleHtml() {
       state.recent_staff_runs.forEach((run) => items.push({ when: run.updated_at, kind: "직원 보고서", title: run.output_id || run.role_run_id, detail: staffName(run.agent_id) + " · " + optionLabel(run.output_status || run.status), page: "runs" }));
       state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "회의", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "meetings" }));
       state.work_orders.forEach((wo) => items.push({ when: wo.updated_at || wo.created_at || "", kind: "업무 지시", title: wo.work_order_id, detail: wo.objective || wo.status, page: "work" }));
-      state.materializations.forEach((m) => items.push({ when: m.updated_at || "", kind: "기록 후보", title: m.materialization_id, detail: "records " + m.created_record_count, page: "runs" }));
+      state.materializations.forEach((m) => items.push({ when: m.updated_at || "", kind: "채택 후보", title: m.materialization_id, detail: "후보 " + m.created_record_count + "개", page: "runs" }));
       state.dev_logs.slice(0, 8).forEach((logItem) => items.push({ when: logItem.updated_at, kind: "DevLog", title: logItem.title, detail: logItem.group, page: "devlog" }));
       return items.sort((a, b) => String(b.when || "").localeCompare(String(a.when || ""))).slice(0, 24);
     }
@@ -4614,7 +4973,7 @@ function directorConsoleHtml() {
       const items = buildDirectorDecisionItems().slice(0, 3);
       el("inbox").innerHTML = items.length
         ? items.map(renderDecisionCard).join("")
-        : '<div class="item good"><h3>지금 바로 결정할 일 없음</h3><p class="summary">새 완료 검토, 승인 gate, 기록 후보, 제안, Git 변경이 생기면 여기에 우선순위와 이유가 함께 표시됩니다.</p></div>';
+        : '<div class="item good"><h3>지금 바로 결정할 일 없음</h3><p class="summary">새 완료 검토, 승인 gate, 채택 후보, 제안, Git 변경이 생기면 여기에 우선순위와 이유가 함께 표시됩니다.</p></div>';
     }
     function renderToolbox() {
       const catalog = state.toolbox || { categories: [] };
@@ -4660,7 +5019,7 @@ function directorConsoleHtml() {
         metric("보고서", m.review_packets),
         metric("인수인계", m.handoffs),
         metric("업무 지시", m.work_orders),
-        metric("기록 후보", m.materializations),
+        metric("채택 후보", m.materializations),
         metric("제안", m.proposals),
         metric("기억", m.memories),
         metric("회의", state.meetings.length),
@@ -4688,20 +5047,32 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>필수 산출물</span><span class="pill">' + esc(inlineList(packet.required_outputs)) + '</span></div>' +
         '</div>' +
         internalLinksHtml([link("문맥 원본", packet.href)]) + '</div>'
-      ).join("") : renderEmpty("아직 내부 문맥 기록이 없습니다. 업무 지시에서 직원 자료 저장을 누르면 여기에 나타납니다.");
+      ).join("") : renderEmpty("아직 내부 문맥 기록이 없습니다. 업무 지시에서 직원 자료를 저장하면 여기에 나타납니다.");
       const visibleRuns = state.recent_staff_runs.filter((r) =>
         (!filters.runStatus || (r.output_status || r.status) === filters.runStatus) &&
         includesText([r.role_run_id, r.output_id, r.agent_id, r.model, r.reasoning, r.summary, r.output_status, r.status].join(" "), filters.runSearch)
       );
+      const hasAdoptionCandidates = (r) => {
+        const counts = r.materializable_counts || {};
+        return Boolean((counts.proposals || 0) + (counts.memory || 0) + (counts.workorders || 0) + (counts.handoffs || 0));
+      };
       el("runs").innerHTML = visibleRuns.length ? visibleRuns.map((r) =>
         '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(optionLabel(r.output_status || r.status)) + '</span></h3>' +
         '<p>' + esc(staffName(r.agent_id)) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
-        '<p class="summary">' + esc(short(r.summary)) + '</p>' +
-        '<p class="small muted">제안 ' + esc(r.materializable_counts.proposals) + ' · 기억 ' + esc(r.materializable_counts.memory) + ' · 업무 지시 ' + esc(r.materializable_counts.workorders) + ' · 인수인계 ' + esc(r.materializable_counts.handoffs) + '</p>' +
+        '<p class="small muted">' + esc(staffOutputStatusDetail(r.output_status || r.status)) + '</p>' +
+        '<h3>보고서 요약</h3><p class="summary">' + esc(short(r.summary)) + '</p>' +
+        '<h3>채택할 수 있는 내용</h3>' +
+        '<ul class="small">' +
+        '<li>아이디어 제안: ' + esc(r.materializable_counts.proposals) + '개</li>' +
+        '<li>프로젝트 기억 후보: ' + esc(r.materializable_counts.memory) + '개</li>' +
+        '<li>업무 지시 후보: ' + esc(r.materializable_counts.workorders) + '개</li>' +
+        '<li>직원 인수인계 후보: ' + esc(r.materializable_counts.handoffs) + '개</li>' +
+        '</ul>' +
         actionsHtml(r.output_path ? [
-          button("보고서 만들기", "review-packet-export", r.output_path),
-          button("기록 후보 보기", "materialize-plan", r.output_path),
-          button("기록함에 넣기", "materialize", r.output_path, "good")
+          button("보고서 보기/만들기", "review-packet-export", r.output_path),
+          button("채택 후보 미리보기", "materialize-plan", r.output_path),
+          button("채택 후보로 넘기기", "materialize", r.output_path, "good"),
+          ...(hasAdoptionCandidates(r) ? [] : [button("임시 보고서 정리", "staff-run-cleanup", r.output_path, "danger")])
         ] : []) +
         internalLinksHtml([
           link("실행 기록", "/file?path=" + encodeURIComponent(r.staff_run_path)),
@@ -4710,15 +5081,15 @@ function directorConsoleHtml() {
       ).join("") : renderEmpty("조건에 맞는 직원 보고서가 없습니다.");
       el("materializations").innerHTML = state.materializations.length ? state.materializations.map((m) =>
         '<div class="item good"><h3><code>' + esc(m.materialization_id) + '</code></h3>' +
-        '<p class="small">source: ' + esc(m.source_output_id) + ' · records ' + esc(m.created_record_count) + '</p>' +
+        '<p class="small">원본 보고서: ' + esc(m.source_output_id) + ' · 후보 ' + esc(m.created_record_count) + '개</p>' +
         actionsHtml([
           button("결정 전 확인", "decision-plan", m.path),
-          button("승인 결정 기록", "decision-approve", m.path, "good", 'data-decision="approve"'),
+          button("채택 결정 기록", "decision-approve", m.path, "good", 'data-decision="approve"'),
           button("수정 요청", "decision-request-changes", m.path, "warn", 'data-decision="request_changes"'),
           button("반려", "decision-reject", m.path, "danger", 'data-decision="reject"')
         ]) +
-        internalLinksHtml([link("기록 후보 원본", m.href)]) + '</div>'
-      ).join("") : '<p class="muted">아직 기록 후보가 없습니다.</p>';
+        internalLinksHtml([link("채택 후보 원본", m.href)]) + '</div>'
+      ).join("") : '<p class="muted">아직 채택 후보가 없습니다. 왼쪽 직원 보고서에서 채택 후보로 넘기기를 누르면 여기에 나타납니다.</p>';
       const visibleWorkOrders = state.work_orders.filter((wo) =>
         (!filters.workDepartment || wo.department_id === filters.workDepartment) &&
         includesText([wo.work_order_id, wo.objective, wo.department_id, wo.status].join(" "), filters.workSearch)
@@ -4728,19 +5099,20 @@ function directorConsoleHtml() {
         '<p class="small muted">부서: ' + esc(departmentName(wo.department_id) || "(없음)") + ' · 담당: ' + esc(inlineList(asArray(wo.assigned_agents).map(staffName), "(없음)")) + '</p>' +
         '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
         '<div class="compact-list">' +
-        '<div class="compact-line"><span>포함 범위</span><span class="pill">' + esc(asArray(wo.scope).length) + '</span></div>' +
-        listHtml(wo.scope, "범위가 비어 있습니다.") +
-        '<div class="compact-line"><span>기대 산출물</span><span class="pill">' + esc(inlineList(wo.expected_outputs)) + '</span></div>' +
+        '<div class="compact-line"><span>할 일</span><span class="pill">' + esc(asArray(wo.scope).length) + '</span></div>' +
+        listHtml(wo.scope, "할 일이 비어 있습니다.") +
+        '<div class="compact-line"><span>기대 산출물</span><span class="pill">' + esc(asArray(wo.expected_outputs).length) + '</span></div>' +
+        listHtml(wo.expected_outputs, "기대 결과물이 비어 있습니다.") +
         '<div class="compact-line"><span>승인 항목</span><span class="pill">' + esc(asArray(wo.approval_items).length ? "필요" : "없음") + '</span></div>' +
         listHtml(wo.approval_items) +
         '</div>' +
+        '<div class="button-help small"><strong>권장 순서</strong><ul><li>먼저 점검/미리보기/계획으로 내용을 확인합니다.</li><li>바로 직원에게 맡길지, 작업 목록에 넣을지 하나를 고릅니다.</li></ul></div>' +
         actionsHtml([
           button("인수인계 점검", "workorder-handoff-plan", wo.path),
           button("직원 자료 미리보기", "workorder-context-plan", wo.path),
-          button("직원 자료 저장", "workorder-context-create", wo.path, "good"),
           button("직원 실행 계획", "workorder-staff-plan", wo.path),
-          button("직원에게 맡기기", "workorder-staff-run", wo.path, "warn"),
           button("작업 생성 계획", "workorder-plan", wo.path),
+          button("직원에게 맡기기", "workorder-staff-run", wo.path, "warn"),
           button("작업 목록에 넣기", "workorder-create", wo.path, "good")
         ]) +
         internalLinksHtml([link("업무 지시 원본", wo.href)]) + '</div>'
@@ -4780,8 +5152,8 @@ function directorConsoleHtml() {
           meeting.is_stored ? button("다음 AI 발언 받기", "meeting-agent-run", meeting.path, "good") : "",
           '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">직접 발언 추가</button>',
           button("회의판 자세히", "meeting-board", meeting.path),
-          button("후속 작업 만들기", "meeting-create-workorder", meeting.path),
-          button("결정으로 기록", "meeting-create-decision", meeting.path),
+          button("업무 후보 만들기", "meeting-create-workorder", meeting.path),
+          button("판단 기록 남기기", "meeting-create-decision", meeting.path),
           meeting.is_stored && meeting.status !== "closed" ? button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : ""
         ]) +
         internalLinksHtml([link("회의 원본", meeting.href)]) + '</div>'
@@ -5106,12 +5478,16 @@ function directorConsoleHtml() {
     }
     async function createWorkOrderFromForm() {
       const objective = fieldValue("workCreateObjective");
+      const departmentId = fieldValue("workCreateDepartment");
+      const assignedAgents = selectedWorkAgents();
       if (!objective) return alert("업무 지시 목표를 입력하세요.");
-      if (!confirm("새 업무 지시를 저장할까요? 작업 목록 생성과 runner 실행은 별도 버튼에서 처리합니다.")) return;
+      if (!departmentId) return alert("담당 부서를 선택하세요.");
+      if (!assignedAgents.length) return alert("담당 직원을 한 명 이상 선택하세요.");
+      if (!confirm("새 업무 지시를 저장할까요?\\n\\n저장되는 것: WorkOrder 기록\\n바뀌지 않는 것: task 생성, 직원 실행, 소스 수정, commit/push")) return;
       log(await post("/api/studio/workorder/create", {
         objective,
-        department_id: fieldValue("workCreateDepartment"),
-        assigned_agents: fieldValue("workCreateAgents"),
+        department_id: departmentId,
+        assigned_agents: assignedAgents,
         status: fieldValue("workCreateStatus") || "director_review",
         scope: fieldValue("workCreateScope"),
         non_goals: fieldValue("workCreateNonGoals"),
@@ -5201,9 +5577,16 @@ function directorConsoleHtml() {
       }
       if (action === "materialize-plan") return log(await post("/api/output/materialize-plan", { path:filePath }));
       if (action === "materialize") {
-        if (!confirm("이 직원 보고서에서 제안/기억/업무 후보만 뽑아 '기록 후보'로 저장할까요?\\n\\n바뀌는 것: Studio 기록 후보 파일이 생깁니다.\\n바뀌지 않는 것: 공식 설정 확정, task 생성/실행, 소스 수정, commit/push는 하지 않습니다.")) return;
+        if (!confirm("이 직원 보고서에서 아이디어 제안, 프로젝트 기억, 업무 지시, 직원 인수인계 후보만 뽑아 '채택 후보'로 넘길까요?\\n\\n바뀌는 것: Studio 채택 후보 파일이 생깁니다.\\n바뀌지 않는 것: 공식 설정 확정, task 생성/실행, 소스 수정, commit/push는 하지 않습니다.")) return;
         log(await post("/api/output/materialize", { path:filePath }));
         await refresh();
+        return;
+      }
+      if (action === "staff-run-cleanup") {
+        if (!confirm("이 임시 직원 보고서를 목록에서 정리할까요?\\n\\n삭제되는 것: _Temp 아래의 해당 직원 실행 기록과 보고서 JSON\\n바뀌지 않는 것: 소스, task, 공식 설정, commit/push")) return;
+        log(await post("/api/studio/staff-run/cleanup", { path:filePath }));
+        await refresh();
+        return;
       }
       if (action === "review-packet-export") {
         log(await post("/api/review-packet/export", { path:filePath }));
@@ -5211,7 +5594,7 @@ function directorConsoleHtml() {
       }
       if (action === "decision-plan") return log(await post("/api/materialization/review-plan", { path:filePath, decision:"approve" }));
       if (action.startsWith("decision-")) {
-        if (!confirm("이 기록 후보에 대한 Human Director 결정 기록을 남길까요? 이후 실행 승인은 별도입니다.")) return;
+        if (!confirm("이 채택 후보에 대한 Human Director 결정 기록을 남길까요? 이후 실행 승인은 별도입니다.")) return;
         log(await post("/api/materialization/review-record", { path:filePath, decision:decision || "approve", reason:"StudioConsole" }));
         await refresh();
       }
@@ -5249,12 +5632,12 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "meeting-create-workorder") {
-        if (!confirm("이 회의 결과로 후속 업무 지시를 만들까요? 업무 지시만 저장하고, 구현/승인/실행은 별도 gate에서 처리합니다.")) return;
+        if (!confirm("이 회의에서 나온 해야 할 일을 업무 지시 후보로 저장할까요? 구현, task 생성, 승인, 실행은 아직 하지 않습니다.")) return;
         log(await post("/api/studio/meeting/create-workorder", { path:filePath }));
         await refresh();
       }
       if (action === "meeting-create-decision") {
-        if (!confirm("이 회의 결과를 Human Director 결정으로 기록할까요? 결정은 근거 기록이며 공식 설정/구현/작업 실행은 별도입니다.")) return;
+        if (!confirm("이 회의에서 정한 결론이나 방향을 감독자 판단 기록으로 남길까요? 공식 설정 확정, 구현, task 생성은 별도입니다.")) return;
         log(await post("/api/studio/meeting/create-decision", { path:filePath, decision_type:"approve" }));
         await refresh();
       }
@@ -5394,6 +5777,19 @@ function directorConsoleHtml() {
       }
       if (event.target.matches("#meetingCreateChair")) {
         updateMeetingCreateImpact();
+      }
+      if (event.target.matches("#workCreateDepartment")) {
+        renderWorkAgentPicker([]);
+        return;
+      }
+      if (event.target.matches("#workCreateStatus")) {
+        renderWorkStatusHelp();
+        updateWorkCreateImpact();
+        return;
+      }
+      if (event.target.matches("input[data-work-agent]")) {
+        updateWorkCreateImpact();
+        return;
       }
     });
     el("studioIntakeSubmit").addEventListener("click", () => submitStudioIntake().catch(log));
@@ -5548,7 +5944,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
       what_will_not_change: nonGoals,
       files_or_memory_affected: ["_Docs/AIWorkflow/Studio/DirectorGoals", "_Docs/AIWorkflow/Studio/MeetingSessions", "_Docs/AIWorkflow/Studio/WorkOrders", "_Docs/AIWorkflow/Studio/Proposals"],
       risks: route.reasons.length ? route.reasons : ["목표 범위가 넓으면 후속 업무가 과하게 커질 수 있습니다."],
-      rollback_plan: ["생성된 Studio 기록 후보를 superseded/rejected로 처리하거나 삭제 전 검토합니다."],
+      rollback_plan: ["생성된 Studio 채택 후보를 superseded/rejected로 처리하거나 삭제 전 검토합니다."],
       evidence_required: ["DirectorGoalPlan JSON", "생성된 MeetingSession/WorkOrder/Proposal 후보"],
     },
   ];
@@ -5645,7 +6041,7 @@ async function buildStaffOperatingPlan(repoRoot, agentId) {
     {
       state: "draft",
       meaning: "직원이 만든 초안입니다. 아직 제안, 결정, 공식 설정, 업무 지시가 아닙니다.",
-      director_action: "읽고 버리거나, 기록 후보로 넘길지 결정합니다.",
+      director_action: "읽고 버리거나, 채택 후보로 넘길지 결정합니다.",
     },
     {
       state: "proposal",
@@ -5906,8 +6302,8 @@ function buildMeetingFacilitationPlan(meeting = {}) {
     recommended_actions: recommendedActions,
     director_decision_options: [
       "회의를 계속한다: AI 직원 발언을 더 받거나 사람이 직접 발언을 추가합니다.",
-      "후속 업무로 넘긴다: 회의 결과를 WorkOrder 후보로 만듭니다.",
-      "결정으로 기록한다: 채택/반려/보류 판단을 Decision으로 남깁니다.",
+      "업무 후보 만들기: 회의에서 나온 해야 할 일을 WorkOrder 후보로 저장합니다.",
+      "판단 기록 남기기: 회의에서 정한 결론, 방향, 채택/반려/보류 판단을 Decision 기록으로 남깁니다.",
       "회의를 종료한다: 더 논의하지 않고 회의 상태를 closed로 바꿉니다.",
     ],
     blockers: [
@@ -6051,7 +6447,7 @@ function buildMeetingBoard(meeting = {}) {
     director_next_actions: [
       nextSpeakerId ? "다음 AI 발언 받기: 추천 직원의 다음 관점을 회의에 추가" : "내 발언 기록: Human Director 의견을 회의록에 기록",
       "회의를 더 이어가려면: 직접 발언 추가 또는 다음 AI 발언 받기",
-      hasOpenItems ? "쟁점이 정리되면: 결정으로 기록 또는 후속 작업 만들기" : "논의가 충분하면: 후속 작업 만들기, 결정으로 기록, 또는 회의 종료",
+      hasOpenItems ? "쟁점이 정리되면: 판단 기록 남기기 또는 업무 후보 만들기" : "논의가 충분하면: 업무 후보 만들기, 판단 기록 남기기, 또는 회의 종료",
     ],
     next_actions: facilitation.recommended_actions,
     remaining_questions: questions,
@@ -6747,9 +7143,9 @@ function buildDirectorSurfaceMap() {
   const surfaces = [
     ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 검증 자료 확인"], false],
     ["goals", "목표 기획", "Human Director", "큰 목표를 부서, 직원, 회의, 업무 후보로 쪼갭니다.", ["기획안 미리보기", "기획안 저장", "후보 생성"], false],
-    ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 기록, 커밋 판단 후보를 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "기록 후보 결정", "commit/push 판단"], false],
-    ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 후속 업무, 결정을 정리합니다.", ["회의판 자세히", "내 발언 기록", "다음 AI 발언 받기", "후속 업무 생성"], false],
-    ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 기록 후보로 넘깁니다.", ["보고서 만들기", "기록 후보 보기", "기록함에 넣기"], false],
+    ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 채택 후보, 커밋 판단을 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "채택 후보 검토", "commit/push 판단"], false],
+    ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 업무 후보, 판단 기록을 정리합니다.", ["회의판 자세히", "내 발언 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
+    ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 채택 후보로 넘깁니다.", ["보고서 보기/만들기", "채택 후보 미리보기", "채택 후보로 넘기기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
     ["knowledge", "지식/결정", "Human Director / Documentation Keeper", "제안, 결정, 기억, canon 후보를 구분합니다.", ["전환 계획", "Canon 충돌 점검", "제안/기억/결정 원본 확인"], false],
     ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
@@ -6814,7 +7210,7 @@ async function buildTraceabilityMap(repoRoot) {
   if (core.completion?.card_path) refs.push({ kind: "CompletionCard", label: "completion card", meaning: "감독자가 읽는 짧은 완료 요약입니다.", ref: core.completion.card_path });
   if (core.git?.changed_count) refs.push({ kind: "Git", label: `${core.git.changed_count} changed`, meaning: "커밋 전 확인해야 할 현재 변경입니다.", ref: core.git.changed_files?.join(", ") || "" });
   const relatedDevLogs = (summary.dev_logs || []).filter((item) => !taskId || JSON.stringify(item).includes(taskId)).slice(0, 6);
-  relatedDevLogs.forEach((item) => refs.push({ kind: "DevLog", label: item.title || item.id || "DevLog", meaning: "작업 배경과 검증 기록 후보입니다.", ref: item.path || item.href || "" }));
+  relatedDevLogs.forEach((item) => refs.push({ kind: "DevLog", label: item.title || item.id || "DevLog", meaning: "작업 배경과 검증 참고 자료입니다.", ref: item.path || item.href || "" }));
   const missing = [];
   if (taskId && !core.runner?.runner_run_id) missing.push("Runner 실행 기록이 없습니다.");
   if (taskId && !core.verification?.path) missing.push("VerificationReport를 찾지 못했습니다.");
@@ -7022,8 +7418,8 @@ async function buildWorkOrderHandoffPlan(repoRoot, workOrder = {}) {
     .slice(0, 3);
   const recommendedAgents = agents.length ? agents : fallbackAgents;
   const missing = [];
-  if (!stringList(workOrder.scope).length) missing.push("포함 범위가 비어 있습니다.");
-  if (!stringList(workOrder.non_goals).length) missing.push("제외 범위가 비어 있습니다.");
+  if (!stringList(workOrder.scope).length) missing.push("할 일이 비어 있습니다.");
+  if (!stringList(workOrder.non_goals).length) missing.push("제약 조건이 비어 있습니다.");
   if (!stringList(workOrder.expected_outputs).length) missing.push("기대 산출물이 비어 있습니다.");
   if (!stringList(workOrder.verification_plan).length) missing.push("검증 계획이 비어 있습니다.");
   if (!recommendedAgents.length) missing.push("담당 AI 직원을 찾지 못했습니다.");
@@ -7051,8 +7447,8 @@ async function buildWorkOrderHandoffPlan(repoRoot, workOrder = {}) {
     })),
     handoff_contract: {
       inputs_required: [
-        ...(workOrder.scope || []).map((item) => `포함 범위: ${item}`),
-        ...(workOrder.non_goals || []).map((item) => `제외 범위: ${item}`),
+        ...(workOrder.scope || []).map((item) => `할 일: ${item}`),
+        ...(workOrder.non_goals || []).map((item) => `제약 조건: ${item}`),
       ],
       expected_outputs: stringList(workOrder.expected_outputs),
       approval_items: approvalSummaryList(workOrder.approval_items),
@@ -7353,6 +7749,12 @@ async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
     const bat = repoPath(repoRoot, "tools/aiworkflow/studio_output_materializer.bat");
     const result = await runTool(repoRoot, bat, ["materialize", body.path, "--execute", "--json"], 120000);
     return sendJson(res, result.ok ? 200 : 500, result.json || result);
+  }
+
+  if (req.method === "POST" && parsedUrl.pathname === "/api/studio/staff-run/cleanup") {
+    const body = await readRequestJson(req);
+    const result = await cleanupTemporaryStaffRun(repoRoot, body.path || "");
+    return sendJson(res, 200, result);
   }
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/review-packet/export") {

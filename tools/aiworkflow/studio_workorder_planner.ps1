@@ -7,6 +7,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = $Utf8NoBom
+$OutputEncoding = $Utf8NoBom
 
 function Read-JsonFile {
     param([string]$Path)
