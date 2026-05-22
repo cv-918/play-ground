@@ -8,15 +8,27 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repo = Resolve-Path $RepoRoot
-$target = Join-Path $repo $DataDir
+$repo = (Resolve-Path -LiteralPath $RepoRoot).Path
+$target = if ([System.IO.Path]::IsPathRooted($DataDir)) {
+    [System.IO.Path]::GetFullPath($DataDir)
+}
+else {
+    [System.IO.Path]::GetFullPath((Join-Path $repo $DataDir))
+}
+
+$repoFull = [System.IO.Path]::GetFullPath($repo).TrimEnd("\", "/")
+if (-not $target.StartsWith($repoFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+    Write-Host "[ERROR] DataDir escapes repository root: $DataDir"
+    Write-Host "[ERROR] Resolved DataDir: $target"
+    exit 2
+}
 
 if (-not (Test-Path $target)) {
     Write-Host "[ERROR] Data directory not found: $target"
     exit 2
 }
 
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$timestamp = Get-Date -Format "yyyyMMdd_HHmmss_fff"
 $outDir = Join-Path $repo "_Temp\AIWorkflowReports"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
