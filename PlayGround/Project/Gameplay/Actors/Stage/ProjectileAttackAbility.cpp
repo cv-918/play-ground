@@ -90,18 +90,18 @@ _bool ProjectileAttackAbility::TryGetAnimationRequest(const Enemy& _enemy, Enemy
 	if (attack_motion_duration_ <= 0.0)
 		return false;
 
-	const _double fire_time = attack_motion_duration_ * 0.5;
-	if (!fired_in_current_attack_ && attack_motion_elapsed_ < fire_time)
+	const _double search_duration = attack_motion_duration_ * 0.5;
+	if (!fired_in_current_attack_ && attack_motion_elapsed_ < search_duration)
 	{
 		_out_request.clip_name_ = L"search";
 		_out_request.elapsed_ = attack_motion_elapsed_;
-		_out_request.duration_ = fire_time;
+		_out_request.duration_ = search_duration;
 		return true;
 	}
 
 	_out_request.clip_name_ = L"attack";
-	_out_request.elapsed_ = std::max(0.0, attack_motion_elapsed_ - fire_time);
-	_out_request.duration_ = std::max(0.0001, attack_motion_duration_ - fire_time);
+	_out_request.elapsed_ = std::max(0.0, attack_motion_elapsed_ - search_duration);
+	_out_request.duration_ = std::max(0.0001, attack_motion_duration_ - search_duration);
 	return true;
 }
 
@@ -151,16 +151,19 @@ void ProjectileAttackAbility::_UpdateAttack(Enemy& _enemy, _double _delta_time)
 	const auto target_pos = target->GetTransform()->Position();
 	_enemy.FaceTo(target_pos);
 
+	const _double attack_duration = std::max(0.0001, attack_motion_duration_);
 	attack_motion_elapsed_ += _delta_time;
 
-	if (!fired_in_current_attack_ && attack_motion_elapsed_ >= attack_motion_duration_ * 0.5)
+	if (!fired_in_current_attack_ && attack_motion_elapsed_ >= attack_duration)
 	{
+		attack_motion_elapsed_ = attack_duration;
 		_SpawnProjectile(_enemy);
 		fired_in_current_attack_ = true;
 		fire_cooldown_acc_ = 0.0;
+		return;
 	}
 
-	if (attack_motion_elapsed_ >= attack_motion_duration_)
+	if (fired_in_current_attack_ && attack_motion_elapsed_ >= attack_duration)
 	{
 		_enemy.RequestChangeState(EnemyActionState::Move);
 	}
@@ -183,10 +186,9 @@ void ProjectileAttackAbility::_SpawnProjectile(Enemy& _enemy)
 	const auto target_pos = target->GetTransform()->Position();
 	const auto enemy_pos = _enemy.GetTransform()->Position();
 	const auto fire_direction = (target_pos - enemy_pos).Normalized();
-	const _Vector3 side_direction{ -fire_direction.y, fire_direction.x, 0.f };
 	const auto muzzle_offset =
 		fire_direction * info->projectile_spawn_offset_x_ +
-		side_direction * info->projectile_spawn_offset_y_;
+		_Vector3(0.f, info->projectile_spawn_offset_y_, 0.f);
 	const auto pos = enemy_pos + muzzle_offset;
 
 	switch (info->projectile_pattern_)

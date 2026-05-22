@@ -425,8 +425,8 @@
     "projectile_knockback_curve_": 2,
     "projectile_camera_shake_scale_": 0.9,
     "projectile_knockback_power_": 200.0,
-    "projectile_spawn_offset_x_": 20.0,
-    "projectile_spawn_offset_y_": 0.0,
+    "projectile_spawn_offset_x_": 21.0,
+    "projectile_spawn_offset_y_": -46.0,
     "animation_clips_": [
       {
         "clip_name_": "move",
