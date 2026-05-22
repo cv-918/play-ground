@@ -2,6 +2,8 @@
 #include "../Widgets/WidgetBase.h"
 
 class AttributeNodeTree;
+class Image;
+
 class OutGameAttributeView final : public WidgetBase
 {
 public:
@@ -19,6 +21,7 @@ private:
 	void UpdateLayout();
 	void _UpdateTreeInputRegion();
 
+	Image* background_image_ = nullptr;
 	class Button* skills_btn_ = nullptr;
 	class Button* return_btn_ = nullptr;
 	AttributeNodeTree* attribute_tree_ = nullptr;

@@ -4,6 +4,7 @@
 
 class Button;
 class Grid;
+class Image;
 class OutGameSkillSlot;
 class OutGameSkillToolTip;
 
@@ -23,6 +24,7 @@ private:
 	void RefreshSkillGridState();
 	void _UpdateHoveredSkillTooltip();
 
+	Image* background_image_ = nullptr;
 	Button* attributes_btn_ = nullptr;
 	Button* return_btn_ = nullptr;
 	Grid* skill_list_grid_ = nullptr;

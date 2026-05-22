@@ -3,6 +3,7 @@
 
 #include "../Elements/Button.h"
 #include "../Elements/Grid.h"
+#include "../Elements/Image.h"
 #include "../Widgets/OutGameSkillSlot.h"
 #include "../Widgets/OutGameSkillToolTip.h"
 
@@ -32,10 +33,19 @@ OutGameSkillView::OutGameSkillView(
 	const std::function<void()>& _attributes_btn_callback,
 	const std::function<void()>& _return_btn_callback)
 {
+	Image::CreateInfo background_info;
+	background_info.rect = GAME_VIEW_RECT;
+	background_info.texture_path = Path::Ui + L"Pages/Skill,Node-page_blank.png";
+	background_image_ = CreateElement<Image>(background_info);
+
 	Button::CreateInfo attributes_btn_info;
 	attributes_btn_info.rect = _Rect{ { 0, 0 }, COMMON_BUTTON_SIZE };
 	attributes_btn_info.text = L"ATTRIBUTES";
 	attributes_btn_info.on_lclick = _attributes_btn_callback;
+	attributes_btn_info.normal_image_path = Path::Buttons + L"ATTRIBUTES/ATTRIBUTES_Default.png";
+	attributes_btn_info.hovered_image_path = Path::Buttons + L"ATTRIBUTES/ATTRIBUTES_MO.png";
+	attributes_btn_info.pressed_l_image_path = Path::Buttons + L"ATTRIBUTES/ATTRIBUTES_Push.png";
+	attributes_btn_info.disabled_image_path = Path::Buttons + L"ATTRIBUTES/ATTRIBUTES_Disabled.png";
 	attributes_btn_ = CreateElement<Button>(attributes_btn_info);
 
 	Button::CreateInfo return_btn_info;
@@ -109,6 +119,9 @@ void OutGameSkillView::OnViewportChanged()
 
 void OutGameSkillView::UpdateLayout()
 {
+	if (background_image_ != nullptr)
+		background_image_->SetRect(GAME_VIEW_RECT);
+
 	if (attributes_btn_ == nullptr || return_btn_ == nullptr || skill_list_grid_ == nullptr
 		|| equipped_skill_slot_0_ == nullptr || equipped_skill_slot_1_ == nullptr)
 		return;

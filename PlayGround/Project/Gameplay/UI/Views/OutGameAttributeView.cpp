@@ -2,6 +2,7 @@
 #include "OutGameAttributeView.h"
 
 #include "../Elements/Button.h"
+#include "../Elements/Image.h"
 #include "../Widgets/AttributeNodeTree.h"
 
 #include "GamePlaySystems/SkillManager.h"
@@ -26,10 +27,19 @@ OutGameAttributeView::OutGameAttributeView(
 	const std::function<void()>& _skills_btn_callback,
 	const std::function<void()>& _return_btn_callback)
 {
+	Image::CreateInfo background_info;
+	background_info.rect = GAME_VIEW_RECT;
+	background_info.texture_path = Path::Ui + L"Pages/Skill,Node-page_blank.png";
+	background_image_ = CreateElement<Image>(background_info);
+
 	Button::CreateInfo skills_btn_info;
 	skills_btn_info.rect = _Rect{ { 0, 0 }, COMMON_BUTTON_SIZE };
 	skills_btn_info.text = L"SKILLS";
 	skills_btn_info.on_lclick = _skills_btn_callback;
+	skills_btn_info.normal_image_path = Path::Buttons + L"SKILLS/SKILLS_Default.png";
+	skills_btn_info.hovered_image_path = Path::Buttons + L"SKILLS/SKILLS_MO.png";
+	skills_btn_info.pressed_l_image_path = Path::Buttons + L"SKILLS/SKILLS_Push.png";
+	skills_btn_info.disabled_image_path = Path::Buttons + L"SKILLS/SKILLS_Disabled.png";
 	skills_btn_ = CreateElement<Button>(skills_btn_info);
 
 	Button::CreateInfo return_btn_info;
@@ -63,6 +73,9 @@ void OutGameAttributeView::OnViewportChanged()
 
 void OutGameAttributeView::UpdateLayout()
 {
+	if (background_image_ != nullptr)
+		background_image_->SetRect(GAME_VIEW_RECT);
+
 	if (skills_btn_ == nullptr || return_btn_ == nullptr)
 		return;
 
