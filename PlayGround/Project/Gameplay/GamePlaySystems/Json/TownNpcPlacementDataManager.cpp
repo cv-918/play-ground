@@ -143,6 +143,31 @@ _bool TownNpcPlacementDataManager::Load(const std::string& _file_path)
 			continue;
 		}
 
+		if (entry_json.contains("visual_width_"))
+		{
+			if (!entry_json["visual_width_"].is_number())
+			{
+				_SYSTEM_LOG_WARN(L"TownNpcPlacement visual_width_ ignored: value must be number. file: %s, placement_id: %s",
+					file_path_w.c_str(),
+					_UtilFunc::ToWString(entry.placement_id_).c_str());
+			}
+			else
+			{
+				const auto visual_width = entry_json["visual_width_"].get<_float>();
+				if (visual_width > 0.f)
+				{
+					entry.visual_width_ = visual_width;
+				}
+				else
+				{
+					_SYSTEM_LOG_WARN(L"TownNpcPlacement visual_width_ ignored: value must be greater than 0. file: %s, placement_id: %s, value: %.2f",
+						file_path_w.c_str(),
+						_UtilFunc::ToWString(entry.placement_id_).c_str(),
+						visual_width);
+				}
+			}
+		}
+
 		if (entry_json.contains("facing") && entry_json["facing"].is_string())
 			entry.facing_ = entry_json["facing"].get<std::string>();
 

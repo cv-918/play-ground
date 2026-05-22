@@ -129,7 +129,7 @@ void OutGameScene::OnEnter()
 
 	// s, [ Temporary Background and NavMesh Setup for Town Testing ]
 	Background::CreateInfo background_info;
-	background_info.background_path_ = Path::World + L"Field-2560x1600.png";
+	background_info.background_path_ = Path::World + L"Town_BG.png";
 	background_info.nav_mesh_size_ = _Size(res.width, res.height);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(

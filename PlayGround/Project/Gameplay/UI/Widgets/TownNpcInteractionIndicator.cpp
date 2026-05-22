@@ -153,10 +153,10 @@ void TownNpcInteractionIndicator::_UpdatePosition()
 		return;
 
 	const _Point npc_screen_position = _CameraMgr.WorldToScreen(transform->Position());
-	const _Vector3 npc_scale = transform->Scale();
+	const _float visual_height = current_target_->GetVisualHeightForIndicator();
 	const _Point indicator_center = {
 		npc_screen_position.x,
-		npc_screen_position.y - s_int(npc_scale.y) - INDICATOR_OFFSET_Y
+		npc_screen_position.y - s_int(std::ceil(visual_height)) - INDICATOR_OFFSET_Y
 	};
 
 	SetCenter(indicator_center);

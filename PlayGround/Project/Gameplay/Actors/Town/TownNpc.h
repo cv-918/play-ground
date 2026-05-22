@@ -2,6 +2,8 @@
 
 #include "../GameObjectBase.h"
 
+class SpriteRendererComponent;
+
 class TownNpc final
 	: public GameObjectBase
 	, public IInteractable
@@ -11,6 +13,8 @@ public:
 	struct CreateInfo 
 	{
 		_Vector3 position = _Vector3::Zero();
+		std::wstring sprite_path;
+		_float visual_width = 80.f;
 		std::function<void()> on_interact = nullptr;
 	};
 
@@ -21,9 +25,14 @@ public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
 
+protected:
+	void _DrawObjectShape() override;
+
 public:
 	_bool CheckAvailableInteract(GameObjectBase* _actor) override;
 	void Interact(GameObjectBase* _actor) override;
+
+	_float GetVisualHeightForIndicator() const;
 
 	void SetCanInteract(_bool _can_interact) { can_interact_ = _can_interact; }
 	void SetOnInteractCallback(const std::function<void()>& _callback) { on_interact_ = _callback; }
@@ -33,8 +42,14 @@ public:
 	void OnCollisionExit(Collider* _this, Collider* _other) override;
 
 private:
+	void _ApplySpriteResource();
+
+private:
 	const CreateInfo create_info_;
 	Collider* interaction_collider_ = nullptr;
+	SpriteRendererComponent* sprite_renderer_ = nullptr;
+	_bool sprite_loaded_ = false;
+	_float visual_height_ratio_ = 1.f;
 
 	_bool can_interact_ = true;
 

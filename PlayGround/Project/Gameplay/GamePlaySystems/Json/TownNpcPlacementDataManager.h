@@ -7,6 +7,7 @@ struct TownNpcPlacementEntry
 	std::string placement_id_;
 	std::string npc_id_;
 	_Vector3 position_ = _Vector3::Zero();
+	_float visual_width_ = 80.f;
 	std::string facing_;
 	_bool enabled_ = true;
 };
