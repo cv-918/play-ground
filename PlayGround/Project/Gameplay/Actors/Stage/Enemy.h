@@ -35,7 +35,9 @@ private:
 private:
 	void _BuildAbilities();
 	void _ConfigureCombatColliders();
+	_float _ResolveVisualScale() const;
 	_float _ResolveVisualColliderYRatio() const;
+	_float _ResolveVisualColliderCenterOffsetY() const;
 	void _ConfigureNavigationProfile();
 	void _UpdateDeferredNavigationActivation();
 	void _ChangeState(EnemyActionState _new_state);
@@ -61,6 +63,7 @@ private:
 	const struct AnimationClipPathInfo* _FindAnimationClipForState(EnemyActionState _state) const;
 	const struct AnimationClipPathInfo* _FindAnimationClipByName(const std::wstring& _clip_name) const;
 	const struct SpriteResource* _TryLoadAnimationFrameSprite() const;
+	const struct SpriteResource* _TryLoadColliderReferenceSprite() const;
 	std::wstring _BuildAnimationFramePath(const struct AnimationClipPathInfo& _clip_info, _int _frame_index) const;
 	std::wstring _BuildSingleFramePath(const struct AnimationClipPathInfo& _clip_info) const;
 	std::wstring _ResolveAnimationFramePath(const struct AnimationClipPathInfo& _clip_info, _int _frame_index) const;

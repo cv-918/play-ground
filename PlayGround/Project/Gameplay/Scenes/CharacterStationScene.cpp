@@ -452,6 +452,21 @@ void CharacterStationScene::_BuildCharacterWindow()
 		[this](_float _value) { _UpdateSelectedUnit([&](UnitJsonInfo& _info) { _info.body_size_ = ClampFloat(_value, 1.f, 240.f); }); });
 
 	add_float(
+		L"12_enemy_visual_scale",
+		L"Visual Scale",
+		0.01f,
+		4.f,
+		0.01f,
+		2,
+		[this]() { return _GetCurrentEnemyVisualScale(); },
+		[this](_float _value)
+	{
+		if (mode_ != CharacterStationMode::Enemy)
+			return;
+		_UpdateSelectedEnemy([&](EnemyJsonInfo& _info) { _info.visual_scale_ = ClampFloat(_value, 0.01f, 4.f); });
+	});
+
+	add_float(
 		L"13_hp",
 		L"HP",
 		0.f,
@@ -1646,11 +1661,15 @@ std::wstring CharacterStationScene::_GetSelectedSummary() const
 		return L"No character selected.";
 
 	const std::wstring mode_label = (mode_ == CharacterStationMode::Playable) ? L"Playable" : L"Enemy";
-	return mode_label +
+	auto summary = mode_label +
 		L" #" + std::to_wstring(unit_info->id_) +
 		L" " + _UtilFunc::ToWString(unit_info->name_) +
-		L" | body=" + FormatFloat(unit_info->body_size_) +
-		L" | preview=" + (preview_sprite_source_.empty() ? L"none" : preview_sprite_source_);
+		L" | body=" + FormatFloat(unit_info->body_size_);
+
+	if (mode_ == CharacterStationMode::Enemy)
+		summary += L" | visual=" + FormatFloat(_GetCurrentEnemyVisualScale(), 2);
+
+	return summary + L" | preview=" + (preview_sprite_source_.empty() ? L"none" : preview_sprite_source_);
 }
 
 std::wstring CharacterStationScene::_GetPreviewResourceSummary() const
@@ -1802,6 +1821,8 @@ std::wstring CharacterStationScene::_GetValidationReport() const
 			append_issue(label + L" has empty name_.");
 		if (info.body_size_ <= 0.f)
 			append_issue(label + L" has body_size_ <= 0.");
+		if (info.visual_scale_ <= 0.f)
+			append_issue(label + L" has visual_scale_ <= 0.");
 		if (!info.image_path_.empty() && !std::filesystem::exists(std::filesystem::path(info.image_path_)))
 			append_issue(label + L" legacy image_path_ missing: " + _UtilFunc::ToWString(info.image_path_));
 		if (HasEnemyAbilityFlag(info.ability_flags_, EnemyAbilityFlags::ProjectileAttack) &&
@@ -1896,6 +1917,12 @@ _float CharacterStationScene::_GetRuntimeBodyCenterOffsetY() const
 	if (mode_ != CharacterStationMode::Enemy)
 		return 0.f;
 
+	if (preview_sprite_ != nullptr && preview_sprite_->image != nullptr)
+	{
+		const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*preview_sprite_);
+		return -metrics.visible_height * _GetCurrentEnemyVisualScale() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
+	}
+
 	return -_GetCurrentBodySize() * _GetRuntimeBodyYRatio() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
 }
 
@@ -1903,6 +1930,15 @@ _float CharacterStationScene::_GetCurrentBodySize() const
 {
 	const auto* unit_info = _GetSelectedUnitInfo();
 	return unit_info != nullptr ? unit_info->body_size_ : 0.f;
+}
+
+_float CharacterStationScene::_GetCurrentEnemyVisualScale() const
+{
+	const auto* info = _GetSelectedEnemyInfo();
+	if (mode_ != CharacterStationMode::Enemy || info == nullptr)
+		return 1.f;
+
+	return std::max(0.01f, info->visual_scale_);
 }
 
 _Vector2 CharacterStationScene::_GetProjectileMuzzleOffset() const
@@ -2345,6 +2381,7 @@ void CharacterStationScene::_CreateNewEnemy()
 	info.id_ = _GetNextEnemyId();
 	info.name_ = "NewEnemy" + std::to_string(info.id_);
 	info.body_size_ = 32.f;
+	info.visual_scale_ = 1.f;
 	info.attack_speed_ = 1.0;
 	info.hp_ = 20.f;
 	info.contact_damage_ = 3.f;
@@ -2696,9 +2733,12 @@ void CharacterStationScene::_DrawPreview(const Resolution& _resolution) const
 	const auto preview_height_ratio = mode_ == CharacterStationMode::Enemy
 		? SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics)
 		: kDefaultColliderYRatio;
+	const auto preview_visible_width = mode_ == CharacterStationMode::Enemy
+		? std::max(1.f, metrics.visible_width * _GetCurrentEnemyVisualScale())
+		: std::max(1.f, _GetCurrentBodySize());
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		center,
-		std::max(1.f, _GetCurrentBodySize()),
+		preview_visible_width,
 		metrics,
 		_ScreenSystem.GetWorldResourceScale(),
 		preview_height_ratio);

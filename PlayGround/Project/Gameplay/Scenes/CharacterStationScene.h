@@ -93,6 +93,7 @@ private:
 	_float _GetRuntimeBodyYRatio() const;
 	_float _GetRuntimeBodyCenterOffsetY() const;
 	_float _GetCurrentBodySize() const;
+	_float _GetCurrentEnemyVisualScale() const;
 	_Vector2 _GetProjectileMuzzleOffset() const;
 
 	const struct SpriteResource* _TryLoadPreviewSprite(const std::wstring& _path) const;

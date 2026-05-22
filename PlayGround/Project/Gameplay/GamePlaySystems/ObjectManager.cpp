@@ -29,6 +29,8 @@ _int ObjectManager::Update(_double _delta_time)
 		}
 	}
 
+	enemy_separation_system_.Resolve(game_objects_, _delta_time);
+
 	return UPDATE_CONTINUE;
 }
 

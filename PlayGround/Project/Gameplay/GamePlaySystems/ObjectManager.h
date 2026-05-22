@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Common/HitReaction.h"
+#include "EnemySeparationSystem.h"
 
 class GameObjectBase;
 
@@ -46,6 +47,7 @@ private:
 private:
 	std::vector<GameObjectBase*> game_objects_;
 	std::vector<GameObjectBase*> new_game_objects_; // 업데이트 중에 추가된 게임 오브젝트들을 임시로 저장하는 컨테이너. 업데이트가 시작 전에 game_objects_에 병합하여 관리
+	EnemySeparationSystem enemy_separation_system_;
 
 	_Rect* play_area_ = nullptr; // 몬스터나 오브젝트가 존재할 수 있는 영역
 };

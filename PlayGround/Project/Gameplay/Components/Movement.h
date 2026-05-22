@@ -115,6 +115,7 @@ public:
 	void AddImpulse(const _Vector3& _impulse);
 	void ClearImpulse();
 	void ClearKnockback();
+	void ApplyExternalDisplacement(const _Vector3& _displacement);
 
 	void StartDashByInputDir(_float _speed, _double _duration);
 	void StartKnockback(const _Vector3& _direction, _float _distance_world_px, _float _duration_sec, KnockbackCurve _curve);

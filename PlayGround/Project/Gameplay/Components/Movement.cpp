@@ -196,6 +196,15 @@ void Movement::ClearKnockback()
 	knockback_curve_ = KnockbackCurve::OutCubic;
 }
 
+void Movement::ApplyExternalDisplacement(const _Vector3& _displacement)
+{
+	if (!transform_ || _displacement.LengthSq() <= 0.f)
+		return;
+
+	transform_->Translate(_displacement);
+	_ClampToNavMesh();
+}
+
 _bool Movement::IsKnockbackActive() const
 {
 	return knockback_total_distance_ > 0.f &&

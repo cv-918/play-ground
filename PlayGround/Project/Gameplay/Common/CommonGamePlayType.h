@@ -205,6 +205,7 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	// ------ 몬스터 분류 관련 ------
 	EnemyTier tier_ = EnemyTier::Undefined;
 	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
+	_float visual_scale_ = 1.f;
 
 	// ------ 보상 관련 ------
 	_uint exp_reward_ = 0;

@@ -8,11 +8,14 @@
 - Added enemy facing flip so movement toward negative X keeps the left-facing source art and movement toward positive X flips it right.
 - Fixed enemy sprite aspect handling so enemy visuals preserve each frame's visible pixel ratio instead of forcing every enemy into the old 0.6 height ratio.
 - Resized enemy body/contact attack colliders from the old `body_size_` radius to a tighter visual-width-based radius of `body_size_ * 0.35`, with Y ratio and center offset derived from each enemy sprite's visible bounds.
+- Split enemy visual size tuning from gameplay collision size by adding `visual_scale_`.
+- Enemy render width now uses each sprite's visible pixel width multiplied by `visual_scale_`, while `body_size_` remains the gameplay/contact tuning value.
 
 ## Background
 - Enemy runtime already had a lightweight state-based frame renderer.
 - Enemy data already had an `animation_clips_` field.
-- The requested scope was resource application and state/ability timing connection without changing the JSON schema.
+- The initial requested scope was resource application and state/ability timing connection.
+- A later tuning pass intentionally added `visual_scale_` so enemy visual size can be adjusted independently from gameplay collision size.
 
 ## Scope
 - Enemy animation data mapping.
@@ -22,6 +25,7 @@
 - Enemy runtime and CharacterStation enemy preview aspect correction.
 - Enemy body/contact attack collider sizing correction.
 - CharacterStation preview/validation support for single-frame hit clips.
+- Enemy visual-size data and runtime/preview rendering based on sprite visible bounds plus `visual_scale_`.
 
 ## Files Changed
 - `PlayGround/Data/Enemy.json`
@@ -35,13 +39,18 @@
 - `PlayGround/Project/Gameplay/Actors/Stage/ProjectileAttackAbility.cpp`
 - `PlayGround/Project/Gameplay/Actors/Stage/Enemy.h`
 - `PlayGround/Project/Gameplay/Actors/Stage/Enemy.cpp`
+- `PlayGround/Project/Gameplay/Common/CommonGamePlayType.h`
+- `PlayGround/Project/Gameplay/GamePlaySystems/Json/EnemyDataManager.h`
+- `PlayGround/Project/Gameplay/Scenes/CharacterStationScene.h`
 - `PlayGround/Project/Gameplay/Scenes/CharacterStationScene.cpp`
 
 ## Architecture Notes
 - Enemy gameplay state remains separate from animation selection.
 - Ability modules can request a temporary animation clip, but they do not own rendering.
 - `Enemy` remains responsible for choosing the final clip and resolving frame paths.
-- No new animation FSM file or JSON schema field was introduced.
+- `body_size_` is treated as gameplay/contact sizing data.
+- `visual_scale_` is treated as render tuning data applied to the loaded sprite's visible pixel bounds.
+- No new animation FSM file was introduced.
 
 ## Implementation Notes
 - `EnemyAnimationRequest` was added as a small ability-to-enemy animation request model.
@@ -51,12 +60,16 @@
 - Non-loop clips with a logic duration are resolved by normalized elapsed time instead of raw fps length.
 - Single-frame clips first try the normal sequence path, then fall back to `directory + prefix + ".png"` when the frame range is exactly one frame.
 - `Enemy.json` now uses empty `image_path_` values so the old deleted `Enemy-Lv1.png` path is not required.
+- `EnemyJsonInfo` now has `visual_scale_` with a default of `1.0`.
+- `Enemy.json` initial visual scales are Lv1 `0.62`, Lv2 `0.52`, Lv3 `0.30`, Lv4 `0.35`, Lv5 `0.16`, and Lv6 `1.0`.
 - Enemy draw calls now use a cached X flip value. The convention is source art faces left: negative X keeps `flip_sprite_x_ = false`, positive X sets `flip_sprite_x_ = true`.
 - Facing is updated from movement velocity first, then from the transform forward vector when horizontal movement is near zero.
 - `SpriteRenderUtils::BuildWorldSpriteDestRect` keeps its default 0.6 height ratio for existing callers, while enemy rendering passes `visible_height / visible_width` explicitly to preserve sprite proportions.
-- CharacterStation enemy preview uses the same natural visible ratio as runtime enemy rendering. Playable preview still uses the existing 0.6 body guide ratio.
-- Enemy `Body` and `Attack` colliders now treat `body_size_` as visible width and use 70% of that width for contact. This reduces old contact hit distance substantially on the X axis.
-- Enemy collider centers are offset upward by one quarter of the visible sprite height so the contact region sits closer to the visible monster body without floating too high above the bottom pivot.
+- Enemy rendering now uses `visible_width * visual_scale_` as the desired world width.
+- CharacterStation enemy preview uses the same `visible_width * visual_scale_` render sizing as runtime enemy rendering. Playable preview still uses the existing 0.6 body guide ratio.
+- Enemy `Body` and `Attack` colliders keep using `body_size_ * 0.35` for contact. This keeps gameplay contact tuning independent from the sprite's authored pixel dimensions.
+- Enemy collider centers are offset upward by one half of the rendered visible sprite height so the contact region is centered against the visible monster body from the bottom pivot.
+- Enemy collider reference metrics are loaded from `move`, then `idle`, then the first loadable clip so enemies without an `idle` clip do not fall back to the default 0.6 ratio during initialization.
 - CharacterStation's enemy body guide now mirrors the runtime collider sizing and center offset.
 
 ## Review Summary
@@ -74,8 +87,9 @@
   - Result: all enemy animation clip frames resolved.
 - Ran build:
   - `MSBuild.exe PlayGround/PlayGround.sln /t:Build /p:Configuration=Debug /p:Platform=x64 /m`
-  - Result after enemy collider offset adjustment: build succeeded with 0 errors and 3 warnings.
-  - Remaining warnings are existing conversion warnings in `Enemy.cpp`.
+  - Result after visual scale adjustment full compile: build succeeded with 0 errors and 16 warnings.
+  - Final incremental build after the last CharacterStation tweak: build succeeded with 0 errors and 0 warnings.
+  - The full compile warnings are existing conversion warnings in unrelated files and previously existing enemy/player/stage code paths.
 - Ran aspect-ratio check on the first move frame for each enemy Lv:
   - Lv1 natural visible H/W: 0.608.
   - Lv2 natural visible H/W: 0.548.
@@ -90,6 +104,16 @@
   - Lv4: previous Rx 30.0 -> new Rx 21.0, new Ry 10.8, center offset Y -7.7.
   - Lv5: previous Rx 16.0 -> new Rx 11.2, new Ry 12.1, center offset Y -8.6.
   - Lv6: previous Rx 60.0 -> new Rx 42.0, new Ry 34.5, center offset Y -24.7.
+- Ran JSON visual-scale validation:
+  - Parsed `PlayGround/Data/Enemy.json`.
+  - Confirmed every enemy has `visual_scale_ > 0`.
+- Current intended visible world widths before global resource scale:
+  - Lv1: `97 * 0.62 ~= 60`.
+  - Lv2: `115 * 0.52 ~= 60`.
+  - Lv3: `206 * 0.30 ~= 62`.
+  - Lv4: `171 * 0.35 ~= 60`.
+  - Lv5: `200 * 0.16 = 32`.
+  - Lv6: `242 * 1.0 = 242`.
 - Runtime visual validation was not performed in this session.
 
 ## Remaining Risks

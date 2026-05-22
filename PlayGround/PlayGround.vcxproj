@@ -339,6 +339,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemySeparationSystem.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SkillManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Skills\SkillDefinitionCompiler.h" />
@@ -514,6 +515,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemySeparationSystem.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\ObjectManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SkillManager.cpp" />

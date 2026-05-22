@@ -184,6 +184,7 @@
     <ClInclude Include="Project\Gameplay\Common\HitReaction.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\TownNpcPlacementDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\TownNpcPlacementSpawner.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\EnemySeparationSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project\Framework\PlayGround.rc">
@@ -283,6 +284,7 @@
     <ClCompile Include="Project\Gameplay\Actors\Props\Props.cpp" />
     <ClCompile Include="Project\Gameplay\Actors\Props\Dust.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\StageJsonDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\EnemySeparationSystem.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillBase.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Skills\SkillDefinitionCompiler.cpp" />
