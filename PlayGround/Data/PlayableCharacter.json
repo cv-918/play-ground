@@ -7,6 +7,7 @@
 		"hp_": 10.0,
 		"contact_damage_": 6.0,
 		"image_path_": "",
+		"visual_width_": 62.0,
 		"attack_range_": 80.0,
 		"collector_size_": 60.0,
 		"move_speed_max_": 300.0,

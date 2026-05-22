@@ -31,6 +31,8 @@ public:
 	const SpriteRenderCommand& GetRenderCommand() const;
 
 	void SetWhiteFlashStrength(_float _strength);
+	void SetVisualWidth(_float _width);
+	void SetUseNaturalVisibleSize(_bool _use);
 
 private:
 	/**
@@ -51,4 +53,6 @@ private:
 	SpriteRenderCommand render_command_{};
 
 	_float white_flash_strength_ = 0.f;
+	_float visual_width_ = 32.f;
+	_bool use_natural_visible_size_ = false;
 };

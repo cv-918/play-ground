@@ -46,11 +46,18 @@ void SpriteRendererComponent::Render(_double _delta_time)
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
 	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(render_command_);
+	const auto world_width = use_natural_visible_size_
+		? std::max(1.f, visual_width_)
+		: transform_->Scale().x;
+	const auto height_ratio = use_natural_visible_size_
+		? SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics)
+		: 0.6f;
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		screen_pos,
-		transform_->Scale().x,
+		world_width,
 		metrics,
-		_ScreenSystem.GetWorldResourceScale());
+		_ScreenSystem.GetWorldResourceScale(),
+		height_ratio);
 
 	if (render_command_.use_source_rect == true)
 	{
@@ -80,6 +87,16 @@ const SpriteRenderCommand& SpriteRendererComponent::GetRenderCommand() const
 void SpriteRendererComponent::SetWhiteFlashStrength(_float _strength)
 {
 	white_flash_strength_ = std::clamp(_strength, 0.f, 1.f);
+}
+
+void SpriteRendererComponent::SetVisualWidth(_float _width)
+{
+	visual_width_ = std::max(1.f, _width);
+}
+
+void SpriteRendererComponent::SetUseNaturalVisibleSize(_bool _use)
+{
+	use_natural_visible_size_ = _use;
 }
 
 /**

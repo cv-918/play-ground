@@ -93,11 +93,12 @@ private:
 	_float _GetRuntimeBodyYRatio() const;
 	_float _GetRuntimeBodyCenterOffsetY() const;
 	_float _GetCurrentBodySize() const;
-	_float _GetCurrentEnemyVisualScale() const;
+	_float _GetCurrentVisualWidth() const;
 	_Vector2 _GetProjectileMuzzleOffset() const;
 
 	const struct SpriteResource* _TryLoadPreviewSprite(const std::wstring& _path) const;
 	const struct SpriteResource* _TryLoadAnimationPreview(std::wstring& _out_path) const;
+	const struct SpriteResource* _TryLoadEnemyColliderReferenceSprite() const;
 	const struct SpriteResource* _TryLoadLegacyPreview(std::wstring& _out_path) const;
 	std::wstring _BuildClipFramePath(const struct AnimationClipPathInfo& _clip_info, _int _frame_index) const;
 	_int _ResolvePreviewFrameIndex(const struct AnimationClipPathInfo& _clip_info) const;

@@ -156,6 +156,8 @@ _bool StagePlayer::Initialize()
 
 	sprite_renderer_ = new SpriteRendererComponent();
 	RegisterComponent(sprite_renderer_);
+	sprite_renderer_->SetUseNaturalVisibleSize(true);
+	sprite_renderer_->SetVisualWidth(info_->visual_width_);
 
 	sprite_animator_ = new SpriteAnimatorComponent();
 	RegisterComponent(sprite_animator_);
@@ -352,11 +354,14 @@ void StagePlayer::_DrawObjectShape()
 	const auto world_pos = transform_->Position();
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
 	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*player_sprite_);
+	const auto natural_height_ratio = SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
+	const auto render_visible_width = info_ != nullptr ? std::max(1.f, info_->visual_width_) : transform_->Scale().x;
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		screen_pos,
-		transform_->Scale().x,
+		render_visible_width,
 		metrics,
-		_ScreenSystem.GetWorldResourceScale());
+		_ScreenSystem.GetWorldResourceScale(),
+		natural_height_ratio);
 
 	const _RectF src_rect(
 		player_sprite_->image_rect.X,

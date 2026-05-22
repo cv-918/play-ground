@@ -13,7 +13,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	image_path_,
 	tier_,
 	role_,
-	visual_scale_,
+	visual_width_,
 	exp_reward_,
 	dust_reward_,
 	dust_resource_count_,

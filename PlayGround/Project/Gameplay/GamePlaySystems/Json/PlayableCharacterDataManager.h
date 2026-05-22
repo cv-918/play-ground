@@ -11,6 +11,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 	hp_,
 	contact_damage_,
 	image_path_,
+	visual_width_,
 	attack_range_,
 	collector_size_,
 	move_speed_max_,

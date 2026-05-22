@@ -46,6 +46,8 @@ _bool TownPlayer::Initialize()
 
 	sprite_renderer_ = new SpriteRendererComponent();
 	RegisterComponent(sprite_renderer_);
+	sprite_renderer_->SetUseNaturalVisibleSize(true);
+	sprite_renderer_->SetVisualWidth(info_->visual_width_);
 
 	sprite_animator_ = new SpriteAnimatorComponent();
 	RegisterComponent(sprite_animator_);

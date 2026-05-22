@@ -452,18 +452,19 @@ void CharacterStationScene::_BuildCharacterWindow()
 		[this](_float _value) { _UpdateSelectedUnit([&](UnitJsonInfo& _info) { _info.body_size_ = ClampFloat(_value, 1.f, 240.f); }); });
 
 	add_float(
-		L"12_enemy_visual_scale",
-		L"Visual Scale",
-		0.01f,
-		4.f,
-		0.01f,
-		2,
-		[this]() { return _GetCurrentEnemyVisualScale(); },
+		L"12_visual_width",
+		L"Visual Width",
+		1.f,
+		640.f,
+		1.f,
+		0,
+		[this]() { return _GetCurrentVisualWidth(); },
 		[this](_float _value)
 	{
-		if (mode_ != CharacterStationMode::Enemy)
-			return;
-		_UpdateSelectedEnemy([&](EnemyJsonInfo& _info) { _info.visual_scale_ = ClampFloat(_value, 0.01f, 4.f); });
+		if (mode_ == CharacterStationMode::Playable)
+			_UpdateSelectedPlayable([&](PlayableCharacterJsonInfo& _info) { _info.visual_width_ = ClampFloat(_value, 1.f, 640.f); });
+		else
+			_UpdateSelectedEnemy([&](EnemyJsonInfo& _info) { _info.visual_width_ = ClampFloat(_value, 1.f, 640.f); });
 	});
 
 	add_float(
@@ -564,7 +565,7 @@ void CharacterStationScene::_BuildCharacterWindow()
 
 	add_float(
 		L"24_nav_visual_margin_x",
-		L"Visual X",
+		L"Nav Margin X",
 		0.f,
 		240.f,
 		1.f,
@@ -585,7 +586,7 @@ void CharacterStationScene::_BuildCharacterWindow()
 
 	add_float(
 		L"25_nav_visual_margin_y",
-		L"Visual Y",
+		L"Nav Margin Y",
 		0.f,
 		240.f,
 		1.f,
@@ -1666,8 +1667,7 @@ std::wstring CharacterStationScene::_GetSelectedSummary() const
 		L" " + _UtilFunc::ToWString(unit_info->name_) +
 		L" | body=" + FormatFloat(unit_info->body_size_);
 
-	if (mode_ == CharacterStationMode::Enemy)
-		summary += L" | visual=" + FormatFloat(_GetCurrentEnemyVisualScale(), 2);
+	summary += L" | visualW=" + FormatFloat(_GetCurrentVisualWidth(), 1);
 
 	return summary + L" | preview=" + (preview_sprite_source_.empty() ? L"none" : preview_sprite_source_);
 }
@@ -1809,6 +1809,8 @@ std::wstring CharacterStationScene::_GetValidationReport() const
 			append_issue(label + L" has empty name_.");
 		if (info.body_size_ <= 0.f)
 			append_issue(label + L" has body_size_ <= 0.");
+		if (info.visual_width_ <= 0.f)
+			append_issue(label + L" has visual_width_ <= 0.");
 		if (info.animation_clips_.empty())
 			append_issue(label + L" has no animation_clips_.");
 		validate_clip_list(label, info.animation_clips_);
@@ -1821,8 +1823,8 @@ std::wstring CharacterStationScene::_GetValidationReport() const
 			append_issue(label + L" has empty name_.");
 		if (info.body_size_ <= 0.f)
 			append_issue(label + L" has body_size_ <= 0.");
-		if (info.visual_scale_ <= 0.f)
-			append_issue(label + L" has visual_scale_ <= 0.");
+		if (info.visual_width_ <= 0.f)
+			append_issue(label + L" has visual_width_ <= 0.");
 		if (!info.image_path_.empty() && !std::filesystem::exists(std::filesystem::path(info.image_path_)))
 			append_issue(label + L" legacy image_path_ missing: " + _UtilFunc::ToWString(info.image_path_));
 		if (HasEnemyAbilityFlag(info.ability_flags_, EnemyAbilityFlags::ProjectileAttack) &&
@@ -1903,9 +1905,10 @@ _float CharacterStationScene::_GetRuntimeBodyRadiusX() const
 
 _float CharacterStationScene::_GetRuntimeBodyYRatio() const
 {
-	if (mode_ == CharacterStationMode::Enemy && preview_sprite_ != nullptr)
+	const auto* collider_sprite = _TryLoadEnemyColliderReferenceSprite();
+	if (mode_ == CharacterStationMode::Enemy && collider_sprite != nullptr)
 	{
-		const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*preview_sprite_);
+		const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*collider_sprite);
 		return std::max(0.1f, SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics));
 	}
 
@@ -1917,10 +1920,11 @@ _float CharacterStationScene::_GetRuntimeBodyCenterOffsetY() const
 	if (mode_ != CharacterStationMode::Enemy)
 		return 0.f;
 
-	if (preview_sprite_ != nullptr && preview_sprite_->image != nullptr)
+	if (const auto* collider_sprite = _TryLoadEnemyColliderReferenceSprite())
 	{
-		const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*preview_sprite_);
-		return -metrics.visible_height * _GetCurrentEnemyVisualScale() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
+		const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*collider_sprite);
+		const auto visual_height = _GetCurrentVisualWidth() * SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
+		return -visual_height * _ScreenSystem.GetWorldResourceScale() * 0.5f;
 	}
 
 	return -_GetCurrentBodySize() * _GetRuntimeBodyYRatio() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
@@ -1932,13 +1936,16 @@ _float CharacterStationScene::_GetCurrentBodySize() const
 	return unit_info != nullptr ? unit_info->body_size_ : 0.f;
 }
 
-_float CharacterStationScene::_GetCurrentEnemyVisualScale() const
+_float CharacterStationScene::_GetCurrentVisualWidth() const
 {
-	const auto* info = _GetSelectedEnemyInfo();
-	if (mode_ != CharacterStationMode::Enemy || info == nullptr)
-		return 1.f;
+	if (mode_ == CharacterStationMode::Playable)
+	{
+		const auto* info = _GetSelectedPlayableInfo();
+		return info != nullptr ? std::max(1.f, info->visual_width_) : 32.f;
+	}
 
-	return std::max(0.01f, info->visual_scale_);
+	const auto* info = _GetSelectedEnemyInfo();
+	return info != nullptr ? std::max(1.f, info->visual_width_) : 32.f;
 }
 
 _Vector2 CharacterStationScene::_GetProjectileMuzzleOffset() const
@@ -1990,6 +1997,50 @@ const SpriteResource* CharacterStationScene::_TryLoadAnimationPreview(std::wstri
 
 		_out_path = frame_path;
 		return sprite;
+	}
+
+	return nullptr;
+}
+
+const SpriteResource* CharacterStationScene::_TryLoadEnemyColliderReferenceSprite() const
+{
+	if (mode_ != CharacterStationMode::Enemy)
+		return nullptr;
+
+	const auto* clips = _GetSelectedClipList();
+	if (clips == nullptr || clips->empty())
+		return nullptr;
+
+	auto try_load_clip = [this](const AnimationClipPathInfo* _clip) -> const SpriteResource*
+	{
+		if (_clip == nullptr)
+			return nullptr;
+
+		const auto frame_index = std::min(_clip->start_index_, _clip->end_index_);
+		const auto frame_path = _BuildClipFramePath(*_clip, frame_index);
+		return _TryLoadPreviewSprite(frame_path);
+	};
+
+	auto find_clip = [clips](const std::wstring& _clip_name) -> const AnimationClipPathInfo*
+	{
+		for (const auto& clip : *clips)
+		{
+			if (_UtilFunc::ToWString(clip.clip_name_) == _clip_name)
+				return &clip;
+		}
+		return nullptr;
+	};
+
+	if (const auto* sprite = try_load_clip(find_clip(L"move")); sprite != nullptr)
+		return sprite;
+
+	if (const auto* sprite = try_load_clip(find_clip(L"idle")); sprite != nullptr)
+		return sprite;
+
+	for (const auto& clip : *clips)
+	{
+		if (const auto* sprite = try_load_clip(&clip); sprite != nullptr)
+			return sprite;
 	}
 
 	return nullptr;
@@ -2354,6 +2405,7 @@ void CharacterStationScene::_CreateNewPlayable()
 	info.id_ = _GetNextPlayableId();
 	info.name_ = "NewPlayable" + std::to_string(info.id_);
 	info.body_size_ = 32.f;
+	info.visual_width_ = 32.f;
 	info.attack_speed_ = 1.0;
 	info.hp_ = 30.f;
 	info.contact_damage_ = 4.f;
@@ -2381,7 +2433,7 @@ void CharacterStationScene::_CreateNewEnemy()
 	info.id_ = _GetNextEnemyId();
 	info.name_ = "NewEnemy" + std::to_string(info.id_);
 	info.body_size_ = 32.f;
-	info.visual_scale_ = 1.f;
+	info.visual_width_ = 32.f;
 	info.attack_speed_ = 1.0;
 	info.hp_ = 20.f;
 	info.contact_damage_ = 3.f;
@@ -2722,20 +2774,16 @@ void CharacterStationScene::_DrawPreview(const Resolution& _resolution) const
 
 	if (preview_sprite_ == nullptr || preview_sprite_->image == nullptr)
 	{
-		const auto body_radius = std::max(12.f, _GetCurrentBodySize() * 0.5f);
-		_DrawFunc::FillCircle(center, body_radius, Palette::Charcoal);
-		_DrawFunc::DrawCircle(center, body_radius, Palette::LightBlue, 2.f);
+		const auto visual_radius = std::max(12.f, _GetCurrentVisualWidth() * 0.5f);
+		_DrawFunc::FillCircle(center, visual_radius, Palette::Charcoal);
+		_DrawFunc::DrawCircle(center, visual_radius, Palette::LightBlue, 2.f);
 		_DrawFunc::DrawString(_Point{ center.x - 96, center.y - 8 }, L"No preview sprite", Palette::White, 14.f, false);
 		return;
 	}
 
 	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*preview_sprite_);
-	const auto preview_height_ratio = mode_ == CharacterStationMode::Enemy
-		? SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics)
-		: kDefaultColliderYRatio;
-	const auto preview_visible_width = mode_ == CharacterStationMode::Enemy
-		? std::max(1.f, metrics.visible_width * _GetCurrentEnemyVisualScale())
-		: std::max(1.f, _GetCurrentBodySize());
+	const auto preview_height_ratio = SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
+	const auto preview_visible_width = _GetCurrentVisualWidth();
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		center,
 		preview_visible_width,
@@ -2782,14 +2830,17 @@ void CharacterStationScene::_DrawPreviewGuides(const _Point& _center) const
 	const _float footprint_offset_y = playable_info != nullptr
 		? playable_info->nav_footprint_offset_y_
 		: (enemy_info != nullptr ? enemy_info->nav_footprint_offset_y_ : 0.f);
+	const auto nav_boundary_mode = playable_info != nullptr
+		? playable_info->nav_boundary_mode_
+		: (enemy_info != nullptr ? enemy_info->nav_boundary_mode_ : NavBoundaryMode::None);
+	const _Point footprint_center{ _center.x, s_int(std::round(_center.y + footprint_offset_y)) };
 
 	if (show_nav_guide_ && footprint_radius > 0.f)
 	{
-		const _Point footprint_center{ _center.x, s_int(std::round(_center.y + footprint_offset_y)) };
 		_DrawFunc::DrawCircle(footprint_center, footprint_radius, Palette::Yellow, 1.5f);
 	}
 
-	if (show_visual_bounds_guide_)
+	if (show_visual_bounds_guide_ && nav_boundary_mode == NavBoundaryMode::ContainVisualBounds)
 	{
 		const _float margin_x = playable_info != nullptr
 			? playable_info->nav_visual_margin_x_
@@ -2797,14 +2848,14 @@ void CharacterStationScene::_DrawPreviewGuides(const _Point& _center) const
 		const _float margin_y = playable_info != nullptr
 			? playable_info->nav_visual_margin_y_
 			: (enemy_info != nullptr ? enemy_info->nav_visual_margin_y_ : 0.f);
-		const _float half_w = std::max(8.f, _GetCurrentBodySize() * 0.5f + margin_x);
-		const _float half_h = std::max(8.f, _GetCurrentBodySize() * 0.5f + margin_y);
+		const _float half_w = std::max(1.f, footprint_radius + margin_x);
+		const _float half_h = std::max(1.f, footprint_radius + margin_y);
 		_DrawFunc::DrawRectangle(
 			_RectF(
-				s_float(_center.x) - half_w,
-				s_float(_center.y) - half_h,
-				s_float(_center.x) + half_w,
-				s_float(_center.y) + half_h),
+				s_float(footprint_center.x) - half_w,
+				s_float(footprint_center.y) - half_h,
+				s_float(footprint_center.x) + half_w,
+				s_float(footprint_center.y) + half_h),
 			Palette::Orange,
 			1.25f);
 	}

@@ -205,7 +205,7 @@ struct EnemyJsonInfo : public UnitJsonInfo
 	// ------ 몬스터 분류 관련 ------
 	EnemyTier tier_ = EnemyTier::Undefined;
 	EnemySpecialRole role_ = EnemySpecialRole::Undefined;
-	_float visual_scale_ = 1.f;
+	_float visual_width_ = 32.f;
 
 	// ------ 보상 관련 ------
 	_uint exp_reward_ = 0;
@@ -265,6 +265,7 @@ struct EnemyJsonInfo : public UnitJsonInfo
 
 struct PlayableCharacterJsonInfo : public UnitJsonInfo
 {
+	_float visual_width_ = 32.f;
 	_float attack_range_ = 0.f;
 	_float collector_size_ = 0.f;
 

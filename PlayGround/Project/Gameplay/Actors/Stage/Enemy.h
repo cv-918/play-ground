@@ -35,7 +35,7 @@ private:
 private:
 	void _BuildAbilities();
 	void _ConfigureCombatColliders();
-	_float _ResolveVisualScale() const;
+	_float _ResolveVisualWidth() const;
 	_float _ResolveVisualColliderYRatio() const;
 	_float _ResolveVisualColliderCenterOffsetY() const;
 	void _ConfigureNavigationProfile();

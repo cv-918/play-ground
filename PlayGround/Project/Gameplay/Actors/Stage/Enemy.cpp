@@ -468,7 +468,7 @@ void Enemy::_DrawObjectShape()
 	const auto screen_pos = _CameraMgr.WorldToScreen(world_pos);
 	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*sprite);
 	const auto natural_height_ratio = SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
-	const auto render_visible_width = std::max(1.f, metrics.visible_width * _ResolveVisualScale());
+	const auto render_visible_width = _ResolveVisualWidth();
 	const _RectF dest_rect = SpriteRenderUtils::BuildWorldSpriteDestRect(
 		screen_pos,
 		render_visible_width,
@@ -535,9 +535,9 @@ void Enemy::_ConfigureCombatColliders()
 	}
 }
 
-_float Enemy::_ResolveVisualScale() const
+_float Enemy::_ResolveVisualWidth() const
 {
-	return info_ != nullptr ? std::max(0.01f, info_->visual_scale_) : 1.f;
+	return info_ != nullptr ? std::max(1.f, info_->visual_width_) : 32.f;
 }
 
 _float Enemy::_ResolveVisualColliderYRatio() const
@@ -563,7 +563,8 @@ _float Enemy::_ResolveVisualColliderCenterOffsetY() const
 		return -info_->body_size_ * ENEMY_DEFAULT_COLLIDER_Y_RATIO * _ScreenSystem.GetWorldResourceScale() * 0.5f;
 
 	const auto metrics = SpriteRenderUtils::MakeWorldSpriteDrawMetrics(*sprite);
-	return -metrics.visible_height * _ResolveVisualScale() * _ScreenSystem.GetWorldResourceScale() * 0.5f;
+	const auto visual_height = _ResolveVisualWidth() * SpriteRenderUtils::GetNaturalVisibleHeightRatio(metrics);
+	return -visual_height * _ScreenSystem.GetWorldResourceScale() * 0.5f;
 }
 
 void Enemy::_ConfigureNavigationProfile()
