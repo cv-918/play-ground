@@ -2,6 +2,7 @@
 #include "IntroScene.h"
 
 #include "EngineSystems/Render/ScreenSystem.h"
+#include "UI/Views/OutGameExitView.h"
 
 _bool IntroScene::Initialize()
 {
@@ -84,6 +85,15 @@ _int IntroScene::Update(_double _delta_time)
 	elapsed_time_ += _delta_time;
 
 #ifndef SHIPPING
+	if (_InputMgr.Down(VK_ESCAPE))
+	{
+		_ShowExitPopup();
+		return UPDATE_BREAK;
+	}
+
+	if (exit_popup_ != nullptr && !exit_popup_->IsPendingDestruction())
+		return UPDATE_CONTINUE;
+
 	if (_InputMgr.Down(VK_SPACE) || _InputMgr.Down(VK_RETURN))
 	{
 		_SceneMgr.ChangeScene(SceneType::OutGame);
@@ -162,3 +172,24 @@ void IntroScene::Render(_double _delta_time)
 	if (ui_manager_)
 		ui_manager_->Render(_delta_time);
 }
+
+#ifndef SHIPPING
+void IntroScene::_ShowExitPopup()
+{
+	if (exit_popup_ != nullptr && !exit_popup_->IsPendingDestruction())
+		return;
+
+	exit_popup_ = ui_manager_->CreateUI<OutGameExitView>(
+		[]() { PostQuitMessage(0); },
+		[this]() { _CloseExitPopup(); });
+}
+
+void IntroScene::_CloseExitPopup()
+{
+	if (exit_popup_ == nullptr)
+		return;
+
+	exit_popup_->ReserveDestruction();
+	exit_popup_ = nullptr;
+}
+#endif // SHIPPING

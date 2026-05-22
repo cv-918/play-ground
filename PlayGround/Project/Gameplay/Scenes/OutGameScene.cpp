@@ -459,7 +459,7 @@ _int OutGameScene::_HandleSceneInput()
 	case OutGameScene::OutGameViewState::Main:
 		if (_InputMgr.Down(VK_ESCAPE))
 		{
-			_ChangeView(OutGameViewState::Exit);
+			_RequestMainExit();
 			return UPDATE_BREAK;
 		}
 
@@ -477,6 +477,15 @@ _int OutGameScene::_HandleSceneInput()
 	}
 
 	return UPDATE_CONTINUE;
+}
+
+void OutGameScene::_RequestMainExit()
+{
+#ifdef SHIPPING
+	_ChangeView(OutGameViewState::Exit);
+#else
+	_SceneMgr.ChangeScene(SceneType::Intro);
+#endif
 }
 
 void OutGameScene::_ChangeView(OutGameViewState _new_view_state)
@@ -536,7 +545,7 @@ WidgetBase* OutGameScene::_CreateView()
 			[this]() { _SceneMgr.ChangeScene(SceneType::InGame); },
 			[this]() { _ChangeView(OutGameViewState::Attribute); },
 			[this]() { _ChangeView(OutGameViewState::Option); },
-			[this]() { _ChangeView(OutGameViewState::Exit); }
+			[this]() { _RequestMainExit(); }
 		);
 	case OutGameScene::OutGameViewState::Attribute:
 		return ui_manager_->CreateUI<OutGameAttributeView>(

@@ -52,6 +52,7 @@ private:
 
 	void _HandleViewportChanged();
 	_int _HandleSceneInput();
+	void _RequestMainExit();
 	void _ConsumeDialogueSessionResult(const DialogueSessionResult& _result);
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;

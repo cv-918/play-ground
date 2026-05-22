@@ -1,6 +1,8 @@
 #pragma once
 #include "Scene.h"
 
+class OutGameExitView;
+
 class IntroScene final : public Scene
 {
 	enum class IntroSceneImageId
@@ -36,6 +38,12 @@ public:
 	void Render(_double _delta_time) override;
 
 private:
+#ifndef SHIPPING
+	void _ShowExitPopup();
+	void _CloseExitPopup();
+#endif // SHIPPING
+
+private:
 	std::vector<IntroSceneImageEntity> images_;
 	_double elapsed_time_ = 0.0; // 씬에 머문 시간 추적
 
@@ -45,5 +53,6 @@ private:
 #ifndef SHIPPING
 	class Button* debug_particle_station_button_ = nullptr;
 	class Button* debug_character_station_button_ = nullptr;
+	class OutGameExitView* exit_popup_ = nullptr;
 #endif // SHIPPING
 };
