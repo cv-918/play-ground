@@ -3259,53 +3259,77 @@ function directorConsoleHtml() {
         <section class="page" data-page="knowledge">
           <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
           <div class="card">
-            <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">Canon 충돌 점검</button></div>
+            <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button></div>
             <ul class="small">
-              <li>제안은 아이디어입니다. 채택하거나 반려해도 곧바로 공식 설정이나 구현 승인이 되지는 않습니다.</li>
-              <li>결정은 Human Director가 어떤 방향을 받아들였는지 남기는 기록입니다.</li>
-              <li>기억/공식 설정은 이후 AI 직원이 참고하는 프로젝트 기억입니다. 상태가 공식 설정일 때만 확정 설정처럼 취급합니다.</li>
+              <li><strong>제안</strong>: 아직 확정되지 않은 아이디어입니다. 채택하거나 반려해도 바로 구현하거나 공식 설정으로 확정하지 않습니다.</li>
+              <li><strong>결정</strong>: Human Director가 어떤 방향을 받아들였는지 남기는 판단 기록입니다.</li>
+              <li><strong>기억/공식 설정</strong>: 이후 AI 직원이 참고하는 프로젝트 지식입니다. 상태가 공식 설정일 때만 확정 설정처럼 취급합니다.</li>
+              <li><strong>공식 설정 충돌 점검</strong>: 새 기억이나 설정이 기존 공식 설정과 부딪힐 가능성이 있는지 읽기 전용으로 확인합니다.</li>
             </ul>
           </div>
           <div class="grid">
             <div class="card">
-              <div class="section-title"><h2>제안 만들기</h2><span class="pill">제안</span></div>
+              <div class="section-title"><h2>제안 만들기</h2><span class="pill">아이디어</span></div>
+              <p class="small muted">아이디어를 검토 대상으로 저장합니다. 저장만으로 공식 설정, task, git은 바뀌지 않습니다.</p>
               <div class="form-grid">
-                <label>제안 제목<input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
-                <label>제안자<select id="proposalCreateAgent"></select></label>
+                <label>제안 제목 <span class="required-mark">필수</span><input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
+                <label>제안자 <span class="optional-mark">선택</span><select id="proposalCreateAgent"></select></label>
               </div>
-              <textarea id="proposalCreateSummary" placeholder="제안 요약"></textarea>
-              <textarea id="proposalCreateRationale" placeholder="왜 이 제안이 필요한지"></textarea>
-              <textarea id="proposalCreateRisks" placeholder="위험/주의점을 줄바꿈으로 입력"></textarea>
+              <label class="field-block">제안 요약 <span class="required-mark">필수</span><span class="field-help">무엇을 제안하는지 한두 문장으로 적습니다.</span><textarea id="proposalCreateSummary" placeholder="예: 초반 10분 안에 생존 압박과 이동 목표가 드러나도록 연출 방향을 잡는다."></textarea></label>
+              <label class="field-block">제안 이유 <span class="optional-mark">선택</span><span class="field-help">이 제안이 왜 필요한지, 어떤 문제를 줄이는지 적습니다.</span><textarea id="proposalCreateRationale" placeholder="예: 플레이어가 초반 목표를 늦게 이해하면 반복 플레이 동기가 약해진다."></textarea></label>
+              <label class="field-block">주의할 점 <span class="optional-mark">선택</span><span class="field-help">채택 전에 확인해야 할 위험이나 충돌 가능성을 한 줄에 하나씩 적습니다.</span><textarea id="proposalCreateRisks" placeholder="예:&#10;기존 세계관과 충돌하지 않아야 함&#10;초반 튜토리얼 분량이 늘어나지 않아야 함"></textarea></label>
               <div class="row"><button class="good" id="proposalCreateSubmit">제안 저장</button></div>
             </div>
             <div class="card">
               <div class="section-title"><h2>결정 기록하기</h2><span class="pill">결정</span></div>
+              <p class="small muted">이미 검토한 제안, 회의, 업무에 대해 감독자의 판단을 남깁니다. 기록만 남기며 구현이나 커밋은 하지 않습니다.</p>
               <div class="form-grid">
-                <label>대상 ref<input id="decisionCreateTarget" placeholder="PROP-..., MEET-..., WO-..."></label>
-                <label>결정 종류<select id="decisionCreateType"></select></label>
+                <label>대상 ID <span class="required-mark">필수</span><input id="decisionCreateTarget" placeholder="PROP-..., MEET-..., WO-..."></label>
+                <label>결정 종류 <span class="required-mark">필수</span><select id="decisionCreateType"></select></label>
               </div>
-              <textarea id="decisionCreateSummary" placeholder="결정 요약"></textarea>
-              <textarea id="decisionCreateAccepted" placeholder="받아들이는 범위"></textarea>
-              <textarea id="decisionCreateRejected" placeholder="받아들이지 않는 범위"></textarea>
-              <textarea id="decisionCreateConditions" placeholder="조건/주의 사항"></textarea>
+              <label class="field-block">결정 요약 <span class="required-mark">필수</span><span class="field-help">무엇을 승인, 반려, 보류, 수정 요청하는지 명확히 적습니다.</span><textarea id="decisionCreateSummary" placeholder="예: 초반 생존 동기 방향은 채택하되, 공식 설정 확정은 다음 회의 후로 보류한다."></textarea></label>
+              <label class="field-block">받아들인 범위 <span class="optional-mark">선택</span><span class="field-help">이번 결정으로 허용되는 내용만 적습니다.</span><textarea id="decisionCreateAccepted" placeholder="예: 초반 10분의 목표 전달 방향"></textarea></label>
+              <label class="field-block">받아들이지 않는 범위 <span class="optional-mark">선택</span><span class="field-help">이번 결정에 포함하지 않는 내용을 적습니다.</span><textarea id="decisionCreateRejected" placeholder="예: 엔딩 방향 확정, 스토리 canon 확정, 구현 task 즉시 생성"></textarea></label>
+              <label class="field-block">조건/주의 사항 <span class="optional-mark">선택</span><span class="field-help">나중에 다시 확인해야 할 조건이나 위험을 적습니다.</span><textarea id="decisionCreateConditions" placeholder="예: 기존 세계관 문서와 충돌 여부 확인 후 공식 설정화 가능"></textarea></label>
               <div class="row"><button class="good" id="decisionCreateSubmit">결정 저장</button></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>기억/설정 기록하기</h2><span class="pill">기억</span></div>
+              <div class="section-title"><h2>기억/설정 기록하기</h2><span class="pill">프로젝트 지식</span></div>
+              <p class="small muted">AI 직원이 이후 참고할 프로젝트 지식을 저장합니다. 공식 설정 상태로 저장할 때는 특히 신중해야 합니다.</p>
               <div class="form-grid">
-                <label>범위<select id="memoryCreateScope"></select></label>
-                <label>종류<select id="memoryCreateType"></select></label>
-                <label>상태<select id="memoryCreateStatus"></select></label>
-                <label>담당 직원<select id="memoryCreateOwner"></select></label>
+                <label>범위 <span class="required-mark">필수</span><select id="memoryCreateScope"></select></label>
+                <label>종류 <span class="required-mark">필수</span><select id="memoryCreateType"></select></label>
+                <label>상태 <span class="required-mark">필수</span><select id="memoryCreateStatus"></select></label>
+                <label>담당 직원 <span class="optional-mark">선택</span><select id="memoryCreateOwner"></select></label>
               </div>
-              <textarea id="memoryCreateContent" placeholder="기억할 내용"></textarea>
-              <input id="memoryCreateRefs" placeholder="근거 refs. 예: DEC-..., MEET-...">
+              <label class="field-block">기억 내용 <span class="required-mark">필수</span><span class="field-help">나중에 AI 직원이 참고해야 할 사실, 결정, 선호, 공식 설정을 적습니다.</span><textarea id="memoryCreateContent" placeholder="예: Dustland의 초반 목표는 생존 압박과 이동 목적을 빠르게 보여주는 방향을 우선 검토한다."></textarea></label>
+              <label class="field-block">근거 ID <span class="optional-mark">선택</span><span class="field-help">이 기억의 근거가 된 결정, 회의, 제안 ID를 적습니다.</span><input id="memoryCreateRefs" placeholder="예: DEC-..., MEET-..., PROP-..."></label>
               <div class="row"><button class="good" id="memoryCreateSubmit">기억 저장</button></div>
             </div>
           </div>
           <div class="control-bar">
             <input id="knowledgeSearch" placeholder="제안, 결정, 기억 검색">
             <select id="memoryStatusFilter"></select>
+          </div>
+          <div class="card">
+            <div class="section-title"><h2>제안 버튼 안내</h2><span class="pill">판단 기록</span></div>
+            <div class="grid">
+              <div class="item">
+                <h3>검토만 할 때</h3>
+                <ul class="small">
+                  <li><strong>전환 계획</strong>: 이 제안을 업무, 결정, 기억 중 어디로 넘길 수 있는지 미리 봅니다. 기록은 만들지 않습니다.</li>
+                </ul>
+              </div>
+              <div class="item">
+                <h3>판단을 남길 때</h3>
+                <ul class="small">
+                  <li><strong>채택 판단 남기기</strong>: 아이디어를 방향 후보로 받아들였다는 결정 기록을 남깁니다.</li>
+                  <li><strong>공식 설정 후보로 남기기</strong>: 공식 설정으로 검토할 수 있게 결정 기록을 남깁니다. 바로 확정 설정이 되는 것은 아닙니다.</li>
+                  <li><strong>수정 요청</strong>: 지금 형태로는 부족하니 다시 다듬어야 한다는 결정 기록을 남깁니다.</li>
+                  <li><strong>반려 판단 남기기</strong>: 채택하지 않는다는 결정 기록을 남깁니다.</li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div class="grid">
             <div class="card"><h2>제안함</h2><p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
@@ -4721,10 +4745,10 @@ function directorConsoleHtml() {
           effect: "결정 기록을 만들 수 있습니다. 공식 설정으로 저장하는 것은 별도 선택입니다.",
           risk: "공식 설정화 버튼은 프로젝트 기억에 강하게 남으므로, 승인된 설정일 때만 사용하세요.",
           actions: [
-            button("제안 채택 기록", "proposal-approve", proposal.path, "good"),
-            button("공식 설정으로 기록", "proposal-canonize", proposal.path, "warn"),
+            button("채택 판단 남기기", "proposal-approve", proposal.path, "good"),
+            button("공식 설정 후보로 남기기", "proposal-canonize", proposal.path, "warn"),
             button("수정 요청", "proposal-request-changes", proposal.path),
-            button("제안 반려 기록", "proposal-reject", proposal.path, "danger"),
+            button("반려 판단 남기기", "proposal-reject", proposal.path, "danger"),
           ],
         });
       });
@@ -5281,10 +5305,10 @@ function directorConsoleHtml() {
         '</div>' +
         actionsHtml([
           button("전환 계획", "knowledge-transition-plan", p.path),
-          button("제안 채택 기록", "proposal-approve", p.path, "good"),
-          button("공식 설정으로 기록", "proposal-canonize", p.path, "warn"),
+          button("채택 판단 남기기", "proposal-approve", p.path, "good"),
+          button("공식 설정 후보로 남기기", "proposal-canonize", p.path, "warn"),
           button("수정 요청", "proposal-request-changes", p.path),
-          button("제안 반려 기록", "proposal-reject", p.path, "danger")
+          button("반려 판단 남기기", "proposal-reject", p.path, "danger")
         ]) +
         internalLinksHtml([link("제안 원본", p.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 제안이 없습니다.");
@@ -6506,10 +6530,10 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   if (kind === "proposal") {
     base.current_meaning = "제안은 아이디어 후보입니다. 채택, 반려, 수정 요청, 공식 설정 기록 중 하나로 판단하기 전까지는 확정 사항이 아닙니다.";
     base.possible_actions = [
-      "제안 채택 기록: 이 아이디어를 방향 후보로 받아들였다는 Decision을 남깁니다.",
-      "공식 설정으로 기록: canonize Decision을 만들고, 이후 Memory/canon으로 넘길 수 있게 합니다.",
+      "채택 판단 남기기: 이 아이디어를 방향 후보로 받아들였다는 Decision을 남깁니다.",
+      "공식 설정 후보로 남기기: canonize Decision을 만들고, 이후 Memory/canon으로 넘길 수 있게 합니다.",
       "수정 요청: 더 다듬어야 한다는 Decision을 남깁니다.",
-      "제안 반려 기록: 채택하지 않는 이유를 Decision으로 남깁니다.",
+      "반려 판단 남기기: 채택하지 않는 이유를 Decision으로 남깁니다.",
     ];
     base.what_changes_if_accepted = [
       "Proposal 자체가 바로 canon이 되지는 않습니다.",
