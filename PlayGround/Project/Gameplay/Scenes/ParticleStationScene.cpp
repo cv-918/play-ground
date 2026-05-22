@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "EngineSystems/Render/GraphicResourceManager.h"
 #include "EngineSystems/Render/ScreenSystem.h"
 
 #include "GamePlaySystems/GameDataLoader.h"
@@ -193,6 +194,7 @@ void ParticleStationScene::Render(_double _delta_time)
 	_DrawFunc::DrawString(_Point(24, 56), _GetSetLabel(), Palette::LightBlue, 16.f, false);
 	_DrawFunc::DrawString(_Point(24, 84), L"Debug windows: EventSet / Event. F5 Reload, F8 Preview Mouse, Space Preview Center, F9 Save, Esc Intro.", Palette::White, 13.f, false);
 	_DrawFunc::DrawString(_Point(24, 112), status_text_, status_color_, 14.f, false);
+	_DrawSelectedTexturePreview(resolution);
 	_DrawPreviewDirectionGuide(resolution);
 }
 
@@ -568,7 +570,7 @@ void ParticleStationScene::_BuildEventEditorWindow()
 
 	add_combo(
 		L"04_particle_source",
-		L"Particle Source",
+		L"Particle Preset",
 		64,
 		[this]() { return _GetParticleSourceLabels(); },
 		[this]() { return _GetSelectedParticleSourceIndex(); },
@@ -576,7 +578,7 @@ void ParticleStationScene::_BuildEventEditorWindow()
 
 	add_combo(
 		L"05_texture",
-		L"Texture",
+		L"Particle Texture",
 		64,
 		[this]() { return _GetTextureLabels(); },
 		[this]() { return _GetSelectedTextureIndex(); },
@@ -1483,6 +1485,7 @@ void ParticleStationScene::_SetSelectedTextureIndex(_int _index)
 		return;
 
 	event_spec->particle_setting_.textureKey = texture_options_[_index];
+	_SetStatus(L"Selected particle texture: " + GetTextureDisplayLabel(event_spec->particle_setting_.textureKey), Palette::Green);
 }
 
 void ParticleStationScene::_SetStatus(const std::wstring& _text, const _Color& _color)
@@ -1586,5 +1589,94 @@ void ParticleStationScene::_DrawPreviewDirectionGuide(const Resolution& _resolut
 		L"Resolved " + FormatFloat(resolved_direction_deg, 0) + L"deg",
 		Palette::LightBlue,
 		12.f,
+		false);
+}
+
+void ParticleStationScene::_DrawSelectedTexturePreview(const Resolution& _resolution) const
+{
+	if (_resolution.width <= 0 || _resolution.height <= 0)
+		return;
+
+	constexpr _float panel_width = 256.f;
+	constexpr _float panel_height = 236.f;
+	constexpr _float preview_max_size = 144.f;
+	constexpr _float padding = 16.f;
+
+	const _float panel_left = std::max(24.f, s_float(_resolution.width) - panel_width - 24.f);
+	const _float panel_top = 132.f;
+	const _RectF panel_rect(
+		panel_left,
+		panel_top,
+		panel_left + panel_width,
+		panel_top + panel_height);
+
+	_DrawFunc::FillRectangle(panel_rect, _Color(220, 28, 32, 40));
+	_DrawFunc::DrawRectangle(panel_rect, Palette::AshGray, 1.f);
+	_DrawFunc::DrawString(
+		_Point(s_int(panel_left + padding), s_int(panel_top + 12.f)),
+		L"Selected Particle Texture",
+		Palette::White,
+		13.f,
+		false);
+
+	const auto* event_spec = _GetSelectedEvent();
+	if (event_spec == nullptr || event_spec->particle_setting_.textureKey.empty())
+	{
+		_DrawFunc::DrawString(
+			_Point(s_int(panel_left + padding), s_int(panel_top + 48.f)),
+			L"<empty>",
+			Palette::AshGray,
+			12.f,
+			false);
+		return;
+	}
+
+	const auto& texture_key = event_spec->particle_setting_.textureKey;
+	auto* texture = _GraphicSourceMgr.GetTexture(texture_key);
+	if (texture == nullptr || texture->Width() <= 0 || texture->Height() <= 0)
+	{
+		_DrawFunc::DrawString(
+			_Point(s_int(panel_left + padding), s_int(panel_top + 48.f)),
+			L"Texture load failed.",
+			Palette::Red,
+			12.f,
+			false);
+		_DrawFunc::DrawString(
+			_Point(s_int(panel_left + padding), s_int(panel_top + 70.f)),
+			GetTextureDisplayLabel(texture_key),
+			Palette::Yellow,
+			11.f,
+			false);
+		return;
+	}
+
+	const _float texture_width = s_float(texture->Width());
+	const _float texture_height = s_float(texture->Height());
+	const _float scale = std::min(preview_max_size / texture_width, preview_max_size / texture_height);
+	const _float draw_width = std::max(1.f, texture_width * scale);
+	const _float draw_height = std::max(1.f, texture_height * scale);
+	const _float preview_left = panel_left + (panel_width - draw_width) * 0.5f;
+	const _float preview_top = panel_top + 50.f + (preview_max_size - draw_height) * 0.5f;
+
+	const _RectF preview_bounds(
+		panel_left + (panel_width - preview_max_size) * 0.5f,
+		panel_top + 50.f,
+		panel_left + (panel_width + preview_max_size) * 0.5f,
+		panel_top + 50.f + preview_max_size);
+	_DrawFunc::FillRectangle(preview_bounds, _Color(255, 42, 46, 56));
+	_DrawFunc::DrawRectangle(preview_bounds, Palette::DarkGray, 1.f);
+
+	const _RectF dest_rect(
+		preview_left,
+		preview_top,
+		preview_left + draw_width,
+		preview_top + draw_height);
+	_DrawFunc::DrawTexture(texture, dest_rect);
+
+	_DrawFunc::DrawString(
+		_Point(s_int(panel_left + padding), s_int(panel_top + 206.f)),
+		GetTextureDisplayLabel(texture_key),
+		Palette::LightBlue,
+		11.f,
 		false);
 }

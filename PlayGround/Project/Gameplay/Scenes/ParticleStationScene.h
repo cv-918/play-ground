@@ -87,6 +87,7 @@ private:
 	std::wstring _GetDirectionPreviewLabel() const;
 	_float _ResolvePreviewDirectionDeg(const ParticleEventSpec& _event) const;
 	void _DrawPreviewDirectionGuide(const Resolution& _resolution) const;
+	void _DrawSelectedTexturePreview(const Resolution& _resolution) const;
 
 private:
 	ParticleEventSet working_set_;
