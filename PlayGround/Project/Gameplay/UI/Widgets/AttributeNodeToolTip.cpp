@@ -4,9 +4,28 @@
 #include "AttributeNode.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 
+namespace
+{
+	const std::wstring kTooltipBackgroundPath = Path::PopUps + L"Default.png";
+	constexpr _int kTooltipWidth = 410;
+	constexpr _int kTooltipFallbackHeight = 143;
+	constexpr _int kTooltipPaddingX = 18;
+	constexpr _int kTooltipPaddingY = 14;
+
+	_Size BuildTooltipSize(const TextureResource* _texture)
+	{
+		if (!_texture || _texture->Width() <= 0 || _texture->Height() <= 0)
+			return { kTooltipWidth, kTooltipFallbackHeight };
+
+		const _int height = static_cast<_int>(std::round(static_cast<_float>(kTooltipWidth) * _texture->Height() / _texture->Width()));
+		return { kTooltipWidth, std::max(1, height) };
+	}
+}
+
 _bool AttributeNodeToolTip::Initialize()
 {
-	SetSize({ 250, 200 }); // 툴팁의 기본 크기 설정. 필요에 따라 내용에 맞게 크기를 조절할 수 있습니다.
+	background_texture_ = _GraphicSourceMgr.GetTexture(kTooltipBackgroundPath);
+	SetSize(BuildTooltipSize(background_texture_));
 	return true;
 }
 
@@ -36,13 +55,28 @@ void AttributeNodeToolTip::Render(_double _delta_time)
 	if (nullptr == target_node_)
 		return;
 
+	if (!background_texture_)
+	{
+		background_texture_ = _GraphicSourceMgr.GetTexture(kTooltipBackgroundPath);
+		if (background_texture_)
+			SetSize(BuildTooltipSize(background_texture_));
+	}
+
 	const auto position = GetPosition();
 	const auto size = GetSize();
-	_DrawFunc::FillRectangle({ position, size }, Palette::White); // 툴팁 배경 채우기
-	_DrawFunc::DrawRectangle({ position, size }, Palette::DarkGray, 2.f); // 툴팁 배경 그리기
+	const _Rect tooltip_rect{ position, size };
 
-	const auto tooltip_pos = position + _Point(10, 10); // 노드 위에 툴팁 위치 설정
-	_DrawFunc::DrawString(tooltip_pos, tooltip_text_, Palette::Black, 14.f, 230.f, false);
+	if (background_texture_)
+		_DrawFunc::DrawTexture(background_texture_, _RectF(tooltip_rect));
+	else
+	{
+		_DrawFunc::FillRectangle(tooltip_rect, Palette::White); // 툴팁 배경 채우기
+		_DrawFunc::DrawRectangle(tooltip_rect, Palette::DarkGray, 2.f); // 툴팁 배경 그리기
+	}
+
+	const auto tooltip_pos = position + _Point(kTooltipPaddingX, kTooltipPaddingY); // 노드 위에 툴팁 위치 설정
+	const _float text_max_width = static_cast<_float>(std::max(1, size.x - kTooltipPaddingX * 2));
+	_DrawFunc::DrawString(tooltip_pos, tooltip_text_, Palette::Black, 14.f, text_max_width, false);
 }
 
 void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)

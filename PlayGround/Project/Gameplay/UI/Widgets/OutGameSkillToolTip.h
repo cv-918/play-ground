@@ -3,6 +3,7 @@
 #include "WidgetBase.h"
 
 struct SkillJsonInfo;
+struct TextureResource;
 
 class OutGameSkillToolTip final : public WidgetBase
 {
@@ -16,5 +17,6 @@ public:
 
 private:
 	const SkillJsonInfo* target_skill_ = nullptr;
+	TextureResource* background_texture_ = nullptr;
 	std::wstring tooltip_text_;
 };

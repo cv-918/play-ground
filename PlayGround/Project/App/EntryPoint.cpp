@@ -11,6 +11,9 @@
 #include <limits>
 #include <mmsystem.h>
 #include <thread>
+#include <vector>
+#include <wincodec.h>
+#include <wrl/client.h>
 
 #pragma comment(lib, "winmm.lib")
 
@@ -25,6 +28,11 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 
 namespace
 {
+	using Microsoft::WRL::ComPtr;
+
+	constexpr wchar_t kCustomCursorRelativePath[] = L"Data\\Resources\\Textures\\UI\\Cursor\\cursor.png";
+	constexpr UINT kCursorPixelSize = 48;
+
 	struct FrameLimitSettings
 	{
 		bool enabled = true;
@@ -57,6 +65,8 @@ namespace
 	};
 
 	FrameLimitSettings g_frame_limit_settings;
+	HCURSOR g_custom_cursor = nullptr;
+	std::wstring g_custom_cursor_path;
 
 	void ConfigureFrameLimit(bool enabled, _double target_fps)
 	{
@@ -67,6 +77,234 @@ namespace
 	void ConfigureFrameLimit(const VideoSettings& settings)
 	{
 		ConfigureFrameLimit(settings.frame_limit_enabled, s_cast(_double, settings.target_fps));
+	}
+
+	std::wstring BuildExecutableRelativePath(const wchar_t* relative_path)
+	{
+		wchar_t module_path[MAX_PATH] = {};
+		const DWORD length = GetModuleFileNameW(nullptr, module_path, MAX_PATH);
+		if (length == 0 || length >= MAX_PATH)
+			return relative_path;
+
+		std::wstring base_path(module_path);
+		const size_t separator_pos = base_path.find_last_of(L"\\/");
+		if (separator_pos == std::wstring::npos)
+			return relative_path;
+
+		base_path.resize(separator_pos + 1);
+		base_path += relative_path;
+		return base_path;
+	}
+
+	_ubyte GetCursorPixelAlpha(_uint pixel)
+	{
+		return static_cast<_ubyte>((pixel >> 24) & 0xFFu);
+	}
+
+	std::vector<BYTE> BuildCursorMaskBits(UINT width, UINT height, const std::vector<_uint>& pixels)
+	{
+		const int mask_stride = ((static_cast<int>(width) + 15) / 16) * 2;
+		std::vector<BYTE> mask_bits(static_cast<size_t>(mask_stride) * static_cast<size_t>(height), 0);
+
+		for (UINT y = 0; y < height; ++y)
+		{
+			for (UINT x = 0; x < width; ++x)
+			{
+				const size_t pixel_index = static_cast<size_t>(y) * width + x;
+				if (GetCursorPixelAlpha(pixels[pixel_index]) > 8)
+					continue;
+
+				const size_t byte_index = static_cast<size_t>(y) * mask_stride + (x / 8);
+				const BYTE bit = static_cast<BYTE>(0x80u >> (x % 8));
+				mask_bits[byte_index] |= bit;
+			}
+		}
+
+		return mask_bits;
+	}
+
+	POINT CalculateCursorHotspot(UINT width, UINT height, const std::vector<_uint>& pixels)
+	{
+		POINT hotspot{ 0, 0 };
+
+		for (UINT y = 0; y < height; ++y)
+		{
+			for (UINT x = 0; x < width; ++x)
+			{
+				const size_t pixel_index = static_cast<size_t>(y) * width + x;
+				if (GetCursorPixelAlpha(pixels[pixel_index]) <= 8)
+					continue;
+
+				hotspot.x = static_cast<LONG>(x);
+				hotspot.y = static_cast<LONG>(y);
+				return hotspot;
+			}
+		}
+
+		return hotspot;
+	}
+
+	HBITMAP CreateCursorColorBitmap(UINT width, UINT height, const std::vector<_uint>& pixels)
+	{
+		BITMAPV5HEADER header{};
+		header.bV5Size = sizeof(BITMAPV5HEADER);
+		header.bV5Width = static_cast<LONG>(width);
+		header.bV5Height = -static_cast<LONG>(height);
+		header.bV5Planes = 1;
+		header.bV5BitCount = 32;
+		header.bV5Compression = BI_BITFIELDS;
+		header.bV5RedMask = 0x00FF0000;
+		header.bV5GreenMask = 0x0000FF00;
+		header.bV5BlueMask = 0x000000FF;
+		header.bV5AlphaMask = 0xFF000000;
+
+		void* bitmap_bits = nullptr;
+		HDC screen_dc = GetDC(nullptr);
+		HBITMAP bitmap = CreateDIBSection(screen_dc, reinterpret_cast<BITMAPINFO*>(&header), DIB_RGB_COLORS, &bitmap_bits, nullptr, 0);
+		ReleaseDC(nullptr, screen_dc);
+
+		if (!bitmap || !bitmap_bits)
+		{
+			if (bitmap)
+				DeleteObject(bitmap);
+
+			return nullptr;
+		}
+
+		memcpy(bitmap_bits, pixels.data(), pixels.size() * sizeof(_uint));
+		return bitmap;
+	}
+
+	HCURSOR LoadPngCursor(const std::wstring& path)
+	{
+		ComPtr<IWICImagingFactory> factory;
+		if (FAILED(CoCreateInstance(
+			CLSID_WICImagingFactory,
+			nullptr,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(factory.GetAddressOf()))))
+		{
+			return nullptr;
+		}
+
+		ComPtr<IWICBitmapDecoder> decoder;
+		if (FAILED(factory->CreateDecoderFromFilename(
+			path.c_str(),
+			nullptr,
+			GENERIC_READ,
+			WICDecodeMetadataCacheOnLoad,
+			decoder.GetAddressOf())))
+		{
+			return nullptr;
+		}
+
+		ComPtr<IWICBitmapFrameDecode> frame;
+		if (FAILED(decoder->GetFrame(0, frame.GetAddressOf())))
+			return nullptr;
+
+		UINT width = 0;
+		UINT height = 0;
+		if (FAILED(frame->GetSize(&width, &height)) || width == 0 || height == 0)
+			return nullptr;
+
+		ComPtr<IWICBitmapScaler> scaler;
+		if (FAILED(factory->CreateBitmapScaler(scaler.GetAddressOf())))
+			return nullptr;
+
+		if (FAILED(scaler->Initialize(
+			frame.Get(),
+			kCursorPixelSize,
+			kCursorPixelSize,
+			WICBitmapInterpolationModeFant)))
+		{
+			return nullptr;
+		}
+
+		ComPtr<IWICFormatConverter> converter;
+		if (FAILED(factory->CreateFormatConverter(converter.GetAddressOf())))
+			return nullptr;
+
+		if (FAILED(converter->Initialize(
+			scaler.Get(),
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			nullptr,
+			0.0,
+			WICBitmapPaletteTypeCustom)))
+		{
+			return nullptr;
+		}
+
+		width = kCursorPixelSize;
+		height = kCursorPixelSize;
+		std::vector<_uint> pixels(static_cast<size_t>(width) * static_cast<size_t>(height));
+		const UINT stride = width * 4;
+		const UINT buffer_size = stride * height;
+		if (FAILED(converter->CopyPixels(nullptr, stride, buffer_size, reinterpret_cast<BYTE*>(pixels.data()))))
+			return nullptr;
+
+		HBITMAP color_bitmap = CreateCursorColorBitmap(width, height, pixels);
+		if (!color_bitmap)
+			return nullptr;
+
+		const std::vector<BYTE> mask_bits = BuildCursorMaskBits(width, height, pixels);
+		HBITMAP mask_bitmap = CreateBitmap(width, height, 1, 1, mask_bits.data());
+		if (!mask_bitmap)
+		{
+			DeleteObject(color_bitmap);
+			return nullptr;
+		}
+
+		ICONINFO icon_info{};
+		const POINT hotspot = CalculateCursorHotspot(width, height, pixels);
+		icon_info.fIcon = FALSE;
+		icon_info.xHotspot = static_cast<DWORD>(hotspot.x);
+		icon_info.yHotspot = static_cast<DWORD>(hotspot.y);
+		icon_info.hbmMask = mask_bitmap;
+		icon_info.hbmColor = color_bitmap;
+
+		HCURSOR cursor = static_cast<HCURSOR>(CreateIconIndirect(&icon_info));
+
+		DeleteObject(mask_bitmap);
+		DeleteObject(color_bitmap);
+
+		return cursor;
+	}
+
+	HCURSOR LoadGameCursorOrDefault()
+	{
+		if (!g_custom_cursor)
+		{
+			if (g_custom_cursor_path.empty())
+				g_custom_cursor_path = BuildExecutableRelativePath(kCustomCursorRelativePath);
+
+			g_custom_cursor = LoadPngCursor(g_custom_cursor_path);
+			if (!g_custom_cursor)
+			{
+				_SYSTEM_LOG_WARN(_T("Failed to load custom cursor: %s"), g_custom_cursor_path.c_str());
+			}
+		}
+
+		return g_custom_cursor ? g_custom_cursor : LoadCursor(nullptr, IDC_ARROW);
+	}
+
+	void ApplyGameCursorToWindow()
+	{
+		LoadGameCursorOrDefault();
+		if (!g_custom_cursor || !g_hwnd)
+			return;
+
+		SetClassLongPtr(g_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(g_custom_cursor));
+		SetCursor(g_custom_cursor);
+	}
+
+	void DestroyGameCursor()
+	{
+		if (!g_custom_cursor)
+			return;
+
+		DestroyCursor(g_custom_cursor);
+		g_custom_cursor = nullptr;
 	}
 }
 
@@ -96,6 +334,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// 애플리케이션 초기화를 수행합니다:
 	if (!InitInstance(hInstance, nCmdShow))
 	{
+		DestroyGameCursor();
 		return FALSE;
 	}
 
@@ -108,8 +347,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		_DEBUG_MSGBOX(L"PlayGround 초기화 실패");
 		pg.Shutdown();
+		DestroyGameCursor();
 		return FALSE;
 	}
+	ApplyGameCursorToWindow();
 
 	TimerResolutionScope timer_resolution_scope(1);
 
@@ -173,6 +414,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	pg.Shutdown();
+	DestroyGameCursor();
 	return (int)msg.wParam;
 }
 
@@ -277,6 +519,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
+	case WM_SETCURSOR:
+		if (LOWORD(lParam) == HTCLIENT && g_custom_cursor)
+		{
+			SetCursor(g_custom_cursor);
+			return TRUE;
+		}
+		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
