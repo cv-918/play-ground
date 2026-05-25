@@ -20,10 +20,14 @@ private:
 
 	void UpdateLayout();
 	void _UpdateTreeInputRegion();
+	_Rect _GetCurrencyPanelRect() const;
+	void _RenderCurrencyPanel() const;
 
 	Image* background_image_ = nullptr;
 	class Button* skills_btn_ = nullptr;
 	class Button* return_btn_ = nullptr;
 	AttributeNodeTree* attribute_tree_ = nullptr;
+
+	_float input_region_ui_scale_ = 0.f;
 };
 

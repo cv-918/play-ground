@@ -10,6 +10,15 @@
 
 namespace
 {
+	constexpr _int kNavButtonRightPadding = 92;
+	constexpr _int kNavButtonBottomPadding = 88;
+	constexpr _int kNavButtonGap = 22;
+	constexpr _int kCurrencyPanelLeftMargin = 56;
+	constexpr _int kCurrencyPanelTopMargin = 72;
+	constexpr _int kCurrencyPanelWidth = 190;
+	constexpr _int kCurrencyPanelHeight = 44;
+	constexpr _float kCurrencyPanelFontSize = 16.f;
+
 	_Rect BuildScaledRect(const _Rect& _base_rect, _float _scale)
 	{
 		if (_scale <= 0.f)
@@ -79,10 +88,9 @@ void OutGameAttributeView::UpdateLayout()
 	if (skills_btn_ == nullptr || return_btn_ == nullptr)
 		return;
 
-	const _int button_gap = 20;
-	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
-	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - 60;
-	skills_btn_->SetRect(_Rect{ { x, y - COMMON_BUTTON_CY - button_gap }, COMMON_BUTTON_SIZE });
+	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - kNavButtonRightPadding;
+	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - kNavButtonBottomPadding;
+	skills_btn_->SetRect(_Rect{ { x, y - COMMON_BUTTON_CY - kNavButtonGap }, COMMON_BUTTON_SIZE });
 	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 
 	if (attribute_tree_)
@@ -94,6 +102,10 @@ void OutGameAttributeView::UpdateLayout()
 
 _int OutGameAttributeView::Update(_double _delta_time)
 {
+	const _float applied_ui_scale = _VideoSettingsMgr.Applied().ui_scale;
+	if (std::fabs(input_region_ui_scale_ - applied_ui_scale) > 0.0001f)
+		_UpdateTreeInputRegion();
+
 	__super::Update(_delta_time);
 
 	if (_InputMgr.Down(VK_ESCAPE))
@@ -111,20 +123,68 @@ void OutGameAttributeView::_UpdateTreeInputRegion()
 		return;
 
 	std::vector<_Rect> excluded_rects;
-	excluded_rects.reserve(2);
+	excluded_rects.reserve(3);
+
+	const _float applied_ui_scale = _VideoSettingsMgr.Applied().ui_scale;
+	input_region_ui_scale_ = applied_ui_scale;
+
+	excluded_rects.push_back(_GetCurrencyPanelRect());
 
 	if (skills_btn_)
-		excluded_rects.push_back(BuildScaledRect(skills_btn_->GetRect(), _VideoSettingsMgr.Applied().ui_scale));
+		excluded_rects.push_back(BuildScaledRect(skills_btn_->GetRect(), applied_ui_scale));
 
 	if (return_btn_)
-		excluded_rects.push_back(BuildScaledRect(return_btn_->GetRect(), _VideoSettingsMgr.Applied().ui_scale));
+		excluded_rects.push_back(BuildScaledRect(return_btn_->GetRect(), applied_ui_scale));
 
 	attribute_tree_->SetInputRegion(GAME_VIEW_RECT, excluded_rects);
+}
+
+_Rect OutGameAttributeView::_GetCurrencyPanelRect() const
+{
+	const _float applied_ui_scale = std::max(0.1f, _VideoSettingsMgr.Applied().ui_scale);
+	const _int left_margin = std::max(1, s_int(std::round(kCurrencyPanelLeftMargin * applied_ui_scale)));
+	const _int top_margin = std::max(1, s_int(std::round(kCurrencyPanelTopMargin * applied_ui_scale)));
+	const _int width = std::max(1, s_int(std::round(kCurrencyPanelWidth * applied_ui_scale)));
+	const _int height = std::max(1, s_int(std::round(kCurrencyPanelHeight * applied_ui_scale)));
+
+	const _Point left_top{
+		GAME_VIEW_RECT.Left() + left_margin,
+		GAME_VIEW_RECT.Top() + top_margin
+	};
+
+	return _Rect{ left_top, _Size{ width, height } };
+}
+
+void OutGameAttributeView::_RenderCurrencyPanel() const
+{
+	const _Rect panel_rect = _GetCurrencyPanelRect();
+	const _float applied_ui_scale = std::max(0.1f, _VideoSettingsMgr.Applied().ui_scale);
+	const _float text_padding_x = 14.f * applied_ui_scale;
+	const _RectF text_rect(
+		s_float(panel_rect.Left()) + text_padding_x,
+		s_float(panel_rect.Top()),
+		s_float(panel_rect.Right()) - text_padding_x,
+		s_float(panel_rect.Bottom()));
+
+	const std::wstring currency_text = L"먼지 : " + std::to_wstring(_UserProfile.GetCoinCount());
+
+	_DrawFunc::FillRectangle(panel_rect, _Color(205, 24, 28, 34));
+	_DrawFunc::DrawRectangle(panel_rect, Palette::AshGray, 1.f);
+	_DrawFunc::DrawString(
+		text_rect,
+		currency_text,
+		_Color(255, 235, 235, 235),
+		kCurrencyPanelFontSize * applied_ui_scale,
+		_DrawFunc::FONT_STYLE_BOLD,
+		_DrawFunc::STRING_ALIGN_NEAR,
+		_DrawFunc::STRING_ALIGN_CENTER,
+		true);
 }
 
 void OutGameAttributeView::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
+	_RenderCurrencyPanel();
 
 	if (_GameState.debug_mode_)
 	{

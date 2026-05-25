@@ -15,6 +15,9 @@ namespace
 {
 	const _Color kSlot0MaskColor(120, 150, 150, 150);
 	const _Color kSlot1MaskColor(120, 150, 170, 200);
+	constexpr _int kNavButtonRightPadding = 92;
+	constexpr _int kNavButtonBottomPadding = 88;
+	constexpr _int kNavButtonGap = 22;
 
 	_Rect BuildScaledRect(const _Rect& _base_rect, _float _scale)
 	{
@@ -128,9 +131,8 @@ void OutGameSkillView::UpdateLayout()
 
 	const _Size equipped_slot_size{ 104, 84 };
 	const _int equipped_slot_gap = 64;
-	const _int button_gap = 20;
-	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - 60;
-	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - 60;
+	const auto x = GAME_VIEW_WIDTH - COMMON_BUTTON_CX - kNavButtonRightPadding;
+	const auto y = GAME_VIEW_HEIGHT - COMMON_BUTTON_CY - kNavButtonBottomPadding;
 	const auto equipped_center_y = GAME_VIEW_CENTER.y - 210;
 	const auto equipped_center_x_gap = equipped_slot_size.x / 2 + equipped_slot_gap / 2;
 
@@ -139,7 +141,7 @@ void OutGameSkillView::UpdateLayout()
 	equipped_skill_slot_0_->SetSlotCenter(_Point{ GAME_VIEW_CENTER.x - equipped_center_x_gap, equipped_center_y });
 	equipped_skill_slot_1_->SetSlotCenter(_Point{ GAME_VIEW_CENTER.x + equipped_center_x_gap, equipped_center_y });
 
-	attributes_btn_->SetRect(_Rect{ { x, y - COMMON_BUTTON_CY - button_gap }, COMMON_BUTTON_SIZE });
+	attributes_btn_->SetRect(_Rect{ { x, y - COMMON_BUTTON_CY - kNavButtonGap }, COMMON_BUTTON_SIZE });
 	return_btn_->SetRect(_Rect{ { x, y }, COMMON_BUTTON_SIZE });
 	skill_list_grid_->SetCenter(GAME_VIEW_CENTER);
 }
