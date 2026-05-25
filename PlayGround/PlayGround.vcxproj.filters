@@ -106,6 +106,7 @@
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\UserDataMigration.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\UserProfile.h" />
     <ClInclude Include="Project\Core\Base\UtilityFunctions.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\RunState.h" />
@@ -276,6 +277,7 @@
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Widgets\AttributeNodeToolTip.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\UserDataMigration.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\UserProfile.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\RunState.cpp" />
     <ClCompile Include="Project\Gameplay\UI\Views\InGamePauseView.cpp" />

@@ -4,6 +4,7 @@
 inline void to_json(json& _json, const UserDataJsonInfo& _info)
 {
 	_json = json{
+		{ "save_schema_version_", _info.save_schema_version_ },
 		{ "id_", _info.id_ },
 		{ "dust_count_", _info.dust_count_ },
 		{ "experience_", _info.experience_ },
@@ -17,6 +18,7 @@ inline void to_json(json& _json, const UserDataJsonInfo& _info)
 
 inline void from_json(const json& _json, UserDataJsonInfo& _info)
 {
+	_info.save_schema_version_ = _json.value("save_schema_version_", 1u);
 	_info.id_ = _json.value("id_", 0u);
 	_info.dust_count_ = _json.value("dust_count_", 0u);
 	_info.experience_ = _json.value("experience_", 0u);
@@ -45,6 +47,11 @@ public:
 	~UserDataManager() override;
 
 public:
+	static std::filesystem::path GetUserDataPath();
+
+	_bool LoadUserData();
+	_bool SaveUserData();
+
 	_bool Load(const std::string& _file_path) override;
 
 	// JsonDataManager을(를) 통해 상속됨

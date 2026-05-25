@@ -138,7 +138,7 @@ $sourceOk = (Assert-SourcePattern "RunEndReason includes Abandoned" $commonTypeH
 $sourceOk = (Assert-SourcePattern "RunState result_apply_eligible policy" $runStateCpp "const\s+_bool\s+result_apply_eligible\s*=\s*\(is_run_completed\s*\|\|\s*is_failed\s*\|\|\s*is_stage_progressed\)\s*&&\s*!is_abandoned;") -and $sourceOk
 $sourceOk = (Assert-SourcePattern "StageManager duplicate apply guard" $stageManagerCpp "if\s*\(\s*run_session_result_applied_\s*\)\s*\r?\n\s*return;") -and $sourceOk
 $sourceOk = (Assert-SourcePattern "StageManager stage progress condition" $stageManagerCpp "(?s)if\s*\(\s*_apply_stage_progress\s*&&\s*result\.stage_clear_eligible_\s*\)\s*\{.*?if\s*\(\s*curr_stage_lv\s*<\s*_StageDataMgr\.GetStageCount\(\)\s*\)\s*\{.*?_UserProfile\.IncreaseStageProgress\(\);") -and $sourceOk
-$sourceOk = (Assert-SourcePattern "StageManager reward and save eligibility gate" $stageManagerCpp "(?s)if\s*\(\s*result\.result_apply_eligible_\s*\)\s*\{.*?_UserProfile\.ApplyRunSessionResult\(result\);.*?_UserDataMgr\.Save\(""Data/UserData\.json""\);") -and $sourceOk
+$sourceOk = (Assert-SourcePattern "StageManager reward and save eligibility gate" $stageManagerCpp "(?s)if\s*\(\s*result\.result_apply_eligible_\s*\)\s*\{.*?_UserProfile\.ApplyRunSessionResult\(result\);.*?_UserDataMgr\.SaveUserData\(\);") -and $sourceOk
 $sourceOk = (Assert-SourcePattern "UserProfile result_apply_eligible guard" $userProfileCpp "if\s*\(\s*!\s*_result\.result_apply_eligible_\s*\)\s*\r?\n\s*return;") -and $sourceOk
 $sourceOk = (Assert-SourcePattern "UserProfile PlayerDied half coin policy" $userProfileCpp "(?s)if\s*\(\s*_result\.end_reason_\s*==\s*RunEndReason::PlayerDied\s*\)\s*\{.*?applied_coin_count\s*=\s*earned_coin_count\s*>>\s*1;") -and $sourceOk
 

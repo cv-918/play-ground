@@ -62,6 +62,7 @@ void UserProfile::StoreUserData(const UserDataJsonInfo& _info)
 UserDataJsonInfo UserProfile::GetUserData() const
 {
 	UserDataJsonInfo info;
+	info.save_schema_version_ = 2;
 	info.id_ = 0; // 필요 시 세이브 데이터 슬롯 id 할당
 	info.dust_count_ = dust_count_;
 	info.experience_ = experience_;

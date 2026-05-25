@@ -28,7 +28,6 @@ namespace
 	constexpr char kAttributeNodePath[] = "Data/AttributeNode.json";
 	constexpr char kStagePath[] = "Data/Stage.json";
 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
-	constexpr char kUserDataPath[] = "Data/UserData.json";
 	constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
 }
 
@@ -107,7 +106,7 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 		return false;
 	}
 
-	if (!_UserDataMgr.Load(kUserDataPath))
+	if (!_UserDataMgr.LoadUserData())
 	{
 		_DEBUG_MSGBOX(_T("Failed to load user data from JSON."));
 		return false;

@@ -178,7 +178,6 @@ $expectedFiles = @(
     @{ key = "AttributeNode"; path = "AttributeNode.json"; label = "AttributeNode.json" },
     @{ key = "Stage"; path = "Stage.json"; label = "Stage.json" },
     @{ key = "SpawnPool"; path = "SpawnPool.json"; label = "SpawnPool.json" },
-    @{ key = "UserData"; path = "UserData.json"; label = "UserData.json" },
     @{ key = "TownNpcPlacement"; path = "TownNpcPlacement.json"; label = "TownNpcPlacement.json" }
 )
 
@@ -200,6 +199,22 @@ foreach ($entry in $expectedFiles) {
     }
 }
 
+$optionalUserDataPath = Join-Path $dataRoot "UserData.json"
+if (Test-Path -LiteralPath $optionalUserDataPath) {
+    try {
+        $parsed = Read-Json -Path $optionalUserDataPath
+        $script:data["UserData"] = $parsed.value
+        $script:topLevel["UserData"] = $parsed.top_level
+        Add-Ok "UserData.json exists and parses. This file is treated as local save data, not required publish data."
+    }
+    catch {
+        Add-Failure "UserData.json parse failed: $($_.Exception.Message)"
+    }
+}
+else {
+    Add-Ok "UserData.json is absent. This is valid for publish Data because UserDataManager owns LocalAppData save creation."
+}
+
 Add-Line ""
 Add-Line "Top-level shape checks:"
 $playableCharacters = Assert-ArrayFile "PlayableCharacter" "PlayableCharacter"
@@ -211,7 +226,10 @@ $enemies = Assert-ArrayFile "Enemy" "Enemy"
 $attributeNodes = Assert-ArrayFile "AttributeNode" "AttributeNode"
 $stages = Assert-ArrayFile "Stage" "Stage"
 $spawnPools = Assert-ArrayFile "SpawnPool" "SpawnPool"
-$userData = Assert-ArrayFile "UserData" "UserData"
+$userData = @()
+if ($script:data.ContainsKey("UserData")) {
+    $userData = Assert-ArrayFile "UserData" "UserData"
+}
 
 $town = $script:data["TownNpcPlacement"]
 if ($null -ne $town) {

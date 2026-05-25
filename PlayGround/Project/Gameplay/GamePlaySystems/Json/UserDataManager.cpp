@@ -2,10 +2,13 @@
 #include "UserDataManager.h"
 
 #include "AttributeNodeDataManager.h"
+#include "UserDataMigration.h"
 #include "../UserProfile.h"
 
 namespace
 {
+	_bool SaveUserDataToPath(const std::filesystem::path& resolved_path);
+
 	std::filesystem::path GetExecutableDirectory()
 	{
 		wchar_t module_path[MAX_PATH] = {};
@@ -30,7 +33,17 @@ namespace
 		return {};
 	}
 
-	std::filesystem::path ResolveUserDataPath(const std::string& file_path)
+	std::filesystem::path GetLocalAppDataUserDataPath()
+	{
+		wchar_t local_app_data[MAX_PATH] = {};
+		const auto length = GetEnvironmentVariableW(L"LOCALAPPDATA", local_app_data, MAX_PATH);
+		if (length > 0 && length < MAX_PATH)
+			return std::filesystem::path(local_app_data) / L"PlayGround" / L"UserData.json";
+
+		return GetExecutableDirectory() / L"Saved" / L"UserData.json";
+	}
+
+	std::filesystem::path ResolveProjectRelativePath(const std::string& file_path)
 	{
 		std::filesystem::path requested_path(file_path);
 		if (requested_path.is_absolute())
@@ -44,7 +57,110 @@ namespace
 		if (!exe_project_root.empty())
 			return exe_project_root / requested_path;
 
+		const auto exe_relative_path = GetExecutableDirectory() / requested_path;
+		if (std::filesystem::exists(exe_relative_path))
+			return exe_relative_path;
+
 		return std::filesystem::current_path() / requested_path;
+	}
+
+	bool AreSamePath(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
+	{
+		std::error_code ec;
+		if (!std::filesystem::exists(lhs, ec) || !std::filesystem::exists(rhs, ec))
+			return false;
+
+		const auto same = std::filesystem::equivalent(lhs, rhs, ec);
+		return !ec && same;
+	}
+
+	std::filesystem::path FindLegacyUserDataPath(const std::filesystem::path& current_save_path)
+	{
+		const std::filesystem::path candidates[] = {
+			ResolveProjectRelativePath("Data/UserData.json"),
+			GetExecutableDirectory() / L"Data" / L"UserData.json",
+			std::filesystem::current_path() / L"Data" / L"UserData.json",
+		};
+
+		for (const auto& candidate : candidates)
+		{
+			if (std::filesystem::exists(candidate) && !AreSamePath(candidate, current_save_path))
+				return candidate;
+		}
+
+		return {};
+	}
+
+	std::wstring MakeTimestampSuffix()
+	{
+		SYSTEMTIME now = {};
+		GetLocalTime(&now);
+
+		wchar_t buffer[32] = {};
+		swprintf_s(buffer, L"%04u%02u%02u_%02u%02u%02u",
+			now.wYear,
+			now.wMonth,
+			now.wDay,
+			now.wHour,
+			now.wMinute,
+			now.wSecond);
+
+		return buffer;
+	}
+
+	bool BackupCorruptUserData(const std::filesystem::path& source_path)
+	{
+		if (!std::filesystem::exists(source_path))
+			return true;
+
+		const auto backup_path = source_path.parent_path() /
+			(source_path.stem().wstring() + L".corrupt_" + MakeTimestampSuffix() + source_path.extension().wstring());
+
+		try
+		{
+			std::filesystem::copy_file(source_path, backup_path, std::filesystem::copy_options::overwrite_existing);
+			_SYSTEM_LOG_WARN(L"Corrupt UserData backed up. source: %s, backup: %s", source_path.wstring().c_str(), backup_path.wstring().c_str());
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			_SYSTEM_LOG_WARN(L"Failed to back up corrupt UserData. source: %s, error: %s", source_path.wstring().c_str(), _TF(e.what()));
+			return false;
+		}
+	}
+
+	bool BackupBeforeMigrationUserData(const std::filesystem::path& source_path, _uint from_version)
+	{
+		if (!std::filesystem::exists(source_path))
+			return true;
+
+		const auto backup_path = source_path.parent_path() /
+			(source_path.stem().wstring() + L".before_migration_v" + std::to_wstring(from_version) + L"_" + MakeTimestampSuffix() + source_path.extension().wstring());
+
+		try
+		{
+			std::filesystem::copy_file(source_path, backup_path, std::filesystem::copy_options::overwrite_existing);
+			_SYSTEM_LOG_INFO(L"UserData migration backup created. source: %s, backup: %s", source_path.wstring().c_str(), backup_path.wstring().c_str());
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			_SYSTEM_LOG_WARN(L"Failed to back up UserData before migration. source: %s, error: %s", source_path.wstring().c_str(), _TF(e.what()));
+			return false;
+		}
+	}
+
+	UserDataJsonInfo CreateDefaultUserData()
+	{
+		UserDataJsonInfo user_data;
+		user_data.save_schema_version_ = UserDataMigration::CURRENT_USER_DATA_SCHEMA_VERSION;
+		user_data.id_ = 0;
+		user_data.dust_count_ = 0;
+		user_data.experience_ = 0;
+		user_data.equipped_skill_ids_ = { -1, -1 };
+		user_data.stage_progress_ = 1;
+		user_data.main_story_progress_ = MainStoryProgress::Prologue1;
+		return user_data;
 	}
 
 	void NormalizeUserData(UserDataJsonInfo& user_data, const std::filesystem::path& source_path)
@@ -97,135 +213,199 @@ namespace
 
 		user_data.acquired_node_ids_ = std::move(normalized_nodes);
 	}
+
+	_bool LoadUserDataFromPath(const std::filesystem::path& resolved_path)
+	{
+		std::ifstream file(resolved_path);
+		if (!file.is_open())
+		{
+			_DEBUG_MSGBOX(_T("Failed to open file: %s"), resolved_path.wstring().c_str());
+			return false;
+		}
+
+		try
+		{
+			json j;
+			file >> j;
+			file.close();
+
+			const auto migration_result = UserDataMigration::MigrateToCurrent(j);
+			if (!migration_result.succeeded)
+			{
+				_SYSTEM_LOG_WARN(L"UserData migration failed. file: %s, reason: %s", resolved_path.wstring().c_str(), migration_result.error_message.c_str());
+				return false;
+			}
+
+			if (migration_result.migrated)
+			{
+				BackupBeforeMigrationUserData(resolved_path, migration_result.from_version);
+				_SYSTEM_LOG_INFO(L"UserData migrated. file: %s, from: %u, to: %u", resolved_path.wstring().c_str(), migration_result.from_version, migration_result.to_version);
+			}
+
+			std::vector<UserDataJsonInfo> data_list = migration_result.document.get<std::vector<UserDataJsonInfo>>();
+			_UserProfile.ResetUserData();
+
+			if (data_list.empty())
+			{
+				_DEBUG_MSGBOX(_T("No user data entries found in %s"), resolved_path.wstring().c_str());
+				return false;
+			}
+
+			if (data_list.size() > 1)
+			{
+				_DEBUG_MSGBOX(_T("Warning: Multiple user data entries found in %s. Only the first entry will be loaded."), resolved_path.wstring().c_str());
+			}
+
+			auto user_save_data = data_list.front();
+			NormalizeUserData(user_save_data, resolved_path);
+			_UserProfile.StoreUserData(user_save_data);
+
+			if (migration_result.migrated && !SaveUserDataToPath(resolved_path))
+				_SYSTEM_LOG_WARN(L"UserData migrated in memory but failed to save latest schema. file: %s", resolved_path.wstring().c_str());
+
+			return true;
+		}
+		catch (json::exception& e)
+		{
+			_DEBUG_MSGBOX(_T("Failed to parse JSON file: %s\nError: %s"), resolved_path.wstring().c_str(), _TF(e.what()));
+			return false;
+		}
+		catch (const std::exception& e)
+		{
+			_DEBUG_MSGBOX(_T("Failed to load user data file: %s\nError: %s"), resolved_path.wstring().c_str(), _TF(e.what()));
+			return false;
+		}
+
+		return true;
+	}
+
+	_bool SaveUserDataToPath(const std::filesystem::path& resolved_path)
+	{
+		auto temp_path = resolved_path;
+		temp_path += L".tmp";
+
+		try
+		{
+			UserDataJsonInfo current_data = _UserProfile.GetUserData();
+			current_data.save_schema_version_ = UserDataMigration::CURRENT_USER_DATA_SCHEMA_VERSION;
+			std::vector<UserDataJsonInfo> data_list = { current_data };
+			json j = data_list;
+
+			std::filesystem::create_directories(resolved_path.parent_path());
+			std::ofstream file(temp_path);
+			if (!file.is_open())
+			{
+				_DEBUG_MSGBOX(_T("Failed to create temp file: %s"), temp_path.wstring().c_str());
+				return false;
+			}
+
+			file << j.dump(4);
+			file.close();
+
+			if (file.fail())
+			{
+				std::filesystem::remove(temp_path);
+				return false;
+			}
+
+			if (std::filesystem::exists(resolved_path))
+			{
+				std::filesystem::remove(resolved_path);
+			}
+			std::filesystem::rename(temp_path, resolved_path);
+
+			_SYSTEM_LOG_INFO(_T("User data saved securely to %s"), resolved_path.wstring().c_str());
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			if (std::filesystem::exists(temp_path))
+				std::filesystem::remove(temp_path);
+
+			_DEBUG_MSGBOX(_T("Save Failed: %s"), _TF(e.what()));
+			return false;
+		}
+	}
+
+	_bool CreateAndSaveDefaultUserData(const std::filesystem::path& save_path, const wchar_t* reason)
+	{
+		auto default_data = CreateDefaultUserData();
+		NormalizeUserData(default_data, save_path);
+
+		_UserProfile.ResetUserData();
+		_UserProfile.StoreUserData(default_data);
+
+		_SYSTEM_LOG_WARN(L"Default UserData created. reason: %s, file: %s", reason, save_path.wstring().c_str());
+		return SaveUserDataToPath(save_path);
+	}
 }
 
 UserDataManager::UserDataManager()
 {
 	_UserProfile;
-	// [ Bug Fix, 260318 ], 매크로 호출
-	// UserProfile의 static instance가 UserDataManager보다 늦게 생성되는 경우, 프로그램 종료 시 UserDataManager의 소멸자에서 이미 소멸된 UserProfile에 접근하여 문제가 발생할 수 있다.
-	// 이렇게 하면 UserProfile의 static instance가 UserDataManager보다 먼저 생성되도록 보장, 소멸 시 UserDataManager가 먼저 소멸되므로 UserProfile에 안전하게 접근할 수 있다.
-	/*
-		생성 순서 (프로그램 시작 시):
-		1. UserDataManager::Get() 호출 -> static instance 생성 + atexit 콜백 등록
-		2. UserProfile::Get() 호출 -> static instance 생성 (Load -> StoreUserData에서)
-
-		소멸 순서 (프로그램 종료 시, 역순):
-		1. UserProfile의 static instance 소멸 <- 벡터 멤버들 전부 파괴됨!
-		2. atexit 콜백 실행 -> Save() -> GetUserData() <- 이미 소멸된 UserProfile 접근!
-		3. UserDataManager의 static instance 소멸
-	*/
 }
 
 UserDataManager::~UserDataManager()
 {
-	if (!Save("Data/UserData.json"))
+	if (!SaveUserData())
 	{
 		_DEBUG_MSGBOX(_T("Failed to save user data on exit."));
 	}
 }
 
+std::filesystem::path UserDataManager::GetUserDataPath()
+{
+	return GetLocalAppDataUserDataPath();
+}
+
+_bool UserDataManager::LoadUserData()
+{
+	const auto save_path = GetUserDataPath();
+	if (std::filesystem::exists(save_path))
+	{
+		if (LoadUserDataFromPath(save_path))
+			return true;
+
+		BackupCorruptUserData(save_path);
+		return CreateAndSaveDefaultUserData(save_path, L"corrupt save file");
+	}
+
+	const auto legacy_path = FindLegacyUserDataPath(save_path);
+	if (!legacy_path.empty())
+	{
+		try
+		{
+			std::filesystem::create_directories(save_path.parent_path());
+			std::filesystem::copy_file(legacy_path, save_path, std::filesystem::copy_options::overwrite_existing);
+			_SYSTEM_LOG_INFO(L"Legacy UserData migrated. source: %s, target: %s", legacy_path.wstring().c_str(), save_path.wstring().c_str());
+
+			if (LoadUserDataFromPath(save_path))
+				return true;
+
+			BackupCorruptUserData(save_path);
+			return CreateAndSaveDefaultUserData(save_path, L"corrupt migrated save file");
+		}
+		catch (const std::exception& e)
+		{
+			_SYSTEM_LOG_WARN(L"Legacy UserData migration failed. source: %s, target: %s, error: %s", legacy_path.wstring().c_str(), save_path.wstring().c_str(), _TF(e.what()));
+			return CreateAndSaveDefaultUserData(save_path, L"legacy migration failed");
+		}
+	}
+
+	return CreateAndSaveDefaultUserData(save_path, L"missing save file");
+}
+
+_bool UserDataManager::SaveUserData()
+{
+	return SaveUserDataToPath(GetUserDataPath());
+}
+
 _bool UserDataManager::Load(const std::string& _file_path)
 {
-	const auto resolved_path = ResolveUserDataPath(_file_path);
-	std::ifstream file(resolved_path);
-	if (!file.is_open())
-	{
-		_DEBUG_MSGBOX(_T("Failed to open file: %s"), resolved_path.wstring().c_str());
-		return false;
-	}
-
-	try
-	{
-		json j;
-		file >> j;
-
-		std::vector<UserDataJsonInfo> data_list = j.get<std::vector<UserDataJsonInfo>>();
-
-		// 기존 유저 데이터 초기화
-		_UserProfile.ResetUserData();
-
-		// 유저의 세이브 슬롯을 여러개 줄 것이 아니라면 data_list의 첫 번째 요소만 사용한다.
-		// 필요에 따라 여러 슬롯을 지원하려면 data_list를 순회하면서 각 슬롯에 대한 데이터를 관리하는 로직을 추가할 수 있다.
-		if (data_list.empty())
-		{
-			_DEBUG_MSGBOX(_T("No user data entries found in %s"), resolved_path.wstring().c_str());
-			return false;
-		}
-
-		if (data_list.size() > 1)
-		{
-			_DEBUG_MSGBOX(_T("Warning: Multiple user data entries found in %s. Only the first entry will be loaded."), resolved_path.wstring().c_str());
-		}
-
-		// JSON에서 읽어온 데이터 중 첫 번째 요소를 사용하여 유저 데이터를 세팅
-		auto user_save_data = data_list.front();
-		NormalizeUserData(user_save_data, resolved_path);
-		_UserProfile.StoreUserData(user_save_data);
-
-		return true;
-	}
-	catch (json::exception& e)
-	{
-		_DEBUG_MSGBOX(_T("Failed to parse JSON file: %s\nError: %s"), resolved_path.wstring().c_str(), _TF(e.what()));
-		return false;
-	}
-
-	return true;
+	return LoadUserDataFromPath(ResolveProjectRelativePath(_file_path));
 }
 
 _bool UserDataManager::Save(const std::string& _file_path)
 {
-	const auto resolved_path = ResolveUserDataPath(_file_path);
-	auto temp_path = resolved_path;
-	temp_path += L".tmp";
-
-	try
-	{
-		// 1. UserProfile로부터 현재 실시간 데이터를 추출
-		UserDataJsonInfo current_data = _UserProfile.GetUserData();
-
-		// 2. 데이터를 리스트 형태로 구성 (Load 로직과 일관성 유지)
-		std::vector<UserDataJsonInfo> data_list = { current_data };
-		json j = data_list;
-
-		// 3. 임시 파일(*.tmp)에 먼저 저장
-		std::filesystem::create_directories(resolved_path.parent_path());
-		std::ofstream file(temp_path);
-		if (!file.is_open())
-		{
-			_DEBUG_MSGBOX(_T("Failed to create temp file: %s"), temp_path.wstring().c_str());
-			return false;
-		}
-
-		file << j.dump(4);
-		file.close();
-
-		// 4. 쓰기 성공 여부 확인
-		if (file.fail())
-		{
-			std::filesystem::remove(temp_path);
-			return false;
-		}
-
-		// 5. 원본 파일 교체 (Atomic Rename)
-		// 기존 파일이 있다면 삭제하거나 덮어씁니다.
-		if (std::filesystem::exists(resolved_path))
-		{
-			std::filesystem::remove(resolved_path);
-		}
-		std::filesystem::rename(temp_path, resolved_path);
-
-		_SYSTEM_LOG_INFO(_T("User data saved securely to %s"), resolved_path.wstring().c_str());
-		return true;
-	}
-	catch (const std::exception& e)
-	{
-		// 에러 발생 시 생성된 임시 파일 삭제
-		if (std::filesystem::exists(temp_path))
-			std::filesystem::remove(temp_path);
-
-		_DEBUG_MSGBOX(_T("Save Failed: %s"), _TF(e.what()));
-		return false;
-	}
+	return SaveUserDataToPath(ResolveProjectRelativePath(_file_path));
 }

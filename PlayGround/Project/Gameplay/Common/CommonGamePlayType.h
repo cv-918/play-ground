@@ -649,6 +649,8 @@ struct SkillJsonInfo
 #pragma region [ 유저 데이터 관련 ]
 struct UserDataJsonInfo
 {
+	_uint save_schema_version_ = 2;
+
 	/** 플레이어의 고유 ID. 필요에 따라 플레이어 데이터 관리 시스템이 구현되면 이 부분을 활용하여 플레이어 데이터를 식별하고 관리할 수 있습니다. */
 	_uint id_ = 0;
 

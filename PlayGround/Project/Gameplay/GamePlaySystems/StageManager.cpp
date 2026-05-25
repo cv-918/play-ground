@@ -160,7 +160,7 @@ void StageManager::ProgressRunSessionResult(_bool _apply_stage_progress)
 		_UserProfile.ApplyRunSessionResult(result);
 
 		// 3. 안전하게 저장 (아까 논의한 Atomic Save 적용 포인트)
-		_UserDataMgr.Save("Data/UserData.json");
+		_UserDataMgr.SaveUserData();
 	}
 
 	// 4. 다음 판을 위해 비우기
