@@ -1,0 +1,232 @@
+{
+  "director_goal_plan_id": "DGP-20260520-120958-studio-ux-improvement-goal-home-huma",
+  "goal": "Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+  "target_project_profile": "dustland_custom_cpp_prototype",
+  "status": "director_review",
+  "recommended_departments": [
+    "executive_production",
+    "engineering",
+    "qa_testing"
+  ],
+  "recommended_staff": [
+    "executive_producer",
+    "technical_architect",
+    "gameplay_programmer",
+    "qa_tester"
+  ],
+  "routing_reasons": [
+    "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다."
+  ],
+  "constraints": [
+    "구현은 하지 말고",
+    "필요한 부서/AI 직원 역할",
+    "제안안",
+    "승인 필요 항목",
+    "후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+  ],
+  "approval_items": [
+    {
+      "type": "scope",
+      "plain_language_summary": "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다.",
+      "what_will_change": [
+        "회의 후보, 업무 지시 후보, 제안 후보가 Studio 기록으로 만들어질 수 있습니다.",
+        "선택한 후보만 다음 단계의 WorkOrder 또는 MeetingSession으로 넘어갑니다."
+      ],
+      "what_will_not_change": [
+        "이 기획안만으로 공식 설정을 확정하지 않습니다.",
+        "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+        "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+        "감독자 제약 유지: 구현은 하지 말고",
+        "감독자 제약 유지: 필요한 부서/AI 직원 역할",
+        "감독자 제약 유지: 제안안",
+        "감독자 제약 유지: 승인 필요 항목",
+        "감독자 제약 유지: 후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+      ],
+      "files_or_memory_affected": [
+        "_Docs/AIWorkflow/Studio/DirectorGoals",
+        "_Docs/AIWorkflow/Studio/MeetingSessions",
+        "_Docs/AIWorkflow/Studio/WorkOrders",
+        "_Docs/AIWorkflow/Studio/Proposals"
+      ],
+      "risks": [
+        "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다."
+      ],
+      "rollback_plan": [
+        "생성된 Studio 기록 후보를 superseded/rejected로 처리하거나 삭제 전 검토합니다."
+      ],
+      "evidence_required": [
+        "DirectorGoalPlan JSON",
+        "생성된 MeetingSession/WorkOrder/Proposal 후보"
+      ]
+    }
+  ],
+  "non_goals": [
+    "이 기획안만으로 공식 설정을 확정하지 않습니다.",
+    "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+    "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+    "감독자 제약 유지: 구현은 하지 말고",
+    "감독자 제약 유지: 필요한 부서/AI 직원 역할",
+    "감독자 제약 유지: 제안안",
+    "감독자 제약 유지: 승인 필요 항목",
+    "감독자 제약 유지: 후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+  ],
+  "meeting_recommendations": [
+    {
+      "meeting_id": "MEET-20260520-120958-director-goal-planning-studio-ux-imp",
+      "topic": "Director goal planning: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+      "meeting_type": "technical",
+      "participants": [
+        "executive_producer",
+        "technical_architect",
+        "gameplay_programmer",
+        "qa_tester"
+      ],
+      "chair_agent_id": "executive_producer",
+      "director_user_id": "human_director",
+      "agenda": [
+        "감독자 목표를 한 문장으로 재정의합니다.",
+        "필요한 부서와 AI 직원 역할을 나눕니다.",
+        "승인이 필요한 선택지를 분리합니다.",
+        "후속 WorkOrder 후보를 정리합니다."
+      ],
+      "known_constraints": [
+        "구현은 하지 말고",
+        "필요한 부서/AI 직원 역할",
+        "제안안",
+        "승인 필요 항목",
+        "후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+      ],
+      "loaded_context_refs": [
+        "DGP-20260520-120958-studio-ux-improvement-goal-home-huma",
+        "dustland_custom_cpp_prototype"
+      ],
+      "discussion_turns": [],
+      "proposals": [],
+      "objections": [],
+      "unresolved_questions": [],
+      "director_decisions": [],
+      "accepted_directions": [],
+      "rejected_directions": [],
+      "follow_up_workorders": [],
+      "minutes_artifact": "_Docs/AIWorkflow/Studio/MeetingSessions/MEET-20260520-120958-director-goal-planning-studio-ux-imp.json",
+      "status": "draft"
+    }
+  ],
+  "work_order_candidates": [
+    {
+      "work_order_id": "WO-20260520-120958-plan-and-scope-director-goal-studio-",
+      "source_type": "director_goal",
+      "source_ref": "DGP-20260520-120958-studio-ux-improvement-goal-home-huma",
+      "objective": "Plan and scope Director goal: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+      "department_id": "executive_production",
+      "assigned_agents": [
+        "executive_producer",
+        "technical_architect",
+        "gameplay_programmer",
+        "qa_tester"
+      ],
+      "scope": [
+        "감독자 목표를 실행 가능한 업무 후보로 분해: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+        "부서/직원/회의/업무지시/승인 항목을 분리해서 제안합니다.",
+        "승인 전에는 공식 설정, 소스 수정, task 실행, commit/push를 하지 않습니다."
+      ],
+      "non_goals": [
+        "이 기획안만으로 공식 설정을 확정하지 않습니다.",
+        "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+        "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+        "감독자 제약 유지: 구현은 하지 말고",
+        "감독자 제약 유지: 필요한 부서/AI 직원 역할",
+        "감독자 제약 유지: 제안안",
+        "감독자 제약 유지: 승인 필요 항목",
+        "감독자 제약 유지: 후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+      ],
+      "expected_outputs": [
+        "감독자가 읽을 수 있는 목표 분해안",
+        "승인 필요 항목 목록",
+        "후속 회의/업무/제안 후보",
+        "검증 자료 요구사항"
+      ],
+      "approval_items": [
+        {
+          "type": "scope",
+          "plain_language_summary": "감독자 목표를 Studio 업무 후보로 분해하는 것만 승인합니다.",
+          "what_will_change": [
+            "감독자 목표를 실행 가능한 업무 후보로 분해: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+            "부서/직원/회의/업무지시/승인 항목을 분리해서 제안합니다.",
+            "승인 전에는 공식 설정, 소스 수정, task 실행, commit/push를 하지 않습니다."
+          ],
+          "what_will_not_change": [
+            "이 기획안만으로 공식 설정을 확정하지 않습니다.",
+            "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+            "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+            "감독자 제약 유지: 구현은 하지 말고",
+            "감독자 제약 유지: 필요한 부서/AI 직원 역할",
+            "감독자 제약 유지: 제안안",
+            "감독자 제약 유지: 승인 필요 항목",
+            "감독자 제약 유지: 후속 WorkOrder 후보만 정리해줘. Discord 기능은 이번 범위에서 제외해."
+          ],
+          "files_or_memory_affected": [],
+          "risks": [],
+          "rollback_plan": [],
+          "evidence_required": [
+            "후보가 승인 전 실행/공식 설정/소스 수정/commit/push를 하지 않는지 확인합니다.",
+            "부서/직원/승인 항목이 목표와 직접 연결되는지 확인합니다.",
+            "후속 업무가 너무 크면 더 작은 WorkOrder로 나눕니다."
+          ]
+        }
+      ],
+      "evidence_requirements": [],
+      "verification_plan": [
+        "후보가 승인 전 실행/공식 설정/소스 수정/commit/push를 하지 않는지 확인합니다.",
+        "부서/직원/승인 항목이 목표와 직접 연결되는지 확인합니다.",
+        "후속 업무가 너무 크면 더 작은 WorkOrder로 나눕니다."
+      ],
+      "handoff_plan": [],
+      "target_project_profile": "dustland_custom_cpp_prototype",
+      "status": "director_review"
+    }
+  ],
+  "proposal_candidates": [
+    {
+      "proposal_id": "PROP-20260520-120958-director-goal-direction-studio-ux-im",
+      "source_agent_id": "executive_producer",
+      "source_type": "director_goal",
+      "source_ref": "DGP-20260520-120958-studio-ux-improvement-goal-home-huma",
+      "title": "Director goal direction: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+      "summary": "이 목표는 executive_production, engineering, qa_testing 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.",
+      "rationale": "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다.",
+      "options": [
+        {
+          "option_id": "option-a",
+          "title": "Director goal direction: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+          "summary": "이 목표는 executive_production, engineering, qa_testing 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.",
+          "tradeoffs": []
+        }
+      ],
+      "risks": [
+        "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다."
+      ],
+      "dependencies": [],
+      "approval_items": [
+        "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다."
+      ],
+      "evidence_refs": [
+        "DGP-20260520-120958-studio-ux-improvement-goal-home-huma"
+      ],
+      "status": "submitted"
+    }
+  ],
+  "next_steps": [
+    "기획안을 저장해 검토 기록으로 남깁니다.",
+    "필요하면 기획안 + 후보 생성을 눌러 회의/업무/제안 후보를 함께 만듭니다.",
+    "생성된 후보 중 실제로 진행할 항목만 감독자가 승인합니다."
+  ],
+  "safety": {
+    "source_changed": false,
+    "task_state_changed": false,
+    "canon_changed": false,
+    "commit_or_push": false
+  },
+  "created_at": "2026-05-20T03:09:58.201Z",
+  "updated_at": "2026-05-20T03:09:58.201Z"
+}

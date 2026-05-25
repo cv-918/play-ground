@@ -1897,16 +1897,16 @@ const TOOLBOX_TOOLS = [
   {
     id: "google_drive_data_upload",
     category: "핵심 도구",
-    label: "구글 드라이브 리소스 업로드",
-    purpose: "PlayGround/Data 스냅샷을 ZIP으로 만들어 Google Drive에 업로드합니다.",
-    when_to_use: "게임 데이터나 리소스를 외부 공유용으로 올려야 할 때 사용합니다.",
+    label: "팀 데이터 배포",
+    purpose: "검증된 PlayGround/Data를 Google Drive 최신 배포본으로 공개합니다.",
+    when_to_use: "게임 데이터 JSON을 팀/테스트 배포본으로 갱신할 때 사용합니다.",
     script: "tools/google-drive-data-upload/upload_playground_data.bat",
     args: [],
-    command_display: "tools\\google-drive-data-upload\\upload_playground_data.bat",
-    timeout_ms: 180000,
-    safety: "외부 Google Drive 업로드가 발생합니다. 소스, task, git은 변경하지 않습니다.",
+    command_display: "tools\\google-drive-data-upload\\upload_playground_data.bat --publish-team-data --data-version <version>",
+    timeout_ms: 20 * 60 * 1000,
+    safety: "원본 Data와 배포 zip을 검증한 뒤 versioned zip을 올리고, latest manifest는 마지막에 갱신합니다. 소스, task, git은 바꾸지 않습니다.",
     primary: true,
-    confirm_message: "PlayGround/Data를 Google Drive에 업로드할까요? 이 작업은 외부 업로드를 수행합니다.",
+    publish_data: true,
   },
   {
     id: "studio_smoke",
@@ -2027,6 +2027,7 @@ function buildToolboxCatalog(repoRoot) {
     available: toolboxToolExists(repoRoot, tool),
     primary: tool.primary === true,
     confirm_message: tool.confirm_message || "",
+    publish_data: tool.publish_data === true,
   });
   const primaryOrder = ["studio_restart", "discord_bot_restart", "google_drive_data_upload"];
   const primaryTools = primaryOrder
@@ -2079,6 +2080,61 @@ function scheduleStudioRestart(repoRoot, context = {}) {
   setTimeout(() => process.exit(0), 250);
 }
 
+function normalizeDataVersion(value) {
+  const version = String(value || "").trim();
+  if (!version) return "";
+  if (!/^[0-9A-Za-z._-]{1,80}$/.test(version)) {
+    throw new Error("Data version can use only letters, numbers, dot, underscore, and hyphen.");
+  }
+  return version;
+}
+
+function infoLineValue(text, label) {
+  const regex = new RegExp(`^\\[INFO\\]\\s+${label}:\\s*(.+)$`, "mi");
+  const match = String(text || "").match(regex);
+  return match ? match[1].trim() : "";
+}
+
+function buildGoogleDrivePublishSummary(result, dataVersion) {
+  const output = [result.stdout || "", result.stderr || ""].filter(Boolean).join("\n");
+  const archiveName = infoLineValue(output, "Archive name");
+  const archiveFileId = infoLineValue(output, "Archive File ID");
+  const archiveSize = infoLineValue(output, "Archive size");
+  const archiveLink = infoLineValue(output, "Archive link");
+  const manifestFileId = infoLineValue(output, "Manifest File ID");
+  const manifestUrl = infoLineValue(output, "Manifest URL");
+  const backupManifestFileId = infoLineValue(output, "Backup Manifest File ID");
+  const backupManifestName = infoLineValue(output, "Backup Manifest name");
+  const logPath = infoLineValue(output, "Log");
+  const failureStage = /VALIDATION_ERROR/i.test(output)
+    ? "Data 검증 단계"
+    : /ZIP_ERROR/i.test(output)
+      ? "배포 zip 생성 단계"
+      : /UPLOAD_ERROR/i.test(output)
+        ? "Google Drive 업로드 또는 manifest 갱신 단계"
+        : /CONFIG_ERROR/i.test(output)
+          ? "Google Drive 설정 단계"
+          : result.ok
+            ? ""
+            : "도구 실행 단계";
+  return {
+    data_version: dataVersion || "",
+    archive_name: archiveName,
+    archive_file_id: archiveFileId,
+    archive_size: archiveSize,
+    archive_link: archiveLink,
+    manifest_file_id: manifestFileId,
+    manifest_url: manifestUrl,
+    backup_manifest_file_id: backupManifestFileId,
+    backup_manifest_name: backupManifestName,
+    log_path: logPath,
+    failure_stage: failureStage,
+    source_validation_seen: /Validating source Data/i.test(output),
+    archive_validation_seen: /Validating publish archive extraction/i.test(output),
+    latest_manifest_updated: Boolean(manifestFileId || manifestUrl),
+  };
+}
+
 async function runToolboxTool(repoRoot, toolId, context = {}) {
   const tool = TOOLBOX_TOOLS.find((item) => item.id === toolId);
   if (!tool) {
@@ -2108,19 +2164,32 @@ async function runToolboxTool(repoRoot, toolId, context = {}) {
       },
     };
   }
-  const result = await runTool(repoRoot, repoPath(repoRoot, tool.script), tool.args || [], tool.timeout_ms || 120000);
+  let args = tool.args || [];
+  let dataVersion = "";
+  let commandDisplay = tool.command_display;
+  if (tool.publish_data) {
+    dataVersion = normalizeDataVersion(context.data_version || "");
+    args = ["--publish-team-data"];
+    if (dataVersion) args.push("--data-version", dataVersion);
+    commandDisplay = `${tool.command_display.replace(" <version>", dataVersion ? ` ${dataVersion}` : " <auto>")}`;
+  }
+  const result = await runTool(repoRoot, repoPath(repoRoot, tool.script), args, tool.timeout_ms || 120000);
+  const publishSummary = tool.publish_data ? buildGoogleDrivePublishSummary(result, dataVersion) : null;
   return {
     ok: result.ok,
     toolbox_result: {
       tool_id: tool.id,
       label: tool.label,
       status: result.ok ? "success" : "failed",
-      summary: result.ok ? "도구 실행이 완료되었습니다." : "도구 실행이 실패했습니다. 출력 내용을 확인하세요.",
-      command_display: tool.command_display,
+      summary: tool.publish_data
+        ? (result.ok ? "팀 데이터 배포가 완료되었습니다." : "팀 데이터 배포가 실패했습니다. 최신 manifest가 바뀌었는지 결과를 확인하세요.")
+        : (result.ok ? "도구 실행이 완료되었습니다." : "도구 실행이 실패했습니다. 출력 내용을 확인하세요."),
+      command_display: commandDisplay,
       exit_code: result.exit_code,
       stdout: result.stdout,
       stderr: result.stderr,
       parsed_json: result.json,
+      publish_summary: publishSummary,
     },
     safety: {
       allowlisted_tool: true,
@@ -2828,14 +2897,14 @@ function directorConsoleHtml() {
         <button data-nav="meetings">회의실 <span class="count" id="nav-meetings-count"></span></button>
         <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
         <button data-nav="work">업무 지시 <span class="count" id="nav-work-count"></span></button>
-        <button data-nav="knowledge">지식/결정 <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="knowledge">제안/결정 기록함 <span class="count" id="nav-knowledge-count"></span></button>
         <button data-nav="evidence">검증 자료 <span class="count" id="nav-evidence-count"></span></button>
         <button data-nav="diff">변경 검토 <span class="count" id="nav-diff-count"></span></button>
         <button data-nav="devlog">DevLog <span class="count" id="nav-devlog-count"></span></button>
         <button data-nav="toolbox">도구함 <span class="count" id="nav-toolbox-count"></span></button>
       </nav>
-      <div class="nav-section-label">참고 / 추적</div>
-      <nav class="nav reference-nav" aria-label="Reference navigation">
+      <button id="referenceNavToggle" class="internal-toggle">참고 / 추적 <span id="referenceNavState">숨김</span></button>
+      <nav id="referenceNav" class="nav reference-nav" aria-label="Reference navigation" hidden>
         <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
         <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
         <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
@@ -3257,24 +3326,24 @@ function directorConsoleHtml() {
         </section>
 
         <section class="page" data-page="knowledge">
-          <div class="page-heading"><div><h2>지식/결정</h2><p>제안, 결정, 기억과 공식 설정 후보를 확인합니다.</p></div></div>
+          <div class="page-heading"><div><h2>제안/결정 기록함</h2><p>제안을 검토하고, 감독자 판단을 기록한 뒤, 필요한 내용만 참고 기록이나 공식 설정 후보로 넘깁니다.</p></div></div>
           <div class="card">
             <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button></div>
             <ul class="small">
-              <li><strong>제안</strong>: 아직 확정되지 않은 아이디어입니다. 채택하거나 반려해도 바로 구현하거나 공식 설정으로 확정하지 않습니다.</li>
-              <li><strong>결정</strong>: Human Director가 어떤 방향을 받아들였는지 남기는 판단 기록입니다.</li>
-              <li><strong>기억/공식 설정</strong>: 이후 AI 직원이 참고하는 프로젝트 지식입니다. 상태가 공식 설정일 때만 확정 설정처럼 취급합니다.</li>
-              <li><strong>공식 설정 충돌 점검</strong>: 새 기억이나 설정이 기존 공식 설정과 부딪힐 가능성이 있는지 읽기 전용으로 확인합니다.</li>
+              <li><strong>제안함</strong>: AI 직원이나 감독자가 낸 아이디어를 임시로 모아둡니다. 이 단계에서는 위키도, 공식 설정도, 구현 지시도 아닙니다.</li>
+              <li><strong>감독자 판단</strong>: 제안을 채택, 수정 요청, 반려, 보류 중 하나로 정리합니다. 판단 기록만 만들며 구현과 commit/push는 하지 않습니다.</li>
+              <li><strong>참고 기록</strong>: 이후 AI 직원이 참고할 메모입니다. 일반 기록은 참고용이고, 공식 설정 후보는 별도 검토 대상입니다.</li>
+              <li><strong>공식 설정 후보</strong>: 게임 세계관, 캐릭터, 규칙처럼 나중에 canon으로 확정할 수 있는 항목입니다. Studio UX나 운영 개선 제안은 공식 설정 후보로 남길 수 없습니다.</li>
             </ul>
           </div>
           <div class="grid">
             <div class="card">
               <div class="section-title"><h2>제안 만들기</h2><span class="pill">아이디어</span></div>
-              <p class="small muted">아이디어를 검토 대상으로 저장합니다. 저장만으로 공식 설정, task, git은 바뀌지 않습니다.</p>
+              <p class="small muted">감독자가 직접 떠올린 아이디어를 검토 대상으로 저장합니다. 새 제안은 Human Director(나)의 제안으로 기록됩니다. 저장만으로 공식 설정, task, git은 바뀌지 않습니다.</p>
               <div class="form-grid">
                 <label>제안 제목 <span class="required-mark">필수</span><input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
-                <label>제안자 <span class="optional-mark">선택</span><select id="proposalCreateAgent"></select></label>
               </div>
+              <input id="proposalCreateAgent" type="hidden" value="human_director">
               <label class="field-block">제안 요약 <span class="required-mark">필수</span><span class="field-help">무엇을 제안하는지 한두 문장으로 적습니다.</span><textarea id="proposalCreateSummary" placeholder="예: 초반 10분 안에 생존 압박과 이동 목표가 드러나도록 연출 방향을 잡는다."></textarea></label>
               <label class="field-block">제안 이유 <span class="optional-mark">선택</span><span class="field-help">이 제안이 왜 필요한지, 어떤 문제를 줄이는지 적습니다.</span><textarea id="proposalCreateRationale" placeholder="예: 플레이어가 초반 목표를 늦게 이해하면 반복 플레이 동기가 약해진다."></textarea></label>
               <label class="field-block">주의할 점 <span class="optional-mark">선택</span><span class="field-help">채택 전에 확인해야 할 위험이나 충돌 가능성을 한 줄에 하나씩 적습니다.</span><textarea id="proposalCreateRisks" placeholder="예:&#10;기존 세계관과 충돌하지 않아야 함&#10;초반 튜토리얼 분량이 늘어나지 않아야 함"></textarea></label>
@@ -3282,20 +3351,21 @@ function directorConsoleHtml() {
             </div>
             <div class="card">
               <div class="section-title"><h2>결정 기록하기</h2><span class="pill">결정</span></div>
-              <p class="small muted">이미 검토한 제안, 회의, 업무에 대해 감독자의 판단을 남깁니다. 기록만 남기며 구현이나 커밋은 하지 않습니다.</p>
+              <p class="small muted">제안함에 있는 제안에 대해 감독자의 판단을 남깁니다. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리합니다. 기록만 남기며 구현이나 커밋은 하지 않습니다.</p>
               <div class="form-grid">
-                <label>대상 ID <span class="required-mark">필수</span><input id="decisionCreateTarget" placeholder="PROP-..., MEET-..., WO-..."></label>
+                <label>판단 대상 <span class="required-mark">필수</span><select id="decisionCreateTarget"></select></label>
                 <label>결정 종류 <span class="required-mark">필수</span><select id="decisionCreateType"></select></label>
               </div>
-              <label class="field-block">결정 요약 <span class="required-mark">필수</span><span class="field-help">무엇을 승인, 반려, 보류, 수정 요청하는지 명확히 적습니다.</span><textarea id="decisionCreateSummary" placeholder="예: 초반 생존 동기 방향은 채택하되, 공식 설정 확정은 다음 회의 후로 보류한다."></textarea></label>
-              <label class="field-block">받아들인 범위 <span class="optional-mark">선택</span><span class="field-help">이번 결정으로 허용되는 내용만 적습니다.</span><textarea id="decisionCreateAccepted" placeholder="예: 초반 10분의 목표 전달 방향"></textarea></label>
-              <label class="field-block">받아들이지 않는 범위 <span class="optional-mark">선택</span><span class="field-help">이번 결정에 포함하지 않는 내용을 적습니다.</span><textarea id="decisionCreateRejected" placeholder="예: 엔딩 방향 확정, 스토리 canon 확정, 구현 task 즉시 생성"></textarea></label>
-              <label class="field-block">조건/주의 사항 <span class="optional-mark">선택</span><span class="field-help">나중에 다시 확인해야 할 조건이나 위험을 적습니다.</span><textarea id="decisionCreateConditions" placeholder="예: 기존 세계관 문서와 충돌 여부 확인 후 공식 설정화 가능"></textarea></label>
+              <p id="decisionCreateTypeHelp" class="small muted"></p>
+              <label class="field-block">판단 내용 <span class="required-mark">필수</span><span class="field-help">이 대상을 어떻게 처리할지 한두 문장으로 적습니다.</span><textarea id="decisionCreateSummary" placeholder="예: Home UX 개선 방향은 채택한다. 다만 구현은 별도 업무 지시와 검증을 거친다."></textarea></label>
+              <label class="field-block">이번 판단으로 허용하는 것 <span class="optional-mark">선택</span><span class="field-help">허용 범위가 따로 있을 때만 적습니다.</span><textarea id="decisionCreateAccepted" placeholder="예: Home 화면에서 지금 결정할 일과 다음 행동을 더 잘 보이게 개선하는 방향"></textarea></label>
+              <label class="field-block">아직 허용하지 않는 것 / 조건 <span class="optional-mark">선택</span><span class="field-help">범위 밖 내용이나 나중에 다시 확인할 조건이 있을 때만 적습니다.</span><textarea id="decisionCreateRejected" placeholder="예: 소스 수정, task 실행, commit/push는 이 판단만으로 하지 않는다."></textarea></label>
+              <input id="decisionCreateConditions" type="hidden" value="">
               <div class="row"><button class="good" id="decisionCreateSubmit">결정 저장</button></div>
             </div>
             <div class="card">
               <div class="section-title"><h2>기억/설정 기록하기</h2><span class="pill">프로젝트 지식</span></div>
-              <p class="small muted">AI 직원이 이후 참고할 프로젝트 지식을 저장합니다. 공식 설정 상태로 저장할 때는 특히 신중해야 합니다.</p>
+              <p class="small muted">AI 직원이 이후 참고할 프로젝트 지식을 저장합니다. 일반 기록은 참고용 메모이고, 공식 설정은 게임 세계관/규칙처럼 확정 근거로 쓰일 수 있으므로 신중하게 남깁니다.</p>
               <div class="form-grid">
                 <label>범위 <span class="required-mark">필수</span><select id="memoryCreateScope"></select></label>
                 <label>종류 <span class="required-mark">필수</span><select id="memoryCreateType"></select></label>
@@ -3309,6 +3379,7 @@ function directorConsoleHtml() {
           </div>
           <div class="control-bar">
             <input id="knowledgeSearch" placeholder="제안, 결정, 기억 검색">
+            <select id="proposalDecisionFilter"></select>
             <select id="memoryStatusFilter"></select>
           </div>
           <div class="card">
@@ -3317,22 +3388,22 @@ function directorConsoleHtml() {
               <div class="item">
                 <h3>검토만 할 때</h3>
                 <ul class="small">
-                  <li><strong>전환 계획</strong>: 이 제안을 업무, 결정, 기억 중 어디로 넘길 수 있는지 미리 봅니다. 기록은 만들지 않습니다.</li>
+                  <li><strong>전환 계획</strong>: 이 제안을 업무, 판단 기록, 참고 기록 중 어디로 넘길 수 있는지 미리 봅니다. 기록은 만들지 않습니다.</li>
                 </ul>
               </div>
               <div class="item">
                 <h3>판단을 남길 때</h3>
                 <ul class="small">
-                  <li><strong>채택 판단 남기기</strong>: 아이디어를 방향 후보로 받아들였다는 결정 기록을 남깁니다.</li>
-                  <li><strong>공식 설정 후보로 남기기</strong>: 공식 설정으로 검토할 수 있게 결정 기록을 남깁니다. 바로 확정 설정이 되는 것은 아닙니다.</li>
+                  <li><strong>채택 기록</strong>: 아직 판단하지 않은 제안에만 표시됩니다. 이 제안을 방향으로 받아들였다는 판단을 남깁니다.</li>
+                  <li><strong>공식 설정 검토 기록</strong>: 게임 설정/세계관 후보일 때만 표시됩니다. Studio UX 같은 운영 제안에는 사용할 수 없습니다.</li>
                   <li><strong>수정 요청</strong>: 지금 형태로는 부족하니 다시 다듬어야 한다는 결정 기록을 남깁니다.</li>
-                  <li><strong>반려 판단 남기기</strong>: 채택하지 않는다는 결정 기록을 남깁니다.</li>
+                  <li><strong>반려 기록</strong>: 채택하지 않는다는 판단을 남깁니다.</li>
                 </ul>
               </div>
             </div>
           </div>
           <div class="grid">
-            <div class="card"><h2>제안함</h2><p class="muted">AI 직원이 제안한 아이디어입니다. 제안은 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
+            <div class="card"><h2>제안함</h2><p class="muted">AI 직원이나 감독자가 낸 아이디어를 모아둡니다. 게임 설정 제안, Studio 운영 제안, 업무 제안이 함께 올 수 있으며 제안 자체는 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
             <div class="card"><h2>결정 기록</h2><p class="muted">Human Director가 남긴 결정 기록입니다.</p><div id="decisions" class="list"></div></div>
             <div class="card"><h2>기억 / 공식 설정</h2><p class="muted">상태가 공식 설정이어야 확정 설정으로 취급합니다.</p><div id="memories" class="list"></div></div>
           </div>
@@ -3428,7 +3499,7 @@ function directorConsoleHtml() {
       meetings: ["회의실", "AI 직원 회의, 업무 후보, 판단 기록, 미해결 질문을 관리합니다."],
       runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
-      knowledge: ["지식/결정", "제안, 결정, 기억, 공식 설정 후보를 확인합니다."],
+      knowledge: ["제안/결정 기록함", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 확인합니다."],
       timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
       diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
@@ -3447,6 +3518,7 @@ function directorConsoleHtml() {
       workSearch: "",
       workDepartment: "",
       knowledgeSearch: "",
+      proposalDecision: "",
       memoryStatus: "",
     };
     const el = (id) => document.getElementById(id);
@@ -3960,6 +4032,91 @@ function directorConsoleHtml() {
         if (directorReport) return directorReport;
       const workOrderReport = formatWorkOrderLog(value);
       if (workOrderReport) return workOrderReport;
+      if (value?.data?.finalization_log_id || value?.data?.finalization_state || value?.command === "request-changes") {
+        const data = value.data || {};
+        const decision = data.final_decision || data.decision || value.decision || value.command || "";
+        const decisionLabel = optionLabel(decision);
+        const taskId = data.task_id || data.approval_record?.task_id || "";
+        const finalizationState = data.finalization_state || "";
+        const cardClass = decision === "request_changes" || decision === "request-changes" ? "warn" : value.ok ? "good" : "danger";
+        const decisionMeaning = {
+          accept: "완료 결과를 받아들였다는 기록을 남겼습니다.",
+          "accept-concerns": "남은 우려를 확인했고 감수한다는 기록을 남겼습니다.",
+          request_changes: "이 작업은 완료하지 않고, 수정이 필요하다는 기록을 남겼습니다.",
+          "request-changes": "이 작업은 완료하지 않고, 수정이 필요하다는 기록을 남겼습니다.",
+          reject: "이번 결과를 받아들이지 않는다는 기록을 남겼습니다.",
+          defer: "지금은 완료 판단을 미룬다는 기록을 남겼습니다.",
+        }[decision] || "감독자 최종 판단 기록을 남겼습니다.";
+        const nextActions = decision === "request_changes" || decision === "request-changes"
+          ? [
+              "수정해야 할 내용을 새 업무 지시나 후속 작업으로 정리하세요.",
+              "수정 작업을 다시 실행한 뒤 완료 보고서를 새로 확인하세요.",
+              "아직 task done, commit, push는 하지 않습니다.",
+            ]
+          : [
+              "결과를 다시 확인하고 필요하면 작업 완료나 커밋/푸시 결정을 진행하세요.",
+              "이 기록만으로 commit/push는 실행되지 않습니다.",
+            ];
+        return '<div class="item ' + cardClass + '"><h3>감독자 최종 판단 기록 완료</h3>' +
+          '<p class="summary">' + esc(decisionMeaning) + '</p>' +
+          reportSection("대상", [
+            "작업: " + taskId,
+            "판단: " + decisionLabel,
+            "상태: " + optionLabel(finalizationState),
+          ]) +
+          reportSection("생성된 기록", [
+            "FinalizationLog: " + (data.finalization_log_id || ""),
+            "ApprovalHistory: " + (data.approval_record_id || data.approval_record?.approval_record_id || ""),
+            "진행 이벤트: " + (data.latest_progress_event_id || ""),
+          ]) +
+          reportSection("다음 행동", nextActions) +
+          safetySection({
+            task_done: !!data.task_done,
+            runner_continue: !!data.runner_continue,
+            commit_push: false,
+          }) +
+          rawJsonDetails(value, "내부 원본 JSON") +
+          '</div>';
+      }
+      if (value?.command === "create-decision" && value?.record?.decision_id) {
+        const record = value.record;
+        const written = value.safety?.decision_written;
+        return '<div class="item ' + (value.ok ? "good" : "danger") + '"><h3>감독자 판단 기록 완료</h3>' +
+          '<p class="summary">제안이나 회의, 업무 지시에 대한 Human Director 판단을 기록했습니다. 이 작업은 구현, task 실행, commit/push를 하지 않습니다.</p>' +
+          reportSection("기록 대상", [
+            "결정: " + (record.decision_id || ""),
+            "대상: " + (record.target_ref || ""),
+            "판단: " + optionLabel(record.decision_type || ""),
+            "요약: " + (record.decision_summary || ""),
+          ]) +
+          reportSection("이 판단으로 허용한 것", record.accepted_scope || [], "따로 적힌 허용 범위가 없습니다.") +
+          reportSection("아직 허용하지 않는 것 / 조건", [...asArray(record.rejected_scope), ...asArray(record.conditions)], "따로 적힌 제한 조건이 없습니다.") +
+          reportSection("다음 행동", [
+            written ? "결정 기록 목록에서 방금 만든 판단을 확인하세요." : "아직 저장되지 않은 dry-run 결과입니다.",
+            "필요하면 이 판단을 참고 기록 또는 공식 설정 후보로 넘길 수 있습니다.",
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
+      if (value?.command === "create-proposal" && value?.record?.proposal_id) {
+        const record = value.record;
+        return '<div class="item ' + (value.ok ? "good" : "danger") + '"><h3>제안 저장 완료</h3>' +
+          '<p class="summary">제안을 제안함에 저장했습니다. 제안은 아직 승인, 공식 설정, 구현 지시가 아닙니다.</p>' +
+          reportSection("저장된 제안", [
+            "제안: " + (record.proposal_id || ""),
+            "제목: " + (record.title || ""),
+            "출처: " + staffName(record.source_agent_id || ""),
+            "상태: " + optionLabel(record.status || ""),
+          ]) +
+          reportSection("다음 행동", [
+            "제안함에서 내용을 읽고 채택, 수정 요청, 반려 중 하나로 판단하세요.",
+            "게임 설정 후보일 때만 공식 설정 검토 기록을 사용하세요.",
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value) +
+          '</div>';
+      }
       if (value?.command === "export" && value?.output_path) {
         return '<div class="item good"><h3>직원 보고서 보기 자료 생성</h3>' +
           '<p class="summary">직원 실행 결과를 사람이 읽기 좋은 HTML 검토 자료로 만들었습니다. 이 작업은 소스, task, 공식 설정, git을 바꾸지 않습니다.</p>' +
@@ -3990,6 +4147,49 @@ function directorConsoleHtml() {
           result.stdout ? "stdout:\\n" + result.stdout.trim() : "",
           result.stderr ? "stderr:\\n" + result.stderr.trim() : "",
         ].filter(Boolean);
+        if (result.tool_id === "google_drive_data_upload") {
+          const publish = result.publish_summary || {};
+          return '<div class="item ' + cardClass + '"><h3>' + esc(value.ok ? "팀 데이터 배포 완료" : "팀 데이터 배포 실패") + '</h3>' +
+            '<p class="summary">' + esc(value.ok
+              ? "PlayGround/Data 검증, versioned zip 업로드, latest manifest 갱신 흐름이 완료되었습니다."
+              : "배포가 완료되지 않았습니다. 실패 단계와 로그를 확인하세요.") + '</p>' +
+            reportSection("배포 버전", [publish.data_version || "자동 버전 사용"]) +
+            reportSection("처리 결과", value.ok ? [
+              publish.source_validation_seen ? "원본 Data 검증 실행" : "원본 Data 검증 로그 확인 필요",
+              publish.archive_validation_seen ? "배포 zip 추출본 검증 실행" : "배포 zip 검증 로그 확인 필요",
+              publish.archive_name ? "versioned zip 업로드: " + publish.archive_name : "versioned zip 업로드 결과 확인 필요",
+              publish.backup_manifest_file_id ? "기존 latest manifest 백업 완료" : "기존 latest manifest가 없었거나 백업 없음",
+              publish.latest_manifest_updated ? "latest manifest 갱신 완료" : "latest manifest 갱신 확인 필요",
+            ] : [
+              publish.failure_stage ? "실패 위치: " + publish.failure_stage : "실패 위치를 로그에서 확인해야 합니다.",
+              "검증/zip 단계에서 실패했다면 Drive 최신 배포본은 바뀌지 않습니다.",
+              "업로드 단계 이후 실패라면 아래 로그와 Drive 상태를 확인하세요.",
+            ]) +
+            reportSection("Drive 기록", [
+              publish.archive_name ? "archive: " + publish.archive_name : "",
+              publish.archive_file_id ? "archive id: " + publish.archive_file_id : "",
+              publish.archive_size ? "archive size: " + publish.archive_size : "",
+              publish.backup_manifest_name ? "backup manifest: " + publish.backup_manifest_name : "",
+              publish.backup_manifest_file_id ? "backup manifest id: " + publish.backup_manifest_file_id : "",
+              publish.manifest_file_id ? "latest manifest id: " + publish.manifest_file_id : "",
+              publish.log_path ? "log: " + publish.log_path : "",
+            ].filter(Boolean), "Drive 기록은 로그에서 확인하세요.") +
+            reportSection("다음 확인", value.ok ? [
+              "독립 폴더에 PlayGround.exe, DataUpdateConfig.json, DataUpdater만 넣고 실행합니다.",
+              "실행 후 Data 폴더와 Data/DataUpdateManifest.json이 생성되는지 확인합니다.",
+              "게임이 정상 시작되면 배포 smoke를 통과로 봅니다.",
+            ] : [
+              "업로드 로그 보기에서 실패 원인을 확인합니다.",
+              "필요하면 백업 manifest 목록/rollback 명령은 별도로 실행합니다.",
+            ]) +
+            reportSection("안전 상태", [
+              "소스 변경 없음",
+              "task 상태 변경 없음",
+              "commit/push 없음",
+            ]) +
+            (outputLines.length ? '<details class="internal-links"><summary>업로드 로그 보기</summary><pre class="log-json">' + esc(outputLines.join("\\n\\n").slice(0, 16000)) + '</pre></details>' : "") +
+            '</div>';
+        }
         return '<div class="item ' + cardClass + '"><h3>' + esc(result.label || "도구 실행 결과") + '</h3>' +
           '<p class="summary">' + esc(result.summary || "") + '</p>' +
           reportSection("실행 정보", [
@@ -4207,6 +4407,36 @@ function directorConsoleHtml() {
         : formatGenericLogObject(value);
       writeResult(rendered);
     };
+    function notifyTeamDataPublish(value) {
+      const result = value?.toolbox_result || {};
+      const publish = result.publish_summary || {};
+      const ok = value?.ok === true;
+      const lines = [
+        ok ? "팀 데이터 배포 완료" : "팀 데이터 배포 실패",
+        "",
+        ok
+          ? "versioned zip 업로드와 latest manifest 갱신까지 완료되었습니다."
+          : "배포가 완료되지 않았습니다. 아래 실패 위치와 로그를 확인하세요.",
+      ];
+      if (publish.data_version) lines.push("배포 버전: " + publish.data_version);
+      if (publish.archive_name) lines.push("업로드 zip: " + publish.archive_name);
+      if (publish.archive_file_id) lines.push("zip 파일 ID: " + publish.archive_file_id);
+      if (publish.manifest_file_id) lines.push("latest manifest ID: " + publish.manifest_file_id);
+      if (publish.backup_manifest_file_id) lines.push("백업 manifest ID: " + publish.backup_manifest_file_id);
+      if (publish.failure_stage) lines.push("실패 위치: " + publish.failure_stage);
+      if (!ok && result.exit_code !== undefined) lines.push("종료 코드: " + result.exit_code);
+      if (!ok && !publish.failure_stage) {
+        const message = value?.error || value?.message || result.summary || "자세한 오류는 화면의 배포 결과 카드에서 확인하세요.";
+        lines.push("오류: " + message);
+      }
+      if (publish.log_path) {
+        lines.push("");
+        lines.push("로그: " + publish.log_path);
+      }
+      lines.push("");
+      lines.push("상세 내용은 화면의 배포 결과 카드에도 남습니다.");
+      alert(lines.join("\\n"));
+    }
 
     async function api(path, options) {
       const res = await fetch(path, options);
@@ -4335,6 +4565,56 @@ function directorConsoleHtml() {
       return '<option value="">' + esc(allLabel) + '</option>' + sorted.map((agent) =>
         '<option value="' + esc(agent.agent_id) + '">' + esc(agent.display_name_ko || agent.agent_id) + '</option>'
       ).join("");
+    }
+    function proposalSourceOptionList(staffAgents) {
+      const sorted = asArray(staffAgents).slice().sort((a, b) => String(a.display_name_ko || a.agent_id).localeCompare(String(b.display_name_ko || b.agent_id)));
+      return '<option value="human_director">Human Director (나)</option>' + sorted.map((agent) =>
+        '<option value="' + esc(agent.agent_id) + '">' + esc(agent.display_name_ko || agent.agent_id) + '</option>'
+      ).join("");
+    }
+    function knowledgeTargetOptionList() {
+      const proposals = asArray(state.proposals).map((item) =>
+        '<option value="' + esc(item.proposal_id) + '">제안 · ' + esc(item.proposal_id) + ' · ' + esc(short(item.title || item.summary || "", 90)) + '</option>'
+      );
+      if (!proposals.length) return '<option value="">판단할 제안이 아직 없습니다</option>';
+      return '<option value="">판단할 제안을 선택하세요</option><optgroup label="제안">' + proposals.join("") + '</optgroup>';
+    }
+    function proposalById(proposalId) {
+      return asArray(state.proposals).find((proposal) => proposal.proposal_id === proposalId);
+    }
+    function proposalDecisions(proposalId) {
+      return asArray(state.decisions).filter((decision) => decision.target_ref === proposalId);
+    }
+    function proposalKindLabel(proposal) {
+      const text = [proposal?.proposal_id, proposal?.title, proposal?.summary, proposal?.source_type, proposal?.source_ref].join(" ").toLowerCase();
+      if (/studio|aiworkflow|workflow|ux|tool|도구|운영|스튜디오/.test(text)) return "Studio/운영 제안";
+      if (/canon|scenario|story|world|lore|character|세계관|캐릭터|스토리|시나리오|공식 설정/.test(text)) return "게임 설정 제안";
+      if (/work|task|업무|작업|implementation|validation/.test(text)) return "업무 제안";
+      return "아이디어 제안";
+    }
+    function proposalCanBecomeCanon(proposal) {
+      return proposalKindLabel(proposal) === "게임 설정 제안";
+    }
+    function decisionTypeOptionListForProposal(proposalId, selectedValue = "") {
+      const proposal = proposalById(proposalId);
+      const values = ["approve", "request_changes", "reject", "defer"];
+      if (proposalCanBecomeCanon(proposal)) values.push("canonize");
+      const selected = values.includes(selectedValue) ? selectedValue : values[0];
+      return values.map((value) =>
+        '<option value="' + esc(value) + '"' + (value === selected ? " selected" : "") + '>' + esc(optionLabel(value)) + '</option>'
+      ).join("");
+    }
+    function syncDecisionTypeOptions() {
+      const targetRef = fieldValue("decisionCreateTarget");
+      const currentType = fieldValue("decisionCreateType");
+      const proposal = proposalById(targetRef);
+      el("decisionCreateType").innerHTML = decisionTypeOptionListForProposal(targetRef, currentType);
+      const category = proposal ? proposalKindLabel(proposal) : "";
+      el("decisionCreateTypeHelp").textContent = proposal
+        ? (proposalCanBecomeCanon(proposal)
+          ? "게임 설정 제안이므로 공식 설정 검토 기록을 남길 수 있습니다."
+          : category + "은 공식 설정 후보로 남길 수 없습니다. 채택, 수정 요청, 반려, 보류 중에서 판단하세요.")
+        : "먼저 판단할 제안을 선택하세요. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리합니다.";
     }
     const MEETING_TYPE_DETAILS = {
       creative: "게임 아이디어, 세계관, 스토리, 컨셉을 논의합니다.",
@@ -4478,7 +4758,7 @@ function directorConsoleHtml() {
         creative:"크리에이티브", technical:"기술", production:"제작", review:"리뷰", qa_triage:"QA 분류", postmortem:"회고", release_readiness:"릴리즈 준비",
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
-        approve:"승인", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"우려 감수", canonize:"공식 설정화",
+        approve:"채택", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"조건부 채택", canonize:"공식 설정 후보",
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"회의", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
         approved:"승인됨", rejected:"반려됨",
@@ -4560,6 +4840,7 @@ function directorConsoleHtml() {
       el("meetingStatusFilter").innerHTML = meetingStatusOptionList(state.meetings);
       el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
       el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
+      el("proposalDecisionFilter").innerHTML = '<option value="">모든 제안</option><option value="pending">판단 대기 제안</option><option value="decided">판단 기록 있음</option>';
       const selectedMeetingType = fieldValue("meetingCreateType") || "creative";
       const selectedMeetingParticipantsBeforeRender = selectedMeetingParticipants();
       const selectedMeetingChairBeforeRender = fieldValue("meetingCreateChair");
@@ -4581,8 +4862,9 @@ function directorConsoleHtml() {
       el("workCreateStatus").value = WORK_ORDER_STATUS_DETAILS[selectedWorkStatusBeforeRender] ? selectedWorkStatusBeforeRender : "director_review";
       renderWorkStatusHelp();
       renderWorkAgentPicker(selectedWorkAgentsBeforeRender);
-      el("proposalCreateAgent").innerHTML = staffOptionList(state.staff_agents, "제안자 선택");
-      el("decisionCreateType").innerHTML = fixedOptionList(["approve", "reject", "defer", "request_changes", "accept_concerns", "canonize"]);
+      el("proposalCreateAgent").value = "human_director";
+      el("decisionCreateTarget").innerHTML = knowledgeTargetOptionList();
+      syncDecisionTypeOptions();
       el("memoryCreateScope").innerHTML = fixedOptionList(["project", "canon", "global", "agent", "department", "meeting", "task"]);
       el("memoryCreateType").innerHTML = fixedOptionList(["fact", "preference", "proposal", "decision", "canon", "rejection", "evidence", "lesson"]);
       el("memoryCreateStatus").innerHTML = fixedOptionList(["proposed", "approved", "canon", "draft", "rejected", "evidence", "lesson"]);
@@ -4600,6 +4882,7 @@ function directorConsoleHtml() {
       el("workSearch").value = filters.workSearch;
       el("workDepartmentFilter").value = filters.workDepartment;
       el("knowledgeSearch").value = filters.knowledgeSearch;
+      el("proposalDecisionFilter").value = filters.proposalDecision;
       el("memoryStatusFilter").value = filters.memoryStatus;
     }
     function renderEmpty(text) {
@@ -4654,6 +4937,12 @@ function directorConsoleHtml() {
     function setInternalNavVisible(visible) {
       const nav = el("internalNav");
       const stateLabel = el("internalNavState");
+      nav.hidden = !visible;
+      stateLabel.textContent = visible ? "표시" : "숨김";
+    }
+    function setReferenceNavVisible(visible) {
+      const nav = el("referenceNav");
+      const stateLabel = el("referenceNavState");
       nav.hidden = !visible;
       stateLabel.textContent = visible ? "표시" : "숨김";
     }
@@ -4736,6 +5025,7 @@ function directorConsoleHtml() {
         });
       });
       state.proposals.slice(0, 4).forEach((proposal) => {
+        const canonEligible = proposalCanBecomeCanon(proposal);
         items.push({
           kind: "제안 판단",
           title: proposal.proposal_id + " · " + (proposal.title || proposal.summary || "(제안)"),
@@ -4745,10 +5035,10 @@ function directorConsoleHtml() {
           effect: "결정 기록을 만들 수 있습니다. 공식 설정으로 저장하는 것은 별도 선택입니다.",
           risk: "공식 설정화 버튼은 프로젝트 기억에 강하게 남으므로, 승인된 설정일 때만 사용하세요.",
           actions: [
-            button("채택 판단 남기기", "proposal-approve", proposal.path, "good"),
-            button("공식 설정 후보로 남기기", "proposal-canonize", proposal.path, "warn"),
+            button("채택 기록", "proposal-approve", proposal.path, "good"),
+            canonEligible ? button("공식 설정 검토 기록", "proposal-canonize", proposal.path, "warn") : "",
             button("수정 요청", "proposal-request-changes", proposal.path),
-            button("반려 판단 남기기", "proposal-reject", proposal.path, "danger"),
+            button("반려 기록", "proposal-reject", proposal.path, "danger"),
           ],
         });
       });
@@ -4999,6 +5289,13 @@ function directorConsoleHtml() {
         ? items.map(renderDecisionCard).join("")
         : '<div class="item good"><h3>지금 바로 결정할 일 없음</h3><p class="summary">새 완료 검토, 승인 gate, 채택 후보, 제안, Git 변경이 생기면 여기에 우선순위와 이유가 함께 표시됩니다.</p></div>';
     }
+    function defaultDataVersion() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return year + "." + month + "." + day + ".001";
+    }
     function renderToolbox() {
       const catalog = state.toolbox || { categories: [] };
       const toolCard = (tool, primary = false) =>
@@ -5011,13 +5308,27 @@ function directorConsoleHtml() {
         '</ul>' +
         '<div class="row"><button class="' + (primary || tool.id.includes("restart") || tool.id.includes("upload") ? "warn" : "secondary") + '" data-toolbox-run="' + esc(tool.id) + '"' + (tool.confirm_message ? ' data-confirm="' + esc(tool.confirm_message) + '"' : '') + (tool.available ? "" : " disabled") + '>실행</button></div>' +
         '</div>';
-      const primaryAction = (tool) =>
-        '<div class="item toolbox-primary-card ' + (tool.available ? "" : "danger") + '"><div>' +
-        '<h3>' + esc(tool.label) + '</h3>' +
-        '<p class="summary">' + esc(tool.purpose) + '</p></div>' +
-        '<button class="warn" data-toolbox-run="' + esc(tool.id) + '"' +
-        (tool.confirm_message ? ' data-confirm="' + esc(tool.confirm_message) + '"' : '') +
-        (tool.available ? "" : " disabled") + '>실행</button></div>';
+      const primaryAction = (tool) => {
+        if (tool.publish_data) {
+          return '<div class="item toolbox-primary-card ' + (tool.available ? "" : "danger") + '"><div>' +
+            '<h3>' + esc(tool.label) + '</h3>' +
+            '<p class="summary">' + esc(tool.purpose) + '</p>' +
+            '<div class="field-block small"><span>배포 버전</span><input id="toolboxDataVersion" value="' + esc(defaultDataVersion()) + '" placeholder="예: 2026.05.23.001"></div>' +
+            '<ul class="small">' +
+            '<li>원본 Data와 배포 zip을 먼저 검증합니다.</li>' +
+            '<li>UserData.json은 배포하지 않습니다.</li>' +
+            '<li>마지막에 latest manifest만 새 버전으로 바꿉니다.</li>' +
+            '</ul></div>' +
+            '<button class="warn" data-toolbox-publish="' + esc(tool.id) + '"' +
+            (tool.available ? "" : " disabled") + '>배포 실행</button></div>';
+        }
+        return '<div class="item toolbox-primary-card ' + (tool.available ? "" : "danger") + '"><div>' +
+          '<h3>' + esc(tool.label) + '</h3>' +
+          '<p class="summary">' + esc(tool.purpose) + '</p></div>' +
+          '<button class="warn" data-toolbox-run="' + esc(tool.id) + '"' +
+          (tool.confirm_message ? ' data-confirm="' + esc(tool.confirm_message) + '"' : '') +
+          (tool.available ? "" : " disabled") + '>실행</button></div>';
+      };
       const primaryTools = catalog.primary_tools || [];
       const primaryHtml = primaryTools.length
         ? '<section class="toolbox-primary">' + primaryTools.map(primaryAction).join("") + '</section>'
@@ -5290,28 +5601,46 @@ function directorConsoleHtml() {
           actionsHtml([button("재현", "automation-replay", evaluation.path), button("수정 계획", "automation-repair", evaluation.path)]) +
           internalLinksHtml([link("평가 원본", evaluation.href)]) + '</div>'
         ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
-      const visibleProposals = state.proposals.filter((p) =>
-        includesText([p.proposal_id, p.title, p.summary, p.status, p.source_agent_id].join(" "), filters.knowledgeSearch)
-      );
-      el("proposals").innerHTML = visibleProposals.length ? visibleProposals.map((p) =>
-        '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(optionLabel(p.status)) + '</span></h3>' +
-        '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
-        '<p class="small muted">제안자 ' + esc(staffName(p.source_agent_id)) + ' · 선택지 ' + esc(p.option_count) + '</p>' +
-        '<div class="compact-list">' +
-        '<div class="compact-line"><span>승인 필요</span><span class="pill">' + esc(asArray(p.approval_items).length) + '</span></div>' +
-        listHtml(p.approval_items) +
-        '<div class="compact-line"><span>위험/의존성</span><span class="pill">' + esc(asArray(p.risks).length + asArray(p.dependencies).length) + '</span></div>' +
-        listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
-        '</div>' +
-        actionsHtml([
-          button("전환 계획", "knowledge-transition-plan", p.path),
-          button("채택 판단 남기기", "proposal-approve", p.path, "good"),
-          button("공식 설정 후보로 남기기", "proposal-canonize", p.path, "warn"),
-          button("수정 요청", "proposal-request-changes", p.path),
-          button("반려 판단 남기기", "proposal-reject", p.path, "danger")
-        ]) +
-        internalLinksHtml([link("제안 원본", p.href)]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 제안이 없습니다.");
+      const visibleProposals = state.proposals.filter((p) => {
+        const decisionCount = proposalDecisions(p.proposal_id).length;
+        const matchesDecisionFilter = !filters.proposalDecision ||
+          (filters.proposalDecision === "pending" && decisionCount === 0) ||
+          (filters.proposalDecision === "decided" && decisionCount > 0);
+        return matchesDecisionFilter &&
+          includesText([p.proposal_id, p.title, p.summary, p.status, p.source_agent_id, proposalKindLabel(p)].join(" "), filters.knowledgeSearch);
+      });
+      el("proposals").innerHTML = visibleProposals.length ? visibleProposals.map((p) => {
+        const decisionsForProposal = proposalDecisions(p.proposal_id);
+        const category = proposalKindLabel(p);
+        const canonEligible = proposalCanBecomeCanon(p);
+        const decisionState = decisionsForProposal.length ? "판단 기록 있음 " + decisionsForProposal.length + "개" : "판단 대기";
+        const decisionSummary = decisionsForProposal.length
+          ? decisionsForProposal.map((decision) => optionLabel(decision.decision_type) + " · " + short(decision.summary || decision.decision_summary || decision.decision_id, 70))
+          : ["아직 감독자 판단 기록이 없습니다."];
+        const decisionButtons = decisionsForProposal.length
+          ? [button("전환 계획", "knowledge-transition-plan", p.path)]
+          : [
+              button("전환 계획", "knowledge-transition-plan", p.path),
+              button("채택 기록", "proposal-approve", p.path, "good"),
+              button("수정 요청", "proposal-request-changes", p.path),
+              button("반려 기록", "proposal-reject", p.path, "danger"),
+              canonEligible ? button("공식 설정 검토 기록", "proposal-canonize", p.path, "warn") : "",
+            ];
+        return '<div class="item warn"><h3><code>' + esc(p.proposal_id) + '</code> <span class="pill">' + esc(category) + '</span> <span class="pill">' + esc(decisionState) + '</span> <span class="pill">' + esc(optionLabel(p.status)) + '</span></h3>' +
+          '<p>' + esc(p.title) + '</p><p class="summary">' + esc(short(p.summary)) + '</p>' +
+          '<p class="small muted">출처 ' + esc(staffName(p.source_agent_id)) + ' · 선택지 ' + esc(p.option_count) + '</p>' +
+          '<div class="compact-list">' +
+          '<div class="compact-line"><span>감독자 판단</span><span class="pill">' + esc(decisionState) + '</span></div>' +
+          listHtml(decisionSummary) +
+          '<div class="compact-line"><span>승인 필요</span><span class="pill">' + esc(asArray(p.approval_items).length) + '</span></div>' +
+          listHtml(p.approval_items) +
+          '<div class="compact-line"><span>위험/의존성</span><span class="pill">' + esc(asArray(p.risks).length + asArray(p.dependencies).length) + '</span></div>' +
+          listHtml([...(p.risks || []), ...(p.dependencies || [])]) +
+          '</div>' +
+          (!canonEligible ? '<p class="small muted">이 제안은 ' + esc(category) + '이라 공식 설정 후보 버튼을 숨겼습니다.</p>' : '') +
+          actionsHtml(decisionButtons) +
+          internalLinksHtml([link("제안 원본", p.href)]) + '</div>';
+      }).join("") : renderEmpty("조건에 맞는 제안이 없습니다.");
       const visibleDecisions = state.decisions.filter((d) =>
         includesText([d.decision_id, d.decision_type, d.target_ref, d.summary].join(" "), filters.knowledgeSearch)
       );
@@ -5538,11 +5867,17 @@ function directorConsoleHtml() {
     async function createDecisionFromForm() {
       const targetRef = fieldValue("decisionCreateTarget");
       const summary = fieldValue("decisionCreateSummary");
-      if (!targetRef || !summary) return alert("대상 ref와 결정 요약을 입력하세요.");
-      if (!confirm("Human Director 결정을 저장할까요? 결정 기록은 근거가 되지만 구현/커밋은 하지 않습니다.")) return;
+      if (!targetRef || !summary) return alert("판단 대상과 판단 내용을 입력하세요.");
+      const proposal = proposalById(targetRef);
+      const decisionType = fieldValue("decisionCreateType") || "approve";
+      if (!proposal) return alert("판단 대상은 제안함에 있는 제안만 선택할 수 있습니다. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리하세요.");
+      if (decisionType === "canonize" && !proposalCanBecomeCanon(proposal)) {
+        return alert("이 제안은 공식 설정 후보로 남길 수 없습니다. 게임 세계관, 캐릭터, 규칙 같은 게임 설정 제안에만 공식 설정 검토 기록을 사용할 수 있습니다.");
+      }
+      if (!confirm("Human Director 판단을 저장할까요? 판단 기록은 근거가 되지만 구현/커밋은 하지 않습니다.")) return;
       log(await post("/api/studio/decision/create", {
         target_ref: targetRef,
-        decision_type: fieldValue("decisionCreateType") || "approve",
+        decision_type: decisionType,
         decision_summary: summary,
         accepted_scope: fieldValue("decisionCreateAccepted"),
         rejected_scope: fieldValue("decisionCreateRejected"),
@@ -5676,7 +6011,11 @@ function directorConsoleHtml() {
       }
       if (action === "proposal-approve" || action === "proposal-canonize" || action === "proposal-request-changes" || action === "proposal-reject") {
         const decisionType = action === "proposal-canonize" ? "canonize" : action === "proposal-request-changes" ? "request_changes" : action === "proposal-reject" ? "reject" : "approve";
-        if (!confirm("이 제안에 대한 결정을 기록할까요? 제안 채택/반려 기록만 남기며, 작업 실행과 공식 설정 기록은 별도입니다.")) return;
+        const proposal = asArray(state.proposals).find((item) => item.path === filePath);
+        if (decisionType === "canonize" && !proposalCanBecomeCanon(proposal)) {
+          return alert("이 제안은 공식 설정 후보로 남길 수 없습니다. 공식 설정 검토 기록은 게임 세계관, 캐릭터, 규칙 같은 게임 설정 제안에만 사용할 수 있습니다.");
+        }
+        if (!confirm("이 제안에 대한 감독자 판단을 기록할까요? 기록만 남기며, 작업 실행과 commit/push는 하지 않습니다.")) return;
         log(await post("/api/studio/proposal/create-decision", { path:filePath, decision_type:decisionType }));
         await refresh();
       }
@@ -5717,6 +6056,18 @@ function directorConsoleHtml() {
       if (action === "staff-operating-plan") return log(await post("/api/studio/staff/operating-plan", { agent_id:filePath }));
     }
     document.addEventListener("click", (event) => {
+      const referenceToggle = event.target.closest("#referenceNavToggle");
+      if (referenceToggle) {
+        event.preventDefault();
+        setReferenceNavVisible(el("referenceNav").hidden);
+        return;
+      }
+      const internalToggle = event.target.closest("#internalNavToggle");
+      if (internalToggle) {
+        event.preventDefault();
+        setInternalNavVisible(el("internalNav").hidden);
+        return;
+      }
       const startTarget = event.target.closest("button[data-workflow-start]");
       if (startTarget) {
         startWorkflowTask(startTarget.dataset.workflowStart).catch(log);
@@ -5736,6 +6087,45 @@ function directorConsoleHtml() {
       if (toolboxTarget) {
         if (toolboxTarget.dataset.confirm && !confirm(toolboxTarget.dataset.confirm)) return;
         post("/api/toolbox/run", { tool_id:toolboxTarget.dataset.toolboxRun }).then(log).catch(log);
+        return;
+      }
+      const toolboxPublishTarget = event.target.closest("button[data-toolbox-publish]");
+      if (toolboxPublishTarget) {
+        const input = el("toolboxDataVersion");
+        const dataVersion = String(input?.value || "").trim();
+        if (!dataVersion || !/^[0-9A-Za-z._-]{1,80}$/.test(dataVersion)) {
+          alert("배포 버전은 비워둘 수 없고, 영문/숫자/점/밑줄/하이픈만 사용할 수 있습니다.");
+          return;
+        }
+        const confirmed = confirm(
+          "팀 데이터 배포를 실행할까요?\\n\\n" +
+          "배포 버전: " + dataVersion + "\\n\\n" +
+          "진행 내용:\\n" +
+          "- PlayGround/Data 원본 검증\\n" +
+          "- 배포 zip 생성 및 추출본 재검증\\n" +
+          "- versioned zip 업로드\\n" +
+          "- 기존 latest manifest 백업\\n" +
+          "- latest manifest 마지막 갱신\\n\\n" +
+          "소스, task, git은 바꾸지 않습니다."
+        );
+        if (!confirmed) return;
+        const previousLabel = toolboxPublishTarget.textContent;
+        toolboxPublishTarget.disabled = true;
+        toolboxPublishTarget.textContent = "배포 중...";
+        log("팀 데이터 배포를 시작했습니다. 완료되면 성공/실패 알림을 띄웁니다.");
+        post("/api/toolbox/run", { tool_id:toolboxPublishTarget.dataset.toolboxPublish, data_version:dataVersion })
+          .then((result) => {
+            log(result);
+            notifyTeamDataPublish(result);
+          })
+          .catch((error) => {
+            log(error);
+            notifyTeamDataPublish(error);
+          })
+          .finally(() => {
+            toolboxPublishTarget.disabled = false;
+            toolboxPublishTarget.textContent = previousLabel || "배포 실행";
+          });
         return;
       }
       const meetingPresetTarget = event.target.closest("button[data-meeting-preset]");
@@ -5861,10 +6251,11 @@ function directorConsoleHtml() {
     bindFilter("workSearch", "workSearch");
     bindFilter("workDepartmentFilter", "workDepartment");
     bindFilter("knowledgeSearch", "knowledgeSearch");
+    bindFilter("proposalDecisionFilter", "proposalDecision");
     bindFilter("memoryStatusFilter", "memoryStatus");
+    el("decisionCreateTarget").addEventListener("change", () => syncDecisionTypeOptions());
     el("refresh").addEventListener("click", () => refresh().catch(log));
     el("export-dashboard").addEventListener("click", () => exportDashboard().catch(log));
-    el("internalNavToggle").addEventListener("click", () => setInternalNavVisible(el("internalNav").hidden));
     setPage((location.hash || "").replace("#", "") || "home");
     window.addEventListener("hashchange", () => setPage((location.hash || "").replace("#", "") || "home"));
     refresh().catch(log);
@@ -6530,10 +6921,10 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   if (kind === "proposal") {
     base.current_meaning = "제안은 아이디어 후보입니다. 채택, 반려, 수정 요청, 공식 설정 기록 중 하나로 판단하기 전까지는 확정 사항이 아닙니다.";
     base.possible_actions = [
-      "채택 판단 남기기: 이 아이디어를 방향 후보로 받아들였다는 Decision을 남깁니다.",
-      "공식 설정 후보로 남기기: canonize Decision을 만들고, 이후 Memory/canon으로 넘길 수 있게 합니다.",
-      "수정 요청: 더 다듬어야 한다는 Decision을 남깁니다.",
-      "반려 판단 남기기: 채택하지 않는 이유를 Decision으로 남깁니다.",
+      "채택 기록: 이 아이디어를 방향 후보로 받아들였다는 감독자 판단을 남깁니다.",
+      "공식 설정 검토 기록: 게임 설정/세계관 후보일 때만 사용합니다. 바로 canon으로 확정하지 않습니다.",
+      "수정 요청: 더 다듬어야 한다는 감독자 판단을 남깁니다.",
+      "반려 기록: 채택하지 않는 이유를 남깁니다.",
     ];
     base.what_changes_if_accepted = [
       "Proposal 자체가 바로 canon이 되지는 않습니다.",
@@ -7149,7 +7540,7 @@ async function buildStudioSmokeReport(repoRoot) {
       "홈에서 현재 할 일을 확인합니다.",
       "목표 기획에서 기획안 미리보기를 실행합니다.",
       "회의실에서 회의판을 봅니다.",
-      "지식/결정에서 전환 계획을 봅니다.",
+      "제안/결정 기록함에서 전환 계획을 봅니다.",
       "프로젝트에서 실행 준비 점검을 봅니다.",
       "검증 자료에서 완료 판단안을 봅니다.",
       "정책에서 자동 진행 준비도를 봅니다.",
@@ -7171,11 +7562,11 @@ function buildDirectorSurfaceMap() {
     ["meetings", "회의실", "Human Director / Creative Director", "회의를 열고 발언, 제안, 업무 후보, 판단 기록을 정리합니다.", ["회의판 자세히", "내 발언 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
     ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 채택 후보로 넘깁니다.", ["보고서 보기/만들기", "채택 후보 미리보기", "채택 후보로 넘기기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
-    ["knowledge", "지식/결정", "Human Director / Documentation Keeper", "제안, 결정, 기억, canon 후보를 구분합니다.", ["전환 계획", "Canon 충돌 점검", "제안/기억/결정 원본 확인"], false],
+    ["knowledge", "제안/결정 기록함", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
     ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
     ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
-    ["toolbox", "도구함", "Human Director / Maintainer", "자주 쓰는 유지보수 도구만 실행합니다.", ["Studio 재시작", "Discord bot 재시작", "리소스 업로드", "점검 도구 실행"], false],
+    ["toolbox", "도구함", "Human Director / Maintainer", "자주 쓰는 유지보수 도구만 실행합니다.", ["Studio 재시작", "Discord bot 재시작", "팀 데이터 배포", "점검 도구 실행"], false],
     ["project", "프로젝트", "참고/추적", "현재 프로젝트와 실행 경계를 확인합니다.", ["실행 준비 점검", "프로젝트 프로필 확인"], false],
     ["departments", "부서", "참고/추적", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/회의 이동"], false],
     ["staff", "AI 직원", "참고/추적", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "회의/업무 이동"], false],
@@ -7594,6 +7985,13 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
 
 function buildDecisionFromProposalPayload(proposal = {}, decisionType = "approve") {
   const title = requireStudioText(proposal.title || proposal.proposal_id, "proposal title");
+  const decisionLabels = {
+    approve: "채택",
+    reject: "반려",
+    defer: "보류",
+    request_changes: "수정 요청",
+    canonize: "공식 설정 후보",
+  };
   const acceptedScope = decisionType === "reject"
     ? []
     : [proposal.summary || title, ...stringList(proposal.approval_items)];
@@ -7609,7 +8007,7 @@ function buildDecisionFromProposalPayload(proposal = {}, decisionType = "approve
     decision_maker: "human_director",
     decision_type: decisionType,
     target_ref: proposal.proposal_id || "proposal",
-    decision_summary: `${decisionType}: ${title}`,
+    decision_summary: `${decisionLabels[decisionType] || decisionType}: ${title}`,
     accepted_scope: acceptedScope,
     rejected_scope: rejectedScope,
     conditions: conditions.length ? conditions : ["후속 작업은 기존 업무 지시/task/승인 gate를 그대로 거쳐야 합니다."],
@@ -7716,7 +8114,10 @@ async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
 
   if (req.method === "POST" && parsedUrl.pathname === "/api/toolbox/run") {
     const body = await readRequestJson(req);
-    const result = await runToolboxTool(repoRoot, String(body.tool_id || ""), serverContext);
+    const result = await runToolboxTool(repoRoot, String(body.tool_id || ""), {
+      ...serverContext,
+      data_version: body.data_version || "",
+    });
     return sendJson(res, result.ok ? 200 : 500, result);
   }
 

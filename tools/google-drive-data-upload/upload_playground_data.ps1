@@ -10,7 +10,19 @@ param(
 
     [switch]$PublishTeamData,
 
-    [string]$DataVersion = ""
+    [string]$DataVersion = "",
+
+    [switch]$ListBackups,
+
+    [switch]$Rollback,
+
+    [string]$BackupManifestId = "",
+
+    [switch]$ListArchives,
+
+    [switch]$CleanupArchive,
+
+    [string]$ArchiveFileId = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,6 +51,83 @@ function Convert-ToRepoRelativePath {
     $rootUri = [System.Uri]::new($rootPath + [System.IO.Path]::DirectorySeparatorChar)
     $pathUri = [System.Uri]::new($fullPath)
     return [System.Uri]::UnescapeDataString($rootUri.MakeRelativeUri($pathUri).ToString()).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+}
+
+function Convert-ToSafeFileToken {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return "unknown"
+    }
+    return ($Value -replace '[\\/:*?"<>|\s]+', '_')
+}
+
+function Assert-PathInside {
+    param(
+        [string]$Parent,
+        [string]$Child
+    )
+
+    $parentFull = [System.IO.Path]::GetFullPath($Parent).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    $childFull = [System.IO.Path]::GetFullPath($Child)
+    if (-not $childFull.StartsWith($parentFull + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Path escapes expected parent. parent=$parentFull child=$childFull"
+    }
+}
+
+function Invoke-DataValidation {
+    param(
+        [string]$Repo,
+        [string]$DataDir,
+        [string]$Label
+    )
+
+    Write-Info "Validating $Label with json_smoke_check."
+    & (Join-Path $Repo "tools\aiworkflow\json_smoke_check.bat") $DataDir
+    if ($LASTEXITCODE -ne 0) {
+        Write-ToolError "VALIDATION_ERROR" "$Label JSON smoke validation failed."
+        exit 8
+    }
+
+    Write-Info "Validating $Label with game_data_loader_readability_check."
+    & (Join-Path $Repo "tools\aiworkflow\game_data_loader_readability_check.bat") $DataDir
+    if ($LASTEXITCODE -ne 0) {
+        Write-ToolError "VALIDATION_ERROR" "$Label GameDataLoader readability validation failed."
+        exit 8
+    }
+}
+
+function Invoke-ZipExtractionValidation {
+    param(
+        [string]$Repo,
+        [string]$ArchivePath,
+        [string]$DataVersion
+    )
+
+    $verifyRootBase = Join-Path $Repo "_Temp\GoogleDriveDataUpload\verify"
+    $verifyRoot = Join-Path $verifyRootBase (Convert-ToSafeFileToken -Value $DataVersion)
+    Assert-PathInside -Parent $verifyRootBase -Child $verifyRoot
+
+    if (Test-Path -LiteralPath $verifyRoot) {
+        Remove-Item -LiteralPath $verifyRoot -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Force -Path $verifyRoot | Out-Null
+
+    try {
+        Expand-Archive -LiteralPath $ArchivePath -DestinationPath $verifyRoot -Force
+    }
+    catch {
+        Write-ToolError "VALIDATION_ERROR" "Failed to extract publish archive for verification: $($_.Exception.Message)"
+        exit 8
+    }
+
+    $extractedData = Join-Path $verifyRoot "Data"
+    if (-not (Test-Path -LiteralPath $extractedData -PathType Container)) {
+        Write-ToolError "VALIDATION_ERROR" "Publish archive does not contain a Data directory."
+        exit 8
+    }
+
+    Invoke-DataValidation -Repo $Repo -DataDir $extractedData -Label "publish archive extraction"
 }
 
 function New-ZipSnapshot {
@@ -129,6 +218,50 @@ try {
         exit 2
     }
 
+    $controlOperationCount = @($ListBackups, $Rollback, $ListArchives, $CleanupArchive).Where({ $_ }).Count
+    if ($controlOperationCount -gt 1) {
+        Write-ToolError "ARG_ERROR" "-ListBackups, -Rollback, -ListArchives, and -CleanupArchive cannot be used together."
+        exit 1
+    }
+
+    if ($ListBackups -or $Rollback -or $ListArchives -or $CleanupArchive) {
+        if ($Rollback -and [string]::IsNullOrWhiteSpace($BackupManifestId)) {
+            Write-ToolError "ARG_ERROR" "-BackupManifestId is required with -Rollback."
+            exit 1
+        }
+
+        if ($CleanupArchive -and [string]::IsNullOrWhiteSpace($ArchiveFileId)) {
+            Write-ToolError "ARG_ERROR" "-ArchiveFileId is required with -CleanupArchive."
+            exit 1
+        }
+
+        $nodeScript = Join-Path $toolRoot "src\uploadDataSnapshot.js"
+        $nodeArgs = @(
+            $nodeScript,
+            "--repo-root", $repo,
+            "--config", $configPath
+        )
+
+        if ($ListBackups) {
+            $nodeArgs += @("--list-backups")
+        }
+
+        if ($Rollback) {
+            $nodeArgs += @("--rollback", "--backup-manifest-id", $BackupManifestId)
+        }
+
+        if ($ListArchives) {
+            $nodeArgs += @("--list-archives")
+        }
+
+        if ($CleanupArchive) {
+            $nodeArgs += @("--cleanup-archive", "--archive-file-id", $ArchiveFileId)
+        }
+
+        & node @nodeArgs
+        exit $LASTEXITCODE
+    }
+
     $sourceDir = [string]$defaultConfig["source_dir"]
     if ([string]::IsNullOrWhiteSpace($sourceDir)) {
         $sourceDir = "PlayGround\Data"
@@ -146,11 +279,13 @@ try {
     }
 
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $resolvedDataVersion = if ([string]::IsNullOrWhiteSpace($DataVersion)) { Get-DefaultDataVersion } else { $DataVersion }
+    $safeDataVersion = Convert-ToSafeFileToken -Value $resolvedDataVersion
     $archiveDir = Join-Path $repo "_Temp\GoogleDriveDataUpload\archives"
     $logDir = Join-Path $repo "_Temp\GoogleDriveDataUpload\logs"
-    $archiveFileName = if ($PublishTeamData) { [string]$defaultConfig["publish_archive_name"] } else { "$prefix`_$timestamp.zip" }
+    $archiveFileName = if ($PublishTeamData) { "$prefix`_$safeDataVersion.zip" } else { "$prefix`_$timestamp.zip" }
     if ([string]::IsNullOrWhiteSpace($archiveFileName)) {
-        $archiveFileName = if ($PublishTeamData) { "PlayGround_Data_Latest.zip" } else { "$prefix`_$timestamp.zip" }
+        $archiveFileName = if ($PublishTeamData) { "PlayGround_Data_$safeDataVersion.zip" } else { "$prefix`_$timestamp.zip" }
     }
 
     $archivePath = Join-Path $archiveDir $archiveFileName
@@ -172,6 +307,10 @@ try {
         exit 2
     }
 
+    if ($PublishTeamData) {
+        Invoke-DataValidation -Repo $repo -DataDir $sourcePath -Label "source Data"
+    }
+
     try {
         $excludeEntries = @()
         if ($PublishTeamData) {
@@ -188,11 +327,14 @@ try {
     $archiveItem = Get-Item -LiteralPath $archivePath
     Write-Info "ZIP created: $createdCount files, $($archiveItem.Length) bytes"
 
+    if ($PublishTeamData) {
+        Invoke-ZipExtractionValidation -Repo $repo -ArchivePath $archivePath -DataVersion $resolvedDataVersion
+    }
+
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
     $manifestPath = $null
     if ($PublishTeamData) {
-        $resolvedDataVersion = if ([string]::IsNullOrWhiteSpace($DataVersion)) { Get-DefaultDataVersion } else { $DataVersion }
         $manifestName = [string]$defaultConfig["publish_manifest_name"]
         if ([string]::IsNullOrWhiteSpace($manifestName)) {
             $manifestName = "PlayGround_Data_Manifest.json"
@@ -232,7 +374,7 @@ try {
             "--publish",
             "--manifest", $manifestPath,
             "--archive-name", $archiveFileName,
-            "--manifest-name", ([string]$defaultConfig["publish_manifest_name"])
+            "--manifest-name", $manifestName
         )
     }
 

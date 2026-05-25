@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "enabled": false,
-  "manifest_url": "",
+  "enabled": true,
+  "manifest_url": "https://drive.google.com/uc?id=1nLtNDdFEkQ3bJAMK8XrNPXFIh9SHrq36&export=download",
   "timeout_seconds": 15,
   "failure_policy": "run_existing_data"
 }

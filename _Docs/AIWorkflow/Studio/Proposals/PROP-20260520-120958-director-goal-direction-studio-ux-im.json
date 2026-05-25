@@ -1,0 +1,32 @@
+{
+    "proposal_id":  "PROP-20260520-120958-director-goal-direction-studio-ux-im",
+    "source_agent_id":  "executive_producer",
+    "source_type":  "director_goal",
+    "source_ref":  "DGP-20260520-120958-studio-ux-improvement-goal-home-huma",
+    "title":  "Director goal direction: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+    "summary":  "이 목표는 executive_production, engineering, qa_testing 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.",
+    "rationale":  "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다.",
+    "options":  [
+                    {
+                        "option_id":  "option-a",
+                        "title":  "Director goal direction: Studio UX improvement goal: Home 화면에서 Human Director가 지금 판단해야 할 일, 최근 작업 상태, 다음 행동을 더 직관적으로 이해할 수 있게 개선 방향을 기획해줘.",
+                        "summary":  "이 목표는 executive_production, engineering, qa_testing 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.",
+                        "tradeoffs":  [
+
+                                      ]
+                    }
+                ],
+    "risks":  [
+                  "소스, 데이터, 런타임, 검증 경계를 명확히 해야 합니다."
+              ],
+    "dependencies":  [
+
+                     ],
+    "approval_items":  [
+                           "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다."
+                       ],
+    "evidence_refs":  [
+                          "DGP-20260520-120958-studio-ux-improvement-goal-home-huma"
+                      ],
+    "status":  "submitted"
+}

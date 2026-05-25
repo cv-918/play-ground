@@ -16,7 +16,7 @@ function printError(code, message) {
 
 function parseArgs(argv) {
   const args = {};
-  const flagArgs = new Set(["publish"]);
+  const flagArgs = new Set(["publish", "list-backups", "rollback", "list-archives", "cleanup-archive"]);
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -56,6 +56,14 @@ function readJson(filePath, code, label) {
   } catch (error) {
     printError(code, `Failed to read ${label}: ${error.message}`);
     process.exit(code === "AUTH_ERROR" ? 5 : 2);
+  }
+}
+
+function readJsonText(text, label) {
+  try {
+    return JSON.parse(text.replace(/^\uFEFF/, ""));
+  } catch (error) {
+    throw new Error(`Failed to read ${label}: ${error.message}`);
   }
 }
 
@@ -264,6 +272,21 @@ function parseUploadResponse(response) {
   throw new Error(`Google Drive upload failed with HTTP ${response.statusCode}: ${detail}`);
 }
 
+function parseDriveResponse(response, operation) {
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    return response.body;
+  }
+
+  let detail = response.body;
+  try {
+    detail = JSON.parse(response.body)?.error?.message || response.body;
+  } catch {
+    // Keep the raw response body.
+  }
+
+  throw new Error(`Google Drive ${operation} failed with HTTP ${response.statusCode}: ${detail}`);
+}
+
 async function uploadArchive(auth, archivePath, config) {
   return await uploadFileResumable(auth, {
     filePath: archivePath,
@@ -353,6 +376,34 @@ function escapeDriveQueryString(value) {
   return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+function safeFileToken(value) {
+  return String(value || "unknown").replace(/[\\/:*?"<>|\s]+/g, "_");
+}
+
+function manifestBackupPrefix(manifestName) {
+  return manifestName.replace(/\.json$/i, "") + "_Backup_";
+}
+
+function publishArchiveName(config) {
+  return config.publish_archive_name || "PlayGround_Data_Latest.zip";
+}
+
+function archiveNamePrefix(config) {
+  return config.archive_name_prefix || "PlayGround_Data";
+}
+
+function isCleanableArchiveName(name, config) {
+  if (!name || !name.endsWith(".zip")) {
+    return false;
+  }
+
+  if (name === publishArchiveName(config)) {
+    return false;
+  }
+
+  return name.startsWith(`${archiveNamePrefix(config)}_`);
+}
+
 async function findFileByName(auth, folderId, name) {
   const drive = google.drive({ version: "v3", auth });
   const q = `'${escapeDriveQueryString(folderId)}' in parents and name = '${escapeDriveQueryString(name)}' and trashed = false`;
@@ -366,6 +417,57 @@ async function findFileByName(auth, folderId, name) {
   });
 
   return response.data.files?.[0]?.id || null;
+}
+
+async function listFilesByNamePrefix(auth, folderId, prefix) {
+  const drive = google.drive({ version: "v3", auth });
+  const q = `'${escapeDriveQueryString(folderId)}' in parents and name contains '${escapeDriveQueryString(prefix)}' and trashed = false`;
+  const response = await drive.files.list({
+    q,
+    spaces: "drive",
+    fields: "files(id,name,size,modifiedTime,webViewLink)",
+    orderBy: "modifiedTime desc",
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    pageSize: 50,
+  });
+
+  return response.data.files || [];
+}
+
+async function getDriveFileMetadata(auth, fileId) {
+  const drive = google.drive({ version: "v3", auth });
+  const response = await drive.files.get({
+    fileId,
+    fields: "id,name,mimeType,size,modifiedTime,parents,trashed,webViewLink",
+    supportsAllDrives: true,
+  });
+
+  return response.data;
+}
+
+async function deleteDriveFile(auth, fileId) {
+  const drive = google.drive({ version: "v3", auth });
+  await drive.files.delete({
+    fileId,
+    supportsAllDrives: true,
+  });
+}
+
+async function downloadDriveFileText(auth, fileId, label) {
+  const accessToken = await getAccessToken(auth);
+  const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+  url.searchParams.set("alt", "media");
+  url.searchParams.set("supportsAllDrives", "true");
+
+  const response = await requestWithBody(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return parseDriveResponse(response, `download ${label}`);
 }
 
 async function ensureAnyoneReader(auth, fileId) {
@@ -396,22 +498,47 @@ function directDownloadUrl(file) {
 async function publishTeamData(auth, archivePath, manifestPath, config, names) {
   const archiveName = names.archiveName || path.basename(archivePath);
   const manifestName = names.manifestName || path.basename(manifestPath);
-  const archiveFileId = config.latest_archive_file_id || await findFileByName(auth, config.drive_folder_id, archiveName);
+  const existingVersionedArchiveId = await findFileByName(auth, config.drive_folder_id, archiveName);
+  if (existingVersionedArchiveId) {
+    throw new Error(`Versioned archive already exists in Google Drive: ${archiveName}`);
+  }
+
   const archive = await uploadFileResumable(auth, {
     filePath: archivePath,
     fileName: archiveName,
     mimeType: "application/zip",
     folderId: config.drive_folder_id,
-    existingFileId: archiveFileId,
+    existingFileId: null,
   });
 
   await ensureAnyoneReader(auth, archive.id);
 
   const manifest = readJson(manifestPath, "CONFIG_ERROR", "publish manifest");
+  const manifestFileId = config.latest_manifest_file_id || await findFileByName(auth, config.drive_folder_id, manifestName);
+  let backupManifest = null;
+
+  if (manifestFileId) {
+    const currentManifestText = await downloadDriveFileText(auth, manifestFileId, "latest manifest");
+    const currentManifest = readJsonText(currentManifestText, "latest manifest backup source");
+
+    const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "").replace("T", "_");
+    const backupManifestName = `${manifestBackupPrefix(manifestName)}${safeFileToken(currentManifest.data_version)}_${timestamp}.json`;
+    const backupManifestPath = path.join(path.dirname(manifestPath), backupManifestName);
+    fs.writeFileSync(backupManifestPath, currentManifestText.endsWith("\n") ? currentManifestText : `${currentManifestText}\n`, "utf8");
+
+    backupManifest = await uploadFileResumable(auth, {
+      filePath: backupManifestPath,
+      fileName: backupManifestName,
+      mimeType: "application/json",
+      folderId: config.drive_folder_id,
+      existingFileId: null,
+    });
+    await ensureAnyoneReader(auth, backupManifest.id);
+  }
+
   manifest.download_url = directDownloadUrl(archive);
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
-  const manifestFileId = config.latest_manifest_file_id || await findFileByName(auth, config.drive_folder_id, manifestName);
   const publishedManifest = await uploadFileResumable(auth, {
     filePath: manifestPath,
     fileName: manifestName,
@@ -426,6 +553,83 @@ async function publishTeamData(auth, archivePath, manifestPath, config, names) {
     archive,
     manifest: publishedManifest,
     manifestDownloadUrl: directDownloadUrl(publishedManifest),
+    backupManifest,
+    dataVersion: manifest.data_version || "",
+    archiveDownloadUrl: directDownloadUrl(archive),
+  };
+}
+
+async function listBackupManifests(auth, config, manifestName) {
+  const backups = await listFilesByNamePrefix(auth, config.drive_folder_id, manifestBackupPrefix(manifestName));
+  if (backups.length === 0) {
+    console.log("[INFO] No manifest backups found.");
+    return;
+  }
+
+  console.log("[INFO] Manifest backups:");
+  for (const file of backups) {
+    console.log(`- ${file.id} | ${file.name} | ${file.modifiedTime || "modifiedTime unknown"} | ${file.size || "size unknown"} bytes`);
+  }
+}
+
+async function listVersionedArchives(auth, config) {
+  const archives = (await listFilesByNamePrefix(auth, config.drive_folder_id, `${archiveNamePrefix(config)}_`))
+    .filter((file) => isCleanableArchiveName(file.name, config));
+  if (archives.length === 0) {
+    console.log("[INFO] No cleanable versioned archives found.");
+    return;
+  }
+
+  console.log("[INFO] Cleanable versioned archives:");
+  for (const file of archives) {
+    console.log(`- ${file.id} | ${file.name} | ${file.modifiedTime || "modifiedTime unknown"} | ${file.size || "size unknown"} bytes`);
+  }
+}
+
+async function cleanupVersionedArchive(auth, config, archiveFileId) {
+  const file = await getDriveFileMetadata(auth, archiveFileId);
+  if (file.trashed) {
+    throw new Error(`Archive is already trashed: ${archiveFileId}`);
+  }
+
+  if (!isCleanableArchiveName(file.name, config)) {
+    throw new Error(`Refusing to delete non-versioned or protected archive: ${file.name || archiveFileId}`);
+  }
+
+  if (Array.isArray(file.parents) && !file.parents.includes(config.drive_folder_id)) {
+    throw new Error(`Refusing to delete archive outside configured Drive folder: ${file.name || archiveFileId}`);
+  }
+
+  await deleteDriveFile(auth, archiveFileId);
+  return file;
+}
+
+async function rollbackLatestManifest(auth, config, backupManifestId, manifestName) {
+  const manifestFileId = config.latest_manifest_file_id || await findFileByName(auth, config.drive_folder_id, manifestName);
+  if (!manifestFileId) {
+    throw new Error(`Latest manifest does not exist in Google Drive: ${manifestName}`);
+  }
+
+  const backupManifestText = await downloadDriveFileText(auth, backupManifestId, "backup manifest");
+  const backupManifest = readJsonText(backupManifestText, "backup manifest");
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "playground-data-rollback-"));
+  const rollbackPath = path.join(tempDir, manifestName);
+  fs.writeFileSync(rollbackPath, `${JSON.stringify(backupManifest, null, 2)}\n`, "utf8");
+
+  const restoredManifest = await uploadFileResumable(auth, {
+    filePath: rollbackPath,
+    fileName: manifestName,
+    mimeType: "application/json",
+    folderId: config.drive_folder_id,
+    existingFileId: manifestFileId,
+  });
+  await ensureAnyoneReader(auth, restoredManifest.id);
+
+  return {
+    manifest: restoredManifest,
+    manifestDownloadUrl: directDownloadUrl(restoredManifest),
+    dataVersion: backupManifest.data_version || "",
+    archiveName: backupManifest.archive_name || "",
   };
 }
 
@@ -444,6 +648,10 @@ function writeUploadLog(logDir, archivePath, result) {
     manifest_file_id: result.manifest_file_id,
     manifest_name: result.manifest_name,
     manifest_url: result.manifest_url,
+    data_version: result.data_version,
+    archive_download_url: result.archive_download_url,
+    backup_manifest_file_id: result.backup_manifest_file_id,
+    backup_manifest_name: result.backup_manifest_name,
   };
 
   fs.writeFileSync(logPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
@@ -465,8 +673,17 @@ async function main() {
   const configPath = path.resolve(args.config || path.join(repoRoot, "_Local", "GoogleDriveDataUpload", "config.local.json"));
   const logDir = path.resolve(args["log-dir"] || path.join(repoRoot, "_Temp", "GoogleDriveDataUpload", "logs"));
   const publish = args.publish === true;
+  const listBackups = args["list-backups"] === true;
+  const rollback = args.rollback === true;
+  const listArchives = args["list-archives"] === true;
+  const cleanupArchive = args["cleanup-archive"] === true;
 
-  requireFile(archivePath, "ZIP_ERROR", "ZIP archive");
+  const controlOperationCount = [listBackups, rollback, listArchives, cleanupArchive].filter(Boolean).length;
+  if (controlOperationCount > 1) {
+    printError("ARG_ERROR", "--list-backups, --rollback, --list-archives, and --cleanup-archive cannot be used together.");
+    process.exit(1);
+  }
+
   requireFile(configPath, "CONFIG_ERROR", "Local config");
 
   const config = readJson(configPath, "CONFIG_ERROR", "local config");
@@ -476,12 +693,66 @@ async function main() {
   }
 
   const auth = await authorize(repoRoot, config);
+  const manifestName = args["manifest-name"] || config.publish_manifest_name || "PlayGround_Data_Manifest.json";
+
+  if (listBackups) {
+    await listBackupManifests(auth, config, manifestName);
+    return;
+  }
+
+  if (rollback) {
+    if (!args["backup-manifest-id"]) {
+      printError("ARG_ERROR", "Missing value for --backup-manifest-id");
+      process.exit(1);
+    }
+
+    try {
+      const rollbackResult = await rollbackLatestManifest(auth, config, args["backup-manifest-id"], manifestName);
+      console.log("[INFO] Google Drive latest manifest rollback complete.");
+      console.log(`[INFO] Restored data version: ${rollbackResult.dataVersion || "(unknown)"}`);
+      console.log(`[INFO] Restored archive: ${rollbackResult.archiveName || "(unknown)"}`);
+      console.log(`[INFO] Manifest File ID: ${rollbackResult.manifest.id}`);
+      console.log(`[INFO] Manifest URL: ${rollbackResult.manifestDownloadUrl}`);
+      return;
+    } catch (error) {
+      const detail = error?.response?.data?.error?.message || error.message;
+      printError("ROLLBACK_ERROR", detail);
+      process.exit(7);
+    }
+  }
+
+  if (listArchives) {
+    await listVersionedArchives(auth, config);
+    return;
+  }
+
+  if (cleanupArchive) {
+    if (!args["archive-file-id"]) {
+      printError("ARG_ERROR", "Missing value for --archive-file-id");
+      process.exit(1);
+    }
+
+    try {
+      const deleted = await cleanupVersionedArchive(auth, config, args["archive-file-id"]);
+      console.log("[INFO] Google Drive versioned archive cleanup complete.");
+      console.log(`[INFO] Deleted archive: ${deleted.name}`);
+      console.log(`[INFO] Deleted archive File ID: ${deleted.id}`);
+      return;
+    } catch (error) {
+      const detail = error?.response?.data?.error?.message || error.message;
+      printError("CLEANUP_ERROR", detail);
+      process.exit(7);
+    }
+  }
+
+  requireFile(archivePath, "ZIP_ERROR", "ZIP archive");
+
   if (publish) {
     requireFile(manifestPath, "CONFIG_ERROR", "Publish manifest");
     try {
       const publishResult = await publishTeamData(auth, archivePath, manifestPath, config, {
         archiveName: args["archive-name"],
-        manifestName: args["manifest-name"],
+        manifestName,
       });
 
       const logPath = writeUploadLog(logDir, archivePath, {
@@ -492,6 +763,10 @@ async function main() {
         manifest_file_id: publishResult.manifest.id,
         manifest_name: publishResult.manifest.name,
         manifest_url: publishResult.manifestDownloadUrl,
+        data_version: publishResult.dataVersion,
+        archive_download_url: publishResult.archiveDownloadUrl,
+        backup_manifest_file_id: publishResult.backupManifest?.id || "",
+        backup_manifest_name: publishResult.backupManifest?.name || "",
       });
 
       console.log("[INFO] Google Drive team Data publish complete.");
@@ -499,6 +774,12 @@ async function main() {
       console.log(`[INFO] Archive name: ${publishResult.archive.name}`);
       console.log(`[INFO] Archive size: ${publishResult.archive.size}`);
       console.log(`[INFO] Archive link: ${publishResult.archive.webViewLink || directDownloadUrl(publishResult.archive)}`);
+      if (publishResult.backupManifest) {
+        console.log(`[INFO] Backup Manifest File ID: ${publishResult.backupManifest.id}`);
+        console.log(`[INFO] Backup Manifest name: ${publishResult.backupManifest.name}`);
+      } else {
+        console.log("[INFO] Backup Manifest: skipped because latest manifest did not exist.");
+      }
       console.log(`[INFO] Manifest File ID: ${publishResult.manifest.id}`);
       console.log(`[INFO] Manifest URL: ${publishResult.manifestDownloadUrl}`);
       console.log(`[INFO] Log: ${logPath}`);
