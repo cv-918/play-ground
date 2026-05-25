@@ -3,6 +3,7 @@
 
 #include "Actors/Stage/StagePlayer.h"
 #include "EngineSystems/Render/CameraManager.h"
+#include "GamePlaySystems/UserProfile.h"
 
 #include <cmath>
 
@@ -13,7 +14,7 @@ PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 
 	input_manager_ = &_InputMgr.Get();
 
-	move_spd_max_ = _info->move_speed_max_;
+	move_spd_max_ = _UserProfile.GetAttributeStat().GetStat(AttributeType::MoveSpeed).GetTotalIncrease(_info->move_speed_max_);
 	acceleration_ = _info->acceleration_;
 	friction_ = _info->friction_;
 }
