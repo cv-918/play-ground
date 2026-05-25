@@ -1,4 +1,4 @@
-﻿#include "framework.h"
+#include "framework.h"
 #include "GameObjectBase.h"
 
 #include "EngineSystems/Render/RenderChain.h"
@@ -62,7 +62,7 @@ _bool GameObjectBase::Finalize()
 
 _int GameObjectBase::Update(_double _delta_time)
 {
-	if(!IsEnable())
+	if (!IsEnable())
 		return 0;
 
 	for (const auto& component : components_)
@@ -73,7 +73,7 @@ _int GameObjectBase::Update(_double _delta_time)
 		component->Update(_delta_time);
 	}
 
-    return 0;
+	return 0;
 }
 
 _int GameObjectBase::LateUpdate(_double _delta_time)
@@ -114,31 +114,31 @@ void GameObjectBase::DebugRender()
 	if (!IsVisible())
 		return;
 
-   const auto world_position = transform_->Position();
+	const auto world_position = transform_->Position();
 	const auto screen_position = _CameraMgr.WorldToScreen(world_position);
-	_DrawFunc::DrawString(_Point{ screen_position.x, screen_position.y }, GetName(), Palette::DarkGray);
+	//_DrawFunc::DrawString(_Point{ screen_position.x, screen_position.y }, GetName(), Palette::DarkGray);
 
 	// 1. 방향 그리기
 	if (_GameState.debug_mode_)
 	{
 		const float line_length = 75.f;
-      const auto world_line_to = world_position + transform_->Forward2D() * line_length;
+		const auto world_line_to = world_position + transform_->Forward2D() * line_length;
 		const auto screen_line_to = _CameraMgr.WorldToScreen(world_line_to);
 
-       _DrawFunc::DrawLine(
+		_DrawFunc::DrawLine(
 			_Point{ screen_position.x, screen_position.y },
 			_Point{ screen_line_to.x, screen_line_to.y },
 			Palette::DarkGray);
 	}
 
-	// 2. 디스크립션 그리기
-	if (!object_description_.empty())
-	{
-       auto description_position = screen_position;
-		description_position.y += 16.f; // 디버그용으로 위치 보정
+	//// 2. 디스크립션 그리기
+	//if (!object_description_.empty())
+	//{
+ //      auto description_position = screen_position;
+	//	description_position.y += 16.f; // 디버그용으로 위치 보정
 
-		_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
-	}
+	//	_DrawFunc::DrawString(_Point{ description_position.x, description_position.y }, object_description_, Palette::DarkGray);
+	//}
 }
 
 void GameObjectBase::RegisterComponent(ComponentBase* _component)
@@ -156,7 +156,7 @@ void GameObjectBase::RegisterComponent(ComponentBase* _component)
 			delete _component;
 			return;
 		}
-		
+
 		transform_ = s_cast(Transform*, _component);
 	}
 
@@ -179,9 +179,9 @@ void GameObjectBase::DeregisterComponent(const ComponentType _type)
 		components_.begin(),
 		components_.end(),
 		[_type](const ComponentBase* _comp)
-		{
-			return (_comp != nullptr) && (_comp->Type() == _type);
-		}
+	{
+		return (_comp != nullptr) && (_comp->Type() == _type);
+	}
 	);
 
 	// 삭제 대상 delete
