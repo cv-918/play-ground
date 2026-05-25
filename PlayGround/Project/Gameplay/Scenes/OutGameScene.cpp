@@ -175,7 +175,7 @@ void OutGameScene::OnEnter()
 	// e, [ Temporary Town Player Setup for Testing ]
 
 	TownNpcPlacementSpawner npc_placement_spawner;
-	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements());
+	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements(), nav_mesh);
 
 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
 	for (_uint i = 0; i < npc_names.size() && i < npcs_.size(); ++i)
@@ -437,6 +437,9 @@ void OutGameScene::_HandleViewportChanged()
 		const auto& nav_mesh = background_->NavMesh();
 		if (test_town_player_)
 			test_town_player_->SetNavMesh(nav_mesh);
+
+		TownNpcPlacementSpawner npc_placement_spawner;
+		npc_placement_spawner.ApplyPositions(npcs_, _TownNpcPlacementDataMgr.GetOutGamePlacements(), nav_mesh);
 
 		_CameraMgr.Initialize(res.width, res.height);
 		if (test_town_player_)

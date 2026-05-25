@@ -4,6 +4,7 @@
 #include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
 #include "GamePlaySystems/ObjectManager.h"
 #include "GamePlay/Actors/Town/TownNpc.h"
+#include "EngineSystems/Render/ScreenSystem.h"
 
 namespace
 {
@@ -22,7 +23,7 @@ namespace
 	}
 }
 
-std::vector<TownNpc*> TownNpcPlacementSpawner::Spawn(ObjectManager* _object_manager, const std::vector<TownNpcPlacementEntry>& _placements) const
+std::vector<TownNpc*> TownNpcPlacementSpawner::Spawn(ObjectManager* _object_manager, const std::vector<TownNpcPlacementEntry>& _placements, const _Rect& _target_area) const
 {
 	std::vector<TownNpc*> spawned_npcs;
 	if (_object_manager == nullptr)
@@ -36,7 +37,7 @@ std::vector<TownNpc*> TownNpcPlacementSpawner::Spawn(ObjectManager* _object_mana
 			continue;
 
 		TownNpc::CreateInfo create_info;
-		create_info.position = placement.position_;
+		create_info.position = _ResolvePosition(placement.position_, _target_area);
 		create_info.sprite_path = _ResolveTownNpcSpritePath(placement.npc_id_);
 		create_info.visual_width = placement.visual_width_;
 
@@ -52,4 +53,41 @@ std::vector<TownNpc*> TownNpcPlacementSpawner::Spawn(ObjectManager* _object_mana
 	}
 
 	return spawned_npcs;
+}
+
+void TownNpcPlacementSpawner::ApplyPositions(const std::vector<TownNpc*>& _npcs, const std::vector<TownNpcPlacementEntry>& _placements, const _Rect& _target_area) const
+{
+	size_t npc_index = 0;
+	for (const auto& placement : _placements)
+	{
+		if (!placement.enabled_)
+			continue;
+
+		if (npc_index >= _npcs.size())
+			return;
+
+		TownNpc* npc = _npcs[npc_index++];
+		if (npc == nullptr || npc->GetTransform() == nullptr)
+			continue;
+
+		npc->GetTransform()->Position(_ResolvePosition(placement.position_, _target_area));
+	}
+}
+
+_Vector3 TownNpcPlacementSpawner::_ResolvePosition(const _Vector3& _authored_position, const _Rect& _target_area) const
+{
+	const Resolution design_resolution = _ScreenSystem.DesignResolution();
+	if (design_resolution.width <= 0 || design_resolution.height <= 0)
+		return _authored_position;
+
+	if (_target_area.Width() <= 0 || _target_area.Height() <= 0)
+		return _authored_position;
+
+	const _float scale_x = s_float(_target_area.Width()) / s_float(design_resolution.width);
+	const _float scale_y = s_float(_target_area.Height()) / s_float(design_resolution.height);
+
+	return _Vector3(
+		_target_area.Left_f() + _authored_position.x * scale_x,
+		_target_area.Top_f() + _authored_position.y * scale_y,
+		_authored_position.z);
 }
