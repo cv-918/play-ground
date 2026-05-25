@@ -31,6 +31,11 @@
 ## 하위 폴더
 
 - `Intake/`: 아직 분류되지 않은 신규 전달물
+- `Packets/`: manifest를 포함한 구조화된 Handoff Packet 폴더
+- `Role_Routines/`: 역할별 Handoff 작업 루틴
+- `Scanner/`: 읽기 전용 스캐너 보고 형식과 요청 예시
+- `Status_Updates/`: 문서-only Handoff 상태 갱신 기록 템플릿
+- `Guide/`: 사용자용 Handoff 가이드 문서
 - `Planning/`: 기획/디자인 전달 문서
 - `Resources/`: 리소스 전달 안내와 사용 조건
 - `Implementation/`: 구현 요청 전달 문서

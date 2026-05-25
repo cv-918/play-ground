@@ -1,0 +1,93 @@
+# Handoff Packet manifest template.
+# Copy this file to:
+# _Docs/Handoff/Packets/HANDOFF-YYYYMMDD-###-short-slug/manifest.yaml
+
+packet_version: 1
+handoff_id: HANDOFF-YYYYMMDD-###-short-slug
+title: Replace with a clear handoff title
+
+created_at: YYYY-MM-DD
+updated_at: YYYY-MM-DD
+
+from_role: Planner
+to_roles:
+  - Developer
+current_owner: ""
+claimed_by: ""
+claimed_at: ""
+
+# delivery_status values:
+# Draft, Ready, Claimed, ReviewRequested, QARequested, Done, Blocked, Archived
+delivery_status: Draft
+
+# execution_status values:
+# NotStarted, Planning, WaitingUserApproval, InProgress, ReviewRequested, QARequested, Done, Blocked
+execution_status: NotStarted
+
+# risk_level values:
+# Low, Medium, High
+risk_level: Low
+
+approval_required: false
+
+# approval_state values:
+# NotRequired, Required, Requested, Approved, Rejected, Superseded
+approval_state: NotRequired
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: false
+  approved_by: ""
+  approved_at: ""
+  approval_source: ""
+  approved_scope: []
+
+# Substantive approval request summary.
+# Required when approval_required is true.
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: ""
+
+packet_documents:
+  planning_brief: ""
+  implementation_request: ""
+  art_request: ""
+  review_request: ""
+  qa_request: ""
+  completion_notice: ""
+
+result_documents: []
+resource_notes: []
+
+allowed_paths: []
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+blocked_by: []
+next_actions: []
+completion_criteria: []
+remaining_risks: []
+
+notes: ""

@@ -12,7 +12,7 @@ Owner:
 
 ## Status
 
-Draft / Ready / In Progress / Review Requested / QA Requested / Done / Blocked
+Draft / Ready / In Progress / Waiting User Approval / Review Requested / QA Requested / Done / Blocked / Archived
 
 ## Summary
 
@@ -52,6 +52,17 @@ Draft / Ready / In Progress / Review Requested / QA Requested / Done / Blocked
 ## Related AIWorkflow Task
 
 관련 AIWorkflow task, task request, ActiveTask, DevLog가 있으면 연결합니다.
+
+## Approval Request
+
+높은 위험 작업이라 사용자 승인이 필요하면, 실제로 무엇을 바꾸려는지 적습니다.
+
+- 사용자/플레이어/게임/워크플로우 관점 변화:
+- 예상 변경 파일:
+- 하지 않을 것:
+- 알려진 위험:
+- 검증 계획:
+- 사용자에게 필요한 결정:
 
 ## Review Request
 

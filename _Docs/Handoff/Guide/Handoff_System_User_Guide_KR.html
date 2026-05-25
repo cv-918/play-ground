@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Role Handoff System User Guide</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --paper: #ffffff;
+      --ink: #1e242b;
+      --muted: #667280;
+      --line: #d9e0e8;
+      --accent: #2166a5;
+      --accent-soft: #e7f1fb;
+      --warn: #8a4b08;
+      --warn-soft: #fff3da;
+      --ok: #176642;
+      --ok-soft: #e5f5ed;
+      --danger: #9b2c2c;
+      --danger-soft: #fde8e8;
+      --code: #24313f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", "Malgun Gothic", Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 28px 22px;
+      background: #101820;
+      color: #dfe8f2;
+      border-right: 1px solid #0b1117;
+    }
+
+    nav h1 {
+      margin: 0 0 6px;
+      font-size: 19px;
+      line-height: 1.25;
+      color: #ffffff;
+    }
+
+    nav p {
+      margin: 0 0 22px;
+      font-size: 13px;
+      color: #aebdcc;
+    }
+
+    nav a {
+      display: block;
+      padding: 7px 0;
+      color: #dfe8f2;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1060px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 44px 38px 76px;
+    }
+
+    .hero {
+      padding: 34px 36px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 40px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: 26px;
+    }
+
+    h3 {
+      margin: 26px 0 10px;
+      font-size: 20px;
+    }
+
+    .hero h2 {
+      margin: 0 0 12px;
+      padding: 0;
+      border: 0;
+      font-size: 34px;
+      line-height: 1.25;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding: 26px 30px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .callout {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #f9fbfd;
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .callout.ok {
+      border-color: #b7ddca;
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .callout.warn {
+      border-color: #f1d095;
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .callout.danger {
+      border-color: #f2b4b4;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    code,
+    pre {
+      font-family: Consolas, "Cascadia Mono", monospace;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #eef2f6;
+      color: var(--code);
+      font-size: 0.95em;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #17212b;
+      color: #e7edf5;
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #edf2f7;
+      font-weight: 700;
+    }
+
+    ul,
+    ol {
+      padding-left: 24px;
+    }
+
+    li + li {
+      margin-top: 4px;
+    }
+
+    .phase-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .phase {
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .phase b {
+      color: var(--accent);
+    }
+
+    footer {
+      margin-top: 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        display: block;
+      }
+
+      nav {
+        position: relative;
+        height: auto;
+      }
+
+      main {
+        padding: 24px 16px 48px;
+      }
+
+      .hero,
+      .section {
+        padding: 22px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <h1>AI Role Handoff System</h1>
+      <p>역할별 AI 업무 인수인계 시스템 사용자 가이드</p>
+      <a href="#overview">개요</a>
+      <a href="#mental-model">핵심 모델</a>
+      <a href="#daily-flow">기본 사용 흐름</a>
+      <a href="#folders">폴더 구조</a>
+      <a href="#packet">Handoff Packet</a>
+      <a href="#roles">역할별 루틴</a>
+      <a href="#approval">승인 대기</a>
+      <a href="#scanner">읽기 전용 스캔</a>
+      <a href="#status-updates">문서/상태 갱신</a>
+      <a href="#phase-status">Phase 상태</a>
+      <a href="#commands">요청 문장 예시</a>
+      <a href="#references">주요 문서</a>
+    </nav>
+
+    <main>
+      <section class="hero" id="overview">
+        <p class="eyebrow">Handoff System User Guide</p>
+        <h2>역할별 AI 채팅들이 같은 저장소에서 일을 주고받는 방법</h2>
+        <p>
+          AI Role Handoff System은 Planner, Developer, Artist, Reviewer, QA 같은 역할 채팅이
+          기획서, 구현 요청, 리소스 안내, 승인 요청, 결과 보고를 같은 저장소 안에서 주고받기 위한 문서 기반 운영 체계다.
+        </p>
+        <div class="callout warn">
+          <strong>가장 중요한 원칙</strong>
+          Handoff는 AIWorkflow를 대체하지 않는다. Handoff는 업무 큐와 전달 인터페이스이고,
+          AIWorkflow는 승인, 위험도, 검증, 완료 판정의 안전 엔진이다.
+        </div>
+      </section>
+
+      <section class="section" id="mental-model">
+        <h2>핵심 모델</h2>
+        <pre>Handoff = 역할 간 업무 큐 / 전달 인터페이스 / 가시화 계층
+AIWorkflow = 승인 / 위험도 / 검증 / 완료 판정의 안전 엔진
+DevLog = 완료된 작업과 조사/수정 이력
+Git = 실제 저장소 변경 이력</pre>
+
+        <h3>기획 승인과 실행 승인은 다르다</h3>
+        <table>
+          <tr>
+            <th>구분</th>
+            <th>의미</th>
+          </tr>
+          <tr>
+            <td>기획 승인</td>
+            <td>이 방향의 기능, 콘텐츠, 디자인, 요구사항으로 간다는 것을 사용자가 받아들인 상태</td>
+          </tr>
+          <tr>
+            <td>실행 승인</td>
+            <td>특정 역할이 특정 파일, 데이터, 런타임 동작, 도구, Git 상태를 바꿔도 된다고 사용자가 허용한 상태</td>
+          </tr>
+        </table>
+
+        <div class="callout danger">
+          <strong><code>Ready</code>는 실행 승인이 아니다</strong>
+          Handoff 항목이 <code>Ready</code>라는 뜻은 받는 역할이 확인할 준비가 되었다는 뜻이다.
+          코드, JSON, 런타임, 빌드, Git 변경은 여전히 별도 승인이 필요하다.
+        </div>
+      </section>
+
+      <section class="section" id="daily-flow">
+        <h2>기본 사용 흐름</h2>
+        <ol>
+          <li>사용자와 Planner가 기획 또는 방향을 논의한다.</li>
+          <li>사용자가 기획 방향을 승인한다.</li>
+          <li>Planner가 Handoff Packet을 만든다.</li>
+          <li>Developer, Artist, Reviewer, QA는 <code>00_Index.md</code>와 Packet manifest를 확인한다.</li>
+          <li>받는 역할은 먼저 계획을 작성한다.</li>
+          <li>낮은 위험 문서-only 작업은 승인된 Handoff 범위 안에서 진행한다.</li>
+          <li>높은 위험 작업은 <code>WaitingUserApproval</code>로 멈추고 승인 요청을 남긴다.</li>
+          <li>결과, 리뷰 요청, QA 요청, 완료 노티를 Packet과 DevLog에 기록한다.</li>
+        </ol>
+      </section>
+
+      <section class="section" id="folders">
+        <h2>폴더 구조</h2>
+        <table>
+          <tr>
+            <th>경로</th>
+            <th>용도</th>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/00_Index.md</code></td>
+            <td>Handoff 시스템 문서, Packet 목록, 승인 대기, 완료 노티 색인</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Packets/</code></td>
+            <td>구조화된 Handoff Packet 보관</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Role_Routines/</code></td>
+            <td>Planner, Developer, Artist, Reviewer, QA 역할별 작업 루틴</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Scanner/</code></td>
+            <td>읽기 전용 스캔 보고 형식과 요청 예시</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Status_Updates/</code></td>
+            <td>문서-only 상태 갱신 기록 템플릿</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Guide/</code></td>
+            <td>사람이 읽는 Handoff 사용자 가이드</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section" id="packet">
+        <h2>Handoff Packet</h2>
+        <p>
+          여러 문서, 여러 역할, 승인 요청, 결과 문서가 필요한 작업은 Packet으로 만든다.
+          Packet은 <code>manifest.yaml</code>을 중심으로 계획, 요청, 결과, 완료 노티를 묶는다.
+        </p>
+        <pre>_Docs/Handoff/Packets/
+  HANDOFF-YYYYMMDD-###-short-slug/
+    manifest.yaml
+    PlanningBrief.md
+    ImplementationRequest.md
+    ArtRequest.md
+    ReviewRequest.md
+    QARequest.md
+    CompletionNotice.md
+    ResourceNotes/
+      ResourceNotes.md
+    Results/
+      DeveloperPlan.md
+      DeveloperResult.md
+      ReviewResult.md
+      QAResult.md</pre>
+
+        <h3>상태는 두 개로 나눈다</h3>
+        <table>
+          <tr>
+            <th>필드</th>
+            <th>의미</th>
+          </tr>
+          <tr>
+            <td><code>delivery_status</code></td>
+            <td>역할 간 전달 흐름에서의 상태</td>
+          </tr>
+          <tr>
+            <td><code>execution_status</code></td>
+            <td>받는 역할의 계획, 승인, 실행, 리뷰, 완료 상태</td>
+          </tr>
+        </table>
+
+        <div class="callout ok">
+          <strong>권장 시작점</strong>
+          새 Packet은 <code>_Docs/Handoff/Packets/_Manifest_Template.yaml</code>을 복사해서 시작한다.
+        </div>
+      </section>
+
+      <section class="section" id="roles">
+        <h2>역할별 루틴</h2>
+        <table>
+          <tr>
+            <th>역할</th>
+            <th>주요 책임</th>
+            <th>문서</th>
+          </tr>
+          <tr>
+            <td>Planner</td>
+            <td>승인된 기획 방향을 Packet으로 만든다.</td>
+            <td><code>Role_Routines/Planner_Routine.md</code></td>
+          </tr>
+          <tr>
+            <td>Developer</td>
+            <td>구현 계획을 작성하고, 고위험 변경은 승인 요청 후 멈춘다.</td>
+            <td><code>Role_Routines/Developer_Routine.md</code></td>
+          </tr>
+          <tr>
+            <td>Artist</td>
+            <td>리소스 요청, 위치, 사용 조건, 전달 내용을 정리한다.</td>
+            <td><code>Role_Routines/Artist_Routine.md</code></td>
+          </tr>
+          <tr>
+            <td>Reviewer</td>
+            <td>범위, 승인, 검증, 아키텍처 위험을 리뷰한다.</td>
+            <td><code>Role_Routines/Reviewer_Routine.md</code></td>
+          </tr>
+          <tr>
+            <td>QA</td>
+            <td>완료 기준에 맞춰 통과/실패/막힘/미실행을 분리해 기록한다.</td>
+            <td><code>Role_Routines/QA_Routine.md</code></td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section" id="approval">
+        <h2>승인 대기</h2>
+        <p>
+          높은 위험 작업은 마음속으로만 멈추면 안 된다. Packet과 <code>00_Index.md</code>에
+          사용자가 찾을 수 있는 승인 대기 상태로 표시해야 한다.
+        </p>
+
+        <h3>승인 요청서에 꼭 들어갈 것</h3>
+        <ul>
+          <li>무엇을 바꾸려는가</li>
+          <li>플레이어, 사용자, 게임, 워크플로우 관점에서 어떤 변화가 생기는가</li>
+          <li>어떤 코드/데이터 개념이 영향을 받는가</li>
+          <li>예상 변경 파일</li>
+          <li>하지 않을 것</li>
+          <li>위험과 검증 계획</li>
+          <li>사용자에게 필요한 결정</li>
+        </ul>
+
+        <div class="callout danger">
+          <strong>잘못된 승인 요청</strong>
+          "런타임 동작 변경이라 승인 필요합니다."
+        </div>
+        <div class="callout ok">
+          <strong>좋은 승인 요청</strong>
+          "몬스터 이동 시스템에 Flying 패턴을 추가해 특정 몬스터가 지상 이동 대신 공중 경로를 사용하게 하려 합니다.
+          Enemy 이동 로직과 Enemy.json 데이터에 영향을 줍니다. 아래 파일 범위와 검증 계획대로 진행해도 될까요?"
+        </div>
+      </section>
+
+      <section class="section" id="scanner">
+        <h2>읽기 전용 스캔</h2>
+        <p>
+          Phase 5의 스캐너는 보고만 한다. 파일을 만들거나 수정하지 않고, claim하지 않고, 상태를 바꾸지 않는다.
+        </p>
+        <table>
+          <tr>
+            <th>스캔 모드</th>
+            <th>확인 내용</th>
+          </tr>
+          <tr>
+            <td>전체 큐</td>
+            <td>현재 Packet과 active handoff 목록</td>
+          </tr>
+          <tr>
+            <td>역할별 큐</td>
+            <td>Developer, Artist, Reviewer, QA 등 특정 역할 대상 작업</td>
+          </tr>
+          <tr>
+            <td>승인 대기</td>
+            <td><code>execution_status: WaitingUserApproval</code> 항목</td>
+          </tr>
+          <tr>
+            <td>정합성</td>
+            <td>manifest/index 불일치, 누락 문서, 숨겨진 승인 대기</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section" id="status-updates">
+        <h2>문서/상태 갱신 경계</h2>
+        <p>
+          Phase 6은 문서-only 상태 갱신의 경계를 정의한다. 허용 가능한 것은 Handoff 문서 내부의 제한적 갱신뿐이다.
+        </p>
+        <table>
+          <tr>
+            <th>허용될 수 있는 것</th>
+            <th>여전히 금지되는 것</th>
+          </tr>
+          <tr>
+            <td>Index 동기화, claim 메타데이터, 계획/결과 문서, 승인 대기 기록, 리뷰/QA 라우팅, 완료/보관 기록</td>
+            <td>소스 코드 변경, JSON/스키마 변경, 런타임 변경, 빌드/테스트 실행, 자동 승인, 검증 없는 Done, 커밋/푸시</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section" id="phase-status">
+        <h2>Phase 상태</h2>
+        <div class="phase-list">
+          <div class="phase"><b>Phase 1 완료:</b> 운영 원칙</div>
+          <div class="phase"><b>Phase 2 완료:</b> Packet / manifest 구조</div>
+          <div class="phase"><b>Phase 3 완료:</b> 역할별 루틴</div>
+          <div class="phase"><b>Phase 4 완료:</b> 수동 파일럿 Packet</div>
+          <div class="phase"><b>Phase 5 완료:</b> 읽기 전용 스캐너 설계</div>
+          <div class="phase"><b>Phase 6 완료:</b> 문서/상태 갱신 경계</div>
+          <div class="phase"><b>Phase 7 보류:</b> 제한적 실행 자동화. 실제 Planner → Developer 게임 작업 Packet을 수동으로 한 번 더 검증한 뒤 판단한다.</div>
+        </div>
+      </section>
+
+      <section class="section" id="commands">
+        <h2>요청 문장 예시</h2>
+        <h3>승인 대기 확인</h3>
+        <pre>현재 Handoff 승인 대기 목록 확인해줘.</pre>
+
+        <h3>역할별 작업 확인</h3>
+        <pre>Developer 역할에게 온 새 Packet만 읽기 전용으로 확인해줘.</pre>
+
+        <h3>Packet 생성 요청</h3>
+        <pre>이 기획은 승인. Planner 루틴에 따라 Developer용 Handoff Packet으로 만들어줘.</pre>
+
+        <h3>고위험 작업 승인</h3>
+        <pre>HANDOFF-YYYYMMDD-001 DeveloperPlan 승인.
+제안된 파일 범위와 검증 계획 안에서만 진행해.</pre>
+
+        <h3>정합성 점검</h3>
+        <pre>Handoff Packet manifest와 00_Index.md 정합성을 읽기 전용으로 점검해줘.</pre>
+      </section>
+
+      <section class="section" id="references">
+        <h2>주요 문서</h2>
+        <ul>
+          <li><a href="../00_Index.md">00_Index.md</a></li>
+          <li><a href="../Handoff_System_Principles_KR.md">Handoff_System_Principles_KR.md</a></li>
+          <li><a href="../Handoff_Packet_Spec_KR.md">Handoff_Packet_Spec_KR.md</a></li>
+          <li><a href="../ReadOnly_Scanner_Design_KR.md">ReadOnly_Scanner_Design_KR.md</a></li>
+          <li><a href="../Status_Update_Boundaries_KR.md">Status_Update_Boundaries_KR.md</a></li>
+          <li><a href="../Role_Routines/Role_Routine_Overview.md">Role_Routine_Overview.md</a></li>
+        </ul>
+      </section>
+
+      <footer>
+        <p>Location: <code>_Docs/Handoff/Guide/Handoff_System_User_Guide_KR.html</code></p>
+        <p>Last updated: 2026-05-25</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

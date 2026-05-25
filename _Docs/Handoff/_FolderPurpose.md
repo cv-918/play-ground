@@ -31,6 +31,11 @@ This folder supplements the existing AIWorkflow. It does not replace `_Docs/AIWo
 ## Folder Map
 
 - `Intake/`: incoming handoffs that still need triage
+- `Packets/`: structured Handoff Packet folders with manifest files
+- `Role_Routines/`: role-specific Handoff operating routines
+- `Scanner/`: read-only scanner report templates and query examples
+- `Status_Updates/`: document-only Handoff status update record templates
+- `Guide/`: user-facing Handoff guide documents
 - `Planning/`: planning and design handoffs
 - `Resources/`: resource delivery notes and asset usage guidance
 - `Implementation/`: implementation request handoffs
