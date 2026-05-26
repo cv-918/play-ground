@@ -1,0 +1,183 @@
+# Handoff Supervisor MVP
+
+## Purpose
+
+The Handoff Supervisor MVP is the first observable automation layer for the AI Role Handoff System.
+
+It reads structured Handoff Packets and produces visible work surfaces:
+
+- `_Docs/Handoff/Dashboard.md`
+- `_Docs/Handoff/Queues/<Role>.md`
+- `_Docs/Handoff/Violations/Open.md`
+
+The Supervisor exists because role chats should not rely only on hidden chat memory, custom instructions, or repeated manual reminders. The repository file state should show what work exists, who it is for, what needs approval, and what is structurally inconsistent.
+
+## Tool Entry Point
+
+Run from the repository root:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat status
+tools\aiworkflow\handoff_supervisor.bat scan --role Developer
+tools\aiworkflow\handoff_supervisor.bat status --json
+tools\aiworkflow\handoff_supervisor.bat write-docs
+tools\aiworkflow\handoff_supervisor.bat write-docs --execute
+```
+
+`write-docs` without `--execute` is a dry-run plan and must not write files.
+
+`write-docs --execute` writes only Handoff documentation surfaces.
+
+## Inputs
+
+The Supervisor may read:
+
+- `_Docs/Handoff/Packets/**/manifest.yaml`
+- Packet documents referenced by each manifest
+- Standard Packet files such as `ImplementationRequest.md`, `ReviewRequest.md`, `QARequest.md`, and `CompletionNotice.md`
+- `_Docs/Handoff/` metadata documents needed to describe the generated surfaces
+
+The MVP does not read game source, gameplay JSON, local config, secrets, or external services.
+
+## Generated Outputs
+
+### Dashboard
+
+`_Docs/Handoff/Dashboard.md` is the human-facing status board.
+
+It shows:
+
+- total Packets
+- active Packets
+- waiting user approval count
+- ready work count
+- in-progress work count
+- blocked count
+- review/QA requested count
+- consistency issue count
+- role queue links
+- recently done Packets
+- full Packet index
+
+### Role Queues
+
+`_Docs/Handoff/Queues/<Role>.md` is the visible intake file for each role chat.
+
+Initial role queues:
+
+- Planner
+- Developer
+- Artist
+- Reviewer
+- QA
+
+A role chat should look at its queue before asking the human developer to re-explain where work lives.
+
+### Violations
+
+`_Docs/Handoff/Violations/Open.md` lists structural problems found by the Supervisor.
+
+Examples:
+
+- missing required manifest fields
+- invalid status values
+- unknown roles
+- Developer target without `ImplementationRequest.md`
+- Artist target without `ArtRequest.md`
+- Reviewer target without `ReviewRequest.md`
+- QA target without `QARequest.md`
+- `approval_required: true` without `approval_request_path`
+- `WaitingUserApproval` without a linked approval request
+- `Done` without `CompletionNotice.md`
+
+## Safety Boundary
+
+The Supervisor MVP may:
+
+- read Handoff Packet metadata
+- check simple consistency rules
+- print status to chat or terminal
+- output JSON
+- generate Dashboard, Queue, and Violation Markdown files when `write-docs --execute` is used
+
+The Supervisor MVP must not:
+
+- edit game source code
+- edit gameplay JSON
+- change JSON schema
+- change runtime behavior
+- create or replace assets
+- run build or tests
+- record human approval
+- set approval evidence
+- decide validation pass/fail
+- mark unverified work done
+- commit
+- push
+- wake or control other role chats
+
+## Relationship To Earlier Phases
+
+Phase 5 defined read-only scanner behavior.
+
+Phase 6 defined document-only status update boundaries.
+
+This MVP combines those ideas into a limited Supervisor:
+
+```text
+read Packets
+-> classify visible state
+-> detect structural issues
+-> generate Handoff-only surfaces
+```
+
+It still does not perform implementation automation.
+
+## Current Limitations
+
+- The manifest reader is intentionally simple and expects straightforward YAML-like manifest fields.
+- It is not a full YAML engine.
+- It does not compare generated Dashboard rows against `00_Index.md` yet.
+- It does not schedule itself.
+- It does not trigger Codex, ChatGPT, Copilot, or other role chats.
+- It does not create new Packets.
+
+## Completion Standard
+
+This Supervisor MVP is considered working when:
+
+- `status` reads all current Packets.
+- `scan --role <Role>` filters role-visible work.
+- `status --json` returns parseable JSON.
+- `write-docs` refuses to write without `--execute`.
+- `write-docs --execute` updates Dashboard, role queues, and open violations.
+- The generated files show approval waits and structural problems without requiring the human developer to inspect every Packet manually.
+
+## Next Expansion
+
+The first Planner to Developer Handoff Packet candidate was rejected by the human developer and removed before commit:
+
+```text
+HANDOFF-20260526-001-m001-projectile-attack-pilot
+```
+
+The replacement pilot is:
+
+```text
+HANDOFF-20260526-002-skill-shortcut-key-labels
+```
+
+It validates the intended flow:
+
+```text
+Planner-approved direction
+-> Packet visible as Ready work
+-> DeveloperPlan written
+-> Packet visible as WaitingUserApproval
+```
+
+Phase 7C is complete for the replacement pilot. After the human developer approved the DeveloperPlan, the implementation stayed within the listed source file scope, Debug x64 build validation passed, user runtime QA passed, and the Packet moved to `Done`.
+
+The next safe expansion is to review the completed diff and decide the commit boundary for Phase 7A through Phase 7C.
+
+Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

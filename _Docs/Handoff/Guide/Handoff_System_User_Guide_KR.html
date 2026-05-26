@@ -268,6 +268,7 @@
       <a href="#roles">역할별 루틴</a>
       <a href="#approval">승인 대기</a>
       <a href="#scanner">읽기 전용 스캔</a>
+      <a href="#supervisor">Supervisor</a>
       <a href="#status-updates">문서/상태 갱신</a>
       <a href="#phase-status">Phase 상태</a>
       <a href="#commands">요청 문장 예시</a>
@@ -355,6 +356,18 @@ Git = 실제 저장소 변경 이력</pre>
           <tr>
             <td><code>_Docs/Handoff/Scanner/</code></td>
             <td>읽기 전용 스캔 보고 형식과 요청 예시</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Dashboard.md</code></td>
+            <td>Supervisor가 생성하는 Handoff 상태판</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Queues/</code></td>
+            <td>Supervisor가 생성하는 역할별 업무 수거함</td>
+          </tr>
+          <tr>
+            <td><code>_Docs/Handoff/Violations/</code></td>
+            <td>Supervisor가 생성하는 정합성 및 정책 문제 리포트</td>
           </tr>
           <tr>
             <td><code>_Docs/Handoff/Status_Updates/</code></td>
@@ -506,6 +519,30 @@ Git = 실제 저장소 변경 이력</pre>
         </table>
       </section>
 
+      <section class="section" id="supervisor">
+        <h2>Handoff Supervisor</h2>
+        <p>
+          Supervisor는 Packet manifest를 읽어서 사람이 볼 수 있는 Dashboard, 역할별 Queue, Open Violations를 만든다.
+          역할 채팅의 숨은 기억을 믿는 대신 저장소에 남은 파일 상태를 기준으로 업무, 승인 대기, 구조 문제를 드러내는 계층이다.
+        </p>
+        <pre>tools\aiworkflow\handoff_supervisor.bat status
+tools\aiworkflow\handoff_supervisor.bat scan --role Developer
+tools\aiworkflow\handoff_supervisor.bat status --json
+tools\aiworkflow\handoff_supervisor.bat write-docs
+tools\aiworkflow\handoff_supervisor.bat write-docs --execute</pre>
+        <div class="callout warn">
+          <strong><code>write-docs</code>는 기본적으로 쓰지 않는다</strong>
+          <code>write-docs</code>만 실행하면 생성 예정 파일만 보여준다.
+          실제로 <code>Dashboard.md</code>, <code>Queues/</code>, <code>Violations/Open.md</code>를 갱신하려면
+          <code>--execute</code>가 필요하다.
+        </div>
+        <div class="callout danger">
+          <strong>Supervisor가 하지 않는 일</strong>
+          Supervisor는 게임 소스, 게임플레이 JSON, 에셋, 빌드 설정, approval evidence, commit, push를 바꾸지 않는다.
+          다른 역할 채팅을 자동으로 깨우거나 제어하지도 않는다.
+        </div>
+      </section>
+
       <section class="section" id="status-updates">
         <h2>문서/상태 갱신 경계</h2>
         <p>
@@ -532,7 +569,9 @@ Git = 실제 저장소 변경 이력</pre>
           <div class="phase"><b>Phase 4 완료:</b> 수동 파일럿 Packet</div>
           <div class="phase"><b>Phase 5 완료:</b> 읽기 전용 스캐너 설계</div>
           <div class="phase"><b>Phase 6 완료:</b> 문서/상태 갱신 경계</div>
-          <div class="phase"><b>Phase 7 보류:</b> 제한적 실행 자동화. 실제 Planner → Developer 게임 작업 Packet을 수동으로 한 번 더 검증한 뒤 판단한다.</div>
+          <div class="phase"><b>Phase 7A 완료:</b> Handoff Supervisor MVP. Packet을 읽고 Dashboard, 역할별 Queue, Open Violations를 생성한다.</div>
+          <div class="phase"><b>Phase 7B 완료:</b> Skill Shortcut Key Label Mapping Packet으로 Planner → Developer 전달, Ready 검출, WaitingUserApproval 승인 대기 흐름을 검증했다.</div>
+          <div class="phase"><b>Phase 7C 완료:</b> 사용자가 DeveloperPlan을 승인한 뒤 제한 구현, Debug x64 빌드 검증, 사용자 런타임 QA 확인까지 완료했다. Packet은 Done 상태다.</div>
         </div>
       </section>
 
@@ -563,13 +602,15 @@ Git = 실제 저장소 변경 이력</pre>
           <li><a href="../Handoff_Packet_Spec_KR.md">Handoff_Packet_Spec_KR.md</a></li>
           <li><a href="../ReadOnly_Scanner_Design_KR.md">ReadOnly_Scanner_Design_KR.md</a></li>
           <li><a href="../Status_Update_Boundaries_KR.md">Status_Update_Boundaries_KR.md</a></li>
+          <li><a href="../Handoff_Supervisor_MVP_KR.md">Handoff_Supervisor_MVP_KR.md</a></li>
+          <li><a href="../Dashboard.md">Dashboard.md</a></li>
           <li><a href="../Role_Routines/Role_Routine_Overview.md">Role_Routine_Overview.md</a></li>
         </ul>
       </section>
 
       <footer>
         <p>Location: <code>_Docs/Handoff/Guide/Handoff_System_User_Guide_KR.html</code></p>
-        <p>Last updated: 2026-05-25</p>
+        <p>Last updated: 2026-05-26</p>
       </footer>
     </main>
   </div>

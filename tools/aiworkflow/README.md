@@ -29,6 +29,7 @@ json_smoke_check.bat
 run_result_semantics_check.bat
 workflow_status.bat
 role_router_status.bat
+handoff_supervisor.bat
 studio_registry_status.bat
 studio_workorder_planner.bat
 studio_decision_store.bat
@@ -167,6 +168,51 @@ verdict format reminder, and next manual action.
 This command does not execute agents, approve tasks, mark tasks done, modify
 source files, change Discord command behavior, commit, push, or write local
 configuration.
+
+---
+
+## handoff_supervisor.bat
+
+Reads `_Docs\Handoff\Packets\**\manifest.yaml` and produces the first
+observable Supervisor surface for the AI Role Handoff System.
+
+Human-readable status:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat status
+```
+
+Role-filtered scan:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat scan --role Developer
+```
+
+JSON status:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat status --json
+```
+
+Generate Handoff document surfaces:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat write-docs
+tools\aiworkflow\handoff_supervisor.bat write-docs --execute
+```
+
+`write-docs` without `--execute` is a dry-run plan. `write-docs --execute`
+writes only Handoff documentation surfaces:
+
+```text
+_Docs\Handoff\Dashboard.md
+_Docs\Handoff\Queues\<Role>.md
+_Docs\Handoff\Violations\Open.md
+```
+
+The Supervisor does not edit game source, gameplay JSON, assets, build
+settings, approval evidence, commits, or pushes. It does not call LLMs or wake
+role chats.
 
 ---
 
@@ -1278,6 +1324,8 @@ tools\aiworkflow\status.bat
 tools\aiworkflow\workflow_status.bat
 tools\aiworkflow\role_router_status.bat
 tools\aiworkflow\role_router_status.bat --json
+tools\aiworkflow\handoff_supervisor.bat status
+tools\aiworkflow\handoff_supervisor.bat status --json
 tools\aiworkflow\studio_registry_status.bat validate
 tools\aiworkflow\studio_tool_registry_status.bat validate
 tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json

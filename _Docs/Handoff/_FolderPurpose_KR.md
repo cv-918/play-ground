@@ -32,6 +32,9 @@
 
 - `Intake/`: 아직 분류되지 않은 신규 전달물
 - `Packets/`: manifest를 포함한 구조화된 Handoff Packet 폴더
+- `Dashboard.md`: 생성된 Handoff 상태판
+- `Queues/`: 생성된 역할별 업무 수거함
+- `Violations/`: 생성된 Handoff 정합성 및 정책 문제 리포트
 - `Role_Routines/`: 역할별 Handoff 작업 루틴
 - `Scanner/`: 읽기 전용 스캐너 보고 형식과 요청 예시
 - `Status_Updates/`: 문서-only Handoff 상태 갱신 기록 템플릿

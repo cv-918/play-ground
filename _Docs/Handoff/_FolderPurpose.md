@@ -32,6 +32,9 @@ This folder supplements the existing AIWorkflow. It does not replace `_Docs/AIWo
 
 - `Intake/`: incoming handoffs that still need triage
 - `Packets/`: structured Handoff Packet folders with manifest files
+- `Dashboard.md`: generated human-facing Handoff status board
+- `Queues/`: generated role-specific work intake queues
+- `Violations/`: generated Handoff consistency and policy issue reports
 - `Role_Routines/`: role-specific Handoff operating routines
 - `Scanner/`: read-only scanner report templates and query examples
 - `Status_Updates/`: document-only Handoff status update record templates

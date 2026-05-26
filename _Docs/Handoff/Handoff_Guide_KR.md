@@ -14,6 +14,8 @@
 
 Handoff 현황 확인은 `ReadOnly_Scanner_Design.md`와 `ReadOnly_Scanner_Design_KR.md`의 읽기 전용 스캐너 규칙을 따른다.
 
+Handoff Supervisor MVP는 `tools\aiworkflow\handoff_supervisor.bat`를 통해 Packet을 읽고 `Dashboard.md`, `Queues/`, `Violations/Open.md`를 생성한다. 기본 조회는 읽기 전용이며, 문서 표면 갱신은 `write-docs --execute`가 있을 때만 수행한다.
+
 Handoff 문서나 상태를 갱신할 때는 `Status_Update_Boundaries.md`와 `Status_Update_Boundaries_KR.md`의 경계를 따른다.
 
 사람이 빠르게 읽는 HTML 사용 가이드는 `Guide/Handoff_System_User_Guide_KR.html`에 보관한다.
@@ -122,6 +124,9 @@ Handoff 상태를 확인할 때는 읽기 전용으로만 스캔한다.
 | --- | --- |
 | `Intake/` | 아직 분류되지 않은 신규 전달물 |
 | `Packets/` | 구조화된 Handoff Packet 폴더 |
+| `Dashboard.md` | Supervisor가 생성하는 Handoff 상태판 |
+| `Queues/` | Supervisor가 생성하는 역할별 업무 수거함 |
+| `Violations/` | Supervisor가 생성하는 정합성 및 정책 문제 리포트 |
 | `Role_Routines/` | 역할별 Handoff 작업 루틴 |
 | `Scanner/` | 읽기 전용 Handoff 스캐너 보고 형식과 요청 예시 |
 | `Status_Updates/` | 문서-only Handoff 상태 갱신 기록 템플릿 |

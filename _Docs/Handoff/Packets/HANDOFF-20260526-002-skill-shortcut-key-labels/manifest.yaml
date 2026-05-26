@@ -1,0 +1,97 @@
+packet_version: 1
+handoff_id: HANDOFF-20260526-002-skill-shortcut-key-labels
+title: Skill Shortcut Key Label Mapping
+
+created_at: 2026-05-26
+updated_at: 2026-05-27
+
+from_role: Planner
+to_roles:
+  - Developer
+  - QA
+current_owner: ""
+claimed_by: Codex
+claimed_at: 2026-05-26
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: High
+
+approval_required: true
+approval_state: Approved
+approval_request_path: Results/DeveloperPlan.md
+approval_type:
+  - FileModification
+  - UIBehavior
+  - RuntimeBehavior
+  - BuildValidation
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-26
+  approval_source: "chat: 좋아 그럼 승인할게 진행해봐"
+  approved_scope: "Modify only InGamePlayView.cpp and OutGameSkillView.cpp to show current mapped Skill1 and Skill2 labels; create FixLog; run/document validation; no JSON, resource, input manager, input display helper, build setting, commit, or push changes."
+
+approval_request:
+  title: "Skill shortcut labels should show mapped keys"
+  user_facing_change: "In-game and out-game skill widgets will show the current mapped key for Skill1 and Skill2 instead of fixed CTRL and ALT labels."
+  gameplay_or_workflow_intent: "Make the visible shortcut labels match the actual input mapping so the player is not told to press the wrong key."
+  proposed_behavior: "Use the current input preset primary bindings for Skill1 and Skill2, then convert those bindings through the existing input display text helper."
+  data_changes: "None planned. Do not change Skill.json or input data schema."
+  code_changes: "Modify the skill slot label creation path in the in-game and out-game skill views only."
+  files_expected_to_change: "PlayGround/Project/Gameplay/UI/Views/InGamePlayView.cpp; PlayGround/Project/Gameplay/UI/Views/OutGameSkillView.cpp; _DevLog/FixLog/."
+  non_goals: "No input remapping changes; no Skill.json changes; no save/load changes; no asset changes; no broad UI redesign."
+  risks: "If the UI must refresh labels live after a remap without recreating the view, the implementation may need a wider scope and must stop for expanded approval."
+  validation_plan: "Build the project if approved; inspect source diff; run or manually check the relevant in-game and out-game skill widget labels if local runtime validation is available."
+  decision_needed: "User should approve, reject, or narrow the proposed implementation scope."
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/FixLog/2026-05-26_SkillShortcutKeyLabels.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: QARequest.md
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - Results/DeveloperPlan.md
+  - Results/DeveloperResult.md
+  - Results/QAResult.md
+resource_notes: []
+
+allowed_paths:
+  - PlayGround/Project/Gameplay/UI/Views/InGamePlayView.cpp
+  - PlayGround/Project/Gameplay/UI/Views/OutGameSkillView.cpp
+  - _DevLog/FixLog/
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Resources/
+  - PlayGround/_Bin/
+
+blocked_by: []
+next_actions:
+  - Human developer may review and commit the completed Handoff, implementation, and logs.
+completion_criteria:
+  - In-game skill slots display the currently mapped primary key for Skill1 and Skill2 instead of hard-coded CTRL and ALT.
+  - Out-game equipped skill slots display the currently mapped primary key for Skill1 and Skill2 instead of hard-coded CTRL and ALT.
+  - No input remapping behavior, skill equip behavior, skill data schema, or resource files are changed.
+  - Validation result or validation deferral is recorded in a FixLog.
+remaining_risks:
+  - MSBuild still reports two pre-existing double-to-float conversion warnings in InGamePlayView.cpp stage progress ratio calls.
+
+notes: "Completed after user-provided runtime QA passed on 2026-05-27."

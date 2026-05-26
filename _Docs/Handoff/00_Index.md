@@ -20,6 +20,15 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff 상태 갱신 경계 | `Status_Update_Boundaries_KR.md` | Korean status update boundary guide |
 | Handoff Guide | `Handoff_Guide_KR.md` | Basic Korean usage guide for the shared exchange space |
 | Handoff System User Guide | `Guide/Handoff_System_User_Guide_KR.html` | User-facing Korean HTML guide |
+| Handoff Supervisor MVP | `Handoff_Supervisor_MVP.md` | Observable Supervisor automation boundary and command guide |
+| Handoff Supervisor MVP Korean | `Handoff_Supervisor_MVP_KR.md` | Korean Supervisor guide |
+| Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
+| Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
+| Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |
+| Artist Queue | `Queues/Artist.md` | Generated Artist intake queue |
+| Reviewer Queue | `Queues/Reviewer.md` | Generated Reviewer intake queue |
+| QA Queue | `Queues/QA.md` | Generated QA intake queue |
+| Open Violations | `Violations/Open.md` | Generated Handoff consistency issue report |
 | Manifest Template | `Packets/_Manifest_Template.yaml` | Starting point for Packet manifests |
 | Packet Document Template | `Packets/_Packet_Document_Template.md` | Generic Packet document template |
 | Approval Request Template | `Packets/_Approval_Request_Template.md` | Substantive approval request template |
@@ -31,6 +40,31 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Artist Routine | `Role_Routines/Artist_Routine.md` | Resource handoff routine |
 | Reviewer Routine | `Role_Routines/Reviewer_Routine.md` | Review routine |
 | QA Routine | `Role_Routines/QA_Routine.md` | QA routine |
+
+## Supervisor Generated Surfaces
+
+Run from repository root:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat status
+tools\aiworkflow\handoff_supervisor.bat scan --role Developer
+tools\aiworkflow\handoff_supervisor.bat write-docs
+tools\aiworkflow\handoff_supervisor.bat write-docs --execute
+```
+
+`write-docs` without `--execute` is a dry-run plan.
+
+`write-docs --execute` may update only these Handoff document surfaces:
+
+- `Dashboard.md`
+- `Queues/Planner.md`
+- `Queues/Developer.md`
+- `Queues/Artist.md`
+- `Queues/Reviewer.md`
+- `Queues/QA.md`
+- `Violations/Open.md`
+
+The Supervisor does not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
 
 ## Status Values
 
@@ -61,6 +95,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | Handoff ID | Delivery Status | Execution Status | From | To | Title | Manifest | Updated |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | HANDOFF-20260525-001-handoff-system-phase1-3-review | Done | Done | Planner | Reviewer, QA | AI Role Handoff System Phase 1-3 Documentation Review | `Packets/HANDOFF-20260525-001-handoff-system-phase1-3-review/manifest.yaml` | 2026-05-25 |
+| HANDOFF-20260526-002-skill-shortcut-key-labels | Done | Done | Planner | Developer, QA | Skill Shortcut Key Label Mapping | `Packets/HANDOFF-20260526-002-skill-shortcut-key-labels/manifest.yaml` | 2026-05-27 |
 
 ## Active Handoffs
 
@@ -72,6 +107,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-27 | QA | Planner, Developer | Skill Shortcut Key Label Mapping | `Packets/HANDOFF-20260526-002-skill-shortcut-key-labels/CompletionNotice.md` |
 | 2026-05-25 | Reviewer, QA | Planner | AI Role Handoff System Phase 1-3 Documentation Review | `Packets/HANDOFF-20260525-001-handoff-system-phase1-3-review/CompletionNotice.md` |
 
 ## Korean Note
