@@ -244,6 +244,169 @@ function Add-Issue {
     })
 }
 
+function Get-MarkdownSectionLines {
+    param(
+        [string[]]$Lines,
+        [string]$Heading
+    )
+
+    $sectionLines = [System.Collections.Generic.List[string]]::new()
+    $insideSection = $false
+
+    foreach ($line in $Lines) {
+        if ($line -match "^##\s+(.+?)\s*$") {
+            if ($insideSection) {
+                break
+            }
+
+            if ($matches[1] -eq $Heading) {
+                $insideSection = $true
+                continue
+            }
+        }
+
+        if ($insideSection) {
+            [void]$sectionLines.Add($line)
+        }
+    }
+
+    return @($sectionLines)
+}
+
+function Read-HandoffIndex {
+    param([string]$Repo)
+
+    $indexPath = Join-Path $Repo "_Docs\Handoff\00_Index.md"
+    $packetIds = @{}
+    $waitingIds = @{}
+    $manifestRefs = [System.Collections.Generic.List[object]]::new()
+
+    if (-not (Test-Path -LiteralPath $indexPath)) {
+        return [pscustomobject]@{
+            exists = $false
+            path = $indexPath
+            packet_ids = $packetIds
+            waiting_ids = $waitingIds
+            manifest_refs = @()
+        }
+    }
+
+    $lines = [System.IO.File]::ReadAllLines($indexPath, [System.Text.Encoding]::UTF8)
+    $packetIndexLines = Get-MarkdownSectionLines -Lines $lines -Heading "Packet Index"
+    $waitingLines = Get-MarkdownSectionLines -Lines $lines -Heading "Waiting User Approval"
+
+    foreach ($line in $packetIndexLines) {
+        if ($line -match "^\|\s*(HANDOFF-[^|\s]+)\s*\|") {
+            $id = $matches[1].Trim()
+            $packetIds[$id] = $true
+
+            if ($line -match '^\|\s*(HANDOFF-[^|\s]+).*?`([^`]*manifest\.yaml)`') {
+                [void]$manifestRefs.Add([pscustomobject]@{
+                    handoff_id = $matches[1].Trim()
+                    path = $matches[2].Trim()
+                })
+            }
+        }
+    }
+
+    foreach ($line in $waitingLines) {
+        if ($line -match "^\|\s*(HANDOFF-[^|\s]+)\s*\|") {
+            $waitingIds[$matches[1].Trim()] = $true
+        }
+    }
+
+    return [pscustomobject]@{
+        exists = $true
+        path = $indexPath
+        packet_ids = $packetIds
+        waiting_ids = $waitingIds
+        manifest_refs = @($manifestRefs)
+    }
+}
+
+function Resolve-HandoffIndexManifestPath {
+    param(
+        [string]$Repo,
+        [string]$IndexManifestPath
+    )
+
+    $normalized = $IndexManifestPath.Replace("/", "\")
+
+    if ([System.IO.Path]::IsPathRooted($normalized)) {
+        return $normalized
+    }
+
+    $handoffRoot = Join-Path $Repo "_Docs\Handoff"
+    $handoffRelative = Join-Path $handoffRoot $normalized
+    $repoRelative = Join-Path $Repo $normalized
+
+    if (Test-Path -LiteralPath $handoffRelative) {
+        return $handoffRelative
+    }
+
+    return $repoRelative
+}
+
+function Add-IndexConsistencyIssues {
+    param(
+        [string]$Repo,
+        [array]$Packets,
+        [System.Collections.Generic.List[object]]$Issues
+    )
+
+    $index = Read-HandoffIndex -Repo $Repo
+
+    if (-not $index.exists) {
+        Add-Issue -Issues $Issues -Severity "Major" -HandoffId "" -Issue "00_Index.md is missing." -SuggestedAction "Restore _Docs/Handoff/00_Index.md so human operators have a durable Handoff index."
+        return
+    }
+
+    $packetById = @{}
+    foreach ($packet in $Packets) {
+        if (-not [string]::IsNullOrWhiteSpace($packet.handoff_id)) {
+            $packetById[$packet.handoff_id] = $packet
+        }
+    }
+
+    foreach ($packet in $Packets) {
+        if (-not $index.packet_ids.ContainsKey($packet.handoff_id)) {
+            $severity = if ($packet.delivery_status -eq "Done" -or $packet.delivery_status -eq "Archived") { "Minor" } else { "Major" }
+            Add-Issue -Issues $Issues -Severity $severity -HandoffId $packet.handoff_id -Issue "Packet manifest exists but 00_Index.md Packet Index does not list it." -SuggestedAction "Add this Packet to the Packet Index or document why it is intentionally excluded."
+        }
+
+        $isWaitingApproval = ($packet.execution_status -eq "WaitingUserApproval" -or $packet.approval_state -eq "Requested")
+        if ($isWaitingApproval -and -not $index.waiting_ids.ContainsKey($packet.handoff_id)) {
+            Add-Issue -Issues $Issues -Severity "Critical" -HandoffId $packet.handoff_id -Issue "Packet is waiting for user approval but 00_Index.md Waiting User Approval does not list it." -SuggestedAction "Add the approval request to 00_Index.md so the human developer can see the decision point."
+        }
+    }
+
+    foreach ($id in $index.packet_ids.Keys) {
+        if (-not $packetById.ContainsKey($id)) {
+            Add-Issue -Issues $Issues -Severity "Major" -HandoffId $id -Issue "00_Index.md Packet Index lists a Handoff ID with no discovered manifest." -SuggestedAction "Restore the Packet manifest or remove the stale Packet Index row."
+        }
+    }
+
+    foreach ($id in $index.waiting_ids.Keys) {
+        if (-not $packetById.ContainsKey($id)) {
+            Add-Issue -Issues $Issues -Severity "Major" -HandoffId $id -Issue "00_Index.md Waiting User Approval lists a Handoff ID with no discovered manifest." -SuggestedAction "Restore the Packet manifest or remove the stale approval wait row."
+            continue
+        }
+
+        $packet = $packetById[$id]
+        $isWaitingApproval = ($packet.execution_status -eq "WaitingUserApproval" -or $packet.approval_state -eq "Requested")
+        if (-not $isWaitingApproval) {
+            Add-Issue -Issues $Issues -Severity "Minor" -HandoffId $id -Issue "00_Index.md Waiting User Approval lists a Packet that is not currently waiting for approval." -SuggestedAction "Remove the stale approval wait row or update the Packet manifest if approval is still required."
+        }
+    }
+
+    foreach ($manifestRef in $index.manifest_refs) {
+        $manifestPath = Resolve-HandoffIndexManifestPath -Repo $Repo -IndexManifestPath $manifestRef.path
+        if (-not (Test-Path -LiteralPath $manifestPath)) {
+            Add-Issue -Issues $Issues -Severity "Major" -HandoffId $manifestRef.handoff_id -Issue "00_Index.md Packet Index references a missing manifest: $($manifestRef.path)" -SuggestedAction "Correct the manifest path or restore the referenced manifest file."
+        }
+    }
+}
+
 function Load-HandoffPackets {
     param([string]$Repo)
 
@@ -792,7 +955,12 @@ try {
     }
 
     $loaded = Load-HandoffPackets -Repo $repo
-    $view = Get-HandoffView -Packets $loaded.packets -Issues $loaded.issues -RoleFilter $Role
+    $issues = [System.Collections.Generic.List[object]]::new()
+    foreach ($issue in $loaded.issues) {
+        [void]$issues.Add($issue)
+    }
+    Add-IndexConsistencyIssues -Repo $repo -Packets $loaded.packets -Issues $issues
+    $view = Get-HandoffView -Packets $loaded.packets -Issues @($issues) -RoleFilter $Role
 
     if ($Command -eq "write-docs") {
         if (-not $Execute) {

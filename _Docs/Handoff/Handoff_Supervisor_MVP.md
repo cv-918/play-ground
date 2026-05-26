@@ -103,6 +103,8 @@ Examples:
 - QA target without `QARequest.md`
 - `approval_required: true` without `approval_request_path`
 - `WaitingUserApproval` without a linked approval request
+- Packet manifest missing from `00_Index.md` Packet Index
+- stale `00_Index.md` Packet Index or Waiting User Approval rows
 - `Done` without `CompletionNotice.md`
 
 ## Safety Boundary
@@ -153,6 +155,7 @@ It still does not perform implementation automation.
 - The manifest reader is intentionally simple and expects straightforward YAML-like manifest fields.
 - It is not a full YAML engine.
 - It treats Packet manifests as the source of truth for generated Dashboard and Queue state. `00_Index.md` remains a human-maintained index and audit summary.
+- It checks `00_Index.md` against discovered Packet manifests, but it does not automatically fix index rows.
 - It does not schedule itself.
 - It does not trigger Codex, ChatGPT, Copilot, or other role chats.
 - It does not create new Packets.
@@ -196,5 +199,7 @@ Phase 7C is complete for the replacement pilot. After the human developer approv
 Phase 7D is complete: the completed Phase 7A through Phase 7C commits were pushed to `origin/main`.
 
 Phase 8A improves operational status surfaces. The Dashboard and role queues now show review and QA routing as direct sections, and `Handoff_Operational_Status_Policy.md` defines the split between manifest, `00_Index.md`, generated Dashboard, generated Queues, and Violations.
+
+Phase 8B adds read-only Index consistency checks. The Supervisor now reports manifest/index mismatches, stale Packet Index rows, stale Waiting User Approval rows, and missing index visibility for approval waits through `Violations/Open.md`.
 
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

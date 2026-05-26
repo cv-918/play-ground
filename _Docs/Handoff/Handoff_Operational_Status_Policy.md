@@ -41,6 +41,20 @@ When a Packet state changes:
 
 Generated files should not be hand-edited unless the Supervisor output itself is being corrected and regenerated.
 
+## Index Consistency Rule
+
+`00_Index.md` is human-maintained, so the Supervisor must not rewrite it automatically.
+
+The Supervisor may still check it and report inconsistencies in `Violations/Open.md`.
+
+Report a consistency issue when:
+
+- a Packet manifest exists but `00_Index.md` Packet Index does not list it
+- `00_Index.md` Packet Index lists a Handoff ID with no discovered manifest
+- `00_Index.md` Packet Index references a missing manifest path
+- a Packet is waiting for user approval but `00_Index.md` Waiting User Approval does not list it
+- `00_Index.md` Waiting User Approval lists a Packet that is not currently waiting for approval
+
 ## Queue Visibility Rule
 
 Role queues must show actionable role states directly, not only in `All Role Packets`.

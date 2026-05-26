@@ -41,6 +41,20 @@ Packet 상태가 바뀌면 다음 순서로 처리한다.
 
 생성 파일은 직접 손으로 고치지 않는다. Supervisor 출력 자체를 고쳐야 한다면 도구를 수정한 뒤 다시 생성한다.
 
+## Index 정합성 규칙
+
+`00_Index.md`는 사람이 관리하므로 Supervisor가 자동으로 다시 쓰지 않는다.
+
+대신 Supervisor는 이를 점검하고 불일치를 `Violations/Open.md`에 보고할 수 있다.
+
+다음 상황은 정합성 문제로 보고한다.
+
+- Packet manifest는 있지만 `00_Index.md` Packet Index에 없다
+- `00_Index.md` Packet Index에 있는 Handoff ID의 manifest를 찾을 수 없다
+- `00_Index.md` Packet Index가 없는 manifest 경로를 참조한다
+- Packet이 사용자 승인을 기다리지만 `00_Index.md` Waiting User Approval에 없다
+- `00_Index.md` Waiting User Approval에 있지만 현재 승인 대기 상태가 아니다
+
 ## Queue 표시 규칙
 
 역할별 Queue는 실제로 처리할 상태를 `All Role Packets` 안에만 숨기지 않는다.
