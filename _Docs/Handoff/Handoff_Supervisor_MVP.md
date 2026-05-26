@@ -202,4 +202,8 @@ Phase 8A improves operational status surfaces. The Dashboard and role queues now
 
 Phase 8B adds read-only Index consistency checks. The Supervisor now reports manifest/index mismatches, stale Packet Index rows, stale Waiting User Approval rows, and missing index visibility for approval waits through `Violations/Open.md`.
 
+Phase 9A defines safe Supervisor automation modes in `Handoff_Supervisor_Automation_Runbook.md`. It prepared the approval boundary before recurring automation creation.
+
+Phase 9B created the approved `playground-handoff-supervisor` Codex recurring automation. It runs every 60 minutes while ACTIVE, may refresh generated Handoff status surfaces, and remains forbidden from source edits, approval evidence, Packet claiming, Done marking, commits, pushes, and role-chat wakeups.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

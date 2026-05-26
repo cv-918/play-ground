@@ -202,4 +202,8 @@ Phase 8A는 운영 상태 표면을 개선한다. Dashboard와 역할별 Queue�
 
 Phase 8B는 읽기 전용 Index 정합성 검사를 추가한다. Supervisor는 manifest/index 불일치, 오래된 Packet Index 행, 오래된 Waiting User Approval 행, 승인 대기 항목의 index 누락을 `Violations/Open.md`에 보고한다.
 
+Phase 9A는 `Handoff_Supervisor_Automation_Runbook_KR.md`에 안전한 Supervisor 자동화 모드를 정의한다. 반복 자동화 생성 전에 승인 경계를 준비했다.
+
+Phase 9B는 승인된 `playground-handoff-supervisor` Codex 반복 자동화를 생성했다. 이 자동화는 ACTIVE 상태인 동안 60분마다 실행되고, 생성 Handoff 상태 표면을 갱신할 수 있으며, 소스 수정, approval evidence 설정, Packet claim, Done 처리, commit, push, 역할 채팅 깨우기는 여전히 금지된다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

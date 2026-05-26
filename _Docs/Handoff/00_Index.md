@@ -24,6 +24,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff Supervisor MVP Korean | `Handoff_Supervisor_MVP_KR.md` | Korean Supervisor guide |
 | Handoff Operational Status Policy | `Handoff_Operational_Status_Policy.md` | Manifest, Index, Dashboard, Queue, and Done/Archive status surface policy |
 | Handoff Operational Status Policy Korean | `Handoff_Operational_Status_Policy_KR.md` | Korean status surface policy |
+| Handoff Supervisor Automation Runbook | `Handoff_Supervisor_Automation_Runbook.md` | Safe Supervisor automation modes and recurring automation scope |
+| Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
 | Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
 | Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
 | Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |

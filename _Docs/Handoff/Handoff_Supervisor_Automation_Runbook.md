@@ -1,0 +1,155 @@
+# Handoff Supervisor Automation Runbook
+
+## Purpose
+
+This document defines how the Handoff Supervisor may be operated as an automation without expanding into unsafe execution.
+
+It is Phase 9A of the AIWorkflow Handoff Integration.
+
+## Automation Goal
+
+The automation goal is to keep Handoff visibility current.
+
+The Supervisor may:
+
+- scan Packet manifests
+- regenerate `Dashboard.md`
+- regenerate role Queues
+- regenerate `Violations/Open.md`
+- report waiting approval, ready work, blocked work, review requests, QA requests, and consistency issues
+
+The Supervisor must not become an implementation worker.
+
+## Automation Modes
+
+### Mode 1: Manual
+
+The human developer or Codex runs:
+
+```bat
+tools\aiworkflow\handoff_supervisor.bat status
+tools\aiworkflow\handoff_supervisor.bat write-docs --execute
+```
+
+Use this mode while changing Supervisor logic or Packet format.
+
+### Mode 2: Thread Follow-Up
+
+A Codex thread may wake up later and run a Handoff status check for this conversation.
+
+This mode is useful for short follow-ups, but it should not be treated as the durable project automation.
+
+Allowed output:
+
+- chat summary
+- optional generated Handoff status surfaces if explicitly approved for that run
+
+### Mode 3: Workspace Cron
+
+A Codex automation may run against the repository workspace on a recurring schedule.
+
+Recommended first schedule:
+
+```text
+Every 60 minutes while the automation is ACTIVE
+```
+
+Allowed output:
+
+- `Dashboard.md`
+- `Queues/<Role>.md`
+- `Violations/Open.md`
+- a short run summary when issues or approval waits exist
+
+## First Safe Automation Scope
+
+The first recurring automation should do only this:
+
+1. Run `tools\aiworkflow\handoff_supervisor.bat status`.
+2. Run `tools\aiworkflow\handoff_supervisor.bat write-docs --execute`.
+3. If waiting approvals or consistency issues exist, summarize them.
+4. Do not edit any files outside generated Handoff status surfaces.
+
+## Explicitly Forbidden
+
+Automation must not:
+
+- edit game source
+- edit gameplay JSON
+- change JSON schema
+- change runtime behavior
+- create or replace assets
+- run build or tests
+- approve work
+- set approval evidence
+- claim work on behalf of a role
+- mark work `Done`
+- commit
+- push
+- wake or control other role chats
+
+## Human Approval Boundary
+
+Creating a recurring Codex automation is a separate approval step.
+
+The approval should specify:
+
+- schedule
+- workspace path
+- whether generated Handoff status surfaces may be written
+- whether the automation should only report or also regenerate docs
+- where summaries should appear
+
+## Approved Initial Automation
+
+The first Supervisor recurring automation was approved by the human developer on 2026-05-27.
+
+Approved settings:
+
+- automation id: `playground-handoff-supervisor`
+- schedule: every 60 minutes
+- status: `ACTIVE`
+- workspace: `C:\Users\kalux\workStation\play-ground`
+- generated Handoff status surface updates: allowed
+
+`ACTIVE` means the Codex automation object is enabled and will run on its schedule.
+
+It does not mean the automation becomes a worker between runs.
+
+Each scheduled run should start, inspect Handoff state, refresh allowed generated surfaces, report relevant status, and then stop.
+
+## Recommended First Automation Prompt
+
+Use this prompt for the first recurring automation after approval:
+
+```text
+Run the Handoff Supervisor for the PlayGround repository.
+
+Allowed actions:
+- Run tools\aiworkflow\handoff_supervisor.bat status.
+- Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
+- Summarize Waiting User Approval and Consistency Issues if any exist.
+
+Forbidden actions:
+- Do not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
+- Do not mark work Done.
+- Do not claim Packets.
+- Do not wake or control other role chats.
+
+Report:
+- Handoff counts
+- Waiting User Approval items
+- Consistency Issues
+- Whether generated status surfaces were refreshed
+```
+
+## Completion Standard
+
+Phase 9A is complete when:
+
+- automation modes are documented
+- first safe recurring scope is documented
+- forbidden automation actions are explicit
+- the first automation prompt is available for review
+
+Actual role-worker automation remains out of scope.
