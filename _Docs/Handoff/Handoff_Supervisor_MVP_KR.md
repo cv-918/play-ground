@@ -55,6 +55,11 @@ MVP는 게임 소스, 게임플레이 JSON, 로컬 설정, 비밀값, 외부 서
 - blocked 수
 - review/QA requested 수
 - consistency issue 수
+- 사용자 승인 대기 표
+- ready work 표
+- review requested 표
+- QA requested 표
+- blocked 표
 - 역할별 queue 링크
 - 최근 완료 Packet
 - 전체 Packet index
@@ -72,6 +77,16 @@ MVP는 게임 소스, 게임플레이 JSON, 로컬 설정, 비밀값, 외부 서
 - QA
 
 역할 채팅은 사람에게 매번 “어디를 보면 되나요?”라고 묻기 전에 자기 queue를 확인해야 한다.
+
+각 역할 queue는 다음 섹션을 직접 보여준다.
+
+- 사용자 승인 대기
+- ready work
+- in progress
+- review requested
+- QA requested
+- blocked
+- 해당 역할의 전체 Packet
 
 ### Violations
 
@@ -137,7 +152,7 @@ Packet 읽기
 
 - manifest reader는 의도적으로 단순하며 직선적인 YAML-like manifest 필드를 기대한다.
 - 완전한 YAML 엔진이 아니다.
-- 아직 생성된 Dashboard와 `00_Index.md`의 행을 비교하지 않는다.
+- Packet manifest를 생성 Dashboard와 Queue 상태의 기준으로 사용한다. `00_Index.md`는 사람이 관리하는 index와 감사 요약으로 남긴다.
 - 스스로 주기 실행되지 않는다.
 - Codex, ChatGPT, Copilot, 다른 역할 채팅을 트리거하지 않는다.
 - 새 Packet을 만들지 않는다.
@@ -178,6 +193,8 @@ Planner가 승인된 기획 방향을 Packet으로 작성
 
 대체 파일럿의 Phase 7C는 완료되었다. 사용자가 DeveloperPlan을 승인한 뒤, 구현은 승인 요청서에 적힌 소스 파일 범위 안에서만 진행했고 Debug x64 빌드 검증과 사용자 런타임 QA를 통과했다. 현재 Packet은 `Done` 상태다.
 
-다음 안전한 확장은 완료된 diff를 검토하고 Phase 7A부터 Phase 7C까지의 커밋 경계를 결정하는 것이다.
+Phase 7D는 완료되었다. Phase 7A부터 Phase 7C까지의 완료 커밋을 `origin/main`에 push했다.
+
+Phase 8A는 운영 상태 표면을 개선한다. Dashboard와 역할별 Queue는 review/QA 라우팅을 별도 섹션으로 보여주고, `Handoff_Operational_Status_Policy_KR.md`는 manifest, `00_Index.md`, 생성 Dashboard, 생성 Queue, Violations의 책임 분리를 정의한다.
 
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

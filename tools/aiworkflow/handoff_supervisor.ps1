@@ -506,6 +506,42 @@ function New-DashboardMarkdown {
         @($p.handoff_id, ($p.to_roles -join ", "), $p.title, $p.approval_request_path, $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
+    [void]$lines.Add("## Ready Work")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | From | To | Title | Manifest | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.ready_work -ColumnCount 6 -Projector {
+        param($p)
+        @($p.handoff_id, $p.from_role, ($p.to_roles -join ", "), $p.title, ('`' + $p.manifest_path + '`'), $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
+    [void]$lines.Add("## Review Requested")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | Role | Title | Review Request | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.review_requested -ColumnCount 5 -Projector {
+        param($p)
+        @($p.handoff_id, ($p.to_roles -join ", "), $p.title, ($p.packet_path + "/ReviewRequest.md"), $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
+    [void]$lines.Add("## QA Requested")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | Role | Title | QA Request | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.qa_requested -ColumnCount 5 -Projector {
+        param($p)
+        @($p.handoff_id, ($p.to_roles -join ", "), $p.title, ($p.packet_path + "/QARequest.md"), $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
+    [void]$lines.Add("## Blocked")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | Role | Title | Delivery | Execution | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.blocked -ColumnCount 6 -Projector {
+        param($p)
+        @($p.handoff_id, ($p.to_roles -join ", "), $p.title, $p.delivery_status, $p.execution_status, $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
     [void]$lines.Add("## Role Queues")
     [void]$lines.Add("")
     [void]$lines.Add("| Role | Queue |")
@@ -560,6 +596,8 @@ function New-QueueMarkdown {
     $waiting = @($rolePackets | Where-Object { $_.execution_status -eq "WaitingUserApproval" -or $_.approval_state -eq "Requested" })
     $ready = @($rolePackets | Where-Object { $_.delivery_status -eq "Ready" -and $_.execution_status -eq "NotStarted" })
     $active = @($rolePackets | Where-Object { $_.delivery_status -eq "Claimed" -or $_.execution_status -eq "Planning" -or $_.execution_status -eq "InProgress" })
+    $reviewRequested = @($rolePackets | Where-Object { $_.delivery_status -eq "ReviewRequested" -or $_.execution_status -eq "ReviewRequested" })
+    $qaRequested = @($rolePackets | Where-Object { $_.delivery_status -eq "QARequested" -or $_.execution_status -eq "QARequested" })
     $blocked = @($rolePackets | Where-Object { $_.delivery_status -eq "Blocked" -or $_.execution_status -eq "Blocked" })
 
     $lines = [System.Collections.Generic.List[string]]::new()
@@ -598,6 +636,24 @@ function New-QueueMarkdown {
     foreach ($line in (New-TableRows -Rows $active -ColumnCount 5 -Projector {
         param($p)
         @($p.handoff_id, $p.current_owner, $p.title, $p.execution_status, $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
+    [void]$lines.Add("## Review Requested")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | Title | Review Request | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $reviewRequested -ColumnCount 4 -Projector {
+        param($p)
+        @($p.handoff_id, $p.title, ($p.packet_path + "/ReviewRequest.md"), $p.updated_at)
+    })) { [void]$lines.Add($line) }
+    [void]$lines.Add("")
+    [void]$lines.Add("## QA Requested")
+    [void]$lines.Add("")
+    [void]$lines.Add("| Handoff ID | Title | QA Request | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $qaRequested -ColumnCount 4 -Projector {
+        param($p)
+        @($p.handoff_id, $p.title, ($p.packet_path + "/QARequest.md"), $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Blocked")

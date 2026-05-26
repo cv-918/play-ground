@@ -22,6 +22,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff System User Guide | `Guide/Handoff_System_User_Guide_KR.html` | User-facing Korean HTML guide |
 | Handoff Supervisor MVP | `Handoff_Supervisor_MVP.md` | Observable Supervisor automation boundary and command guide |
 | Handoff Supervisor MVP Korean | `Handoff_Supervisor_MVP_KR.md` | Korean Supervisor guide |
+| Handoff Operational Status Policy | `Handoff_Operational_Status_Policy.md` | Manifest, Index, Dashboard, Queue, and Done/Archive status surface policy |
+| Handoff Operational Status Policy Korean | `Handoff_Operational_Status_Policy_KR.md` | Korean status surface policy |
 | Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
 | Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
 | Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |
