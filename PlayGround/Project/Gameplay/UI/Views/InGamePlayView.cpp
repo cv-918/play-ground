@@ -4,8 +4,30 @@
 #include "../Elements/ProgressBar.h"
 #include "../Widgets/InGameSkillSlot.h"
 
+#include "EngineSystems/Input/InputDisplayText.h"
 #include "GamePlaySystems/StageManager.h"
 #include "GamePlaySystems/SkillManager.h"
+
+namespace
+{
+	std::wstring GetSkillShortcutText(InputAction _action)
+	{
+		InputBinding binding;
+		if (_InputMgr.TryGetPrimaryBinding(_InputMgr.GetCurrentPreset(), _action, &binding))
+			return InputDisplayText::ToBindingText(binding);
+
+		return L"-";
+	}
+
+	void RefreshSkillShortcutLabels(InGameSkillSlot* _slot0, InGameSkillSlot* _slot1)
+	{
+		if (_slot0 != nullptr)
+			_slot0->SetKeyLabel(GetSkillShortcutText(InputAction::Skill1));
+
+		if (_slot1 != nullptr)
+			_slot1->SetKeyLabel(GetSkillShortcutText(InputAction::Skill2));
+	}
+}
 
 InGamePlayView::InGamePlayView()
 {
@@ -34,11 +56,11 @@ InGamePlayView::InGamePlayView()
 	// -------------------------
 	// 스킬 슬롯 2개
 	// -------------------------
-	skill_slot_0_ = CreateElement<InGameSkillSlot>(0, L"CTRL");
+	skill_slot_0_ = CreateElement<InGameSkillSlot>(0, GetSkillShortcutText(InputAction::Skill1));
 	skill_slot_0_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H - 46, GAME_VIEW_HEIGHT - 110 });
 	skill_slot_0_->SetShowSkillName(true);
 
-	skill_slot_1_ = CreateElement<InGameSkillSlot>(1, L"ALT");
+	skill_slot_1_ = CreateElement<InGameSkillSlot>(1, GetSkillShortcutText(InputAction::Skill2));
 	skill_slot_1_->SetSlotCenter(_Point{ GAME_VIEW_WIDTH_H + 46, GAME_VIEW_HEIGHT - 110 });
 	skill_slot_1_->SetShowSkillName(true);
 
@@ -54,6 +76,8 @@ InGamePlayView::InGamePlayView()
 
 _int InGamePlayView::Update(_double _delta_time)
 {
+	RefreshSkillShortcutLabels(skill_slot_0_, skill_slot_1_);
+
 	__super::Update(_delta_time);
 
 	// 비율 업데이트

@@ -7,6 +7,7 @@
 #include "../Widgets/OutGameSkillSlot.h"
 #include "../Widgets/OutGameSkillToolTip.h"
 
+#include "EngineSystems/Input/InputDisplayText.h"
 #include "GamePlaySystems/Json/SkillJsonDataManager.h"
 #include "GamePlaySystems/SkillManager.h"
 #include "GamePlaySystems/Skills/SkillBase.h"
@@ -18,6 +19,24 @@ namespace
 	constexpr _int kNavButtonRightPadding = 92;
 	constexpr _int kNavButtonBottomPadding = 88;
 	constexpr _int kNavButtonGap = 22;
+
+	std::wstring GetSkillShortcutText(InputAction _action)
+	{
+		InputBinding binding;
+		if (_InputMgr.TryGetPrimaryBinding(_InputMgr.GetCurrentPreset(), _action, &binding))
+			return InputDisplayText::ToBindingText(binding);
+
+		return L"-";
+	}
+
+	void RefreshSkillShortcutLabels(OutGameSkillSlot* _slot0, OutGameSkillSlot* _slot1)
+	{
+		if (_slot0 != nullptr)
+			_slot0->SetKeyLabel(GetSkillShortcutText(InputAction::Skill1));
+
+		if (_slot1 != nullptr)
+			_slot1->SetKeyLabel(GetSkillShortcutText(InputAction::Skill2));
+	}
 
 	_Rect BuildScaledRect(const _Rect& _base_rect, _float _scale)
 	{
@@ -61,8 +80,8 @@ OutGameSkillView::OutGameSkillView(
 	return_btn_info.disabled_image_path = Path::Buttons + L"RETURN/RETURN_Disabled.png";
 	return_btn_ = CreateElement<Button>(return_btn_info);
 
-	equipped_skill_slot_0_ = CreateElement<OutGameSkillSlot>(0, L"CTRL");
-	equipped_skill_slot_1_ = CreateElement<OutGameSkillSlot>(1, L"ALT");
+	equipped_skill_slot_0_ = CreateElement<OutGameSkillSlot>(0, GetSkillShortcutText(InputAction::Skill1));
+	equipped_skill_slot_1_ = CreateElement<OutGameSkillSlot>(1, GetSkillShortcutText(InputAction::Skill2));
 
 	const auto table = _SkillDataMgr.GetTable();
 	GridCreateInfo skill_list_grid_layout;
@@ -102,6 +121,8 @@ OutGameSkillView::OutGameSkillView(
 
 _int OutGameSkillView::Update(_double _delta_time)
 {
+	RefreshSkillShortcutLabels(equipped_skill_slot_0_, equipped_skill_slot_1_);
+
 	_UpdateHoveredSkillTooltip();
 	__super::Update(_delta_time);
 	RefreshSkillGridState();
