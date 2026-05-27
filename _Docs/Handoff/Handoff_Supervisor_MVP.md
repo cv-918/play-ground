@@ -39,6 +39,8 @@ The Supervisor may read:
 
 The MVP does not read game source, gameplay JSON, local config, secrets, or external services.
 
+For Phase 20 scope drift checks, the Supervisor may also read Git changed-file lists through safe read-only commands such as `git diff --name-only`, `git diff --cached --name-only`, and `git ls-files --others --exclude-standard`. It reads file paths only; it does not inspect or edit file contents.
+
 ## Generated Outputs
 
 ### Dashboard
@@ -54,6 +56,9 @@ It shows:
 - in-progress work count
 - blocked count
 - review/QA requested count
+- approved execution scope count
+- missing execution scope count
+- scope drift issue count
 - consistency issue count
 - waiting approval table
 - ready work table
@@ -106,6 +111,10 @@ Examples:
 - Packet manifest missing from `00_Index.md` Packet Index
 - stale `00_Index.md` Packet Index or Waiting User Approval rows
 - `Done` without `CompletionNotice.md`
+- active Developer execution without `approved_execution_scope.approved: true`
+- approved execution scope without `approved_scope_allowed_paths`
+- changed files outside `approved_scope_allowed_paths` for an active approved Packet
+- changed files under forbidden paths for an active approved Packet
 
 ## Safety Boundary
 
@@ -116,6 +125,7 @@ The Supervisor MVP may:
 - print status to chat or terminal
 - output JSON
 - generate Dashboard, Queue, and Violation Markdown files when `write-docs --execute` is used
+- compare Git changed-file paths against active approved Packet scope boundaries
 
 The Supervisor MVP must not:
 
@@ -132,6 +142,8 @@ The Supervisor MVP must not:
 - commit
 - push
 - wake or control other role chats
+
+Scope drift findings are suspected boundary issues. They are not automatic rollback decisions, review verdicts, validation failures, or completion decisions.
 
 ## Relationship To Earlier Phases
 
@@ -170,6 +182,8 @@ This Supervisor MVP is considered working when:
 - `write-docs` refuses to write without `--execute`.
 - `write-docs --execute` updates Dashboard, role queues, and open violations.
 - The generated files show approval waits and structural problems without requiring the human developer to inspect every Packet manually.
+- Scope Status appears in Dashboard and role queues.
+- Active approved Packets can surface suspected changed-file drift outside their approved scope.
 
 ## Next Expansion
 

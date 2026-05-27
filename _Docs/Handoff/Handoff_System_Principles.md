@@ -73,19 +73,31 @@ A Handoff item being `Ready` means it is ready for the receiving role to inspect
 
 AIWorkflow approval gates still apply to:
 
-- Source code implementation
-- Structural refactoring
-- Project source directory file creation
-- JSON schema changes
-- Save/load behavior changes
-- Actor or scene lifecycle changes
-- Runtime behavior changes
+- Source code implementation without an approved execution scope
+- Structural refactoring outside the approved scope
+- Project source directory file creation outside the approved scope
+- JSON schema changes not included in the approved scope
+- Save/load behavior changes not included in the approved scope
+- Actor or scene lifecycle changes outside the approved scope
+- Runtime behavior changes outside the approved design or execution scope
 - Build setting changes
-- File-modifying tool execution
+- File-modifying tool execution outside the approved scope
 - Commit and push
 - Workflow rule changes
 
 Approval applies only to the stated scope. If the scope changes, the role must stop and request renewed approval.
+
+## v2 Scope-Based Execution Principle
+
+The intended v2 standard is scope-based approval.
+
+Approval is not triggered by source code modification itself. Approval is triggered when a role lacks an approved execution scope or needs to move outside that scope.
+
+When the human developer approves a Handoff Packet, DeveloperPlan, work order, or equivalent execution scope, the Developer may make normal source code edits and non-schema data edits required to complete that approved work. The Developer should not ask for another approval only because code or non-schema data will be edited inside the approved scope.
+
+The role must stop again when implementation needs files, systems, behavior, schema, lifecycle, build settings, Git actions, or workflow rule changes outside the approved scope.
+
+See `Handoff_V2_Scope_Based_Execution_Principle.md`.
 
 ## Substantive Approval Request Rule
 
@@ -121,7 +133,8 @@ High-risk work must wait visibly.
 
 Waiting means:
 
-- Do not modify source code, JSON schema, runtime data, project files, build settings, or Git state.
+- If no execution scope is approved yet, do not modify source code, JSON schema, runtime data, project files, build settings, or Git state.
+- If an execution scope is already approved, do not move outside that scope.
 - Do not mark the Handoff item as done.
 - Do not pass the work forward as completed.
 - Record the approval request path in the Handoff index or the item itself.

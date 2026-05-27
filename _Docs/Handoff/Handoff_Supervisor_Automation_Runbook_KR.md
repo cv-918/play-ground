@@ -153,7 +153,7 @@ Command order:
 Allowed actions:
 - Run tools\aiworkflow\handoff_supervisor.bat status.
 - Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
-- Summarize Handoff counts, Waiting User Approval items, and Consistency Issues.
+- Summarize Handoff counts, Waiting User Approval items, Scope Status, Scope Drift Issues, and Consistency Issues.
 
 Forbidden actions:
 - Do not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
@@ -188,6 +188,9 @@ Forbidden actions:
 - Review Requested: <number>
 - QA Requested: <number>
 - Blocked: <number>
+- Approved Scopes: <number>
+- Missing Scopes: <number>
+- Scope Drift Issues: <number>
 - Consistency Issues: <number>
 
 ## Waiting User Approval
@@ -202,6 +205,13 @@ None
 
 If items exist, replace `None` with a Markdown table:
 | Severity | Handoff ID | Issue | Suggested Action |
+| --- | --- | --- | --- |
+
+## Scope Drift Issues
+None
+
+If items exist, replace `None` with a Markdown table:
+| Severity | Handoff ID | Changed Files | Suggested Action |
 | --- | --- | --- | --- |
 
 ## Generated Files

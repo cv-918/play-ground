@@ -172,6 +172,7 @@ Commit generated surfaces when:
 
 These are candidates for a future Handoff v2, not v1 commitments.
 
+- Adopt scope-based execution approval as the first v2 operating principle: normal source code and non-schema data edits inside an approved Packet, DeveloperPlan, work order, or equivalent execution scope do not require separate per-file approval.
 - Turn low-risk Role Worker automation from `PAUSED` to `ACTIVE`.
 - Allow Role Worker automation to draft Packet Results under a stricter approval boundary.
 - Split Role Worker automation by role only if the single automation becomes insufficient.
@@ -182,6 +183,8 @@ These are candidates for a future Handoff v2, not v1 commitments.
 - Integrate more tightly with AIWorkflow task state only after boundary review.
 
 Every v2 item requires separate approval before implementation.
+
+The scope-based execution approval principle is recorded in `Handoff_V2_Scope_Based_Execution_Principle.md`.
 
 ## v1 Completion Criteria
 

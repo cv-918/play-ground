@@ -149,6 +149,42 @@ The request document must include exact decision options and suggested user resp
 
 The human developer should not need to infer what to type from a gate label alone.
 
+## Approved Execution Scope
+
+v2 uses a scope-based execution contract.
+
+The manifest should record the approved execution scope separately from a waiting approval request.
+
+```yaml
+approved_execution_scope:
+  approved: true
+  summary: "Implement mapped shortcut labels for in-game and out-game skill widgets."
+  approved_by: "HumanDeveloper"
+  approved_at: "YYYY-MM-DD"
+  approval_source: "chat"
+  source_document: "Results/DeveloperPlan.md"
+
+approved_scope_allowed_paths:
+  - PlayGround/...
+
+approved_scope_forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - No input remapping redesign.
+
+approved_scope_validation:
+  - Build Debug x64.
+  - Confirm in-game and out-game skill labels.
+```
+
+When `approved_execution_scope.approved` is true, normal source code edits and non-schema data edits inside `approved_scope_allowed_paths` are treated as execution inside the approved task, not as a separate approval point.
+
+If implementation needs a file, system, behavior, schema, lifecycle, build, Git, or workflow change outside the approved scope, the role must stop and request scope expansion.
+
 ## AIWorkflow Linkage
 
 A Packet may link to AIWorkflow records, but it does not replace them.
@@ -171,6 +207,8 @@ If the Packet conflicts with AIWorkflow, stop and report the conflict.
 They are not automatic approval.
 
 If execution requires a path outside `allowed_paths`, the role must stop and request scope approval before proceeding.
+
+For v2 execution, prefer `approved_scope_allowed_paths` and `approved_scope_forbidden_paths` when the work has an approved execution scope. Keep `allowed_paths` and `forbidden_paths` as general Packet routing boundaries.
 
 ## Packet Completion
 

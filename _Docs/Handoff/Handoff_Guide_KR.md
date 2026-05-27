@@ -27,7 +27,8 @@ Handoff 문서나 상태를 갱신할 때는 `Status_Update_Boundaries.md`와 `S
 - `_DevLog/`는 완료된 작업, 조사, 수정, 회고 기록을 남기는 위치다.
 - `_Docs/Handoff/`는 역할 간 전달물, 준비물, 요청, 완료 노티를 모아두는 위치다.
 - 전달 문서는 받는 역할이 바로 다음 행동을 알 수 있게 작성한다.
-- `Ready`는 받는 역할이 확인할 준비가 되었다는 뜻이지, 코드/데이터/런타임 변경 승인이 아니다.
+- `Ready`는 받는 역할이 확인할 준비가 되었다는 뜻이지, 실행 승인 자체가 아니다.
+- Packet, DeveloperPlan, work order 등으로 실행 범위가 승인되면 그 범위 안의 일반적인 코드 수정과 스키마 변경이 아닌 데이터 수정은 다시 승인받지 않는다.
 - 높은 위험 작업은 `Waiting User Approval` 상태로 눈에 보이게 멈춘다.
 - 승인 요청은 게이트 이름만 말하지 않고, 실제로 무엇을 바꾸려는지 설명한다.
 - 검증하지 않은 내용을 완료 또는 통과로 기록하지 않는다.
@@ -51,7 +52,7 @@ Handoff 문서나 상태를 갱신할 때는 `Status_Update_Boundaries.md`와 `S
 2. `Packets/_Manifest_Template.yaml`을 복사해 Packet 폴더의 `manifest.yaml`로 사용한다.
 3. 필요한 문서만 만든다. 예: `PlanningBrief.md`, `ImplementationRequest.md`, `Results/DeveloperPlan.md`.
 4. `00_Index.md`의 `Packet Index`에 등록한다.
-5. 높은 위험 작업이면 `execution_status: WaitingUserApproval`과 승인 요청 문서를 작성한다.
+5. 승인된 실행 범위가 없거나 범위 밖 작업이 필요하면 `execution_status: WaitingUserApproval`과 승인 요청 문서를 작성한다.
 6. 승인 요청 중인 항목은 `00_Index.md`의 `Waiting User Approval`에도 등록한다.
 7. 결과와 완료 기준은 `Results/` 또는 `CompletionNotice.md`에 기록한다.
 
@@ -106,7 +107,7 @@ Handoff 상태를 확인할 때는 읽기 전용으로만 스캔한다.
 - 리뷰/QA 라우팅
 - 완료 또는 보관 기록
 
-여전히 금지되는 것:
+승인된 실행 범위 없이 여전히 금지되는 것:
 
 - 소스 코드 변경
 - 게임플레이 JSON 또는 JSON 스키마 변경
@@ -117,6 +118,18 @@ Handoff 상태를 확인할 때는 읽기 전용으로만 스캔한다.
 - 커밋/푸시
 
 중요한 상태 갱신은 `Status_Updates/_Status_Update_Record_Template_KR.md` 형식으로 기록한다.
+
+## v2 범위 기반 실행
+
+v2에서는 `approved_execution_scope`가 실행 가능 범위를 나타낸다.
+
+승인된 실행 범위가 있으면 Developer는 그 범위 안에서 일반적인 코드 수정과 스키마 변경이 아닌 데이터 수정을 진행할 수 있다.
+
+다시 멈추는 기준은 코드 수정 여부가 아니라 범위 이탈 여부다.
+
+- `approved_scope_allowed_paths` 안이면 진행 가능
+- `approved_scope_allowed_paths` 밖이면 범위 확장 요청
+- 승인되지 않은 schema, save/load, lifecycle, build, Git, workflow 변경이면 별도 승인 요청
 
 ## 하위 폴더 선택 기준
 

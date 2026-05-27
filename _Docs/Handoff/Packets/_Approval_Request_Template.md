@@ -89,6 +89,32 @@ Approval applies only to the proposed scope in this document.
 
 If additional files, data/schema changes, runtime behavior, assets, build steps, validation actions, commit, or push become necessary, stop and request expanded approval.
 
+## Approved Execution Scope To Record
+
+If approved, record the scope in `manifest.yaml`:
+
+```yaml
+approved_execution_scope:
+  approved: true
+  summary: ""
+  approved_by: "HumanDeveloper"
+  approved_at: "YYYY-MM-DD"
+  approval_source: "chat"
+  source_document: "Results/<Role>Plan.md"
+
+approved_scope_allowed_paths:
+  -
+
+approved_scope_forbidden_paths:
+  -
+
+approved_scope_non_goals:
+  -
+
+approved_scope_validation:
+  -
+```
+
 ## Before Approval I Will Not
 
 - Modify source code.

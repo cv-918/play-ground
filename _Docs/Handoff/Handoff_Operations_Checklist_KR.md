@@ -58,7 +58,10 @@ tools\aiworkflow\handoff_supervisor.bat status
 | --- | --- | --- |
 | Dashboard | `Waiting User Approval` 항목 | 요청 문서를 열고 승인, 거절, 범위 수정 중 하나를 결정한다. |
 | Dashboard | `Consistency Issues`가 0보다 큼 | 작업이나 승인 전에 `Violations/Open.md`를 먼저 본다. |
-| Role Queue | `Ready Work` 항목 | 대상 역할은 읽고 계획할 수 있다. 구현 승인이라는 뜻은 아니다. |
+| Dashboard / Queue | `Scope Status: Approved` | 대상 역할은 승인된 범위 안에서 구현할 수 있다. |
+| Dashboard / Queue | `Scope Status: MissingScope` | 실행 전에 승인된 범위를 기록하거나 범위 승인을 요청한다. |
+| Dashboard / Queue | `Scope Drift Issues` | 변경 파일이 승인 범위 밖인지 확인하고 필요하면 범위 확장을 승인한다. |
+| Role Queue | `Ready Work` 항목 | 대상 역할은 읽고 계획할 수 있다. 실행은 승인된 범위가 기록된 뒤 진행한다. |
 | Role Queue | `Waiting User Approval` 항목 | 사용자 결정이 기록되기 전까지 대상 역할은 구현하지 않는다. |
 | Violations | manifest/index/request 문서 누락 | 실행 작업 전에 Handoff 문서 상태를 먼저 고친다. |
 | Packet Results | DeveloperPlan 또는 승인 요청 | 일반 게이트명이 아니라 구체적인 요청 범위를 보고 결정한다. |

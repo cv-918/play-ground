@@ -127,6 +127,14 @@ _Docs/Handoff/Role_Workers/Harness/Runs/
 - push
 - 역할 채팅 깨우기 또는 제어
 
+## v2 승인 범위 작업과의 분리
+
+승인된 범위 안의 Developer 실행은 허용된다고 해서 낮은 위험 자동화로 분류하지 않는다.
+
+`approved_execution_scope.approved`가 true이면 Developer 역할은 승인 범위 안에서 일반적인 소스 코드 수정과 스키마 변경이 아닌 데이터 수정을 할 수 있다. 하지만 이것은 제한된 구현 작업이지 낮은 위험 역할 직원 자동화가 아니다.
+
+낮은 위험 자동화는 이후 Phase에서 명시적으로 실행 권한을 확장하기 전까지 문서/보고 중심으로 유지한다.
+
 ## 역할별 예시
 
 ### Planner

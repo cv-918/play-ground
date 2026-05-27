@@ -39,6 +39,14 @@ approval_type:
 
 The exact approval types may differ by task.
 
+## When Approval Waiting Is Needed
+
+Do not put a Packet into approval waiting only because implementation will edit source code or non-schema data inside an approved scope.
+
+Approval waiting is needed when no execution scope has been approved yet, or when the role needs to expand beyond an already approved scope.
+
+Inside an approved execution scope, normal Developer source edits and non-schema data edits are part of execution.
+
 ## Dashboard And Index Rule
 
 The waiting row must show:

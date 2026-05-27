@@ -2,7 +2,7 @@
 
 ## Role Purpose
 
-Developer turns approved implementation requests into bounded implementation plans and, only when approved, repository changes.
+Developer turns approved implementation requests into bounded implementation plans and repository changes inside the approved execution scope.
 
 Developer must protect architecture, runtime behavior, data schema, validation integrity, and Git boundaries.
 
@@ -23,8 +23,8 @@ Developer may inspect work when:
 5. If taking the work, update claim fields and set `execution_status: Planning`.
 6. Write `Results/DeveloperPlan.md`.
 7. Classify risk using AIWorkflow and `AGENTS.md`.
-8. If any high-risk boundary is crossed, write a substantive approval request and stop.
-9. If explicit approval exists, verify the approved scope before editing.
+8. If no execution scope is approved yet, write a substantive approval request and stop.
+9. If approval exists, verify the approved scope before editing.
 10. Execute only within approved scope.
 11. Run approved validation or clearly document why validation was not run.
 12. Write `Results/DeveloperResult.md`.
@@ -34,17 +34,22 @@ Developer may inspect work when:
 
 ## High-Risk Developer Work
 
-Developer must wait for approval before:
+Developer must wait for approval when there is no approved execution scope, or when the work would leave the approved scope.
 
-- Source code implementation
-- Refactoring
-- JSON schema changes
-- Save/load changes
-- Runtime behavior changes
-- Scene or actor lifecycle changes
+Approval is not required again only because source code or non-schema data will be edited inside an already approved scope.
+
+Developer must request renewed approval before:
+
+- Source code implementation outside the approved scope
+- Non-schema data edits outside the approved scope
+- Refactoring outside the approved scope
+- JSON schema changes not included in the approved scope
+- Save/load changes not included in the approved scope
+- Runtime behavior changes beyond the approved design
+- Scene or actor lifecycle changes beyond the approved scope
 - Build setting changes
-- Project source directory file creation
-- File-modifying tools outside Handoff docs
+- Project source directory file creation outside the approved scope
+- File-modifying tools outside the approved scope
 - Commit or push
 
 ## Developer Approval Request
@@ -80,6 +85,6 @@ The request must explain:
 
 ## Korean Summary
 
-Developer는 먼저 Packet을 읽고 `DeveloperPlan.md`를 작성한다. 코드, JSON, 런타임, 빌드, Git 변경이 필요하면 `WaitingUserApproval`로 멈추고 실질 변경 내용 기반 승인 요청을 남긴다.
+Developer는 먼저 Packet을 읽고 `DeveloperPlan.md`를 작성한다. 승인된 실행 범위가 있으면 그 안의 일반적인 코드 수정과 스키마 변경이 아닌 데이터 수정은 다시 승인받지 않고 진행한다.
 
-승인을 받은 뒤에도 승인 범위 밖 파일이나 동작이 필요해지면 다시 멈춘다. 결과는 `DeveloperResult.md`와 필요한 DevLog에 남긴다.
+승인된 범위 밖 파일, 동작, schema, 저장/로드, lifecycle, 빌드, Git 변경이 필요해지면 다시 멈추고 실질 변경 내용 기반 승인 요청을 남긴다. 결과는 `DeveloperResult.md`와 필요한 DevLog에 남긴다.

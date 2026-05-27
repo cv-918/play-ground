@@ -41,14 +41,14 @@ It may summarize the waiting approval request and ask for a human decision.
 
 The Role Worker may inspect the Packet and write an intake decision or plan.
 
-`Ready` does not authorize source edits, JSON edits, runtime changes, build/test execution, approval evidence, `Done`, commit, or push.
+`Ready` does not authorize execution by itself. Implementation starts only after an approved execution scope is recorded or explicitly provided by the human developer.
 
 ### In Progress
 
 The Role Worker may continue only if:
 
 - it is the current owner, claimed role, or explicitly instructed by the human developer
-- the work is still inside the approved scope
+- the work is still inside `approved_execution_scope` and `approved_scope_allowed_paths`
 - required approvals are already recorded or not required
 
 ### Review Requested
@@ -88,6 +88,8 @@ The Intake Decision must include:
 - documents read
 - whether this role is a valid target
 - whether approval is required
+- approved execution scope status
+- approved scope allowed paths
 - allowed next action
 - forbidden actions
 - stop condition, if any
@@ -100,7 +102,9 @@ The Role Worker must stop when:
 - the manifest is missing or structurally invalid
 - the role is not a target, owner, or requested reviewer/QA role
 - `WaitingUserApproval` is present without human approval
-- code, JSON, runtime, asset, build, approval, `Done`, commit, or push work would be required without explicit approval
+- code, non-schema data, runtime, or asset work would be required without an approved execution scope
+- the work would leave `approved_scope_allowed_paths`
+- schema, save/load, lifecycle, build, approval evidence, `Done`, commit, or push work would be required without explicit approval for that scope
 - `Violations/Open.md` contains a Critical or Major issue for the Packet
 - the requested work conflicts with `AGENTS.md` or `_Docs/AIWorkflow/`
 

@@ -39,6 +39,8 @@ Supervisor가 읽을 수 있는 것:
 
 MVP는 게임 소스, 게임플레이 JSON, 로컬 설정, 비밀값, 외부 서비스를 읽지 않는다.
 
+Phase 20의 scope drift 검사를 위해 Supervisor는 `git diff --name-only`, `git diff --cached --name-only`, `git ls-files --others --exclude-standard` 같은 안전한 읽기 전용 Git 변경 파일 목록을 읽을 수 있다. 파일 경로만 읽고, 파일 내용을 검사하거나 수정하지 않는다.
+
 ## 생성 출력
 
 ### Dashboard
@@ -54,6 +56,9 @@ MVP는 게임 소스, 게임플레이 JSON, 로컬 설정, 비밀값, 외부 서
 - in-progress 수
 - blocked 수
 - review/QA requested 수
+- 승인된 실행 범위 수
+- 실행 범위 누락 수
+- scope drift issue 수
 - consistency issue 수
 - 사용자 승인 대기 표
 - ready work 표
@@ -106,6 +111,10 @@ MVP는 게임 소스, 게임플레이 JSON, 로컬 설정, 비밀값, 외부 서
 - Packet manifest가 `00_Index.md` Packet Index에 없음
 - 오래된 `00_Index.md` Packet Index 또는 Waiting User Approval 행
 - `Done`인데 `CompletionNotice.md` 없음
+- active Developer 실행인데 `approved_execution_scope.approved: true`가 아님
+- 승인된 실행 범위가 있지만 `approved_scope_allowed_paths`가 비어 있음
+- active 승인 Packet에서 변경 파일이 `approved_scope_allowed_paths` 밖에 있음
+- active 승인 Packet에서 변경 파일이 금지 경로 아래에 있음
 
 ## 안전 경계
 
@@ -116,6 +125,7 @@ Supervisor MVP가 할 수 있는 것:
 - 채팅 또는 터미널에 상태 출력
 - JSON 출력
 - `write-docs --execute`가 사용된 경우 Dashboard, Queue, Violation Markdown 파일 생성
+- Git 변경 파일 경로를 active 승인 Packet의 scope 경계와 비교
 
 Supervisor MVP가 하면 안 되는 것:
 
@@ -132,6 +142,8 @@ Supervisor MVP가 하면 안 되는 것:
 - commit
 - push
 - 다른 역할 채팅 깨우기 또는 제어
+
+scope drift 발견은 의심 경계 문제다. 자동 rollback 결정, 리뷰 판정, 검증 실패, 완료 판정이 아니다.
 
 ## 이전 Phase와의 관계
 
@@ -170,6 +182,8 @@ Packet 읽기
 - `write-docs`는 `--execute` 없이는 파일을 쓰지 않는다.
 - `write-docs --execute`가 Dashboard, role queue, open violation을 갱신한다.
 - 생성 파일이 승인 대기와 구조 문제를 표시해서 사람이 모든 Packet을 직접 뒤지지 않아도 된다.
+- Dashboard와 role queue에 Scope Status가 표시된다.
+- active 승인 Packet에서 승인 범위 밖 변경 파일 의심을 표시할 수 있다.
 
 ## 다음 확장
 

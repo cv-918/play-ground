@@ -172,6 +172,7 @@ timestamp-only diff는 별도 커밋하지 않아도 된다.
 
 아래는 v1 약속이 아니라 향후 v2 후보이다.
 
+- v2의 첫 운영 원칙으로 범위 기반 실행 승인을 채택한다. 승인된 Packet, DeveloperPlan, work order 또는 이에 준하는 실행 범위 안의 일반적인 소스 코드 수정과 스키마 변경이 아닌 데이터 수정은 파일별로 다시 승인받지 않는다.
 - 낮은 위험 Role Worker 자동화를 `PAUSED`에서 `ACTIVE`로 전환
 - 더 엄격한 승인 경계 안에서 Role Worker가 Packet Results 초안 작성
 - 단일 자동화가 부족해질 때만 역할별 자동화 분리
@@ -182,6 +183,8 @@ timestamp-only diff는 별도 커밋하지 않아도 된다.
 - 경계 검토 후 AIWorkflow task state와 더 강하게 연결
 
 v2 항목은 구현 전에 모두 별도 승인이 필요하다.
+
+범위 기반 실행 승인 원칙은 `Handoff_V2_Scope_Based_Execution_Principle_KR.md`에 기록한다.
 
 ## v1 완료 기준
 

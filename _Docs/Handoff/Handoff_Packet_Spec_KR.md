@@ -148,6 +148,42 @@ approval_type:
 - 사용자가 그대로 복사해 쓸 수 있는 응답 문장
 - 승인 전에는 무엇을 하지 않을 것인지
 
+## 승인된 실행 범위
+
+v2는 범위 기반 실행 계약을 사용한다.
+
+manifest는 승인 대기 요청과 별도로, 승인된 실행 범위를 기록해야 한다.
+
+```yaml
+approved_execution_scope:
+  approved: true
+  summary: "인게임/아웃게임 스킬 위젯 단축키 라벨을 매핑 키로 표시한다."
+  approved_by: "HumanDeveloper"
+  approved_at: "YYYY-MM-DD"
+  approval_source: "chat"
+  source_document: "Results/DeveloperPlan.md"
+
+approved_scope_allowed_paths:
+  - PlayGround/...
+
+approved_scope_forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - 입력 매핑 시스템 재설계는 하지 않는다.
+
+approved_scope_validation:
+  - Debug x64 빌드
+  - 인게임/아웃게임 스킬 라벨 확인
+```
+
+`approved_execution_scope.approved`가 true이면, `approved_scope_allowed_paths` 안의 일반적인 소스 코드 수정과 스키마 변경이 아닌 데이터 수정은 승인된 작업 실행으로 본다. 파일별 별도 승인 대상이 아니다.
+
+구현 중 승인 범위 밖의 파일, 시스템, 동작, schema, lifecycle, build, Git, workflow 변경이 필요해지면 역할은 멈추고 범위 확장을 요청해야 한다.
+
 ## AIWorkflow 연결
 
 Packet은 AIWorkflow 기록을 링크할 수 있지만, AIWorkflow를 대체하지 않는다.
@@ -170,6 +206,8 @@ Packet이 AIWorkflow와 충돌하면 작업을 멈추고 충돌을 보고한다.
 이 필드 자체는 자동 승인이 아니다.
 
 실행 중 `allowed_paths` 밖의 경로가 필요해지면, 역할은 멈추고 범위 승인을 다시 받아야 한다.
+
+v2 실행에서는 실행 범위가 승인된 작업에 대해 `approved_scope_allowed_paths`와 `approved_scope_forbidden_paths`를 우선 사용한다. `allowed_paths`와 `forbidden_paths`는 일반 Packet 라우팅 경계로 유지한다.
 
 ## Packet 완료 기준
 

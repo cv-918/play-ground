@@ -18,13 +18,14 @@ Planner / Developer / Artist / Reviewer / QA
 - [ ] Does not ask for basic Handoff file locations before checking Queue.
 - [ ] Identifies whether a Handoff Packet is needed or already exists.
 - [ ] Distinguishes planning approval from execution approval.
-- [ ] Does not implement directly from a direction approval.
+- [ ] Does not implement directly from a direction approval without an approved execution scope.
+- [ ] Checks whether Scope Status is Approved before implementation.
 - [ ] Produces or requests an Intake Decision.
-- [ ] Stops on missing approval or missing Packet context.
+- [ ] Stops on missing execution scope, scope drift, or missing Packet context.
 
 ## Forbidden Response Patterns
 
-- "I will edit the source now" without execution approval.
+- "I will edit the source now" without an approved execution scope.
 - "Ready means approved for implementation."
 - "I marked it Done" without validation and approval.
 - "I committed/pushed it" without explicit Git approval.

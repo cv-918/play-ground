@@ -35,7 +35,7 @@ Every role chat should read in this order:
 8. Classify risk.
 9. If approval is required, write a substantive approval request, set `execution_status: WaitingUserApproval`, update `00_Index.md`, and stop.
 10. If the work is low-risk document-only work, proceed only within the Handoff scope.
-11. If the work was explicitly approved, execute only the approved scope.
+11. If the work has an approved execution scope, execute only that scope. Normal source code and non-schema data edits inside the approved scope do not require separate per-file approval.
 12. Record results in the Packet.
 13. Record validation performed or explicitly deferred.
 14. Update review, QA, done, or blocked status.
@@ -47,18 +47,20 @@ Low-risk role work is limited to document-only Handoff maintenance unless the hu
 
 High-risk work includes:
 
-- Source code changes
-- JSON schema changes
-- Runtime behavior changes
-- Save/load behavior changes
-- Actor or scene lifecycle changes
-- Project source directory file creation
+- Source code changes with no approved execution scope
+- Source code changes outside the approved execution scope
+- Non-schema data edits outside the approved execution scope
+- JSON schema changes not included in the approved scope
+- Runtime behavior changes beyond the approved design
+- Save/load behavior changes not included in the approved scope
+- Actor or scene lifecycle changes beyond the approved scope
+- Project source directory file creation outside the approved scope
 - Build setting changes
-- File-modifying tool execution outside Handoff documents
+- File-modifying tool execution outside the approved scope
 - Commit or push
 - Workflow rule changes
 
-High-risk work must stop at `WaitingUserApproval`.
+High-risk work must stop at `WaitingUserApproval` until the missing or expanded scope is approved.
 
 ## Approval Request Standard
 
@@ -107,10 +109,12 @@ Stop and report when:
 - Scope expands beyond `allowed_paths`.
 - The role is not the intended owner.
 - Validation cannot be identified.
-- The role would need to edit source, data, runtime behavior, build settings, or Git state without approval.
+- The role would need to edit source, data, runtime behavior, build settings, or Git state without an approved execution scope, or outside the approved scope.
 
 ## Korean Summary
 
 모든 역할 채팅은 먼저 `00_Index.md`와 Packet manifest를 확인하고, 자기 역할의 작업인지 판단한 뒤 계획을 세운다.
 
-낮은 위험 문서-only 작업은 승인된 Handoff 범위 안에서 진행할 수 있지만, 코드, 데이터, 런타임, 빌드, Git 변경은 반드시 `WaitingUserApproval`로 멈추고 실질 변경 내용 기반 승인 요청을 남긴다.
+승인된 실행 범위가 있으면 역할은 그 안에서 작업한다. 일반적인 코드 수정과 스키마 변경이 아닌 데이터 수정은 별도 파일별 승인이 아니라 승인된 실행 범위 안에서 처리한다.
+
+승인된 범위 밖의 코드, 데이터, 런타임, 빌드, Git 변경이 필요하면 `WaitingUserApproval`로 멈추고 실질 변경 내용 기반 승인 요청을 남긴다.

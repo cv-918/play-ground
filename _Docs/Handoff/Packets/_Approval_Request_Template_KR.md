@@ -89,6 +89,32 @@ Yes
 
 추가 파일, 데이터/schema 변경, runtime behavior, asset, build step, validation action, commit, push가 필요해지면 멈추고 확장 승인을 요청한다.
 
+## 승인 후 manifest에 기록할 실행 범위
+
+승인되면 `manifest.yaml`에 범위를 기록한다.
+
+```yaml
+approved_execution_scope:
+  approved: true
+  summary: ""
+  approved_by: "HumanDeveloper"
+  approved_at: "YYYY-MM-DD"
+  approval_source: "chat"
+  source_document: "Results/<Role>Plan.md"
+
+approved_scope_allowed_paths:
+  -
+
+approved_scope_forbidden_paths:
+  -
+
+approved_scope_non_goals:
+  -
+
+approved_scope_validation:
+  -
+```
+
 ## Before Approval I Will Not
 
 - 소스 코드를 수정하지 않는다.

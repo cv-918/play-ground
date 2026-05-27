@@ -32,6 +32,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff v1 Readiness Audit Korean | `Handoff_V1_Readiness_Audit_KR.md` | Korean v1 readiness audit |
 | Handoff v1 Finalization | `Handoff_V1_Finalization.md` | Phase 16 final v1 contract, maintenance policy, and v2 candidates |
 | Handoff v1 Finalization Korean | `Handoff_V1_Finalization_KR.md` | Korean final v1 contract and operating summary |
+| Handoff v2 Scope-Based Execution Principle | `Handoff_V2_Scope_Based_Execution_Principle.md` | v2 principle that approval is based on scope departure, not source code edits alone |
+| Handoff v2 범위 기반 실행 승인 원칙 | `Handoff_V2_Scope_Based_Execution_Principle_KR.md` | Korean v2 scope-based execution approval principle |
 | Handoff Supervisor Automation Runbook | `Handoff_Supervisor_Automation_Runbook.md` | Safe Supervisor automation modes and recurring automation scope |
 | Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
 | Role Worker Intake Contract | `Role_Workers/Role_Worker_Intake_Contract.md` | Queue intake contract for role chats and future role-worker automation |
@@ -99,6 +101,8 @@ tools\aiworkflow\handoff_supervisor.bat write-docs --execute
 
 The Supervisor does not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
 
+Supervisor may read Git changed-file paths to report suspected scope drift against active approved Handoff Packets. Scope drift reports are review signals, not automatic rollback or completion decisions.
+
 ## Status Values
 
 - `Draft`: being prepared
@@ -111,7 +115,9 @@ The Supervisor does not edit game source, gameplay JSON, assets, build settings,
 - `Blocked`: waiting on missing information or dependency
 - `Archived`: inactive or superseded
 
-`Ready` does not mean execution is approved. Source code, data schema, runtime behavior, build setting, tool execution, commit, and push work still follow AIWorkflow approval gates.
+`Ready` does not mean execution is approved. Once a Packet, DeveloperPlan, work order, or equivalent execution scope is explicitly approved, normal source code edits and non-schema data edits inside that scope do not need a separate per-file approval. New approval is needed when work leaves the approved scope or needs unapproved schema, lifecycle, build, Git, or workflow changes.
+
+`Scope Status: Approved` means the Packet has a recorded approved execution scope. `Scope Drift Issues` means changed-file paths may be outside that approved scope and should be checked before completion.
 
 ## Waiting User Approval
 
@@ -151,4 +157,6 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 이 파일은 역할 간 전달 문서의 간단한 색인입니다. 새 전달 문서를 만들면 `Active Handoffs`에 추가하고, 완료되면 `Done/` 또는 `Archive/`로 이동한 뒤 상태를 갱신합니다.
 
-`Ready`는 실행 승인 상태가 아닙니다. 코드, 데이터, 런타임 동작, 빌드 설정, 도구 실행, 커밋, 푸시는 여전히 AIWorkflow 승인 게이트를 따릅니다. 높은 위험 작업이 사용자 승인을 기다릴 때는 `Waiting User Approval`에 표시합니다.
+`Ready`는 실행 승인 상태가 아닙니다. 하지만 Packet, DeveloperPlan, work order 또는 이에 준하는 실행 범위가 명시적으로 승인되면, 그 범위 안의 일반적인 소스 코드 수정과 스키마 변경이 아닌 데이터 수정은 파일별로 다시 승인받지 않습니다. 승인된 범위를 벗어나거나 승인되지 않은 schema, lifecycle, build, Git, workflow 변경이 필요할 때 다시 승인 대기로 전환합니다.
+
+`Scope Status: Approved`는 승인된 실행 범위가 기록되어 있다는 뜻입니다. `Scope Drift Issues`는 변경 파일 경로가 승인 범위 밖일 가능성이 있다는 신호이며, 완료 처리 전에 확인해야 합니다.

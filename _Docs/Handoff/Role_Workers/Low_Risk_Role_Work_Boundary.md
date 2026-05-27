@@ -127,6 +127,14 @@ The following are not low-risk:
 - push
 - role-chat wakeup or control
 
+## v2 Approved-Scope Work Is Separate
+
+Approved-scope Developer execution is not classified as low-risk automation just because it is allowed inside an approved Packet.
+
+If `approved_execution_scope.approved` is true, a Developer role may perform normal source code edits and non-schema data edits inside the approved scope, but that is bounded implementation work, not low-risk role-worker automation.
+
+Low-risk automation remains document/report oriented unless a later phase explicitly expands role-worker execution authority.
+
 ## Role-Specific Examples
 
 ### Planner

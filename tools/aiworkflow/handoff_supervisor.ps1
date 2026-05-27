@@ -190,6 +190,78 @@ function Get-ManifestBool {
     return ([string]$v).ToLowerInvariant() -eq "true"
 }
 
+function Get-ManifestNestedScalar {
+    param(
+        [hashtable]$Manifest,
+        [string]$ParentKey,
+        [string]$ChildKey,
+        [string]$Default = ""
+    )
+
+    if (-not $Manifest.ContainsKey($ParentKey) -or -not ($Manifest[$ParentKey] -is [hashtable])) {
+        return $Default
+    }
+
+    $parent = $Manifest[$ParentKey]
+    if (-not $parent.ContainsKey($ChildKey) -or $null -eq $parent[$ChildKey]) {
+        return $Default
+    }
+
+    return [string]$parent[$ChildKey]
+}
+
+function Get-ManifestNestedBool {
+    param(
+        [hashtable]$Manifest,
+        [string]$ParentKey,
+        [string]$ChildKey,
+        [bool]$Default = $false
+    )
+
+    if (-not $Manifest.ContainsKey($ParentKey) -or -not ($Manifest[$ParentKey] -is [hashtable])) {
+        return $Default
+    }
+
+    $parent = $Manifest[$ParentKey]
+    if (-not $parent.ContainsKey($ChildKey) -or $null -eq $parent[$ChildKey]) {
+        return $Default
+    }
+
+    $v = $parent[$ChildKey]
+    if ($v -is [bool]) {
+        return $v
+    }
+
+    return ([string]$v).ToLowerInvariant() -eq "true"
+}
+
+function Get-ExecutionScopeStatus {
+    param(
+        [bool]$ScopeApproved,
+        [string]$DeliveryStatus,
+        [string]$ExecutionStatus,
+        [string]$ApprovalState
+    )
+
+    if ($ScopeApproved) {
+        return "Approved"
+    }
+
+    if ($DeliveryStatus -eq "Done" -or $DeliveryStatus -eq "Archived") {
+        return "Closed"
+    }
+
+    if ($ExecutionStatus -eq "WaitingUserApproval" -or $ApprovalState -eq "Requested") {
+        return "WaitingApproval"
+    }
+
+    if ($DeliveryStatus -eq "Claimed" -or $ExecutionStatus -in @("Planning", "InProgress", "ReviewRequested", "QARequested")) {
+        return "MissingScope"
+    }
+
+    return "NotApproved"
+}
+
 function Get-DocumentPathFromManifest {
     param(
         [hashtable]$Manifest,
@@ -407,6 +479,94 @@ function Test-ApprovalDecisionOption {
     return (($Text -match $englishPattern) -or ($Text -match $koreanPattern))
 }
 
+function Normalize-ScopePath {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        return ""
+    }
+
+    $normalized = ([string]$Path).Trim().Replace("\", "/")
+
+    while ($normalized.StartsWith("./")) {
+        $normalized = $normalized.Substring(2)
+    }
+
+    return $normalized.TrimStart("/")
+}
+
+function Test-PathMatchesScopePattern {
+    param(
+        [string]$RepoPath,
+        [string]$Pattern
+    )
+
+    $path = Normalize-ScopePath -Path $RepoPath
+    $patternText = Normalize-ScopePath -Path $Pattern
+
+    if ([string]::IsNullOrWhiteSpace($patternText)) {
+        return $false
+    }
+
+    if ($patternText -eq "." -or $patternText -eq "*") {
+        return $true
+    }
+
+    if ($patternText.Contains("*")) {
+        return ($path -like $patternText)
+    }
+
+    if ($patternText.EndsWith("/")) {
+        return $path.StartsWith($patternText)
+    }
+
+    return ($path -eq $patternText -or $path.StartsWith($patternText + "/"))
+}
+
+function Test-PathMatchesAnyScopePattern {
+    param(
+        [string]$RepoPath,
+        [array]$Patterns
+    )
+
+    foreach ($pattern in @($Patterns)) {
+        if (Test-PathMatchesScopePattern -RepoPath $RepoPath -Pattern ([string]$pattern)) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Get-GitChangedPaths {
+    param([string]$Repo)
+
+    $paths = [System.Collections.Generic.List[string]]::new()
+
+    $commands = @(
+        @("diff", "--name-only"),
+        @("diff", "--cached", "--name-only"),
+        @("ls-files", "--others", "--exclude-standard")
+    )
+
+    foreach ($args in $commands) {
+        try {
+            $result = & git -C $Repo @args 2>$null
+            foreach ($line in @($result)) {
+                $normalized = Normalize-ScopePath -Path $line
+                if (-not [string]::IsNullOrWhiteSpace($normalized)) {
+                    [void]$paths.Add($normalized)
+                }
+            }
+        }
+        catch {
+            return @()
+        }
+    }
+
+    return @($paths | Select-Object -Unique | Sort-Object)
+}
+
 function Add-ApprovalRequestContentIssues {
     param(
         [string]$PacketDir,
@@ -541,6 +701,70 @@ function Add-IndexConsistencyIssues {
     }
 }
 
+function Add-ScopeDriftIssues {
+    param(
+        [string]$Repo,
+        [array]$Packets,
+        [System.Collections.Generic.List[object]]$Issues
+    )
+
+    $changedPaths = @(Get-GitChangedPaths -Repo $Repo)
+    if ($changedPaths.Count -eq 0) {
+        return
+    }
+
+    foreach ($packet in $Packets) {
+        if (-not [bool]$packet.scope_approved) {
+            continue
+        }
+
+        if ($packet.delivery_status -eq "Done" -or $packet.delivery_status -eq "Archived") {
+            continue
+        }
+
+        if (-not ($packet.delivery_status -eq "Claimed" -or $packet.execution_status -in @("Planning", "InProgress", "ReviewRequested", "QARequested"))) {
+            continue
+        }
+
+        $allowedPatterns = @($packet.approved_scope_allowed_paths)
+        if ($allowedPatterns.Count -eq 0) {
+            $allowedPatterns = @($packet.allowed_paths)
+        }
+
+        if ($allowedPatterns.Count -eq 0) {
+            continue
+        }
+
+        $forbiddenPatterns = @($packet.approved_scope_forbidden_paths) + @($packet.forbidden_paths)
+        $outsideAllowed = [System.Collections.Generic.List[string]]::new()
+        $insideForbidden = [System.Collections.Generic.List[string]]::new()
+
+        foreach ($changedPath in $changedPaths) {
+            $isAllowed = Test-PathMatchesAnyScopePattern -RepoPath $changedPath -Patterns $allowedPatterns
+            $isForbidden = Test-PathMatchesAnyScopePattern -RepoPath $changedPath -Patterns $forbiddenPatterns
+
+            if (-not $isAllowed) {
+                [void]$outsideAllowed.Add($changedPath)
+            }
+
+            if ($isForbidden) {
+                [void]$insideForbidden.Add($changedPath)
+            }
+        }
+
+        $packet.scope_drift_files = @($outsideAllowed)
+        $packet.scope_forbidden_files = @($insideForbidden)
+
+        if ($insideForbidden.Count -gt 0) {
+            Add-Issue -Issues $Issues -Severity "Critical" -HandoffId $packet.handoff_id -Issue "Scope drift check found changed files under forbidden paths: $($insideForbidden -join ', ')." -SuggestedAction "Verify whether these files belong to another task, revert/isolate unrelated changes, or request expanded approval."
+        }
+
+        if ($outsideAllowed.Count -gt 0) {
+            Add-Issue -Issues $Issues -Severity "Major" -HandoffId $packet.handoff_id -Issue "Scope drift check found changed files outside approved_scope_allowed_paths: $($outsideAllowed -join ', ')." -SuggestedAction "Verify ownership of the changed files or request expanded execution scope before treating the Packet as complete."
+        }
+    }
+}
+
 function Load-HandoffPackets {
     param([string]$Repo)
 
@@ -591,6 +815,19 @@ function Load-HandoffPackets {
         $approvalState = Get-ManifestScalar -Manifest $manifest -Key "approval_state"
         $approvalRequestPath = Get-ManifestScalar -Manifest $manifest -Key "approval_request_path"
         $approvalTypes = @(ConvertTo-ArrayValue -Value $manifest["approval_type"])
+        $scopeApproved = Get-ManifestNestedBool -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "approved"
+        $scopeSummary = Get-ManifestNestedScalar -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "summary"
+        $scopeApprovedBy = Get-ManifestNestedScalar -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "approved_by"
+        $scopeApprovedAt = Get-ManifestNestedScalar -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "approved_at"
+        $scopeApprovalSource = Get-ManifestNestedScalar -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "approval_source"
+        $scopeSourceDocument = Get-ManifestNestedScalar -Manifest $manifest -ParentKey "approved_execution_scope" -ChildKey "source_document"
+        $approvedScopeAllowedPaths = @(ConvertTo-ArrayValue -Value $manifest["approved_scope_allowed_paths"])
+        $approvedScopeForbiddenPaths = @(ConvertTo-ArrayValue -Value $manifest["approved_scope_forbidden_paths"])
+        $approvedScopeNonGoals = @(ConvertTo-ArrayValue -Value $manifest["approved_scope_non_goals"])
+        $approvedScopeValidation = @(ConvertTo-ArrayValue -Value $manifest["approved_scope_validation"])
+        $allowedPaths = @(ConvertTo-ArrayValue -Value $manifest["allowed_paths"])
+        $forbiddenPaths = @(ConvertTo-ArrayValue -Value $manifest["forbidden_paths"])
+        $scopeStatus = Get-ExecutionScopeStatus -ScopeApproved $scopeApproved -DeliveryStatus $deliveryStatus -ExecutionStatus $executionStatus -ApprovalState $approvalState
 
         $packetRel = Get-RelativePath -BasePath $Repo -FullPath $packetDir
         $manifestRel = Get-RelativePath -BasePath $Repo -FullPath $manifestFile.FullName
@@ -612,6 +849,21 @@ function Load-HandoffPackets {
             approval_state = $approvalState
             approval_request_path = $approvalRequestPath
             approval_type = @($approvalTypes)
+            scope_status = $scopeStatus
+            scope_approved = $scopeApproved
+            scope_summary = $scopeSummary
+            scope_approved_by = $scopeApprovedBy
+            scope_approved_at = $scopeApprovedAt
+            scope_approval_source = $scopeApprovalSource
+            scope_source_document = $scopeSourceDocument
+            approved_scope_allowed_paths = @($approvedScopeAllowedPaths)
+            approved_scope_forbidden_paths = @($approvedScopeForbiddenPaths)
+            approved_scope_non_goals = @($approvedScopeNonGoals)
+            approved_scope_validation = @($approvedScopeValidation)
+            allowed_paths = @($allowedPaths)
+            forbidden_paths = @($forbiddenPaths)
+            scope_drift_files = @()
+            scope_forbidden_files = @()
             packet_path = $packetRel.Replace("\", "/")
             manifest_path = $manifestRel.Replace("\", "/")
             packet_dir = $packetDir
@@ -685,6 +937,27 @@ function Load-HandoffPackets {
             Add-Issue -Issues $issues -Severity "Critical" -HandoffId $handoffId -Issue "approval_required is true but approval_request_path is empty." -SuggestedAction "Write a substantive approval request and set approval_request_path."
         }
 
+        $isActiveExecution = ($deliveryStatus -ne "Done" -and $deliveryStatus -ne "Archived" -and ($deliveryStatus -eq "Claimed" -or $executionStatus -in @("Planning", "InProgress", "ReviewRequested", "QARequested")))
+        $isDeveloperPacket = (($toRoles -contains "Developer") -or $currentOwner -eq "Developer" -or $claimedBy -eq "Developer")
+
+        if ($isActiveExecution -and $isDeveloperPacket -and -not $scopeApproved) {
+            Add-Issue -Issues $issues -Severity "Major" -HandoffId $handoffId -Issue "Developer execution is active but approved_execution_scope.approved is not true." -SuggestedAction "Record the approved execution scope or move the Packet back to WaitingUserApproval."
+        }
+
+        if ($scopeApproved) {
+            if ($approvedScopeAllowedPaths.Count -eq 0) {
+                Add-Issue -Issues $issues -Severity "Major" -HandoffId $handoffId -Issue "approved_execution_scope is approved but approved_scope_allowed_paths is empty." -SuggestedAction "Record the file, directory, or pattern boundary that the approved execution may modify."
+            }
+
+            if ([string]::IsNullOrWhiteSpace($scopeSummary)) {
+                Add-Issue -Issues $issues -Severity "Minor" -HandoffId $handoffId -Issue "approved_execution_scope is approved but summary is empty." -SuggestedAction "Add a short summary of the approved execution scope."
+            }
+
+            if ([string]::IsNullOrWhiteSpace($scopeSourceDocument)) {
+                Add-Issue -Issues $issues -Severity "Minor" -HandoffId $handoffId -Issue "approved_execution_scope is approved but source_document is empty." -SuggestedAction "Link the DeveloperPlan, work order, or chat-derived scope document that records the approval."
+            }
+        }
+
         if ($executionStatus -eq "WaitingUserApproval" -and [string]::IsNullOrWhiteSpace($approvalRequestPath)) {
             Add-Issue -Issues $issues -Severity "Critical" -HandoffId $handoffId -Issue "execution_status is WaitingUserApproval but no approval request path is recorded." -SuggestedAction "Create Results/DeveloperPlan.md or another approval request document and link it."
         }
@@ -723,6 +996,7 @@ function Get-HandoffView {
     else {
         @($activePackets | Where-Object { @($_.to_roles) -contains $RoleFilter -or $_.current_owner -eq $RoleFilter -or $_.claimed_by -eq $RoleFilter })
     }
+    $scopeDriftIssues = @($Issues | Where-Object { [string]$_.issue -match "Scope drift check" })
 
     return [pscustomobject]@{
         generated_at = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss K")
@@ -730,6 +1004,9 @@ function Get-HandoffView {
         packet_count = $Packets.Count
         active_count = $activePackets.Count
         issue_count = $Issues.Count
+        approved_scope_count = @($Packets | Where-Object { [bool]$_.scope_approved }).Count
+        missing_scope_count = @($rolePackets | Where-Object { $_.scope_status -eq "MissingScope" }).Count
+        scope_drift_issue_count = $scopeDriftIssues.Count
         all_packets = @($Packets)
         waiting_user_approval = @($Packets | Where-Object { $_.execution_status -eq "WaitingUserApproval" -or $_.approval_state -eq "Requested" })
         ready_work = @($rolePackets | Where-Object { $_.delivery_status -eq "Ready" -and $_.execution_status -eq "NotStarted" })
@@ -797,24 +1074,27 @@ function New-DashboardMarkdown {
     [void]$lines.Add("| Blocked | $($View.blocked.Count) |")
     [void]$lines.Add("| Review Requested | $($View.review_requested.Count) |")
     [void]$lines.Add("| QA Requested | $($View.qa_requested.Count) |")
+    [void]$lines.Add("| Approved Execution Scopes | $($View.approved_scope_count) |")
+    [void]$lines.Add("| Missing Execution Scopes | $($View.missing_scope_count) |")
+    [void]$lines.Add("| Scope Drift Issues | $($View.scope_drift_issue_count) |")
     [void]$lines.Add("| Consistency Issues | $($View.issue_count) |")
     [void]$lines.Add("")
     [void]$lines.Add("## Waiting User Approval")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | Role | Title | Approval Request Path | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $View.waiting_user_approval -ColumnCount 5 -Projector {
+    [void]$lines.Add("| Handoff ID | Role | Title | Scope Status | Approval Request Path | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.waiting_user_approval -ColumnCount 6 -Projector {
         param($p)
-        @($p.handoff_id, ($p.to_roles -join ", "), $p.title, $p.approval_request_path, $p.updated_at)
+        @($p.handoff_id, ($p.to_roles -join ", "), $p.title, $p.scope_status, $p.approval_request_path, $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Ready Work")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | From | To | Title | Manifest | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $View.ready_work -ColumnCount 6 -Projector {
+    [void]$lines.Add("| Handoff ID | From | To | Title | Scope Status | Manifest | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.ready_work -ColumnCount 7 -Projector {
         param($p)
-        @($p.handoff_id, $p.from_role, ($p.to_roles -join ", "), $p.title, ('`' + $p.manifest_path + '`'), $p.updated_at)
+        @($p.handoff_id, $p.from_role, ($p.to_roles -join ", "), $p.title, $p.scope_status, ('`' + $p.manifest_path + '`'), $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Review Requested")
@@ -874,11 +1154,11 @@ function New-DashboardMarkdown {
     [void]$lines.Add("")
     [void]$lines.Add("## Packet Index")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | Delivery | Execution | From | To | Title | Manifest | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $View.all_packets -ColumnCount 8 -Projector {
+    [void]$lines.Add("| Handoff ID | Delivery | Execution | Scope | From | To | Title | Manifest | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $View.all_packets -ColumnCount 9 -Projector {
         param($p)
-        @($p.handoff_id, $p.delivery_status, $p.execution_status, $p.from_role, ($p.to_roles -join ", "), $p.title, ('`' + $p.manifest_path + '`'), $p.updated_at)
+        @($p.handoff_id, $p.delivery_status, $p.execution_status, $p.scope_status, $p.from_role, ($p.to_roles -join ", "), $p.title, ('`' + $p.manifest_path + '`'), $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Safety Boundary")
@@ -911,33 +1191,33 @@ function New-QueueMarkdown {
     [void]$lines.Add("")
     [void]$lines.Add("## How To Use")
     [void]$lines.Add("")
-    [void]$lines.Add('A role chat should use this queue as its visible work intake. `Ready` means the role may inspect and plan. It does not mean implementation, data, runtime, build, Git, or approval changes are authorized.')
+    [void]$lines.Add('A role chat should use this queue as its visible work intake. `Ready` means the role may inspect and plan. Implementation starts when `Scope Status` is `Approved` or the human developer explicitly provides an execution scope.')
     [void]$lines.Add("")
     [void]$lines.Add("## Waiting User Approval")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | Title | Approval Request Path | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $waiting -ColumnCount 4 -Projector {
+    [void]$lines.Add("| Handoff ID | Title | Scope Status | Approval Request Path | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $waiting -ColumnCount 5 -Projector {
         param($p)
-        @($p.handoff_id, $p.title, $p.approval_request_path, $p.updated_at)
+        @($p.handoff_id, $p.title, $p.scope_status, $p.approval_request_path, $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Ready Work")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | From | Title | Manifest | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $ready -ColumnCount 5 -Projector {
+    [void]$lines.Add("| Handoff ID | From | Title | Scope Status | Manifest | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $ready -ColumnCount 6 -Projector {
         param($p)
-        @($p.handoff_id, $p.from_role, $p.title, ('`' + $p.manifest_path + '`'), $p.updated_at)
+        @($p.handoff_id, $p.from_role, $p.title, $p.scope_status, ('`' + $p.manifest_path + '`'), $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## In Progress")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | Owner | Title | Execution | Updated |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $active -ColumnCount 5 -Projector {
+    [void]$lines.Add("| Handoff ID | Owner | Title | Execution | Scope Status | Updated |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $active -ColumnCount 6 -Projector {
         param($p)
-        @($p.handoff_id, $p.current_owner, $p.title, $p.execution_status, $p.updated_at)
+        @($p.handoff_id, $p.current_owner, $p.title, $p.execution_status, $p.scope_status, $p.updated_at)
     })) { [void]$lines.Add($line) }
     [void]$lines.Add("")
     [void]$lines.Add("## Review Requested")
@@ -969,11 +1249,11 @@ function New-QueueMarkdown {
     [void]$lines.Add("")
     [void]$lines.Add("## All Role Packets")
     [void]$lines.Add("")
-    [void]$lines.Add("| Handoff ID | Delivery | Execution | Title | Manifest |")
-    [void]$lines.Add("| --- | --- | --- | --- | --- |")
-    foreach ($line in (New-TableRows -Rows $rolePackets -ColumnCount 5 -Projector {
+    [void]$lines.Add("| Handoff ID | Delivery | Execution | Scope | Title | Manifest |")
+    [void]$lines.Add("| --- | --- | --- | --- | --- | --- |")
+    foreach ($line in (New-TableRows -Rows $rolePackets -ColumnCount 6 -Projector {
         param($p)
-        @($p.handoff_id, $p.delivery_status, $p.execution_status, $p.title, ('`' + $p.manifest_path + '`'))
+        @($p.handoff_id, $p.delivery_status, $p.execution_status, $p.scope_status, $p.title, ('`' + $p.manifest_path + '`'))
     })) { [void]$lines.Add($line) }
 
     return ($lines -join "`r`n")
@@ -1055,6 +1335,9 @@ function Write-HumanOutput {
     Write-Host "Blocked:               $($View.blocked.Count)"
     Write-Host "Review Requested:      $($View.review_requested.Count)"
     Write-Host "QA Requested:          $($View.qa_requested.Count)"
+    Write-Host "Approved Scopes:       $($View.approved_scope_count)"
+    Write-Host "Missing Scopes:        $($View.missing_scope_count)"
+    Write-Host "Scope Drift Issues:    $($View.scope_drift_issue_count)"
     Write-Host "Consistency Issues:    $($View.issue_count)"
     Write-Host ""
 
@@ -1069,7 +1352,7 @@ function Write-HumanOutput {
     if ($View.ready_work.Count -gt 0) {
         Write-Host "[Ready Work]"
         foreach ($p in $View.ready_work) {
-            Write-Host ("- {0} -> {1} | {2}" -f $p.from_role, ($p.to_roles -join ", "), $p.title)
+            Write-Host ("- {0} -> {1} | {2} | scope={3}" -f $p.from_role, ($p.to_roles -join ", "), $p.title, $p.scope_status)
         }
         Write-Host ""
     }
@@ -1099,6 +1382,7 @@ try {
         [void]$issues.Add($issue)
     }
     Add-IndexConsistencyIssues -Repo $repo -Packets $loaded.packets -Issues $issues
+    Add-ScopeDriftIssues -Repo $repo -Packets $loaded.packets -Issues $issues
     $view = Get-HandoffView -Packets $loaded.packets -Issues @($issues) -RoleFilter $Role
 
     if ($Command -eq "write-docs") {

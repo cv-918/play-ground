@@ -344,18 +344,36 @@ Use Full Path for architecture, runtime, data schema, refactor, or AI-generated 
 
 AI assistants must stop and request explicit user approval before:
 
-- Source code implementation
-- Structural refactoring
-- File creation under project source directories
-- JSON schema changes
-- Save/load behavior changes
-- Actor lifecycle changes
-- Scene lifecycle changes
-- Runtime behavior changes
+- Source code implementation without an approved execution scope
+- Structural refactoring outside the approved scope
+- File creation under project source directories outside the approved scope
+- JSON schema changes not included in the approved scope
+- Save/load behavior changes not included in the approved scope
+- Actor lifecycle changes outside the approved scope
+- Scene lifecycle changes outside the approved scope
+- Runtime behavior changes outside the approved design or execution scope
 - Build setting changes
-- Tool execution that may modify files
+- Tool execution that may modify files outside the approved scope
 - Git commit recommendations
 - Workflow rule changes
+
+### 8.1 Scope-Based Implementation Approval
+
+Approval is scope-based, not per-code-change.
+
+When the user has explicitly approved a Handoff Packet, implementation plan, work order, or equivalent execution scope, that approval covers normal source code edits and non-schema data edits that are necessary to complete the described work inside the approved boundary.
+
+Do not request another approval only because source code or non-schema data will be edited inside the approved scope.
+
+Request renewed approval when:
+
+- the implementation needs to expand beyond the approved goal, files, systems, or behavior
+- the work introduces a structural refactor not included in the approved scope
+- the work changes JSON schema, save/load behavior, migration behavior, or broad runtime architecture beyond the approved scope
+- the work needs build setting changes, commit, push, release, deployment, or workflow rule changes not already approved
+- the approved scope is ambiguous enough that proceeding would require guessing
+
+This rule prevents per-file or per-developer micro-approval. The human approval decision is about the intended game/workflow change and its execution boundary.
 
 Approval applies only to the described scope.
 

@@ -41,14 +41,14 @@ AIWorkflow Handoff Integration의 Phase 10A 문서다.
 
 역할 직원은 Packet을 읽고 Intake 결정 또는 계획을 작성할 수 있다.
 
-`Ready`는 소스 수정, JSON 수정, 런타임 변경, 빌드/테스트 실행, approval evidence 설정, `Done` 처리, commit, push를 승인하지 않는다.
+`Ready` 자체는 실행 승인이 아니다. 구현은 승인된 실행 범위가 기록되었거나 사용자가 명시적으로 제공한 뒤 시작한다.
 
 ### In Progress
 
 역할 직원은 다음 조건에서만 계속 진행할 수 있다.
 
 - 자신이 current owner, claimed role이거나 사용자가 명시적으로 지시했다
-- 작업이 여전히 승인된 범위 안에 있다
+- 작업이 여전히 `approved_execution_scope`와 `approved_scope_allowed_paths` 안에 있다
 - 필요한 승인이 이미 기록되었거나 필요 없는 작업이다
 
 ### Review Requested
@@ -88,6 +88,8 @@ Intake Decision에는 다음이 들어가야 한다.
 - 읽은 문서
 - 이 역할이 유효한 대상인지
 - 승인이 필요한지
+- 승인된 실행 범위 상태
+- 승인된 허용 경로
 - 허용되는 다음 행동
 - 금지 행동
 - 멈춰야 하는 조건
@@ -100,7 +102,9 @@ Intake Decision에는 다음이 들어가야 한다.
 - manifest가 없거나 구조적으로 유효하지 않다
 - 해당 역할이 대상, owner, reviewer/QA 요청 역할이 아니다
 - `WaitingUserApproval`인데 사용자 승인이 없다
-- 명시 승인 없이 코드, JSON, 런타임, 에셋, 빌드, 승인, `Done`, commit, push 작업이 필요하다
+- 승인된 실행 범위 없이 코드, 스키마 변경이 아닌 데이터, 런타임, 에셋 작업이 필요하다
+- 작업이 `approved_scope_allowed_paths` 밖으로 나가야 한다
+- schema, save/load, lifecycle, build, approval evidence, `Done`, commit, push 작업이 해당 범위에 대해 명시 승인 없이 필요하다
 - `Violations/Open.md`에 해당 Packet의 Critical 또는 Major 문제가 있다
 - 요청 작업이 `AGENTS.md` 또는 `_Docs/AIWorkflow/`와 충돌한다
 

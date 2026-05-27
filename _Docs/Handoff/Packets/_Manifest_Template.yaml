@@ -43,6 +43,23 @@ approval_evidence:
   approval_source: ""
   approved_scope: []
 
+# v2 scope-based execution contract.
+# When approved is true, normal source code edits and non-schema data edits
+# inside approved_scope_allowed_paths are part of execution, not a separate
+# per-file approval point.
+approved_execution_scope:
+  approved: false
+  summary: ""
+  approved_by: ""
+  approved_at: ""
+  approval_source: ""
+  source_document: ""
+
+approved_scope_allowed_paths: []
+approved_scope_forbidden_paths: []
+approved_scope_non_goals: []
+approved_scope_validation: []
+
 # Substantive approval request summary.
 # Required when approval_required is true.
 approval_request:
