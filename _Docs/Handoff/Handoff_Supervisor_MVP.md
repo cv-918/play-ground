@@ -228,4 +228,8 @@ Phase 12C validates the first low-risk Role Worker automation run. The automatio
 
 Phase 13A strengthens the user-facing approval wait flow. `Approval_Waiting_Flow.md` defines where approval waits appear, what the approval request must contain, and the exact approve/reject/modify-scope decision language the human developer can use.
 
+Phase 13B validated the approval wait flow with `HANDOFF-20260527-004-approval-waiting-flow-pilot`. While waiting for approval, the Packet appeared in Dashboard and Developer Queue output and linked to `Results/DeveloperPlan.md` as the user decision surface.
+
+Phase 13C implements the approved narrow Supervisor lint for incomplete approval request documents. When a Packet waits for user approval, Supervisor checks the linked approval request document for required Phase 13A sections and approve/reject/modify-scope options. The check is section-based and intentionally narrow; it reports clearly incomplete requests without judging writing style.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

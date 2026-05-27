@@ -124,6 +124,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260525-001-handoff-system-phase1-3-review | Done | Done | Planner | Reviewer, QA | AI Role Handoff System Phase 1-3 Documentation Review | `Packets/HANDOFF-20260525-001-handoff-system-phase1-3-review/manifest.yaml` | 2026-05-25 |
 | HANDOFF-20260526-002-skill-shortcut-key-labels | Done | Done | Planner | Developer, QA | Skill Shortcut Key Label Mapping | `Packets/HANDOFF-20260526-002-skill-shortcut-key-labels/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-003-low-risk-role-worker-pilot | Done | Done | Planner | Developer, QA | Low-Risk Role Worker Pilot | `Packets/HANDOFF-20260527-003-low-risk-role-worker-pilot/manifest.yaml` | 2026-05-27 |
+| HANDOFF-20260527-004-approval-waiting-flow-pilot | Done | Done | Planner | Developer | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/manifest.yaml` | 2026-05-27 |
 
 ## Active Handoffs
 
@@ -135,6 +136,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-27 | Developer | Planner | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/CompletionNotice.md` |
 | 2026-05-27 | Developer, QA | Planner | Low-Risk Role Worker Pilot | `Packets/HANDOFF-20260527-003-low-risk-role-worker-pilot/CompletionNotice.md` |
 | 2026-05-27 | QA | Planner, Developer | Skill Shortcut Key Label Mapping | `Packets/HANDOFF-20260526-002-skill-shortcut-key-labels/CompletionNotice.md` |
 | 2026-05-25 | Reviewer, QA | Planner | AI Role Handoff System Phase 1-3 Documentation Review | `Packets/HANDOFF-20260525-001-handoff-system-phase1-3-review/CompletionNotice.md` |

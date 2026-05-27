@@ -128,6 +128,14 @@ A `Ready` Packet is not implementation approval.
 
 An automation run report is not implementation approval.
 
+## Supervisor Lint Rule
+
+Phase 13C adds a narrow Supervisor lint for approval request documents.
+
+When a Packet waits for user approval, Supervisor may report a consistency issue if the linked request document is missing required Phase 13A sections or the approve/reject/modify-scope decision options.
+
+This lint checks structure and obvious omissions. It does not judge writing style or automatically approve, reject, complete, or modify the Packet.
+
 ## User Action Summary
 
 When the human developer asks what to do with a waiting approval, the assistant should answer in this order:

@@ -128,6 +128,14 @@ approval_type:
 
 자동화 run report는 구현 승인이 아니다.
 
+## Supervisor 검사 규칙
+
+Phase 13C는 승인 요청 문서에 대한 좁은 Supervisor 검사를 추가한다.
+
+Packet이 사용자 승인을 기다릴 때, Supervisor는 연결된 요청 문서에 Phase 13A 필수 섹션이나 승인/거절/범위 수정 선택지가 빠져 있으면 consistency issue로 보고할 수 있다.
+
+이 검사는 구조와 명확한 누락만 확인한다. 문장 품질을 평가하거나 Packet을 자동으로 승인, 거절, 완료, 수정하지 않는다.
+
 ## 사용자에게 설명할 때의 순서
 
 사용자가 승인 대기 항목에서 무엇을 해야 하는지 물으면 assistant는 다음 순서로 답한다.

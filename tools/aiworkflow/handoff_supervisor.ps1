@@ -347,6 +347,140 @@ function Resolve-HandoffIndexManifestPath {
     return $repoRelative
 }
 
+function Resolve-PacketRelativePath {
+    param(
+        [string]$PacketDir,
+        [string]$RelativePath
+    )
+
+    $normalized = $RelativePath.Replace("/", "\")
+
+    if ([System.IO.Path]::IsPathRooted($normalized)) {
+        return $normalized
+    }
+
+    return (Join-Path $PacketDir $normalized)
+}
+
+function Test-MarkdownSectionHasMeaningfulContent {
+    param([string[]]$Lines)
+
+    foreach ($line in $Lines) {
+        $trimmed = $line.Trim()
+
+        if ([string]::IsNullOrWhiteSpace($trimmed)) {
+            continue
+        }
+
+        if ($trimmed -match '^```') {
+            continue
+        }
+
+        if ($trimmed -eq "-") {
+            continue
+        }
+
+        if ($trimmed -match '^(TBD|TODO|Replace with details)\.?$') {
+            continue
+        }
+
+        if ($trimmed -match '^(Describe|Explain|List)\s+') {
+            continue
+        }
+
+        return $true
+    }
+
+    return $false
+}
+
+function Test-ApprovalDecisionOption {
+    param(
+        [string]$Text,
+        [string]$EnglishLabel,
+        [string]$KoreanLabel
+    )
+
+    $englishPattern = '(?mi)^\s*(?:[-*]\s*)?' + [regex]::Escape($EnglishLabel) + '\s*:?\s*$'
+    $koreanPattern = '(?m)^\s*(?:[-*]\s*)?' + [regex]::Escape($KoreanLabel) + '\s*:?\s*$'
+
+    return (($Text -match $englishPattern) -or ($Text -match $koreanPattern))
+}
+
+function Add-ApprovalRequestContentIssues {
+    param(
+        [string]$PacketDir,
+        [string]$HandoffId,
+        [string]$ApprovalRequestPath,
+        [System.Collections.Generic.List[object]]$Issues
+    )
+
+    $resolvedPath = Resolve-PacketRelativePath -PacketDir $PacketDir -RelativePath $ApprovalRequestPath
+
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+        Add-Issue -Issues $Issues -Severity "Critical" -HandoffId $HandoffId -Issue "approval_request_path points to a missing approval request document: $ApprovalRequestPath" -SuggestedAction "Create the linked approval request document or correct approval_request_path."
+        return
+    }
+
+    $lines = [System.IO.File]::ReadAllLines($resolvedPath, [System.Text.Encoding]::UTF8)
+    $text = [System.IO.File]::ReadAllText($resolvedPath, [System.Text.Encoding]::UTF8)
+
+    $requiredSections = @(
+        "User-Facing Change",
+        "Proposed Behavior",
+        "Files Expected To Change",
+        "Files Not Allowed To Touch",
+        "Non-Goals",
+        "Risks",
+        "Validation Plan",
+        "Decision Needed",
+        "Suggested User Response",
+        "Before Approval I Will Not"
+    )
+
+    $missingSections = [System.Collections.Generic.List[string]]::new()
+    $emptySections = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($section in $requiredSections) {
+        $sectionLines = @(Get-MarkdownSectionLines -Lines $lines -Heading $section)
+
+        if ($sectionLines.Count -eq 0) {
+            [void]$missingSections.Add($section)
+            continue
+        }
+
+        if (-not (Test-MarkdownSectionHasMeaningfulContent -Lines $sectionLines)) {
+            [void]$emptySections.Add($section)
+        }
+    }
+
+    if ($missingSections.Count -gt 0) {
+        Add-Issue -Issues $Issues -Severity "Major" -HandoffId $HandoffId -Issue "Approval request is missing required Phase 13A sections: $($missingSections -join ', ')." -SuggestedAction "Update the request using _Docs/Handoff/Packets/_Approval_Request_Template.md."
+    }
+
+    if ($emptySections.Count -gt 0) {
+        Add-Issue -Issues $Issues -Severity "Major" -HandoffId $HandoffId -Issue "Approval request has empty or placeholder-only sections: $($emptySections -join ', ')." -SuggestedAction "Replace placeholders with concrete change, scope, risk, validation, and decision details."
+    }
+
+    $missingOptions = [System.Collections.Generic.List[string]]::new()
+
+    if (-not (Test-ApprovalDecisionOption -Text $text -EnglishLabel "Approve" -KoreanLabel "승인")) {
+        [void]$missingOptions.Add("approve")
+    }
+
+    if (-not (Test-ApprovalDecisionOption -Text $text -EnglishLabel "Reject" -KoreanLabel "거절")) {
+        [void]$missingOptions.Add("reject")
+    }
+
+    if (-not (Test-ApprovalDecisionOption -Text $text -EnglishLabel "Modify Scope" -KoreanLabel "범위 수정")) {
+        [void]$missingOptions.Add("modify scope")
+    }
+
+    if ($missingOptions.Count -gt 0) {
+        Add-Issue -Issues $Issues -Severity "Major" -HandoffId $HandoffId -Issue "Approval request does not show all required user decision options: $($missingOptions -join ', ')." -SuggestedAction "Add approve, reject, and modify-scope options with suggested user response sentences."
+    }
+}
+
 function Add-IndexConsistencyIssues {
     param(
         [string]$Repo,
@@ -553,6 +687,11 @@ function Load-HandoffPackets {
 
         if ($executionStatus -eq "WaitingUserApproval" -and [string]::IsNullOrWhiteSpace($approvalRequestPath)) {
             Add-Issue -Issues $issues -Severity "Critical" -HandoffId $handoffId -Issue "execution_status is WaitingUserApproval but no approval request path is recorded." -SuggestedAction "Create Results/DeveloperPlan.md or another approval request document and link it."
+        }
+
+        $isWaitingApproval = ($executionStatus -eq "WaitingUserApproval" -or $approvalState -eq "Requested")
+        if ($isWaitingApproval -and -not [string]::IsNullOrWhiteSpace($approvalRequestPath)) {
+            Add-ApprovalRequestContentIssues -PacketDir $packetDir -HandoffId $handoffId -ApprovalRequestPath $approvalRequestPath -Issues $issues
         }
 
         if ($deliveryStatus -eq "Ready" -and $executionStatus -eq "InProgress") {
