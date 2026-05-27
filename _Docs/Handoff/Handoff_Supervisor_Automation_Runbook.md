@@ -118,6 +118,26 @@ It does not mean the automation becomes a worker between runs.
 
 Each scheduled run should start, inspect Handoff state, refresh allowed generated surfaces, report relevant status, and then stop.
 
+## First Run Validation
+
+The first observed scheduled run was validated on 2026-05-27.
+
+Observed generated surface timestamp:
+
+```text
+2026-05-27 14:27:03 +09:00
+```
+
+The run refreshed only generated Handoff status surfaces:
+
+- `Dashboard.md`
+- `Queues/<Role>.md`
+- `Violations/Open.md`
+
+The Handoff status after validation reported 0 waiting approvals, 0 ready work, and 0 consistency issues.
+
+Cron execution may create one visible run/thread per scheduled execution. The human developer decided to keep the 60-minute ACTIVE schedule unchanged for now.
+
 ## Recommended First Automation Prompt
 
 Use this prompt for the first recurring automation after approval:

@@ -206,4 +206,6 @@ Phase 9A defines safe Supervisor automation modes in `Handoff_Supervisor_Automat
 
 Phase 9B created the approved `playground-handoff-supervisor` Codex recurring automation. It runs every 60 minutes while ACTIVE, may refresh generated Handoff status surfaces, and remains forbidden from source edits, approval evidence, Packet claiming, Done marking, commits, pushes, and role-chat wakeups.
 
+Phase 9C validated the first observed Supervisor automation run. The run refreshed only generated Handoff status surfaces and Handoff status remained clean with 0 consistency issues.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.
