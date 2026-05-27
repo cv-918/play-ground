@@ -560,6 +560,37 @@ tools\aiworkflow\handoff_supervisor.bat write-docs --execute</pre>
         </table>
       </section>
 
+      <section class="section" id="operations-checklist">
+        <h2>운영 체크리스트</h2>
+        <p>
+          실제 운영 중에는 <code>Dashboard.md</code>를 먼저 보고, 문제가 있으면 <code>Violations/Open.md</code>를 확인한다.
+          역할별 작업은 <code>Queues/&lt;Role&gt;.md</code>에서 확인하고, 승인 대기 항목은 연결된 Packet의 요청 문서를 읽고 결정한다.
+        </p>
+        <pre>tools\aiworkflow\handoff_supervisor.bat status</pre>
+        <table>
+          <tr>
+            <th>상황</th>
+            <th>해야 할 일</th>
+          </tr>
+          <tr>
+            <td>Waiting User Approval</td>
+            <td>요청 문서를 열고 승인, 거절, 범위 수정 중 하나를 결정한다.</td>
+          </tr>
+          <tr>
+            <td>Consistency Issues &gt; 0</td>
+            <td>새 작업을 진행하기 전에 <code>Violations/Open.md</code>를 먼저 해결한다.</td>
+          </tr>
+          <tr>
+            <td>Ready Work</td>
+            <td>역할은 읽고 계획할 수 있지만, 구현 승인으로 취급하지 않는다.</td>
+          </tr>
+          <tr>
+            <td>CompletionNotice</td>
+            <td>검증 기록과 남은 위험을 보고 commit/push 여부를 판단한다.</td>
+          </tr>
+        </table>
+      </section>
+
       <section class="section" id="phase-status">
         <h2>Phase 상태</h2>
         <div class="phase-list">
@@ -590,6 +621,7 @@ tools\aiworkflow\handoff_supervisor.bat write-docs --execute</pre>
           <div class="phase"><b>Phase 13A 완료:</b> 승인 대기 항목을 사용자가 판단할 수 있도록 승인 요청 문서의 결정 선택지와 응답 문장 기준을 강화했다.</div>
           <div class="phase"><b>Phase 13B 완료:</b> 실제 승인 대기 Packet을 만들어 Dashboard, Developer Queue, Index에서 승인 요청 문서까지 이어지는 흐름을 검증했다.</div>
           <div class="phase"><b>Phase 13C 완료:</b> Supervisor가 사용자 승인 대기 Packet의 승인 요청 문서에서 필수 섹션과 승인/거절/범위 수정 선택지 누락을 감지하도록 했다.</div>
+          <div class="phase"><b>Phase 14 완료:</b> Dashboard, Violations, Queue, Packet 문서를 어떤 순서로 보고 무엇을 결정해야 하는지 운영 체크리스트로 고정했다.</div>
         </div>
       </section>
 
@@ -621,6 +653,7 @@ tools\aiworkflow\handoff_supervisor.bat write-docs --execute</pre>
           <li><a href="../ReadOnly_Scanner_Design_KR.md">ReadOnly_Scanner_Design_KR.md</a></li>
           <li><a href="../Status_Update_Boundaries_KR.md">Status_Update_Boundaries_KR.md</a></li>
           <li><a href="../Handoff_Supervisor_MVP_KR.md">Handoff_Supervisor_MVP_KR.md</a></li>
+          <li><a href="../Handoff_Operations_Checklist_KR.md">Handoff_Operations_Checklist_KR.md</a></li>
           <li><a href="../Dashboard.md">Dashboard.md</a></li>
           <li><a href="../Role_Routines/Role_Routine_Overview.md">Role_Routine_Overview.md</a></li>
         </ul>
@@ -628,7 +661,7 @@ tools\aiworkflow\handoff_supervisor.bat write-docs --execute</pre>
 
       <footer>
         <p>Location: <code>_Docs/Handoff/Guide/Handoff_System_User_Guide_KR.html</code></p>
-        <p>Last updated: 2026-05-26</p>
+        <p>Last updated: 2026-05-27</p>
       </footer>
     </main>
   </div>

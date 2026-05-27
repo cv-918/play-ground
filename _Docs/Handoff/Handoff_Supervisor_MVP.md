@@ -232,4 +232,6 @@ Phase 13B validated the approval wait flow with `HANDOFF-20260527-004-approval-w
 
 Phase 13C implements the approved narrow Supervisor lint for incomplete approval request documents. When a Packet waits for user approval, Supervisor checks the linked approval request document for required Phase 13A sections and approve/reject/modify-scope options. The check is section-based and intentionally narrow; it reports clearly incomplete requests without judging writing style.
 
+Phase 14 adds the daily operations checklist. `Handoff_Operations_Checklist.md` defines the normal check order, user action matrix, current automation states, approval decision checklist, and end-of-work checklist.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

@@ -232,4 +232,6 @@ Phase 13B는 `HANDOFF-20260527-004-approval-waiting-flow-pilot`으로 승인 대
 
 Phase 13C는 승인된 좁은 범위의 Supervisor 승인 요청서 검사를 구현했다. Packet이 사용자 승인을 기다릴 때, Supervisor는 연결된 승인 요청 문서에 Phase 13A 필수 섹션과 승인/거절/범위 수정 선택지가 있는지 확인한다. 이 검사는 섹션 기반이며, 문장 품질 전체를 평가하지 않고 명확히 부족한 요청서만 보고한다.
 
+Phase 14는 일상 운영 체크리스트를 추가했다. `Handoff_Operations_Checklist_KR.md`는 기본 확인 순서, 사용자 행동 표, 현재 자동화 상태, 승인 결정 체크리스트, 작업 종료 체크리스트를 정의한다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.
