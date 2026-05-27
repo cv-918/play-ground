@@ -34,6 +34,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff v1 Finalization Korean | `Handoff_V1_Finalization_KR.md` | Korean final v1 contract and operating summary |
 | Handoff v2 Scope-Based Execution Principle | `Handoff_V2_Scope_Based_Execution_Principle.md` | v2 principle that approval is based on scope departure, not source code edits alone |
 | Handoff v2 범위 기반 실행 승인 원칙 | `Handoff_V2_Scope_Based_Execution_Principle_KR.md` | Korean v2 scope-based execution approval principle |
+| Handoff v2 Phase 17-22 Finalization | `Handoff_V2_Phase17_22_Finalization.md` | Final contract for the first v2 scope-based execution bundle |
+| Handoff v2 Phase 17-22 마감 | `Handoff_V2_Phase17_22_Finalization_KR.md` | Korean support document for the first v2 finalization bundle |
 | Handoff Supervisor Automation Runbook | `Handoff_Supervisor_Automation_Runbook.md` | Safe Supervisor automation modes and recurring automation scope |
 | Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
 | Role Worker Intake Contract | `Role_Workers/Role_Worker_Intake_Contract.md` | Queue intake contract for role chats and future role-worker automation |
