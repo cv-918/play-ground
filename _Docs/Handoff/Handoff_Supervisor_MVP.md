@@ -212,4 +212,6 @@ Phase 10A defines the role worker intake contract in `_Docs/Handoff/Role_Workers
 
 Phase 10B adds a role worker contract check harness under `_Docs/Handoff/Role_Workers/Harness/`. It defines contract checks, blind scenarios, run reports, pass/fail criteria, and recovery rules before real work assignment.
 
+Phase 10C runs a Developer harness-readiness pilot and records Contract Check and Blind Scenario reports. It validates that the harness can produce scorable evidence, but it does not prove that a separate external role chat has internalized the contract.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

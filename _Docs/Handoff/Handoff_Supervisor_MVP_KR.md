@@ -212,4 +212,6 @@ Phase 10A는 `_Docs/Handoff/Role_Workers/`에 역할 직원 intake 계약을 정
 
 Phase 10B는 `_Docs/Handoff/Role_Workers/Harness/`에 역할 직원 계약 확인 하네스를 추가한다. 실제 작업 배정 전에 계약 확인, 블라인드 시나리오, 실행 리포트, 통과/실패 기준, 복구 규칙을 정의한다.
 
+Phase 10C는 Developer 하네스 준비 상태 파일럿을 실행하고 Contract Check와 Blind Scenario 리포트를 기록한다. 이 파일럿은 하네스가 채점 가능한 증거를 만들 수 있음을 검증하지만, 독립된 외부 역할 채팅이 계약을 내재화했음을 증명하지는 않는다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

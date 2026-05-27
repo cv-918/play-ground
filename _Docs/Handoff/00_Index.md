@@ -35,6 +35,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Harness Contract Check Template | `Role_Workers/Harness/_Contract_Check_Template.md` | Contract check template |
 | Role Worker Harness Blind Scenario Template | `Role_Workers/Harness/_Blind_Scenario_Template.md` | Blind scenario template |
 | Role Worker Harness Run Report Template | `Role_Workers/Harness/_Run_Report_Template.md` | Harness run report template |
+| Role Worker Harness Pilot Report | `Role_Workers/Harness/Role_Worker_Harness_Pilot_Report.md` | Phase 10C Developer harness pilot summary |
+| Role Worker Harness Pilot Report Korean | `Role_Workers/Harness/Role_Worker_Harness_Pilot_Report_KR.md` | Korean Phase 10C harness pilot summary |
 | Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
 | Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
 | Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |
