@@ -226,4 +226,6 @@ Phase 12B creates the approved `playground-handoff-role-worker-low-risk` Codex r
 
 Phase 12C validates the first low-risk Role Worker automation run. The automation was temporarily activated, wrote only `_Docs/Handoff/Role_Workers/Automation/Runs/2026-05-27_173316_LowRiskRoleWorker.md`, found no candidates, avoided Packet Results drafts and all forbidden actions, and was returned to `PAUSED`.
 
+Phase 13A strengthens the user-facing approval wait flow. `Approval_Waiting_Flow.md` defines where approval waits appear, what the approval request must contain, and the exact approve/reject/modify-scope decision language the human developer can use.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

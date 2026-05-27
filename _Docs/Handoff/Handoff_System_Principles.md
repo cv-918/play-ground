@@ -91,6 +91,8 @@ Approval applies only to the stated scope. If the scope changes, the role must s
 
 Approval requests must describe the actual proposed change.
 
+The user-facing approval wait and decision flow is defined in `Approval_Waiting_Flow.md`.
+
 An approval request must not ask only for a gate label such as:
 
 ```text

@@ -49,7 +49,7 @@ Developer must wait for approval before:
 
 ## Developer Approval Request
 
-Use `Results/DeveloperPlan.md` or `_Docs/Handoff/Packets/_Approval_Request_Template.md`.
+Use `Results/DeveloperPlan.md`, `_Docs/Handoff/Packets/_Approval_Request_Template.md`, and `_Docs/Handoff/Approval_Waiting_Flow.md`.
 
 The request must explain:
 
@@ -62,6 +62,7 @@ The request must explain:
 - Risks
 - Validation plan
 - Exact decision needed
+- Suggested user response for approve, reject, and scope modification
 
 ## Developer Result
 

@@ -139,6 +139,16 @@ The approval request must follow the substantive approval request rule from `Han
 
 It must explain the actual proposed change, not only the approval gate name.
 
+Use `Approval_Waiting_Flow.md` for the user-facing decision flow.
+
+The request document must include exact decision options and suggested user response sentences for:
+
+- approval
+- rejection
+- scope modification
+
+The human developer should not need to infer what to type from a gate label alone.
+
 ## AIWorkflow Linkage
 
 A Packet may link to AIWorkflow records, but it does not replace them.

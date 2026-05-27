@@ -226,4 +226,6 @@ Phase 12B는 승인된 `playground-handoff-role-worker-low-risk` Codex recurring
 
 Phase 12C는 낮은 위험 Role Worker 자동화의 첫 실행을 검증했다. 자동화를 일시적으로 활성화했고, `_Docs/Handoff/Role_Workers/Automation/Runs/2026-05-27_173316_LowRiskRoleWorker.md` run report 하나만 작성되었으며, 후보는 없었다. Packet Results 초안과 모든 금지 행동은 수행되지 않았고, 검증 후 자동화는 다시 `PAUSED`로 돌렸다.
 
+Phase 13A는 사용자 관점의 승인 대기 흐름을 강화했다. `Approval_Waiting_Flow_KR.md`는 승인 대기가 어디에 표시되는지, 승인 요청에 무엇이 들어가야 하는지, 사용자가 쓸 수 있는 승인/거절/범위 수정 문장을 정의한다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

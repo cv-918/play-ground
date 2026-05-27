@@ -93,6 +93,7 @@ Allowed:
 Only allowed when:
 
 - A substantive approval request exists or is created in the same document-only update.
+- The request follows `Approval_Waiting_Flow.md` and includes exact user decision options.
 
 Not allowed:
 

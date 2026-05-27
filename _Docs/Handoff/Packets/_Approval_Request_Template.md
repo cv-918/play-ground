@@ -57,7 +57,49 @@ Describe the behavior or workflow that will exist after the change.
 
 ## Decision Needed
 
-Approve / Reject / Modify Scope
+Choose one:
+
+- Approve
+- Reject
+- Modify Scope
+
+## Suggested User Response
+
+Approve:
+
+```text
+<Handoff ID> <Request Document> 승인. 제안된 범위와 검증 계획대로 진행해.
+```
+
+Reject:
+
+```text
+<Handoff ID> <Request Document> 거절. 이 변경은 진행하지 마.
+```
+
+Modify Scope:
+
+```text
+<Handoff ID> <Request Document> 범위 수정. <허용할 것>만 진행하고 <금지할 것>은 하지 마.
+```
+
+## Approval Scope
+
+Approval applies only to the proposed scope in this document.
+
+If additional files, data/schema changes, runtime behavior, assets, build steps, validation actions, commit, or push become necessary, stop and request expanded approval.
+
+## Before Approval I Will Not
+
+- Modify source code.
+- Modify gameplay JSON or schema.
+- Change runtime behavior.
+- Change assets.
+- Run build/test as completion evidence.
+- Set approval evidence.
+- Claim approval from planning approval.
+- Mark work `Done`.
+- Commit or push.
 
 ## Stop Rule
 

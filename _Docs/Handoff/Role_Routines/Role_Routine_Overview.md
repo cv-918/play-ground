@@ -64,6 +64,8 @@ High-risk work must stop at `WaitingUserApproval`.
 
 Approval requests must describe the actual proposed change.
 
+Use `_Docs/Handoff/Approval_Waiting_Flow.md` and the approval request template under `_Docs/Handoff/Packets/`.
+
 They must include:
 
 - User-facing or gameplay/workflow change
@@ -76,6 +78,7 @@ They must include:
 - Risks
 - Validation plan
 - Decision needed
+- Suggested user response for approve, reject, and modify-scope decisions
 
 Do not request approval with only a gate label.
 
