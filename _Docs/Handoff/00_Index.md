@@ -44,6 +44,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Low-Risk Role Work Boundary Korean | `Role_Workers/Low_Risk_Role_Work_Boundary_KR.md` | Korean low-risk role work boundary |
 | Role Worker Automation Design | `Role_Workers/Role_Worker_Automation_Design.md` | Phase 12A safe design for future low-risk role-worker automation |
 | Role Worker Automation Design Korean | `Role_Workers/Role_Worker_Automation_Design_KR.md` | Korean Phase 12A role-worker automation design |
+| Role Worker Automation v2 Bundle 2 | `Role_Workers/Role_Worker_Automation_v2_Bundle2.md` | Phase 23-28 Role Worker automation scope, run contract, Results draft permission, and pilot boundary |
+| Role Worker Automation v2 Bundle 2 Korean | `Role_Workers/Role_Worker_Automation_v2_Bundle2_KR.md` | Korean Phase 23-28 Role Worker automation bundle |
 | Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
 | Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
 | Low-Risk Role Work Report Template | `Role_Workers/_Low_Risk_Work_Report_Template.md` | Report template for low-risk role work candidates |
@@ -52,6 +54,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Automation Run Report Template Korean | `Role_Workers/Automation/_Run_Report_Template_KR.md` | Korean run report template for future role-worker automation |
 | Role Worker Automation Runbook | `Role_Workers/Automation/Role_Worker_Automation_Runbook.md` | Phase 12B creation record for the low-risk Role Worker automation |
 | Role Worker Automation Runbook Korean | `Role_Workers/Automation/Role_Worker_Automation_Runbook_KR.md` | Korean Phase 12B Role Worker automation runbook |
+| Handoff v2 Bundle 2 Role Worker Automation Finalization | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization.md` | Finalization document for the Phase 23-28 Role Worker automation bundle |
+| Handoff v2 Bundle 2 Role Worker Automation Finalization Korean | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization_KR.md` | Korean finalization document for the Phase 23-28 Role Worker automation bundle |
 | Role Worker Contract Check Harness | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness.md` | Harness for checking role worker contract readiness |
 | Role Worker Contract Check Harness Korean | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness_KR.md` | Korean role worker harness |
 | Role Worker Harness Contract Check Template | `Role_Workers/Harness/_Contract_Check_Template.md` | Contract check template |
@@ -140,6 +144,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260527-003-low-risk-role-worker-pilot | Done | Done | Planner | Developer, QA | Low-Risk Role Worker Pilot | `Packets/HANDOFF-20260527-003-low-risk-role-worker-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-004-approval-waiting-flow-pilot | Done | Done | Planner | Developer | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-005-attribute-tree-render-bounds | Done | Done | Planner | Developer, QA | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/manifest.yaml` | 2026-05-27 |
+| HANDOFF-20260527-006-role-worker-resolution-position-pilot | Done | Done | Planner | Developer | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/manifest.yaml` | 2026-05-27 |
 
 ## Active Handoffs
 
@@ -151,6 +156,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-27 | Role Worker, Developer | Planner | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/CompletionNotice.md` |
 | 2026-05-27 | Developer, QA | Planner | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/CompletionNotice.md` |
 | 2026-05-27 | Developer | Planner | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/CompletionNotice.md` |
 | 2026-05-27 | Developer, QA | Planner | Low-Risk Role Worker Pilot | `Packets/HANDOFF-20260527-003-low-risk-role-worker-pilot/CompletionNotice.md` |

@@ -1,0 +1,103 @@
+packet_version: 1
+handoff_id: HANDOFF-20260527-006-role-worker-resolution-position-pilot
+title: Role Worker Pilot - Resolution Character Field Position
+
+created_at: 2026-05-27
+updated_at: 2026-05-27
+
+from_role: Planner
+to_roles:
+  - Developer
+current_owner: ""
+claimed_by: Codex
+claimed_at: 2026-05-27
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Medium
+
+approval_required: false
+approval_state: NotRequired
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: false
+  approved_by: ""
+  approved_at: ""
+  approval_source: ""
+  approved_scope: []
+
+approved_execution_scope:
+  approved: false
+  summary: ""
+  approved_by: ""
+  approved_at: ""
+  approval_source: ""
+  source_document: ""
+
+approved_scope_allowed_paths: []
+approved_scope_forbidden_paths: []
+approved_scope_non_goals: []
+approved_scope_validation: []
+
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/WorkLog/2026-05-27_Handoff_Role_Worker_Automation_Bundle2.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: ""
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - Results/DeveloperIntakeDecision.md
+  - Results/RoleWorkerLowRiskWorkReport.md
+resource_notes: []
+
+allowed_paths:
+  - _Docs/Handoff/Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/
+  - _Docs/Handoff/Role_Workers/
+  - _DevLog/WorkLog/
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/
+  - _Docs/AIWorkflow/
+
+blocked_by: []
+next_actions:
+  - If the user wants the actual bug fixed, create or approve a separate Developer execution scope.
+completion_criteria:
+  - Role Worker pilot records an intake decision without implementing the bug fix.
+  - The Packet clearly states that source/runtime work is outside the document-only pilot.
+  - Role Worker Bundle 2 can close without changing game source, JSON, runtime, assets, build settings, or Git automation.
+remaining_risks:
+  - The actual resolution-change character-position bug remains unfixed.
+
+notes: "Completed as a document-only Role Worker automation Bundle 2 pilot. No game implementation was performed."

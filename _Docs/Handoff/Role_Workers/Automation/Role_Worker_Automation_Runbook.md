@@ -17,12 +17,12 @@ It is an operational runbook, not permission to expand automation scope.
 ## Mode
 
 ```text
-document-only low-risk run reporting
+document-only low-risk reporting and safe Packet Results drafting
 ```
 
 The automation is a shared office-assistant style worker. It is not a Developer, QA, Planner, Artist, or Reviewer replacement.
 
-It reads Supervisor-generated work surfaces and writes its own run report only.
+It reads Supervisor-generated work surfaces, writes its own run report, and may write safe Packet Results drafts when the work is document-only low-risk.
 
 ## Allowed Reads
 
@@ -37,7 +37,7 @@ It reads Supervisor-generated work surfaces and writes its own run report only.
 
 ## Allowed Writes
 
-Only timestamped run reports under:
+Timestamped run reports under:
 
 ```text
 _Docs/Handoff/Role_Workers/Automation/Runs/
@@ -49,17 +49,22 @@ Use:
 _Docs/Handoff/Role_Workers/Automation/_Run_Report_Template.md
 ```
 
-## Explicitly Deferred
-
-Packet Results draft writing is deferred.
-
-The automation must not write:
+New Packet Results draft documents under:
 
 ```text
 _Docs/Handoff/Packets/<handoff-id>/Results/
 ```
 
-unless the human developer separately approves that expansion in a later phase.
+Allowed draft names:
+
+```text
+<Role>IntakeDecision.md
+<Role>LowRiskWorkReport.md
+<Role>ClarificationRequest.md
+<Role>BlockerSummary.md
+```
+
+The automation must not overwrite existing result documents.
 
 ## Forbidden Actions
 
@@ -92,13 +97,14 @@ When activated later, each run should:
 3. Identify low-risk document-only candidates.
 4. Skip `WaitingUserApproval`, blocked, risky, or unclear candidates.
 5. Write one timestamped run report.
-6. Stop without editing Packet Results or operational status.
+6. Write safe Packet Results drafts only when the target output does not already exist.
+7. Stop without editing operational status.
 
 ## Activation Rule
 
-The automation is created as PAUSED.
+The automation remains PAUSED after Bundle 2.
 
-Do not activate it until Phase 12C or another explicit human approval asks for first-run validation.
+Do not activate it until the human developer explicitly asks for first-run validation under the updated Results-draft boundary.
 
 ## First Run Validation
 
@@ -123,6 +129,16 @@ Observed result:
 - Source, JSON, assets, build/test, commit, push: not touched
 
 After the first run was validated, the automation was returned to `PAUSED`.
+
+## Phase 23-28 Bundle 2 Update
+
+On 2026-05-27, Bundle 2 updated the automation boundary:
+
+- status remains `PAUSED`
+- cadence remains 60 minutes
+- single shared Role Worker automation is retained
+- safe Packet Results draft writing is allowed
+- game source, JSON, runtime, assets, build/test, manifests, status, approval evidence, Done/Archived, commit, push, and role-chat control remain forbidden
 
 ## Phase 12B Completion
 
