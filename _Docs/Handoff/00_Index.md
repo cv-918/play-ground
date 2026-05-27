@@ -28,8 +28,12 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
 | Role Worker Intake Contract | `Role_Workers/Role_Worker_Intake_Contract.md` | Queue intake contract for role chats and future role-worker automation |
 | Role Worker Intake Contract Korean | `Role_Workers/Role_Worker_Intake_Contract_KR.md` | Korean role worker intake contract |
+| Low-Risk Role Work Boundary | `Role_Workers/Low_Risk_Role_Work_Boundary.md` | Candidate categories and forbidden actions for future low-risk role work automation |
+| Low-Risk Role Work Boundary Korean | `Role_Workers/Low_Risk_Role_Work_Boundary_KR.md` | Korean low-risk role work boundary |
 | Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
 | Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
+| Low-Risk Role Work Report Template | `Role_Workers/_Low_Risk_Work_Report_Template.md` | Report template for low-risk role work candidates |
+| Low-Risk Role Work Report Template Korean | `Role_Workers/_Low_Risk_Work_Report_Template_KR.md` | Korean low-risk work report template |
 | Role Worker Contract Check Harness | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness.md` | Harness for checking role worker contract readiness |
 | Role Worker Contract Check Harness Korean | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness_KR.md` | Korean role worker harness |
 | Role Worker Harness Contract Check Template | `Role_Workers/Harness/_Contract_Check_Template.md` | Contract check template |

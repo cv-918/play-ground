@@ -214,4 +214,6 @@ Phase 10B adds a role worker contract check harness under `_Docs/Handoff/Role_Wo
 
 Phase 10C runs a Developer harness-readiness pilot and records Contract Check and Blind Scenario reports. It validates that the harness can produce scorable evidence, but it does not prove that a separate external role chat has internalized the contract.
 
+Phase 11A defines low-risk role work boundaries in `_Docs/Handoff/Role_Workers/Low_Risk_Role_Work_Boundary.md`. It lists future automation candidate categories and explicitly excludes source, JSON, runtime, asset, approval, claim, `Done`, commit, push, and role-chat control actions.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.
