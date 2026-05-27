@@ -1,0 +1,144 @@
+packet_version: 1
+handoff_id: HANDOFF-20260527-005-attribute-tree-render-bounds
+title: Attribute Tree Render Bounds
+
+created_at: 2026-05-27
+updated_at: 2026-05-27
+
+from_role: Planner
+to_roles:
+  - Developer
+  - QA
+current_owner: ""
+claimed_by: Codex
+claimed_at: 2026-05-27
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Medium
+
+approval_required: true
+approval_state: Approved
+approval_request_path: PlanningBrief.md
+approval_type:
+  - FileModification
+  - UIBehavior
+  - RuntimeBehavior
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-27
+  approval_source: "chat"
+  approved_scope: "Limit attribute tree rendering to the dark gray board area. Scope is limited to the attribute tree and related classes. Excluded: schema, save/load, lifecycle, build setting, commit, and push changes."
+
+approved_execution_scope:
+  approved: true
+  summary: "Limit attribute tree nodes and connection lines so they do not visibly render outside the dark gray attribute board area."
+  approved_by: User
+  approved_at: 2026-05-27
+  approval_source: "chat"
+  source_document: PlanningBrief.md
+
+approved_scope_allowed_paths:
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.h
+  - PlayGround/Project/Gameplay/UI/Views/OutGameAttributeView.cpp
+  - PlayGround/Project/Gameplay/UI/Views/OutGameAttributeView.h
+  - _Docs/Handoff/Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/
+  - _Docs/Handoff/00_Index.md
+  - _Docs/Handoff/Dashboard.md
+  - _Docs/Handoff/Queues/
+  - _Docs/Handoff/Violations/
+  - _DevLog/FixLog/
+
+approved_scope_forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Resources/
+  - _Docs/AIWorkflow/
+
+approved_scope_non_goals:
+  - No AttributeNode JSON schema changes.
+  - No save/load behavior changes.
+  - No actor, scene, or UI lifecycle changes.
+  - No build setting changes.
+  - No asset or background resource edits.
+  - No commit or push.
+  - No redesign of the attribute tree layout or data.
+  - The dark gray board bounds do not need pixel-perfect matching.
+
+approved_scope_validation:
+  - Inspect source diff and confirm only approved files changed.
+  - Run the existing project build if available without changing build settings.
+  - Manual QA should confirm nodes and connection lines do not visibly render outside the dark gray board area.
+
+approval_request:
+  title: "Attribute tree render bounds"
+  user_facing_change: "Attribute tree nodes and connection lines should stay visually inside the dark gray board area."
+  gameplay_or_workflow_intent: "Prevent the growth tree UI from spilling outside the intended board resource."
+  proposed_behavior: "Clip or otherwise limit the tree rendering area using an approximate panel rectangle derived from the current view size."
+  data_changes: "None."
+  code_changes: "Modify only AttributeNodeTree rendering and the related OutGameAttributeView panel-boundary wiring if needed."
+  files_expected_to_change: "AttributeNodeTree.cpp/.h, OutGameAttributeView.cpp/.h, this Handoff Packet, and a FixLog."
+  non_goals: "No schema, save/load, lifecycle, build setting, asset, commit, or push changes."
+  risks: "The panel boundary is approximate because the background resource does not expose exact board coordinates."
+  validation_plan: "Build if available and manually check the attribute tree view at the target resolution."
+  decision_needed: "Already approved by the user for Phase 21 pilot execution."
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/FixLog/2026-05-27_AttributeTreeRenderBounds.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: QARequest.md
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - Results/DeveloperResult.md
+  - Results/QAResult.md
+resource_notes:
+  - "User provided screenshots showing nodes above and below the dark gray board area."
+
+allowed_paths:
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.h
+  - PlayGround/Project/Gameplay/UI/Views/OutGameAttributeView.cpp
+  - PlayGround/Project/Gameplay/UI/Views/OutGameAttributeView.h
+  - _Docs/Handoff/Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/
+  - _DevLog/FixLog/
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Resources/
+  - _Docs/AIWorkflow/
+
+blocked_by: []
+next_actions:
+  - Human developer may commit the completed Phase 21 pilot work.
+completion_criteria:
+  - Attribute tree nodes and connection lines no longer visibly render outside the dark gray board area.
+  - The implementation remains inside the approved attribute tree and related view classes.
+  - No schema, save/load, lifecycle, build setting, asset, commit, or push changes are made.
+  - Validation result or validation deferral is recorded.
+remaining_risks:
+  - The background art does not provide exact board coordinates, so the clip rectangle is approximate.
+
+notes: "Completed after user confirmed the implemented result and approved commit."

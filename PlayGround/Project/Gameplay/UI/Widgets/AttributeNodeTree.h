@@ -11,6 +11,7 @@ public:
 	void OnViewportChanged() override;
 	void ResetView();
 	void SetInputRegion(const _Rect& _bounds, const std::vector<_Rect>& _excluded_rects);
+	void SetRenderRegion(const _Rect& _bounds);
 
 	_int Update(_double _delta_time) override;
 	void Render(_double _delta_time) override;
@@ -44,6 +45,7 @@ private:
 	_Point _GetRootAnchor() const;
 
 	void _CreateTooltip();
+	void _RenderTreeContent(_double _delta_time);
 
 	// 노드 간의 연결선을 그리는 메서드. 매개변수로 받은 노드가 가진 자식에 대해 연결선을 그린다
 	void _DrawConnections(AttributeNode* _node);
@@ -56,6 +58,7 @@ private:
 	AttributeNode* mouse_overed_node_ = nullptr; // 마우스 오버된 노드를 추적하는 포인터. 필요에 따라 마우스 오버된 노드에 대한 추가적인 UI 요소(예: 툴팁)를 표시할 때 활용할 수 있습니다.
 	_Point base_root_anchor_ = GAME_VIEW_CENTER;
 	_Rect input_bounds_ = GAME_VIEW_RECT;
+	_Rect render_bounds_ = GAME_VIEW_RECT;
 	std::vector<_Rect> input_excluded_rects_;
 	_Vector2 pan_offset_ = _Vector2::Zero();
 	_float zoom_scale_ = 1.0f;

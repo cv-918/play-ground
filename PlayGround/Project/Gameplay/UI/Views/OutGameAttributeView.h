@@ -20,6 +20,7 @@ private:
 
 	void UpdateLayout();
 	void _UpdateTreeInputRegion();
+	_Rect _GetTreeRenderPanelRect() const;
 	_Rect _GetCurrencyPanelRect() const;
 	void _RenderCurrencyPanel() const;
 

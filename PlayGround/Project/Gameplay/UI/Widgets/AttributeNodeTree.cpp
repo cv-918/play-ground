@@ -53,6 +53,17 @@ void AttributeNodeTree::SetInputRegion(const _Rect& _bounds, const std::vector<_
 	input_excluded_rects_ = _excluded_rects;
 }
 
+void AttributeNodeTree::SetRenderRegion(const _Rect& _bounds)
+{
+	if (_bounds.Width() <= 0 || _bounds.Height() <= 0)
+	{
+		render_bounds_ = GAME_VIEW_RECT;
+		return;
+	}
+
+	render_bounds_ = _bounds;
+}
+
 _int AttributeNodeTree::Update(_double _delta_time)
 {
 	_int ret = UPDATE_CONTINUE;
@@ -102,6 +113,38 @@ void AttributeNodeTree::Render(_double _delta_time)
 {
 	__super::Render(_delta_time);
 
+	if (render_bounds_.Width() > 0 && render_bounds_.Height() > 0 && g_back_dc != nullptr)
+	{
+		const auto saved_dc = SaveDC(g_back_dc);
+		if (saved_dc > 0)
+		{
+			IntersectClipRect(
+				g_back_dc,
+				render_bounds_.Left(),
+				render_bounds_.Top(),
+				render_bounds_.Right(),
+				render_bounds_.Bottom());
+
+			_RenderTreeContent(_delta_time);
+			RestoreDC(g_back_dc, saved_dc);
+		}
+		else
+		{
+			_RenderTreeContent(_delta_time);
+		}
+	}
+	else
+	{
+		_RenderTreeContent(_delta_time);
+	}
+
+	// 마우스 오버된 노드가 있다면 해당 노드에 대한 툴팁이나 추가적인 UI 요소를 렌더링할 수 있습니다.
+	if (mouse_overed_node_)
+		tooltip_->Render(_delta_time);
+}
+
+void AttributeNodeTree::_RenderTreeContent(_double _delta_time)
+{
 	// 트리의 루트 노드부터 연결선을 그리기 시작
 	_DrawConnections(node_entries_.empty() ? nullptr : node_entries_.front().node);
 
@@ -111,10 +154,6 @@ void AttributeNodeTree::Render(_double _delta_time)
 		if (entry.node)
 			entry.node->Render(_delta_time);
 	}
-
-	// 마우스 오버된 노드가 있다면 해당 노드에 대한 툴팁이나 추가적인 UI 요소를 렌더링할 수 있습니다.
-	if (mouse_overed_node_)
-		tooltip_->Render(_delta_time);
 }
 
 void AttributeNodeTree::OnViewportChanged()

@@ -18,6 +18,10 @@ namespace
 	constexpr _int kCurrencyPanelWidth = 190;
 	constexpr _int kCurrencyPanelHeight = 44;
 	constexpr _float kCurrencyPanelFontSize = 16.f;
+	constexpr _float kTreePanelLeftRatio = 0.089f;
+	constexpr _float kTreePanelTopRatio = 0.294f;
+	constexpr _float kTreePanelRightRatio = 0.911f;
+	constexpr _float kTreePanelBottomRatio = 0.94f;
 
 	_Rect BuildScaledRect(const _Rect& _base_rect, _float _scale)
 	{
@@ -136,7 +140,24 @@ void OutGameAttributeView::_UpdateTreeInputRegion()
 	if (return_btn_)
 		excluded_rects.push_back(BuildScaledRect(return_btn_->GetRect(), applied_ui_scale));
 
-	attribute_tree_->SetInputRegion(GAME_VIEW_RECT, excluded_rects);
+	const _Rect tree_panel_rect = _GetTreeRenderPanelRect();
+	attribute_tree_->SetInputRegion(tree_panel_rect, excluded_rects);
+	attribute_tree_->SetRenderRegion(tree_panel_rect);
+}
+
+_Rect OutGameAttributeView::_GetTreeRenderPanelRect() const
+{
+	const _Rect view_rect = GAME_VIEW_RECT;
+	const _int left = view_rect.Left() + s_int(std::round(view_rect.Width() * kTreePanelLeftRatio));
+	const _int top = view_rect.Top() + s_int(std::round(view_rect.Height() * kTreePanelTopRatio));
+	const _int right = view_rect.Left() + s_int(std::round(view_rect.Width() * kTreePanelRightRatio));
+	const _int bottom = view_rect.Top() + s_int(std::round(view_rect.Height() * kTreePanelBottomRatio));
+
+	return _Rect(
+		left,
+		top,
+		std::max(left + 1, right),
+		std::max(top + 1, bottom));
 }
 
 _Rect OutGameAttributeView::_GetCurrencyPanelRect() const
