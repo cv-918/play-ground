@@ -17,6 +17,47 @@
 #include "GamePlaySystems/TownNpcPlacementSpawner.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
+namespace
+{
+	struct NormalizedFieldPosition
+	{
+		_float x = 0.f;
+		_float y = 0.f;
+		_float z = 0.f;
+		_bool valid = false;
+	};
+
+	NormalizedFieldPosition CaptureNormalizedFieldPosition(TownPlayer* _player, const _Rect& _field_rect)
+	{
+		NormalizedFieldPosition result;
+		if (_player == nullptr || _player->GetTransform() == nullptr)
+			return result;
+
+		if (_field_rect.Width() <= 0 || _field_rect.Height() <= 0)
+			return result;
+
+		const auto position = _player->GetTransform()->Position();
+		result.x = std::clamp((position.x - _field_rect.Left_f()) / s_float(_field_rect.Width()), 0.f, 1.f);
+		result.y = std::clamp((position.y - _field_rect.Top_f()) / s_float(_field_rect.Height()), 0.f, 1.f);
+		result.z = position.z;
+		result.valid = true;
+		return result;
+	}
+
+	void ApplyNormalizedFieldPosition(TownPlayer* _player, const _Rect& _field_rect, const NormalizedFieldPosition& _position)
+	{
+		if (!_position.valid || _player == nullptr || _player->GetTransform() == nullptr)
+			return;
+
+		if (_field_rect.Width() <= 0 || _field_rect.Height() <= 0)
+			return;
+
+		const _float x = _field_rect.Left_f() + s_float(_field_rect.Width()) * _position.x;
+		const _float y = _field_rect.Top_f() + s_float(_field_rect.Height()) * _position.y;
+		_player->GetTransform()->Position(_Vector3(x, y, _position.z));
+	}
+}
+
 _bool OutGameScene::Initialize()
 {
 	if (!__super::Initialize())
@@ -429,6 +470,10 @@ void OutGameScene::_HandleViewportChanged()
 	if (res.width <= 0 || res.height <= 0)
 		return;
 
+	NormalizedFieldPosition player_field_position;
+	if (background_)
+		player_field_position = CaptureNormalizedFieldPosition(test_town_player_, background_->NavMesh());
+
 	if (background_)
 		background_->UpdateViewport(_Size(res.width, res.height));
 
@@ -436,7 +481,10 @@ void OutGameScene::_HandleViewportChanged()
 	{
 		const auto& nav_mesh = background_->NavMesh();
 		if (test_town_player_)
+		{
+			ApplyNormalizedFieldPosition(test_town_player_, nav_mesh, player_field_position);
 			test_town_player_->SetNavMesh(nav_mesh);
+		}
 
 		TownNpcPlacementSpawner npc_placement_spawner;
 		npc_placement_spawner.ApplyPositions(npcs_, _TownNpcPlacementDataMgr.GetOutGamePlacements(), nav_mesh);

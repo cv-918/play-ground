@@ -1,0 +1,132 @@
+packet_version: 1
+handoff_id: HANDOFF-20260528-007-resolution-character-position-fix
+title: Resolution Change Character Field Position Fix
+
+created_at: 2026-05-28
+updated_at: 2026-05-28
+
+from_role: Planner
+to_roles:
+  - Developer
+current_owner: Developer
+claimed_by: Codex
+claimed_at: 2026-05-28
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Medium
+
+approval_required: false
+approval_state: Approved
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  approved_scope:
+    - Keep the character at the same field-relative position after a resolution change.
+    - Limit implementation to resolution-change character positioning behavior.
+    - Do not change schema, save/load, lifecycle, build settings, assets, commit, or push unless separately requested.
+
+approved_execution_scope:
+  approved: true
+  summary: Preserve the outgame player character's field-relative position when the viewport/nav mesh is rebuilt after a resolution change.
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  source_document: ImplementationRequest.md
+
+approved_scope_allowed_paths:
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.h
+  - _Docs/Handoff/Packets/HANDOFF-20260528-007-resolution-character-position-fix/
+  - _DevLog/FixLog/
+
+approved_scope_forbidden_paths:
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - Do not add or change JSON schema.
+  - Do not change save/load behavior.
+  - Do not change scene or actor lifecycle semantics beyond the existing viewport-change handling path.
+  - Do not change build settings.
+  - Do not edit assets.
+  - Do not create Developer role automation in this task.
+
+approved_scope_validation:
+  - Build the PlayGround project if available.
+  - User/manual QA should verify that changing resolution keeps the outgame character at the same field-relative location.
+  - User/manual QA should verify normal town movement after the resolution change.
+
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/FixLog/2026-05-28_Resolution_Character_Field_Position_Fix.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: QARequest.md
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - Results/DeveloperPlan.md
+  - Results/DeveloperResult.md
+resource_notes: []
+
+allowed_paths:
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.h
+  - _Docs/Handoff/Packets/HANDOFF-20260528-007-resolution-character-position-fix/
+  - _DevLog/FixLog/
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+
+blocked_by: []
+next_actions:
+  - Commit the completed fix when the user is ready.
+completion_criteria:
+  - Resolution changes preserve the outgame player character's field-relative position.
+  - The change stays within OutGameScene viewport handling.
+  - No schema, save/load, asset, build setting, automation, or Git behavior changes are introduced.
+remaining_risks: []
+
+notes: "Developer role automation does not exist yet. This Codex chat acted as the Developer for this approved execution scope. Debug x64 build passed on 2026-05-28. Human QA passed on 2026-05-28."

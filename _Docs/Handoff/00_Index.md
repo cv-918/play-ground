@@ -145,6 +145,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260527-004-approval-waiting-flow-pilot | Done | Done | Planner | Developer | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-005-attribute-tree-render-bounds | Done | Done | Planner | Developer, QA | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-006-role-worker-resolution-position-pilot | Done | Done | Planner | Developer | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/manifest.yaml` | 2026-05-27 |
+| HANDOFF-20260528-007-resolution-character-position-fix | Done | Done | Planner | Developer | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/manifest.yaml` | 2026-05-28 |
 
 ## Active Handoffs
 
@@ -156,6 +157,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-28 | Developer, QA | Planner | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/CompletionNotice.md` |
 | 2026-05-27 | Role Worker, Developer | Planner | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/CompletionNotice.md` |
 | 2026-05-27 | Developer, QA | Planner | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/CompletionNotice.md` |
 | 2026-05-27 | Developer | Planner | Approval Waiting Flow Pilot | `Packets/HANDOFF-20260527-004-approval-waiting-flow-pilot/CompletionNotice.md` |
