@@ -9,6 +9,7 @@ Use this folder for:
 - intake decision templates
 - role worker harness rules
 - future low-risk worker automation boundaries
+- future low-risk worker automation design and run report templates
 
 Do not use this folder for:
 
@@ -18,6 +19,7 @@ Do not use this folder for:
 - game source code
 - gameplay JSON
 - automation scripts
+- recurring automation definitions
 - commit or push automation
 
 The role worker documents here do not grant permission to edit source, JSON, assets, build settings, approval evidence, or Git history.

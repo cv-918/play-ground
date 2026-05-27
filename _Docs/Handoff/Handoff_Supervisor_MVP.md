@@ -216,4 +216,12 @@ Phase 10C runs a Developer harness-readiness pilot and records Contract Check an
 
 Phase 11A defines low-risk role work boundaries in `_Docs/Handoff/Role_Workers/Low_Risk_Role_Work_Boundary.md`. It lists future automation candidate categories and explicitly excludes source, JSON, runtime, asset, approval, claim, `Done`, commit, push, and role-chat control actions.
 
+Phase 11B validates a low-risk Developer role-worker pilot with `HANDOFF-20260527-003-low-risk-role-worker-pilot`. The pilot Packet appeared in the generated Developer Queue as Ready Work, and the Developer role produced an Intake Decision plus a Low-Risk Work Report without source, JSON, runtime, asset, build, approval, claim, `Done`, commit, push, or role-chat control actions.
+
+Phase 11C validates repeatability with a QA role pass on the same pilot Packet. QA applied the same document-only boundary and produced a Low-Risk Work Report without expanding scope.
+
+Phase 12A designs the first future Role Worker automation as one low-risk, document-only recurring automation candidate. The design lives in `_Docs/Handoff/Role_Workers/Role_Worker_Automation_Design.md`, defines allowed inputs, allowed outputs, stop rules, idempotency rules, and Phase 12B approval questions, but does not create the automation.
+
+Phase 12B creates the approved `playground-handoff-role-worker-low-risk` Codex recurring automation in PAUSED status. It uses the same 60-minute cadence as the Handoff Supervisor, may write only timestamped run reports under `_Docs/Handoff/Role_Workers/Automation/Runs/` when activated later, and must not write Packet Results drafts, edit operational status, edit manifests, set approval evidence, claim Packets, mark `Done`, commit, push, or control role chats.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.

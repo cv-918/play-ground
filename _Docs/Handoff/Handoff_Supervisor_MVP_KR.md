@@ -216,4 +216,12 @@ Phase 10C는 Developer 하네스 준비 상태 파일럿을 실행하고 Contrac
 
 Phase 11A는 `_Docs/Handoff/Role_Workers/Low_Risk_Role_Work_Boundary_KR.md`에 낮은 위험 역할 작업 경계를 정의한다. 미래 자동화 후보 범주를 나열하고, 소스, JSON, 런타임, 에셋, 승인, claim, `Done`, commit, push, 역할 채팅 제어 행동은 명시적으로 제외한다.
 
+Phase 11B는 `HANDOFF-20260527-003-low-risk-role-worker-pilot`으로 낮은 위험 Developer 역할 작업 파일럿을 검증했다. Pilot Packet은 생성된 Developer Queue에 Ready Work로 표시되었고, Developer 역할은 Intake Decision과 Low-Risk Work Report를 작성했다. 소스, JSON, 런타임, 에셋, 빌드, 승인, claim, `Done`, commit, push, 역할 채팅 제어 행동은 수행하지 않았다.
+
+Phase 11C는 같은 Pilot Packet에서 QA 역할 반복성을 검증했다. QA는 동일한 문서-only 경계를 적용해 Low-Risk Work Report를 작성했고 범위를 확장하지 않았다.
+
+Phase 12A는 첫 미래 역할 직원 자동화를 하나의 낮은 위험, 문서-only recurring automation 후보로 설계했다. 설계 문서는 `_Docs/Handoff/Role_Workers/Role_Worker_Automation_Design_KR.md`에 있으며, 허용 입력, 허용 출력, 중지 규칙, 반복 실행 안전 규칙, Phase 12B 승인 질문을 정의한다. 실제 자동화는 생성하지 않았다.
+
+Phase 12B는 승인된 `playground-handoff-role-worker-low-risk` Codex recurring automation을 PAUSED 상태로 생성했다. 주기는 Handoff Supervisor와 같은 60분 간격이며, 나중에 활성화되더라도 `_Docs/Handoff/Role_Workers/Automation/Runs/` 아래 timestamp run report만 작성할 수 있다. Packet Results 초안, 운영 상태 수정, manifest 수정, approval evidence 설정, Packet claim, `Done` 처리, commit, push, 역할 채팅 제어는 금지된다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.
