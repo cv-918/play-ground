@@ -236,4 +236,6 @@ Phase 14는 일상 운영 체크리스트를 추가했다. `Handoff_Operations_C
 
 Phase 15는 v1 운영 준비 감사를 `Handoff_V1_Readiness_Audit_KR.md`에 기록했다. 현재 안전 경계 안에서 문서 기반 일상 운영은 준비되었고, 완전 자율 다역할 실행은 여전히 범위 밖이다.
 
+Phase 16은 `Handoff_V1_Finalization_KR.md`에서 Handoff System v1을 닫았다. 최종 v1 범위, 범위 밖 항목, 일상 요청 문장, 유지보수 정책, 생성 표면 정책, v2 후보를 기록했다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

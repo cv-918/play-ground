@@ -30,6 +30,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff Operations Checklist Korean | `Handoff_Operations_Checklist_KR.md` | Korean daily Handoff operations checklist |
 | Handoff v1 Readiness Audit | `Handoff_V1_Readiness_Audit.md` | Phase 15 readiness audit for v1 document-driven operation |
 | Handoff v1 Readiness Audit Korean | `Handoff_V1_Readiness_Audit_KR.md` | Korean v1 readiness audit |
+| Handoff v1 Finalization | `Handoff_V1_Finalization.md` | Phase 16 final v1 contract, maintenance policy, and v2 candidates |
+| Handoff v1 Finalization Korean | `Handoff_V1_Finalization_KR.md` | Korean final v1 contract and operating summary |
 | Handoff Supervisor Automation Runbook | `Handoff_Supervisor_Automation_Runbook.md` | Safe Supervisor automation modes and recurring automation scope |
 | Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
 | Role Worker Intake Contract | `Role_Workers/Role_Worker_Intake_Contract.md` | Queue intake contract for role chats and future role-worker automation |

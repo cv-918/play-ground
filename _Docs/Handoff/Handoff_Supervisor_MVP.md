@@ -236,4 +236,6 @@ Phase 14 adds the daily operations checklist. `Handoff_Operations_Checklist.md` 
 
 Phase 15 records the v1 readiness audit in `Handoff_V1_Readiness_Audit.md`. The system is ready for document-driven daily operation with current safety boundaries, while fully autonomous multi-role execution remains out of scope.
 
+Phase 16 closes Handoff System v1 in `Handoff_V1_Finalization.md`. It records the final v1 scope, non-scope, normal request phrases, maintenance policy, generated surface policy, and v2 candidate list.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.
