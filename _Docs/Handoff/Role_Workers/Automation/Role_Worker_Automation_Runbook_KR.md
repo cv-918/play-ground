@@ -100,6 +100,30 @@ _Docs/Handoff/Packets/<handoff-id>/Results/
 
 Phase 12C 또는 별도 사용자 승인이 있기 전까지 활성화하지 않는다.
 
+## 첫 실행 검증
+
+Phase 12C 첫 실행 검증은 2026-05-27에 수행했다.
+
+확인된 run report:
+
+```text
+_Docs/Handoff/Role_Workers/Automation/Runs/2026-05-27_173316_LowRiskRoleWorker.md
+```
+
+확인 결과:
+
+- 실행 시각: 2026-05-27 17:33:16 +09:00
+- 확인한 역할: Planner, Developer, Artist, Reviewer, QA
+- 검토한 후보: 없음
+- 작성한 파일: timestamp run report 1개만
+- Packet Results 초안: 작성하지 않음
+- Packet manifest: 수정하지 않음
+- approval evidence: 변경하지 않음
+- Packet claim/status/Done/Archived: 변경하지 않음
+- 소스, JSON, 에셋, build/test, commit, push: 건드리지 않음
+
+첫 실행 검증 후 자동화는 다시 `PAUSED`로 돌렸다.
+
 ## Phase 12B 완료 기준
 
 Phase 12B는 다음 조건을 만족하면 완료다.

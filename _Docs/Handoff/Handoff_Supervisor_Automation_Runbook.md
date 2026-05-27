@@ -138,30 +138,93 @@ The Handoff status after validation reported 0 waiting approvals, 0 ready work, 
 
 Cron execution may create one visible run/thread per scheduled execution. The human developer decided to keep the 60-minute ACTIVE schedule unchanged for now.
 
-## Recommended First Automation Prompt
+## Recommended Automation Prompt
 
-Use this prompt for the first recurring automation after approval:
+Use this prompt for the recurring automation after approval:
 
 ```text
 Run the Handoff Supervisor for the PlayGround repository.
 
+Command order:
+1. Run tools\aiworkflow\handoff_supervisor.bat status.
+2. Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
+3. Report the result using the fixed Markdown format in the next section.
+
 Allowed actions:
 - Run tools\aiworkflow\handoff_supervisor.bat status.
 - Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
-- Summarize Waiting User Approval and Consistency Issues if any exist.
+- Summarize Handoff counts, Waiting User Approval items, and Consistency Issues.
 
 Forbidden actions:
 - Do not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
+- Do not run builds or tests.
 - Do not mark work Done.
 - Do not claim Packets.
 - Do not wake or control other role chats.
-
-Report:
-- Handoff counts
-- Waiting User Approval items
-- Consistency Issues
-- Whether generated status surfaces were refreshed
+- Do not add, remove, rename, or reorder sections in the report format.
 ```
+
+## Fixed Supervisor Report Format
+
+Recurring Supervisor runs must use this exact Markdown section order.
+
+If a section has no items, write `None`.
+
+```md
+# PlayGround Handoff Supervisor Run
+
+## Status
+- Result: OK / WARNING / ERROR
+- Generated At: <timestamp from supervisor output if available>
+- Automation: playground-handoff-supervisor
+- Workspace: C:\Users\kalux\workStation\play-ground
+
+## Counts
+- All Packets: <number>
+- Active Packets: <number>
+- Waiting Approval: <number>
+- Ready Work: <number>
+- In Progress: <number>
+- Review Requested: <number>
+- QA Requested: <number>
+- Blocked: <number>
+- Consistency Issues: <number>
+
+## Waiting User Approval
+None
+
+If items exist, replace `None` with a Markdown table:
+| Handoff ID | Role | Title | Approval Request | Updated |
+| --- | --- | --- | --- | --- |
+
+## Consistency Issues
+None
+
+If items exist, replace `None` with a Markdown table:
+| Severity | Handoff ID | Issue | Suggested Action |
+| --- | --- | --- | --- |
+
+## Generated Files
+- Dashboard.md: refreshed / not refreshed
+- Queues/*.md: refreshed / not refreshed
+- Violations/Open.md: refreshed / not refreshed
+
+## Forbidden Action Check
+- Source edits: No
+- Gameplay JSON edits: No
+- Asset edits: No
+- Build/test execution: No
+- Approval evidence changes: No
+- Packet claim changes: No
+- Done/Archived changes: No
+- Commit/push: No
+- Role-chat wake/control: No
+
+## Human Action Needed
+None
+```
+
+The automation should not add narrative before or after this report.
 
 ## Completion Standard
 

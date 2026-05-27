@@ -138,30 +138,93 @@ Codex automation이 저장소 workspace를 대상으로 반복 실행된다.
 
 cron 실행은 예약 실행마다 보이는 run/thread를 하나씩 만들 수 있다. 사용자는 일단 60분 ACTIVE 주기를 유지하기로 결정했다.
 
-## 추천 첫 자동화 프롬프트
+## 추천 자동화 프롬프트
 
-승인 후 첫 반복 자동화에는 다음 프롬프트를 사용한다.
+반복 Supervisor 자동화에는 아래 프롬프트와 고정 출력 양식을 사용한다.
 
 ```text
 Run the Handoff Supervisor for the PlayGround repository.
 
+Command order:
+1. Run tools\aiworkflow\handoff_supervisor.bat status.
+2. Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
+3. Report the result using the fixed Markdown format in the next section.
+
 Allowed actions:
 - Run tools\aiworkflow\handoff_supervisor.bat status.
 - Run tools\aiworkflow\handoff_supervisor.bat write-docs --execute.
-- Summarize Waiting User Approval and Consistency Issues if any exist.
+- Summarize Handoff counts, Waiting User Approval items, and Consistency Issues.
 
 Forbidden actions:
 - Do not edit game source, gameplay JSON, assets, build settings, approval evidence, commits, or pushes.
+- Do not run builds or tests.
 - Do not mark work Done.
 - Do not claim Packets.
 - Do not wake or control other role chats.
-
-Report:
-- Handoff counts
-- Waiting User Approval items
-- Consistency Issues
-- Whether generated status surfaces were refreshed
+- Do not add, remove, rename, or reorder sections in the report format.
 ```
+
+## Supervisor 고정 출력 양식
+
+반복 Supervisor 실행은 아래 Markdown 섹션 순서를 그대로 사용한다.
+
+항목이 없으면 `None`이라고 쓴다.
+
+```md
+# PlayGround Handoff Supervisor Run
+
+## Status
+- Result: OK / WARNING / ERROR
+- Generated At: <timestamp from supervisor output if available>
+- Automation: playground-handoff-supervisor
+- Workspace: C:\Users\kalux\workStation\play-ground
+
+## Counts
+- All Packets: <number>
+- Active Packets: <number>
+- Waiting Approval: <number>
+- Ready Work: <number>
+- In Progress: <number>
+- Review Requested: <number>
+- QA Requested: <number>
+- Blocked: <number>
+- Consistency Issues: <number>
+
+## Waiting User Approval
+None
+
+If items exist, replace `None` with a Markdown table:
+| Handoff ID | Role | Title | Approval Request | Updated |
+| --- | --- | --- | --- | --- |
+
+## Consistency Issues
+None
+
+If items exist, replace `None` with a Markdown table:
+| Severity | Handoff ID | Issue | Suggested Action |
+| --- | --- | --- | --- |
+
+## Generated Files
+- Dashboard.md: refreshed / not refreshed
+- Queues/*.md: refreshed / not refreshed
+- Violations/Open.md: refreshed / not refreshed
+
+## Forbidden Action Check
+- Source edits: No
+- Gameplay JSON edits: No
+- Asset edits: No
+- Build/test execution: No
+- Approval evidence changes: No
+- Packet claim changes: No
+- Done/Archived changes: No
+- Commit/push: No
+- Role-chat wake/control: No
+
+## Human Action Needed
+None
+```
+
+자동화는 이 리포트 앞뒤에 별도 서술을 추가하지 않는다.
 
 ## 완료 기준
 

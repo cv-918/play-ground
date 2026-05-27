@@ -100,6 +100,30 @@ The automation is created as PAUSED.
 
 Do not activate it until Phase 12C or another explicit human approval asks for first-run validation.
 
+## First Run Validation
+
+Phase 12C first-run validation was performed on 2026-05-27.
+
+Observed run report:
+
+```text
+_Docs/Handoff/Role_Workers/Automation/Runs/2026-05-27_173316_LowRiskRoleWorker.md
+```
+
+Observed result:
+
+- Run time: 2026-05-27 17:33:16 +09:00
+- Roles scanned: Planner, Developer, Artist, Reviewer, QA
+- Candidates considered: none
+- Files written: the timestamped run report only
+- Packet Results drafts: not written
+- Packet manifests: not edited
+- Approval evidence: not changed
+- Packet claim/status/Done/Archived: not changed
+- Source, JSON, assets, build/test, commit, push: not touched
+
+After the first run was validated, the automation was returned to `PAUSED`.
+
 ## Phase 12B Completion
 
 Phase 12B is complete when:
