@@ -210,4 +210,6 @@ Phase 9C는 처음 관측된 Supervisor 자동화 실행을 검증했다. 해당
 
 Phase 10A는 `_Docs/Handoff/Role_Workers/`에 역할 직원 intake 계약을 정의한다. 역할 채팅과 미래의 역할 직원 자동화가 Queue를 확인하고, Intake Decision을 작성하고, 위험한 실행 전에 멈추는 방법을 정한다.
 
+Phase 10B는 `_Docs/Handoff/Role_Workers/Harness/`에 역할 직원 계약 확인 하네스를 추가한다. 실제 작업 배정 전에 계약 확인, 블라인드 시나리오, 실행 리포트, 통과/실패 기준, 복구 규칙을 정의한다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

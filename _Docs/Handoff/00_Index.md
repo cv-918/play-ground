@@ -30,6 +30,11 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Intake Contract Korean | `Role_Workers/Role_Worker_Intake_Contract_KR.md` | Korean role worker intake contract |
 | Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
 | Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
+| Role Worker Contract Check Harness | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness.md` | Harness for checking role worker contract readiness |
+| Role Worker Contract Check Harness Korean | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness_KR.md` | Korean role worker harness |
+| Role Worker Harness Contract Check Template | `Role_Workers/Harness/_Contract_Check_Template.md` | Contract check template |
+| Role Worker Harness Blind Scenario Template | `Role_Workers/Harness/_Blind_Scenario_Template.md` | Blind scenario template |
+| Role Worker Harness Run Report Template | `Role_Workers/Harness/_Run_Report_Template.md` | Harness run report template |
 | Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
 | Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
 | Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |

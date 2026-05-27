@@ -210,4 +210,6 @@ Phase 9C validated the first observed Supervisor automation run. The run refresh
 
 Phase 10A defines the role worker intake contract in `_Docs/Handoff/Role_Workers/`. It tells role chats and future role-worker automation how to inspect Queues, write Intake Decisions, and stop before unsafe execution.
 
+Phase 10B adds a role worker contract check harness under `_Docs/Handoff/Role_Workers/Harness/`. It defines contract checks, blind scenarios, run reports, pass/fail criteria, and recovery rules before real work assignment.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.
