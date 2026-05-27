@@ -26,6 +26,10 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Handoff Operational Status Policy Korean | `Handoff_Operational_Status_Policy_KR.md` | Korean status surface policy |
 | Handoff Supervisor Automation Runbook | `Handoff_Supervisor_Automation_Runbook.md` | Safe Supervisor automation modes and recurring automation scope |
 | Handoff Supervisor Automation Runbook Korean | `Handoff_Supervisor_Automation_Runbook_KR.md` | Korean Supervisor automation runbook |
+| Role Worker Intake Contract | `Role_Workers/Role_Worker_Intake_Contract.md` | Queue intake contract for role chats and future role-worker automation |
+| Role Worker Intake Contract Korean | `Role_Workers/Role_Worker_Intake_Contract_KR.md` | Korean role worker intake contract |
+| Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
+| Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
 | Handoff Dashboard | `Dashboard.md` | Generated Handoff status board |
 | Planner Queue | `Queues/Planner.md` | Generated Planner intake queue |
 | Developer Queue | `Queues/Developer.md` | Generated Developer intake queue |

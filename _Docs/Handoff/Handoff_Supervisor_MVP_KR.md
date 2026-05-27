@@ -208,4 +208,6 @@ Phase 9B는 승인된 `playground-handoff-supervisor` Codex 반복 자동화를 
 
 Phase 9C는 처음 관측된 Supervisor 자동화 실행을 검증했다. 해당 실행은 생성 Handoff 상태 표면만 갱신했고, Handoff 상태는 정합성 문제 0건으로 유지되었다.
 
+Phase 10A는 `_Docs/Handoff/Role_Workers/`에 역할 직원 intake 계약을 정의한다. 역할 채팅과 미래의 역할 직원 자동화가 Queue를 확인하고, Intake Decision을 작성하고, 위험한 실행 전에 멈추는 방법을 정한다.
+
 주기 실행, 역할 채팅 자동 호출, 승인 범위 밖 소스 수정, JSON schema 수정, Git 작업은 나중에 명시 승인 전까지 범위 밖이다.

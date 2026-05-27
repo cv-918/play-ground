@@ -208,4 +208,6 @@ Phase 9B created the approved `playground-handoff-supervisor` Codex recurring au
 
 Phase 9C validated the first observed Supervisor automation run. The run refreshed only generated Handoff status surfaces and Handoff status remained clean with 0 consistency issues.
 
+Phase 10A defines the role worker intake contract in `_Docs/Handoff/Role_Workers/`. It tells role chats and future role-worker automation how to inspect Queues, write Intake Decisions, and stop before unsafe execution.
+
 Scheduled automation, role-chat wakeups, source edits outside approved scope, JSON schema edits, and Git operations remain out of scope until explicitly approved later.
