@@ -71,10 +71,14 @@ void AttributeNodeTree::SetRenderRegion(const _Rect& _bounds)
 	if (_bounds.Width() <= 0 || _bounds.Height() <= 0)
 	{
 		render_bounds_ = GAME_VIEW_RECT;
+		if (tooltip_)
+			tooltip_->SetClampRegion(render_bounds_);
 		return;
 	}
 
 	render_bounds_ = _bounds;
+	if (tooltip_)
+		tooltip_->SetClampRegion(render_bounds_);
 }
 
 _int AttributeNodeTree::Update(_double _delta_time)
@@ -421,6 +425,7 @@ _Point AttributeNodeTree::_GetRootAnchor() const
 void AttributeNodeTree::_CreateTooltip()
 {
 	tooltip_ = CreateElement<AttributeNodeToolTip>();
+	tooltip_->SetClampRegion(render_bounds_);
 	tooltip_->SetVisible(false); // 초기에는 툴팁이 보이지 않도록 설정. 필요에 따라 마우스 오버된 노드가 있을 때만 툴팁이 보이도록 제어할 수 있습니다.
 }
 

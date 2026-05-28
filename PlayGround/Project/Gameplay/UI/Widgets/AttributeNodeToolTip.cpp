@@ -4,6 +4,8 @@
 #include "AttributeNode.h"
 #include "GamePlaySystems/Json/AttributeNodeDataManager.h"
 
+#include <algorithm>
+
 namespace
 {
 	const std::wstring kTooltipBackgroundPath = Path::PopUps + L"Default.png";
@@ -11,6 +13,7 @@ namespace
 	constexpr _int kTooltipFallbackHeight = 143;
 	constexpr _int kTooltipPaddingX = 18;
 	constexpr _int kTooltipPaddingY = 14;
+	constexpr _Point kTooltipOffset = { 5, 5 };
 
 	_Size BuildTooltipSize(const TextureResource* _texture)
 	{
@@ -19,6 +22,19 @@ namespace
 
 		const _int height = static_cast<_int>(std::round(static_cast<_float>(kTooltipWidth) * _texture->Height() / _texture->Width()));
 		return { kTooltipWidth, std::max(1, height) };
+	}
+
+	_Point ClampTooltipPosition(const _Point& _desired_position, const _Size& _tooltip_size, const _Rect& _clamp_region)
+	{
+		if (_clamp_region.Width() <= 0 || _clamp_region.Height() <= 0)
+			return _desired_position;
+
+		_Point clamped_position = _desired_position;
+		const _int max_left = std::max(_clamp_region.Left(), _clamp_region.Right() - _tooltip_size.x);
+		const _int max_top = std::max(_clamp_region.Top(), _clamp_region.Bottom() - _tooltip_size.y);
+		clamped_position.x = std::clamp(clamped_position.x, _clamp_region.Left(), max_left);
+		clamped_position.y = std::clamp(clamped_position.y, _clamp_region.Top(), max_top);
+		return clamped_position;
 	}
 }
 
@@ -39,8 +55,8 @@ _int AttributeNodeToolTip::Update(_double _delta_time)
 		return ret;
 
 	const auto mouse_point = _InputMgr.MousePoint();
-	const auto offset = _Point{ 5, 5 };
-	SetPosition(mouse_point + offset);
+	const auto desired_position = mouse_point + kTooltipOffset;
+	SetPosition(ClampTooltipPosition(desired_position, GetSize(), clamp_region_));
 
 	return ret;
 }
@@ -126,4 +142,15 @@ void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)
 	swprintf_s(buffer, L"%s", _UtilFunc::ToWString(target_info->desc_).c_str());
 	swprintf_s(buffer, buffer, total_value);
 	tooltip_text_ += L"\n\n" + std::wstring(buffer);
+}
+
+void AttributeNodeToolTip::SetClampRegion(const _Rect& _bounds)
+{
+	if (_bounds.Width() <= 0 || _bounds.Height() <= 0)
+	{
+		clamp_region_ = GAME_VIEW_RECT;
+		return;
+	}
+
+	clamp_region_ = _bounds;
 }

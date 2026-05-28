@@ -1,0 +1,154 @@
+packet_version: 1
+handoff_id: HANDOFF-20260528-010-attribute-tooltip-bounds
+title: Attribute Node Tooltip Bounds
+
+created_at: 2026-05-28
+updated_at: 2026-05-28
+
+from_role: Planner
+to_roles:
+  - Developer
+  - QA
+current_owner: ""
+claimed_by: playground-handoff-developer-worker-implementation-pilot
+claimed_at: 2026-05-28
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Low
+
+approval_required: false
+approval_state: Approved
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  approved_scope:
+    - Keep the Attribute Node tooltip inside the visible screen or Attribute Tree board area as much as practical.
+    - Limit implementation to Attribute Node tooltip positioning and the Attribute Node Tree wiring needed to provide a clamp region.
+    - Do not change gameplay data, JSON schema, save/load, lifecycle, assets, build settings, commit, or push.
+
+approved_execution_scope:
+  approved: true
+  summary: Clamp or reposition the Attribute Node tooltip so it does not visibly spill outside the usable Attribute Tree screen or board area.
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  source_document: ImplementationRequest.md
+
+approved_scope_allowed_paths:
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeToolTip.cpp
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeToolTip.h
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+
+approved_scope_forbidden_paths:
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - PlayGround/Project/Gameplay/GamePlaySystems/
+  - PlayGround/Project/Gameplay/Actors/
+  - PlayGround/Project/Gameplay/Scenes/
+  - PlayGround/Project/Gameplay/UI/Elements/
+  - PlayGround/Project/Gameplay/UI/Views/
+  - PlayGround/Resources/
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - Do not modify AttributeNode.json or any gameplay JSON.
+  - Do not modify Attribute Node data loading, progression, or level-up behavior.
+  - Do not redesign the tooltip content or typography.
+  - Do not modify shared tooltip or Button behavior outside the Attribute Node tooltip.
+  - Do not add or replace assets.
+  - Do not change save/load behavior.
+  - Do not change scene, actor, component, or tree lifecycle.
+  - Do not change build settings.
+  - Do not commit or push from the automation.
+
+approved_scope_validation:
+  - Run git status --short before editing.
+  - Run git diff --name-only after editing.
+  - Run git diff --check for changed files.
+  - Run C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe PlayGround\PlayGround.sln /t:Build /p:Configuration=Release /p:Platform=x64 /m after source edits.
+  - If an approved build or test command fails because of a cause inside approved_scope_allowed_paths, analyze the failure, apply an in-scope fix, rerun the validation command, and record the failure/fix/rerun evidence.
+  - Manual QA required: hover Attribute Tree nodes near screen or board edges and confirm the tooltip stays visible without breaking hover, click, right-click, or panning behavior.
+
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/FixLog/20260528-154839-attribute-tooltip-bounds.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: QARequest.md
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - _Docs/Handoff/Role_Workers/Automation/Runs/DeveloperWorkerImplementationRun-20260528-154839-HANDOFF-20260528-010-attribute-tooltip-bounds.md
+  - Results/DeveloperResult.md
+  - Results/QAResult.md
+  - _DevLog/FixLog/20260528-154839-attribute-tooltip-bounds.md
+resource_notes: []
+
+allowed_paths:
+  - _Docs/Handoff/Packets/HANDOFF-20260528-010-attribute-tooltip-bounds/
+  - _Docs/Handoff/Role_Workers/Automation/Runs/
+  - _DevLog/FixLog/
+  - _DevLog/WorkLog/
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeToolTip.cpp
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeToolTip.h
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - PlayGround/Resources/
+
+blocked_by: []
+next_actions:
+  - Human developer may decide whether to commit and push the completed Packet work.
+completion_criteria:
+  - Attribute Node tooltip stays visible inside the usable screen or board area as much as practical.
+  - The implementation changes only approved files.
+  - Hover, tooltip, click, right-click, and panning behavior are not broken.
+  - Release x64 MSBuild passes or an in-scope build failure is fixed and rerun.
+  - DeveloperResult and DevLog are written.
+  - Human QA result is recorded before closing the Packet.
+remaining_risks:
+  - None recorded after human QA.
+
+notes: "Completed after user confirmed QA passed."

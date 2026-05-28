@@ -159,18 +159,21 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260527-006-role-worker-resolution-position-pilot | Done | Done | Planner | Developer | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260528-007-resolution-character-position-fix | Done | Done | Planner | Developer | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/manifest.yaml` | 2026-05-28 |
 | HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot | Done | Done | Planner | Developer | Developer Worker Dry-Run Plan Creation Pilot | `Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/manifest.yaml` | 2026-05-28 |
-| HANDOFF-20260528-009-attribute-node-hover-indicator | Claimed | InProgress | Planner | Developer | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/manifest.yaml` | 2026-05-28 |
+| HANDOFF-20260528-009-attribute-node-hover-indicator | Done | Done | Planner | Developer, QA | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/manifest.yaml` | 2026-05-28 |
+| HANDOFF-20260528-010-attribute-tooltip-bounds | Done | Done | Planner | Developer, QA | Attribute Node Tooltip Bounds | `Packets/HANDOFF-20260528-010-attribute-tooltip-bounds/manifest.yaml` | 2026-05-28 |
 
 ## Active Handoffs
 
 | Status | From | To | Title | Path | Updated |
 | --- | --- | --- | --- | --- | --- |
-| InProgress | Planner | Developer | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/manifest.yaml` | 2026-05-28 |
+|  |  |  |  |  |  |
 
 ## Recent Done Notices
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-28 | Developer, QA | Planner | Attribute Node Tooltip Bounds | `Packets/HANDOFF-20260528-010-attribute-tooltip-bounds/CompletionNotice.md` |
+| 2026-05-28 | Developer, QA | Planner | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/CompletionNotice.md` |
 | 2026-05-28 | Developer Worker | Planner | Developer Worker Dry-Run Plan Creation Pilot | `Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/CompletionNotice.md` |
 | 2026-05-28 | Developer, QA | Planner | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/CompletionNotice.md` |
 | 2026-05-27 | Role Worker, Developer | Planner | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/CompletionNotice.md` |
