@@ -33,6 +33,15 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |
 | `FinalBlueprint/WF_Studio_Control_Plane_Repositioning_Audit.md` | Repositions Studio as the Human Director Control Plane and classifies Studio, external-tool, internal/admin, and legacy Discord responsibilities |
 | `FinalBlueprint/WF_Studio_Control_Plane_Repositioning_Audit_KR.md` | Korean Human Director companion for the Studio Control Plane repositioning audit and productivity-based redesign plan |
+| `FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap.md` | Fixes the Phase 1 operating direction for Studio, Handoff, LLM Wiki, Hermes, OpenClaw, Codex, and governed external-agent integration |
+| `FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap_KR.md` | Korean Human Director companion for the Studio, Handoff, LLM Wiki, Hermes, OpenClaw, and Codex integration roadmap |
+| `FinalBlueprint/WF_Handoff_Work_Packet_Internalization.md` | Defines how the existing Handoff system becomes Studio's internal Work Packet and dispatch layer rather than a separate user-facing workflow |
+| `FinalBlueprint/WF_Handoff_Work_Packet_Internalization_KR.md` | Korean Human Director companion for Handoff as an internal Work Packet / staff handoff layer |
+| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide.md` | Defines Hermes and OpenClaw as governed external tool/worker candidates under Studio approval, evidence, and safety boundaries |
+| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide_KR.md` | Korean Human Director guide for using Hermes and OpenClaw without giving them approval, canon, commit, or push authority |
+| `StudioWiki/README.md` | Defines the LLM Wiki company-memory structure, knowledge classes, promotion rules, and Obsidian-compatible Markdown boundary |
+| `StudioWiki/00_MOC.md` | Top-level map of content for StudioWiki concepts, sections, and promotion review checklist |
+| `Guide/AIWorkflow_LLM_Wiki_Guide_KR.md` | Korean Human Director guide to the LLM Wiki / AI Librarian memory workflow |
 | `Studio/README.md` | First durable Studio implementation slice: domain model, schemas, read-only staff registry, WorkOrder bridge, staff context/output contract, canon decision flow, memory policy, and runtime contracts |
 | `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |
