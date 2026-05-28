@@ -94,12 +94,6 @@ function renderMeetingsPageShell() {
           <div id="meetings" class="list"></div>
         </section>
 
-        \${renderRunsPageShell()}
-
-        \${renderWorkPageShell()}
-
-        \${renderKnowledgePageShell()}
-
 `;
 }
 

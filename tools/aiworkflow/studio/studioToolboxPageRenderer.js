@@ -15,8 +15,6 @@ function renderToolboxPageShell() {
           <section id="toolboxList" class="toolbox-layout"></section>
         </section>
 
-        \${renderGoalsPageShell()}
-
 `;
 }
 

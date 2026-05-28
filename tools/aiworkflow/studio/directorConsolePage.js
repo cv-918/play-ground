@@ -334,6 +334,8 @@ function directorConsoleHtml() {
           </section>
         </section>
 
+        ${renderGoalsPageShell()}
+
         ${renderToolboxPageShell()}
 
         ${renderProjectPageShell()}
@@ -349,6 +351,12 @@ function directorConsoleHtml() {
         ${renderStaffPageShell()}
 
         ${renderMeetingsPageShell()}
+
+        ${renderRunsPageShell()}
+
+        ${renderWorkPageShell()}
+
+        ${renderKnowledgePageShell()}
 
         ${renderSystemsPageShell()}
 
