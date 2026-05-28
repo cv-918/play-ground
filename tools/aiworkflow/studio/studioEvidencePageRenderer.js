@@ -3,7 +3,6 @@
 
 function renderEvidencePageShell() {
   return `        <section class="page" data-page="evidence">
-          <div class="page-heading"><div><h2>결과 검토</h2><p>완료로 받을지, 수정할지, 보류할지 판단하는 화면입니다. 원본 검증 자료는 필요할 때만 펼쳐 봅니다.</p></div></div>
           <div id="evidenceSummary" class="grid"></div>
           <div class="card">
             <h2>이 페이지에서 하는 일</h2>

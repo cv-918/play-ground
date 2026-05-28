@@ -3,7 +3,6 @@
 
 function renderToolboxPageShell() {
   return `        <section class="page" data-page="toolbox">
-          <div class="page-heading"><div><h2>도구함</h2><p>직접 사용할 만한 로컬 도구만 모았습니다. 스크립트 파일명을 외우지 않아도 됩니다.</p></div></div>
           <div class="card" id="meetingButtonGuide">
             <h2>사용 기준</h2>
             <ul class="small">

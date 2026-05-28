@@ -3,7 +3,6 @@
 
 function renderDevlogPageShell() {
   return `        <section class="page" data-page="devlog">
-          <div class="page-heading"><div><h2>DevLog</h2><p>의미 있는 작업의 배경, 변경 범위, 검증, 남은 위험을 확인합니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

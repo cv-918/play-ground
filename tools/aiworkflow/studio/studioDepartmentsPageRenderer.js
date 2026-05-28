@@ -3,7 +3,6 @@
 
 function renderDepartmentsPageShell() {
   return `        <section class="page" data-page="departments">
-          <div class="page-heading"><div><h2>부서</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

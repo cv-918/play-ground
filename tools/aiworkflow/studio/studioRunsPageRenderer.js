@@ -3,7 +3,6 @@
 
 function renderRunsPageShell() {
   return `        <section class="page" data-page="runs">
-          <div class="page-heading"><div><h2>직원 보고서</h2><p>AI 직원 보고서를 읽고, 쓸 만한 내용만 채택 후보로 넘깁니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

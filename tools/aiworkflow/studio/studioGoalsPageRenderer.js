@@ -3,7 +3,6 @@
 
 function renderGoalsPageShell() {
   return `        <section class="page" data-page="goals">
-          <div class="page-heading"><div><h2>목표/방향</h2><p>큰 방향을 말하면 Studio가 부서, AI 직원, 회의, 업무 지시, 승인 항목으로 쪼갭니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

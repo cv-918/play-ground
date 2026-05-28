@@ -3,7 +3,6 @@
 
 function renderDiffPageShell() {
   return `        <section class="page" data-page="diff">
-          <div class="page-heading"><div><h2>변경 검토</h2><p>현재 Git 작업대의 변경 파일을 사람 말로 확인하고, 커밋 전 범위를 고릅니다.</p></div></div>
           <section class="grid">
             <div class="card">
               <div class="section-title"><h2>변경 파일</h2><span id="diffChangedCount" class="pill"></span></div>

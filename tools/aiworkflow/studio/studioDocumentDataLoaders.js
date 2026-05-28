@@ -350,7 +350,6 @@ async function getMemories(repoRoot) {
 async function getMeetings(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/MeetingSessions"),
-    repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Examples"),
   ];
   const files = [];
   for (const root of roots) {
@@ -530,7 +529,6 @@ async function getConditionalAutomation(repoRoot) {
 async function getHandoffCandidates(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Handoffs"),
-    repoPath(repoRoot, "_Docs/AIWorkflow/Studio/Examples"),
   ];
   const files = [];
   for (const root of roots) {

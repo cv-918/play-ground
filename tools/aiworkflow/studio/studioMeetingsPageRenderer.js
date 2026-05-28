@@ -3,7 +3,6 @@
 
 function renderMeetingsPageShell() {
   return `        <section class="page" data-page="meetings">
-          <div class="page-heading"><div><h2>회의실</h2><p>AI 직원 의견을 모아 쟁점, 후속 업무 후보, 감독자 판단 후보로 정리합니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

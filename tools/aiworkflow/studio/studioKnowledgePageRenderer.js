@@ -3,7 +3,6 @@
 
 function renderKnowledgePageShell() {
   return `        <section class="page" data-page="knowledge">
-          <div class="page-heading"><div><h2>기록실</h2><p>제안, 감독자 판단, 참고 기록, 공식 설정 후보를 확인합니다. 평소에는 결정함에서 올라온 항목만 처리하면 됩니다.</p></div></div>
           <div class="card">
             <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button></div>
             <ul class="small">

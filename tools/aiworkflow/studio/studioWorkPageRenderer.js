@@ -3,7 +3,6 @@
 
 function renderWorkPageShell() {
   return `        <section class="page" data-page="work">
-          <div class="page-heading"><div><h2>업무 지시</h2><p>Studio에서 정리한 일을 AI 직원 실행이나 AIWorkflow 작업 목록으로 넘깁니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

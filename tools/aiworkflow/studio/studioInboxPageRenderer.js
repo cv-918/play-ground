@@ -3,7 +3,6 @@
 
 function renderInboxPageShell() {
   return `        <section class="page" data-page="inbox">
-          <div class="page-heading"><div><h2>감독자 결정함</h2><p>Studio가 올린 판단거리 중 사람이 실제로 결론을 내려야 하는 것만 봅니다.</p></div></div>
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">

@@ -28,7 +28,10 @@ function Get-Scalar {
         return $Default
     }
 
-    $pattern = "(?m)^\s*" + [regex]::Escape($Key) + "\s*:\s*(.*?)\s*$"
+    # Keep whitespace matching on a single line. In .NET regex, \s also matches
+    # newlines, so a blank value like `task_id:` could accidentally consume the
+    # next YAML key and be parsed as `title:`.
+    $pattern = "(?m)^[ \t]*" + [regex]::Escape($Key) + "[ \t]*:[ \t]*(.*?)[ \t]*$"
     $m = [regex]::Match($Text, $pattern)
 
     if (-not $m.Success -or $m.Groups.Count -lt 2) {

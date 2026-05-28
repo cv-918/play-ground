@@ -229,7 +229,10 @@ function escapeRegex(value) {
 }
 
 function getScalar(text, key, defaultValue = "") {
-  const match = String(text || "").match(new RegExp(`^${escapeRegex(key)}\\s*:\\s*(.*)$`, "mi"));
+  // Keep whitespace matching on a single line. JavaScript \s includes line
+  // breaks, so `task_id:` with an empty value could accidentally capture the
+  // next YAML key as the value.
+  const match = String(text || "").match(new RegExp(`^${escapeRegex(key)}[^\\S\\r\\n]*:[^\\S\\r\\n]*(.*)$`, "mi"));
   return match ? match[1].trim() : defaultValue;
 }
 

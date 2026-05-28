@@ -3,7 +3,6 @@
 
 function renderProjectPageShell() {
   return `        <section class="page" data-page="project">
-          <div class="page-heading"><div><h2>프로젝트</h2><p>현재 Studio가 어떤 프로젝트를 보고 있고, 어떤 검증/빌드/작업 경계를 쓰는지 확인합니다.</p></div></div>
           <section class="grid">
             <div class="card">
               <div class="section-title"><h2>현재 프로젝트</h2><span id="projectActiveBadge" class="pill"></span></div>

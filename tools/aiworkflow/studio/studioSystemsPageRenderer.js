@@ -3,7 +3,6 @@
 
 function renderSystemsPageShell() {
   return `        <section class="page" data-page="systems">
-          <div class="page-heading"><div><h2>시스템</h2><p>내부/관리자용 화면입니다. 평소에는 신경 쓰지 않아도 됩니다.</p></div></div>
           <div class="card">
             <div class="section-title"><h2>Studio 진단 도구</h2><span class="pill">내부 도구</span></div>
             <p class="muted">Studio 자체가 이상하거나, 새 기능을 고친 뒤 확인할 때만 쓰는 점검 도구입니다. 일반 작업을 진행할 때는 쓰지 않아도 됩니다.</p>
