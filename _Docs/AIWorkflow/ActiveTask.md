@@ -11,32 +11,51 @@ There should be only one active task represented here at a time.
 ## Active Task Metadata
 
 ```yaml
-task_id: GAME-20260514-172323
-title: Game data completion-review fix for GAME-20260514-162134
-status: ready_for_implementation
-workflow_path: discord_task_management
-priority: P2
-risk_level: low
+task_id:
+title:
+status:
+workflow_path:
+priority:
+risk_level:
 requested_by: human_director
-requested_at: 2026-05-14
-last_updated: 2026-05-14
+requested_at:
+last_updated: 2026-05-28
 ```
 
 ---
 
 ## Goal
 
-Game data completion-review fix for GAME-20260514-162134
+```text
+No active workflow task is currently selected.
+```
+
+---
+
+## Approved Scope
+
+```text
+No implementation scope is currently active.
+```
+
+---
+
+## Non-Goals
+
+```text
+No source, data, task lifecycle, commit, push, or release action is approved by this file.
+```
 
 ---
 
 ## Tool Route
 
 ```yaml
-discord: task selection command
-human: review and approval
-codex: only after explicit approval for implementation
-validation: codex intake draft: risk=high; workflow_path=gameplay; required_validation_count=30; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260514_172301_239.output.json; needs review; validation pending human approval
+chatgpt:
+codex:
+copilot:
+git:
+validation:
 ```
 
 ---
@@ -44,7 +63,23 @@ validation: codex intake draft: risk=high; workflow_path=gameplay; required_vali
 ## Files In Scope
 
 ```text
-Define during task intake before implementation.
+None.
+```
+
+---
+
+## Current Findings
+
+```text
+Previous stale Discord/Runner completion-review follow-up tasks were closed during Studio cleanup.
+```
+
+---
+
+## Decision Needed
+
+```text
+None.
 ```
 
 ---
@@ -52,8 +87,15 @@ Define during task intake before implementation.
 ## Human Action Required
 
 ```text
-1. Review the selected active task.
-2. Approve architecture and scope before implementation if source or runtime behavior will change.
+None.
+```
+
+---
+
+## Next Action
+
+```text
+Use Studio to create or select the next real Human Director work item.
 ```
 
 ---
@@ -61,26 +103,26 @@ Define during task intake before implementation.
 ## Validation Plan
 
 ```text
-codex intake draft: risk=high; workflow_path=gameplay; required_validation_count=30; taskdraft_output=_Temp/AIWorkflowDiscordBot/intake/intake_20260514_172301_239.output.json; needs review; validation pending human approval
+Not applicable.
 ```
 
 ---
 
-## Latest Status Note
+## Validation Evidence
 
-```text
-status: ready_for_implementation
-note: approved: Human Director가 GAME-20260514-172323 범위를 승인함: Game data completion-review fix for GAME-20260514-162134. 작업 범위에 명시되지 않은 schema 변경은 승인하지 않음. 관련 없는 리팩터, 대규모 정리, done, commit, push는 이 승인에 포함되지 않음.
-updated_at: 2026-05-14
-source: Discord task status command
+```yaml
+build_executed: false
+runtime_executed: false
+document_review_required: false
+other: ActiveTask cleanup only.
 ```
 
 ---
 
-## Next Recommended Task
+## Handoff Artifacts
 
 ```text
-Review Backlog.md for the next highest-priority open task after this task is complete.
+None.
 ```
 
 ---
@@ -88,11 +130,6 @@ Review Backlog.md for the next highest-priority open task after this task is com
 ## Completion Criteria
 
 ```text
-[ ] Task scope reviewed
-[ ] Required approvals recorded
-[ ] Implementation completed within approved scope, if applicable
-[ ] Review completed, if applicable
-[ ] Validation completed or explicitly deferred
-[ ] Dev Log created for meaningful work
-[ ] User decides whether to commit
+[x] Stale active task cleared
+[ ] New task selected when needed
 ```
