@@ -215,7 +215,7 @@ Forbidden actions:
 - do not create or modify recurring automations
 
 Required run report:
-Always write one timestamped run report using the format in _Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md.
+Always write one timestamped run report using the Korean format in _Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md.
 
 Required result:
 If one safe candidate is selected and DeveloperDryRunPlan.md does not already exist, write DeveloperDryRunPlan.md using the format in _Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md.
@@ -224,94 +224,121 @@ Otherwise, write no Packet Result and explain why in the run report.
 
 ## Run Report 형식
 
-각 run report는 다음 구조를 사용한다.
+각 run report는 다음 한글 구조를 사용한다. 추적이 필요한 판단값은 괄호 안에 enum 값을 함께 남긴다.
 
 ```md
-# Developer Worker Dry-Run Report
+# Developer Worker Dry-Run 실행 보고
 
-## Automation
+## 자동화
 
-Name: playground-handoff-developer-worker-dry-run
-Run At:
-Mode: approved-scope dry run
+이름: playground-handoff-developer-worker-dry-run
+실행 시각:
+모드: 승인 범위 dry-run
 
-## Files Read
+## 읽은 파일
 
 -
 
-## Queue Summary
+## Queue 요약
 
-| Handoff ID | Delivery | Execution | Scope Approved | Decision | Reason |
+| Handoff ID | 전달 상태 | 실행 상태 | 범위 승인 | 판단 | 사유 |
 | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |
 
-## Selected Packet
+## 선택한 Packet
 
 Handoff ID:
-Title:
-Decision: NoCandidate / PlanWritten / AlreadyPresent / Blocked
+제목:
+판단: 후보 없음(NoCandidate) / 계획 작성(PlanWritten) / 이미 있음(AlreadyPresent) / 막힘(Blocked)
 
-## Approved Scope Check
+## 승인 범위 확인
 
 - approved_execution_scope:
-- allowed paths:
-- forbidden paths:
-- non-goals:
-- validation plan:
+- 허용 경로:
+- 제외 경로:
+- 제외 목표:
+- 검증 계획:
 
-## Working Tree Check
+## 작업대 확인
 
-- git status checked:
-- changed target files:
-- unrelated changes observed:
-- decision:
+- git status 확인:
+- 변경된 대상 파일:
+- 관련 없는 변경:
+- 판단:
 
-## Proposed Implementation Plan
-
--
-
-## Files Expected To Change In Future Implementation
+## 제안 구현 계획
 
 -
 
-## Out-Of-Scope Or Protected Changes Needed
+## 향후 구현 예상 변경 파일
 
 -
 
-## Files Written
+## 범위 밖 또는 보호 변경 필요 여부
 
 -
 
-## Forbidden Action Check
-
-- [ ] No game source edits.
-- [ ] No gameplay JSON edits.
-- [ ] No non-schema data edits.
-- [ ] No asset edits.
-- [ ] No build commands.
-- [ ] No tests.
-- [ ] No runtime behavior changes.
-- [ ] No build setting edits.
-- [ ] No generated Supervisor surface edits.
-- [ ] No 00_Index.md edits.
-- [ ] No Packet manifest edits.
-- [ ] No approval evidence edits.
-- [ ] No Packet claim.
-- [ ] No status changes.
-- [ ] No Done or Archived marking.
-- [ ] No DevLog creation.
-- [ ] No commit.
-- [ ] No push.
-- [ ] No role-chat wakeup or control.
-- [ ] No recurring automation creation or modification.
-
-## Stop Reason
+## 작성한 파일
 
 -
 
-## Result
+## 경계 확인
+
+- [ ] 게임 소스 수정 없음.
+- [ ] 게임플레이 JSON 수정 없음.
+- [ ] 비스키마 데이터 수정 없음.
+- [ ] 에셋 수정 없음.
+- [ ] 빌드 명령 실행 없음.
+- [ ] 테스트 실행 없음.
+- [ ] 런타임 동작 변경 없음.
+- [ ] 빌드 설정 수정 없음.
+- [ ] Supervisor 생성 표면 수정 없음.
+- [ ] 00_Index.md 수정 없음.
+- [ ] Packet manifest 수정 없음.
+- [ ] approval evidence 수정 없음.
+- [ ] Packet claim 없음.
+- [ ] 상태 변경 없음.
+- [ ] Done 또는 Archived 처리 없음.
+- [ ] DevLog 생성 없음.
+- [ ] commit 없음.
+- [ ] push 없음.
+- [ ] 역할 채팅 깨우기/제어 없음.
+- [ ] recurring automation 생성/수정 없음.
+
+## 중지 사유
 
 -
+
+## 결과
+
+-
+```
+
+## 자동화 최종 응답 형식
+
+Codex 자동화 스레드의 응답은 다음 한글 구조를 사용한다.
+
+```md
+# Developer Worker Dry-Run 실행 결과
+
+## 상태
+- 결과: 후보 없음 / 계획 작성 / 이미 있음 / 막힘
+- 자동화: playground-handoff-developer-worker-dry-run
+- 선택 Packet: <handoff id and title, or 없음>
+
+## 작성한 파일
+- Run report: <path>
+- DeveloperDryRunPlan.md: <path or 없음>
+
+## 경계 확인
+- 소스 수정: 없음
+- JSON 수정: 없음
+- 빌드/테스트 실행: 없음
+- manifest/status/approval evidence 변경: 없음
+- commit/push: 없음
+
+## 사용자 확인 필요
+없음
 ```
 
 ## DeveloperDryRunPlan 형식

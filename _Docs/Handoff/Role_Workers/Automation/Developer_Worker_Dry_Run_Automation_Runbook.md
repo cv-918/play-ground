@@ -63,6 +63,12 @@ One timestamped run report under:
 _Docs/Handoff/Role_Workers/Automation/Runs/
 ```
 
+The run report must use the Korean section headings and field labels defined in:
+
+```text
+_Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md
+```
+
 One new dry-run plan under a selected Packet:
 
 ```text

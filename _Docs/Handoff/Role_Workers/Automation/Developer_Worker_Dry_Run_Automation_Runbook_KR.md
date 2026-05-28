@@ -63,6 +63,12 @@ _Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md
 _Docs/Handoff/Role_Workers/Automation/Runs/
 ```
 
+run report는 아래 문서에 정의된 한글 섹션 제목과 한글 필드명을 사용한다.
+
+```text
+_Docs/Handoff/Role_Workers/Developer_Worker_Prompt_Contract.md
+```
+
 선택된 Packet 아래 새 dry-run plan 1개:
 
 ```text

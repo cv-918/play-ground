@@ -134,6 +134,12 @@ Every run should write:
 _Docs/Handoff/Role_Workers/Automation/Runs/YYYY-MM-DD_HHMMSS_DeveloperWorkerImplementation.md
 ```
 
+The run report must use the Korean section headings and field labels defined in:
+
+```text
+_Docs/Handoff/Role_Workers/Developer_Worker_Implementation_Mode_Prompt_Contract.md
+```
+
 If implementation succeeds inside scope, it should also write:
 
 ```text
@@ -247,10 +253,15 @@ Implementation-mode contract: documented
 Implementation-mode prompt contract: documented
 Implementation-mode runbook: documented
 Implementation-mode automation: created as PAUSED
-Implementation-mode pilot: first run observed
-Build/test self-fix loop: documented after first build failure follow-up
+Implementation-mode pilot: two observed implementation runs completed
+Build/test self-fix loop: documented and used as the current validation rule
+Current automation posture: PAUSED by default; temporarily activate only for an explicitly approved pilot window
 ```
 
-## Next Step
+## Current Operating Posture
 
-Use the documented build/test self-fix loop in the next approved implementation-mode pilot before expanding the worker's authority or cadence.
+The implementation-mode automation is available for approved-scope Developer work, but it should remain `PAUSED` by default.
+
+Use it by creating a concrete Handoff Packet with an approved execution scope, temporarily activating the automation for one observed run, returning it to `PAUSED`, then recording build and human QA evidence before closing the Packet.
+
+Do not expand the worker's authority, cadence, or always-on behavior without a separate user decision.

@@ -145,6 +145,12 @@ PAUSED
 _Docs/Handoff/Role_Workers/Automation/Runs/YYYY-MM-DD_HHMMSS_DeveloperWorkerImplementation.md
 ```
 
+run report는 아래 문서에 정의된 한글 섹션 제목과 한글 필드명을 사용한다.
+
+```text
+_Docs/Handoff/Role_Workers/Developer_Worker_Implementation_Mode_Prompt_Contract.md
+```
+
 구현이 범위 안에서 성공하면 다음도 작성한다.
 
 ```text
@@ -257,9 +263,22 @@ Implementation-mode contract: documented
 Implementation-mode prompt contract: documented
 Implementation-mode runbook: documented
 Implementation-mode automation: created as PAUSED
-Implementation-mode pilot: not run
+Implementation-mode pilot: two observed implementation runs completed
+Build/test self-fix loop: documented and used as the current validation rule
+Current automation posture: PAUSED by default; temporarily activate only for an explicitly approved pilot window
 ```
 
-## 다음 단계
+## 현재 운영 방식
 
-작은 approved-scope implementation Packet 하나를 준비한 뒤, 사용자 승인 후 `playground-handoff-developer-worker-implementation-pilot`을 일시적으로 활성화해 한 번의 파일럿 실행을 관찰한다.
+implementation-mode 자동화는 승인된 범위의 Developer 작업에 사용할 수 있다. 다만 기본 상태는 `PAUSED`로 둔다.
+
+사용 방식은 다음과 같다.
+
+1. 구체적인 Handoff Packet을 만든다.
+2. 승인된 실행 범위를 manifest에 기록한다.
+3. 사용자 승인 후 자동화를 일시적으로 `ACTIVE`로 켠다.
+4. 한 번의 실행을 관찰한다.
+5. 자동화를 다시 `PAUSED`로 되돌린다.
+6. 빌드 결과와 human QA evidence를 기록한 뒤 Packet을 닫는다.
+
+자동화의 권한, 주기, 상시 실행 여부는 별도 사용자 결정 없이 확장하지 않는다.

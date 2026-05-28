@@ -149,4 +149,4 @@ Phase 12B is complete when:
 - its cadence matches the Handoff Supervisor cadence
 - its prompt forbids Packet Results drafts and risky actions
 - this runbook records the creation boundary
-- no first run has been claimed as validated
+- first-run validation status is recorded without expanding the automation boundary

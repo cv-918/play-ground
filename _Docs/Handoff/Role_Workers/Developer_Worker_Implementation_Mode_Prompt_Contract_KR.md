@@ -272,83 +272,119 @@ Required outputs:
 
 ## Implementation Run Report 형식
 
-각 run report는 다음 구조를 사용한다.
+각 run report는 다음 한글 구조를 사용한다. 추적이 필요한 판단값은 괄호 안에 enum 값을 함께 남긴다.
 
 ```md
-# Developer Worker Implementation Run Report
+# Developer Worker Implementation 실행 보고
 
-## Automation
+## 자동화
 
-Name: playground-handoff-developer-worker-implementation-pilot
-Run At:
-Mode: approved-scope implementation pilot
+이름: playground-handoff-developer-worker-implementation-pilot
+실행 시각:
+모드: 승인 범위 implementation pilot
 
-## Files Read
+## 읽은 파일
 
 -
 
-## Working Tree Before
+## 실행 전 작업대
 
-- Branch:
-- Unrelated non-target changes:
-- Target file changes before run:
+- 브랜치:
+- 관련 없는 비대상 변경:
+- 실행 전 대상 파일 변경:
 
-## Queue Summary
+## Queue 요약
 
-| Handoff ID | Delivery | Execution | Scope Approved | Decision | Reason |
+| Handoff ID | 전달 상태 | 실행 상태 | 범위 승인 | 판단 | 사유 |
 | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |
 
-## Selected Packet
+## 선택한 Packet
 
 Handoff ID:
-Title:
-Decision: NoCandidate / Implemented / ScopeChangeRequired / Blocked / ValidationDeferred / AlreadyPresent
+제목:
+판단: 후보 없음(NoCandidate) / 구현 완료(Implemented) / 범위 변경 필요(ScopeChangeRequired) / 막힘(Blocked) / 검증 보류(ValidationDeferred) / 이미 있음(AlreadyPresent)
 
-## Approved Scope Check
+## 승인 범위 확인
 
 - approved_execution_scope:
-- allowed paths:
-- forbidden paths:
-- non-goals:
-- validation plan:
+- 허용 경로:
+- 제외 경로:
+- 제외 목표:
+- 검증 계획:
 
-## Implementation Summary
-
--
-
-## Changed Files
+## 구현 요약
 
 -
 
-## Validation
-
-- Commands run:
-- Results:
-- Deferred human validation:
-
-## Forbidden Action Check
-
-- Out-of-scope file edits:
-- JSON schema edits:
-- Save/load changes:
-- Lifecycle changes:
-- Build setting edits:
-- Asset edits:
-- Supervisor surface edits:
-- Manifest edits:
-- Approval evidence edits:
-- Packet status edits:
-- Automation edits:
-- Commit/push:
-
-## Outputs Written
+## 변경 파일
 
 -
 
-## Human Action Needed
+## 검증
+
+- 실행한 명령:
+- 빌드/테스트 실패 후속 조치:
+- 결과:
+- 사람 검증 필요:
+
+## 경계 확인
+
+- 범위 밖 파일 수정:
+- JSON schema 수정:
+- save/load 변경:
+- lifecycle 변경:
+- 빌드 설정 수정:
+- 에셋 수정:
+- Supervisor 생성 표면 수정:
+- manifest 수정:
+- approval evidence 수정:
+- Packet 상태 수정:
+- automation 수정:
+- commit/push:
+
+## 작성한 산출물
 
 -
+
+## 사용자 확인 필요
+
+-
+```
+
+## 자동화 최종 응답 형식
+
+Codex 자동화 스레드의 응답은 다음 한글 구조를 사용한다.
+
+```md
+# Developer Worker Implementation 실행 결과
+
+## 상태
+- 결과: 후보 없음 / 구현 완료 / 범위 변경 필요 / 막힘 / 검증 보류 / 이미 있음
+- 자동화: playground-handoff-developer-worker-implementation-pilot
+- 선택 Packet: <handoff id and title, or 없음>
+
+## 변경과 산출물
+- 변경 파일: <list or 없음>
+- Run report: <path>
+- DeveloperResult.md: <path or 없음>
+- DeveloperScopeChangeRequest.md: <path or 없음>
+- DevLog: <path or 없음>
+
+## 검증
+- git status/diff 확인: 완료 / 미실행
+- diff check: 통과 / 실패 / 미실행
+- build/test/runtime: 통과 / 실패 / 보류 / 미실행
+- 사람 QA 필요: <필요 내용 or 없음>
+
+## 경계 확인
+- 범위 밖 파일 수정: 없음
+- JSON schema/save-load/lifecycle/build setting/asset 변경: 없음
+- manifest/status/approval evidence 변경: 없음
+- commit/push: 없음
+
+## 사용자 확인 필요
+없음
 ```
 
 ## Developer Result 형식
@@ -367,8 +403,13 @@ _Docs/Handoff/Role_Workers/Developer_Worker_Implementation_Mode_Contract.md
 _Docs/Handoff/Role_Workers/Developer_Worker_Implementation_Mode_Contract.md
 ```
 
-## 다음 단계
+## 현재 운영 방식
 
-implementation-pilot automation은 2026-05-28에 `PAUSED` 상태로 생성되었다.
+implementation-pilot automation은 2026-05-28에 생성되었고, 기본 상태는 `PAUSED`로 유지한다.
 
-다음 Phase 31A 단계는 작은 approved-scope implementation Packet 하나를 준비하고, 사용자 승인 후 자동화를 일시적으로 활성화해 한 번의 파일럿 실행을 관찰하는 것이다.
+관찰된 approved-scope implementation 실행은 다음과 같다.
+
+- `HANDOFF-20260528-009-attribute-node-hover-indicator`
+- `HANDOFF-20260528-010-attribute-tooltip-bounds`
+
+이후 사용할 때는 구체적인 Developer Packet을 만들고, 승인된 실행 범위를 기록한 뒤, 사용자 승인으로 자동화를 일시적으로 활성화한다. 한 번의 실행을 확인하면 다시 `PAUSED`로 돌리고, build 결과와 human QA evidence를 기록한 뒤 Packet을 닫는다.

@@ -166,72 +166,72 @@ Forbidden actions:
 
 ## Fixed Supervisor Report Format
 
-Recurring Supervisor runs must use this exact Markdown section order.
+Recurring Supervisor runs must use this exact Korean Markdown section order.
 
-If a section has no items, write `None`.
+If a section has no items, write `없음`.
 
 ```md
-# PlayGround Handoff Supervisor Run
+# PlayGround Handoff Supervisor 실행 보고
 
-## Status
-- Result: OK / WARNING / ERROR
-- Generated At: <timestamp from supervisor output if available>
-- Automation: playground-handoff-supervisor
-- Workspace: C:\Users\kalux\workStation\play-ground
+## 상태
+- 결과: 정상 / 주의 / 오류
+- 생성 시각: <supervisor 출력 timestamp가 있으면 사용>
+- 자동화: playground-handoff-supervisor
+- 작업 경로: C:\Users\kalux\workStation\play-ground
 
-## Counts
-- All Packets: <number>
-- Active Packets: <number>
-- Waiting Approval: <number>
-- Ready Work: <number>
-- In Progress: <number>
-- Review Requested: <number>
-- QA Requested: <number>
-- Blocked: <number>
-- Approved Scopes: <number>
-- Missing Scopes: <number>
-- Scope Drift Issues: <number>
-- Consistency Issues: <number>
+## 집계
+- 전체 Packet: <number>
+- 활성 Packet: <number>
+- 사용자 승인 대기: <number>
+- 준비된 작업: <number>
+- 진행 중: <number>
+- 리뷰 요청: <number>
+- QA 요청: <number>
+- 막힘: <number>
+- 승인된 범위: <number>
+- 범위 누락: <number>
+- 범위 이탈 의심: <number>
+- 정합성 문제: <number>
 
-## Waiting User Approval
-None
+## 사용자 승인 대기
+없음
 
-If items exist, replace `None` with a Markdown table:
-| Handoff ID | Role | Title | Approval Request | Updated |
+항목이 있으면 `없음` 대신 아래 표를 사용한다.
+| Handoff ID | 역할 | 제목 | 승인 요청 | 갱신일 |
 | --- | --- | --- | --- | --- |
 
-## Consistency Issues
-None
+## 정합성 문제
+없음
 
-If items exist, replace `None` with a Markdown table:
-| Severity | Handoff ID | Issue | Suggested Action |
+항목이 있으면 `없음` 대신 아래 표를 사용한다.
+| 심각도 | Handoff ID | 문제 | 권장 조치 |
 | --- | --- | --- | --- |
 
-## Scope Drift Issues
-None
+## 범위 이탈 의심
+없음
 
-If items exist, replace `None` with a Markdown table:
-| Severity | Handoff ID | Changed Files | Suggested Action |
+항목이 있으면 `없음` 대신 아래 표를 사용한다.
+| 심각도 | Handoff ID | 변경 파일 | 권장 조치 |
 | --- | --- | --- | --- |
 
-## Generated Files
-- Dashboard.md: refreshed / not refreshed
-- Queues/*.md: refreshed / not refreshed
-- Violations/Open.md: refreshed / not refreshed
+## 갱신된 파일
+- Dashboard.md: 갱신됨 / 갱신 안 됨
+- Queues/*.md: 갱신됨 / 갱신 안 됨
+- Violations/Open.md: 갱신됨 / 갱신 안 됨
 
-## Forbidden Action Check
-- Source edits: No
-- Gameplay JSON edits: No
-- Asset edits: No
-- Build/test execution: No
-- Approval evidence changes: No
-- Packet claim changes: No
-- Done/Archived changes: No
-- Commit/push: No
-- Role-chat wake/control: No
+## 경계 확인
+- 소스 수정: 없음
+- 게임플레이 JSON 수정: 없음
+- 에셋 수정: 없음
+- 빌드/테스트 실행: 없음
+- approval evidence 변경: 없음
+- Packet claim 변경: 없음
+- Done/Archived 변경: 없음
+- commit/push: 없음
+- 역할 채팅 깨우기/제어: 없음
 
-## Human Action Needed
-None
+## 사용자 확인 필요
+없음
 ```
 
 The automation should not add narrative before or after this report.
