@@ -46,6 +46,10 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Automation Design Korean | `Role_Workers/Role_Worker_Automation_Design_KR.md` | Korean Phase 12A role-worker automation design |
 | Role Worker Automation v2 Bundle 2 | `Role_Workers/Role_Worker_Automation_v2_Bundle2.md` | Phase 23-28 Role Worker automation scope, run contract, Results draft permission, and pilot boundary |
 | Role Worker Automation v2 Bundle 2 Korean | `Role_Workers/Role_Worker_Automation_v2_Bundle2_KR.md` | Korean Phase 23-28 Role Worker automation bundle |
+| Developer Worker MVP | `Role_Workers/Developer_Worker_MVP.md` | Phase 29A design for future approved-scope Developer worker automation |
+| Developer Worker MVP Korean | `Role_Workers/Developer_Worker_MVP_KR.md` | Korean Phase 29A Developer worker MVP design |
+| Developer Worker Prompt Contract | `Role_Workers/Developer_Worker_Prompt_Contract.md` | Phase 29B prompt and dry-run report contract for future Developer worker automation |
+| Developer Worker Prompt Contract Korean | `Role_Workers/Developer_Worker_Prompt_Contract_KR.md` | Korean Phase 29B Developer worker prompt contract |
 | Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
 | Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
 | Low-Risk Role Work Report Template | `Role_Workers/_Low_Risk_Work_Report_Template.md` | Report template for low-risk role work candidates |
@@ -54,6 +58,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Automation Run Report Template Korean | `Role_Workers/Automation/_Run_Report_Template_KR.md` | Korean run report template for future role-worker automation |
 | Role Worker Automation Runbook | `Role_Workers/Automation/Role_Worker_Automation_Runbook.md` | Phase 12B creation record for the low-risk Role Worker automation |
 | Role Worker Automation Runbook Korean | `Role_Workers/Automation/Role_Worker_Automation_Runbook_KR.md` | Korean Phase 12B Role Worker automation runbook |
+| Developer Worker Dry-Run Automation Runbook | `Role_Workers/Automation/Developer_Worker_Dry_Run_Automation_Runbook.md` | Phase 30A creation record for the PAUSED Developer Worker dry-run automation |
+| Developer Worker Dry-Run Automation Runbook Korean | `Role_Workers/Automation/Developer_Worker_Dry_Run_Automation_Runbook_KR.md` | Korean Phase 30A Developer Worker dry-run automation runbook |
 | Handoff v2 Bundle 2 Role Worker Automation Finalization | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization.md` | Finalization document for the Phase 23-28 Role Worker automation bundle |
 | Handoff v2 Bundle 2 Role Worker Automation Finalization Korean | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization_KR.md` | Korean finalization document for the Phase 23-28 Role Worker automation bundle |
 | Role Worker Contract Check Harness | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness.md` | Harness for checking role worker contract readiness |
@@ -146,6 +152,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260527-005-attribute-tree-render-bounds | Done | Done | Planner | Developer, QA | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260527-006-role-worker-resolution-position-pilot | Done | Done | Planner | Developer | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260528-007-resolution-character-position-fix | Done | Done | Planner | Developer | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/manifest.yaml` | 2026-05-28 |
+| HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot | Done | Done | Planner | Developer | Developer Worker Dry-Run Plan Creation Pilot | `Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/manifest.yaml` | 2026-05-28 |
 
 ## Active Handoffs
 
@@ -157,6 +164,7 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 
 | Date | From | To | Title | Path |
 | --- | --- | --- | --- | --- |
+| 2026-05-28 | Developer Worker | Planner | Developer Worker Dry-Run Plan Creation Pilot | `Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/CompletionNotice.md` |
 | 2026-05-28 | Developer, QA | Planner | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/CompletionNotice.md` |
 | 2026-05-27 | Role Worker, Developer | Planner | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/CompletionNotice.md` |
 | 2026-05-27 | Developer, QA | Planner | Attribute Tree Render Bounds | `Packets/HANDOFF-20260527-005-attribute-tree-render-bounds/CompletionNotice.md` |

@@ -1,0 +1,137 @@
+packet_version: 1
+handoff_id: HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot
+title: Developer Worker Dry-Run Plan Creation Pilot
+
+created_at: 2026-05-28
+updated_at: 2026-05-28
+
+from_role: Planner
+to_roles:
+  - Developer
+current_owner: Developer
+claimed_by: ""
+claimed_at: ""
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Medium
+
+approval_required: false
+approval_state: Approved
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  approved_scope:
+    - Create a dry-run planning candidate for Developer Worker validation.
+    - Allow read-only source inspection for the already implemented outgame resolution-position fix area.
+    - Do not implement source changes, JSON changes, runtime behavior changes, build/test execution, status changes, commit, or push in this pilot.
+
+approved_execution_scope:
+  approved: true
+  summary: Dry-run planning only for a follow-up review of outgame resolution-change character position preservation.
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  source_document: ImplementationRequest.md
+
+approved_scope_allowed_paths:
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+  - PlayGround/Project/Gameplay/World/Background.cpp
+  - PlayGround/Project/Gameplay/World/Background.h
+
+approved_scope_forbidden_paths:
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - Do not edit source in Phase 30C.
+  - Do not edit JSON or schema.
+  - Do not change save/load behavior.
+  - Do not edit assets.
+  - Do not run build or tests from the dry-run automation.
+  - Do not change Packet status, manifest, approval evidence, commit, or push.
+
+approved_scope_validation:
+  - Developer Worker dry-run should write at most one DeveloperDryRunPlan.md.
+  - Developer Worker dry-run should write one timestamped run report.
+  - No source, JSON, asset, build/test, status, manifest, approval evidence, DevLog, commit, or push changes should be made by the automation.
+
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/WorkLog/2026-05-28_Handoff_Developer_Worker_Dry_Run_Plan_Creation_Pilot.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: ""
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - Results/DeveloperDryRunPlan.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_041145_DeveloperWorkerDryRun.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_051214_DeveloperWorkerDryRun.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_061241_DeveloperWorkerDryRun.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_071422_DeveloperWorkerDryRun.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_081516_DeveloperWorkerDryRun.md
+resource_notes: []
+
+allowed_paths:
+  - _Docs/Handoff/Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/
+  - _Docs/Handoff/Role_Workers/Automation/Runs/
+  - PlayGround/Project/Gameplay/Scenes/OutGameScene.cpp
+  - PlayGround/Project/Gameplay/World/Background.cpp
+  - PlayGround/Project/Gameplay/World/Background.h
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+
+blocked_by: []
+next_actions:
+  - Review Phase 31A separately before approving implementation-mode automation.
+completion_criteria:
+  - Developer Worker dry-run writes a run report.
+  - Developer Worker dry-run writes exactly one DeveloperDryRunPlan.md for this Packet.
+  - Automation does not edit source, JSON, assets, build/test, status, manifest, approval evidence, DevLog, commit, or push.
+remaining_risks:
+  - This pilot validates planning output only; it does not validate implementation-mode automation.
+
+notes: "Phase 30C pilot passed. DeveloperDryRunPlan.md was created once, repeated runs preserved it with AlreadyPresent, and the automation was returned to PAUSED."
