@@ -899,7 +899,7 @@ function directorConsoleHtml() {
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
       setNavCount("meetings", state.meetings.length);
-      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length + state.context_packets.length);
+      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length);
       setNavCount("work", state.work_orders.length + state.handoffs.length);
       setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
       setNavCount("timeline", buildTimelineItems().length);
