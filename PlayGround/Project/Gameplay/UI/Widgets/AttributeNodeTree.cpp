@@ -21,6 +21,19 @@ namespace
 		{ NodeDirection::Left, _Point{ -1, 0 } },
 		{ NodeDirection::LeftUp, _Point{ -1, -1 } },
 	} };
+
+	const _Color kHoverFillColor = _Color(72, 255, 245, 170);
+	const _Color kHoverOuterFrameColor = _Color(220, 255, 245, 170);
+	const _Color kHoverInnerFrameColor = _Color(255, 255, 255, 255);
+
+	_Rect ExpandRect(const _Rect& _rect, _int _padding)
+	{
+		return _Rect(
+			_rect.Left() - _padding,
+			_rect.Top() - _padding,
+			_rect.Right() + _padding,
+			_rect.Bottom() + _padding);
+	}
 }
 
 AttributeNodeTree::AttributeNodeTree()
@@ -153,6 +166,16 @@ void AttributeNodeTree::_RenderTreeContent(_double _delta_time)
 	{
 		if (entry.node)
 			entry.node->Render(_delta_time);
+	}
+
+	if (mouse_overed_node_)
+	{
+		const _Rect node_rect = mouse_overed_node_->GetRect();
+		const _int frame_padding = std::max(2, node_rect.Width() / 12);
+		const _int fill_padding = std::max(1, frame_padding / 2);
+		_DrawFunc::FillRectangle(ExpandRect(node_rect, fill_padding), kHoverFillColor);
+		_DrawFunc::DrawRectangle(ExpandRect(node_rect, frame_padding), kHoverOuterFrameColor, 3.f);
+		_DrawFunc::DrawRectangle(ExpandRect(node_rect, std::max(1, frame_padding - 2)), kHoverInnerFrameColor, 1.f);
 	}
 }
 

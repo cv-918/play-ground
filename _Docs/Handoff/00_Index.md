@@ -50,6 +50,10 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Developer Worker MVP Korean | `Role_Workers/Developer_Worker_MVP_KR.md` | Korean Phase 29A Developer worker MVP design |
 | Developer Worker Prompt Contract | `Role_Workers/Developer_Worker_Prompt_Contract.md` | Phase 29B prompt and dry-run report contract for future Developer worker automation |
 | Developer Worker Prompt Contract Korean | `Role_Workers/Developer_Worker_Prompt_Contract_KR.md` | Korean Phase 29B Developer worker prompt contract |
+| Developer Worker Implementation Mode Contract | `Role_Workers/Developer_Worker_Implementation_Mode_Contract.md` | Phase 31A approved-scope implementation mode contract |
+| Developer Worker Implementation Mode Contract Korean | `Role_Workers/Developer_Worker_Implementation_Mode_Contract_KR.md` | Korean Phase 31A implementation mode contract |
+| Developer Worker Implementation Mode Prompt Contract | `Role_Workers/Developer_Worker_Implementation_Mode_Prompt_Contract.md` | Phase 31A implementation-mode automation prompt contract |
+| Developer Worker Implementation Mode Prompt Contract Korean | `Role_Workers/Developer_Worker_Implementation_Mode_Prompt_Contract_KR.md` | Korean Phase 31A implementation-mode prompt contract |
 | Role Worker Intake Decision Template | `Role_Workers/_Intake_Decision_Template.md` | Intake decision template for role workers |
 | Role Worker Intake Decision Template Korean | `Role_Workers/_Intake_Decision_Template_KR.md` | Korean intake decision template |
 | Low-Risk Role Work Report Template | `Role_Workers/_Low_Risk_Work_Report_Template.md` | Report template for low-risk role work candidates |
@@ -60,6 +64,8 @@ Use this file as a lightweight table of contents. When a handoff is created, add
 | Role Worker Automation Runbook Korean | `Role_Workers/Automation/Role_Worker_Automation_Runbook_KR.md` | Korean Phase 12B Role Worker automation runbook |
 | Developer Worker Dry-Run Automation Runbook | `Role_Workers/Automation/Developer_Worker_Dry_Run_Automation_Runbook.md` | Phase 30A creation record for the PAUSED Developer Worker dry-run automation |
 | Developer Worker Dry-Run Automation Runbook Korean | `Role_Workers/Automation/Developer_Worker_Dry_Run_Automation_Runbook_KR.md` | Korean Phase 30A Developer Worker dry-run automation runbook |
+| Developer Worker Implementation Mode Automation Runbook | `Role_Workers/Automation/Developer_Worker_Implementation_Mode_Automation_Runbook.md` | Phase 31A operating runbook for a future PAUSED implementation-mode automation |
+| Developer Worker Implementation Mode Automation Runbook Korean | `Role_Workers/Automation/Developer_Worker_Implementation_Mode_Automation_Runbook_KR.md` | Korean Phase 31A implementation-mode automation runbook |
 | Handoff v2 Bundle 2 Role Worker Automation Finalization | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization.md` | Finalization document for the Phase 23-28 Role Worker automation bundle |
 | Handoff v2 Bundle 2 Role Worker Automation Finalization Korean | `Handoff_V2_Bundle2_Role_Worker_Automation_Finalization_KR.md` | Korean finalization document for the Phase 23-28 Role Worker automation bundle |
 | Role Worker Contract Check Harness | `Role_Workers/Harness/Role_Worker_Contract_Check_Harness.md` | Harness for checking role worker contract readiness |
@@ -153,12 +159,13 @@ Structured Packets live under `Packets/`. Add new Packet folders here when they 
 | HANDOFF-20260527-006-role-worker-resolution-position-pilot | Done | Done | Planner | Developer | Role Worker Pilot - Resolution Character Field Position | `Packets/HANDOFF-20260527-006-role-worker-resolution-position-pilot/manifest.yaml` | 2026-05-27 |
 | HANDOFF-20260528-007-resolution-character-position-fix | Done | Done | Planner | Developer | Resolution Change Character Field Position Fix | `Packets/HANDOFF-20260528-007-resolution-character-position-fix/manifest.yaml` | 2026-05-28 |
 | HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot | Done | Done | Planner | Developer | Developer Worker Dry-Run Plan Creation Pilot | `Packets/HANDOFF-20260528-008-developer-worker-dry-run-plan-pilot/manifest.yaml` | 2026-05-28 |
+| HANDOFF-20260528-009-attribute-node-hover-indicator | Claimed | InProgress | Planner | Developer | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/manifest.yaml` | 2026-05-28 |
 
 ## Active Handoffs
 
 | Status | From | To | Title | Path | Updated |
 | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
+| InProgress | Planner | Developer | Attribute Node Hover Indicator UI Pilot | `Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/manifest.yaml` | 2026-05-28 |
 
 ## Recent Done Notices
 

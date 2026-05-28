@@ -1,0 +1,150 @@
+packet_version: 1
+handoff_id: HANDOFF-20260528-009-attribute-node-hover-indicator
+title: Attribute Node Hover Indicator UI Pilot
+
+created_at: 2026-05-28
+updated_at: 2026-05-28
+
+from_role: Planner
+to_roles:
+  - Developer
+  - QA
+current_owner: ""
+claimed_by: playground-handoff-developer-worker-implementation-pilot
+claimed_at: 2026-05-28
+
+delivery_status: Done
+execution_status: Done
+
+risk_level: Low
+
+approval_required: false
+approval_state: Approved
+approval_request_path: ""
+approval_type: []
+
+approval_evidence:
+  approved: true
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  approved_scope:
+    - Add a small visual hover or focus indicator for Attribute Node Tree nodes.
+    - Keep the implementation inside AttributeNodeTree UI rendering behavior.
+    - Do not change node data, schema, progression logic, save/load, lifecycle, assets, build settings, commit, or push.
+
+approved_execution_scope:
+  approved: true
+  summary: Add a clearer hover indicator to Attribute Node Tree nodes using a small, reversible UI-only source change.
+  approved_by: User
+  approved_at: 2026-05-28
+  approval_source: chat
+  source_document: ImplementationRequest.md
+
+approved_scope_allowed_paths:
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+
+approved_scope_forbidden_paths:
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - PlayGround/Project/Gameplay/GamePlaySystems/
+  - PlayGround/Project/Gameplay/Actors/
+  - PlayGround/Project/Gameplay/Scenes/
+  - PlayGround/Project/Gameplay/UI/Elements/
+  - PlayGround/Project/Gameplay/UI/Views/
+  - PlayGround/Resources/
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+
+approved_scope_non_goals:
+  - Do not modify AttributeNode.json or any gameplay JSON.
+  - Do not modify AttributeNode data loading, state, level-up, or progression behavior.
+  - Do not modify Button shared behavior.
+  - Do not add or replace assets.
+  - Do not change save/load behavior.
+  - Do not change scene, actor, component, or tree lifecycle.
+  - Do not change build settings.
+  - Do not commit or push from the automation.
+
+approved_scope_validation:
+  - Run git status --short before editing.
+  - Run git diff --name-only after editing.
+  - Run git diff --check for changed files.
+  - Run the Release x64 MSBuild command after source edits when MSBuild is available.
+  - If an approved build or test command fails because of a cause inside approved_scope_allowed_paths, analyze the failure, apply an in-scope fix, rerun the validation command, and record the failure/fix/rerun evidence.
+  - Manual QA required: open the Attribute Tree UI, hover nodes, confirm the hovered node has a clearer visual indicator, confirm node click/level-up and right-click/level-down still work, and confirm panning/tooltip behavior is not broken.
+
+approval_request:
+  title: ""
+  user_facing_change: ""
+  gameplay_or_workflow_intent: ""
+  proposed_behavior: ""
+  data_changes: []
+  code_changes: []
+  files_expected_to_change: []
+  non_goals: []
+  risks: []
+  validation_plan: []
+  decision_needed: ""
+
+aiworkflow_required: false
+aiworkflow_links:
+  task_request: ""
+  active_task: ""
+  proposal: ""
+  decision: ""
+  work_order: ""
+  devlog: _DevLog/FixLog/2026-05-28_Attribute_Node_Hover_Indicator.md
+
+packet_documents:
+  planning_brief: PlanningBrief.md
+  implementation_request: ImplementationRequest.md
+  art_request: ""
+  review_request: ""
+  qa_request: QARequest.md
+  completion_notice: CompletionNotice.md
+
+result_documents:
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_123418_DeveloperWorkerImplementation.md
+  - _Docs/Handoff/Role_Workers/Automation/Runs/2026-05-28_134739_DeveloperWorkerBuildFix.md
+  - Results/DeveloperResult.md
+  - Results/DeveloperBuildFix.md
+  - Results/QAResult.md
+  - _DevLog/FixLog/2026-05-28_Attribute_Node_Hover_Indicator.md
+resource_notes: []
+
+allowed_paths:
+  - _Docs/Handoff/Packets/HANDOFF-20260528-009-attribute-node-hover-indicator/
+  - _Docs/Handoff/Role_Workers/Automation/Runs/
+  - _DevLog/FixLog/
+  - _DevLog/WorkLog/
+  - PlayGround/Project/Gameplay/UI/Widgets/AttributeNodeTree.cpp
+
+forbidden_paths:
+  - _Local/
+  - _Temp/
+  - .env
+  - node_modules/
+  - PlayGround/Data/
+  - PlayGround/Project/**/*.json
+  - PlayGround/Project/**/*.vcxproj
+  - PlayGround/Project/**/*.vcxproj.filters
+  - PlayGround/Resources/
+
+blocked_by: []
+next_actions:
+  - Human developer may decide whether to commit and push the completed Packet work.
+completion_criteria:
+  - Hovered Attribute Tree node has a clearer visual indicator.
+  - The implementation changes only approved files.
+  - Node tooltip, click, right-click, pan, and render clipping behavior are not broken.
+  - DeveloperResult and DevLog are written.
+  - Human QA result is recorded before closing the Packet.
+remaining_risks:
+  - None recorded after human QA.
+
+notes: "Completed after user confirmed hover, tooltip, left-click, right-click, and panning QA passed."
