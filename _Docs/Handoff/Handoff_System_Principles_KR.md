@@ -20,6 +20,19 @@ Planner, Developer, Artist, Reviewer, QA 같은 역할이 서로에게 넘겨야
 
 목표 사용감은 사용자가 주로 메인 기획자 채팅과 기획 대화를 하고, 기획이 승인되면 각 역할 채팅이 Handoff 공간에서 자기 일을 찾아 계획하고 진행하며, 필요한 경우에만 사용자에게 승인 요청을 올리는 것이다.
 
+## 현재 제품 위치
+
+Studio 중심 방향에서는 Handoff가 사용자의 기본 화면이 아니다.
+
+AIWorkflow Studio는 Human Director가 방향과 결정을 내리는 운영 콘솔이다. Handoff는 그 뒤에서 승인된 범위, 금지 범위, 참고 맥락, 검증 요구사항, 검증 자료 요구사항, 산출물 계약, 역할 간 인수인계 기록을 보존하는 내부 Work Packet / 업무 전달 레이어다.
+
+Human Director는 평소에 Studio에서 판단한다. raw Handoff 큐, packet manifest, dashboard, violation report는 Studio가 명시적으로 사용자용 행동으로 노출하지 않는 한 내부 점검과 추적용 표면이다.
+
+현재 위치 기준 문서는 아래를 따른다.
+
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Handoff_Work_Packet_Internalization.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap.md`
+
 ## AIWorkflow와의 관계
 
 Handoff는 AIWorkflow를 대체하지 않는다.

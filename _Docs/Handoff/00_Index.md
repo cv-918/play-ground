@@ -6,6 +6,26 @@ This index tracks active handoff documents between roles.
 
 Use this file as a lightweight table of contents. When a handoff is created, add it to the relevant section. When the handoff is completed or superseded, update its status and move the document to `Done/` or `Archive/` when appropriate.
 
+## Current Studio Relationship
+
+Handoff is no longer the preferred user-facing operating surface.
+
+In the Studio-centered workflow, Handoff is treated as the internal Work Packet
+and dispatch layer that preserves scope, non-goals, context, validation
+requirements, evidence requirements, and output contracts between Studio,
+staff agents, Codex, Hermes, OpenClaw, and local tools.
+
+Human Director decisions should normally happen in Studio. Raw Handoff queues,
+generated dashboards, packet manifests, and violation reports remain available
+for internal inspection, debugging, and traceability.
+
+Current positioning documents:
+
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Handoff_Work_Packet_Internalization.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Handoff_Work_Packet_Internalization_KR.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap_KR.md`
+
 ## System Documents
 
 | Title | Path | Note |

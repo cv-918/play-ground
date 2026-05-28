@@ -20,6 +20,26 @@ It lets roles such as Planner, Developer, Artist, Reviewer, and QA pass work to 
 
 The system exists so the human developer can primarily discuss planning in the main planning chat while role-specific chats can find prepared work, produce plans, request approval when needed, and return results through a common path.
 
+## Current Product Position
+
+Handoff is no longer the primary user-facing surface for the Studio-centered
+workflow.
+
+AIWorkflow Studio is the Human Director control plane. Handoff is the internal
+Work Packet and dispatch layer that preserves approved scope, non-goals,
+context, validation requirements, evidence requirements, output contracts, and
+handoff history for staff agents and execution tools.
+
+The Human Director should normally make decisions through Studio. Raw Handoff
+queues, packet manifests, dashboards, and violation reports are internal
+inspection and traceability surfaces unless Studio explicitly exposes a
+Director-facing action.
+
+The current positioning documents are:
+
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Handoff_Work_Packet_Internalization.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap.md`
+
 ## Source Of Truth Relationship
 
 Handoff does not replace AIWorkflow.

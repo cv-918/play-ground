@@ -6,6 +6,15 @@
 
 `_Docs/Handoff/`는 기획, 개발, 아트, 리뷰, QA 같은 역할 간 전달물을 모아두는 공용 교환소다. 기존 AIWorkflow를 대체하지 않고, 작업을 넘겨받는 역할이 필요한 자료를 빠르게 확인할 수 있도록 돕는다.
 
+현재 Studio 중심 방향에서는 Handoff를 사용자가 직접 관리하는 별도 제품으로 보지 않는다.
+
+Handoff는 Studio 내부의 **Work Packet / 업무 전달 레이어**로 취급한다. 즉, 사용자는 raw Handoff 큐나 manifest를 평소에 직접 관리하지 않고, Studio에서 안건, 자문, 감독자 결정, 업무 지시, 결과 검토를 본다. Handoff는 그 뒤에서 승인된 범위, 금지 범위, 참고 맥락, 검증 요구사항, 검증 자료 요구사항, 산출물 계약을 안전하게 보존한다.
+
+새 위치와 폐기/유지 기준은 아래 문서를 따른다.
+
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Handoff_Work_Packet_Internalization_KR.md`
+- `_Docs/AIWorkflow/FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap_KR.md`
+
 이 시스템의 고정 이름은 `AI Role Handoff System`이며, 통합 작업명은 `AIWorkflow Handoff Integration`이다. 운영 원칙은 `Handoff_System_Principles.md`와 `Handoff_System_Principles_KR.md`를 기준으로 한다.
 
 구조화된 다중 문서 전달은 `Packets/` 아래의 Handoff Packet을 사용한다. Packet 구조와 manifest 규칙은 `Handoff_Packet_Spec.md`와 `Handoff_Packet_Spec_KR.md`를 기준으로 한다.
