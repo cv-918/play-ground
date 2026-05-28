@@ -61,7 +61,7 @@ function buildMeetingFacilitationPlan(meeting = {}) {
   const recommendedActions = [];
 
   if (status === "draft") {
-    recommendedActions.push("회의를 시작하고 각 역할이 무엇을 판단해야 하는지 먼저 확인합니다.");
+    recommendedActions.push("자문을 시작하고 각 역할이 무엇을 판단해야 하는지 먼저 확인합니다.");
   }
   if (!turns.length) {
     recommendedActions.push(`${nextSpeaker}에게 첫 관점 정리를 요청합니다.`);
@@ -70,7 +70,7 @@ function buildMeetingFacilitationPlan(meeting = {}) {
   } else if (proposals.length && !accepted.length) {
     recommendedActions.push("제안 중 채택/반려/보류할 항목을 Human Director 결정으로 넘깁니다.");
   } else {
-    recommendedActions.push("회의 결과를 후속 업무 후보 또는 감독자 판단으로 넘길지 결정합니다.");
+    recommendedActions.push("자문 결과를 후속 업무 후보 또는 감독자 판단으로 넘길지 결정합니다.");
   }
 
   return {
@@ -79,18 +79,18 @@ function buildMeetingFacilitationPlan(meeting = {}) {
     topic,
     status,
     current_meaning: status === "draft"
-      ? "아직 회의가 시작되기 전입니다. 주제와 참석자를 확인할 차례입니다."
-      : "회의 기록을 보고 의견을 더 받을지, 후속 업무 후보로 넘길지, 감독자 판단으로 남길지 결정하는 단계입니다.",
+      ? "아직 자문이 시작되기 전입니다. 주제와 참석자를 확인할 차례입니다."
+      : "자문 기록을 보고 의견을 더 받을지, 후속 업무 후보로 넘길지, 감독자 판단으로 남길지 결정하는 단계입니다.",
     next_speaker_recommendation: nextSpeaker,
     next_speaker_reason: spoken.has(nextSpeaker)
       ? "이미 발언한 직원이지만 현재 참석자 중 다음 관점 정리에 가장 적합합니다."
       : "아직 발언하지 않은 참석자라서 먼저 관점을 받을 수 있습니다.",
     recommended_actions: recommendedActions,
     director_decision_options: [
-      "회의를 계속한다: AI 직원 발언을 더 받거나 사람이 직접 발언을 추가합니다.",
-      "업무 후보 만들기: 회의에서 나온 해야 할 일을 업무 지시 후보로 저장합니다.",
-      "방향 판단으로 남기기: 회의에서 정한 결론, 방향, 채택/반려/보류 판단을 감독자 결정함에 남깁니다.",
-      "회의를 종료한다: 더 논의하지 않고 회의 상태를 closed로 바꿉니다.",
+      "자문을 계속한다: AI 직원 발언을 더 받거나 사람이 직접 발언을 추가합니다.",
+      "업무 후보 만들기: 자문에서 나온 해야 할 일을 업무 지시 후보로 저장합니다.",
+      "방향 판단으로 남기기: 자문에서 정한 결론, 방향, 채택/반려/보류 판단을 감독자 결정함에 남깁니다.",
+      "자문을 종료한다: 더 논의하지 않고 자문 상태를 closed로 바꿉니다.",
     ],
     blockers: [
       ...unresolved.map((item) => `남은 질문: ${item}`),
@@ -121,7 +121,7 @@ function buildMeetingRunbook(meeting = {}) {
   const spoken = new Set(turns.map((turn) => String(turn.speaker_id || "").trim()).filter(Boolean));
   const silentParticipants = participants.filter((id) => id && !spoken.has(id));
   const nextTurnQueue = silentParticipants.length
-    ? silentParticipants.map((id) => `${id}: 아직 회의 관점이 기록되지 않았습니다.`)
+    ? silentParticipants.map((id) => `${id}: 아직 자문 관점이 기록되지 않았습니다.`)
     : participants.slice(0, 3).map((id) => `${id}: 제안/반박/질문 중 빠진 관점을 보강합니다.`);
   const decisionCandidates = [
     ...proposals.map((item) => `제안 판단: ${item}`),
@@ -132,7 +132,7 @@ function buildMeetingRunbook(meeting = {}) {
     "핵심 제안이 채택/반려/보류 중 하나로 분류되었습니다.",
     "반론과 남은 질문이 후속 업무 또는 결정 후보로 이동했습니다.",
     "후속 업무 후보 또는 감독자 판단으로 넘길 대상이 명확합니다.",
-    "회의 결과가 canon이나 구현으로 바로 굳지 않는다는 점이 분리되어 있습니다.",
+    "자문 결과가 canon이나 구현으로 바로 굳지 않는다는 점이 분리되어 있습니다.",
   ];
   const blockers = [];
   if (!turns.length) blockers.push("직원 발언이 아직 없습니다.");
@@ -146,8 +146,8 @@ function buildMeetingRunbook(meeting = {}) {
     topic,
     status: meeting.status || "draft",
     current_meaning: blockers.length
-      ? "회의가 아직 닫히기 전입니다. 발언, 질문, 우려, 제안 판단을 더 정리해야 합니다."
-      : "회의 결과를 후속 업무 후보 또는 감독자 판단으로 넘길 준비가 되어 있습니다.",
+      ? "자문이 아직 닫히기 전입니다. 발언, 질문, 우려, 제안 판단을 더 정리해야 합니다."
+      : "자문 결과를 후속 업무 후보 또는 감독자 판단으로 넘길 준비가 되어 있습니다.",
     participants,
     discussion_state: {
       turn_count: turns.length,
@@ -159,19 +159,19 @@ function buildMeetingRunbook(meeting = {}) {
       follow_up_count: followUps.length,
     },
     next_turn_queue: nextTurnQueue,
-    decision_candidates: decisionCandidates.length ? decisionCandidates : ["현재 회의에는 즉시 판단할 제안/우려/질문이 없습니다."],
+    decision_candidates: decisionCandidates.length ? decisionCandidates : ["현재 자문에는 즉시 판단할 제안/우려/질문이 없습니다."],
     handoff_candidates: followUps.length
       ? followUps
       : proposals.length
         ? proposals.map((item) => `업무 후보: ${item}`)
-        : [`회의 주제 요약을 후속 업무 후보로 만들지 검토: ${topic}`],
+        : [`자문 주제 요약을 후속 업무 후보로 만들지 검토: ${topic}`],
     close_criteria: closeCriteria,
     blockers,
     director_checklist: [
       "모든 핵심 역할이 최소 한 번은 자기 관점에서 발언했는지 확인합니다.",
       "제안, 반론, 질문이 서로 섞이지 않고 분리되어 있는지 확인합니다.",
       "공식 설정으로 확정할 내용은 별도 감독자 판단/기록 gate로 넘깁니다.",
-      "구현이 필요하면 회의 결과를 바로 실행하지 말고 WorkOrder로 넘깁니다.",
+      "구현이 필요하면 자문 결과를 바로 실행하지 말고 WorkOrder로 넘깁니다.",
     ],
     safety: {
       read_only: true,
@@ -204,12 +204,12 @@ function buildMeetingBoard(meeting = {}) {
   const meaningfulDecisions = decisionCandidates.filter((item) => !/즉시 판단할 제안\/우려\/질문이 없습니다/.test(item));
   const hasOpenItems = questions.length || concernsOrBlockers.length || meaningfulDecisions.length;
   const currentMeaning = !turns.length
-    ? "아직 회의 발언이 없습니다. 먼저 첫 관점을 받을 차례입니다."
+    ? "아직 자문 발언이 없습니다. 먼저 첫 관점을 받을 차례입니다."
     : silentParticipants.length
       ? "아직 발언하지 않은 직원이 있습니다. 다음 관점을 받은 뒤 후속 업무 후보나 감독자 판단으로 넘길지 판단합니다."
       : hasOpenItems
         ? "남은 질문, 우려, 판단 후보를 정리해야 합니다."
-        : "회의 결과를 후속 업무 후보 또는 감독자 판단으로 넘기거나 회의를 닫을지 판단하는 단계입니다.";
+        : "자문 결과를 후속 업무 후보 또는 감독자 판단으로 넘기거나 자문을 닫을지 판단하는 단계입니다.";
   return {
     meeting_board_id: makeStudioId("MB", meeting.meeting_id || meeting.topic || "meeting"),
     meeting_id: meeting.meeting_id || "",
@@ -231,9 +231,9 @@ function buildMeetingBoard(meeting = {}) {
     next_speaker_recommendation: nextSpeakerId,
     next_speaker_reason: facilitation.next_speaker_reason,
     director_next_actions: [
-      nextSpeakerId ? "다음 AI 발언 받기: 추천 직원의 다음 관점을 회의에 추가" : "내 의견 기록: Human Director 의견을 회의록에 기록",
-      "회의를 더 이어가려면: 내 의견 기록 또는 다음 AI 발언 받기",
-      hasOpenItems ? "쟁점이 정리되면: 방향 판단으로 남기기 또는 업무 후보 만들기" : "논의가 충분하면: 업무 후보 만들기, 방향 판단으로 남기기, 또는 회의 종료",
+      nextSpeakerId ? "다음 AI 발언 받기: 추천 직원의 다음 관점을 자문에 추가" : "내 의견 기록: Human Director 의견을 자문 기록에 기록",
+      "자문을 더 이어가려면: 내 의견 기록 또는 다음 AI 발언 받기",
+      hasOpenItems ? "쟁점이 정리되면: 방향 판단으로 남기기 또는 업무 후보 만들기" : "논의가 충분하면: 업무 후보 만들기, 방향 판단으로 남기기, 또는 자문 종료",
     ],
     next_actions: facilitation.recommended_actions,
     remaining_questions: questions,
@@ -244,7 +244,7 @@ function buildMeetingBoard(meeting = {}) {
     close_checklist: [
       "필요한 역할의 발언이 빠지지 않았는지 확인합니다.",
       "결정할 내용과 후속 업무로 넘길 내용을 분리합니다.",
-      "회의 결과가 바로 canon/task/git으로 굳지 않았는지 확인합니다.",
+      "자문 결과가 바로 canon/task/git으로 굳지 않았는지 확인합니다.",
     ],
     director_checklist: stringList(runbook.director_checklist),
     safety: {
@@ -331,7 +331,7 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
     ] : [
       "이 제안을 운영 방향이나 업무 후보로 받아들일지 확인합니다.",
       "이 판단만으로 소스 수정, task 실행, commit/push가 일어나지 않는지 확인합니다.",
-      "후속 업무 지시나 회의가 필요한지 확인합니다.",
+      "후속 업무 지시나 자문이 필요한지 확인합니다.",
     ];
   } else if (kind === "decision") {
     const canStoreAsCanon = record.decision_type === "canonize" && isGameCanonRecord;
@@ -613,20 +613,20 @@ function buildApprovalImpactPlan(core = {}, automation = {}) {
 function buildDirectorSurfaceMap() {
   const surfaces = [
     ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 검증 자료 확인"], false],
-    ["goals", "목표 기획", "Human Director", "큰 목표를 부서, 직원, 회의, 업무 후보로 쪼갭니다.", ["기획안 미리보기", "기획안 저장", "후보 생성"], false],
+    ["goals", "새 안건", "Human Director", "큰 목표를 Director Brief로 정리하고 자문, 업무, 결정 후보로 쪼갭니다.", ["브리프 미리보기", "브리프 저장", "후보 생성"], false],
     ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 채택 후보, 커밋 판단을 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "채택 후보 검토", "commit/push 판단"], false],
-    ["meetings", "회의실", "Human Director / Creative Director", "AI 직원 의견을 모아 후속 업무 후보와 감독자 판단 후보로 정리합니다.", ["회의판 보기", "내 의견 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
+    ["meetings", "자문실", "Human Director / Creative Director", "AI 직원 의견과 반박을 모아 후속 업무 후보와 감독자 판단 후보로 정리합니다.", ["자문판 보기", "내 의견 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
     ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 채택 후보로 넘깁니다.", ["보고서 보기/만들기", "채택 후보 미리보기", "채택 후보로 넘기기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
-    ["knowledge", "제안/결정 기록함", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
+    ["knowledge", "LLM Wiki", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 회사 기억으로 구분합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
     ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
     ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
     ["toolbox", "도구함", "Human Director / Maintainer", "자주 쓰는 유지보수 도구만 실행합니다.", ["Studio 재시작", "Discord bot 재시작", "팀 데이터 배포", "점검 도구 실행"], false],
     ["project", "프로젝트", "참고/추적", "현재 프로젝트와 실행 경계를 확인합니다.", ["실행 준비 점검", "프로젝트 프로필 확인"], false],
-    ["departments", "부서", "참고/추적", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/회의 이동"], false],
-    ["staff", "AI 직원", "참고/추적", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "회의/업무 이동"], false],
-    ["timeline", "실행 타임라인", "참고/추적", "회의, 업무, 직원 보고서, Runner 기록을 시간순으로 봅니다.", ["관련 화면 이동", "원본 기록 확인"], false],
+    ["departments", "부서", "참고/추적", "부서 책임과 산출물 경계를 봅니다.", ["부서 책임 확인", "관련 직원/업무/자문 이동"], false],
+    ["staff", "AI 직원", "참고/추적", "직원 역할, 권한, 금지 행위, 산출물 책임을 봅니다.", ["운영 점검", "직원 보고서 보기", "자문/업무 이동"], false],
+    ["timeline", "실행 타임라인", "참고/추적", "자문, 업무, 직원 보고서, Runner 기록을 시간순으로 봅니다.", ["관련 화면 이동", "원본 기록 확인"], false],
     ["systems", "시스템", "관리자/내부", "도구 adapter와 도구 요청 경계를 점검합니다.", ["실행 준비 점검", "도구 요청서 작성"], true],
     ["policy", "정책", "관리자/내부", "승인 영향과 자동 진행 준비도를 점검합니다.", ["승인 영향 점검", "자동 진행 준비도"], true],
   ].map(([page_id, label, audience, purpose, actions, internal]) => ({
@@ -696,8 +696,8 @@ function buildStudioEvalPlan() {
     ],
     manual_director_checks: [
       "홈에서 다음 행동이 이해되는지 확인합니다.",
-      "목표 기획에서 후보가 실행이 아니라 기획 기록으로 보이는지 확인합니다.",
-      "회의실에서 회의판과 후속 업무 흐름이 보이는지 확인합니다.",
+      "새 안건에서 후보가 실행이 아니라 브리프 기록으로 보이는지 확인합니다.",
+      "자문실에서 자문판과 후속 업무 흐름이 보이는지 확인합니다.",
       "업무 지시에서 인수인계 점검, 직원 자료, 직원 실행 계획 차이가 보이는지 확인합니다.",
       "검증 자료에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
       "변경 검토에서 선택 commit/push만 가능하다는 점이 보이는지 확인합니다.",

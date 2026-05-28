@@ -139,19 +139,21 @@ This slice defines:
   manual Director checks, and pass criteria after Studio feature changes.
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
-  workspace. The normal Director-facing pages are Korean-labeled Home,
-  Project Dashboard, Director Inbox, Department, Staff, Meeting Room, Staff
-  Runs, Work Orders, Knowledge, Timeline, Diff Review, Evidence / 검증 자료, and
-  DevLog pages: `홈`, `프로젝트`, `감독자 결정함`, `부서`, `AI 직원`, `회의실`,
-  `직원 보고서`, `업무 지시`, `지식/결정`, `실행 타임라인`, `변경 검토`,
-  `검증 자료`, and `DevLog`.
+  workspace. The current Director-facing surface is intentionally narrow:
+  `홈`, `새 안건`, `자문실`, `감독자 결정함`, `결과 검토`, `기록실`,
+  and `도구함`. Operations-detail and organization-reference pages remain
+  available behind collapsed sections, but they are not the default work path.
   Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
-  default. Home is the Director situation board for recent work,
-  staff status, and AIWorkflow Core state. The Goal Planning page
-  (`목표 기획`) is the Director-facing intake for broad goals; it produces a
-  deterministic DirectorGoalPlan preview and can store the plan or create
-  governed MeetingSession, WorkOrder, and Proposal candidates. Director-facing
+  default. Home is the Director situation board for current decisions and
+  active direction. The New Agenda page (`새 안건`) is the Director-facing
+  intake for broad goals; it produces a deterministic Director Brief and can
+  store the brief or create governed Advisory Session, WorkOrder, and Proposal
+  candidates. The Advisory Room (`자문실`) is where AI staff opinions,
+  objections, questions, and next-action candidates are collected before the
+  Director turns them into decisions or work. The Records Room (`기록실`) is the
+  LLM Wiki-facing surface for proposals, Director decisions, reference memory,
+  and canon candidates. Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.
   The covered read-only report set includes DirectorGoalPlan, StaffOperatingPlan,

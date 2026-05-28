@@ -260,9 +260,9 @@ function createPlanningMeetingApiHandler(deps = {}) {
           staff_plan: {
             ok: false,
             status: "context_unavailable",
-            current_meaning: "직원 발언 계획에 필요한 문맥 묶음을 만들지 못했습니다. 회의 기록은 유지되며, canon/task/git은 바뀌지 않았습니다.",
+            current_meaning: "직원 발언 계획에 필요한 문맥 묶음을 만들지 못했습니다. 자문 기록은 유지되며, canon/task/git은 바뀌지 않았습니다.",
             next_actions: [
-              "회의를 계속하려면 내 의견 기록을 사용하세요.",
+              "자문을 계속하려면 내 의견 기록을 사용하세요.",
               "AI 직원 발언이 필요하면 직원 registry와 context builder 상태를 먼저 확인하세요.",
             ],
             error: contextResult.stderr || contextResult.stdout || "context builder plan failed",
@@ -283,9 +283,9 @@ function createPlanningMeetingApiHandler(deps = {}) {
         : {
             ok: false,
             status: "executor_plan_unavailable",
-            current_meaning: "직원 실행 계획을 만들지 못했습니다. 회의 기록과 문맥 묶음은 준비됐지만, 직원 실행 도구 쪽 점검이 필요합니다.",
+            current_meaning: "직원 실행 계획을 만들지 못했습니다. 자문 기록과 문맥 묶음은 준비됐지만, 직원 실행 도구 쪽 점검이 필요합니다.",
             next_actions: [
-              "회의를 계속하려면 내 의견 기록을 사용하세요.",
+              "자문을 계속하려면 내 의견 기록을 사용하세요.",
               "AI 직원 발언이 꼭 필요하면 staff executor 상태를 먼저 확인하세요.",
             ],
             error: staffPlan.stderr || staffPlan.stdout || "staff executor plan failed",

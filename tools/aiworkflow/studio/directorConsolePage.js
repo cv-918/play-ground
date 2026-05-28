@@ -217,11 +217,11 @@ function directorConsoleHtml() {
       <div class="nav-section-label">감독자 콘솔</div>
       <nav class="nav" aria-label="Human Director navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="goals">목표/방향 <span class="count" id="nav-goals-count"></span></button>
-        <button data-nav="meetings">회의실 <span class="count" id="nav-meetings-count"></span></button>
+        <button data-nav="goals">새 안건 <span class="count" id="nav-goals-count"></span></button>
+        <button data-nav="meetings">자문실 <span class="count" id="nav-meetings-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="evidence">결과 검토 <span class="count" id="nav-evidence-count"></span></button>
-        <button data-nav="knowledge">기록실 <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="knowledge">LLM Wiki <span class="count" id="nav-knowledge-count"></span></button>
         <button data-nav="toolbox">도구함 <span class="count" id="nav-toolbox-count"></span></button>
       </nav>
       <button id="referenceNavToggle" class="internal-toggle">운영 상세 <span id="referenceNavState">숨김</span></button>
@@ -368,15 +368,15 @@ function directorConsoleHtml() {
     const PAGES = {
       home: ["홈", "Human Director가 지금 결정할 일과 진행 중인 방향만 봅니다."],
       toolbox: ["도구함", "직접 사용할 만한 유지보수 도구만 설명과 함께 실행합니다."],
-      goals: ["목표/방향", "큰 방향을 말하면 Studio가 부서, 직원, 회의, 업무 후보로 분해합니다."],
+      goals: ["새 안건", "큰 목표를 Director Brief로 정리하고 자문, 업무, 결정 후보로 나눕니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
       staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
-      meetings: ["회의실", "AI 직원 의견을 모아 후속 업무와 감독자 판단 후보로 정리합니다."],
+      meetings: ["자문실", "AI 직원 의견, 반박, 질문을 모아 안건의 다음 방향을 정리합니다."],
       runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
-      knowledge: ["제안/결정 기록함", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 확인합니다."],
+      knowledge: ["LLM Wiki", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 회사 기억으로 정리합니다."],
       timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
       diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
@@ -450,8 +450,8 @@ function directorConsoleHtml() {
     }
     function meetingStatusOptionList(meetings) {
       const statuses = Array.from(new Set(asArray(meetings).map((meeting) => meeting.status).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
-      return '<option value="__active__">진행 중 회의만 보기</option>' +
-        '<option value="">전체 회의 보기</option>' +
+      return '<option value="__active__">진행 중 자문만 보기</option>' +
+        '<option value="">전체 자문 보기</option>' +
         statuses.map((value) => '<option value="' + esc(value) + '">' + esc(optionLabel(value)) + '</option>').join("");
     }
     function meetingMatchesStatusFilter(meeting) {
@@ -538,14 +538,14 @@ function directorConsoleHtml() {
       const targetHelp = el("decisionCreateTargetHelp");
       if (targetHelp) {
         targetHelp.innerHTML = proposal
-          ? '<strong>선택한 제안</strong>: <code>' + esc(proposal.proposal_id || "") + '</code> · ' + esc(category) + '<br><span>' + esc(short(proposal.title || proposal.summary || "", 140)) + '</span>'
+        ? '<strong>선택한 제안</strong>: <code>' + esc(proposal.proposal_id || "") + '</code> · ' + esc(category) + '<br><span>' + esc(short(proposal.title || proposal.summary || "", 140)) + '</span>'
           : "판단할 제안을 먼저 선택하세요. 긴 제목은 선택 후 여기에서 확인합니다.";
       }
       el("decisionCreateTypeHelp").textContent = proposal
         ? (proposalCanBecomeCanon(proposal)
           ? "게임 설정 제안이므로 공식 설정 검토 기록을 남길 수 있습니다."
           : category + "은 공식 설정 후보로 남길 수 없습니다. 채택, 수정 요청, 반려, 보류 중에서 판단하세요.")
-        : "먼저 판단할 제안을 선택하세요. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리합니다.";
+        : "먼저 판단할 제안을 선택하세요. 자문이나 업무 지시는 각 화면의 전용 버튼에서 처리합니다.";
     }
     const MEETING_TYPE_DETAILS = {
       creative: "게임 아이디어, 세계관, 스토리, 컨셉을 논의합니다.",
@@ -557,10 +557,10 @@ function directorConsoleHtml() {
       release_readiness: "배포, 공유, 릴리즈 체크와 남은 위험을 점검합니다.",
     };
     const MEETING_PRESETS = [
-      { id:"studio_ux_tools", label:"Studio UX/도구 회의", type:"technical", chair:"executive_producer", participants:["executive_producer", "tools_engineer", "qa_tester"] },
-      { id:"game_design", label:"게임 기획 회의", type:"creative", chair:"game_designer", participants:["game_designer", "scenario_director", "executive_producer"] },
-      { id:"validation_bug", label:"검증/버그 회의", type:"qa_triage", chair:"qa_tester", participants:["qa_tester", "tools_engineer", "executive_producer"] },
-      { id:"release_ready", label:"릴리즈 준비 회의", type:"release_readiness", chair:"executive_producer", participants:["executive_producer", "documentation_keeper", "qa_tester"] },
+      { id:"studio_ux_tools", label:"Studio UX/도구 자문", type:"technical", chair:"executive_producer", participants:["executive_producer", "tools_engineer", "qa_tester"] },
+      { id:"game_design", label:"게임 기획 자문", type:"creative", chair:"game_designer", participants:["game_designer", "scenario_director", "executive_producer"] },
+      { id:"validation_bug", label:"검증/버그 자문", type:"qa_triage", chair:"qa_tester", participants:["qa_tester", "tools_engineer", "executive_producer"] },
+      { id:"release_ready", label:"릴리즈 준비 자문", type:"release_readiness", chair:"executive_producer", participants:["executive_producer", "documentation_keeper", "qa_tester"] },
     ];
     function meetingTypeOptionList() {
       return Object.keys(MEETING_TYPE_DETAILS).map((value) =>
@@ -583,7 +583,7 @@ function directorConsoleHtml() {
     }
     function renderMeetingTypeHelp() {
       const type = fieldValue("meetingCreateType") || "creative";
-      el("meetingTypeHelp").innerHTML = '<strong>' + esc(optionLabel(type)) + '</strong><p class="small muted">' + esc(MEETING_TYPE_DETAILS[type] || "회의 목적에 맞게 논의 범위를 정합니다.") + '</p>';
+      el("meetingTypeHelp").innerHTML = '<strong>' + esc(optionLabel(type)) + '</strong><p class="small muted">' + esc(MEETING_TYPE_DETAILS[type] || "자문 목적에 맞게 논의 범위를 정합니다.") + '</p>';
     }
     function renderMeetingPresetButtons() {
       el("meetingPresetButtons").innerHTML = MEETING_PRESETS.map((preset) =>
@@ -619,7 +619,7 @@ function directorConsoleHtml() {
       el("meetingCreateImpact").innerHTML =
         '<strong>생성 시 기록되는 내용</strong>' +
         '<ul class="small">' +
-        '<li>회의 종류: ' + esc(optionLabel(type)) + ' - ' + esc(MEETING_TYPE_DETAILS[type] || "") + '</li>' +
+        '<li>자문 종류: ' + esc(optionLabel(type)) + ' - ' + esc(MEETING_TYPE_DETAILS[type] || "") + '</li>' +
         '<li>참가 직원: ' + esc(participants.length ? participants.map(staffName).join(", ") : "아직 선택 없음") + '</li>' +
         '<li>의장: ' + esc(chair ? staffName(chair) : "아직 선택 없음") + '</li>' +
         '<li>변경 범위: MeetingSession JSON만 생성합니다. canon/task/git은 바꾸지 않습니다.</li>' +
@@ -635,7 +635,7 @@ function directorConsoleHtml() {
     }
     const WORK_ORDER_STATUS_DETAILS = {
       director_review: "감독자가 내용을 보고 넘길지 판단하는 단계입니다. 새 업무 지시의 기본값입니다.",
-      proposed: "직원이나 회의에서 나온 제안 상태입니다. 아직 실행 대상으로 고른 것은 아닙니다.",
+      proposed: "직원이나 자문에서 나온 제안 상태입니다. 아직 실행 대상으로 고른 것은 아닙니다.",
       draft: "내용을 더 다듬는 초안 상태입니다. 작업 목록에 넣기 전에 보강할 때 사용합니다.",
       approved_for_tasking: "업무 지시 내용이 충분해서 작업 목록 후보로 넘길 수 있는 상태입니다.",
     };
@@ -690,7 +690,7 @@ function directorConsoleHtml() {
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
         approve:"채택", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"조건부 채택", canonize:"공식 설정 후보",
-        project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"회의", task:"작업",
+        project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"자문", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
         approved:"승인됨", rejected:"반려됨",
         active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시",
@@ -820,12 +820,12 @@ function directorConsoleHtml() {
       return '<div class="empty">' + esc(text) + '</div>';
     }
     function meetingNextActionText(meeting) {
-      if (!meeting.is_stored) return "예시 회의입니다. 실제로 쓰려면 새 회의 만들기로 기록을 생성하세요.";
-      if (meeting.status === "draft") return "회의판을 보고 내 의견을 기록하거나 다음 AI 발언을 받아 첫 관점을 모으세요.";
+      if (!meeting.is_stored) return "예시 자문입니다. 실제로 쓰려면 새 자문 세션 만들기로 기록을 생성하세요.";
+      if (meeting.status === "draft") return "자문판을 보고 내 의견을 기록하거나 다음 AI 발언을 받아 첫 관점을 모으세요.";
       if (meeting.unresolved_count) return "남은 질문을 정리하고 답할 직원의 의견을 더 받으세요.";
       if (meeting.follow_up_count) return "후속 업무 후보를 확인하고 실제 업무 지시로 넘길지 결정하세요.";
       if (asArray(meeting.proposals).length) return "제안을 업무 후보로 넘길지, 방향 판단으로 남길지 결정하세요.";
-      return "회의판을 보고 의견을 더 받을지, 업무 후보/방향 판단으로 넘길지, 회의를 닫을지 고르세요.";
+      return "자문판을 보고 의견을 더 받을지, 업무 후보/방향 판단으로 넘길지, 자문을 닫을지 고르세요.";
     }
     function meetingLastTurnLine(meeting) {
       const turn = meeting?.last_turn;
@@ -1100,7 +1100,7 @@ function directorConsoleHtml() {
         '<div class="compact-list">' +
         '<div class="compact-line"><span>추천 부서</span><span class="pill">' + esc(inlineList(departments, "(없음)")) + '</span></div>' +
         '<div class="compact-line"><span>추천 직원</span><span class="pill">' + esc(inlineList(staff, "(없음)")) + '</span></div>' +
-        '<div class="compact-line"><span>다음 단계 후보</span><span class="pill">' + esc("회의 " + meetingCount + " · 업무 " + workOrderCount + " · 제안 " + proposalCount) + '</span></div>' +
+        '<div class="compact-line"><span>다음 단계 후보</span><span class="pill">' + esc("자문 " + meetingCount + " · 업무 " + workOrderCount + " · 제안 " + proposalCount) + '</span></div>' +
         '</div>' +
         (routingReasons.length ? '<h4>왜 이렇게 나눴나</h4>' + listHtml(routingReasons) : '') +
         '<h4>감독자가 승인할 때 볼 것</h4>' +
@@ -1116,11 +1116,11 @@ function directorConsoleHtml() {
       el("goalPlanCount").textContent = plans.length ? String(plans.length) : "없음";
       el("directorGoalPlans").innerHTML = plans.length
         ? plans.map((plan) => renderGoalPlanCard(plan, true)).join("")
-        : renderEmpty("저장된 목표 기획안이 없습니다. 큰 목표를 입력해 먼저 기획안으로 쪼개보세요.");
+        : renderEmpty("저장된 Director Brief가 없습니다. 새 안건을 입력해 먼저 브리프로 정리해보세요.");
       el("goalPreviewBadge").textContent = latestGoalPreview ? "미리보기" : "대기";
       el("goalPreview").innerHTML = latestGoalPreview
         ? renderGoalPlanCard(latestGoalPreview, false)
-        : '<div class="item"><h3>아직 미리보기가 없습니다</h3><p class="summary">왼쪽에 큰 방향과 제약 조건을 입력하고 분해안 미리보기를 누르세요.</p></div>';
+        : '<div class="item"><h3>아직 미리보기가 없습니다</h3><p class="summary">왼쪽에 안건과 제약 조건을 입력하고 브리프 미리보기를 누르세요.</p></div>';
     }
     function renderProjectDashboard() {
       const core = state.workflow_core || {};
@@ -1161,7 +1161,7 @@ function directorConsoleHtml() {
         items.push({ when: core.runner.updated_at || state.generated_at, kind: "Runner", title: core.runner.runner_run_id, detail: core.runner.stop_reason || core.runner.status, page: "evidence" });
       }
       state.recent_staff_runs.forEach((run) => items.push({ when: run.updated_at, kind: "직원 보고서", title: run.output_id || run.role_run_id, detail: staffName(run.agent_id) + " · " + optionLabel(run.output_status || run.status), page: "runs" }));
-      state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "회의", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "meetings" }));
+      state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "자문", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "meetings" }));
       state.work_orders.forEach((wo) => items.push({ when: wo.updated_at || wo.created_at || "", kind: "업무 지시", title: wo.work_order_id, detail: wo.objective || wo.status, page: "work" }));
       state.materializations.forEach((m) => items.push({ when: m.updated_at || "", kind: "채택 후보", title: m.materialization_id, detail: "후보 " + m.created_record_count + "개", page: "runs" }));
       state.dev_logs.slice(0, 8).forEach((logItem) => items.push({ when: logItem.updated_at, kind: "DevLog", title: logItem.title, detail: logItem.group, page: "devlog" }));
@@ -1208,7 +1208,7 @@ function directorConsoleHtml() {
       const hasActiveTask = Boolean(activeTask.task_id);
       const displayNextAction = hasActiveTask ? nextAction : {
         label: "새 작업 선택",
-        detail: "현재 선택된 작업이 없습니다. 목표/방향에서 새 목표를 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
+        detail: "현재 선택된 작업이 없습니다. 새 안건에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       const activeTaskHtml = activeTask.task_id
@@ -1274,7 +1274,7 @@ function directorConsoleHtml() {
       ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
       const activity = [
         ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 보고서", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
-        ...state.meetings.slice(0, 2).map((meeting) => ({ label:"회의", value:meeting.meeting_id, status:meeting.status })),
+        ...state.meetings.slice(0, 2).map((meeting) => ({ label:"자문", value:meeting.meeting_id, status:meeting.status })),
         ...state.work_orders.slice(0, 2).map((wo) => ({ label:"업무 지시", value:wo.work_order_id, status:wo.status })),
       ].slice(0, 6);
       el("homeActivity").innerHTML = activity.length ? activity.map((item) =>
@@ -1369,7 +1369,7 @@ function directorConsoleHtml() {
       const m = state.metrics;
       syncFilterControls();
       el("metrics").innerHTML = [
-        metric("목표 기획안", m.director_goal_plans),
+        metric("Director Brief", m.director_goal_plans),
         metric("직원", m.staff),
         metric("직원 보고서", m.staff_runs),
         metric("보고서", m.review_packets),
@@ -1378,7 +1378,7 @@ function directorConsoleHtml() {
         metric("채택 후보", m.materializations),
         metric("제안", m.proposals),
         metric("기억", m.memories),
-        metric("회의", state.meetings.length),
+        metric("자문", state.meetings.length),
         metric("프로젝트", m.project_profiles),
         metric("정책 평가", m.automation_evaluations),
         metric("DevLog", m.dev_logs)
@@ -1505,14 +1505,14 @@ function directorConsoleHtml() {
         listHtml(meeting.unresolved_questions) +
         '</div>' +
         actionsHtml([
-          button("회의판 보기", "meeting-board", meeting.path),
+          button("자문판 보기", "meeting-board", meeting.path),
           meeting.is_stored ? button("다음 AI 발언 받기", "meeting-agent-run", meeting.path, "good") : "",
           '<button class="secondary" data-meeting-turn="' + esc(meeting.meeting_id) + '">내 의견 기록</button>',
           button("업무 후보 만들기", "meeting-create-workorder", meeting.path),
           button("방향 판단으로 남기기", "meeting-create-decision", meeting.path),
-          meeting.is_stored && meeting.status !== "closed" ? button("회의 종료", "meeting-finalize", meeting.meeting_id, "warn") : ""
+          meeting.is_stored && meeting.status !== "closed" ? button("자문 종료", "meeting-finalize", meeting.meeting_id, "warn") : ""
         ]) +
-        internalLinksHtml([link("회의 원본", meeting.href)]) + '</div>'
+        internalLinksHtml([link("자문 원본", meeting.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.");
       const visibleDepartments = state.departments.filter((department) =>
         includesText([department.name_ko, department.name, department.department_id, department.mission_ko, department.review_gate_labels.join(" ")].join(" "), filters.departmentSearch)
@@ -1533,7 +1533,7 @@ function directorConsoleHtml() {
         '<div class="row">' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
-        '<button class="secondary" data-nav-jump="meetings">회의 보기</button>' +
+        '<button class="secondary" data-nav-jump="meetings">자문 보기</button>' +
         '</div>' +
         internalLinksHtml([link("부서 registry 원본", department.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 부서가 없습니다.");
@@ -1573,7 +1573,7 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>근거 없이 주장 금지</span><span class="pill">' + esc(asArray(agent.cannot_claim_without_evidence).length) + '</span></div>' +
         listHtml(agent.cannot_claim_without_evidence, "(없음)") +
         '</div></details>' +
-        '<div class="row"><button class="secondary" data-action="staff-operating-plan" data-path="' + esc(agent.agent_id) + '">운영 점검</button><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">회의 보기</button></div>' +
+        '<div class="row"><button class="secondary" data-action="staff-operating-plan" data-path="' + esc(agent.agent_id) + '">운영 점검</button><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">자문 보기</button></div>' +
         internalLinksHtml([link("직원 registry 원본", agent.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 AI 직원이 없습니다.");
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
@@ -1795,7 +1795,7 @@ function directorConsoleHtml() {
     async function createDirectorGoalBundle() {
       const payload = goalPayloadFromForm();
       if (!payload.goal) return alert("감독자 목표를 입력하세요.");
-      if (!confirm("기획안과 회의/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
+      if (!confirm("브리프와 자문/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
       const result = await post("/api/studio/director-goal/create-bundle", payload);
       latestGoalPreview = result.director_goal_plan;
       log(result);
@@ -1874,9 +1874,9 @@ function directorConsoleHtml() {
     async function createMeetingFromForm() {
       const topic = fieldValue("meetingCreateTopic");
       const participants = selectedMeetingParticipants();
-      if (!topic) return alert("회의 주제를 입력하세요.");
+      if (!topic) return alert("자문 주제를 입력하세요.");
       if (!participants.length) return alert("참가 직원을 한 명 이상 선택하세요.");
-      if (!confirm("새 회의를 저장할까요? 회의 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
+      if (!confirm("새 자문 세션을 저장할까요? 자문 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/create", {
         topic,
         meeting_type: fieldValue("meetingCreateType") || "creative",
@@ -1891,8 +1891,8 @@ function directorConsoleHtml() {
       const meetingId = fieldValue("meetingTurnId");
       const speaker = "human_director";
       const content = fieldValue("meetingTurnContent");
-      if (!meetingId || !content) return alert("회의 ID와 내 발언 내용을 입력하세요.");
-      if (!confirm("내 발언을 회의록에 기록할까요? 이 작업은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
+      if (!meetingId || !content) return alert("자문 ID와 내 의견 내용을 입력하세요.");
+      if (!confirm("내 의견을 자문 기록에 남길까요? 이 작업은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/add-turn", {
         meeting_id: meetingId,
         speaker_id: speaker,
@@ -1942,7 +1942,7 @@ function directorConsoleHtml() {
       if (!targetRef || !summary) return alert("판단 대상과 판단 내용을 입력하세요.");
       const proposal = proposalById(targetRef);
       const decisionType = fieldValue("decisionCreateType") || "approve";
-      if (!proposal) return alert("판단 대상은 제안함에 있는 제안만 선택할 수 있습니다. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리하세요.");
+      if (!proposal) return alert("판단 대상은 제안함에 있는 제안만 선택할 수 있습니다. 자문이나 업무 지시는 각 화면의 전용 버튼에서 처리하세요.");
       if (decisionType === "canonize" && !proposalCanBecomeCanon(proposal)) {
         return alert("이 제안은 공식 설정 후보로 남길 수 없습니다. 게임 세계관, 캐릭터, 규칙 같은 게임 설정 제안에만 공식 설정 검토 기록을 사용할 수 있습니다.");
       }
@@ -2048,27 +2048,27 @@ function directorConsoleHtml() {
       if (action === "meeting-inspect") return log(await post("/api/meeting/inspect", { path:filePath }));
       if (action === "meeting-handoff") return log(await post("/api/meeting/handoff", { path:filePath }));
       if (action === "meeting-start") {
-        if (!confirm("이 회의를 시작 상태로 바꿀까요? 회의 시작은 작업 실행이나 공식 설정 확정이 아닙니다.")) return;
+        if (!confirm("이 자문을 시작 상태로 바꿀까요? 자문 시작은 작업 실행이나 공식 설정 확정이 아닙니다.")) return;
         log(await post("/api/meeting/start", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-finalize") {
-        if (!confirm("이 회의를 종료 상태로 닫을까요? 결정, 공식 설정, 작업 생성은 별도 gate에서 처리합니다.")) return;
+        if (!confirm("이 자문을 종료 상태로 닫을까요? 결정, 공식 설정, 작업 생성은 별도 gate에서 처리합니다.")) return;
         log(await post("/api/meeting/finalize", { meeting_id:filePath }));
         await refresh();
       }
       if (action === "meeting-create") {
-        if (!confirm("이 회의를 Studio 저장소에 기록할까요? 저장만 하며 실행이나 공식 설정 확정은 하지 않습니다.")) return;
+        if (!confirm("이 자문을 Studio 저장소에 기록할까요? 저장만 하며 실행이나 공식 설정 확정은 하지 않습니다.")) return;
         log(await post("/api/meeting/create", { path:filePath }));
         await refresh();
       }
       if (action === "meeting-create-workorder") {
-        if (!confirm("이 회의에서 나온 해야 할 일을 업무 지시 후보로 저장할까요? 구현, task 생성, 승인, 실행은 아직 하지 않습니다.")) return;
+        if (!confirm("이 자문에서 나온 해야 할 일을 업무 지시 후보로 저장할까요? 구현, task 생성, 승인, 실행은 아직 하지 않습니다.")) return;
         log(await post("/api/studio/meeting/create-workorder", { path:filePath }));
         await refresh();
       }
       if (action === "meeting-create-decision") {
-        if (!confirm("이 회의에서 정한 결론이나 방향을 감독자 결정함에 남길까요? 공식 설정 확정, 구현, task 생성은 별도입니다.")) return;
+        if (!confirm("이 자문에서 정한 결론이나 방향을 감독자 결정함에 남길까요? 공식 설정 확정, 구현, task 생성은 별도입니다.")) return;
         log(await post("/api/studio/meeting/create-decision", { path:filePath, decision_type:"approve" }));
         await refresh();
       }
@@ -2077,7 +2077,7 @@ function directorConsoleHtml() {
       if (action === "meeting-runbook") return log(await post("/api/studio/meeting/runbook", { path:filePath }));
       if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "meeting-agent-run") {
-        if (!confirm("다음 AI 발언을 받을까요? Codex 직원 실행을 호출하고, 결과 요약을 새 회의 발언으로 추가합니다. 결정/공식 설정/task/git은 변경하지 않습니다.")) return;
+        if (!confirm("다음 AI 의견을 받을까요? Codex 직원 실행을 호출하고, 결과 요약을 새 자문 발언으로 추가합니다. 결정/공식 설정/task/git은 변경하지 않습니다.")) return;
         log(await post("/api/studio/meeting/agent-turn-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
         await refresh();
       }
@@ -2252,7 +2252,7 @@ function directorConsoleHtml() {
         el("meetingTurnId").value = meetingTurnTarget.dataset.meetingTurn;
         el("meetingTurnSpeaker").value = "human_director";
         setPage("meetings");
-        writeResult('<div class="item"><h3>내 의견 기록 준비</h3><p class="summary">선택한 회의 ID를 입력칸에 넣었습니다. 내용을 적고 <strong>내 의견 기록</strong>을 누르면 Human Director 의견으로 회의록에 저장됩니다.</p><ul class="small"><li>AI 직원에게 보내는 메시지가 아니라 회의록에 남기는 내 의견입니다.</li><li>공식 설정 확정 없음</li><li>task 생성 없음</li><li>git 변경 없음</li></ul></div>');
+        writeResult('<div class="item"><h3>내 의견 기록 준비</h3><p class="summary">선택한 자문 ID를 입력칸에 넣었습니다. 내용을 적고 <strong>내 의견 기록</strong>을 누르면 Human Director 의견으로 자문 기록에 저장됩니다.</p><ul class="small"><li>AI 직원에게 보내는 메시지가 아니라 자문 기록에 남기는 내 의견입니다.</li><li>공식 설정 확정 없음</li><li>task 생성 없음</li><li>git 변경 없음</li></ul></div>');
         el("meetingTurnContent").focus();
         el("meetingTurnId").scrollIntoView({ behavior:"smooth", block:"center" });
         return;

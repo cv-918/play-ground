@@ -90,14 +90,14 @@ function renderClientGenericResultScript() {
         ? staffName(nextSpeaker) + (board.next_speaker_reason ? " - " + short(board.next_speaker_reason, 120) : "")
         : "추천 발언자가 아직 없습니다.";
       const safetyLines = [
-        "읽기 전용: 이 버튼은 회의 기록, task, git을 바꾸지 않습니다.",
+        "읽기 전용: 이 버튼은 자문 기록, task, git을 바꾸지 않습니다.",
         safety?.read_only || board.safety?.read_only ? "검토용 카드입니다." : "상태 변경 가능성이 있으면 별도 버튼에서 다시 확인합니다.",
       ];
       return '<div class="item good">' +
-        '<h3>회의판</h3>' +
-        '<p class="summary">' + esc(board.current_meaning || "회의 상태와 다음 행동을 확인합니다.") + '</p>' +
+        '<h3>자문판</h3>' +
+        '<p class="summary">' + esc(board.current_meaning || "자문 상태와 다음 행동을 확인합니다.") + '</p>' +
         reportSection("지금 상황", [
-          "회의: " + (board.meeting_id || board.topic || ""),
+          "자문: " + (board.meeting_id || board.topic || ""),
           "상태: " + optionLabel(board.status || "draft"),
           "발언 수: " + (board.turn_count ?? 0) + "개",
           "마지막 발언: " + meetingBoardLastTurnLine(board.last_turn),
@@ -126,7 +126,7 @@ function renderClientGenericResultScript() {
       const specs = [
         {
           key: "director_goal_plan",
-          title: "목표 기획안",
+          title: "Director Brief",
           status: [["plan", "director_goal_plan_id"], ["상태", "status"]],
           sections: [
             ["추천 부서", "recommended_departments"],
@@ -150,22 +150,22 @@ function renderClientGenericResultScript() {
         },
         {
           key: "meeting_board",
-          title: "회의판",
-          status: [["회의", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
+          title: "자문판",
+          status: [["자문", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
           sections: [
             ["다음 행동", "next_actions"],
             ["남은 질문", "remaining_questions"],
             ["우려/막는 항목", "concerns_or_blockers"],
             ["판단 후보", "decision_candidates"],
             ["후속 업무 후보", "handoff_candidates"],
-            ["회의 종료 기준", "close_criteria"],
+            ["자문 종료 기준", "close_criteria"],
             ["감독자 체크리스트", "director_checklist"],
           ],
         },
         {
           key: "meeting_facilitation_plan",
-          title: "회의 진행안",
-          status: [["회의", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
+          title: "자문 진행안",
+          status: [["자문", "meeting_id"], ["상태", "status"], ["다음 발언자", "next_speaker_recommendation"]],
           sections: [
             ["추천 행동", "recommended_actions"],
             ["감독자 선택지", "director_decision_options"],
@@ -174,8 +174,8 @@ function renderClientGenericResultScript() {
         },
         {
           key: "meeting_runbook",
-          title: "회의 운영판",
-          status: [["회의", "meeting_id"], ["상태", "status"]],
+          title: "자문 운영판",
+          status: [["자문", "meeting_id"], ["상태", "status"]],
           sections: [
             ["다음 발언 순서", "next_turn_queue"],
             ["판단 후보", "decision_candidates"],
@@ -584,7 +584,7 @@ function renderClientGenericResultScript() {
         const record = value.record;
         const written = value.safety?.decision_written;
         return '<div class="item ' + (value.ok ? "good" : "danger") + '"><h3>감독자 판단 기록 완료</h3>' +
-          '<p class="summary">제안이나 회의, 업무 지시에 대한 Human Director 판단을 기록했습니다. 이 작업은 구현, task 실행, commit/push를 하지 않습니다.</p>' +
+          '<p class="summary">제안이나 자문, 업무 지시에 대한 Human Director 판단을 기록했습니다. 이 작업은 구현, task 실행, commit/push를 하지 않습니다.</p>' +
           reportSection("기록 대상", [
             "결정: " + (record.decision_id || ""),
             "대상: " + (record.target_ref || ""),
@@ -707,10 +707,10 @@ function renderClientGenericResultScript() {
       if (value?.command === "inspect" && value?.summary) {
         const summary = value.summary || {};
         const validation = value.validation || {};
-        return '<div class="item ' + (validation.ok ? "good" : "warn") + '"><h3>회의 상태 점검</h3>' +
-          '<p class="summary">선택한 회의 기록이 진행 가능한 상태인지 읽기 전용으로 확인했습니다.</p>' +
-          reportSection("현재 회의", [
-            "회의: " + (summary.meeting_id || ""),
+        return '<div class="item ' + (validation.ok ? "good" : "warn") + '"><h3>자문 상태 점검</h3>' +
+          '<p class="summary">선택한 자문 기록이 진행 가능한 상태인지 읽기 전용으로 확인했습니다.</p>' +
+          reportSection("현재 자문", [
+            "자문: " + (summary.meeting_id || ""),
             "주제: " + (summary.topic || ""),
             "종류: " + optionLabel(summary.meeting_type || ""),
             "상태: " + optionLabel(summary.status || ""),
@@ -729,10 +729,10 @@ function renderClientGenericResultScript() {
           '</div>';
       }
       if (value?.command === "handoff") {
-        return '<div class="item ' + (value.handoff_ready ? "good" : "warn") + '"><h3>회의 인수인계 보기</h3>' +
-          '<p class="summary">회의 결과를 후속 업무나 다른 AI 직원에게 넘길 준비가 됐는지 확인했습니다. 이 버튼은 읽기 전용이며 업무를 만들지 않습니다.</p>' +
-          reportSection("현재 회의", [
-            "회의: " + (value.meeting_id || ""),
+        return '<div class="item ' + (value.handoff_ready ? "good" : "warn") + '"><h3>자문 인수인계 보기</h3>' +
+          '<p class="summary">자문 결과를 후속 업무나 다른 AI 직원에게 넘길 준비가 됐는지 확인했습니다. 이 버튼은 읽기 전용이며 업무를 만들지 않습니다.</p>' +
+          reportSection("현재 자문", [
+            "자문: " + (value.meeting_id || ""),
             "주제: " + (value.topic || ""),
             "넘길 준비: " + (value.handoff_ready ? "가능" : "확인 필요"),
           ]) +
@@ -751,15 +751,15 @@ function renderClientGenericResultScript() {
       if (value?.command === "add-turn") {
         const turn = value.turn || {};
         return '<div class="item good"><h3>내 의견 기록 완료</h3>' +
-          '<p class="summary">MeetingSession에 발언 1개를 저장했습니다. 이 작업은 회의 기록만 바꾸며 공식 설정, task, git은 바꾸지 않습니다.</p>' +
+          '<p class="summary">MeetingSession에 발언 1개를 저장했습니다. 이 작업은 자문 기록만 바꾸며 공식 설정, task, git은 바꾸지 않습니다.</p>' +
           reportSection("추가된 발언", [
-            "회의: " + (value.meeting_id || ""),
+            "자문: " + (value.meeting_id || ""),
             "기록 주체: " + staffName(turn.speaker_id || ""),
             "종류: " + optionLabel(turn.turn_type || ""),
             "내용: " + short(turn.content || "", 220),
           ]) +
           reportSection("현재 상태", [
-            "다음 회의 상태: " + optionLabel(value.next_status || ""),
+            "다음 자문 상태: " + optionLabel(value.next_status || ""),
             "저장 파일: " + (value.path || ""),
           ]) +
           safetySection(value.safety) +
@@ -772,9 +772,9 @@ function renderClientGenericResultScript() {
         return '<div class="item ' + (appended ? "good" : "warn") + '"><h3>다음 AI 발언 결과</h3>' +
           '<p class="summary">' + esc(appended
             ? "AI 직원 의견이 MeetingSession 발언으로 추가되었습니다. 공식 설정, task, git은 바꾸지 않았습니다."
-            : "AI 직원 실행은 끝났지만 회의 발언으로 추가되지 않았습니다. 결과와 원본 JSON을 확인해야 합니다.") + '</p>' +
+            : "AI 직원 실행은 끝났지만 자문 발언으로 추가되지 않았습니다. 결과와 원본 JSON을 확인해야 합니다.") + '</p>' +
           reportSection("바뀐 것", [
-            "회의: " + (value.meeting_id || ""),
+            "자문: " + (value.meeting_id || ""),
             "발언자: " + staffName(value.agent_id || turn.speaker_id || ""),
             "발언 수: " + (value.before_turn_count ?? "?") + " -> " + (value.after_turn_count ?? "?"),
             "AI 발언 추가: " + (appended ? "yes" : "no"),

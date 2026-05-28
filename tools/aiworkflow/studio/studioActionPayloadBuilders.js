@@ -150,7 +150,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
   const meetingType = meetingTypeForRoute(route);
   const coreScope = [
     `감독자 목표를 실행 가능한 업무 후보로 분해: ${goal}`,
-    "부서/직원/회의/업무지시/승인 항목을 분리해서 제안합니다.",
+    "부서/직원/자문/업무지시/승인 항목을 분리해서 제안합니다.",
     "승인 전에는 공식 설정, 소스 수정, task 실행, commit/push를 하지 않습니다.",
   ];
   const nonGoals = [
@@ -164,7 +164,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
       type: "scope",
       plain_language_summary: "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다.",
       what_will_change: [
-        "회의 후보, 업무 지시 후보, 제안 후보가 Studio 기록으로 만들어질 수 있습니다.",
+        "자문 후보, 업무 지시 후보, 제안 후보가 Studio 기록으로 만들어질 수 있습니다.",
         "선택한 후보만 다음 단계의 WorkOrder 또는 MeetingSession으로 넘어갑니다.",
       ],
       what_will_not_change: nonGoals,
@@ -196,9 +196,9 @@ function buildDirectorGoalPlanPayload(body = {}) {
       scope: coreScope,
       non_goals: nonGoals,
       expected_outputs: [
-        "감독자가 읽을 수 있는 목표 분해안",
+        "감독자가 읽을 수 있는 Director Brief",
         "승인 필요 항목 목록",
-        "후속 회의/업무/제안 후보",
+        "후속 자문/업무/제안 후보",
         "검증 자료 요구사항",
       ],
       approval_summary: "감독자 목표를 Studio 업무 후보로 분해하는 것만 승인합니다.",
@@ -242,8 +242,8 @@ function buildDirectorGoalPlanPayload(body = {}) {
     work_order_candidates: [workOrder],
     proposal_candidates: [proposal],
     next_steps: [
-      "분해안을 저장해 검토 기록으로 남깁니다.",
-      "필요하면 분해안 + 다음 단계 후보 생성을 눌러 회의/업무/제안 후보를 함께 만듭니다.",
+      "브리프를 저장해 검토 기록으로 남깁니다.",
+      "필요하면 브리프 + 다음 단계 후보 생성을 눌러 자문/업무/제안 후보를 함께 만듭니다.",
       "생성된 후보 중 실제로 진행할 항목만 감독자가 승인합니다.",
     ],
     safety: {
@@ -511,7 +511,7 @@ function buildWorkOrderFromMeetingPayload(meeting = {}) {
     ...unresolved.map((item) => `Clarify unresolved question: ${item}`),
   ].filter(Boolean);
   const nonGoals = [
-    "Human Director 결정 없이 회의에서 나온 말을 공식 설정으로 취급하지 않습니다.",
+    "Human Director 결정 없이 자문에서 나온 말을 공식 설정으로 취급하지 않습니다.",
     "이 업무 지시만으로 소스, 데이터, 에셋 수정, task done, commit, push를 실행하지 않습니다.",
     ...objections.map((item) => `Respect meeting objection: ${item}`),
   ];
@@ -537,7 +537,7 @@ function buildWorkOrderFromMeetingPayload(meeting = {}) {
     }],
     evidence_requirements: [meeting.meeting_id || "meeting", meeting.minutes_artifact || "MeetingSession JSON"],
     verification_plan: [
-      "업무 지시가 회의 후속 범위 안에 머무르는지 확인합니다.",
+      "업무 지시가 자문 후속 범위 안에 머무르는지 확인합니다.",
       "공식 설정, 구현, task done, commit, push가 별도 gate로 남아 있는지 확인합니다.",
       "Confirm approval items state what may change and what must not change.",
     ],
@@ -625,7 +625,7 @@ function buildDecisionFromMeetingPayload(meeting = {}, decisionType = "approve")
   const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
   const lastTurn = turns[turns.length - 1] || null;
   const fallbackAcceptedScope = [
-    `회의 주제 검토: ${topic}`,
+    `자문 주제 검토: ${topic}`,
     lastTurn?.content ? `마지막 발언 참고: ${shortText(lastTurn.content, 240)}` : "",
   ].filter(Boolean);
   const acceptedScope = accepted.length ? accepted : (proposals.length ? proposals : fallbackAcceptedScope);
@@ -635,8 +635,8 @@ function buildDecisionFromMeetingPayload(meeting = {}, decisionType = "approve")
     decision_type: decisionType,
     target_ref: meeting.meeting_id || "meeting",
     decision_summary: accepted.length
-      ? `회의에서 합의된 방향을 기록합니다: ${accepted.join("; ")}`
-      : `회의 결과를 감독자 판단 기록으로 남깁니다: ${topic}`,
+      ? `자문에서 합의된 방향을 기록합니다: ${accepted.join("; ")}`
+      : `자문 결과를 감독자 판단 기록으로 남깁니다: ${topic}`,
     accepted_scope: acceptedScope,
     rejected_scope: rejected,
     conditions: unresolved.length ? unresolved.map((item) => `아직 미해결: ${item}`) : ["구현, 공식 설정, task done, commit, push는 별도 gate가 필요합니다."],

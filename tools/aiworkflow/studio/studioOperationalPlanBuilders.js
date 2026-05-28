@@ -406,9 +406,9 @@ function createStudioOperationalPlanBuilders(deps = {}) {
       warnings,
       recommended_manual_smoke: [
         "홈에서 현재 할 일을 확인합니다.",
-        "목표 기획에서 기획안 미리보기를 실행합니다.",
-        "회의실에서 회의판을 봅니다.",
-        "제안/결정 기록함에서 전환 계획을 봅니다.",
+        "새 안건에서 브리프 미리보기를 실행합니다.",
+        "자문실에서 자문판을 봅니다.",
+        "LLM Wiki에서 전환 계획을 봅니다.",
         "프로젝트에서 실행 준비 점검을 봅니다.",
         "검증 자료에서 완료 판단안을 봅니다.",
         "정책에서 자동 진행 준비도를 봅니다.",
@@ -568,7 +568,7 @@ function createStudioOperationalPlanBuilders(deps = {}) {
         "A-console-mvp",
         "A",
         "Studio Console MVP",
-        "Human Director가 Studio 화면만 보고 현재 작업, 직원, 회의, 검증 자료, git gate를 이해할 수 있어야 합니다.",
+        "Human Director가 Studio 화면만 보고 현재 작업, 직원, 자문, 검증 자료, git gate를 이해할 수 있어야 합니다.",
         ["Director Console server", "daily Studio pages", "Korean user guide", "department/staff registries"],
         [
           ...missingFiles(["consoleServer", "startBat", "userGuide", "staffRegistry", "departmentRegistry"]),
@@ -603,7 +603,7 @@ function createStudioOperationalPlanBuilders(deps = {}) {
         "C-meeting-loop",
         "C",
         "Creative Meeting loop",
-        "회의가 단순 메모가 아니라 발언, 반박, 질문, AI 직원 발언 요청, 후속 업무 후보, 감독자 판단으로 이어져야 합니다.",
+        "자문이 단순 메모가 아니라 발언, 반박, 질문, AI 직원 발언 요청, 후속 업무 후보, 감독자 판단으로 이어져야 합니다.",
         ["MeetingSession runtime", "meeting turn recording", "agent turn planning/run", "meeting to WorkOrder", "meeting to Decision"],
         [
           ...missingFiles(["meetingRuntime", "staffExecutor", "contextBuilder", "workOrderPlanner", "decisionStore"]),
@@ -649,7 +649,7 @@ function createStudioOperationalPlanBuilders(deps = {}) {
       overall_label: conceptualComplete ? "C 단계 개념 완성" : "C 단계 점검 필요",
       conceptual_completion_boundary: {
         fixed_standard: "C: Personal AI Company v1",
-        definition: "AI 직원, 회의, 업무 지시, 승인, 실행, 검증, 기억이 하나의 회사 런타임으로 닫힌 상태입니다.",
+        definition: "AI 직원, 자문, 업무 지시, 승인, 실행, 검증, 기억이 하나의 회사 런타임으로 닫힌 상태입니다.",
         after_c_is: "v1 안정화, 품질 개선, 역할/도구 확장, 운영 편의 개선입니다. C 이후 새 항목을 v1 미완성으로 재분류하지 않습니다.",
       },
       stage_summary: {
