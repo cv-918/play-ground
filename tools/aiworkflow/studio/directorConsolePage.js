@@ -7,6 +7,16 @@ const { renderWorkPageShell } = require("./studioWorkPageRenderer");
 const { renderKnowledgePageShell } = require("./studioKnowledgePageRenderer");
 const { renderEvidencePageShell } = require("./studioEvidencePageRenderer");
 const { renderDevlogPageShell } = require("./studioDevlogPageRenderer");
+const { renderToolboxPageShell } = require("./studioToolboxPageRenderer");
+const { renderProjectPageShell } = require("./studioProjectPageRenderer");
+const { renderInboxPageShell } = require("./studioInboxPageRenderer");
+const { renderTimelinePageShell } = require("./studioTimelinePageRenderer");
+const { renderDiffPageShell } = require("./studioDiffPageRenderer");
+const { renderDepartmentsPageShell } = require("./studioDepartmentsPageRenderer");
+const { renderStaffPageShell } = require("./studioStaffPageRenderer");
+const { renderMeetingsPageShell } = require("./studioMeetingsPageRenderer");
+const { renderSystemsPageShell } = require("./studioSystemsPageRenderer");
+const { renderPolicyPageShell } = require("./studioPolicyPageRenderer");
 
 function directorConsoleHtml() {
   return `<!doctype html>
@@ -322,258 +332,25 @@ function directorConsoleHtml() {
           </section>
         </section>
 
-        <section class="page" data-page="toolbox">
-          <div class="page-heading"><div><h2>도구함</h2><p>직접 사용할 만한 로컬 도구만 모았습니다. 스크립트 파일명을 외우지 않아도 됩니다.</p></div></div>
-          <div class="card" id="meetingButtonGuide">
-            <h2>사용 기준</h2>
-            <ul class="small">
-              <li>여기에는 allowlist된 도구만 표시합니다.</li>
-              <li>소스 수정, task 완료, commit/push는 이 도구함에서 자동으로 하지 않습니다.</li>
-              <li>긴 출력이 필요한 도구는 해당 화면의 결과 영역 또는 생성된 파일에서 확인합니다.</li>
-            </ul>
-          </div>
-          <section id="toolboxList" class="toolbox-layout"></section>
-        </section>
+        ${renderToolboxPageShell()}
 
-        ${renderGoalsPageShell()}
+        ${renderProjectPageShell()}
 
-        <section class="page" data-page="project">
-          <div class="page-heading"><div><h2>프로젝트</h2><p>현재 Studio가 어떤 프로젝트를 보고 있고, 어떤 검증/빌드/작업 경계를 쓰는지 확인합니다.</p></div></div>
-          <section class="grid">
-            <div class="card">
-              <div class="section-title"><h2>현재 프로젝트</h2><span id="projectActiveBadge" class="pill"></span></div>
-              <div id="projectActiveSummary" class="list"></div>
-            </div>
-            <div class="card">
-              <div class="section-title"><h2>AIWorkflow 상태</h2><button class="secondary" data-nav-jump="inbox">감독자 결정함</button></div>
-              <div id="projectWorkflowSummary" class="compact-list"></div>
-            </div>
-          </section>
-          <section class="grid">
-            <div class="card"><h2>프로젝트 프로필</h2><p class="muted">빌드, 데이터, 검증 진입점은 Project Profile이 제공합니다. Core는 특정 게임 경로를 직접 알지 않는 방향입니다.</p><div id="projectProfilesPublic" class="list"></div></div>
-            <div class="card"><div class="section-title"><h2>도구와 실행 경계</h2><div class="row"><button class="secondary" data-action="model-routing-plan">모델/권한 라우팅</button><button class="secondary" data-action="project-execution-plan">실행 준비 점검</button></div></div><p class="muted">도구는 실행 장비입니다. 비용, 외부 호출, 파일 수정 가능성은 여기서 검토합니다.</p><div id="projectToolSummary" class="list"></div></div>
-          </section>
-        </section>
+        ${renderInboxPageShell()}
 
-        <section class="page" data-page="inbox">
-          <div class="page-heading"><div><h2>감독자 결정함</h2><p>Studio가 올린 판단거리 중 사람이 실제로 결론을 내려야 하는 것만 봅니다.</p></div></div>
-          <div class="card">
-            <h2>이 페이지의 역할</h2>
-            <ul class="small">
-              <li>큰 방향, 완료 검토, 수정 요청, 채택/반려, 커밋 판단처럼 감독자가 결정해야 하는 항목만 모읍니다.</li>
-              <li>각 카드에서 “내가 결정할 것”과 “결정하면 바뀌는 것”을 보고 판단합니다.</li>
-              <li>세부 보고서, 원본 JSON, 내부 실행 기록은 필요할 때만 운영 상세 화면에서 확인합니다.</li>
-            </ul>
-          </div>
-          <div id="directorInboxFull" class="list"></div>
-        </section>
+        ${renderTimelinePageShell()}
 
-        <section class="page" data-page="timeline">
-          <div class="page-heading"><div><h2>실행 타임라인</h2><p>회의, 업무 지시, 직원 보고서, Runner 실행, 채택 후보를 시간순으로 훑어봅니다.</p></div><button class="secondary" data-action="traceability-map">추적 지도</button></div>
-          <div class="card">
-            <h2>이 페이지의 역할</h2>
-            <ul class="small">
-              <li>최근 어떤 일이 어떤 순서로 일어났는지 확인합니다.</li>
-              <li>멈춘 실행, 직원 보고서, 회의 후속 작업을 빠르게 찾아갑니다.</li>
-              <li>세부 판단은 각 항목의 원래 화면에서 진행합니다.</li>
-            </ul>
-          </div>
-          <div id="timelineList" class="list"></div>
-        </section>
+        ${renderDiffPageShell()}
 
-        <section class="page" data-page="diff">
-          <div class="page-heading"><div><h2>변경 검토</h2><p>현재 Git 작업대의 변경 파일을 사람 말로 확인하고, 커밋 전 범위를 고릅니다.</p></div></div>
-          <section class="grid">
-            <div class="card">
-              <div class="section-title"><h2>변경 파일</h2><span id="diffChangedCount" class="pill"></span></div>
-              <div id="diffChangedFiles" class="list"></div>
-            </div>
-            <div class="card">
-              <div class="section-title"><h2>커밋 범위 선택</h2><span class="pill">Git Gate</span></div>
-              <p class="muted">Home의 Studio Git Gate와 같은 안전 규칙을 사용합니다. unrelated 변경은 선택하지 마세요.</p>
-              <div id="diffGitFileSelect" class="file-select"></div>
-              <input id="diffGitCommitMessage" placeholder="커밋 메시지 비우면 자동 제안">
-              <div class="row">
-                <button class="secondary" id="diffGitSelectWorkflow">Workflow만 선택</button>
-                <button class="secondary" id="diffGitClearSelection">선택 해제</button>
-                <button class="good" id="diffGitCommitSelected">선택 커밋</button>
-                <button class="good" id="diffGitCommitPushSelected">선택 커밋+푸시</button>
-              </div>
-            </div>
-          </section>
-          <section class="card">
-            <h2>diff 통계</h2>
-            <pre id="diffStatView">대기 중</pre>
-          </section>
-        </section>
+        ${renderDepartmentsPageShell()}
 
-        <section class="page" data-page="departments">
-          <div class="page-heading"><div><h2>부서</h2><p>AI 회사의 부서입니다. 각 부서가 어떤 책임, 검토 기준, 산출물 경계를 갖는지 확인합니다.</p></div></div>
-          <div class="card">
-            <h2>이 페이지의 역할</h2>
-            <ul class="small">
-              <li>부서별 책임과 검토 기준을 확인합니다.</li>
-              <li>어떤 AI 직원이 어떤 부서에 속하는지 확인하고 직원 화면으로 이동합니다.</li>
-              <li>부서가 담당하는 결과물 종류를 보고 업무 지시나 회의 범위를 정리합니다.</li>
-            </ul>
-          </div>
-          <div class="control-bar">
-            <input id="departmentSearch" placeholder="부서명, 역할, 검토 기준 검색">
-            <span id="departmentSummary" class="pill"></span>
-          </div>
-          <div id="departments" class="grid"></div>
-        </section>
+        ${renderStaffPageShell()}
 
-        <section class="page" data-page="staff">
-          <div class="page-heading"><div><h2>AI 직원</h2><p>영구 역할을 가진 AI 직원 명단입니다. 역할, 권한, 승인 필요 항목, 산출물 책임을 확인합니다.</p></div></div>
-          <div class="control-bar">
-            <input id="staffSearch" placeholder="직원명, 역할, 산출물 검색">
-            <select id="staffDepartmentFilter"></select>
-            <button class="secondary" data-clear-filter="staff">필터 해제</button>
-          </div>
-          <div id="staffAgents" class="grid"></div>
-        </section>
+        ${renderMeetingsPageShell()}
 
-        <section class="page" data-page="meetings">
-          <div class="page-heading"><div><h2>회의실</h2><p>AI 직원 의견을 모아 쟁점, 후속 업무 후보, 감독자 판단 후보로 정리합니다.</p></div></div>
-          <div class="card">
-            <h2>이 페이지의 역할</h2>
-            <ul class="small">
-              <li>감독자가 회의 주제와 제약 조건을 정하고, AI 직원들의 관점을 모읍니다.</li>
-              <li>회의 발언은 회의록에만 남습니다. 공식 설정, task, git은 직접 바꾸지 않습니다.</li>
-              <li>충분히 논의되면 실행할 일은 업무 후보로, 방향 판단은 감독자 결정함으로 넘깁니다.</li>
-            </ul>
-          </div>
-          <div class="card">
-            <div class="section-title"><h2>회의 흐름</h2><span class="pill">권장 순서</span></div>
-            <ol class="small">
-              <li>회의 주제와 참가 직원을 정해 회의를 만듭니다.</li>
-              <li>내 의견을 기록하거나 다음 AI 발언을 받아 관점을 모읍니다.</li>
-              <li>회의판에서 최근 발언, 남은 질문, 쟁점을 확인합니다.</li>
-              <li>실행할 일은 업무 후보로 만들고, 방향 판단은 감독자 결정함에 남깁니다.</li>
-              <li>더 논의할 것이 없으면 회의를 종료합니다.</li>
-            </ol>
-          </div>
-          <div class="card">
-            <div class="section-title"><h2>논의 주제 만들기</h2><span class="pill">회의 세션</span></div>
-            <div class="form-grid">
-              <label>회의 주제<input id="meetingCreateTopic" placeholder="예: 초반 10분 플레이 루프 방향 회의"></label>
-              <label>회의 종류<select id="meetingCreateType"></select></label>
-              <label>의장<select id="meetingCreateChair"></select></label>
-            </div>
-            <div id="meetingTypeHelp" class="inline-help"></div>
-            <div class="form-subsection">
-              <h3>추천 참가자 조합</h3>
-              <p class="small muted">회의 목적에 맞는 기본 조합을 누르면 참가 직원과 의장이 자동으로 채워집니다.</p>
-              <div id="meetingPresetButtons" class="preset-row"></div>
-            </div>
-            <div class="form-subsection">
-              <h3>참가 직원</h3>
-              <p class="small muted">표시명은 한글 직책명 중심으로 보여주고, 회의 기록에는 기존 staff/role ID가 저장됩니다.</p>
-              <div id="meetingParticipantPicker" class="staff-picker"></div>
-            </div>
-            <div id="meetingCreateImpact" class="impact-note"></div>
-            <textarea id="meetingCreateAgenda" placeholder="안건을 줄바꿈으로 입력하세요. 예:&#10;현재 플레이 루프의 약점 확인&#10;후속 업무 지시 후보 정리"></textarea>
-            <textarea id="meetingCreateConstraints" placeholder="제약 조건을 줄바꿈으로 입력하세요. 예:&#10;승인 없는 공식 설정 확정 금지&#10;구현 작업 직접 생성 금지"></textarea>
-            <div class="row"><button class="good" id="meetingCreateSubmit">회의 생성</button></div>
-            <p class="small muted">회의 생성은 MeetingSession 기록만 만듭니다. 공식 설정 확정, task 생성, git 변경은 하지 않습니다.</p>
-          </div>
-          <div class="card">
-            <div class="section-title"><h2>내 의견 기록</h2><span class="pill">Human Director</span></div>
-            <div class="form-grid">
-              <label>회의 ID<input id="meetingTurnId" placeholder="MEET-..."></label>
-              <label>기록 주체<select id="meetingTurnSpeaker"></select></label>
-              <label>발언 종류<select id="meetingTurnType"></select></label>
-            </div>
-            <p class="small muted">이 입력칸은 Human Director인 내 의견을 회의록에 남기는 곳입니다. AI 직원 발언은 아래 회의 카드의 <strong>다음 AI 발언 받기</strong>를 사용하세요.</p>
-            <textarea id="meetingTurnContent" placeholder="내 의견, 질문, 반박, 정리 메모를 입력하세요."></textarea>
-            <div class="row"><button class="good" id="meetingTurnSubmit">내 의견 기록</button></div>
-          </div>
-          <div class="control-bar">
-            <input id="meetingSearch" placeholder="회의 주제, ID 검색">
-            <select id="meetingStatusFilter"></select>
-          </div>
-          <div class="card">
-            <div class="section-title"><h2>회의 버튼 안내</h2><span class="pill">회의 기록 전용</span></div>
-            <div class="grid">
-              <div class="item">
-                <h3>1. 회의 상태 보기</h3>
-                <ul class="small">
-                  <li><strong>회의판 보기</strong>: 최근 발언, 다음에 받을 관점, 남은 질문, 후속 업무 후보를 한 번에 확인합니다.</li>
-                </ul>
-              </div>
-              <div class="item">
-                <h3>2. 의견 더 모으기</h3>
-                <ul class="small">
-                  <li><strong>다음 AI 발언 받기</strong>: 추천된 AI 직원의 의견을 하나 더 받습니다. 공식 설정, task, git은 바꾸지 않습니다.</li>
-                  <li><strong>내 의견 기록</strong>: 선택한 회의 ID를 위 입력칸에 넣고, Human Director인 내 의견만 회의록에 남깁니다.</li>
-                </ul>
-              </div>
-              <div class="item">
-                <h3>3. 결과 넘기기</h3>
-                <ul class="small">
-                  <li><strong>업무 후보 만들기</strong>: 회의에서 나온 “해야 할 일”을 업무 지시 후보로 저장합니다. 구현, task 생성, git 변경은 시작하지 않습니다.</li>
-                  <li><strong>방향 판단으로 남기기</strong>: 회의에서 정한 결론이나 방향을 감독자 결정함에 남깁니다. 공식 설정 확정이나 구현 지시는 별도입니다.</li>
-                  <li><strong>회의 종료</strong>: 회의 기록의 진행 상태만 닫습니다. 소스, task, git은 바꾸지 않습니다.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div id="meetingResultPanel" class="card result-panel" hidden>
-            <div class="section-title"><h2>회의 실행 결과</h2><button id="meetingResultClose" class="secondary">닫기</button></div>
-            <div id="meetingResult" class="list"></div>
-          </div>
-          <div id="meetings" class="list"></div>
-        </section>
+        ${renderSystemsPageShell()}
 
-        ${renderRunsPageShell()}
-
-        ${renderWorkPageShell()}
-
-        ${renderKnowledgePageShell()}
-
-        <section class="page" data-page="systems">
-          <div class="page-heading"><div><h2>시스템</h2><p>내부/관리자용 화면입니다. 평소에는 신경 쓰지 않아도 됩니다.</p></div></div>
-          <div class="card">
-            <div class="section-title"><h2>Studio 진단 도구</h2><span class="pill">내부 도구</span></div>
-            <p class="muted">Studio 자체가 이상하거나, 새 기능을 고친 뒤 확인할 때만 쓰는 점검 도구입니다. 일반 작업을 진행할 때는 쓰지 않아도 됩니다.</p>
-            <div class="row">
-              <button class="secondary" data-action="studio-surface-map">화면 목록 점검</button>
-              <button class="secondary" data-action="studio-recovery-plan">복구 상태 점검</button>
-              <button class="secondary" data-action="studio-eval-plan">테스트 계획 보기</button>
-              <button class="secondary" data-action="studio-smoke-status">Studio 상태 점검</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-title"><h2>도구 요청서 만들기</h2><span class="pill">실행 전 요청서</span></div>
-            <p class="muted">도구를 바로 실행하지 않고, 어떤 도구를 왜 쓰려는지와 어떤 검증 자료가 필요한지 먼저 기록합니다.</p>
-            <div class="form-grid">
-              <label>도구<select id="toolRunCreateAdapter"></select></label>
-              <label>권한 등급<select id="toolRunCreatePermission"></select></label>
-              <label>요청자 종류<select id="toolRunCreateRequesterType"></select></label>
-              <label>요청자 ref<input id="toolRunCreateRequesterRef" placeholder="WO-..., RR-..., MEET-..."></label>
-            </div>
-            <textarea id="toolRunCreateAction" placeholder="요청 행동. 예: 승인 범위 기준으로 직원 보고서 검토"></textarea>
-            <textarea id="toolRunCreatePurpose" placeholder="왜 이 도구 요청이 필요한지"></textarea>
-            <textarea id="toolRunCreateInputs" placeholder="입력 refs를 줄바꿈으로 입력"></textarea>
-            <textarea id="toolRunCreateOutputs" placeholder="기대 산출물을 줄바꿈으로 입력"></textarea>
-            <textarea id="toolRunCreateEvidence" placeholder="필수 검증 자료를 줄바꿈으로 입력"></textarea>
-            <div class="row">
-              <button class="secondary" id="toolRunPlanSubmit">요청 평가</button>
-              <button class="good" id="toolRunCreateSubmit">요청 저장</button>
-            </div>
-          </div>
-          <div class="grid">
-            <div class="card"><h2>프로젝트 프로필</h2><p class="muted">현재 작업 대상 프로젝트와 검증/빌드 프로필입니다.</p><div id="projectProfiles" class="list"></div></div>
-            <div class="card"><h2>도구 어댑터</h2><p class="muted">비용, 외부 호출, 파일 수정, 승인 필요 여부를 확인합니다.</p><div id="toolAdapters" class="list"></div></div>
-            <div class="card"><h2>도구 요청서</h2><p class="muted">아직 실행이 아니라, 실행 전 검토해야 하는 도구 요청서입니다.</p><div id="toolRunRequests" class="list"></div></div>
-          </div>
-        </section>
-
-        <section class="page" data-page="policy">
-          <div class="page-heading"><div><h2>정책</h2><p>내부/관리자용 정책 검증 화면입니다. 자동 진행 정책을 조정하거나 디버깅할 때만 봅니다.</p></div></div>
-          <div class="card"><div class="section-title"><h2>자동 진행 정책</h2><div class="row"><button class="secondary" data-action="approval-impact-plan">승인 영향 점검</button><button class="secondary" data-action="automation-readiness-plan">자동 진행 준비도</button></div></div><p class="muted">이 패널은 승인/실행을 하지 않고 평가와 _Temp 검증 자료만 만듭니다.</p><div id="automationPolicy" class="list"></div></div>
-        </section>
+        ${renderPolicyPageShell()}
 
         ${renderEvidencePageShell()}
 
