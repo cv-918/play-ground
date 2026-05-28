@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
+const {
+  runPayloadToolJson,
+  runToolJson,
+  sendToolJson,
+} = require("./studioApiRouteUtils");
+
 function createToolAutomationApiHandler(deps = {}) {
   const {
     buildToolboxCatalog,
@@ -31,8 +37,7 @@ function createToolAutomationApiHandler(deps = {}) {
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/dashboard/export") {
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_dashboard_export.bat");
-      const result = await runTool(repoRoot, bat, ["--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, bat, ["--json"]);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/handoff/plan") {
@@ -40,7 +45,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_staff_pipeline.bat");
       const result = await runTool(repoRoot, bat, ["handoff", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/handoff/execute") {
@@ -65,7 +70,7 @@ function createToolAutomationApiHandler(deps = {}) {
         "--json",
       ];
       const result = await runTool(repoRoot, bat, args, 20 * 60 * 1000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/output/materialize-plan") {
@@ -73,7 +78,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_output_materializer.bat");
       const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/output/materialize") {
@@ -81,7 +86,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_output_materializer.bat");
       const result = await runTool(repoRoot, bat, ["materialize", body.path, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/staff-run/cleanup") {
@@ -95,7 +100,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_review_packet_exporter.bat");
       const result = await runTool(repoRoot, bat, ["export", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/materialization/review-plan") {
@@ -106,7 +111,7 @@ function createToolAutomationApiHandler(deps = {}) {
       const reason = body.reason || "StudioConsolePlan";
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_materialization_review.bat");
       const result = await runTool(repoRoot, bat, ["plan", body.path, "--decision", decision, "--target", target, "--reason", reason, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/materialization/review-record") {
@@ -117,7 +122,7 @@ function createToolAutomationApiHandler(deps = {}) {
       const reason = body.reason || "StudioConsole";
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_materialization_review.bat");
       const result = await runTool(repoRoot, bat, ["record", body.path, "--decision", decision, "--target", target, "--reason", reason, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workorder/plan") {
@@ -125,7 +130,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
       const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workorder/create") {
@@ -133,25 +138,39 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
       const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/plan") {
       const body = await readRequestJson(req);
       const payload = buildToolRunRequestPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "toolrun-request", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
-      const result = await runTool(repoRoot, bat, ["plan", inputPath, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, { ...(result.json || result), input_path: inputPath });
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "toolrun-request",
+        payload,
+        "tools/aiworkflow/studio_tool_run_planner.bat",
+        (inputPath) => ["plan", inputPath, "--json"],
+        120000,
+        (inputPath) => ({ input_path: inputPath }),
+      );
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/create") {
       const body = await readRequestJson(req);
       const payload = buildToolRunRequestPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "toolrun-request", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
-      const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, { ...(result.json || result), input_path: inputPath });
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "toolrun-request",
+        payload,
+        "tools/aiworkflow/studio_tool_run_planner.bat",
+        (inputPath) => ["create", inputPath, "--execute", "--json"],
+        120000,
+        (inputPath) => ({ input_path: inputPath }),
+      );
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/toolrun/plan-file") {
@@ -159,31 +178,27 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_tool_run_planner.bat");
       const result = await runTool(repoRoot, bat, ["plan", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/status") {
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
-      const result = await runTool(repoRoot, bat, ["status", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, bat, ["status", "--json"]);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/validate") {
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
-      const result = await runTool(repoRoot, bat, ["validate", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, bat, ["validate", "--json"]);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/test") {
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
-      const result = await runTool(repoRoot, bat, ["test", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, bat, ["test", "--json"]);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/test-write") {
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
-      const result = await runTool(repoRoot, bat, ["test", "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, bat, ["test", "--execute", "--json"]);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/replay") {
@@ -191,7 +206,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
       const result = await runTool(repoRoot, bat, ["replay", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/automation/repair") {
@@ -199,7 +214,7 @@ function createToolAutomationApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_conditional_automation.bat");
       const result = await runTool(repoRoot, bat, ["repair-plan", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
     return false;
   };

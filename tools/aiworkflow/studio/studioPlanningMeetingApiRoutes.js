@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 "use strict";
 
+const {
+  readStudioRecordRequest,
+  runPayloadToolJson,
+  sendStudioPayload,
+  sendToolJson,
+} = require("./studioApiRouteUtils");
+
 function createPlanningMeetingApiHandler(deps = {}) {
   const {
     buildDecisionFromMeetingPayload,
@@ -32,7 +39,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
       const result = await runTool(repoRoot, bat, ["inspect", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/handoff") {
@@ -40,7 +47,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
       const result = await runTool(repoRoot, bat, ["handoff", body.path, "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/start") {
@@ -51,7 +58,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       }
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
       const result = await runTool(repoRoot, bat, ["start", meetingId, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/finalize") {
@@ -62,7 +69,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       }
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
       const result = await runTool(repoRoot, bat, ["finalize", meetingId, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/meeting/create") {
@@ -70,26 +77,27 @@ function createPlanningMeetingApiHandler(deps = {}) {
       safeResolveReadable(repoRoot, body.path || "");
       const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
       const result = await runTool(repoRoot, bat, ["create", body.path, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/create") {
       const body = await readRequestJson(req);
       const payload = buildMeetingPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "meeting", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.bat");
-      const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "meeting",
+        payload,
+        "tools/aiworkflow/studio_meeting_runtime.bat",
+        (inputPath) => ["create", inputPath, "--execute", "--json"],
+      );
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/director-goal/plan") {
       const body = await readRequestJson(req);
       const payload = buildDirectorGoalPlanPayload(body);
-      return sendJson(res, 200, {
-        ok: true,
-        director_goal_plan: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "director_goal_plan", payload);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/director-goal/store") {
@@ -177,7 +185,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       if (result.json?.ok && result.json?.turn) {
         result.json.turn.content = content;
       }
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return sendToolJson(sendJson, res, result);
     }
 
 
@@ -185,10 +193,15 @@ function createPlanningMeetingApiHandler(deps = {}) {
       const body = await readRequestJson(req);
       const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
       const payload = buildWorkOrderFromMeetingPayload(meeting);
-      const inputPath = await writeTempStudioInput(repoRoot, "workorder_from_meeting", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
-      const result = await runTool(repoRoot, bat, ["store", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "workorder_from_meeting",
+        payload,
+        "tools/aiworkflow/studio_workorder_planner.bat",
+        (inputPath) => ["store", inputPath, "--execute", "--json"],
+      );
     }
 
 
@@ -196,46 +209,36 @@ function createPlanningMeetingApiHandler(deps = {}) {
       const body = await readRequestJson(req);
       const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
       const payload = buildDecisionFromMeetingPayload(meeting, String(body.decision_type || "approve").trim() || "approve");
-      const inputPath = await writeTempStudioInput(repoRoot, "decision_from_meeting", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
-      const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "decision_from_meeting",
+        payload,
+        "tools/aiworkflow/studio_decision_store.bat",
+        (inputPath) => ["create-decision", inputPath, "--execute", "--json"],
+      );
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/facilitation-plan") {
-      const body = await readRequestJson(req);
-      const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+      const { json: meeting } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "meeting");
       const payload = buildMeetingFacilitationPlan(meeting);
-      return sendJson(res, 200, {
-        ok: true,
-        meeting_facilitation_plan: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "meeting_facilitation_plan", payload);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/board") {
-      const body = await readRequestJson(req);
-      const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+      const { json: meeting } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "meeting");
       const payload = buildMeetingBoard(meeting);
-      return sendJson(res, 200, {
-        ok: true,
-        meeting_board: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "meeting_board", payload);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/meeting/runbook") {
-      const body = await readRequestJson(req);
-      const { json: meeting } = await readStudioRecordFromBody(repoRoot, body, "meeting");
+      const { json: meeting } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "meeting");
       const payload = buildMeetingRunbook(meeting);
-      return sendJson(res, 200, {
-        ok: true,
-        meeting_runbook: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "meeting_runbook", payload);
     }
 
 

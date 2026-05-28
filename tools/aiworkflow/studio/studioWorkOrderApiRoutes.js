@@ -2,6 +2,12 @@
 "use strict";
 
 const path = require("path");
+const {
+  readStudioRecordRequest,
+  runPayloadToolJson,
+  runToolJson,
+  sendStudioPayload,
+} = require("./studioApiRouteUtils");
 
 function createWorkOrderApiHandler(deps = {}) {
   const {
@@ -22,10 +28,15 @@ function createWorkOrderApiHandler(deps = {}) {
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/create") {
       const body = await readRequestJson(req);
       const payload = buildWorkOrderPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "workorder", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
-      const result = await runTool(repoRoot, bat, ["store", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "workorder",
+        payload,
+        "tools/aiworkflow/studio_workorder_planner.bat",
+        (inputPath) => ["store", inputPath, "--execute", "--json"],
+      );
     }
 
 
@@ -107,54 +118,49 @@ function createWorkOrderApiHandler(deps = {}) {
       });
       payload.source_type = "completion_review";
       payload.source_ref = completion.id || task.task_id;
-      const inputPath = await writeTempStudioInput(repoRoot, "completion_fix_workorder", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_workorder_planner.bat");
-      const result = await runTool(repoRoot, bat, ["store", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "completion_fix_workorder",
+        payload,
+        "tools/aiworkflow/studio_workorder_planner.bat",
+        (inputPath) => ["store", inputPath, "--execute", "--json"],
+      );
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/handoff-plan") {
-      const body = await readRequestJson(req);
-      const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+      const { json: workOrder } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "work order");
       const payload = await buildWorkOrderHandoffPlan(repoRoot, workOrder);
-      return sendJson(res, 200, {
-        ok: true,
-        work_order_handoff_plan: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "work_order_handoff_plan", payload);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/context-plan") {
-      const body = await readRequestJson(req);
-      const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+      const { body, json: workOrder } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "work order");
       const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
       const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
       const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
       const args = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-RepoRoot", repoRoot, "plan", agentId, body.path, "--json"];
       if (memoryQuery) args.push("--memory-query", memoryQuery);
-      const result = await runTool(repoRoot, "powershell.exe", args, 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, "powershell.exe", args);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/context-create") {
-      const body = await readRequestJson(req);
-      const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+      const { body, json: workOrder } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "work order");
       const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
       const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
       const ps1 = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
       const args = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-RepoRoot", repoRoot, "create", agentId, body.path, "--execute", "--json"];
       if (memoryQuery) args.push("--memory-query", memoryQuery);
-      const result = await runTool(repoRoot, "powershell.exe", args, 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runToolJson(repoRoot, res, { runTool, sendJson }, "powershell.exe", args);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/staff-plan") {
-      const body = await readRequestJson(req);
-      const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+      const { body, json: workOrder } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "work order");
       const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
       const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
       const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");
@@ -177,8 +183,7 @@ function createWorkOrderApiHandler(deps = {}) {
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/workorder/staff-run") {
-      const body = await readRequestJson(req);
-      const { json: workOrder } = await readStudioRecordFromBody(repoRoot, body, "work order");
+      const { body, json: workOrder } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "work order");
       const agentId = resolveWorkOrderAgent(workOrder, body.agent_id);
       const memoryQuery = String(body.memory_query || workOrder.objective || "").trim();
       const contextScript = repoPath(repoRoot, "tools/aiworkflow/studio_context_builder.ps1");

@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
+const {
+  readStudioRecordRequest,
+  runPayloadToolJson,
+  sendStudioPayload,
+} = require("./studioApiRouteUtils");
+
 function createKnowledgeDecisionApiHandler(deps = {}) {
   const {
     buildCanonConflictReport,
@@ -22,30 +28,45 @@ function createKnowledgeDecisionApiHandler(deps = {}) {
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/proposal/create") {
       const body = await readRequestJson(req);
       const payload = buildProposalPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "proposal", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
-      const result = await runTool(repoRoot, bat, ["create-proposal", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "proposal",
+        payload,
+        "tools/aiworkflow/studio_decision_store.bat",
+        (inputPath) => ["create-proposal", inputPath, "--execute", "--json"],
+      );
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/decision/create") {
       const body = await readRequestJson(req);
       const payload = buildDecisionPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "decision", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
-      const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "decision",
+        payload,
+        "tools/aiworkflow/studio_decision_store.bat",
+        (inputPath) => ["create-decision", inputPath, "--execute", "--json"],
+      );
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/memory/create") {
       const body = await readRequestJson(req);
       const payload = buildMemoryPayload(body);
-      const inputPath = await writeTempStudioInput(repoRoot, "memory", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
-      const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "memory",
+        payload,
+        "tools/aiworkflow/studio_memory_store.bat",
+        (inputPath) => ["create", inputPath, "--execute", "--json"],
+      );
     }
 
 
@@ -57,41 +78,35 @@ function createKnowledgeDecisionApiHandler(deps = {}) {
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/proposal/create-decision") {
-      const body = await readRequestJson(req);
-      const { json: proposal } = await readStudioRecordFromBody(repoRoot, body, "proposal");
+      const { body, json: proposal } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "proposal");
       const payload = buildDecisionFromProposalPayload(proposal, String(body.decision_type || "approve").trim() || "approve");
-      const inputPath = await writeTempStudioInput(repoRoot, "decision_from_proposal", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_decision_store.bat");
-      const result = await runTool(repoRoot, bat, ["create-decision", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "decision_from_proposal",
+        payload,
+        "tools/aiworkflow/studio_decision_store.bat",
+        (inputPath) => ["create-decision", inputPath, "--execute", "--json"],
+      );
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/knowledge/transition-plan") {
-      const body = await readRequestJson(req);
-      const { json, relativePath } = await readStudioRecordFromBody(repoRoot, body, "knowledge record");
+      const { json, relativePath } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "knowledge record");
       const payload = buildKnowledgeTransitionPlan(json, relativePath);
-      return sendJson(res, 200, {
-        ok: true,
-        knowledge_transition_plan: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "knowledge_transition_plan", payload);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/knowledge/canon-conflict-report") {
       const payload = await buildCanonConflictReport(repoRoot);
-      return sendJson(res, 200, {
-        ok: true,
-        canon_conflict_report: payload,
-        safety: payload.safety,
-      });
+      return sendStudioPayload(sendJson, res, "canon_conflict_report", payload);
     }
 
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/studio/decision/create-memory") {
-      const body = await readRequestJson(req);
-      const { json: decision } = await readStudioRecordFromBody(repoRoot, body, "decision");
+      const { body, json: decision } = await readStudioRecordRequest(repoRoot, req, readRequestJson, readStudioRecordFromBody, "decision");
       if (!String(decision.target_ref || "").trim()) {
         return sendJson(res, 400, {
           ok: false,
@@ -112,10 +127,15 @@ function createKnowledgeDecisionApiHandler(deps = {}) {
         });
       }
       const payload = buildMemoryFromDecisionPayload(decision, String(body.status || "").trim());
-      const inputPath = await writeTempStudioInput(repoRoot, "memory_from_decision", payload);
-      const bat = repoPath(repoRoot, "tools/aiworkflow/studio_memory_store.bat");
-      const result = await runTool(repoRoot, bat, ["create", inputPath, "--execute", "--json"], 120000);
-      return sendJson(res, result.ok ? 200 : 500, result.json || result);
+      return runPayloadToolJson(
+        repoRoot,
+        res,
+        { repoPath, runTool, sendJson, writeTempStudioInput },
+        "memory_from_decision",
+        payload,
+        "tools/aiworkflow/studio_memory_store.bat",
+        (inputPath) => ["create", inputPath, "--execute", "--json"],
+      );
     }
 
 

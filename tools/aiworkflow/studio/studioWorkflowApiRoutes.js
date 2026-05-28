@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 
+const { sendToolJson } = require("./studioApiRouteUtils");
+
 function createWorkflowApiHandler(deps = {}) {
   const {
     commitSelectedFiles,
@@ -19,7 +21,7 @@ function createWorkflowApiHandler(deps = {}) {
       if (!text) throw new Error("Missing intake text.");
       const { createTaskFromIntake } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/intakeTaskCreationService.js");
       const result = await createTaskFromIntake(studioServiceConfig(repoRoot), { text });
-      return sendJson(res, result.ok ? 200 : 500, result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/finalize") {
@@ -40,7 +42,7 @@ function createWorkflowApiHandler(deps = {}) {
           markDone: body.mark_done === true,
           actor: "studio_console",
         });
-        return sendJson(res, result.ok ? 200 : 500, result);
+        return sendToolJson(sendJson, res, result);
       }
 
       const commandByDecision = {
@@ -58,7 +60,7 @@ function createWorkflowApiHandler(deps = {}) {
         completionReportId,
         actor: "studio_console",
       });
-      return sendJson(res, result.ok ? 200 : 500, result);
+      return sendToolJson(sendJson, res, result);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/task/approve-start") {
