@@ -347,6 +347,75 @@ async function getMemories(repoRoot) {
   return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 }
 
+const STUDIO_WIKI_CATEGORY_LABELS = {
+  Root: "위키 지도",
+  Inbox: "정리 대기",
+  Concepts: "핵심 개념",
+  Decisions: "결정",
+  Proposals: "제안",
+  Lessons: "교훈",
+  Research: "조사",
+  Canon: "공식 설정",
+  Rejected: "반려/폐기",
+  Templates: "템플릿",
+};
+
+function extractMarkdownTitle(text, fallback) {
+  const match = String(text || "").match(/^#\s+(.+)$/m);
+  return match ? match[1].trim() : fallback;
+}
+
+function extractMarkdownSummary(text, title) {
+  const lines = String(text || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("#"))
+    .filter((line) => !line.startsWith("---"))
+    .filter((line) => !/^-\s*(status|source|created_at|promotion_target|tags)\s*:/i.test(line));
+  const clean = lines.join(" ").replace(/\s+/g, " ").trim();
+  return shortText(clean || title, 240);
+}
+
+async function getStudioWikiEntries(repoRoot) {
+  const root = repoPath(repoRoot, "_Docs/AIWorkflow/StudioWiki");
+  const files = await listFiles(root, (_full, name) => name.endsWith(".md"));
+  const items = [];
+
+  for (const file of files) {
+    const text = await readTextIfExists(file);
+    const stat = await fsp.stat(file);
+    const relFromRoot = slash(path.relative(root, file));
+    const parts = relFromRoot.split("/").filter(Boolean);
+    const category = parts.length > 1 ? parts[0] : "Root";
+    const baseName = path.basename(file);
+    const isIndex = baseName.toLowerCase() === "readme.md" || baseName === "00_MOC.md";
+    const isTemplate = category === "Templates";
+    const title = extractMarkdownTitle(text, path.basename(file, ".md"));
+    const rel = toRepoRelative(repoRoot, file);
+    items.push({
+      wiki_id: slash(path.relative(root, file)).replace(/\.md$/i, ""),
+      title,
+      summary: extractMarkdownSummary(text, title),
+      category,
+      category_label: STUDIO_WIKI_CATEGORY_LABELS[category] || category,
+      status: category === "Inbox" && !isIndex ? "triage_needed" : category === "Canon" ? "canon_area" : isIndex ? "index" : "available",
+      kind: isTemplate ? "template" : isIndex ? "index" : "entry",
+      path: rel,
+      href: `/file?path=${encodeURIComponent(rel)}`,
+      updated_at: stat.mtime.toISOString(),
+    });
+  }
+
+  return items.sort((a, b) => {
+    const categoryOrder = ["Inbox", "Root", "Concepts", "Decisions", "Proposals", "Lessons", "Research", "Canon", "Rejected", "Templates"];
+    const categoryDiff = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+    if (categoryDiff) return categoryDiff;
+    if (a.kind !== b.kind) return a.kind === "entry" ? -1 : 1;
+    return b.updated_at.localeCompare(a.updated_at);
+  });
+}
+
 async function getMeetings(repoRoot) {
   const roots = [
     repoPath(repoRoot, "_Docs/AIWorkflow/Studio/MeetingSessions"),
@@ -566,6 +635,7 @@ module.exports = {
   getProposals,
   getDecisions,
   getMemories,
+  getStudioWikiEntries,
   getMeetings,
   getProjectProfiles,
   getToolAdapters,

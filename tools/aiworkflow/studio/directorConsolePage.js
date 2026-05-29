@@ -693,7 +693,7 @@ function directorConsoleHtml() {
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"자문", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
         approved:"승인됨", rejected:"반려됨",
-        active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시",
+        active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시", triage_needed:"정리 필요", canon_area:"공식 설정 영역", index:"목차",
         valid_output:"보고서 준비됨", output_ready:"보고서 준비됨", needs_evidence:"검증 자료 필요", needs_director_decision:"감독자 결정 필요", completed:"실행 완료", failed:"실패",
         completion_review_required:"완료 검토 필요", done_or_commit_decision:"완료/커밋 결정 필요", ready_for_implementation:"구현 준비 완료", in_progress:"진행 중", todo:"대기",
         low:"낮음", medium:"중간", high:"높음", critical:"치명적",
@@ -901,7 +901,7 @@ function directorConsoleHtml() {
       setNavCount("meetings", state.meetings.length);
       setNavCount("runs", state.recent_staff_runs.length + state.materializations.length);
       setNavCount("work", state.work_orders.length + state.handoffs.length);
-      setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
+      setNavCount("knowledge", (state.metrics?.studio_wiki_inbox || 0) + state.proposals.length + state.decisions.length + state.memories.length);
       setNavCount("timeline", buildTimelineItems().length);
       setNavCount("diff", state.workflow_core?.git?.changed_count || "");
       setNavCount("systems", state.project_profiles.length + state.tool_adapters.length + state.tool_run_requests.length);
@@ -1622,6 +1622,36 @@ function directorConsoleHtml() {
           actionsHtml([button("재현", "automation-replay", evaluation.path), button("수정 계획", "automation-repair", evaluation.path)]) +
           internalLinksHtml([link("평가 원본", evaluation.href)]) + '</div>'
         ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
+      const wikiEntries = asArray(state.studio_wiki_entries);
+      const wikiVisibleEntries = wikiEntries.filter((entry) =>
+        includesText([entry.wiki_id, entry.title, entry.summary, entry.category_label, entry.status].join(" "), filters.knowledgeSearch)
+      );
+      const wikiCategoryCounts = wikiEntries.reduce((acc, entry) => {
+        const label = entry.category_label || entry.category || "기타";
+        acc[label] = (acc[label] || 0) + 1;
+        return acc;
+      }, {});
+      const wikiInboxCount = wikiEntries.filter((entry) => entry.category === "Inbox" && entry.kind === "entry").length;
+      el("wikiEntryCount").textContent = wikiEntries.length ? String(wikiEntries.length) : "0";
+      el("studioWikiOverview").innerHTML = wikiEntries.length
+        ? '<div class="compact-list">' +
+          Object.keys(wikiCategoryCounts).sort((a, b) => a.localeCompare(b)).map((label) =>
+            '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(wikiCategoryCounts[label]) + '</span></div>'
+          ).join("") +
+          '</div>' +
+          '<p class="small ' + (wikiInboxCount ? 'warn' : 'muted') + '">' + (wikiInboxCount ? '정리 대기 Inbox ' + esc(wikiInboxCount) + '개가 있습니다.' : '정리 대기 Inbox 항목은 없습니다.') + '</p>'
+        : '<p class="muted">아직 Studio Wiki 문서를 찾지 못했습니다.</p>';
+      el("studioWikiEntries").innerHTML = wikiVisibleEntries.length ? wikiVisibleEntries.map((entry) =>
+        '<div class="item ' + (entry.category === "Inbox" && entry.kind === "entry" ? "warn" : entry.category === "Canon" ? "good" : "") + '">' +
+        '<h3><code>' + esc(entry.wiki_id) + '</code> <span class="pill">' + esc(entry.category_label || entry.category) + '</span> <span class="pill">' + esc(optionLabel(entry.status)) + '</span></h3>' +
+        '<p>' + esc(entry.title) + '</p>' +
+        '<p class="summary">' + esc(short(entry.summary, 180)) + '</p>' +
+        actionsHtml([
+          entry.kind === "entry" ? button(entry.category === "Inbox" ? "승격 계획" : "분류 점검", "wiki-promotion-plan", entry.path) : "",
+        ]) +
+        internalLinksHtml([link("문서 열기", entry.href)]) +
+        '</div>'
+      ).join("") : renderEmpty("조건에 맞는 Wiki 문서가 없습니다.");
       const visibleProposals = state.proposals.filter((p) => {
         const decisionCount = proposalDecisions(p.proposal_id).length;
         const matchesDecisionFilter = !filters.proposalDecision ||
@@ -1922,6 +1952,21 @@ function directorConsoleHtml() {
       }));
       await refresh();
     }
+    async function createWikiInboxFromForm() {
+      const title = fieldValue("wikiInboxTitle");
+      const content = fieldValue("wikiInboxContent");
+      if (!title || !content) return alert("Wiki Inbox 제목과 내용을 입력하세요.");
+      if (!confirm("이 내용을 Wiki Inbox에 저장할까요?\\n\\n저장되는 것: 정리 대기 Markdown 문서\\n바뀌지 않는 것: 공식 결정, 공식 설정, task, 소스, commit/push")) return;
+      log(await post("/api/studio/wiki-inbox/create", {
+        title,
+        content,
+        source: fieldValue("wikiInboxSource") || "Studio",
+      }));
+      el("wikiInboxTitle").value = "";
+      el("wikiInboxContent").value = "";
+      el("wikiInboxSource").value = "";
+      await refresh();
+    }
     async function createProposalFromForm() {
       const title = fieldValue("proposalCreateTitle");
       const summary = fieldValue("proposalCreateSummary");
@@ -2092,6 +2137,7 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "knowledge-transition-plan") return log(await post("/api/studio/knowledge/transition-plan", { path:filePath }));
+      if (action === "wiki-promotion-plan") return log(await post("/api/studio/wiki/promotion-plan", { path:filePath }));
       if (action === "canon-conflict-report") return log(await post("/api/studio/knowledge/canon-conflict-report", {}));
       if (action === "decision-create-memory" || action === "decision-create-canon") {
         const status = action === "decision-create-canon" ? "canon" : "approved";
@@ -2331,6 +2377,7 @@ function directorConsoleHtml() {
     el("meetingResultClose").addEventListener("click", () => { el("meetingResultPanel").hidden = true; });
     el("globalResultClose").addEventListener("click", () => { el("globalResultPanel").hidden = true; });
     el("workCreateSubmit").addEventListener("click", () => createWorkOrderFromForm().catch(log));
+    el("wikiInboxCreateSubmit").addEventListener("click", () => createWikiInboxFromForm().catch(log));
     el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
     el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
     el("memoryCreateSubmit").addEventListener("click", () => createMemoryFromForm().catch(log));

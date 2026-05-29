@@ -381,6 +381,106 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   return base;
 }
 
+function buildWikiPromotionPlan(record = {}) {
+  const id = record.wiki_id || record.id || "wiki-entry";
+  const title = record.title || id;
+  const text = [
+    id,
+    title,
+    record.summary,
+    record.content,
+    record.source,
+    record.path,
+  ].join(" ").toLowerCase();
+  const includesAny = (patterns) => patterns.some((pattern) => text.includes(pattern));
+  const currentCategory = record.category || "Unknown";
+  const isInbox = currentCategory === "Inbox" || record.status === "triage_needed" || /(^|\/)inbox\//i.test(String(record.path || ""));
+  const candidates = [
+    {
+      target: "Decisions",
+      label: "감독자 결정",
+      score: includesAny(["결정", "확정", "승인", "허용", "반려", "보류", "decision", "approve", "reject"]) ? 2 : 0,
+      meaning: "앞으로 따라야 할 방향이나 운영 기준으로 남기는 기록입니다.",
+    },
+    {
+      target: "Canon",
+      label: "공식 설정 후보",
+      score: includesAny(["공식 설정", "canon", "세계관", "캐릭터", "시나리오", "story", "lore", "setting"]) ? 2 : 0,
+      meaning: "게임/IP의 공식 설정으로 굳을 수 있는 내용입니다. 반드시 감독자 결정이 필요합니다.",
+    },
+    {
+      target: "Lessons",
+      label: "교훈",
+      score: includesAny(["교훈", "배운", "실패", "재발", "다음부터", "lesson", "retrospective"]) ? 2 : 0,
+      meaning: "나중에 같은 실수를 줄이기 위해 남기는 운영/개발 교훈입니다.",
+    },
+    {
+      target: "Research",
+      label: "조사 자료",
+      score: includesAny(["조사", "비교", "자료", "링크", "https://", "http://", "tool", "도구", "research"]) ? 2 : 0,
+      meaning: "외부 도구, 사례, 기술 자료를 다시 찾기 쉽게 정리하는 기록입니다.",
+    },
+    {
+      target: "Proposals",
+      label: "제안",
+      score: includesAny(["제안", "아이디어", "후보", "하면 좋", "proposal", "candidate"]) ? 2 : 0,
+      meaning: "아직 채택하지 않은 선택지나 방향 후보입니다.",
+    },
+    {
+      target: "Concepts",
+      label: "개념 정리",
+      score: includesAny(["정의", "개념", "역할", "구조", "architecture", "concept", "runtime"]) ? 1 : 0,
+      meaning: "Studio, Work Packet, 도구 역할처럼 반복해서 설명해야 하는 개념입니다.",
+    },
+  ].sort((a, b) => b.score - a.score);
+  const recommended = candidates.find((candidate) => candidate.score > 0) || {
+    target: "Inbox",
+    label: "계속 정리 대기",
+    score: 0,
+    meaning: "아직 안전하게 분류하기에는 신호가 약합니다.",
+  };
+
+  return {
+    wiki_promotion_plan_id: makeStudioId("WPP", id),
+    source_ref: id,
+    source_path: record.path || "",
+    title,
+    current_category: currentCategory,
+    current_meaning: isInbox
+      ? "이 문서는 아직 정리 대기 상태입니다. 바로 공식 결정, 공식 설정, 업무 지시로 쓰면 안 됩니다."
+      : "이 문서는 이미 Studio Wiki 안의 분류된 영역에 있습니다. 추가 승격이 필요한지 확인하는 읽기 전용 점검입니다.",
+    recommended_target: recommended.target,
+    recommended_label: recommended.label,
+    recommendation_reason: recommended.meaning,
+    candidate_targets: candidates
+      .filter((candidate) => candidate.score > 0)
+      .map((candidate) => `${candidate.label}: ${candidate.meaning}`),
+    director_checklist: [
+      "이 기록이 단순 참고인지, 앞으로 따라야 할 결정인지 구분합니다.",
+      "공식 설정 후보라면 기존 canon과 충돌하지 않는지 확인합니다.",
+      "승격해도 task 생성, 소스 수정, commit/push가 자동으로 일어나지 않는지 확인합니다.",
+    ],
+    what_changes_if_promoted: [
+      "문서가 Inbox 밖의 적절한 Wiki 영역으로 옮겨질 수 있습니다.",
+      "나중에 AI 직원 Context Pack에 더 안정적인 기억으로 들어갈 수 있습니다.",
+    ],
+    what_does_not_change: [
+      "이 계획을 보는 것만으로 문서 이동, 공식 설정 확정, task 생성, 소스 수정, commit/push는 일어나지 않습니다.",
+      "공식 설정 또는 주요 방향으로 확정하려면 Human Director 결정이 별도로 필요합니다.",
+    ],
+    safety: {
+      read_only: true,
+      wiki_moved: false,
+      decision_written: false,
+      canon_changed: false,
+      task_created: false,
+      source_changed: false,
+      commit_or_push: false,
+    },
+    created_at: studioTimestampParts().iso,
+  };
+}
+
 function buildCompletionDecisionPlan(core = {}) {
   const task = core.active_task || {};
   const runner = core.runner || {};
@@ -724,6 +824,7 @@ module.exports = {
   buildCompletionEvidenceChecklist,
   buildDirectorSurfaceMap,
   buildKnowledgeTransitionPlan,
+  buildWikiPromotionPlan,
   buildMeetingBoard,
   buildMeetingFacilitationPlan,
   buildMeetingRunbook,

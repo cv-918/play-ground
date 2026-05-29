@@ -83,6 +83,9 @@ try {
     "meetingButtonGuide",
     "meeting-board",
     "meeting-agent-run",
+    "wikiInboxCreateSubmit",
+    "studioWikiEntries",
+    "wiki-promotion-plan",
     "studio-smoke-status",
     "completion-decision-plan"
   )
@@ -223,6 +226,27 @@ try {
 
   try {
     $summary = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/summary" -TimeoutSec 20
+    $firstWikiEntry = @($summary.studio_wiki_entries | Where-Object { $_.path -and $_.kind -eq "entry" } | Select-Object -First 1)[0]
+    if ($firstWikiEntry -and $firstWikiEntry.path) {
+      $wikiPromotion = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/studio/wiki/promotion-plan" -Body @{ path = $firstWikiEntry.path }
+      $promotionPlan = $wikiPromotion.wiki_promotion_plan
+      $promotionOk = [bool]$wikiPromotion.ok -and ($null -ne $promotionPlan) -and [bool]$promotionPlan.wiki_promotion_plan_id
+      $promotionReadOnly = [bool]$wikiPromotion.safety.read_only
+      if ($promotionPlan -and $promotionPlan.safety -and ($promotionPlan.safety.PSObject.Properties.Name -contains "read_only")) {
+        $promotionReadOnly = [bool]$promotionPlan.safety.read_only
+      }
+      $checks += [ordered]@{
+        name = "wiki promotion plan"
+        ok = $promotionOk
+        read_only = $promotionReadOnly
+        wiki = $firstWikiEntry.wiki_id
+      }
+      if (-not $promotionOk) { $failures += "Wiki promotion plan did not return the expected payload." }
+      if (-not $promotionReadOnly) { $failures += "Wiki promotion plan was not read-only." }
+    } else {
+      $checks += [ordered]@{ name = "wiki promotion plan"; ok = $true; skipped = "No Studio Wiki entry available." }
+    }
+
     $firstRun = @($summary.recent_staff_runs | Where-Object { $_.output_path } | Select-Object -First 1)[0]
     if ($firstRun -and $firstRun.output_path) {
       $reviewPacket = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/review-packet/export" -Body @{ path = $firstRun.output_path }

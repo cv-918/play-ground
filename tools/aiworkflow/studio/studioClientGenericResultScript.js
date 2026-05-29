@@ -211,6 +211,19 @@ function renderClientGenericResultScript() {
           ],
         },
         {
+          key: "wiki_promotion_plan",
+          title: "Wiki 승격 계획",
+          status: [["대상", "source_ref"], ["현재 위치", "current_category"], ["추천", "recommended_label"]],
+          sections: [
+            ["현재 의미", (r) => [r.current_meaning]],
+            ["추천 이유", (r) => [r.recommendation_reason]],
+            ["다른 후보", "candidate_targets"],
+            ["승격하면 바뀌는 것", "what_changes_if_promoted"],
+            ["바뀌지 않는 것", "what_does_not_change"],
+            ["감독자 체크리스트", "director_checklist"],
+          ],
+        },
+        {
           key: "canon_conflict_report",
           title: "공식 설정 충돌 점검",
           status: [["제안", "counts.proposals"], ["결정", "counts.decisions"], ["기억", "counts.memories"]],
@@ -504,6 +517,26 @@ function renderClientGenericResultScript() {
           reportSection("다음 행동", [
             "대상이 명확한 제안/결정에서 다시 저장하세요.",
             "오래된 테스트 기록이면 읽고 넘어가거나 정리 대상으로 보면 됩니다.",
+          ]) +
+          safetySection(value.safety) +
+          rawJsonDetails(value, "내부 원본 JSON") +
+          '</div>';
+      }
+      if (value?.command === "wiki-inbox-create") {
+        return '<div class="item ' + (value.ok ? "good" : "danger") + '"><h3>' + esc(value.ok ? "Wiki Inbox 저장 완료" : "Wiki Inbox 저장 실패") + '</h3>' +
+          '<p class="summary">' + esc(value.ok
+            ? "나중에 AI Librarian이 정리할 수 있도록 Studio Wiki Inbox에 임시 기록을 남겼습니다. 공식 결정, 공식 설정, task, git은 바뀌지 않습니다."
+            : "Wiki Inbox에 저장하지 못했습니다. 아래 오류를 확인하세요.") + '</p>' +
+          reportSection("저장 대상", [
+            "기록: " + (value.wiki_inbox_id || ""),
+            "제목: " + (value.title || ""),
+            "출처: " + (value.source || ""),
+          ]) +
+          reportSection("다음 행동", value.ok ? [
+            "LLM Wiki 현황 또는 Wiki 문서 목록에서 방금 저장한 Inbox 항목을 확인하세요.",
+            "공식 설정이나 결정으로 쓰려면 별도 승격/판단 과정을 거쳐야 합니다.",
+          ] : [
+            translateStudioMessage(value.error || "저장 오류가 발생했습니다."),
           ]) +
           safetySection(value.safety) +
           rawJsonDetails(value, "내부 원본 JSON") +

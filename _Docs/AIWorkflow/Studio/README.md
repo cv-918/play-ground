@@ -153,7 +153,13 @@ This slice defines:
   objections, questions, and next-action candidates are collected before the
   Director turns them into decisions or work. The Records Room (`기록실`) is the
   LLM Wiki-facing surface for proposals, Director decisions, reference memory,
-  and canon candidates. Director-facing
+  canon candidates, and Wiki Inbox capture. Wiki Inbox capture stores a
+  triage-needed Markdown note under `_Docs/AIWorkflow/StudioWiki/Inbox/` without
+  canonizing the content, creating tasks, editing source, or touching git. Wiki
+  promotion planning is read-only and only recommends whether an Inbox note
+  should become a Decision, Canon note, Lesson, Research note, Proposal, Concept,
+  or rejected/archive item.
+  Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.
   The covered read-only report set includes DirectorGoalPlan, StaffOperatingPlan,
