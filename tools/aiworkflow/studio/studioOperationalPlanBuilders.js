@@ -410,7 +410,7 @@ function createStudioOperationalPlanBuilders(deps = {}) {
         "자문실에서 자문판을 봅니다.",
         "LLM Wiki에서 전환 계획을 봅니다.",
         "프로젝트에서 실행 준비 점검을 봅니다.",
-        "검증 자료에서 완료 판단안을 봅니다.",
+        "결과 검토에서 완료 판단안을 봅니다.",
         "정책에서 자동 진행 준비도를 봅니다.",
       ],
       safety: {

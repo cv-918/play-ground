@@ -80,7 +80,7 @@ _Docs/AIWorkflow/StudioWiki/
 
 ## 6. Studio에서 바로 남기는 방법
 
-Studio의 `기록실`에는 `Wiki Inbox에 남기기`가 있다.
+Studio의 `LLM Wiki`에는 `Wiki Inbox에 남기기`가 있다.
 
 이 기능은 대화, 자문, 조사, 작업 중 “나중에 다시 써야 할 것 같은 맥락”을
 `_Docs/AIWorkflow/StudioWiki/Inbox/` 아래 Markdown 문서로 남긴다.

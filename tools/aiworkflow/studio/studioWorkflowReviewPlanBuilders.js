@@ -712,14 +712,14 @@ function buildApprovalImpactPlan(core = {}, automation = {}) {
 
 function buildDirectorSurfaceMap() {
   const surfaces = [
-    ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 검증 자료 확인"], false],
+    ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 결과 검토 자료 확인"], false],
     ["goals", "새 안건", "Human Director", "큰 목표를 Director Brief로 정리하고 자문, 업무, 결정 후보로 쪼갭니다.", ["브리프 미리보기", "브리프 저장", "후보 생성"], false],
-    ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 채택 후보, 커밋 판단을 한곳에서 처리합니다.", ["승인+실행", "완료 판단", "채택 후보 검토", "commit/push 판단"], false],
+    ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 수정 요청, 채택 후보처럼 사람이 결론을 내려야 하는 항목을 처리합니다.", ["승인+실행", "완료 판단", "수정 요청", "채택 후보 검토"], false],
     ["meetings", "자문실", "Human Director / Creative Director", "AI 직원 의견과 반박을 모아 후속 업무 후보와 감독자 판단 후보로 정리합니다.", ["자문판 보기", "내 의견 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
     ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 채택 후보로 넘깁니다.", ["보고서 보기/만들기", "채택 후보 미리보기", "채택 후보로 넘기기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
     ["knowledge", "LLM Wiki", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 회사 기억으로 구분합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
-    ["evidence", "검증 자료", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
+    ["evidence", "결과 검토", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료와 남은 우려를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
     ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
     ["toolbox", "도구함", "Human Director / Maintainer", "자주 쓰는 유지보수 도구만 실행합니다.", ["Studio 재시작", "Discord bot 재시작", "팀 데이터 배포", "점검 도구 실행"], false],
@@ -799,7 +799,7 @@ function buildStudioEvalPlan() {
       "새 안건에서 후보가 실행이 아니라 브리프 기록으로 보이는지 확인합니다.",
       "자문실에서 자문판과 후속 업무 흐름이 보이는지 확인합니다.",
       "업무 지시에서 인수인계 점검, 직원 자료, 직원 실행 계획 차이가 보이는지 확인합니다.",
-      "검증 자료에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
+      "결과 검토에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
       "변경 검토에서 선택 commit/push만 가능하다는 점이 보이는지 확인합니다.",
     ],
     pass_criteria: [

@@ -282,10 +282,18 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card">
-              <div class="section-title"><h2>새 작업 접수</h2><span class="pill">Studio 접수</span></div>
-              <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
-              <div class="row"><button class="good" id="studioIntakeSubmit">작업 접수</button></div>
-              <p class="small muted">접수는 작업 초안과 작업 목록 항목을 만들 수 있습니다. 저위험 작업만 정책에 따라 자동 착수됩니다.</p>
+              <div class="section-title"><h2>새 방향 시작</h2><span class="pill">Director Brief</span></div>
+              <p class="summary">세부 task를 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 새 안건으로 정리합니다.</p>
+              <div class="row">
+                <button class="good" data-nav-jump="goals">새 안건으로 시작</button>
+                <button class="secondary" data-nav-jump="meetings">자문실 열기</button>
+                <button class="secondary" data-nav-jump="work">업무 지시 보기</button>
+              </div>
+              <p class="small muted">빠른 검증용 작업 접수 기능은 유지하지만 홈 기본 흐름에서는 숨깁니다. 필요한 경우 운영 상세의 업무 지시 흐름을 사용하세요.</p>
+              <div hidden>
+                <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
+                <button id="studioIntakeSubmit">작업 접수</button>
+              </div>
             </div>
             <div class="card">
               <div class="section-title"><h2>Studio Git Gate</h2><span id="gitGateCount" class="pill"></span></div>
@@ -322,7 +330,7 @@ function directorConsoleHtml() {
             </div>
           </section>
           <section class="card" hidden>
-            <div class="section-title"><h2>최근 검증 자료</h2><button class="secondary" data-nav-jump="evidence">검증 자료 보기</button></div>
+            <div class="section-title"><h2>최근 결과 검토 자료</h2><button class="secondary" data-nav-jump="evidence">결과 검토</button></div>
             <div id="homeEvidence" class="compact-list"></div>
           </section>
         </section>
@@ -1302,7 +1310,7 @@ function directorConsoleHtml() {
       ].slice(0, 5);
       el("homeEvidence").innerHTML = evidence.length ? evidence.map((item) =>
         '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><a href="' + esc(item.href) + '" target="_blank">열기</a></div>'
-      ).join("") : '<p class="muted">최근 검증 자료 파일이 없습니다.</p>';
+      ).join("") : '<p class="muted">최근 결과 검토 자료가 없습니다.</p>';
     }
     function renderInbox() {
       const items = buildDirectorDecisionItems({ includeGit: false }).slice(0, 3);

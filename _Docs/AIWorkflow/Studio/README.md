@@ -140,7 +140,7 @@ This slice defines:
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The current Director-facing surface is intentionally narrow:
-  `홈`, `새 안건`, `자문실`, `감독자 결정함`, `결과 검토`, `기록실`,
+  `홈`, `새 안건`, `자문실`, `감독자 결정함`, `결과 검토`, `LLM Wiki`,
   and `도구함`. Operations-detail and organization-reference pages remain
   available behind collapsed sections, but they are not the default work path.
   Systems and Policy are
@@ -151,7 +151,7 @@ This slice defines:
   store the brief or create governed Advisory Session, WorkOrder, and Proposal
   candidates. The Advisory Room (`자문실`) is where AI staff opinions,
   objections, questions, and next-action candidates are collected before the
-  Director turns them into decisions or work. The Records Room (`기록실`) is the
+  Director turns them into decisions or work. The LLM Wiki page (`LLM Wiki`) is the
   LLM Wiki-facing surface for proposals, Director decisions, reference memory,
   canon candidates, and Wiki Inbox capture. Wiki Inbox capture stores a
   triage-needed Markdown note under `_Docs/AIWorkflow/StudioWiki/Inbox/` without

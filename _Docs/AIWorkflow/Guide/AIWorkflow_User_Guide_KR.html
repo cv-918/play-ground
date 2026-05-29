@@ -316,11 +316,12 @@
             일상 사용은 <code>tools\aiworkflow\studio_start_here.bat</code>로 시작합니다. 이 스크립트는 로컬 콘솔이 꺼져 있으면 켜고, 기본 브라우저로 <code>http://127.0.0.1:47831/</code>을 엽니다.
             기본 포트가 이미 다른 프로그램에 잡혀 있으면 다음 빈 로컬 포트로 자동 이동합니다.
             Studio 변경 뒤 반복 점검은 <code>tools\aiworkflow\studio_smoke_check.bat</code>로 실행합니다. 이 점검은 임시 로컬 서버를 띄워 주요 화면과 읽기 전용 점검 API를 확인한 뒤 서버를 닫으며, 작업 상태나 소스, 커밋은 바꾸지 않습니다.
-            로컬 Studio Director Console의 왼쪽 사이드바는 <strong>감독자 작업대</strong>, <strong>참고 / 추적</strong>, <strong>내부 도구</strong>로 나뉩니다.
-            <strong>감독자 작업대</strong>에는 <code>홈</code>, <code>새 안건</code>, <code>자문실</code>, <code>감독자 결정함</code>, <code>결과 검토</code>, <code>기록실</code>, <code>도구함</code>이 있습니다.
-            <strong>참고 / 추적</strong>에는 <code>프로젝트</code>, <code>부서</code>, <code>AI 직원</code>, <code>실행 타임라인</code>이 있습니다.
+            로컬 Studio Director Console의 왼쪽 사이드바는 <strong>감독자 콘솔</strong>, <strong>운영 상세</strong>, <strong>조직 참고</strong>, <strong>내부 도구</strong>로 나뉩니다.
+            <strong>감독자 콘솔</strong>에는 <code>홈</code>, <code>새 안건</code>, <code>자문실</code>, <code>감독자 결정함</code>, <code>결과 검토</code>, <code>LLM Wiki</code>, <code>도구함</code>이 있습니다.
+            <strong>운영 상세</strong>에는 <code>업무 지시</code>, <code>직원 보고서</code>, <code>변경 검토</code>, <code>DevLog</code>, <code>실행 타임라인</code>이 접혀 있습니다.
+            <strong>조직 참고</strong>에는 <code>프로젝트</code>, <code>부서</code>, <code>AI 직원</code>이 접혀 있습니다.
             <strong>내부 도구</strong>에는 <code>시스템</code>과 <code>정책</code>이 접혀 있습니다.
-            <code>홈</code>은 사람이 지금 결정해야 할 일, 현재 작업, 최근 검증 자료와 git gate를 보여주는 기본 상황판입니다. <code>감독자 결정함</code>은 승인/반려/완료/커밋 여부를 결정해야 하는 항목만 모아둔 작업함입니다.
+            <code>홈</code>은 사람이 지금 결정해야 할 일, 현재 작업, 최근 결과 검토 자료와 git gate를 보여주는 기본 상황판입니다. <code>감독자 결정함</code>은 승인/반려/완료/수정 요청/채택 판단처럼 사람이 실제로 결론을 내려야 하는 항목만 모아둔 작업함입니다.
             <code>도구함</code>은 Studio 서버 재시작, Discord bot 재시작, 팀 데이터 배포처럼 사람이 직접 쓸 만한 유지보수 도구를 모아둔 화면입니다. 팀 데이터 배포는 <code>PlayGround/Data</code>를 검증한 뒤 versioned zip을 Google Drive에 올리고 latest manifest를 마지막에 갱신합니다. 그 밖의 점검 도구는 도구함 아래쪽에 따로 배치됩니다.
             <code>프로젝트</code>는 현재 대상 프로젝트, Project Profile, 실행 도구 경계를 보여주고, <code>실행 타임라인</code>은 자문, 업무 지시, 직원 보고서, Runner 실행, DevLog를 시간순으로 보여줍니다.
             <code>변경 검토</code>는 현재 Git 작업대의 변경 파일을 사람 말로 설명하고, 선택 파일만 commit 또는 commit+push할 수 있게 합니다.
@@ -334,15 +335,15 @@
           </div>
           <div class="note">
             <strong>Studio에서 직접 할 수 있는 일:</strong>
-            <code>홈</code>에서 새 작업 접수, 현재 판단할 일, 최근 검증 자료, 선택 파일 commit gate를 확인할 수 있습니다.
+            <code>홈</code>에서 현재 판단할 일, 최근 결과 검토 자료, 선택 파일 commit gate를 확인하고, 새 방향은 <code>새 안건</code>으로 시작합니다.
             <code>새 안건</code>에서는 큰 목표를 입력해 Director Brief로 정리하고, 필요한 자문 후보, 업무 지시 후보, 제안 후보, 승인 항목으로 먼저 쪼갤 수 있습니다. 이 단계는 브리프와 후보만 만들며 공식 설정 확정, 소스 수정, task 실행, commit/push를 하지 않습니다.
-            <code>감독자 결정함</code>에서 작업 착수 승인, 완료 승인/우려 감수/수정 요청/판단 보류, 직원 보고서 후보 결정, 제안 판단, 커밋/푸시 판단을 진행합니다.
+            <code>감독자 결정함</code>에서 작업 착수 승인, 완료 승인/우려 감수/수정 요청/판단 보류, 직원 보고서 후보 결정, 제안 판단을 진행합니다. 커밋/푸시는 <code>변경 검토</code> 또는 홈의 <code>Studio Git Gate</code>에서 따로 결정합니다.
             <code>프로젝트</code>에서 현재 프로젝트 프로필, 검증/빌드 경계, 도구 사용 경계를 참고합니다. <code>모델/권한 라우팅</code>은 ChatGPT/Codex 요금제 기반 경로, 추천 모델/추론 강도, 별도 비용/외부 호출/파일 쓰기 권한 gate를 보여줍니다. <code>실행 준비 점검</code>은 어떤 빌드/검증 프로필과 도구가 준비되어 있는지, 빠진 profile은 무엇인지, 어떤 도구가 파일 수정/외부 호출/비용/승인 영향을 갖는지, 안전한 시작 후보가 무엇인지 읽기 전용으로 보여줍니다.
             <code>부서</code>에서는 부서 책임, 검토 기준, 담당 결과물을 확인하고 해당 부서의 직원/업무로 이동할 수 있습니다.
             <code>자문실</code>에서는 AI 직원 자문 세션을 만들고 의견을 추가하며, <code>자문 진행안</code>으로 다음 발언자와 다음 행동을 확인하고, <code>자문 운영판</code>으로 누가 아직 말하지 않았는지, 어떤 제안/우려/질문이 남았는지, 무엇을 결정해야 세션을 닫을 수 있는지 확인합니다. AI 직원 발언 계획/실행을 요청하고, 자문 결과를 후속 업무 지시나 감독자 결정으로 넘길 수 있습니다.
             <code>업무 지시</code>에서는 AI 직원에게 맡길 일의 목표, 할 일, 제약 조건, 기대 결과물, 승인 판단, 검증 방법을 정리합니다. 담당 부서를 먼저 고른 뒤 해당 부서 직원들을 체크박스로 선택합니다. 저장된 업무 지시는 먼저 인수인계 점검, 직원 자료 미리보기, 직원 실행 계획, 작업 생성 계획으로 확인하고, 필요할 때 <code>직원에게 맡기기</code> 또는 <code>작업 목록에 넣기</code>로 넘깁니다.
             <code>직원 보고서</code>에서는 AI 직원이 만든 결과를 <code>보고서 보기/만들기</code>로 읽기 좋게 내보내고, 필요한 내용만 <code>채택 후보 미리보기</code> 또는 <code>채택 후보로 넘기기</code>로 넘길 수 있습니다. 깨진 테스트 보고서나 오래된 개발 버전 보고서는 <code>임시 보고서 정리</code>로 _Temp 목록에서 지울 수 있습니다.
-            <code>기록실</code>은 LLM Wiki와 연결되는 회사 기억 화면입니다. 대화, 자문, 조사 중 사라지면 안 되는 맥락은 <code>Wiki Inbox에 남기기</code>로 먼저 정리 대기 문서에 저장할 수 있습니다. 이 저장은 공식 결정, 공식 설정, task, 소스, commit/push를 바꾸지 않습니다. Inbox 문서는 <code>승격 계획</code>으로 어디에 보관할지 먼저 점검할 수 있습니다. 이후 제안, 감독자 결정, 참고 기록, 공식 설정 후보를 분리해서 관리하고, <code>전환 계획</code>으로 “이 항목이 아직 아이디어인지, 결정인지, 참고 기록인지, 공식 설정 후보인지”와 “받아들이면 실제로 무엇이 바뀌는지”를 먼저 확인한 뒤 다음 단계로 넘깁니다.
+            <code>LLM Wiki</code>는 회사 기억 화면입니다. 대화, 자문, 조사 중 사라지면 안 되는 맥락은 <code>Wiki Inbox에 남기기</code>로 먼저 정리 대기 문서에 저장할 수 있습니다. 이 저장은 공식 결정, 공식 설정, task, 소스, commit/push를 바꾸지 않습니다. Inbox 문서는 <code>승격 계획</code>으로 어디에 보관할지 먼저 점검할 수 있습니다. 이후 제안, 감독자 결정, 참고 기록, 공식 설정 후보를 분리해서 관리하고, <code>전환 계획</code>으로 “이 항목이 아직 아이디어인지, 결정인지, 참고 기록인지, 공식 설정 후보인지”와 “받아들이면 실제로 무엇이 바뀌는지”를 먼저 확인한 뒤 다음 단계로 넘깁니다.
             <code>Canon 충돌 점검</code>은 제안/기억이 승인 없이 공식 설정처럼 굳지 않았는지, 공식 설정 기억에 결정 근거가 있는지, 기존 canon과 새 제안이 겹치는지 읽기 전용으로 확인합니다.
             <code>실행 타임라인</code>에서는 최근 활동의 순서를 참고하고 관련 화면으로 이동합니다. <code>추적 지도</code>는 현재 작업의 task, Runner 실행, 검증 보고서, 완료 보고서, 완료 카드, git 변경, DevLog 연결을 읽기 전용으로 보여줍니다.
             <code>변경 검토</code>에서는 변경 파일의 의미를 확인하고 선택 파일만 commit 또는 commit+push합니다.
@@ -389,18 +390,19 @@
               <li>아이디어 조율이 필요하면 <code>자문실</code>에서 AI 직원 의견을 받고, 결과를 후속 업무나 결정으로 넘깁니다.</li>
               <li>실행 가능한 일은 <code>업무 지시</code>에서 인수인계 점검 후 직원 자료 또는 작업 목록으로 넘깁니다.</li>
               <li>승인이나 완료 판단이 필요하면 <code>감독자 결정함</code>에서만 처리합니다.</li>
-              <li>결과는 <code>검증 자료</code>에서 완료 근거 점검과 완료 판단안으로 확인합니다.</li>
+              <li>결과는 <code>결과 검토</code>에서 완료 근거 점검과 완료 판단안으로 확인합니다.</li>
               <li>최종 변경은 <code>변경 검토</code>에서 선택 파일 단위로 commit 또는 commit+push합니다.</li>
               <li>서버 재시작, Discord bot 재시작, 팀 데이터 배포처럼 로컬 유지보수가 필요하면 <code>도구함</code>을 사용합니다.</li>
             </ol>
           </div>
-          <pre><code>1. Studio 홈의 새 작업 접수에 작업 요청 입력
-2. 승인 필요 시에만 승인+실행
-3. PC Runner가 실행, 감시, 검증 자료 수집, 검증 보고
-4. 감독자 결정함 또는 검증 자료에서 완료 카드와 결과 확인
-5. 완료 승인 / 우려 감수 후 완료 / 수정 요청 / 반려 / 판단 보류 결정
-6. 변경 검토에서 선택 파일만 commit/push 결정
-7. DevLog에서 기록과 남은 위험 확인</code></pre>
+          <pre><code>1. 새 안건에서 큰 목표를 Director Brief로 정리
+2. 자문실에서 필요한 AI 직원 의견과 반박 수집
+3. 감독자 결정함에서 방향 승인 / 수정 요청 / 보류 결정
+4. 업무 지시로 실행 가능한 WorkOrder 정리
+5. 결과 검토에서 완료 카드와 검증 자료 확인
+6. 완료 승인 / 우려 감수 후 완료 / 수정 요청 / 반려 / 판단 보류 결정
+7. 변경 검토에서 선택 파일만 commit/push 결정
+8. DevLog와 LLM Wiki에 남길 기록 정리</code></pre>
           <p>수동 Codex App/CLI 붙여넣기는 정규 경로가 아니라 수동 승격 경로입니다. PC Runner가 막혔거나 인증/어댑터 문제가 있을 때만 사용합니다. Discord adapter를 쓰는 경우 상태 의미나 다음 행동이 헷갈리면 <code>/ai ask</code>로 물어볼 수 있습니다.</p>
         </section>
 
@@ -555,11 +557,11 @@
             <h3>전체 흐름 지도</h3>
             <div class="flow">
               <div class="flow-step manual">
-                <strong>1. 작업 지시</strong>
-                <span>Studio 홈의 새 작업 접수에 자연어 요청을 넣습니다.</span>
+                <strong>1. 새 안건</strong>
+                <span>Studio 새 안건에 큰 목표나 방향을 넣고 Director Brief로 정리합니다.</span>
                 <div class="flow-command">
                   <em>Studio 기본 경로</em>
-                  <code>홈 → 새 작업 접수</code>
+                  <code>새 안건 → 브리프 + 다음 단계 후보 생성</code>
                   <em>Discord 보조 경로</em>
                   <code>/ai intake text:&lt;작업 요청&gt;</code>
                 </div>
