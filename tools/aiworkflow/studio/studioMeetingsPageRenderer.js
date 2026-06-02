@@ -6,7 +6,7 @@ function renderMeetingsPageShell() {
           <div class="card">
             <h2>이 페이지의 역할</h2>
             <ul class="small">
-              <li>감독자가 안건과 제약 조건을 정하고, AI 직원들의 관점과 반박을 모읍니다.</li>
+              <li>안건 시작에서 정리된 방향을 바탕으로 AI 직원들의 관점, 질문, 반박을 모으는 자문 단계입니다.</li>
               <li>자문 발언은 자문 기록에만 남습니다. 공식 설정, task, git은 직접 바꾸지 않습니다.</li>
               <li>충분히 논의되면 실행할 일은 업무 후보로, 방향 판단은 감독자 결정함으로 넘깁니다.</li>
             </ul>
@@ -14,7 +14,8 @@ function renderMeetingsPageShell() {
           <div class="card">
             <div class="section-title"><h2>자문 흐름</h2><span class="pill">권장 순서</span></div>
             <ol class="small">
-              <li>안건과 참가 직원을 정해 자문 세션을 만듭니다.</li>
+              <li>안건 시작에서 만든 Director Brief 또는 직접 논의할 주제를 고릅니다.</li>
+              <li>참가 직원을 정해 자문 세션을 만듭니다.</li>
               <li>내 의견을 기록하거나 다음 AI 발언을 받아 관점을 모읍니다.</li>
               <li>자문판에서 최근 발언, 남은 질문, 쟁점을 확인합니다.</li>
               <li>실행할 일은 업무 후보로 만들고, 방향 판단은 감독자 결정함에 남깁니다.</li>
@@ -23,6 +24,7 @@ function renderMeetingsPageShell() {
           </div>
           <div class="card">
             <div class="section-title"><h2>자문 세션 만들기</h2><span class="pill">MeetingSession</span></div>
+            <p class="small muted">보통은 안건 시작에서 만든 브리프를 보고 이어서 자문을 엽니다. 직접 만드는 경우에도 이 세션은 자문 기록만 만들며 실행을 시작하지 않습니다.</p>
             <div class="form-grid">
               <label>안건 / 논의 주제<input id="meetingCreateTopic" placeholder="예: 초반 10분 플레이 루프 방향 자문"></label>
               <label>자문 종류<select id="meetingCreateType"></select></label>

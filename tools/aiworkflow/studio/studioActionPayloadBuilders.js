@@ -149,20 +149,20 @@ function buildDirectorGoalPlanPayload(body = {}) {
   const goalId = makeStudioId("DGP", goal);
   const meetingType = meetingTypeForRoute(route);
   const coreScope = [
-    `감독자 목표를 실행 가능한 업무 후보로 분해: ${goal}`,
+    `감독자 안건을 자문, 질문, 제안, 승인 항목, 후속 업무 후보로 분해: ${goal}`,
     "부서/직원/자문/업무지시/승인 항목을 분리해서 제안합니다.",
     "승인 전에는 공식 설정, 소스 수정, task 실행, commit/push를 하지 않습니다.",
   ];
   const nonGoals = [
-    "이 기획안만으로 공식 설정을 확정하지 않습니다.",
-    "이 기획안만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
-    "이 기획안만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
+    "이 Director Brief만으로 공식 설정을 확정하지 않습니다.",
+    "이 Director Brief만으로 소스, 데이터, 에셋, 문서를 수정하지 않습니다.",
+    "이 Director Brief만으로 AIWorkflow task를 done 처리하거나 commit/push하지 않습니다.",
     ...constraints.map((item) => `감독자 제약 유지: ${item}`),
   ];
   const approvalItems = [
     {
       type: "scope",
-      plain_language_summary: "이 목표를 어떤 부서와 AI 직원에게 나눠 맡길지 승인해야 합니다.",
+      plain_language_summary: "이 안건을 어떤 자문, 질문, 제안, 업무 후보로 이어갈지 승인해야 합니다.",
       what_will_change: [
         "자문 후보, 업무 지시 후보, 제안 후보가 Studio 기록으로 만들어질 수 있습니다.",
         "선택한 후보만 다음 단계의 WorkOrder 또는 MeetingSession으로 넘어갑니다.",
@@ -201,7 +201,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
         "후속 자문/업무/제안 후보",
         "검증 자료 요구사항",
       ],
-      approval_summary: "감독자 목표를 Studio 업무 후보로 분해하는 것만 승인합니다.",
+      approval_summary: "감독자 안건을 Studio 자문/업무/제안 후보로 분해하는 것만 승인합니다.",
       verification_plan: [
         "후보가 승인 전 실행/공식 설정/소스 수정/commit/push를 하지 않는지 확인합니다.",
         "부서/직원/승인 항목이 목표와 직접 연결되는지 확인합니다.",
@@ -215,7 +215,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
   };
   const proposal = {
     ...buildProposalPayload({
-      title: `Director goal direction: ${goal}`,
+      title: `Director agenda direction: ${goal}`,
       source_agent_id: route.staff.includes("creative_director") ? "creative_director" : "executive_producer",
       summary: `이 목표는 ${route.departments.join(", ")} 관점에서 분해하고, 감독자 승인이 필요한 항목을 먼저 분리해야 합니다.`,
       rationale: route.reasons.join(" ") || "Studio가 감독자 목표를 안전하게 업무 후보로 분해하기 위한 초기 제안입니다.",
@@ -243,7 +243,7 @@ function buildDirectorGoalPlanPayload(body = {}) {
     proposal_candidates: [proposal],
     next_steps: [
       "브리프를 저장해 검토 기록으로 남깁니다.",
-      "필요하면 브리프 + 다음 단계 후보 생성을 눌러 자문/업무/제안 후보를 함께 만듭니다.",
+      "필요하면 브리프 + 다음 처리 후보 생성을 눌러 자문/질문/업무/제안 후보를 함께 만듭니다.",
       "생성된 후보 중 실제로 진행할 항목만 감독자가 승인합니다.",
     ],
     safety: {

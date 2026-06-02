@@ -12,6 +12,7 @@ function renderKnowledgePageShell() {
               <li><strong>참고 기록</strong>: 이후 AI 직원이 참고할 메모입니다. 일반 기록은 참고용이고, 공식 설정 후보는 별도 검토 대상입니다.</li>
               <li><strong>공식 설정 후보</strong>: 게임 세계관, 캐릭터, 규칙처럼 나중에 canon으로 확정할 수 있는 항목입니다. Studio UX나 운영 개선 제안은 공식 설정 후보로 남길 수 없습니다.</li>
               <li><strong>외부 지식 기반</strong>: Obsidian/Hermes 같은 장기 지식 정리는 별도 지식 도구의 책임입니다. 이 화면은 장기 지식 편집기가 아닙니다.</li>
+              <li><strong>Hermes 조사 결과</strong>: 웹 조사나 브라우저 확인 결과는 참고 기록으로만 가져옵니다. 자동으로 공식 설정, 결정, task가 되지 않습니다.</li>
             </ul>
           </div>
           <details class="internal-panel">
@@ -57,6 +58,18 @@ function renderKnowledgePageShell() {
               <label class="field-block">참고할 내용 <span class="required-mark">필수</span><span class="field-help">나중에 AI 직원이 참고해야 할 사실, 결정, 선호, 공식 설정을 적습니다.</span><textarea id="memoryCreateContent" placeholder="예: Dustland의 초반 목표는 생존 압박과 이동 목적을 빠르게 보여주는 방향을 우선 검토한다."></textarea></label>
               <label class="field-block">근거 ID <span class="optional-mark">선택</span><span class="field-help">이 참고 기록의 근거가 된 결정, 회의, 제안 ID를 적습니다.</span><input id="memoryCreateRefs" placeholder="예: DEC-..., MEET-..., PROP-..."></label>
               <div class="row"><button class="good" id="memoryCreateSubmit">참고 기록 저장</button></div>
+            </div>
+            <div class="item">
+              <div class="section-title"><h2>Hermes 조사 결과 가져오기</h2><span class="pill">외부 조사</span></div>
+              <p class="small muted">Hermes가 웹 검색이나 브라우저 확인으로 정리한 내용을 Studio 참고 기록으로 저장합니다. 저장해도 공식 설정, 감독자 결정, task, git은 바뀌지 않습니다.</p>
+              <div class="form-grid">
+                <label>조사 제목 <span class="required-mark">필수</span><input id="hermesImportTitle" placeholder="예: Hermes LLM Wiki 기능 확인"></label>
+                <label>출처 URL 또는 세션 <span class="required-mark">필수</span><input id="hermesImportSource" placeholder="예: https://... 또는 hermes session 20260602-..."></label>
+              </div>
+              <label class="field-block">조사 요약 <span class="required-mark">필수</span><span class="field-help">Hermes가 확인한 핵심 내용을 사람이 읽기 좋게 붙여넣습니다.</span><textarea id="hermesImportSummary" placeholder="예: Hermes에는 persistent memory와 llm-wiki skill이 있으며, Studio 내부 Wiki 대신 외부 지식 정리 후보로 다룬다."></textarea></label>
+              <label class="field-block">참고할 이유 <span class="optional-mark">선택</span><span class="field-help">이 자료를 나중에 왜 참고해야 하는지 적습니다.</span><textarea id="hermesImportReason" placeholder="예: Studio와 Hermes의 역할 분리를 정할 때 근거로 사용한다."></textarea></label>
+              <label class="field-block">관련 회의/결정/업무 ID <span class="optional-mark">선택</span><span class="field-help">관련된 MEET, DEC, WO, PROP ID가 있으면 쉼표나 줄바꿈으로 적습니다.</span><input id="hermesImportRefs" placeholder="예: MEET-..., DEC-..., WO-..."></label>
+              <div class="row"><button class="good" id="hermesImportSubmit">Hermes 조사 참고 기록 저장</button></div>
             </div>
             </div>
           </details>

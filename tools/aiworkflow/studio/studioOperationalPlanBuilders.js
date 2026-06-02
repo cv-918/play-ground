@@ -370,12 +370,11 @@ function createStudioOperationalPlanBuilders(deps = {}) {
     }
     const pageChecks = [
       "home",
-      "goals",
+      "sessions",
       "project",
       "inbox",
       "departments",
       "staff",
-      "meetings",
       "runs",
       "work",
       "knowledge",
@@ -405,13 +404,12 @@ function createStudioOperationalPlanBuilders(deps = {}) {
       },
       warnings,
       recommended_manual_smoke: [
-        "홈에서 현재 할 일을 확인합니다.",
-        "새 안건에서 브리프 미리보기를 실행합니다.",
-        "자문실에서 자문판을 봅니다.",
-        "LLM Wiki에서 전환 계획을 봅니다.",
-        "프로젝트에서 실행 준비 점검을 봅니다.",
-        "결과 검토에서 완료 판단안을 봅니다.",
-        "정책에서 자동 진행 준비도를 봅니다.",
+        "홈에서 Human Director가 지금 판단해야 할 항목이 실제 내용 중심으로 보이는지 확인합니다.",
+        "자문 세션에서 큰 방향을 입력하고 브리프, AI 직원 자문, 다음 후보 흐름을 한 화면에서 확인합니다.",
+        "감독자 결정함에서 내가 결정할 것, 왜 올라왔나, 결정하면 바뀌는 것이 분리되어 보이는지 확인합니다.",
+        "업무 지시에서 후보가 실행이 아니라 승인 전 WorkOrder 후보로 보이는지 확인합니다.",
+        "결과 검토에서 완료, 수정 요청, 판단 보류 중 하나를 빠르게 고를 수 있는지 확인합니다.",
+        "기록함이 Wiki가 아니라 감독자 결정, 참고 기록, 공식 설정 후보만 다루는지 확인합니다.",
       ],
       safety: {
         read_only: true,

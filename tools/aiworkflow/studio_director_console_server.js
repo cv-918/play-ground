@@ -37,7 +37,6 @@ const {
   buildCompletionEvidenceChecklist,
   buildDirectorSurfaceMap,
   buildKnowledgeTransitionPlan,
-  buildWikiPromotionPlan,
   buildMeetingBoard,
   buildMeetingFacilitationPlan,
   buildMeetingRunbook,
@@ -56,7 +55,6 @@ const {
   getProposals,
   getDecisions,
   getMemories,
-  getStudioWikiEntries,
   getMeetings,
   getProjectProfiles,
   getToolAdapters,
@@ -653,7 +651,6 @@ async function getSummary(repoRoot) {
   const proposals = await getProposals(repoRoot);
   const decisions = await getDecisions(repoRoot);
   const memories = await getMemories(repoRoot);
-  const studioWikiEntries = await getStudioWikiEntries(repoRoot);
   const meetings = await getMeetings(repoRoot);
   const projectProfiles = await getProjectProfiles(repoRoot);
   const toolAdapters = await getToolAdapters(repoRoot);
@@ -668,8 +665,6 @@ async function getSummary(repoRoot) {
     proposals: await countJsonFiles(path.join(studioRoot, "Proposals")),
     decisions: await countJsonFiles(path.join(studioRoot, "Decisions")),
     memories: await countJsonFiles(path.join(studioRoot, "MemoryRecords")),
-    studio_wiki_entries: studioWikiEntries.filter((entry) => entry.kind === "entry").length,
-    studio_wiki_inbox: studioWikiEntries.filter((entry) => entry.category === "Inbox" && entry.kind === "entry").length,
     meetings: await countJsonFiles(path.join(studioRoot, "MeetingSessions")),
     context_packets: await countJsonFiles(path.join(studioRoot, "ContextPackets")),
     role_runs: await countJsonFiles(path.join(studioRoot, "RoleRuns")),
@@ -716,7 +711,6 @@ async function getSummary(repoRoot) {
     proposals: proposals.slice(0, 12),
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
-    studio_wiki_entries: studioWikiEntries.slice(0, 80),
     meetings: meetings.slice(0, 12),
     dev_logs: devLogs.slice(0, 24),
     project_profiles: projectProfiles.profiles.slice(0, 12),
@@ -880,7 +874,6 @@ async function startServer(options) {
     buildDirectorGoalPlanPayload,
     buildDirectorSurfaceMap,
     buildKnowledgeTransitionPlan,
-    buildWikiPromotionPlan,
     buildMeetingAgentTurnWorkOrder,
     buildMeetingBoard,
     buildMeetingFacilitationPlan,

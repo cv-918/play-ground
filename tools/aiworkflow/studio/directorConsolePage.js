@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 "use strict";
 
-const { renderGoalsPageShell } = require("./studioGoalsPageRenderer");
 const { renderRunsPageShell } = require("./studioRunsPageRenderer");
 const { renderWorkPageShell } = require("./studioWorkPageRenderer");
 const { renderKnowledgePageShell } = require("./studioKnowledgePageRenderer");
@@ -14,7 +13,7 @@ const { renderTimelinePageShell } = require("./studioTimelinePageRenderer");
 const { renderDiffPageShell } = require("./studioDiffPageRenderer");
 const { renderDepartmentsPageShell } = require("./studioDepartmentsPageRenderer");
 const { renderStaffPageShell } = require("./studioStaffPageRenderer");
-const { renderMeetingsPageShell } = require("./studioMeetingsPageRenderer");
+const { renderSessionsPageShell } = require("./studioSessionsPageRenderer");
 const { renderSystemsPageShell } = require("./studioSystemsPageRenderer");
 const { renderPolicyPageShell } = require("./studioPolicyPageRenderer");
 const { renderClientWorkflowResultScript } = require("./studioClientWorkflowResultScript");
@@ -141,6 +140,54 @@ function directorConsoleHtml() {
     .staff-choice input { margin-top:3px; }
     .staff-choice strong, .staff-choice span { display:block; overflow-wrap:anywhere; }
     .staff-choice span { color:var(--muted); font-size:12px; margin-top:2px; }
+    .consultation-layout { display:grid; grid-template-columns:minmax(280px, .75fr) minmax(420px, 1.35fr) minmax(280px, .8fr); gap:14px; align-items:start; }
+    .consultation-sidebar, .consultation-context { display:grid; gap:12px; min-width:0; }
+    .consultation-main { min-width:0; }
+    .consultation-chat-panel { display:grid; grid-template-rows:auto minmax(360px, 58vh) auto; gap:12px; min-height:640px; }
+    .session-list { display:grid; gap:8px; margin-top:10px; max-height:44vh; overflow:auto; padding-right:4px; }
+    .session-card { width:100%; display:block; text-align:left; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:10px; }
+    .session-card:hover { background:#2a3240; }
+    .session-card.active { border-color:#6f96d8; background:#27344a; }
+    .session-card.closed { border-left-color:var(--muted); opacity:.82; }
+    .session-title { display:block; font-weight:700; overflow-wrap:anywhere; }
+    .session-meta { display:block; color:var(--muted); font-size:12px; margin-top:3px; }
+    .status-strip { border:1px solid var(--line); border-radius:8px; padding:9px 10px; background:rgba(255,255,255,.03); }
+    .status-strip.running { border-left:4px solid var(--warn); }
+    .status-strip.done { border-left:4px solid var(--good); }
+    .status-strip.failed { border-left:4px solid var(--danger); }
+    .chat-timeline { min-height:320px; overflow:auto; padding:12px; border:1px solid var(--line); border-radius:8px; background:#111722; scroll-behavior:smooth; }
+    .chat-message { display:grid; grid-template-columns:34px minmax(0, 1fr); gap:10px; margin:0 0 12px; align-items:start; }
+    .chat-message:last-child { margin-bottom:0; }
+    .chat-avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:#2f3a50; color:#dce7ff; font-weight:800; font-size:12px; }
+    .chat-message.human .chat-avatar { background:#31558e; }
+    .chat-message.staff .chat-avatar { background:#2d6247; }
+    .chat-message.system .chat-avatar { background:#4c5565; }
+    .chat-message.pending .chat-avatar { background:#7a581f; }
+    .chat-message.failed .chat-avatar { background:#8a2f3b; }
+    .chat-bubble { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--panel2); min-width:0; }
+    .chat-message.human .chat-bubble { border-left:4px solid var(--accent); }
+    .chat-message.staff .chat-bubble { border-left:4px solid var(--good); }
+    .chat-message.system .chat-bubble { border-left:4px solid var(--muted); }
+    .chat-message.pending .chat-bubble { border-left:4px solid var(--warn); }
+    .chat-message.failed .chat-bubble { border-left:4px solid var(--danger); }
+    .chat-speaker { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:5px; font-weight:700; }
+    .chat-content { white-space:pre-wrap; overflow-wrap:anywhere; }
+    .chat-composer { border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.025); }
+    .composer-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:8px; }
+    .composer-bar select { min-height:36px; max-width:280px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
+    .button-stack { display:grid; gap:8px; }
+    .button-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .hidden { display:none !important; }
+    @media (max-width: 1180px) {
+      .consultation-layout { grid-template-columns:minmax(260px, .8fr) minmax(420px, 1.2fr); }
+      .consultation-context { grid-column:1 / -1; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      .consultation-layout { grid-template-columns:1fr; }
+      .consultation-chat-panel { grid-template-rows:auto minmax(320px, 56vh) auto; }
+      .composer-bar { display:grid; }
+      .composer-bar select { max-width:none; width:100%; }
+    }
     .summary { color:var(--muted); font-size:13px; }
     .staff-detail { margin:9px 0; color:var(--muted); font-size:13px; }
     .staff-detail strong { display:block; color:var(--text); margin-bottom:3px; }
@@ -217,8 +264,7 @@ function directorConsoleHtml() {
       <div class="nav-section-label">감독자 콘솔</div>
       <nav class="nav" aria-label="Human Director navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="goals">안건 시작 <span class="count" id="nav-goals-count"></span></button>
-        <button data-nav="meetings">자문 진행 <span class="count" id="nav-meetings-count"></span></button>
+        <button data-nav="sessions">자문 세션 <span class="count" id="nav-sessions-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="evidence">결과 검토 <span class="count" id="nav-evidence-count"></span></button>
         <button data-nav="knowledge">기록함 <span class="count" id="nav-knowledge-count"></span></button>
@@ -282,11 +328,11 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card">
-              <div class="section-title"><h2>새 방향 시작</h2><span class="pill">Director Brief</span></div>
+              <div class="section-title"><h2>새 자문 세션</h2><span class="pill">Director Brief</span></div>
               <p class="summary">세부 task를 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 안건으로 정리하고 필요한 자문과 업무 후보로 이어갑니다.</p>
               <div class="row">
-                <button class="good" data-nav-jump="goals">안건 시작</button>
-                <button class="secondary" data-nav-jump="meetings">진행 중 자문 보기</button>
+                <button class="good" data-nav-jump="sessions">새 자문 세션</button>
+                <button class="secondary" data-nav-jump="sessions">진행 중 자문 보기</button>
                 <button class="secondary" data-nav-jump="work">업무 지시 보기</button>
               </div>
               <p class="small muted">빠른 검증용 작업 접수 기능은 유지하지만 홈 기본 흐름에서는 숨깁니다. 필요한 경우 운영 상세의 업무 지시 흐름을 사용하세요.</p>
@@ -323,7 +369,7 @@ function directorConsoleHtml() {
           </section>
         </section>
 
-        ${renderGoalsPageShell()}
+        ${renderSessionsPageShell()}
 
         ${renderToolboxPageShell()}
 
@@ -338,8 +384,6 @@ function directorConsoleHtml() {
         ${renderDepartmentsPageShell()}
 
         ${renderStaffPageShell()}
-
-        ${renderMeetingsPageShell()}
 
         ${renderRunsPageShell()}
 
@@ -361,15 +405,21 @@ function directorConsoleHtml() {
     let state = null;
     let activePage = "home";
     let latestGoalPreview = null;
+    let activeConsultationMeetingId = "";
+    const consultationActionState = {
+      meeting_id: "",
+      status: "",
+      title: "",
+      detail: "",
+    };
     const PAGES = {
       home: ["홈", "Human Director가 지금 결정할 일과 진행 중인 방향만 봅니다."],
       toolbox: ["도구함", "직접 사용할 만한 유지보수 도구만 설명과 함께 실행합니다."],
-      goals: ["안건 시작", "큰 방향을 Director Brief로 정리하고 자문, 질문, 제안, 승인, 업무 후보로 이어줍니다."],
+      sessions: ["자문 세션", "큰 방향을 자연어로 입력하고 AI 직원 자문, 방향 판단, 업무 후보로 이어갑니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
       staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
-      meetings: ["자문 진행", "안건에 필요한 AI 직원 의견, 반박, 질문을 모아 다음 방향을 정리합니다."],
       runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
       knowledge: ["기록함", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분해 검토합니다."],
@@ -878,8 +928,225 @@ function directorConsoleHtml() {
       const value = Number(count || 0);
       return value ? label + " " + value + "개" : emptyLabel;
     }
+    function consultationMeetings() {
+      return operationalRecords(state?.meetings || []).filter((meeting) =>
+        meetingMatchesStatusFilter(meeting) &&
+        includesText([meeting.meeting_id, meeting.topic, meeting.meeting_type, meeting.status].join(" "), filters.meetingSearch)
+      );
+    }
+    function currentConsultationMeeting() {
+      const meetings = consultationMeetings();
+      if (!meetings.length) {
+        activeConsultationMeetingId = "";
+        return null;
+      }
+      const selected = meetings.find((meeting) => meeting.meeting_id === activeConsultationMeetingId || meeting.id === activeConsultationMeetingId);
+      if (selected) return selected;
+      const active = meetings.find((meeting) => !["closed", "cancelled", "blocked"].includes(meeting.status || ""));
+      const fallback = active || meetings[0];
+      activeConsultationMeetingId = fallback.meeting_id || fallback.id || "";
+      return fallback;
+    }
+    function meetingSpeakerRole(speakerId) {
+      if (speakerId === "human_director") return "감독자";
+      const agent = asArray(state?.staff_agents).find((item) => item.agent_id === speakerId);
+      if (!agent) return optionLabel(speakerId || "");
+      return (agent.role_title_ko || agent.role_title || agent.department_name_ko || agent.department_id || "").trim();
+    }
+    function speakerInitial(speakerId) {
+      if (speakerId === "human_director") return "나";
+      const name = staffName(speakerId || "");
+      return (name || "AI").slice(0, 2);
+    }
+    function turnContent(turn) {
+      return String(turn?.content || turn?.summary || turn?.message || "").trim();
+    }
+    function meetingTurns(meeting) {
+      return asArray(meeting?.discussion_turns || meeting?.turns).filter((turn) => turnContent(turn));
+    }
+    function consultationStaffOptions(meeting) {
+      const participants = asArray(meeting?.participants).filter(Boolean);
+      const participantSet = new Set(participants);
+      const agents = asArray(state?.staff_agents).filter((agent) =>
+        participantSet.has(agent.agent_id) || participantSet.size === 0
+      );
+      const preferred = participants.length
+        ? participants.map((agentId) => agents.find((agent) => agent.agent_id === agentId) || { agent_id: agentId })
+        : agents.slice(0, 8);
+      return preferred.filter((agent, index, array) =>
+        agent?.agent_id && array.findIndex((item) => item.agent_id === agent.agent_id) === index
+      );
+    }
+    function chatMessageHtml(kind, speaker, role, content, meta = "") {
+      const className = kind || "system";
+      return '<div class="chat-message ' + esc(className) + '">' +
+        '<div class="chat-avatar">' + esc(speakerInitial(speaker)) + '</div>' +
+        '<div class="chat-bubble">' +
+        '<div class="chat-speaker"><span>' + esc(speaker) + '</span>' +
+        (role ? '<span class="pill">' + esc(role) + '</span>' : '') +
+        (meta ? '<span class="pill">' + esc(meta) + '</span>' : '') +
+        '</div>' +
+        '<div class="chat-content">' + esc(content) + '</div>' +
+        '</div></div>';
+    }
+    function turnChatHtml(turn) {
+      const speakerId = turn.speaker_id || turn.actor_id || "staff_agent";
+      const isHuman = speakerId === "human_director";
+      return chatMessageHtml(
+        isHuman ? "human" : "staff",
+        isHuman ? "Human Director (나)" : staffName(speakerId),
+        isHuman ? "내 발언" : meetingSpeakerRole(speakerId),
+        turnContent(turn),
+        optionLabel(turn.turn_type || "brief")
+      );
+    }
+    function consultationActionHtml(meeting) {
+      if (!meeting || consultationActionState.meeting_id !== (meeting.meeting_id || meeting.id)) return "";
+      if (!consultationActionState.status) return "";
+      const status = consultationActionState.status;
+      const title = consultationActionState.title || (status === "failed" ? "실패" : "진행 중");
+      const detail = consultationActionState.detail || "";
+      const className = status === "failed" ? "failed" : status === "done" ? "staff" : "pending";
+      return chatMessageHtml(className, "Studio", status === "done" ? "완료" : status === "failed" ? "실패" : "실행 중", title + (detail ? "\\n" + detail : ""));
+    }
+    function renderConsultationSessionList() {
+      const target = el("consultationSessionList");
+      if (!target) return;
+      const meetings = consultationMeetings();
+      el("meetingCount").textContent = String(meetings.length);
+      if (!meetings.length) {
+        target.innerHTML = renderEmpty("아직 자문 세션이 없습니다. 위에서 새 자문을 시작하세요.");
+        return;
+      }
+      target.innerHTML = meetings.map((meeting) => {
+        const id = meeting.meeting_id || meeting.id || "";
+        const isActive = id === activeConsultationMeetingId;
+        const isClosed = ["closed", "cancelled"].includes(meeting.status || "");
+        return '<button class="session-card ' + (isActive ? "active " : "") + (isClosed ? "closed" : "") + '" data-consultation-session="' + esc(id) + '">' +
+          '<span class="session-title">' + esc(short(meeting.topic || id, 96)) + '</span>' +
+          '<span class="session-meta">' + esc(optionLabel(meeting.status || "draft")) + ' · 발언 ' + esc(meeting.turn_count || meetingTurns(meeting).length || 0) + ' · ' + esc(optionLabel(meeting.meeting_type || "")) + '</span>' +
+          '<span class="session-meta">' + esc(meetingLastTurnLine(meeting)) + '</span>' +
+          '</button>';
+      }).join("");
+    }
+    function renderConsultationContext(meeting) {
+      const summary = el("consultationSessionSummary");
+      const participants = el("consultationParticipants");
+      const questions = el("consultationOpenQuestions");
+      const candidates = el("consultationCandidates");
+      const safety = el("consultationSafety");
+      if (!summary || !participants || !questions || !candidates || !safety) return;
+      if (!meeting) {
+        const empty = renderEmpty("세션을 선택하면 여기에 내용이 표시됩니다.");
+        summary.innerHTML = empty;
+        participants.innerHTML = empty;
+        questions.innerHTML = empty;
+        candidates.innerHTML = empty;
+        safety.innerHTML = empty;
+        return;
+      }
+      summary.innerHTML =
+        '<div class="item"><h3>' + esc(short(meeting.topic || meeting.meeting_id, 140)) + '</h3>' +
+        '<p class="small muted">상태: ' + esc(optionLabel(meeting.status || "")) + ' · 종류: ' + esc(optionLabel(meeting.meeting_type || "")) + '</p>' +
+        '<p class="summary">' + esc(meetingNextActionText(meeting)) + '</p></div>';
+      participants.innerHTML = asArray(meeting.participants).length
+        ? listHtml(asArray(meeting.participants).map((agentId) => staffName(agentId) + " · " + meetingSpeakerRole(agentId)))
+        : renderEmpty("참가 직원이 기록되지 않았습니다.");
+      questions.innerHTML = asArray(meeting.unresolved_questions).length
+        ? listHtml(meeting.unresolved_questions)
+        : '<div class="item good"><p class="summary">현재 남은 질문은 없습니다.</p></div>';
+      candidates.innerHTML =
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>판단할 제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
+        '<div class="compact-line"><span>후속 업무 후보</span><span class="pill">' + esc(asArray(meeting.follow_up_workorders).length || meeting.follow_up_count || 0) + '</span></div>' +
+        '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(asArray(meeting.unresolved_questions).length || meeting.unresolved_count || 0) + '</span></div>' +
+        '</div>';
+      safety.innerHTML = listHtml([
+        "자문 발언은 MeetingSession 기록만 바꿉니다.",
+        "방향 판단/업무 후보는 후보 기록만 만들고 자동 구현하지 않습니다.",
+        "source, task done, commit, push는 이 화면에서 자동 실행하지 않습니다.",
+        "Hermes Gateway는 이번 화면에서 활성화하지 않습니다.",
+      ]);
+    }
+    function renderConsultationChat() {
+      const meeting = currentConsultationMeeting();
+      const title = el("activeConsultationTitle");
+      const status = el("consultationStatus");
+      const badge = el("activeConsultationBadge");
+      const timeline = el("consultationChatTimeline");
+      const staffSelect = el("consultationStaffSelect");
+      if (!title || !status || !badge || !timeline || !staffSelect) return;
+      if (!meeting) {
+        title.textContent = "자문 세션을 선택하세요";
+        status.textContent = "왼쪽에서 세션을 고르거나 새 자문을 시작하세요.";
+        badge.textContent = "대기";
+        staffSelect.innerHTML = '<option value="">AI 직원 없음</option>';
+        const pendingAction = consultationActionState.meeting_id === "__new__"
+          ? chatMessageHtml("pending", "Studio", "실행 중", (consultationActionState.title || "자문 세션을 만드는 중입니다.") + (consultationActionState.detail ? "\\n" + consultationActionState.detail : ""))
+          : "";
+        timeline.innerHTML = chatMessageHtml("system", "Studio", "안내", "아직 자문 세션이 없습니다. 왼쪽에서 새 자문을 시작하세요.") + pendingAction;
+        renderConsultationContext(null);
+        return;
+      }
+      const meetingId = meeting.meeting_id || meeting.id || "";
+      title.textContent = meeting.topic || meetingId;
+      status.textContent = meetingId + " · " + optionLabel(meeting.status || "") + " · " + meetingNextActionText(meeting);
+      badge.textContent = optionLabel(meeting.status || "draft");
+      const staffOptions = consultationStaffOptions(meeting);
+      staffSelect.innerHTML = staffOptions.length
+        ? staffOptions.map((agent) => '<option value="' + esc(agent.agent_id) + '">' + esc(staffName(agent.agent_id)) + ' · ' + esc(meetingSpeakerRole(agent.agent_id)) + '</option>').join("")
+        : '<option value="">참가 직원 없음</option>';
+      const turns = meetingTurns(meeting);
+      const systemIntro = chatMessageHtml(
+        "system",
+        "Studio",
+        "세션 안내",
+        "이 대화는 자문 기록입니다. AI 직원 발언을 받아 방향을 좁히고, 필요하면 방향 판단이나 업무 후보로 넘기세요."
+      );
+      const empty = turns.length ? "" : chatMessageHtml("system", "Studio", "대기", "아직 발언이 없습니다. 먼저 내 의견을 보내거나 AI 직원 의견을 받아보세요.");
+      timeline.innerHTML = systemIntro + turns.map(turnChatHtml).join("") + empty + consultationActionHtml(meeting);
+      timeline.scrollTop = timeline.scrollHeight;
+      renderConsultationContext(meeting);
+    }
+    function renderConsultationPage() {
+      renderConsultationSessionList();
+      renderConsultationChat();
+    }
+    function setConsultationStatus(meeting, status, title, detail = "") {
+      consultationActionState.meeting_id = meeting?.meeting_id || meeting?.id || "";
+      consultationActionState.status = status;
+      consultationActionState.title = title || "";
+      consultationActionState.detail = detail || "";
+      renderConsultationChat();
+    }
+    function markConsultationActionDone(title, detail = "") {
+      consultationActionState.status = "done";
+      consultationActionState.title = title || "완료";
+      consultationActionState.detail = detail || "";
+    }
+    function extractCreatedMeetingId(result) {
+      const candidates = [
+        result?.meeting_id,
+        result?.meeting?.meeting_id,
+        result?.meeting?.record?.meeting_id,
+        result?.record?.meeting_id,
+        ...asArray(result?.results?.meetings).flatMap((item) => [
+          item?.meeting_id,
+          item?.record?.meeting_id,
+          item?.result?.meeting_id,
+          item?.result?.record?.meeting_id,
+        ]),
+      ].filter(Boolean);
+      return candidates[0] || "";
+    }
+    function activeConsultationOrAlert() {
+      const meeting = currentConsultationMeeting();
+      if (!meeting) alert("먼저 자문 세션을 선택하거나 새로 시작하세요.");
+      return meeting;
+    }
     function setPage(page) {
-      const nextPage = PAGES[page] ? page : "home";
+      const normalizedPage = (page === "goals" || page === "meetings") ? "sessions" : page;
+      const nextPage = PAGES[normalizedPage] ? normalizedPage : "home";
       if (nextPage !== activePage) {
         const globalPanel = el("globalResultPanel");
         const meetingPanel = el("meetingResultPanel");
@@ -935,12 +1202,11 @@ function directorConsoleHtml() {
       const m = state.metrics;
       setNavCount("home", buildDirectorDecisionItems({ includeGit: false }).length);
       setNavCount("toolbox", state.toolbox?.tool_count || "");
-      setNavCount("goals", state.director_goal_plans.length);
+      setNavCount("sessions", state.director_goal_plans.length + operationalRecords(state.meetings).length);
       setNavCount("project", state.project_profiles.length);
       setNavCount("inbox", buildDirectorDecisionItems({ includeGit: false }).length);
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
-      setNavCount("meetings", operationalRecords(state.meetings).length);
       setNavCount("runs", operationalRecords(state.recent_staff_runs).length + operationalRecords(state.materializations).length);
       setNavCount("work", operationalRecords(state.work_orders).length + operationalRecords(state.handoffs).length);
       setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
@@ -1152,7 +1418,7 @@ function directorConsoleHtml() {
         listHtml(plan.non_goals || ["Director Brief만으로 실행, 공식 설정 확정, commit/push를 하지 않습니다."]) +
         (nextSteps.length ? '<h4>다음 행동</h4>' + listHtml(nextSteps) : '') +
         '<div class="row">' +
-        '<button class="secondary" data-nav-jump="meetings">자문 진행으로 이동</button>' +
+        '<button class="secondary" data-nav-jump="sessions">자문 세션으로 이동</button>' +
         '<button class="secondary" data-nav-jump="inbox">감독자 결정함 보기</button>' +
         '<button class="secondary" data-nav-jump="work">업무 후보 보기</button>' +
         '</div>' +
@@ -1209,7 +1475,7 @@ function directorConsoleHtml() {
         items.push({ when: core.runner.updated_at || state.generated_at, kind: "Runner", title: core.runner.runner_run_id, detail: core.runner.stop_reason || core.runner.status, page: "evidence" });
       }
       state.recent_staff_runs.forEach((run) => items.push({ when: run.updated_at, kind: "직원 보고서", title: run.output_id || run.role_run_id, detail: staffName(run.agent_id) + " · " + optionLabel(run.output_status || run.status), page: "runs" }));
-      state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "자문", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "meetings" }));
+      state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "자문", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "sessions" }));
       state.work_orders.forEach((wo) => items.push({ when: wo.updated_at || wo.created_at || "", kind: "업무 지시", title: wo.work_order_id, detail: wo.objective || wo.status, page: "work" }));
       state.materializations.forEach((m) => items.push({ when: m.updated_at || "", kind: "채택 후보", title: m.materialization_id, detail: "후보 " + m.created_record_count + "개", page: "runs" }));
       state.dev_logs.slice(0, 8).forEach((logItem) => items.push({ when: logItem.updated_at, kind: "DevLog", title: logItem.title, detail: logItem.group, page: "devlog" }));
@@ -1256,7 +1522,7 @@ function directorConsoleHtml() {
       const hasActiveTask = Boolean(activeTask.task_id);
       const displayNextAction = hasActiveTask ? nextAction : {
         label: "새 작업 선택",
-        detail: "현재 선택된 작업이 없습니다. 안건 시작에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
+        detail: "현재 선택된 작업이 없습니다. 자문 세션에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       const activeTaskHtml = activeTask.task_id
@@ -1556,6 +1822,7 @@ function directorConsoleHtml() {
         ]) +
         internalLinksHtml([link("자문 원본", meeting.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.")) + sampleRecordsHtml("숨긴 테스트/샘플 자문 기록", state.meetings);
+      renderConsultationPage();
       const visibleDepartments = state.departments.filter((department) =>
         includesText([department.name_ko, department.name, department.department_id, department.mission_ko, department.review_gate_labels.join(" ")].join(" "), filters.departmentSearch)
       );
@@ -1575,7 +1842,7 @@ function directorConsoleHtml() {
         '<div class="row">' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="staff">직원 보기</button>' +
         '<button class="secondary" data-filter-department="' + esc(department.department_id) + '" data-target-page="work">관련 업무 보기</button>' +
-        '<button class="secondary" data-nav-jump="meetings">자문 보기</button>' +
+        '<button class="secondary" data-nav-jump="sessions">자문 보기</button>' +
         '</div>' +
         internalLinksHtml([link("부서 registry 원본", department.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 부서가 없습니다.");
@@ -1615,7 +1882,7 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>근거 없이 주장 금지</span><span class="pill">' + esc(asArray(agent.cannot_claim_without_evidence).length) + '</span></div>' +
         listHtml(agent.cannot_claim_without_evidence, "(없음)") +
         '</div></details>' +
-        '<div class="row"><button class="secondary" data-action="staff-operating-plan" data-path="' + esc(agent.agent_id) + '">운영 점검</button><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="meetings">자문 보기</button></div>' +
+        '<div class="row"><button class="secondary" data-action="staff-operating-plan" data-path="' + esc(agent.agent_id) + '">운영 점검</button><button class="secondary" data-filter-agent="' + esc(agent.agent_id) + '" data-target-page="runs">최근 보고서</button><button class="secondary" data-nav-jump="sessions">자문 보기</button></div>' +
         internalLinksHtml([link("직원 registry 원본", agent.href)]) + '</div>'
       ).join("") : renderEmpty("조건에 맞는 AI 직원이 없습니다.");
       el("projectProfiles").innerHTML = state.project_profiles.length ? state.project_profiles.map((profile) =>
@@ -1788,7 +2055,7 @@ function directorConsoleHtml() {
       const decisionActions = hasReviewContext ? completionFollowUpActionItems(core) : [];
       const decisionActionSummary = hasReviewContext
         ? completionDirectorDecisionSummary(core)
-        : "현재 선택된 작업이나 완료 보고서가 없습니다. 안건 시작, 업무 지시, 또는 결과 검토가 필요한 작업을 먼저 선택하세요.";
+        : "현재 선택된 작업이나 완료 보고서가 없습니다. 자문 세션, 업무 지시, 또는 결과 검토가 필요한 작업을 먼저 선택하세요.";
       const decisionStateLabel = hasReviewContext ? completionDecisionStateLabel(core) : "검토할 작업 없음";
       el("evidenceSummary").innerHTML =
         metric("현재 작업", activeTask.task_id || "없음") +
@@ -1869,11 +2136,30 @@ function directorConsoleHtml() {
     async function createDirectorGoalBundle() {
       const payload = goalPayloadFromForm();
       if (!payload.goal) return alert("감독자 안건을 입력하세요.");
-      if (!confirm("브리프와 자문/질문/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
-      const result = await post("/api/studio/director-goal/create-bundle", payload);
-      latestGoalPreview = result.director_goal_plan;
-      log(result);
-      await refresh();
+      consultationActionState.meeting_id = "__new__";
+      consultationActionState.status = "running";
+      consultationActionState.title = "자문 세션을 만드는 중입니다.";
+      consultationActionState.detail = "브리프와 자문 기록만 생성합니다. source, task, git은 바꾸지 않습니다.";
+      renderConsultationChat();
+      try {
+        const result = await post("/api/studio/director-goal/create-bundle", payload);
+        latestGoalPreview = result.director_goal_plan;
+        const createdMeetingId = extractCreatedMeetingId(result);
+        if (createdMeetingId) {
+          activeConsultationMeetingId = createdMeetingId;
+        }
+        consultationActionState.status = "done";
+        consultationActionState.title = "자문 세션 생성 완료";
+        consultationActionState.detail = createdMeetingId ? createdMeetingId : "새 자문 기록이 생성되었습니다.";
+        el("goalCreateText").value = "";
+        el("goalCreateConstraints").value = "";
+        await refresh();
+      } catch (error) {
+        consultationActionState.status = "failed";
+        consultationActionState.title = "자문 세션 생성 실패";
+        consultationActionState.detail = error?.message || String(error);
+        renderConsultationChat();
+      }
     }
     async function finalizeWorkflow(decision, markDone) {
       const core = state.workflow_core || {};
@@ -1961,11 +2247,105 @@ function directorConsoleHtml() {
       }));
       await refresh();
     }
+    function findMeetingById(meetingId) {
+      return asArray(state.meetings).find((meeting) => meeting.meeting_id === meetingId || meeting.id === meetingId);
+    }
+    async function runMeetingSlashCommand(meetingId, rawContent, options = {}) {
+      const meeting = findMeetingById(meetingId);
+      const parts = String(rawContent || "").trim().split(/\s+/u);
+      const command = String(parts.shift() || "").toLowerCase();
+      const argument = parts.join(" ").trim();
+      const skipConfirm = options.skipConfirm === true;
+      const quiet = options.quiet === true;
+      if (!meeting) {
+        alert("자문 세션을 찾지 못했습니다. 자문 ID를 확인하세요.");
+        return true;
+      }
+      if (command === "/ask") {
+        const question = argument || rawContent.replace(/^\\/ask\\s*/iu, "").trim();
+        if (!question) {
+          alert("/ask 뒤에 자문에 남길 질문을 적어주세요.");
+          return true;
+        }
+        if (!skipConfirm && !confirm("이 질문을 Human Director 발언으로 자문 기록에 남길까요?")) return true;
+        setConsultationStatus(meeting, "running", "질문을 자문 기록에 저장 중입니다.");
+        const result = await post("/api/studio/meeting/add-turn", {
+          meeting_id: meetingId,
+          speaker_id: "human_director",
+          turn_type: "question",
+          content: question,
+        });
+        if (!quiet) log(result);
+        markConsultationActionDone("질문 기록 완료", "Human Director 발언으로 자문 기록에 남겼습니다.");
+        await refresh();
+        return true;
+      }
+      if (command === "/summon") {
+        if (!meeting.path) {
+          alert("이 자문 세션은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
+          return true;
+        }
+        const agentId = argument || options.agent_id || "";
+        if (!skipConfirm && !confirm("AI 직원 발언을 요청할까요? 이 작업은 자문 기록만 바꾸고 canon/task/git은 바꾸지 않습니다.")) return true;
+        setConsultationStatus(meeting, "running", (agentId ? staffName(agentId) : "AI 직원") + "에게 의견을 요청하는 중입니다.", "완료되면 자문 타임라인에 발언이 추가됩니다.");
+        const result = await post("/api/studio/meeting/agent-turn-run", {
+          path: meeting.path,
+          agent_id: agentId,
+          model: "gpt-5.5",
+          reasoning: "high",
+        });
+        if (!quiet) log(result);
+        markConsultationActionDone("AI 직원 발언 완료", (agentId ? staffName(agentId) : "AI 직원") + " 발언을 자문 타임라인에 추가했습니다.");
+        await refresh();
+        return true;
+      }
+      if (command === "/work") {
+        if (!meeting.path) {
+          alert("이 자문 세션은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
+          return true;
+        }
+        if (!skipConfirm && !confirm("자문 내용을 업무 후보로 넘길까요? 구현, task 실행, commit/push는 하지 않습니다.")) return true;
+        setConsultationStatus(meeting, "running", "업무 후보를 만드는 중입니다.", "실행 가능한 WorkOrder 후보만 만들고 구현은 시작하지 않습니다.");
+        const result = await post("/api/studio/meeting/create-workorder", { path: meeting.path });
+        if (!quiet) log(result);
+        markConsultationActionDone("업무 후보 생성 완료", "WorkOrder 후보만 생성했습니다. 구현, task 실행, commit/push는 하지 않았습니다.");
+        await refresh();
+        return true;
+      }
+      if (command === "/decision") {
+        if (!meeting.path) {
+          alert("이 자문 세션은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
+          return true;
+        }
+        if (!skipConfirm && !confirm("자문 내용을 감독자 결정함에 올릴까요? 공식 확정, 구현, task 실행은 하지 않습니다.")) return true;
+        setConsultationStatus(meeting, "running", "방향 판단 후보를 만드는 중입니다.", "감독자 결정함에 올릴 후보만 만들고 공식 확정은 하지 않습니다.");
+        const result = await post("/api/studio/meeting/create-decision", { path: meeting.path, decision_type: "approve" });
+        if (!quiet) log(result);
+        markConsultationActionDone("방향 판단 후보 생성 완료", "감독자 결정함에 올릴 후보만 생성했습니다. 공식 확정이나 구현은 하지 않았습니다.");
+        await refresh();
+        return true;
+      }
+      if (command === "/close") {
+        if (!skipConfirm && !confirm("이 자문 세션을 종료 상태로 바꿀까요? 결정, 업무 생성, commit/push는 하지 않습니다.")) return true;
+        setConsultationStatus(meeting, "running", "자문 세션을 종료하는 중입니다.", "기록 상태만 닫고 source, task, git은 바꾸지 않습니다.");
+        const result = await post("/api/meeting/finalize", { meeting_id: meetingId });
+        if (!quiet) log(result);
+        markConsultationActionDone("자문 종료 완료", "자문 기록 상태만 닫았습니다. source, task, git은 바꾸지 않았습니다.");
+        await refresh();
+        return true;
+      }
+      alert("알 수 없는 자문 명령입니다. 사용 가능: /ask, /summon, /work, /decision, /close");
+      return true;
+    }
     async function addMeetingTurnFromForm() {
       const meetingId = fieldValue("meetingTurnId");
       const speaker = "human_director";
       const content = fieldValue("meetingTurnContent");
       if (!meetingId || !content) return alert("자문 ID와 내 의견 내용을 입력하세요.");
+      if (content.startsWith("/")) {
+        await runMeetingSlashCommand(meetingId, content);
+        return;
+      }
       if (!confirm("내 의견을 자문 기록에 남길까요? 이 작업은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/add-turn", {
         meeting_id: meetingId,
@@ -1974,6 +2354,75 @@ function directorConsoleHtml() {
         content,
       }));
       await refresh();
+    }
+    async function sendConsultationMessage() {
+      const meeting = activeConsultationOrAlert();
+      if (!meeting) return;
+      const content = fieldValue("consultationComposer");
+      if (!content) return alert("보낼 내용을 입력하세요.");
+      const meetingId = meeting.meeting_id || meeting.id;
+      try {
+        if (content.startsWith("/")) {
+          await runMeetingSlashCommand(meetingId, content, { skipConfirm: true, quiet: true, agent_id: fieldValue("consultationStaffSelect") });
+          el("consultationComposer").value = "";
+          return;
+        }
+        setConsultationStatus(meeting, "running", "내 발언을 저장하는 중입니다.");
+        await post("/api/studio/meeting/add-turn", {
+          meeting_id: meetingId,
+          speaker_id: "human_director",
+          turn_type: "synthesis",
+          content,
+        });
+        el("consultationComposer").value = "";
+        consultationActionState.status = "done";
+        consultationActionState.title = "내 발언 기록 완료";
+        consultationActionState.detail = "자문 기록에만 저장했습니다. source, task, git은 바꾸지 않았습니다.";
+        await refresh();
+      } catch (error) {
+        setConsultationStatus(meeting, "failed", "내 발언 저장 실패", error?.message || String(error));
+      }
+    }
+    async function requestConsultationAgentTurn() {
+      const meeting = activeConsultationOrAlert();
+      if (!meeting) return;
+      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
+      const agentId = fieldValue("consultationStaffSelect");
+      try {
+        await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/summon " + agentId, { skipConfirm: true, quiet: true, agent_id: agentId });
+      } catch (error) {
+        setConsultationStatus(meeting, "failed", "AI 직원 발언 요청 실패", error?.message || String(error));
+      }
+    }
+    async function createConsultationWorkCandidate() {
+      const meeting = activeConsultationOrAlert();
+      if (!meeting) return;
+      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
+      try {
+        await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/work", { skipConfirm: true, quiet: true });
+      } catch (error) {
+        setConsultationStatus(meeting, "failed", "업무 후보 생성 실패", error?.message || String(error));
+      }
+    }
+    async function createConsultationDecisionCandidate() {
+      const meeting = activeConsultationOrAlert();
+      if (!meeting) return;
+      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
+      try {
+        await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/decision", { skipConfirm: true, quiet: true });
+      } catch (error) {
+        setConsultationStatus(meeting, "failed", "방향 판단 후보 생성 실패", error?.message || String(error));
+      }
+    }
+    async function closeConsultationSession() {
+      const meeting = activeConsultationOrAlert();
+      if (!meeting) return;
+      if (!confirm("이 자문 세션을 종료할까요? 결정, 업무 생성, source, task, git은 바꾸지 않습니다.")) return;
+      try {
+        await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/close", { skipConfirm: true, quiet: true });
+      } catch (error) {
+        setConsultationStatus(meeting, "failed", "자문 종료 실패", error?.message || String(error));
+      }
     }
     async function createWorkOrderFromForm() {
       const objective = fieldValue("workCreateObjective");
@@ -2042,6 +2491,34 @@ function directorConsoleHtml() {
         owner_agent_id: fieldValue("memoryCreateOwner"),
         content,
         source_refs: fieldValue("memoryCreateRefs"),
+      }));
+      await refresh();
+    }
+    async function createHermesImportFromForm() {
+      const title = fieldValue("hermesImportTitle");
+      const source = fieldValue("hermesImportSource");
+      const summary = fieldValue("hermesImportSummary");
+      const reason = fieldValue("hermesImportReason");
+      const refs = fieldValue("hermesImportRefs");
+      if (!title || !source || !summary) return alert("조사 제목, 출처 URL/세션, 조사 요약을 입력하세요.");
+      if (!confirm("Hermes 조사 결과를 Studio 참고 기록으로 저장할까요?\\n\\n저장되는 것: 참고/검증 자료 MemoryRecord\\n바뀌지 않는 것: 공식 설정, 감독자 결정, task, 소스, git")) return;
+      const content = [
+        "Hermes 조사 결과",
+        "제목: " + title,
+        "출처: " + source,
+        "요약:",
+        summary,
+        reason ? "참고할 이유:\\n" + reason : "",
+        refs ? "관련 ID:\\n" + refs : "",
+        "안전 메모: 이 기록은 외부 조사 참고 자료입니다. 공식 설정, 감독자 결정, task, 소스, git은 이 저장만으로 바뀌지 않습니다.",
+      ].filter(Boolean).join("\\n\\n");
+      log(await post("/api/studio/memory/create", {
+        scope: "project",
+        type: "evidence",
+        status: "evidence",
+        owner_agent_id: "documentation_keeper",
+        content,
+        source_refs: [source, refs].filter(Boolean).join("\\n"),
       }));
       await refresh();
     }
@@ -2305,6 +2782,13 @@ function directorConsoleHtml() {
         setPage(navTarget.dataset.nav || navTarget.dataset.navJump);
         return;
       }
+      const consultationSessionTarget = event.target.closest("button[data-consultation-session]");
+      if (consultationSessionTarget) {
+        activeConsultationMeetingId = consultationSessionTarget.dataset.consultationSession || "";
+        consultationActionState.status = "";
+        renderConsultationPage();
+        return;
+      }
       const departmentTarget = event.target.closest("button[data-filter-department]");
       if (departmentTarget) {
         const page = departmentTarget.dataset.targetPage || "staff";
@@ -2323,12 +2807,10 @@ function directorConsoleHtml() {
       }
       const meetingTurnTarget = event.target.closest("button[data-meeting-turn]");
       if (meetingTurnTarget) {
-        el("meetingTurnId").value = meetingTurnTarget.dataset.meetingTurn;
-        el("meetingTurnSpeaker").value = "human_director";
-        setPage("meetings");
-        writeResult('<div class="item"><h3>내 의견 기록 준비</h3><p class="summary">선택한 자문 ID를 입력칸에 넣었습니다. 내용을 적고 <strong>내 의견 기록</strong>을 누르면 Human Director 의견으로 자문 기록에 저장됩니다.</p><ul class="small"><li>AI 직원에게 보내는 메시지가 아니라 자문 기록에 남기는 내 의견입니다.</li><li>공식 설정 확정 없음</li><li>task 생성 없음</li><li>git 변경 없음</li></ul></div>');
-        el("meetingTurnContent").focus();
-        el("meetingTurnId").scrollIntoView({ behavior:"smooth", block:"center" });
+        activeConsultationMeetingId = meetingTurnTarget.dataset.meetingTurn;
+        setPage("sessions");
+        renderConsultationPage();
+        el("consultationComposer").focus();
         return;
       }
       const toolRunAdapterTarget = event.target.closest("button[data-toolrun-adapter]");
@@ -2343,6 +2825,7 @@ function directorConsoleHtml() {
         if (scope === "staff") { filters.staffSearch = ""; filters.staffDepartment = ""; }
         if (scope === "runs") { filters.runSearch = ""; filters.runStatus = ""; }
         if (scope === "work") { filters.workSearch = ""; filters.workDepartment = ""; }
+        if (scope === "meetings") { filters.meetingSearch = ""; filters.meetingStatus = "__active__"; }
         render();
       }
     });
@@ -2383,6 +2866,17 @@ function directorConsoleHtml() {
     el("goalPlanSubmit").addEventListener("click", () => previewDirectorGoalPlan().catch(log));
     el("goalStoreSubmit").addEventListener("click", () => storeDirectorGoalPlan().catch(log));
     el("goalBundleSubmit").addEventListener("click", () => createDirectorGoalBundle().catch(log));
+    el("consultationSend").addEventListener("click", () => sendConsultationMessage().catch(log));
+    el("consultationAskStaff").addEventListener("click", () => requestConsultationAgentTurn().catch(log));
+    el("consultationDecision").addEventListener("click", () => createConsultationDecisionCandidate().catch(log));
+    el("consultationWork").addEventListener("click", () => createConsultationWorkCandidate().catch(log));
+    el("consultationClose").addEventListener("click", () => closeConsultationSession().catch(log));
+    el("consultationComposer").addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        sendConsultationMessage().catch(log);
+      }
+    });
     const homeGitSelectWorkflow = el("gitSelectWorkflow");
     if (homeGitSelectWorkflow) {
       homeGitSelectWorkflow.addEventListener("click", () => {
@@ -2417,6 +2911,7 @@ function directorConsoleHtml() {
     el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
     el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
     el("memoryCreateSubmit").addEventListener("click", () => createMemoryFromForm().catch(log));
+    el("hermesImportSubmit").addEventListener("click", () => createHermesImportFromForm().catch(log));
     el("toolRunPlanSubmit").addEventListener("click", () => planToolRunFromForm().catch(log));
     el("toolRunCreateSubmit").addEventListener("click", () => createToolRunFromForm().catch(log));
     function bindFilter(id, key) {

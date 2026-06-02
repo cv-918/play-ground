@@ -83,9 +83,10 @@ try {
     "meetingButtonGuide",
     "meeting-board",
     "meeting-agent-run",
-    "wikiInboxCreateSubmit",
-    "studioWikiEntries",
-    "wiki-promotion-plan",
+    "proposalCreateSubmit",
+    "decisionCreateSubmit",
+    "memoryCreateSubmit",
+    "canon-conflict-report",
     "studio-smoke-status",
     "completion-decision-plan"
   )
@@ -99,6 +100,17 @@ try {
   $removedOk = -not $htmlText.Contains($removedToken)
   $checks += [ordered]@{ name = "html removed token: $removedToken"; ok = $removedOk }
   if (-not $removedOk) { $failures += "Removed meeting participant text input is still present." }
+
+  $removedWikiTokens = @(
+    "wikiInboxCreateSubmit",
+    "studioWikiEntries",
+    "wiki-promotion-plan"
+  )
+  foreach ($token in $removedWikiTokens) {
+    $ok = -not $htmlText.Contains($token)
+    $checks += [ordered]@{ name = "html removed wiki token: $token"; ok = $ok }
+    if (-not $ok) { $failures += "Studio UI still exposes old LLM Wiki token: $token" }
+  }
 
   $scriptMatches = [regex]::Matches($htmlText, '(?s)<script>(.*?)</script>')
   if ($scriptMatches.Count -eq 0) {
@@ -225,28 +237,22 @@ try {
   }
 
   try {
-    $summary = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/summary" -TimeoutSec 20
-    $firstWikiEntry = @($summary.studio_wiki_entries | Where-Object { $_.path -and $_.kind -eq "entry" } | Select-Object -First 1)[0]
-    if ($firstWikiEntry -and $firstWikiEntry.path) {
-      $wikiPromotion = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/studio/wiki/promotion-plan" -Body @{ path = $firstWikiEntry.path }
-      $promotionPlan = $wikiPromotion.wiki_promotion_plan
-      $promotionOk = [bool]$wikiPromotion.ok -and ($null -ne $promotionPlan) -and [bool]$promotionPlan.wiki_promotion_plan_id
-      $promotionReadOnly = [bool]$wikiPromotion.safety.read_only
-      if ($promotionPlan -and $promotionPlan.safety -and ($promotionPlan.safety.PSObject.Properties.Name -contains "read_only")) {
-        $promotionReadOnly = [bool]$promotionPlan.safety.read_only
-      }
-      $checks += [ordered]@{
-        name = "wiki promotion plan"
-        ok = $promotionOk
-        read_only = $promotionReadOnly
-        wiki = $firstWikiEntry.wiki_id
-      }
-      if (-not $promotionOk) { $failures += "Wiki promotion plan did not return the expected payload." }
-      if (-not $promotionReadOnly) { $failures += "Wiki promotion plan was not read-only." }
-    } else {
-      $checks += [ordered]@{ name = "wiki promotion plan"; ok = $true; skipped = "No Studio Wiki entry available." }
+    $canonReport = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/studio/knowledge/canon-conflict-report"
+    $canonPayload = $canonReport.canon_conflict_report
+    $canonOk = [bool]$canonReport.ok -and ($null -ne $canonPayload) -and [bool]$canonPayload.canon_conflict_report_id
+    $canonReadOnly = [bool]$canonReport.safety.read_only
+    if ($canonPayload -and $canonPayload.safety -and ($canonPayload.safety.PSObject.Properties.Name -contains "read_only")) {
+      $canonReadOnly = [bool]$canonPayload.safety.read_only
     }
+    $checks += [ordered]@{
+      name = "knowledge canon conflict report"
+      ok = $canonOk
+      read_only = $canonReadOnly
+    }
+    if (-not $canonOk) { $failures += "Knowledge canon conflict report did not return the expected payload." }
+    if (-not $canonReadOnly) { $failures += "Knowledge canon conflict report was not read-only." }
 
+    $summary = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/summary" -TimeoutSec 20
     $firstRun = @($summary.recent_staff_runs | Where-Object { $_.output_path } | Select-Object -First 1)[0]
     if ($firstRun -and $firstRun.output_path) {
       $reviewPacket = Invoke-StudioPost -BaseUrl $baseUrl -Path "/api/review-packet/export" -Body @{ path = $firstRun.output_path }

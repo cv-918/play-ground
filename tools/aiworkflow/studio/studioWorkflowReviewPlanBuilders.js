@@ -381,106 +381,6 @@ function buildKnowledgeTransitionPlan(record = {}, relativePath = "") {
   return base;
 }
 
-function buildWikiPromotionPlan(record = {}) {
-  const id = record.wiki_id || record.id || "wiki-entry";
-  const title = record.title || id;
-  const text = [
-    id,
-    title,
-    record.summary,
-    record.content,
-    record.source,
-    record.path,
-  ].join(" ").toLowerCase();
-  const includesAny = (patterns) => patterns.some((pattern) => text.includes(pattern));
-  const currentCategory = record.category || "Unknown";
-  const isInbox = currentCategory === "Inbox" || record.status === "triage_needed" || /(^|\/)inbox\//i.test(String(record.path || ""));
-  const candidates = [
-    {
-      target: "Decisions",
-      label: "감독자 결정",
-      score: includesAny(["결정", "확정", "승인", "허용", "반려", "보류", "decision", "approve", "reject"]) ? 2 : 0,
-      meaning: "앞으로 따라야 할 방향이나 운영 기준으로 남기는 기록입니다.",
-    },
-    {
-      target: "Canon",
-      label: "공식 설정 후보",
-      score: includesAny(["공식 설정", "canon", "세계관", "캐릭터", "시나리오", "story", "lore", "setting"]) ? 2 : 0,
-      meaning: "게임/IP의 공식 설정으로 굳을 수 있는 내용입니다. 반드시 감독자 결정이 필요합니다.",
-    },
-    {
-      target: "Lessons",
-      label: "교훈",
-      score: includesAny(["교훈", "배운", "실패", "재발", "다음부터", "lesson", "retrospective"]) ? 2 : 0,
-      meaning: "나중에 같은 실수를 줄이기 위해 남기는 운영/개발 교훈입니다.",
-    },
-    {
-      target: "Research",
-      label: "조사 자료",
-      score: includesAny(["조사", "비교", "자료", "링크", "https://", "http://", "tool", "도구", "research"]) ? 2 : 0,
-      meaning: "외부 도구, 사례, 기술 자료를 다시 찾기 쉽게 정리하는 기록입니다.",
-    },
-    {
-      target: "Proposals",
-      label: "제안",
-      score: includesAny(["제안", "아이디어", "후보", "하면 좋", "proposal", "candidate"]) ? 2 : 0,
-      meaning: "아직 채택하지 않은 선택지나 방향 후보입니다.",
-    },
-    {
-      target: "Concepts",
-      label: "개념 정리",
-      score: includesAny(["정의", "개념", "역할", "구조", "architecture", "concept", "runtime"]) ? 1 : 0,
-      meaning: "Studio, Work Packet, 도구 역할처럼 반복해서 설명해야 하는 개념입니다.",
-    },
-  ].sort((a, b) => b.score - a.score);
-  const recommended = candidates.find((candidate) => candidate.score > 0) || {
-    target: "Inbox",
-    label: "계속 정리 대기",
-    score: 0,
-    meaning: "아직 안전하게 분류하기에는 신호가 약합니다.",
-  };
-
-  return {
-    wiki_promotion_plan_id: makeStudioId("WPP", id),
-    source_ref: id,
-    source_path: record.path || "",
-    title,
-    current_category: currentCategory,
-    current_meaning: isInbox
-      ? "이 문서는 아직 정리 대기 상태입니다. 바로 공식 결정, 공식 설정, 업무 지시로 쓰면 안 됩니다."
-      : "이 문서는 이미 Studio Wiki 안의 분류된 영역에 있습니다. 추가 승격이 필요한지 확인하는 읽기 전용 점검입니다.",
-    recommended_target: recommended.target,
-    recommended_label: recommended.label,
-    recommendation_reason: recommended.meaning,
-    candidate_targets: candidates
-      .filter((candidate) => candidate.score > 0)
-      .map((candidate) => `${candidate.label}: ${candidate.meaning}`),
-    director_checklist: [
-      "이 기록이 단순 참고인지, 앞으로 따라야 할 결정인지 구분합니다.",
-      "공식 설정 후보라면 기존 canon과 충돌하지 않는지 확인합니다.",
-      "승격해도 task 생성, 소스 수정, commit/push가 자동으로 일어나지 않는지 확인합니다.",
-    ],
-    what_changes_if_promoted: [
-      "문서가 Inbox 밖의 적절한 Wiki 영역으로 옮겨질 수 있습니다.",
-      "나중에 AI 직원 Context Pack에 더 안정적인 기억으로 들어갈 수 있습니다.",
-    ],
-    what_does_not_change: [
-      "이 계획을 보는 것만으로 문서 이동, 공식 설정 확정, task 생성, 소스 수정, commit/push는 일어나지 않습니다.",
-      "공식 설정 또는 주요 방향으로 확정하려면 Human Director 결정이 별도로 필요합니다.",
-    ],
-    safety: {
-      read_only: true,
-      wiki_moved: false,
-      decision_written: false,
-      canon_changed: false,
-      task_created: false,
-      source_changed: false,
-      commit_or_push: false,
-    },
-    created_at: studioTimestampParts().iso,
-  };
-}
-
 function buildCompletionDecisionPlan(core = {}) {
   const task = core.active_task || {};
   const runner = core.runner || {};
@@ -713,12 +613,11 @@ function buildApprovalImpactPlan(core = {}, automation = {}) {
 function buildDirectorSurfaceMap() {
   const surfaces = [
     ["home", "홈", "Human Director", "오늘 볼 일과 다음 행동을 확인합니다.", ["판단 대기 확인", "직원 상태 확인", "최근 결과 검토 자료 확인"], false],
-    ["goals", "새 안건", "Human Director", "큰 목표를 Director Brief로 정리하고 자문, 업무, 결정 후보로 쪼갭니다.", ["브리프 미리보기", "브리프 저장", "후보 생성"], false],
+    ["sessions", "자문 세션", "Human Director / Creative Director", "큰 방향을 Director Brief로 정리하고 AI 직원 자문, 감독자 판단 후보, 업무 후보로 이어줍니다.", ["브리프 미리보기", "자문 세션 생성", "내 의견 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
     ["inbox", "감독자 결정함", "Human Director", "승인, 완료, 수정 요청, 채택 후보처럼 사람이 결론을 내려야 하는 항목을 처리합니다.", ["승인+실행", "완료 판단", "수정 요청", "채택 후보 검토"], false],
-    ["meetings", "자문실", "Human Director / Creative Director", "AI 직원 의견과 반박을 모아 후속 업무 후보와 감독자 판단 후보로 정리합니다.", ["자문판 보기", "내 의견 기록", "다음 AI 발언 받기", "업무 후보 만들기"], false],
     ["runs", "직원 보고서", "Human Director / Reviewer", "AI 직원 산출물을 보고 채택 후보로 넘깁니다.", ["보고서 보기/만들기", "채택 후보 미리보기", "채택 후보로 넘기기"], false],
     ["work", "업무 지시", "Human Director / Producer", "업무 지시를 직원 실행이나 AIWorkflow task로 넘깁니다.", ["인수인계 점검", "직원 자료 미리보기", "직원 실행 계획", "작업 목록에 넣기"], false],
-    ["knowledge", "LLM Wiki", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 회사 기억으로 구분합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
+    ["knowledge", "기록함", "Human Director / Documentation Keeper", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분해 검토합니다.", ["전환 계획", "공식 설정 충돌 점검", "제안/기억/결정 원본 확인"], false],
     ["evidence", "결과 검토", "Human Director / Reviewer", "완료 판단에 필요한 검증 자료와 남은 우려를 확인합니다.", ["완료 근거 점검", "완료 판단안", "보고서 열기"], false],
     ["diff", "변경 검토", "Human Director / Release Manager", "현재 변경 파일을 골라 commit/push 범위를 정합니다.", ["파일 선택", "선택 commit", "선택 commit+push"], false],
     ["devlog", "DevLog", "Human Director / Documentation Keeper", "작업 배경, 검증, 남은 위험 기록을 확인합니다.", ["작업 기록 확인", "원본 열기"], false],
@@ -748,7 +647,7 @@ function buildDirectorSurfaceMap() {
     total_surfaces: surfaces.length,
     human_director_surfaces: surfaces.filter((item) => !item.internal_or_admin).length,
     internal_surfaces: surfaces.filter((item) => item.internal_or_admin).length,
-    recommended_home_order: ["home", "goals", "inbox", "meetings", "runs", "work", "knowledge", "evidence", "diff", "devlog", "toolbox"],
+    recommended_home_order: ["home", "sessions", "inbox", "runs", "work", "knowledge", "evidence", "diff", "devlog", "toolbox"],
     surfaces,
     director_surfaces: directorSurfaces,
     internal_admin_surfaces: internalSurfaces,
@@ -784,10 +683,9 @@ function buildStudioEvalPlan() {
     ],
     browser_smoke_routes: [
       "/#home",
-      "/#goals",
+      "/#sessions",
       "/#project",
       "/#inbox",
-      "/#meetings",
       "/#work",
       "/#knowledge",
       "/#evidence",
@@ -795,12 +693,12 @@ function buildStudioEvalPlan() {
       "/#diff",
     ],
     manual_director_checks: [
-      "홈에서 다음 행동이 이해되는지 확인합니다.",
-      "새 안건에서 후보가 실행이 아니라 브리프 기록으로 보이는지 확인합니다.",
-      "자문실에서 자문판과 후속 업무 흐름이 보이는지 확인합니다.",
-      "업무 지시에서 인수인계 점검, 직원 자료, 직원 실행 계획 차이가 보이는지 확인합니다.",
-      "결과 검토에서 완료 근거 점검과 완료 판단안 차이가 보이는지 확인합니다.",
-      "변경 검토에서 선택 commit/push만 가능하다는 점이 보이는지 확인합니다.",
+      "홈에서 Human Director가 지금 판단해야 할 항목이 실제 내용 중심으로 보이는지 확인합니다.",
+      "자문 세션에서 큰 방향이 브리프/자문/업무/제안 후보로 분해되며, AI 직원 의견과 남은 질문을 같은 화면에서 확인할 수 있는지 봅니다.",
+      "감독자 결정함에서 내가 결정할 것, 왜 올라왔나, 결정하면 바뀌는 것이 분리되어 보이는지 확인합니다.",
+      "업무 지시에서 WorkOrder 후보가 승인 전 후보로 보이고, 직원 실행이나 작업 목록 반영은 별도 결정임을 확인합니다.",
+      "결과 검토에서 완료, 수정 요청, 판단 보류 중 하나를 빠르게 고를 수 있고 세부 검증 자료는 보조 정보로만 보이는지 확인합니다.",
+      "기록함이 내부 Wiki처럼 보이지 않고 감독자 결정, 참고 기록, 공식 설정 후보만 다루는지 확인합니다.",
     ],
     pass_criteria: [
       "필수 schema가 모두 존재합니다.",
@@ -824,7 +722,6 @@ module.exports = {
   buildCompletionEvidenceChecklist,
   buildDirectorSurfaceMap,
   buildKnowledgeTransitionPlan,
-  buildWikiPromotionPlan,
   buildMeetingBoard,
   buildMeetingFacilitationPlan,
   buildMeetingRunbook,
