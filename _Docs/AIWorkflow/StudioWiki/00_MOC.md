@@ -1,6 +1,12 @@
-# Studio Wiki Map of Content
+# External Knowledge Map of Content
 
-This file is the top-level map for the AIWorkflow Studio Wiki.
+This file is the top-level map for the deferred external knowledge-base
+candidate formerly called Studio Wiki.
+
+It is not a primary Studio screen. Studio owns Director decisions, proposals,
+reference records, verification material, and governance gates. Long-term
+Markdown wiki curation belongs to an external knowledge layer such as Obsidian,
+Hermes LLM Wiki, or a future AI Librarian workflow.
 
 ## Core Concepts
 
@@ -32,7 +38,7 @@ This file is the top-level map for the AIWorkflow Studio Wiki.
 ## Operating Flow
 
 ```text
-capture -> classify -> summarize -> connect -> Director decision -> promote
+capture -> classify -> summarize -> connect -> Director decision -> external knowledge record
 ```
 
 ## Director Review Checklist
@@ -44,4 +50,3 @@ Before promoting a record, confirm:
 - canon vs proposal vs lesson is not mixed
 - rejected ideas are kept out of future plans
 - downstream worker context can cite the record
-

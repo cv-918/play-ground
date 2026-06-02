@@ -1,4 +1,4 @@
-# Studio Wiki Proposals
+# External Knowledge Proposals
 
 Use this folder for ideas that are not accepted yet.
 
@@ -14,4 +14,3 @@ A Proposal is not approval.
 
 Accepted proposals must be connected to a Decision record before they are used
 as authoritative context.
-

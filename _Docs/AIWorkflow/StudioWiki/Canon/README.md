@@ -1,4 +1,4 @@
-# Studio Wiki Canon
+# External Knowledge Canon
 
 Use this folder for official project truths and constraints.
 
@@ -14,4 +14,3 @@ Examples:
 Canon records must reference a Director Decision or another approved source.
 
 Do not move a proposal into Canon just because an AI staff agent wrote it.
-

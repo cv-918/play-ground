@@ -16,7 +16,7 @@ Work Packet = what the worker is allowed to do
 
 Context Packs may cite:
 
-- LLM Wiki records
+- external knowledge references
 - Director decisions
 - proposals
 - rejected directions
@@ -28,4 +28,3 @@ Context Packs may cite:
 
 Context Pack content must keep proposal, decision, canon, and rejected material
 separate.
-

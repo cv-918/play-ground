@@ -14,7 +14,8 @@ Studio is responsible for:
 - organizing advisory discussion
 - surfacing decisions that need human judgment
 - preparing WorkOrders and Work Packets
-- linking outputs to Wiki memory, verification material, and final decisions
+- linking outputs to Director decisions, reference records, verification material,
+  and optional external knowledge references
 
 ## Authority
 
@@ -35,4 +36,3 @@ Only the Human Director can approve:
 - [[Advisory Loop]]
 - [[Work Packet]]
 - [[LLM Wiki]]
-

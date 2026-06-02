@@ -1,4 +1,4 @@
-# Studio Wiki Research
+# External Knowledge Research
 
 Use this folder for investigated material.
 
@@ -12,4 +12,3 @@ Examples:
 
 Research records should include source links, access date when useful, and a
 short note on how the material affects the project.
-

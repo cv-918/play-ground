@@ -1,4 +1,4 @@
-# Studio Wiki Concepts
+# External Knowledge Concepts
 
 Use this folder for stable definitions and vocabulary.
 
@@ -16,4 +16,3 @@ Examples:
 
 Concept records should be short, link to source decisions, and avoid becoming
 implementation manuals.
-

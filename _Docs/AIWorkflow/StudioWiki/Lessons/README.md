@@ -1,4 +1,4 @@
-# Studio Wiki Lessons
+# External Knowledge Lessons
 
 Use this folder for reusable learning.
 
@@ -12,4 +12,3 @@ Examples:
 - game data pipeline lessons
 
 Lessons help future staff avoid repeating the same mistake.
-

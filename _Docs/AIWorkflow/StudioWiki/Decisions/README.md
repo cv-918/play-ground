@@ -1,4 +1,4 @@
-# Studio Wiki Decisions
+# External Knowledge Decisions
 
 Use this folder for Human Director judgments.
 
@@ -14,4 +14,3 @@ A Decision records what the Human Director chose and why.
 
 A Decision may approve a direction, but it does not automatically execute code,
 modify files, mark tasks done, commit, or push.
-

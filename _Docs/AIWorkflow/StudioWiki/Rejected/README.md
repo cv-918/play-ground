@@ -1,4 +1,4 @@
-# Studio Wiki Rejected
+# External Knowledge Rejected
 
 Use this folder for rejected ideas and the reason they were rejected.
 
@@ -11,4 +11,3 @@ Each record should include:
 - why it was rejected
 - whether it is permanently rejected or only rejected for the current phase
 - what condition would allow reconsideration, if any
-

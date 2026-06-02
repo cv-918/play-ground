@@ -1,6 +1,12 @@
-# Studio Wiki Inbox
+# External Knowledge Inbox
 
-Use this folder for useful material that has not been classified yet.
+This folder is retained as an external knowledge-base candidate inbox.
+
+It is not a primary AIWorkflow Studio screen. Studio's Director console should
+link to approved records, decisions, staff reports, or external knowledge
+references instead of trying to manage a full LLM Wiki directly.
+
+Use this folder only for useful material that has not been classified yet.
 
 Examples:
 
@@ -11,6 +17,5 @@ Examples:
 - external links before research summary
 - staff report fragments
 
-Inbox records are not official decisions, canon, tasks, or implementation
-approval.
-
+Inbox records are not official decisions, canon, tasks, implementation approval,
+or Studio governance records.

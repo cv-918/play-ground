@@ -1,8 +1,17 @@
-# AIWorkflow Studio Wiki
+# External Knowledge Candidate
+
+> Status: external knowledge-base candidate.
+>
+> This folder preserves the earlier LLM Wiki experiment and possible
+> Obsidian/Hermes knowledge-base structure. It is not a primary Studio screen.
+> Studio's Director-facing records area owns proposals, Director decisions, reference
+> notes, and canon candidates as governance records. Long-term wiki curation,
+> AI Librarian behavior, and Markdown graph management should be evaluated as an
+> external knowledge-base layer.
 
 ## Purpose
 
-`StudioWiki` is the durable company memory for AIWorkflow Studio.
+`StudioWiki` is an external knowledge-base candidate for AIWorkflow Studio.
 
 It is the place where useful conversation outcomes, research notes, proposals,
 Director decisions, lessons, rejected directions, and canon-like project facts
@@ -87,4 +96,3 @@ Obsidian is a reading and navigation tool. It is not the authority system.
 - It must not replace Backlog, ActiveTask, VerificationReport, CompletionReport,
   FinalizationLog, or Git history.
 - It must not make implementation or commit decisions.
-
