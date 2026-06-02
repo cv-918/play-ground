@@ -6,29 +6,19 @@ function renderKnowledgePageShell() {
           <div class="card">
             <div class="section-title"><h2>이 페이지의 역할</h2><button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button></div>
             <ul class="small">
-              <li><strong>제안함</strong>: AI 직원이나 감독자가 낸 아이디어를 임시로 모아둡니다. 이 단계에서는 위키도, 공식 설정도, 구현 지시도 아닙니다.</li>
+              <li><strong>기록함은 장기 지식 정리 도구가 아닙니다.</strong> Studio 안에서는 감독자 판단, 참고 기록, 공식 설정 후보만 최소한으로 다룹니다.</li>
+              <li><strong>제안함</strong>: AI 직원이나 감독자가 낸 아이디어를 임시로 모아둡니다. 이 단계에서는 공식 설정도, 구현 지시도 아닙니다.</li>
               <li><strong>감독자 판단</strong>: 제안을 채택, 수정 요청, 반려, 보류 중 하나로 정리합니다. 판단 기록만 만들며 구현과 commit/push는 하지 않습니다.</li>
               <li><strong>참고 기록</strong>: 이후 AI 직원이 참고할 메모입니다. 일반 기록은 참고용이고, 공식 설정 후보는 별도 검토 대상입니다.</li>
               <li><strong>공식 설정 후보</strong>: 게임 세계관, 캐릭터, 규칙처럼 나중에 canon으로 확정할 수 있는 항목입니다. Studio UX나 운영 개선 제안은 공식 설정 후보로 남길 수 없습니다.</li>
+              <li><strong>외부 지식 기반</strong>: Obsidian/Hermes 같은 장기 지식 정리는 별도 지식 도구의 책임입니다. 이 화면은 장기 지식 편집기가 아닙니다.</li>
             </ul>
           </div>
-          <div class="grid">
-            <div class="card">
-              <div class="section-title"><h2>Wiki Inbox에 남기기</h2><span class="pill">정리 대기</span></div>
-              <p class="small muted">대화, 회의, 조사 중 나중에 다시 써야 할 내용을 임시 보관합니다. 저장만 하며 공식 설정, 결정, task, git은 바뀌지 않습니다.</p>
-              <label class="field-block">제목 <span class="required-mark">필수</span><span class="field-help">나중에 다시 찾을 수 있게 짧게 적습니다.</span><input id="wikiInboxTitle" placeholder="예: Studio와 Handoff 역할 분리 기준"></label>
-              <label class="field-block">내용 <span class="required-mark">필수</span><span class="field-help">남길 가치가 있는 대화 요지, 아이디어, 외부 자료 요약을 적습니다.</span><textarea id="wikiInboxContent" placeholder="예: Studio는 감독자 운영 콘솔이고, Handoff는 내부 Work Packet 전달 계층으로 유지한다."></textarea></label>
-              <label class="field-block">출처 <span class="optional-mark">선택</span><span class="field-help">비워두면 Studio로 기록합니다.</span><input id="wikiInboxSource" placeholder="예: Codex 대화, 회의 MEET-..., 외부 기사"></label>
-              <div class="row"><button class="good" id="wikiInboxCreateSubmit">Inbox 저장</button></div>
-            </div>
-            <div class="card">
-              <div class="section-title"><h2>LLM Wiki 현황</h2><span class="pill" id="wikiEntryCount">0</span></div>
-              <p class="small muted">Inbox는 정리 대기, Concepts는 정리된 개념, Canon은 공식 설정 후보 영역입니다. 자동 승격은 아직 하지 않고 사람이 볼 수 있게 모읍니다.</p>
-              <div id="studioWikiOverview" class="list"></div>
-            </div>
-          </div>
-          <div class="grid">
-            <div class="card">
+          <details class="internal-panel">
+            <summary>수동 기록 추가</summary>
+            <p class="small muted">보통은 제안 카드나 결정 카드의 버튼으로 기록을 남깁니다. 직접 입력이 필요할 때만 이 영역을 열어 사용하세요.</p>
+            <div class="grid">
+            <div class="item">
               <div class="section-title"><h2>제안 만들기</h2><span class="pill">아이디어</span></div>
               <p class="small muted">감독자가 직접 떠올린 아이디어를 검토 대상으로 저장합니다. 새 제안은 Human Director(나)의 제안으로 기록됩니다. 저장만으로 공식 설정, task, git은 바뀌지 않습니다.</p>
               <div class="form-grid">
@@ -40,7 +30,7 @@ function renderKnowledgePageShell() {
               <label class="field-block">주의할 점 <span class="optional-mark">선택</span><span class="field-help">채택 전에 확인해야 할 위험이나 충돌 가능성을 한 줄에 하나씩 적습니다.</span><textarea id="proposalCreateRisks" placeholder="예:&#10;기존 세계관과 충돌하지 않아야 함&#10;초반 튜토리얼 분량이 늘어나지 않아야 함"></textarea></label>
               <div class="row"><button class="good" id="proposalCreateSubmit">제안 저장</button></div>
             </div>
-            <div class="card">
+            <div class="item">
               <div class="section-title"><h2>결정 기록하기</h2><span class="pill">결정</span></div>
               <p class="small muted">제안함에 있는 제안에 대해 감독자의 판단을 남깁니다. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리합니다. 기록만 남기며 구현이나 커밋은 하지 않습니다.</p>
               <div class="form-grid">
@@ -55,7 +45,7 @@ function renderKnowledgePageShell() {
               <input id="decisionCreateConditions" type="hidden" value="">
               <div class="row"><button class="good" id="decisionCreateSubmit">결정 저장</button></div>
             </div>
-            <div class="card">
+            <div class="item">
               <div class="section-title"><h2>참고 기록 / 공식 설정 기록하기</h2><span class="pill">프로젝트 지식</span></div>
               <p class="small muted">AI 직원이 이후 참고할 프로젝트 지식을 저장합니다. 일반 기록은 참고용 메모이고, 공식 설정은 게임 세계관/규칙처럼 확정 근거로 쓰일 수 있으므로 신중하게 남깁니다.</p>
               <div class="form-grid">
@@ -68,14 +58,15 @@ function renderKnowledgePageShell() {
               <label class="field-block">근거 ID <span class="optional-mark">선택</span><span class="field-help">이 참고 기록의 근거가 된 결정, 회의, 제안 ID를 적습니다.</span><input id="memoryCreateRefs" placeholder="예: DEC-..., MEET-..., PROP-..."></label>
               <div class="row"><button class="good" id="memoryCreateSubmit">참고 기록 저장</button></div>
             </div>
-          </div>
+            </div>
+          </details>
           <div class="control-bar">
             <input id="knowledgeSearch" placeholder="제안, 결정, 참고 기록 검색">
             <select id="proposalDecisionFilter"></select>
             <select id="memoryStatusFilter"></select>
           </div>
           <div class="card">
-            <div class="section-title"><h2>제안 버튼 안내</h2><span class="pill">판단 기록</span></div>
+            <div class="section-title"><h2>기록함 버튼 안내</h2><span class="pill">판단 기록</span></div>
             <div class="grid">
               <div class="item">
                 <h3>검토만 할 때</h3>
@@ -110,10 +101,9 @@ function renderKnowledgePageShell() {
             </div>
           </div>
           <div class="grid">
-            <div class="card"><h2>제안함</h2><p class="muted">AI 직원이나 감독자가 낸 아이디어를 모아둡니다. 게임 설정 제안, Studio 운영 제안, 업무 제안이 함께 올 수 있으며 제안 자체는 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
-            <div class="card"><h2>결정 기록</h2><p class="muted">Human Director가 남긴 결정 기록입니다.</p><div id="decisions" class="list"></div></div>
-            <div class="card"><h2>참고 기록 / 공식 설정</h2><p class="muted">상태가 공식 설정이어야 확정 설정으로 취급합니다.</p><div id="memories" class="list"></div></div>
-            <div class="card"><h2>Wiki 문서</h2><p class="muted">정리된 Studio Wiki 문서를 확인합니다. Inbox 항목은 아직 승격 전입니다.</p><div id="studioWikiEntries" class="list"></div></div>
+            <div class="card"><h2>제안함</h2><p class="muted">아직 감독자 판단을 기다리는 아이디어입니다. 제안 자체는 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
+            <div class="card"><h2>감독자 결정</h2><p class="muted">Human Director가 채택, 수정 요청, 반려, 보류로 정리한 판단 기록입니다.</p><div id="decisions" class="list"></div></div>
+            <div class="card"><h2>참고 기록 / 공식 설정 후보</h2><p class="muted">AI 직원이 참고할 메모와 나중에 canon으로 검토할 후보만 남깁니다.</p><div id="memories" class="list"></div></div>
           </div>
         </section>
 

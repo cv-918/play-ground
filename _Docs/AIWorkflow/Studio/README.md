@@ -140,25 +140,24 @@ This slice defines:
 - Read-only RoleRunOutput review packet HTML export for Human Director review
 - Local-only Studio Director Console server with a sidebar-based Director
   workspace. The current Director-facing surface is intentionally narrow:
-  `홈`, `새 안건`, `자문실`, `감독자 결정함`, `결과 검토`, `LLM Wiki`,
+  `홈`, `안건 시작`, `자문 진행`, `감독자 결정함`, `결과 검토`, `기록함`,
   and `도구함`. Operations-detail and organization-reference pages remain
   available behind collapsed sections, but they are not the default work path.
   Systems and Policy are
   internal/admin pages and are hidden under the `내부 도구` section by
   default. Home is the Director situation board for current decisions and
-  active direction. The New Agenda page (`새 안건`) is the Director-facing
+  active direction. The Agenda Start page (`안건 시작`) is the Director-facing
   intake for broad goals; it produces a deterministic Director Brief and can
-  store the brief or create governed Advisory Session, WorkOrder, and Proposal
-  candidates. The Advisory Room (`자문실`) is where AI staff opinions,
-  objections, questions, and next-action candidates are collected before the
-  Director turns them into decisions or work. The LLM Wiki page (`LLM Wiki`) is the
-  LLM Wiki-facing surface for proposals, Director decisions, reference memory,
-  canon candidates, and Wiki Inbox capture. Wiki Inbox capture stores a
-  triage-needed Markdown note under `_Docs/AIWorkflow/StudioWiki/Inbox/` without
-  canonizing the content, creating tasks, editing source, or touching git. Wiki
-  promotion planning is read-only and only recommends whether an Inbox note
-  should become a Decision, Canon note, Lesson, Research note, Proposal, Concept,
-  or rejected/archive item.
+  store the brief or create governed advisory, question, WorkOrder, Proposal,
+  and approval candidates. Advisory Progress (`자문 진행`) is the continuation
+  step where AI staff opinions, objections, questions, and next-action
+  candidates are collected before the Director turns them into decisions or
+  work. The Records page (`기록함`) is the
+  Studio governance surface for proposals, Director decisions, reference notes,
+  and canon candidates. It is not a long-term knowledge editor. Long-term Markdown
+  curation, Obsidian organization, or Hermes-provided knowledge-base behavior belongs
+  to an external knowledge-base layer. Studio may decide what is worth keeping,
+  but it does not directly own wiki ingestion, promotion, or automatic canonizing.
   Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.
@@ -365,6 +364,25 @@ local console if needed and opens `http://127.0.0.1:47831/` in the default
 browser. If the default port is already occupied by another process, it selects
 the next available local port before opening the browser. It does not modify
 workflow state, run staff, modify files, commit, or push.
+The intended Director loop is:
+
+```text
+홈에서 지금 판단할 일 확인
+-> 안건 시작에서 큰 방향을 Director Brief로 분해
+-> 자문 진행에서 AI 직원 의견, 질문, 반박 수집
+-> 감독자 결정함에서 실제 결정 내용과 영향 확인
+-> 업무 지시에서 실행 가능한 WorkOrder 후보 정리
+-> approved Codex/App/CLI or runner execution path
+-> 결과 검토에서 완료 / 수정 요청 / 판단 보류 결정
+-> 변경 검토 or external git gate에서 선택 commit/push 판단
+```
+
+`감독자 결정함` must describe the actual decision content first, not only the
+workflow process that produced it. `결과 검토` is a completion decision surface,
+not a raw evidence browsing surface. Detailed verification artifacts remain
+available as secondary links. `기록함` is a minimal governance record surface
+for Director decisions, reference notes, and canon candidates; it is not the
+Obsidian/Hermes external knowledge base.
 For repeatable local verification, `tools\aiworkflow\studio_smoke_check.bat`
 starts a temporary local Studio server, checks the main HTML surface and
 read-only Studio report APIs, verifies read-only safety flags where available,
@@ -405,7 +423,7 @@ Review buttons may then perform bounded workflow actions:
 - create an intake task from a Studio request
 - approve and start the selected task through PC Runner
 - record completion finalization decisions
-- commit or commit+push only the files selected in Studio Git Gate
+- commit or commit+push only the files selected in the dedicated Diff Review git gate
 
 These actions still use the existing workflow services. They do not bypass
 approval policy, runner gates, evidence records, completion review, or git

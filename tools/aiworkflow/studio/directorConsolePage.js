@@ -217,11 +217,11 @@ function directorConsoleHtml() {
       <div class="nav-section-label">감독자 콘솔</div>
       <nav class="nav" aria-label="Human Director navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="goals">새 안건 <span class="count" id="nav-goals-count"></span></button>
-        <button data-nav="meetings">자문실 <span class="count" id="nav-meetings-count"></span></button>
+        <button data-nav="goals">안건 시작 <span class="count" id="nav-goals-count"></span></button>
+        <button data-nav="meetings">자문 진행 <span class="count" id="nav-meetings-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="evidence">결과 검토 <span class="count" id="nav-evidence-count"></span></button>
-        <button data-nav="knowledge">LLM Wiki <span class="count" id="nav-knowledge-count"></span></button>
+        <button data-nav="knowledge">기록함 <span class="count" id="nav-knowledge-count"></span></button>
         <button data-nav="toolbox">도구함 <span class="count" id="nav-toolbox-count"></span></button>
       </nav>
       <button id="referenceNavToggle" class="internal-toggle">운영 상세 <span id="referenceNavState">숨김</span></button>
@@ -283,28 +283,16 @@ function directorConsoleHtml() {
           <section class="grid">
             <div class="card">
               <div class="section-title"><h2>새 방향 시작</h2><span class="pill">Director Brief</span></div>
-              <p class="summary">세부 task를 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 새 안건으로 정리합니다.</p>
+              <p class="summary">세부 task를 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 안건으로 정리하고 필요한 자문과 업무 후보로 이어갑니다.</p>
               <div class="row">
-                <button class="good" data-nav-jump="goals">새 안건으로 시작</button>
-                <button class="secondary" data-nav-jump="meetings">자문실 열기</button>
+                <button class="good" data-nav-jump="goals">안건 시작</button>
+                <button class="secondary" data-nav-jump="meetings">진행 중 자문 보기</button>
                 <button class="secondary" data-nav-jump="work">업무 지시 보기</button>
               </div>
               <p class="small muted">빠른 검증용 작업 접수 기능은 유지하지만 홈 기본 흐름에서는 숨깁니다. 필요한 경우 운영 상세의 업무 지시 흐름을 사용하세요.</p>
               <div hidden>
                 <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
                 <button id="studioIntakeSubmit">작업 접수</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="section-title"><h2>Studio Git Gate</h2><span id="gitGateCount" class="pill"></span></div>
-              <div id="gitFileSelect" class="file-select"></div>
-              <input id="gitCommitMessage" placeholder="커밋 메시지 비우면 자동 제안">
-              <div class="row">
-                <button class="secondary" id="gitSelectWorkflow">Workflow만 선택</button>
-                <button class="secondary" id="gitClearSelection">선택 해제</button>
-                <button class="good" id="gitCommitSelected">선택 커밋</button>
-                <button class="good" id="gitCommitPushSelected">선택 커밋+푸시</button>
-                <button class="secondary" id="gitPushOnly">푸시만</button>
               </div>
             </div>
           </section>
@@ -376,15 +364,15 @@ function directorConsoleHtml() {
     const PAGES = {
       home: ["홈", "Human Director가 지금 결정할 일과 진행 중인 방향만 봅니다."],
       toolbox: ["도구함", "직접 사용할 만한 유지보수 도구만 설명과 함께 실행합니다."],
-      goals: ["새 안건", "큰 목표를 Director Brief로 정리하고 자문, 업무, 결정 후보로 나눕니다."],
+      goals: ["안건 시작", "큰 방향을 Director Brief로 정리하고 자문, 질문, 제안, 승인, 업무 후보로 이어줍니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
       staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
-      meetings: ["자문실", "AI 직원 의견, 반박, 질문을 모아 안건의 다음 방향을 정리합니다."],
+      meetings: ["자문 진행", "안건에 필요한 AI 직원 의견, 반박, 질문을 모아 다음 방향을 정리합니다."],
       runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
       work: ["업무 지시", "Studio 업무 후보와 인수인계를 AIWorkflow task로 연결합니다."],
-      knowledge: ["LLM Wiki", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 회사 기억으로 정리합니다."],
+      knowledge: ["기록함", "제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분해 검토합니다."],
       timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
       diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
       systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
@@ -413,6 +401,52 @@ function directorConsoleHtml() {
       if (!values.length) return '<p class="small muted">' + esc(emptyText) + '</p>';
       const more = asArray(items).length > values.length ? '<li>+' + esc(asArray(items).length - values.length) + '개 더 있음</li>' : "";
       return '<ul class="small">' + values.map((item) => '<li>' + esc(short(item, 150)) + '</li>').join("") + more + '</ul>';
+    }
+    function recordIdentity(record) {
+      if (!record || typeof record !== "object") return String(record || "");
+      return [
+        record.meeting_id,
+        record.topic,
+        record.role_run_id,
+        record.output_id,
+        record.materialization_id,
+        record.work_order_id,
+        record.handoff_id,
+        record.proposal_id,
+        record.decision_id,
+        record.memory_id,
+        record.title,
+        record.summary,
+        record.objective,
+        record.reason,
+        record.source_output_id,
+        record.path,
+      ].filter(Boolean).join(" ");
+    }
+    function isSampleRecord(record) {
+      const text = recordIdentity(record).toLowerCase();
+      if (!text) return false;
+      return /(^|[^a-z0-9])(mock|smoke|sample|fixture|utf8|format-test)([^a-z0-9]|$)/i.test(text)
+        || text.includes("technical participant picker validation")
+        || text.includes("테스트용")
+        || text.includes("스모크")
+        || text.includes("샘플")
+        || text.includes("목업");
+    }
+    function operationalRecords(records) {
+      return asArray(records).filter((record) => !isSampleRecord(record));
+    }
+    function sampleRecords(records) {
+      return asArray(records).filter(isSampleRecord);
+    }
+    function sampleRecordsHtml(title, records) {
+      const samples = sampleRecords(records);
+      if (!samples.length) return "";
+      const rows = samples.slice(0, 12).map((record) =>
+        '<li><code>' + esc(short(recordIdentity(record), 130)) + '</code></li>'
+      ).join("");
+      const more = samples.length > 12 ? '<li>+' + esc(samples.length - 12) + '개 더 있음</li>' : "";
+      return '<details class="internal-links"><summary>' + esc(title) + ' ' + esc(samples.length) + '개</summary><p class="small muted">운영 판단을 흐리지 않도록 기본 목록에서 숨긴 테스트/샘플 기록입니다. 원본 파일은 삭제하지 않았습니다.</p><ul class="small">' + rows + more + '</ul></details>';
     }
     function formatCompanyRuntimeReadinessLog(value) {
       const report = value.company_runtime_readiness_report || value.company_runtime || value;
@@ -728,7 +762,7 @@ function directorConsoleHtml() {
       FinalizationLog: "최종화 기록",
       Decision: "결정 기록",
       Proposal: "제안서",
-      MemoryRecord: "기억/설정 기록",
+      MemoryRecord: "참고/설정 기록",
       CreativeBrief: "크리에이티브 방향 문서",
       DirectionDecision: "방향성 결정 기록",
       RejectedDirection: "반려된 방향 기록",
@@ -778,7 +812,7 @@ function directorConsoleHtml() {
       el("workDepartmentFilter").innerHTML = departmentOptionList(state.departments, "모든 부서");
       el("meetingStatusFilter").innerHTML = meetingStatusOptionList(state.meetings);
       el("runStatusFilter").innerHTML = optionList(state.recent_staff_runs.map((run) => run.output_status || run.status), "모든 실행 상태");
-      el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 기억 상태");
+      el("memoryStatusFilter").innerHTML = optionList(state.memories.map((memory) => memory.status), "모든 참고 기록 상태");
       el("proposalDecisionFilter").innerHTML = '<option value="">모든 제안</option><option value="pending">판단 대기 제안</option><option value="decided">판단 기록 있음</option>';
       const selectedMeetingType = fieldValue("meetingCreateType") || "creative";
       const selectedMeetingParticipantsBeforeRender = selectedMeetingParticipants();
@@ -906,15 +940,15 @@ function directorConsoleHtml() {
       setNavCount("inbox", buildDirectorDecisionItems({ includeGit: false }).length);
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
-      setNavCount("meetings", state.meetings.length);
-      setNavCount("runs", state.recent_staff_runs.length + state.materializations.length);
-      setNavCount("work", state.work_orders.length + state.handoffs.length);
-      setNavCount("knowledge", (state.metrics?.studio_wiki_inbox || 0) + state.proposals.length + state.decisions.length + state.memories.length);
+      setNavCount("meetings", operationalRecords(state.meetings).length);
+      setNavCount("runs", operationalRecords(state.recent_staff_runs).length + operationalRecords(state.materializations).length);
+      setNavCount("work", operationalRecords(state.work_orders).length + operationalRecords(state.handoffs).length);
+      setNavCount("knowledge", state.proposals.length + state.decisions.length + state.memories.length);
       setNavCount("timeline", buildTimelineItems().length);
       setNavCount("diff", state.workflow_core?.git?.changed_count || "");
       setNavCount("systems", state.project_profiles.length + state.tool_adapters.length + state.tool_run_requests.length);
       setNavCount("policy", state.conditional_automation.evaluations.length);
-      setNavCount("evidence", m.review_packets);
+      setNavCount("evidence", buildDirectorDecisionItems({ includeGit: false }).filter((item) => String(item.kind || "").includes("완료")).length);
       setNavCount("devlog", state.dev_logs.length);
     }
     function decisionPriorityRank(label) {
@@ -945,7 +979,7 @@ function directorConsoleHtml() {
       const medium = items.filter((item) => item.priority_label === "중간").length;
       const queueList = items.slice(0, 8).map((item) =>
         '<li><strong>' + esc(item.priority_label || "일반") + '</strong> · ' +
-        esc(item.kind || "판단") + ': ' + esc(short(item.title || "", 120)) + '</li>'
+        esc(item.kind || "판단") + ': ' + esc(short(item.meaning || item.title || "", 150)) + '</li>'
       ).join("");
       return '<div class="card">' +
         '<div class="section-title"><h2>결정 큐 요약</h2><span class="pill">' + esc(total) + '개</span></div>' +
@@ -955,11 +989,11 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>중간</span><span class="pill">' + esc(medium) + '</span></div>' +
         '</div>' +
         (queueList ? '<h3>현재 올라온 판단</h3><ul class="small">' + queueList + '</ul>' : '') +
-        '<p class="small muted">이 화면에는 방향 승인, 완료 판단, 수정 요청, 채택/반려처럼 Human Director가 실제로 판단해야 하는 항목만 모입니다. 커밋/푸시는 변경 검토 또는 Git Gate에서 처리합니다.</p>' +
+        '<p class="small muted">이 화면에는 방향 승인, 완료 판단, 수정 요청, 채택/반려처럼 Human Director가 실제로 판단해야 하는 항목만 모입니다. 커밋/푸시는 변경 검토에서 따로 처리합니다.</p>' +
         '</div>';
     }
     function buildDirectorDecisionItems(options = {}) {
-      const includeGit = options.includeGit !== false;
+      const includeGit = options.includeGit === true;
       const core = state.workflow_core || {};
       const activeTask = core.active_task || {};
       const runner = core.runner || {};
@@ -979,13 +1013,14 @@ function directorConsoleHtml() {
           state_label: optionLabel(activeTask.status || ""),
           why_now: "현재 선택된 작업이 아직 실행 대상으로 확정되지 않았습니다.",
           priority_label: "높음",
-          meaning: "다음 작업을 실제로 시작할지 판단합니다: " + short(activeTask.title || activeTask.task_id, 220),
-          effect: "시작을 승인하면 승인 기록이 남고 PC Runner가 이 작업 범위 안에서 실행됩니다. 완료 처리, commit, push는 여기서 하지 않습니다.",
-          risk: short(activeTask.reason || "실행 범위가 불분명하면 업무 지시나 작업 설명을 먼저 확인해야 합니다.", 260),
+          meaning: "“" + short(activeTask.title || activeTask.task_id, 180) + "” 작업을 지금 실행 대상으로 승인할지 결정합니다.",
+          effect: "승인하면 이 task가 ActiveTask로 선택되고 승인 기록이 남습니다. PC Runner는 이 제목과 작업 설명에 적힌 범위 안에서만 시작됩니다. 완료 처리, commit, push는 여기서 하지 않습니다.",
+          risk: "실제 바뀔 수 있는 범위: " + short(activeTask.reason || activeTask.title || "작업 설명이 부족합니다. 실행 전에 업무 지시나 task 상세를 확인하세요.", 240),
           actions: [workflowStartButton("승인+실행", activeTask.task_id, "good"), '<button class="secondary" data-nav-jump="work">업무 지시 보기</button>'],
         });
       }
       if (activeTaskOpen && (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision")) {
+        const remainingConcernCount = asArray(completion.remaining_concerns).length;
         items.push({
           kind: "완료 검토",
           title: activeTask.task_id ? activeTask.task_id + " · " + (activeTask.title || "완료 판단") : "완료 판단",
@@ -995,17 +1030,17 @@ function directorConsoleHtml() {
             : "Runner가 완료 검토 지점에서 멈춰 있어 사람 판단 없이는 다음 단계로 진행할 수 없습니다.",
           priority_label: "최우선",
           meaning: completionChangesRequested
-            ? "이 결과를 다시 완료 승인할지 말지가 아닙니다. 이미 수정 요청된 결과이므로 새 수정 업무로 넘길지, 더 이상 다루지 않고 닫을지 판단해야 합니다."
-            : "검증 자료와 완료 보고서를 보고 이 결과를 받을지, 수정 요청할지, 판단을 보류할지 결정합니다.",
+            ? "“" + short(activeTask.title || activeTask.task_id, 150) + "” 결과는 이미 수정 요청으로 정리됐습니다. 같은 결과를 다시 승인하지 말고, 새 수정 업무로 이어갈지 판단합니다."
+            : "“" + short(activeTask.title || activeTask.task_id, 150) + "” 결과를 완료로 받을지, 수정 요청할지, 판단을 보류할지 결정합니다" + (remainingConcernCount ? " (" + remainingConcernCount + "개 우려 확인 필요)." : "."),
           effect: completionChangesRequested
             ? "이 카드에서는 추가 FinalizationLog를 만들지 않습니다. 기존 수정 요청 기록을 기준으로 다음 작업을 진행하세요."
             : completionNeedsChoice
-              ? "일반 완료 승인은 숨깁니다. 우려 감수, 수정 요청, 판단 보류 중 하나를 선택하면 FinalizationLog가 남습니다."
+              ? "우려 감수, 수정 요청, 판단 보류 중 하나를 선택하면 FinalizationLog가 남습니다. 수정 요청은 task를 끝내지 않고 후속 수정 흐름으로 넘깁니다."
               : "완료 승인은 FinalizationLog를 남기고 Runner를 계속 진행합니다. markDone이면 task done까지 처리합니다. 커밋/푸시는 별도입니다.",
           risk: completionChangesRequested
             ? "이미 수정 요청된 결과를 다시 완료 처리하지 않도록 주의하세요."
             : (completion.remaining_concerns || []).length
-              ? "우려 사항이 남아 있습니다. 감수할 수 있는 문제인지 먼저 확인해야 합니다."
+              ? "남은 우려: " + short(asArray(completion.remaining_concerns).map(translateConcernDetail).join(" / "), 260)
               : "표시된 우려 사항은 없습니다.",
           status_lines: completionDecisionStatusLines(core),
           actions: completionFollowUpActionItems(core),
@@ -1018,7 +1053,7 @@ function directorConsoleHtml() {
           state_label: "채택 대기",
           why_now: "직원 보고서에서 뽑힌 채택 후보가 아직 채택/반려/수정 요청으로 정리되지 않았습니다.",
           priority_label: "중간",
-          meaning: "이 직원 보고서에서 뽑힌 아이디어, 기억, 업무 지시, 인수인계 후보를 받을지 판단합니다.",
+          meaning: "“" + short(item.source_output_id || item.materialization_id, 100) + "” 직원 보고서에서 뽑힌 후보 " + esc(item.created_record_count || 0) + "개를 검토 대상으로 받을지 결정합니다.",
           effect: "채택/반려/수정 요청 기록만 남습니다. 바로 소스 수정이나 실행으로 이어지지는 않습니다.",
           risk: "직원 제안이 공식 설정처럼 굳지 않게, 채택 범위와 제외 범위를 분리해야 합니다.",
           actions: [
@@ -1037,7 +1072,7 @@ function directorConsoleHtml() {
           state_label: optionLabel(proposal.status || "제안"),
           why_now: "제안은 공식 설정이나 구현 근거가 되기 전에 감독자 판단이 필요합니다.",
           priority_label: "중간",
-          meaning: "이 제안의 핵심 내용을 채택할지, 고쳐 달라고 할지, 반려할지 판단합니다.",
+          meaning: "“" + short(proposal.title || proposal.summary || proposal.proposal_id, 150) + "” 제안을 채택할지, 수정 요청할지, 반려할지, 보류할지 결정합니다.",
           effect: "판단 기록이 남습니다. 공식 설정으로 저장하는 것은 별도 선택이며, 일반 채택만으로 canon이 되지는 않습니다.",
           risk: "공식 설정화 버튼은 프로젝트 기억에 강하게 남으므로, 승인된 설정일 때만 사용하세요.",
           actions: [
@@ -1071,21 +1106,21 @@ function directorConsoleHtml() {
       const title = (item.kind ? "[" + item.kind + "] " : "") + (item.title || "");
       return '<div class="item warn decision-card">' +
         '<div class="section-title"><h3>' + esc(short(title, 220)) + '</h3>' + statusPills + '</div>' +
-        '<h4>내가 판단할 내용</h4>' +
+        '<h4>내가 결정할 것</h4>' +
         '<p class="summary">' + esc(item.meaning) + '</p>' +
         (item.why_now ? '<h4>왜 지금 올라왔나</h4><p class="small">' + esc(item.why_now) + '</p>' : '') +
-        '<h4>판단 후 실제 변화</h4>' +
+        '<h4>결정하면 바뀌는 것</h4>' +
         '<p class="small">' + esc(item.effect) + '</p>' +
         '<h4>주의할 것</h4>' +
         '<p class="small">' + esc(item.risk) + '</p>' +
-        (asArray(item.status_lines).length ? '<h3>현재 판정</h3>' + compactListHtml(item.status_lines) : '') +
+        (asArray(item.status_lines).length ? '<h3>현재 상태</h3>' + compactListHtml(item.status_lines) : '') +
         actionsHtml(item.actions) + '</div>';
     }
     function renderDirectorInboxFull() {
       const items = buildDirectorDecisionItems({ includeGit: false });
       el("directorInboxFull").innerHTML = items.length
         ? decisionInboxSummaryHtml(items) + '<div class="list">' + items.map(renderDecisionCard).join("") + '</div>'
-        : '<div class="item good"><h3>지금 결정할 항목 없음</h3><p class="summary">현재는 방향 승인, 완료 판단, 수정 요청, 채택/반려처럼 Human Director가 직접 판단해야 하는 항목이 없습니다. 커밋/푸시는 변경 검토 또는 Git Gate에서 따로 확인하세요.</p></div>';
+        : '<div class="item good"><h3>지금 결정할 항목 없음</h3><p class="summary">현재는 방향 승인, 완료 판단, 수정 요청, 채택/반려처럼 Human Director가 직접 판단해야 하는 항목이 없습니다. 커밋/푸시는 변경 검토에서 따로 확인하세요.</p></div>';
     }
     function renderGoalPlanCard(plan, compact = false) {
       if (!plan) return "";
@@ -1108,15 +1143,20 @@ function directorConsoleHtml() {
         '<div class="compact-list">' +
         '<div class="compact-line"><span>추천 부서</span><span class="pill">' + esc(inlineList(departments, "(없음)")) + '</span></div>' +
         '<div class="compact-line"><span>추천 직원</span><span class="pill">' + esc(inlineList(staff, "(없음)")) + '</span></div>' +
-        '<div class="compact-line"><span>다음 단계 후보</span><span class="pill">' + esc("자문 " + meetingCount + " · 업무 " + workOrderCount + " · 제안 " + proposalCount) + '</span></div>' +
+        '<div class="compact-line"><span>다음 처리 후보</span><span class="pill">' + esc("자문 " + meetingCount + " · 업무 " + workOrderCount + " · 제안 " + proposalCount) + '</span></div>' +
         '</div>' +
         (routingReasons.length ? '<h4>왜 이렇게 나눴나</h4>' + listHtml(routingReasons) : '') +
         '<h4>감독자가 승인할 때 볼 것</h4>' +
         listHtml(approvalText, "승인 항목이 없습니다.") +
         '<h4>이 단계에서 바뀌지 않는 것</h4>' +
-        listHtml(plan.non_goals || ["기획안만으로 실행, 공식 설정 확정, commit/push를 하지 않습니다."]) +
+        listHtml(plan.non_goals || ["Director Brief만으로 실행, 공식 설정 확정, commit/push를 하지 않습니다."]) +
         (nextSteps.length ? '<h4>다음 행동</h4>' + listHtml(nextSteps) : '') +
-        internalLinksHtml([plan.href ? link("기획안 JSON", plan.href) : ""]) +
+        '<div class="row">' +
+        '<button class="secondary" data-nav-jump="meetings">자문 진행으로 이동</button>' +
+        '<button class="secondary" data-nav-jump="inbox">감독자 결정함 보기</button>' +
+        '<button class="secondary" data-nav-jump="work">업무 후보 보기</button>' +
+        '</div>' +
+        internalLinksHtml([plan.href ? link("브리프 JSON", plan.href) : ""]) +
         '</div>';
     }
     function renderDirectorGoals() {
@@ -1124,7 +1164,7 @@ function directorConsoleHtml() {
       el("goalPlanCount").textContent = plans.length ? String(plans.length) : "없음";
       el("directorGoalPlans").innerHTML = plans.length
         ? plans.map((plan) => renderGoalPlanCard(plan, true)).join("")
-        : renderEmpty("저장된 Director Brief가 없습니다. 새 안건을 입력해 먼저 브리프로 정리해보세요.");
+        : renderEmpty("저장된 Director Brief가 없습니다. 안건을 입력해 먼저 브리프로 정리해보세요.");
       el("goalPreviewBadge").textContent = latestGoalPreview ? "미리보기" : "대기";
       el("goalPreview").innerHTML = latestGoalPreview
         ? renderGoalPlanCard(latestGoalPreview, false)
@@ -1216,7 +1256,7 @@ function directorConsoleHtml() {
       const hasActiveTask = Boolean(activeTask.task_id);
       const displayNextAction = hasActiveTask ? nextAction : {
         label: "새 작업 선택",
-        detail: "현재 선택된 작업이 없습니다. 새 안건에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
+        detail: "현재 선택된 작업이 없습니다. 안건 시작에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       const activeTaskHtml = activeTask.task_id
@@ -1244,15 +1284,15 @@ function directorConsoleHtml() {
         runnerHtml +
         actionButtons;
       const evidenceLines = hasActiveTask ? [
-        ["브랜치", git.branch || "(unknown)"],
-        ["변경 파일", (git.changed_count || 0) + "개"],
+        ["현재 작업", activeTask.task_id || "(unknown)"],
         ["검증", verification.verdict || "(없음)"],
         ["완료 상태", completion.state || completion.readiness || "(없음)"],
+        ["남은 우려", asArray(completion.remaining_concerns).length + "개"],
       ] : [
-        ["브랜치", git.branch || "(unknown)"],
-        ["변경 파일", (git.changed_count || 0) + "개"],
         ["선택된 작업", "없음"],
-        ["검토할 완료 자료", "없음"],
+        ["검증", verification.verdict || "(없음)"],
+        ["완료 상태", completion.state || completion.readiness || "(없음)"],
+        ["남은 우려", asArray(completion.remaining_concerns).length + "개"],
       ];
       const evidenceLinks = [
         hasActiveTask && verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '',
@@ -1263,15 +1303,7 @@ function directorConsoleHtml() {
         evidenceLines.map(([label, value]) =>
           '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
         ).join("") +
-        (git.changed_files && git.changed_files.length
-          ? '<div class="item warn"><h3>변경 파일 미리보기</h3><p class="summary">' + esc(git.changed_files.slice(0, 6).join(", ")) + ((git.changed_count || git.changed_files.length) > 6 ? ' 외 ' + esc((git.changed_count || git.changed_files.length) - 6) + '개' : '') + '</p></div>'
-          : '<div class="item good"><h3>Git 변경 없음</h3><p class="summary">현재 Git 작업대가 깨끗합니다.</p></div>') +
-        (evidenceLinks ? '<div class="row">' + evidenceLinks + '</div>' : '');
-      const gitEntries = git.changed_entries || [];
-      el("gitGateCount").textContent = gitEntries.length ? gitEntries.length + "개" : "깨끗함";
-      el("gitFileSelect").innerHTML = gitEntries.length ? gitEntries.map((entry) =>
-        '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
-      ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
+        (evidenceLinks ? '<div class="row">' + evidenceLinks + '</div>' : '<p class="small muted">검증 보고서나 완료 카드가 생기면 여기에서 바로 열 수 있습니다.</p>');
       const queue = buildDirectorDecisionItems({ includeGit: false }).slice(0, 6);
       el("homeQueueCount").textContent = queue.length ? String(queue.length) : "없음";
       el("homeDecisionQueue").innerHTML = queue.length
@@ -1281,9 +1313,9 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>' + esc(agent.display_name_ko || agent.display_name || agent.agent_id) + '</span><span class="pill">' + esc(agent.department_name_ko || departmentName(agent.department_id)) + '</span></div>'
       ).join("") : '<p class="muted">등록된 StaffAgent가 없습니다.</p>';
       const activity = [
-        ...state.recent_staff_runs.slice(0, 3).map((run) => ({ label:"직원 보고서", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
-        ...state.meetings.slice(0, 2).map((meeting) => ({ label:"자문", value:meeting.meeting_id, status:meeting.status })),
-        ...state.work_orders.slice(0, 2).map((wo) => ({ label:"업무 지시", value:wo.work_order_id, status:wo.status })),
+        ...operationalRecords(state.recent_staff_runs).slice(0, 3).map((run) => ({ label:"직원 보고서", value:run.output_id || run.role_run_id, status:run.output_status || run.status })),
+        ...operationalRecords(state.meetings).slice(0, 2).map((meeting) => ({ label:"자문", value:meeting.meeting_id, status:meeting.status })),
+        ...operationalRecords(state.work_orders).slice(0, 2).map((wo) => ({ label:"업무 지시", value:wo.work_order_id, status:wo.status })),
       ].slice(0, 6);
       el("homeActivity").innerHTML = activity.length ? activity.map((item) =>
         '<div class="compact-line"><span><span class="muted">' + esc(item.label) + '</span> · ' + esc(item.value) + '</span><span class="pill">' + esc(optionLabel(item.status || "")) + '</span></div>'
@@ -1412,7 +1444,7 @@ function directorConsoleHtml() {
         '</div>' +
         internalLinksHtml([link("문맥 원본", packet.href)]) + '</div>'
       ).join("") : renderEmpty("아직 내부 문맥 기록이 없습니다. 업무 지시에서 직원 자료를 저장하면 여기에 나타납니다.");
-      const visibleRuns = state.recent_staff_runs.filter((r) =>
+      const visibleRuns = operationalRecords(state.recent_staff_runs).filter((r) =>
         (!filters.runStatus || (r.output_status || r.status) === filters.runStatus) &&
         includesText([r.role_run_id, r.output_id, r.agent_id, r.model, r.reasoning, r.summary, r.output_status, r.status].join(" "), filters.runSearch)
       );
@@ -1420,7 +1452,8 @@ function directorConsoleHtml() {
         const counts = r.materializable_counts || {};
         return Boolean((counts.proposals || 0) + (counts.memory || 0) + (counts.workorders || 0) + (counts.handoffs || 0));
       };
-      el("runs").innerHTML = visibleRuns.length ? visibleRuns.map((r) =>
+      const hiddenRunSamples = sampleRecordsHtml("숨긴 테스트/샘플 직원 보고서", state.recent_staff_runs);
+      el("runs").innerHTML = (visibleRuns.length ? visibleRuns.map((r) =>
         '<div class="item ' + (r.status === "failed" ? "danger" : "") + '"><h3><code>' + esc(r.output_id || r.role_run_id) + '</code> <span class="pill">' + esc(optionLabel(r.output_status || r.status)) + '</span></h3>' +
         '<p>' + esc(staffName(r.agent_id)) + ' · ' + esc(r.model) + ' / ' + esc(r.reasoning) + '</p>' +
         '<p class="small muted">' + esc(staffOutputStatusDetail(r.output_status || r.status)) + '</p>' +
@@ -1442,8 +1475,9 @@ function directorConsoleHtml() {
           link("실행 기록", "/file?path=" + encodeURIComponent(r.staff_run_path)),
           r.output_href ? link("원본 JSON", r.output_href) : ""
         ]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 직원 보고서가 없습니다.");
-      el("materializations").innerHTML = state.materializations.length ? state.materializations.map((m) =>
+      ).join("") : renderEmpty("조건에 맞는 직원 보고서가 없습니다.")) + hiddenRunSamples;
+      const visibleMaterializations = operationalRecords(state.materializations);
+      el("materializations").innerHTML = (visibleMaterializations.length ? visibleMaterializations.map((m) =>
         '<div class="item good"><h3><code>' + esc(m.materialization_id) + '</code></h3>' +
         '<p class="small">원본 보고서: ' + esc(m.source_output_id) + ' · 후보 ' + esc(m.created_record_count) + '개</p>' +
         actionsHtml([
@@ -1453,12 +1487,12 @@ function directorConsoleHtml() {
           button("반려", "decision-reject", m.path, "danger", 'data-decision="reject"')
         ]) +
         internalLinksHtml([link("채택 후보 원본", m.href)]) + '</div>'
-      ).join("") : '<p class="muted">아직 채택 후보가 없습니다. 왼쪽 직원 보고서에서 채택 후보로 넘기기를 누르면 여기에 나타납니다.</p>';
-      const visibleWorkOrders = state.work_orders.filter((wo) =>
+      ).join("") : '<p class="muted">아직 채택 후보가 없습니다. 왼쪽 직원 보고서에서 채택 후보로 넘기기를 누르면 여기에 나타납니다.</p>') + sampleRecordsHtml("숨긴 테스트/샘플 채택 후보", state.materializations);
+      const visibleWorkOrders = operationalRecords(state.work_orders).filter((wo) =>
         (!filters.workDepartment || wo.department_id === filters.workDepartment) &&
         includesText([wo.work_order_id, wo.objective, wo.department_id, wo.status].join(" "), filters.workSearch)
       );
-      el("workorders").innerHTML = visibleWorkOrders.length ? visibleWorkOrders.map((wo) =>
+      el("workorders").innerHTML = (visibleWorkOrders.length ? visibleWorkOrders.map((wo) =>
         '<div class="item"><h3><code>' + esc(wo.work_order_id) + '</code> <span class="pill">' + esc(optionLabel(wo.status)) + '</span></h3>' +
         '<p class="small muted">부서: ' + esc(departmentName(wo.department_id) || "(없음)") + ' · 담당: ' + esc(inlineList(asArray(wo.assigned_agents).map(staffName), "(없음)")) + '</p>' +
         '<p class="summary">' + esc(short(wo.objective)) + '</p>' +
@@ -1480,21 +1514,21 @@ function directorConsoleHtml() {
           button("작업 목록에 넣기", "workorder-create", wo.path, "good")
         ]) +
         internalLinksHtml([link("업무 지시 원본", wo.href)]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 업무 지시가 없습니다.");
-      const visibleHandoffs = state.handoffs.filter((h) =>
+      ).join("") : renderEmpty("조건에 맞는 업무 지시가 없습니다.")) + sampleRecordsHtml("숨긴 테스트/샘플 업무 지시", state.work_orders);
+      const visibleHandoffs = operationalRecords(state.handoffs).filter((h) =>
         includesText([h.handoff_id, h.from_agent_id, h.to_agent_id, h.reason, h.status].join(" "), filters.workSearch)
       );
-      el("handoffs").innerHTML = visibleHandoffs.length ? visibleHandoffs.map((h) =>
+      el("handoffs").innerHTML = (visibleHandoffs.length ? visibleHandoffs.map((h) =>
         '<div class="item warn"><h3><code>' + esc(h.handoff_id) + '</code> <span class="pill">' + esc(optionLabel(h.status)) + '</span></h3>' +
         '<p>' + esc(staffName(h.from_agent_id)) + ' → ' + esc(staffName(h.to_agent_id)) + '</p><p class="summary">' + esc(short(h.reason)) + '</p>' +
         actionsHtml([button("인수인계 계획", "handoff-plan", h.path), button("직원에게 맡기기", "handoff-execute", h.path, "good")]) +
         internalLinksHtml([link("인수인계 원본", "/file?path=" + encodeURIComponent(h.path))]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 인수인계 후보가 없습니다.");
-      const visibleMeetings = state.meetings.filter((meeting) =>
+      ).join("") : renderEmpty("조건에 맞는 인수인계 후보가 없습니다.")) + sampleRecordsHtml("숨긴 테스트/샘플 인수인계 후보", state.handoffs);
+      const visibleMeetings = operationalRecords(state.meetings).filter((meeting) =>
         meetingMatchesStatusFilter(meeting) &&
         includesText([meeting.meeting_id, meeting.topic, meeting.meeting_type, meeting.status].join(" "), filters.meetingSearch)
       );
-      el("meetings").innerHTML = visibleMeetings.length ? visibleMeetings.map((meeting) =>
+      el("meetings").innerHTML = (visibleMeetings.length ? visibleMeetings.map((meeting) =>
         '<div class="item"><h3><code>' + esc(meeting.meeting_id) + '</code> <span class="pill">' + esc(optionLabel(meeting.status)) + '</span></h3>' +
         '<p>' + esc(meeting.topic) + '</p>' +
         '<p class="small muted">종류 ' + esc(optionLabel(meeting.meeting_type || "(none)")) + ' · 출처 ' + esc(meeting.is_stored ? "저장됨" : "예시") + '</p>' +
@@ -1521,7 +1555,7 @@ function directorConsoleHtml() {
           meeting.is_stored && meeting.status !== "closed" ? button("자문 종료", "meeting-finalize", meeting.meeting_id, "warn") : ""
         ]) +
         internalLinksHtml([link("자문 원본", meeting.href)]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.");
+      ).join("") : renderEmpty("조건에 맞는 MeetingSession이 없습니다.")) + sampleRecordsHtml("숨긴 테스트/샘플 자문 기록", state.meetings);
       const visibleDepartments = state.departments.filter((department) =>
         includesText([department.name_ko, department.name, department.department_id, department.mission_ko, department.review_gate_labels.join(" ")].join(" "), filters.departmentSearch)
       );
@@ -1630,36 +1664,6 @@ function directorConsoleHtml() {
           actionsHtml([button("재현", "automation-replay", evaluation.path), button("수정 계획", "automation-repair", evaluation.path)]) +
           internalLinksHtml([link("평가 원본", evaluation.href)]) + '</div>'
         ).join("") : '<p class="muted">저장된 정책 평가가 없습니다.</p>');
-      const wikiEntries = asArray(state.studio_wiki_entries);
-      const wikiVisibleEntries = wikiEntries.filter((entry) =>
-        includesText([entry.wiki_id, entry.title, entry.summary, entry.category_label, entry.status].join(" "), filters.knowledgeSearch)
-      );
-      const wikiCategoryCounts = wikiEntries.reduce((acc, entry) => {
-        const label = entry.category_label || entry.category || "기타";
-        acc[label] = (acc[label] || 0) + 1;
-        return acc;
-      }, {});
-      const wikiInboxCount = wikiEntries.filter((entry) => entry.category === "Inbox" && entry.kind === "entry").length;
-      el("wikiEntryCount").textContent = wikiEntries.length ? String(wikiEntries.length) : "0";
-      el("studioWikiOverview").innerHTML = wikiEntries.length
-        ? '<div class="compact-list">' +
-          Object.keys(wikiCategoryCounts).sort((a, b) => a.localeCompare(b)).map((label) =>
-            '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(wikiCategoryCounts[label]) + '</span></div>'
-          ).join("") +
-          '</div>' +
-          '<p class="small ' + (wikiInboxCount ? 'warn' : 'muted') + '">' + (wikiInboxCount ? '정리 대기 Inbox ' + esc(wikiInboxCount) + '개가 있습니다.' : '정리 대기 Inbox 항목은 없습니다.') + '</p>'
-        : '<p class="muted">아직 Studio Wiki 문서를 찾지 못했습니다.</p>';
-      el("studioWikiEntries").innerHTML = wikiVisibleEntries.length ? wikiVisibleEntries.map((entry) =>
-        '<div class="item ' + (entry.category === "Inbox" && entry.kind === "entry" ? "warn" : entry.category === "Canon" ? "good" : "") + '">' +
-        '<h3><code>' + esc(entry.wiki_id) + '</code> <span class="pill">' + esc(entry.category_label || entry.category) + '</span> <span class="pill">' + esc(optionLabel(entry.status)) + '</span></h3>' +
-        '<p>' + esc(entry.title) + '</p>' +
-        '<p class="summary">' + esc(short(entry.summary, 180)) + '</p>' +
-        actionsHtml([
-          entry.kind === "entry" ? button(entry.category === "Inbox" ? "승격 계획" : "분류 점검", "wiki-promotion-plan", entry.path) : "",
-        ]) +
-        internalLinksHtml([link("문서 열기", entry.href)]) +
-        '</div>'
-      ).join("") : renderEmpty("조건에 맞는 Wiki 문서가 없습니다.");
       const visibleProposals = state.proposals.filter((p) => {
         const decisionCount = proposalDecisions(p.proposal_id).length;
         const matchesDecisionFilter = !filters.proposalDecision ||
@@ -1743,8 +1747,8 @@ function directorConsoleHtml() {
         '<p class="small">' + esc(optionLabel(m.scope)) + ' · ' + esc(optionLabel(m.type)) + ' · 담당 ' + esc(staffName(m.owner_agent_id)) + '</p>' +
         '<p class="summary">' + esc(short(m.content)) + '</p>' +
         actionsHtml([button("전환 계획", "knowledge-transition-plan", m.path)]) +
-        internalLinksHtml([link("기억 원본", m.href)]) + '</div>'
-      ).join("") : renderEmpty("조건에 맞는 기억 기록이 없습니다.");
+        internalLinksHtml([link("참고 기록 원본", m.href)]) + '</div>'
+      ).join("") : renderEmpty("조건에 맞는 참고 기록이 없습니다.");
       const core = state.workflow_core || {};
       const completion = core.completion || {};
       const verification = core.verification || {};
@@ -1756,31 +1760,63 @@ function directorConsoleHtml() {
       const warningPreview = warnings.slice(0, 6);
       const concernMore = concerns.length > concernPreview.length ? '<li>+' + esc(concerns.length - concernPreview.length) + '개 더 있음</li>' : "";
       const warningMore = warnings.length > warningPreview.length ? '<li>+' + esc(warnings.length - warningPreview.length) + '개 더 있음</li>' : "";
-      const decisionStatus = completionDecisionStatusLines(core);
-      const decisionActions = completionFollowUpActionItems(core);
-      const decisionActionSummary = completionDirectorDecisionSummary(core);
       const activeTask = core.active_task || {};
-      const decisionStateLabel = completionDecisionStateLabel(core);
+      const hasActiveTask = !!activeTask.task_id;
+      const hasVerificationContext = !!(
+        verification.verdict ||
+        verification.href ||
+        verification.path ||
+        verification.warning_count != null ||
+        verification.concern_count != null
+      );
+      const hasCompletionContext = !!(
+        completion.id ||
+        completion.state ||
+        completion.readiness ||
+        completion.summary ||
+        completion.href ||
+        completion.path ||
+        completion.card_href ||
+        completion.card_path ||
+        concerns.length ||
+        warnings.length
+      );
+      const hasReviewContext = hasActiveTask || hasVerificationContext || hasCompletionContext;
+      const decisionStatus = hasReviewContext
+        ? completionDecisionStatusLines(core)
+        : ["현재 완료 판단 대상이 없습니다.", "완료 승인, 수정 요청, 판단 보류는 완료 보고서가 있을 때만 의미가 있습니다."];
+      const decisionActions = hasReviewContext ? completionFollowUpActionItems(core) : [];
+      const decisionActionSummary = hasReviewContext
+        ? completionDirectorDecisionSummary(core)
+        : "현재 선택된 작업이나 완료 보고서가 없습니다. 안건 시작, 업무 지시, 또는 결과 검토가 필요한 작업을 먼저 선택하세요.";
+      const decisionStateLabel = hasReviewContext ? completionDecisionStateLabel(core) : "검토할 작업 없음";
       el("evidenceSummary").innerHTML =
         metric("현재 작업", activeTask.task_id || "없음") +
         metric("감독자 결정", decisionStateLabel) +
-        metric("현재 판정", verification.verdict || "없음") +
+        metric("검증 판정", verification.verdict || "없음") +
         metric("참고 보고서", visibleReviewPackets + "개" + (totalReviewPackets > visibleReviewPackets ? " / 전체 " + totalReviewPackets + "개" : ""));
-      el("workflowReview").innerHTML =
-        '<div class="item ' + (verification.verdict === "CONCERNS" ? "warn" : verification.verdict === "FAIL" ? "danger" : "good") + '"><h3>현재 판정 <span class="pill">' + esc(verification.verdict || "없음") + '</span></h3>' +
-        '<p class="summary">' + esc(translateCompletionSummary(completion.summary) || "완료 보고서 요약이 없습니다.") + '</p>' +
-        '<p class="small muted">경고 ' + esc(verification.warning_count ?? "-") + ' · 우려 ' + esc(verification.concern_count ?? "-") + '</p>' +
-        '<div class="row">' + (verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '') + (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '') + (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') + '</div></div>' +
-        '<div class="item ' + (completionNeedsDirectorChoice(core) || completionChangesAlreadyRequested(core) ? "warn" : "good") + '"><h3>감독자 결정 <span class="pill">' + esc(decisionStateLabel) + '</span></h3><p class="summary">' + esc(decisionActionSummary) + '</p>' +
-        (decisionStatus.length ? compactListHtml(decisionStatus) : "") +
-        actionsHtml(decisionActions) +
-        '</div>' +
-        (concerns.length ? '<div class="item warn"><h3>우려 사항</h3><p class="summary">완료 전에 사람이 확인해야 하는 신호입니다. 문제가 받아들일 만하면 우려 감수, 고쳐야 하면 수정 요청을 선택합니다.</p><ul class="small">' + concernPreview.map((concern) =>
-          '<li><strong>' + esc(explainConcern(concern)) + '</strong><br><span class="muted">' + esc(translateConcernDetail(concern)) + '</span></li>'
-        ).join("") + concernMore + '</ul></div>' : '<div class="item good"><h3>표시할 우려 사항 없음</h3><p class="summary">현재 완료 보고서에서 별도 concern 목록을 찾지 못했습니다.</p></div>') +
-        (warnings.length ? '<div class="item"><h3>참고 신호</h3><p class="summary">완료 판단을 보조하는 경고입니다. 우려 사항보다 낮은 강도의 확인 항목입니다.</p><ul class="small">' + warningPreview.map((warning) =>
-          '<li>' + esc(translateConcernDetail(warning)) + '</li>'
-        ).join("") + warningMore + '</ul></div>' : "");
+      if (!hasReviewContext) {
+        el("workflowReview").innerHTML =
+          '<div class="item"><h3>검토할 작업 없음</h3><p class="summary">' + esc(decisionActionSummary) + '</p>' +
+          compactListHtml(decisionStatus) +
+          '<p class="small muted">완료 승인이나 수정 요청은 검증 보고서와 완료 보고서가 생긴 뒤에만 판단합니다.</p></div>';
+      } else {
+        el("workflowReview").innerHTML =
+          '<div class="item ' + (completionNeedsDirectorChoice(core) || completionChangesAlreadyRequested(core) ? "warn" : "good") + '"><h3>지금 결정할 일 <span class="pill">' + esc(decisionStateLabel) + '</span></h3><p class="summary">' + esc(decisionActionSummary) + '</p>' +
+          (decisionStatus.length ? compactListHtml(decisionStatus) : "") +
+          actionsHtml(decisionActions) +
+          '</div>' +
+          '<div class="item ' + (verification.verdict === "CONCERNS" ? "warn" : verification.verdict === "FAIL" ? "danger" : "good") + '"><h3>검증 요약 <span class="pill">' + esc(verification.verdict || "없음") + '</span></h3>' +
+          '<p class="summary">' + esc(translateCompletionSummary(completion.summary) || "완료 보고서 요약이 없습니다.") + '</p>' +
+          '<p class="small muted">경고 ' + esc(verification.warning_count ?? "-") + ' · 우려 ' + esc(verification.concern_count ?? "-") + '</p>' +
+          '<details class="internal-links"><summary>원본 보고서 링크</summary><div class="row">' + (verification.href ? '<a href="' + esc(verification.href) + '" target="_blank">검증 보고서</a>' : '') + (completion.href ? '<a href="' + esc(completion.href) + '" target="_blank">완료 보고서</a>' : '') + (completion.card_href ? '<a href="' + esc(completion.card_href) + '" target="_blank">완료 카드</a>' : '') + '</div></details></div>' +
+          (concerns.length ? '<div class="item warn"><h3>우려 사항</h3><p class="summary">완료 전에 사람이 확인해야 하는 신호입니다. 문제가 받아들일 만하면 우려 감수, 고쳐야 하면 수정 요청을 선택합니다.</p><ul class="small">' + concernPreview.map((concern) =>
+            '<li><strong>' + esc(explainConcern(concern)) + '</strong><br><span class="muted">' + esc(translateConcernDetail(concern)) + '</span></li>'
+          ).join("") + concernMore + '</ul></div>' : '<div class="item good"><h3>표시할 우려 사항 없음</h3><p class="summary">현재 완료 보고서에서 별도 concern 목록을 찾지 못했습니다.</p></div>') +
+          (warnings.length ? '<div class="item"><h3>참고 신호</h3><p class="summary">완료 판단을 보조하는 경고입니다. 우려 사항보다 낮은 강도의 확인 항목입니다.</p><ul class="small">' + warningPreview.map((warning) =>
+            '<li>' + esc(translateConcernDetail(warning)) + '</li>'
+          ).join("") + warningMore + '</ul></div>' : "");
+      }
       el("packets").innerHTML = state.review_packets.length ? '<details class="internal-links"><summary>참고용 검토 보고서 ' + esc(visibleReviewPackets) + '개 보기' + (totalReviewPackets > visibleReviewPackets ? ' · 전체 ' + esc(totalReviewPackets) + '개 중 일부' : '') + '</summary><div class="item"><h3>무엇이 들어 있나</h3><p class="summary">직원 보고서와 검토 패킷입니다. 현재 완료 판단이 헷갈릴 때만 열어 보면 됩니다.</p>' + reviewPacketBreakdownHtml(state.review_packets) + '</div><div class="list">' + state.review_packets.map((p) =>
         '<div class="item good"><h3><code>' + esc(p.id) + '</code> <span class="pill">' + esc(reviewPacketRoleLabel(p)) + '</span></h3><p class="muted small">' + esc(p.updated_at) + '</p><a href="' + esc(p.href) + '" target="_blank">검토 보고서 열기</a></div>'
       ).join("") + '</div></details>' : '<p class="muted">검토 보고서가 없습니다.</p>';
@@ -1815,7 +1851,7 @@ function directorConsoleHtml() {
     }
     async function previewDirectorGoalPlan() {
       const payload = goalPayloadFromForm();
-      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
+      if (!payload.goal) return alert("감독자 안건을 입력하세요.");
       const result = await post("/api/studio/director-goal/plan", payload);
       latestGoalPreview = result.director_goal_plan;
       log(result);
@@ -1823,8 +1859,8 @@ function directorConsoleHtml() {
     }
     async function storeDirectorGoalPlan() {
       const payload = goalPayloadFromForm();
-      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
-      if (!confirm("기획안을 저장할까요? 저장만 하며 공식 설정 확정, 소스 수정, task 실행, commit/push는 하지 않습니다.")) return;
+      if (!payload.goal) return alert("감독자 안건을 입력하세요.");
+      if (!confirm("Director Brief를 저장할까요? 저장만 하며 공식 설정 확정, 소스 수정, task 실행, commit/push는 하지 않습니다.")) return;
       const result = await post("/api/studio/director-goal/store", payload);
       latestGoalPreview = result.director_goal_plan;
       log(result);
@@ -1832,8 +1868,8 @@ function directorConsoleHtml() {
     }
     async function createDirectorGoalBundle() {
       const payload = goalPayloadFromForm();
-      if (!payload.goal) return alert("감독자 목표를 입력하세요.");
-      if (!confirm("브리프와 자문/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
+      if (!payload.goal) return alert("감독자 안건을 입력하세요.");
+      if (!confirm("브리프와 자문/질문/업무/제안 후보를 함께 생성할까요? 이 작업은 Studio 기록만 만들고 구현, task 실행, commit/push는 하지 않습니다.")) return;
       const result = await post("/api/studio/director-goal/create-bundle", payload);
       latestGoalPreview = result.director_goal_plan;
       log(result);
@@ -1960,21 +1996,6 @@ function directorConsoleHtml() {
       }));
       await refresh();
     }
-    async function createWikiInboxFromForm() {
-      const title = fieldValue("wikiInboxTitle");
-      const content = fieldValue("wikiInboxContent");
-      if (!title || !content) return alert("Wiki Inbox 제목과 내용을 입력하세요.");
-      if (!confirm("이 내용을 Wiki Inbox에 저장할까요?\\n\\n저장되는 것: 정리 대기 Markdown 문서\\n바뀌지 않는 것: 공식 결정, 공식 설정, task, 소스, commit/push")) return;
-      log(await post("/api/studio/wiki-inbox/create", {
-        title,
-        content,
-        source: fieldValue("wikiInboxSource") || "Studio",
-      }));
-      el("wikiInboxTitle").value = "";
-      el("wikiInboxContent").value = "";
-      el("wikiInboxSource").value = "";
-      await refresh();
-    }
     async function createProposalFromForm() {
       const title = fieldValue("proposalCreateTitle");
       const summary = fieldValue("proposalCreateSummary");
@@ -2012,8 +2033,8 @@ function directorConsoleHtml() {
     }
     async function createMemoryFromForm() {
       const content = fieldValue("memoryCreateContent");
-      if (!content) return alert("기억할 내용을 입력하세요.");
-      if (!confirm("기억 기록을 저장할까요? 공식 설정 상태로 저장하면 이후 AI 직원들이 확정 설정처럼 참고합니다.")) return;
+      if (!content) return alert("참고할 내용을 입력하세요.");
+      if (!confirm("참고 기록을 저장할까요? 공식 설정 상태로 저장하면 이후 AI 직원들이 확정 설정처럼 참고합니다.")) return;
       log(await post("/api/studio/memory/create", {
         scope: fieldValue("memoryCreateScope") || "project",
         type: fieldValue("memoryCreateType") || "fact",
@@ -2145,7 +2166,6 @@ function directorConsoleHtml() {
         await refresh();
       }
       if (action === "knowledge-transition-plan") return log(await post("/api/studio/knowledge/transition-plan", { path:filePath }));
-      if (action === "wiki-promotion-plan") return log(await post("/api/studio/wiki/promotion-plan", { path:filePath }));
       if (action === "canon-conflict-report") return log(await post("/api/studio/knowledge/canon-conflict-report", {}));
       if (action === "decision-create-memory" || action === "decision-create-canon") {
         const status = action === "decision-create-canon" ? "canon" : "approved";
@@ -2363,15 +2383,24 @@ function directorConsoleHtml() {
     el("goalPlanSubmit").addEventListener("click", () => previewDirectorGoalPlan().catch(log));
     el("goalStoreSubmit").addEventListener("click", () => storeDirectorGoalPlan().catch(log));
     el("goalBundleSubmit").addEventListener("click", () => createDirectorGoalBundle().catch(log));
-    el("gitSelectWorkflow").addEventListener("click", () => {
-      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
-    });
-    el("gitClearSelection").addEventListener("click", () => {
-      document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = false; });
-    });
-    el("gitCommitSelected").addEventListener("click", () => commitSelected(false).catch(log));
-    el("gitCommitPushSelected").addEventListener("click", () => commitSelected(true).catch(log));
-    el("gitPushOnly").addEventListener("click", () => pushOnly().catch(log));
+    const homeGitSelectWorkflow = el("gitSelectWorkflow");
+    if (homeGitSelectWorkflow) {
+      homeGitSelectWorkflow.addEventListener("click", () => {
+        document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
+      });
+    }
+    const homeGitClearSelection = el("gitClearSelection");
+    if (homeGitClearSelection) {
+      homeGitClearSelection.addEventListener("click", () => {
+        document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = false; });
+      });
+    }
+    const homeGitCommitSelected = el("gitCommitSelected");
+    if (homeGitCommitSelected) homeGitCommitSelected.addEventListener("click", () => commitSelected(false).catch(log));
+    const homeGitCommitPushSelected = el("gitCommitPushSelected");
+    if (homeGitCommitPushSelected) homeGitCommitPushSelected.addEventListener("click", () => commitSelected(true).catch(log));
+    const homeGitPushOnly = el("gitPushOnly");
+    if (homeGitPushOnly) homeGitPushOnly.addEventListener("click", () => pushOnly().catch(log));
     el("diffGitSelectWorkflow").addEventListener("click", () => {
       document.querySelectorAll("input[data-git-file]").forEach((input) => { input.checked = isWorkflowPath(input.dataset.gitFile); });
     });
@@ -2385,7 +2414,6 @@ function directorConsoleHtml() {
     el("meetingResultClose").addEventListener("click", () => { el("meetingResultPanel").hidden = true; });
     el("globalResultClose").addEventListener("click", () => { el("globalResultPanel").hidden = true; });
     el("workCreateSubmit").addEventListener("click", () => createWorkOrderFromForm().catch(log));
-    el("wikiInboxCreateSubmit").addEventListener("click", () => createWikiInboxFromForm().catch(log));
     el("proposalCreateSubmit").addEventListener("click", () => createProposalFromForm().catch(log));
     el("decisionCreateSubmit").addEventListener("click", () => createDecisionFromForm().catch(log));
     el("memoryCreateSubmit").addEventListener("click", () => createMemoryFromForm().catch(log));
