@@ -223,3 +223,53 @@ Pass criteria:
 - No Studio decision is automatically approved.
 - No canon, task execution, commit, or push happens from Hermes output alone.
 - The returned research has enough evidence for the Human Director to review.
+
+## 13. Verified Hermes Research Smoke
+
+On 2026-06-02, Hermes was used from the local TUI for a real research smoke:
+
+```text
+Do not modify files. Check whether Hermes Agent has official documentation or
+public sources for LLM Wiki, knowledge, or memory features. Summarize the result.
+```
+
+Result:
+
+```text
+PASS_WITH_NOTES
+```
+
+The run confirmed that Hermes can use web search and browser automation to
+collect useful external research. One navigation attempt to the Hermes docs
+timed out, so network retry behavior remains a practical caveat, but the final
+research result included enough source references for Human Director review.
+
+Confirmed references:
+
+- Persistent Memory official docs:
+  `https://hermes-agent.nousresearch.com/docs/user-guide/features/memory`
+- LLM Wiki bundled skill docs:
+  `https://hermes-agent.nousresearch.com/docs/user-guide/skills/bundled/research/research-llm-wiki`
+- Hermes Agent docs home:
+  `https://hermes-agent.nousresearch.com/docs/`
+- Public bundled skill source:
+  `https://github.com/NousResearch/hermes-agent/blob/main/skills/research/llm-wiki/SKILL.md`
+
+Interpretation:
+
+- Hermes has a documented persistent memory feature.
+- Hermes has a documented LLM Wiki / knowledge-base skill.
+- AIWorkflow Studio should not grow an internal LLM Wiki screen or treat the
+  Studio proposal/decision record as the long-term wiki.
+- Studio should decide what is worth preserving and import/link the result as a
+  governed reference.
+- Obsidian-compatible Markdown and Hermes LLM Wiki remain the preferred external
+  knowledge-base direction.
+
+Safety boundary:
+
+- Hermes output is evidence, not approval.
+- Hermes output may become a `ResearchNote`, `MeetingReference`,
+  `StaffReportInput`, or external knowledge reference.
+- Hermes output must not directly approve direction, canonize knowledge,
+  create/execute tasks, modify source/data/config, commit, push, or release.

@@ -539,6 +539,8 @@ Studio 실행 흐름에 자동으로 연결된 것은 아니다.
 - Hermes는 OpenClaw 도입 전까지 브라우저 / 웹 어댑터 역할을 맡는다.
 - Hermes는 `openai-codex`, `gpt-5.5`, OAuth 인증, 웹 검색, 브라우저 자동화
   smoke가 확인된 상태다.
+- 2026-06-02 Hermes 조사 smoke에서 Persistent Memory와 bundled LLM Wiki /
+  knowledge-base skill의 공식 문서와 공개 자료가 확인되었다.
 - Hermes는 웹/브라우저 검증 자료를 모을 수 있지만 승인, 공식 설정 확정,
   로컬 소스 구현, commit, push, Codex 대체를 하면 안 된다.
 - OpenClaw는 아직 설치된 운영 도구가 아니며, sandbox worker 후보로 남는다.
@@ -546,8 +548,9 @@ Studio 실행 흐름에 자동으로 연결된 것은 아니다.
   나중에 Hermes LLM Wiki 또는 다른 지식 도구가 유용하다고 검증되면 외부 지식
   기반 레이어에서 다룬다.
 
-다음 연동 단계는 새 Studio 페이지를 더 만드는 것이 아니다. Hermes로 실제 웹/브라우저
-조사를 수행하고, 그 결과를 Studio의 통제된 참고 기록으로 가져오는 smoke다.
+다음 연동 단계는 새 Studio Wiki 페이지를 더 만드는 것이 아니다. Hermes가 모은
+웹/브라우저 조사 결과를 Human Director가 보존하기로 결정했을 때만 Studio의
+통제된 참고 기록으로 가져오는 import 경로를 만드는 것이다.
 
 ---
 

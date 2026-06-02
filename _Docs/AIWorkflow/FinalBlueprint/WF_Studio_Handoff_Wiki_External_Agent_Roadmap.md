@@ -553,6 +553,8 @@ Current fixed state:
 - Hermes is the interim browser/web adapter before OpenClaw is introduced.
 - Hermes is verified with `openai-codex`, `gpt-5.5`, OAuth auth, web search, and
   browser automation smoke.
+- A 2026-06-02 Hermes research smoke confirmed official/public references for
+  Persistent Memory and the bundled LLM Wiki / knowledge-base skill.
 - Hermes may collect web and browser evidence, but it may not approve, canonize,
   implement local source changes, commit, push, or replace Codex.
 - OpenClaw is not installed in this roadmap state and remains a sandbox worker
@@ -561,9 +563,9 @@ Current fixed state:
   knowledge-base layer, currently represented by Obsidian-compatible Markdown
   and later by Hermes LLM Wiki or another knowledge tool if it proves useful.
 
-The next integration step is not another Studio page. It is a real
-Hermes-backed research smoke that turns web/browser findings into a governed
-Studio reference record.
+The next integration step is not another Studio wiki page. It is a controlled
+import path that turns Hermes web/browser findings into a governed Studio
+reference record only when the Human Director chooses to preserve them.
 
 ---
 

@@ -214,3 +214,52 @@ OpenClaw가 하면 안 되는 일:
 - Studio 결정이 자동 승인되지 않는다.
 - Hermes 결과만으로 공식 설정 확정, task 실행, commit, push가 일어나지 않는다.
 - 반환된 조사 결과에 Human Director가 검토할 수 있는 근거가 붙어 있다.
+
+## 13. 검증된 Hermes 조사 smoke
+
+2026-06-02에 로컬 Hermes TUI에서 실제 조사 smoke를 수행했다.
+
+```text
+파일은 수정하지 말고, Hermes Agent에 LLM Wiki, knowledge, memory 관련 기능이
+공식 문서나 공개 자료에 있는지 확인하고 요약한다.
+```
+
+결과:
+
+```text
+PASS_WITH_NOTES
+```
+
+Hermes가 웹 검색과 브라우저 자동화로 외부 조사 자료를 모을 수 있음을 확인했다.
+Hermes 문서 페이지로 이동하는 중 한 번 timeout이 있었으므로 네트워크 retry는
+실사용 주의점으로 남긴다. 하지만 최종 조사 결과에는 Human Director가 검토할
+수 있는 공식 문서와 공개 소스 링크가 포함되었다.
+
+확인된 근거:
+
+- Persistent Memory 공식 문서:
+  `https://hermes-agent.nousresearch.com/docs/user-guide/features/memory`
+- LLM Wiki bundled skill 문서:
+  `https://hermes-agent.nousresearch.com/docs/user-guide/skills/bundled/research/research-llm-wiki`
+- Hermes Agent 문서 홈:
+  `https://hermes-agent.nousresearch.com/docs/`
+- 공개 bundled skill 원본:
+  `https://github.com/NousResearch/hermes-agent/blob/main/skills/research/llm-wiki/SKILL.md`
+
+해석:
+
+- Hermes에는 persistent memory 기능이 문서화되어 있다.
+- Hermes에는 LLM Wiki / knowledge-base skill이 문서화되어 있다.
+- AIWorkflow Studio는 내부 LLM Wiki 화면을 키우지 않는다.
+- Studio의 제안/결정 기록함을 장기 Wiki로 취급하지 않는다.
+- Studio는 보존할 가치가 있는 결과를 판단하고, 통제된 참고 기록이나 외부
+  지식 링크로 가져오는 역할만 맡는다.
+- Obsidian 호환 Markdown과 Hermes LLM Wiki를 외부 지식 기반 방향으로 둔다.
+
+안전 경계:
+
+- Hermes 결과는 근거 자료이지 승인이 아니다.
+- Hermes 결과는 `ResearchNote`, `MeetingReference`, `StaffReportInput`,
+  또는 외부 지식 링크가 될 수 있다.
+- Hermes 결과만으로 방향 승인, 공식 설정 확정, task 생성/실행,
+  소스/데이터/config 수정, commit, push, release를 하면 안 된다.
