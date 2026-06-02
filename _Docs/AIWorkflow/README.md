@@ -28,7 +28,7 @@ This README is the entry point for the document set.
 | `AIWorkflow_Overview_KR.md` | Korean Human Director overview of the AIWorkflow layers, responsibilities, and regular operating model |
 | `AIWorkflow_Flowchart_KR.md` | Korean flowchart guide for the regular path, read-only inspection path, missing-validation path, and commit decision path |
 | `AIWorkflow_Korean_Guide_Glossary.md` | Korean glossary and command usage guide for regular and optional/debug AIWorkflow commands |
-| `Guide/AIWorkflow_User_Guide_KR.html` | Complete browser-readable Korean Human Director user guide for the current Discord-first PC Runner workflow |
+| `Guide/AIWorkflow_User_Guide_KR.html` | Browser-readable Korean Human Director guide for the Studio-centered workflow, PC Runner gates, and legacy Discord helper path |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |
 | `FinalBlueprint/WF_Studio_Control_Plane_Repositioning_Audit.md` | Repositions Studio as the Human Director Control Plane and classifies Studio, external-tool, internal/admin, and legacy Discord responsibilities |
@@ -37,11 +37,11 @@ This README is the entry point for the document set.
 | `FinalBlueprint/WF_Studio_Handoff_Wiki_External_Agent_Roadmap_KR.md` | Korean Human Director companion for the Studio, Handoff, LLM Wiki, Hermes, OpenClaw, and Codex integration roadmap |
 | `FinalBlueprint/WF_Handoff_Work_Packet_Internalization.md` | Defines how the existing Handoff system becomes Studio's internal Work Packet and dispatch layer rather than a separate user-facing workflow |
 | `FinalBlueprint/WF_Handoff_Work_Packet_Internalization_KR.md` | Korean Human Director companion for Handoff as an internal Work Packet / staff handoff layer |
-| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide.md` | Defines Hermes and OpenClaw as governed external tool/worker candidates under Studio approval, evidence, and safety boundaries |
-| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide_KR.md` | Korean Human Director guide for using Hermes and OpenClaw without giving them approval, canon, commit, or push authority |
-| `StudioWiki/README.md` | Defines the LLM Wiki company-memory structure, knowledge classes, promotion rules, and Obsidian-compatible Markdown boundary |
-| `StudioWiki/00_MOC.md` | Top-level map of content for StudioWiki concepts, sections, and promotion review checklist |
-| `Guide/AIWorkflow_LLM_Wiki_Guide_KR.md` | Korean Human Director guide to the LLM Wiki / AI Librarian memory workflow |
+| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide.md` | Defines Hermes and OpenClaw as governed external tool/worker candidates, including the current verified Hermes baseline and next real-use smoke |
+| `FinalBlueprint/WF_Hermes_OpenClaw_Integration_Guide_KR.md` | Korean Human Director guide for using Hermes/OpenClaw without giving them approval, canon, commit, or push authority, including the verified Hermes setup |
+| `StudioWiki/README.md` | Preserves the external LLM Wiki / Obsidian / Hermes knowledge-base candidate and states that it is not a primary Studio screen |
+| `StudioWiki/00_MOC.md` | Top-level map of content for the external StudioWiki experiment and promotion review checklist |
+| `Guide/AIWorkflow_LLM_Wiki_Guide_KR.md` | Korean Human Director reference for the deferred/externalized LLM Wiki and AI Librarian memory workflow |
 | `Studio/README.md` | First durable Studio implementation slice: domain model, schemas, read-only staff registry, WorkOrder bridge, staff context/output contract, canon decision flow, memory policy, and runtime contracts |
 | `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |

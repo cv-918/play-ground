@@ -1,8 +1,16 @@
 # AIWorkflow LLM Wiki 사용자 가이드
 
+> 상태: 보류 / 외부화 후보.
+>
+> 이 문서는 LLM Wiki 아이디어의 배경을 남겨두기 위한 참고 문서다.
+> 현재 Studio 주 메뉴는 LLM Wiki를 직접 관리하지 않는다. Studio의 `기록함`은
+> 제안, 감독자 판단, 참고 기록, 공식 설정 후보를 구분하는 운영 화면이고,
+> 장기 지식 정리와 Wiki 편집은 Obsidian, Hermes, 또는 별도 지식 기반 도구에서
+> 담당하는 방향으로 재검토한다.
+
 ## 1. LLM Wiki가 뭐야?
 
-LLM Wiki는 AIWorkflow Studio의 **회사 기억**이다.
+LLM Wiki는 AIWorkflow Studio 내부 화면이 아니라, 외부 지식 기반 후보로 다룬다.
 
 내가 Codex와 나눈 중요한 대화, 회의 결과, 반려한 아이디어, 공식 방향,
 실패에서 배운 점, 외부 조사 결과를 사람이 읽을 수 있는 Markdown 문서로
@@ -25,7 +33,7 @@ RAG는 큰 문서 더미에서 필요한 조각을 검색하는 방식에 가깝
 LLM Wiki는 AI Librarian이 내용을 읽고, 요약하고, 연결하고, 사람이 검토할 수
 있는 지식 문서로 정리하는 방식이다.
 
-지금 단계에서는 RAG보다 LLM Wiki가 먼저다.
+현재는 Hermes의 내장 LLM Wiki 기능과 Obsidian 기반 수동/반자동 지식 정리를 먼저 검토한다.
 
 이유:
 
@@ -78,37 +86,34 @@ _Docs/AIWorkflow/StudioWiki/
 3. 나는 이것을 공식 설정, 제안, 교훈, 반려 기록 중 무엇으로 둘지 판단한다.
 4. 확정된 기록은 다음 회의나 작업 지시의 맥락으로 쓰인다.
 
-## 6. Studio에서 바로 남기는 방법
+## 6. Studio와의 현재 경계
 
-Studio의 `LLM Wiki`에는 `Wiki Inbox에 남기기`가 있다.
+현재 Studio는 LLM Wiki를 직접 관리하지 않는다.
 
-이 기능은 대화, 자문, 조사, 작업 중 “나중에 다시 써야 할 것 같은 맥락”을
-`_Docs/AIWorkflow/StudioWiki/Inbox/` 아래 Markdown 문서로 남긴다.
+Studio의 `기록함`은 제안, 감독자 판단, 참고 기록, 공식 설정 후보를
+구분해 검토하는 운영 화면이다. 대화, 자문, 조사, 작업 중 “나중에 다시
+써야 할 것 같은 맥락”은 우선 Studio 기록함에서 참고 기록 또는 제안으로
+남길지 판단한다.
 
 중요한 점:
 
-- 저장되는 것은 정리 대기 문서다.
-- 공식 결정이나 공식 설정으로 확정되지 않는다.
+- Studio 기록함은 Wiki 편집기가 아니다.
+- 공식 결정이나 공식 설정으로 자동 확정되지 않는다.
 - task 생성, 소스 수정, commit/push는 하지 않는다.
-- 나중에 AI Librarian 또는 Human Director가 읽고 `Decisions`, `Canon`,
-  `Lessons`, `Research`, `Rejected` 같은 위치로 승격할지 판단한다.
+- 장기 지식 정리, Obsidian 정리, Hermes 내장 LLM Wiki 활용 여부는
+  별도 외부 지식 기반 도입 결정으로 다룬다.
 
-즉, `Wiki Inbox에 남기기`는 “잊어버리지 않게 임시로 붙잡아 두는 입구”다.
-
-Inbox에 쌓인 문서는 Studio에서 `승격 계획`을 눌러 읽기 전용으로 먼저 점검한다.
-
-`승격 계획`은 해당 문서를 `Decisions`, `Canon`, `Lessons`, `Research`,
-`Proposals`, `Concepts` 중 어디로 옮기는 것이 자연스러운지 추천한다.
-이 버튼은 실제 파일 이동, 공식 설정 확정, task 생성, 소스 수정, commit/push를 하지 않는다.
-최종 승격은 Human Director가 의미와 위험을 확인한 뒤 별도 흐름으로 처리한다.
+즉, Studio는 “무엇을 기억할 가치가 있는가”를 결정하는 운영본부이고,
+LLM Wiki 또는 Obsidian은 그 기록을 장기 지식으로 정리하는 외부 도구 후보다.
 
 ## 7. Studio와의 관계
 
 Studio는 운영본부다.
 
-LLM Wiki는 회사 기억이다.
+LLM Wiki는 Studio 내부 기능이 아니라 외부 지식 기반 후보다.
 
-Studio가 일을 진행할 때 LLM Wiki에서 필요한 기억을 꺼내 Context Pack에 넣는다.
+나중에 외부 지식 기반이 정해지면 Studio는 필요한 기억을 Context Pack에
+연결하거나, 기록함의 감독자 판단을 외부 지식 기반으로 넘기는 역할만 맡는다.
 
 예:
 
@@ -131,8 +136,8 @@ Obsidian은 읽고 탐색하기 좋은 도구다.
 ```text
 결정권: Human Director
 운영 기록: Studio
-기억 저장: LLM Wiki
-읽기 도구: Obsidian
+기억 저장: Obsidian / Hermes LLM Wiki / 별도 지식 기반 후보
+읽기 도구: Obsidian 또는 외부 지식 기반 UI
 ```
 
 ## 9. 하면 안 되는 것

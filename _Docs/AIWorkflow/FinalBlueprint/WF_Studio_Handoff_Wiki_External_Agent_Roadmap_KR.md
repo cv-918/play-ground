@@ -8,7 +8,7 @@
 
 - AIWorkflow Studio
 - Handoff 시스템
-- LLM Wiki / Obsidian 기반 지식 체계
+- 외부 지식 기반 후보(Obsidian, Hermes LLM Wiki, LLM Wiki 실험)
 - Hermes
 - OpenClaw
 - Codex App / Codex CLI
@@ -55,7 +55,7 @@ Studio가 되면 안 되는 것:
 | 요소 | 최종 역할 | 내가 보는 정도 |
 |---|---|---|
 | Studio | 감독자 콘솔, 안건판, 승인/결정 중심 | 주 UI |
-| LLM Wiki | 회사 기억, 공식 지식, 결정, 교훈, 반려 기록, 조사 노트 | 읽을 수 있는 Markdown |
+| 외부 지식 기반 | 회사 기억 후보, 공식 지식 후보, 결정, 교훈, 반려 기록, 조사 노트 | Obsidian/Hermes/Markdown 후보 |
 | Handoff | 내부 업무 봉투, 작업 전달 레이어 | 대부분 숨김 |
 | Hermes | 웹 조사, 브라우저 QA, 웹 화면 증거 수집 | Studio가 호출 |
 | OpenClaw | 장기 실행 AI 직원 런타임 후보 | 제한된 직원 후보 |
@@ -111,7 +111,7 @@ Studio가 책임지는 것:
 8. 제한된 실행기가 작업한다.
 9. 검증 자료가 Studio로 돌아온다.
 10. 나는 완료, 우려 감수 후 완료, 수정 요청, 반려, 보류를 판단한다.
-11. 중요한 결정과 교훈은 LLM Wiki에 남긴다.
+11. 중요한 결정과 교훈은 Studio 기록함에 남기고, 장기 보관이 필요하면 외부 지식 기반으로 넘긴다.
 12. commit/push는 마지막 명시적 gate로 남긴다.
 ```
 
@@ -134,14 +134,16 @@ Studio가 책임지는 것:
 
 ---
 
-## 6. LLM Wiki 위치
+## 6. 외부 지식 기반 위치
 
-LLM Wiki는 Studio의 회사 기억이다.
+LLM Wiki는 Studio 내부 화면이 아니라 외부 지식 기반 후보로 둔다.
 
 이것은 단순 RAG 데이터베이스도 아니고, 단순 archive 폴더도 아니다.
 
-AI Librarian이 계속 읽고 정리하는, 사람이 읽을 수 있는 Markdown 지식
-체계다.
+AI Librarian, Obsidian, Hermes 내장 LLM Wiki, 또는 별도 지식 기반 도구가
+읽고 정리할 수 있는 사람이 읽을 수 있는 Markdown 지식 체계 후보이다.
+Studio는 무엇을 남길 가치가 있는지 결정하고, 장기 지식 정리 자체는
+외부 지식 기반에 위임한다.
 
 ### 6.1 지식 종류
 
@@ -274,7 +276,7 @@ Hermes 결과는 실행 완료가 아니라 다음 중 하나로 Studio에 들�
 
 - Research Note
 - 검증 자료 링크
-- Wiki Inbox 항목
+- 외부 지식 기반 후보 노트
 - 회의 참고 자료
 - 직원 보고서 입력
 
@@ -380,7 +382,7 @@ Studio는 점진적으로 다음 사용자 화면 중심으로 바뀌어야 한�
 | 감독자 결정함 | 채택, 반려, 수정 요청, 보류, 공식화 |
 | 업무 지시 | 승인된 실행 후보 |
 | 결과 검토 | 완료, 우려, 수정 요청, 검증 자료 |
-| LLM Wiki | 회사 기억과 공식 지식 |
+| 기록함 | 제안, 판단, 참고 기록, 공식 설정 후보 |
 | 도구함 | 사람이 직접 누르는 작은 유지보수 도구 |
 
 기본적으로 숨겨야 할 것:
@@ -436,7 +438,7 @@ Studio는 점진적으로 다음 사용자 화면 중심으로 바뀌어야 한�
 - Studio의 감독자 흐름을 중복한다.
 - Discord-first 시절의 흔적일 뿐이다.
 - 실제 판단에 도움이 안 되는 내부 상태만 노출한다.
-- Work Packet, Context Pack, LLM Wiki로 이미 대체됐다.
+- Work Packet, Context Pack, 외부 지식 기반 후보로 이미 대체됐다.
 
 ---
 
@@ -451,7 +453,7 @@ Studio는 점진적으로 다음 사용자 화면 중심으로 바뀌어야 한�
 - 역할 지도
 - 업무 흐름 지도
 - Handoff 유지/숨김/폐기 기준
-- LLM Wiki 위치
+- 외부 지식 기반 위치
 - Hermes/OpenClaw/Codex 위치
 
 ### Phase 2: Studio 화면 단순화
@@ -465,17 +467,17 @@ Studio를 페이지 중심이 아니라 안건 중심으로 바꾼다.
 - 회의/자문은 안건에 붙는다.
 - 내부 Handoff와 raw record는 기본 숨김 처리한다.
 
-### Phase 3: LLM Wiki 기초 구축
+### Phase 3: 외부 지식 기반 기초 검토
 
-Markdown Wiki 구조와 AI Librarian 흐름을 만든다.
+Markdown Wiki 구조와 AI Librarian/Hermes/Obsidian 흐름을 비교 검토한다.
 
 결과물:
 
-- StudioWiki 폴더
-- MOC template
-- Inbox에서 Decision/Canon/Lesson으로 승격하는 규칙
-- Studio의 Wiki 후보 카드
-- Obsidian 호환 링크 규칙
+- 외부 지식 기반 후보 목록
+- Obsidian/Hermes LLM Wiki 비교 기준
+- Studio 기록함에서 외부 지식 기반으로 넘길 기록 기준
+- MOC template 후보
+- Obsidian 호환 링크 규칙 후보
 
 ### Phase 4: Context Pack과 Work Packet 연결
 
@@ -497,7 +499,7 @@ Markdown Wiki 구조와 AI Librarian 흐름을 만든다.
 - Hermes tool request
 - ResearchNote output
 - 브라우저 검증 자료 링크
-- Wiki Inbox 연동
+- 외부 지식 기반 연동
 
 ### Phase 6: OpenClaw Sandbox Worker
 
@@ -524,11 +526,36 @@ Markdown Wiki가 커진 뒤 검색 보조를 붙인다.
 
 ---
 
-## 15. 절대 경계
+## 15. 현재 도구 도입 상태
+
+이 로드맵에서 Hermes는 설치와 smoke가 완료된 상태로 취급한다. 다만 아직
+Studio 실행 흐름에 자동으로 연결된 것은 아니다.
+
+현재 고정된 상태:
+
+- Studio는 Human Director 운영 콘솔로 남는다.
+- Handoff는 Studio가 작업 범위, 금지 범위, 문맥, 산출물 계약, 감사 기록을
+  완전히 대체할 때까지 내부 Work Packet / 작업 전달 레이어로 유지한다.
+- Hermes는 OpenClaw 도입 전까지 브라우저 / 웹 어댑터 역할을 맡는다.
+- Hermes는 `openai-codex`, `gpt-5.5`, OAuth 인증, 웹 검색, 브라우저 자동화
+  smoke가 확인된 상태다.
+- Hermes는 웹/브라우저 검증 자료를 모을 수 있지만 승인, 공식 설정 확정,
+  로컬 소스 구현, commit, push, Codex 대체를 하면 안 된다.
+- OpenClaw는 아직 설치된 운영 도구가 아니며, sandbox worker 후보로 남는다.
+- LLM Wiki는 Studio 기능이 아니다. Obsidian 호환 Markdown을 시작점으로 하고,
+  나중에 Hermes LLM Wiki 또는 다른 지식 도구가 유용하다고 검증되면 외부 지식
+  기반 레이어에서 다룬다.
+
+다음 연동 단계는 새 Studio 페이지를 더 만드는 것이 아니다. Hermes로 실제 웹/브라우저
+조사를 수행하고, 그 결과를 Studio의 통제된 참고 기록으로 가져오는 smoke다.
+
+---
+
+## 16. 절대 경계
 
 - Studio는 governance를 담당한다.
 - Human Director는 승인을 담당한다.
-- LLM Wiki는 durable memory를 담당한다.
+- 외부 지식 기반은 durable memory를 담당한다.
 - Handoff는 bounded work를 전달한다.
 - Hermes는 도구 정책 안에서 웹/브라우저 작업만 수행한다.
 - OpenClaw는 제한된 worker로만 실행된다.
@@ -538,13 +565,13 @@ Markdown Wiki가 커진 뒤 검색 보조를 붙인다.
 
 ---
 
-## 16. Phase 1 결정
+## 17. Phase 1 결정
 
 다음 방향을 고정한다.
 
 ```text
 Studio는 안건 중심 Human Director 운영 콘솔이 된다.
-LLM Wiki는 회사 기억이 된다.
+외부 지식 기반은 회사 기억 후보가 된다.
 Handoff는 내부 업무 전달 / Work Packet 레이어가 된다.
 Hermes는 브라우저 / 웹 어댑터가 된다.
 OpenClaw는 sandboxed 장기 실행 AI 직원 런타임 후보가 된다.

@@ -158,6 +158,13 @@ This slice defines:
   curation, Obsidian organization, or Hermes-provided knowledge-base behavior belongs
   to an external knowledge-base layer. Studio may decide what is worth keeping,
   but it does not directly own wiki ingestion, promotion, or automatic canonizing.
+  Hermes is treated as an external browser/web adapter, not as a Studio
+  decision engine. The current verified Hermes route uses OpenAI Codex
+  `gpt-5.5` through Hermes' OAuth configuration and is suitable for
+  web research, browser QA, and page-state evidence collection. Hermes output
+  should enter Studio as a research/reference/evidence input for Human Director
+  review; it must not approve direction, promote canon, edit local source,
+  commit, push, or replace the bounded Codex implementation path.
   Director-facing
   action results should render known workflow reports as Human Director cards
   first, with raw JSON used only as a fallback for unknown/debug responses.

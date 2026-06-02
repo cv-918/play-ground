@@ -37,7 +37,7 @@ Hermes output should return as one of:
 
 - `ResearchNote`
 - `EvidenceLink`
-- `WikiInboxItem`
+- `ExternalKnowledgeCandidate`
 - `StaffReportInput`
 - `MeetingReference`
 
@@ -60,7 +60,7 @@ Allowed early uses:
 - staff report drafting
 - cross-tool analysis in a sandbox
 - draft proposal generation
-- draft Wiki candidate generation
+- draft external knowledge-base candidate generation
 
 Initial mode should be:
 
@@ -107,7 +107,7 @@ Minimum output classes:
 - StaffReport
 - EvidenceLink
 - ProposalDraft
-- WikiCandidate
+- ExternalKnowledgeCandidate
 - WorkOrderCandidate
 - FailureReport
 
@@ -147,7 +147,7 @@ Human Director approval is required before:
 
 1. Document adapter policy and safety boundaries.
 2. Add read-only ToolRequest records.
-3. Add manual import of Hermes/OpenClaw outputs as Wiki Inbox or StaffReport.
+3. Add manual import of Hermes/OpenClaw outputs as ExternalKnowledgeCandidate or StaffReport.
 4. Add Studio buttons that prepare a request but do not execute it.
 5. Add supervised execution only after evidence and stop conditions are stable.
 6. Add automated routing only after repeated successful manual runs.
@@ -164,3 +164,62 @@ Stop and require Human Director decision when:
 - output contradicts canon or a previous Director decision
 - the tool cannot explain its source
 
+## 11. Current Verified Hermes Baseline
+
+As of 2026-06-02, the local Hermes installation has been verified as a
+usable browser/web tool candidate.
+
+Verified configuration:
+
+- Hermes home: `%LOCALAPPDATA%\hermes`
+- Config path: `%LOCALAPPDATA%\hermes\config.yaml`
+- Auth provider: `openai-codex`
+- Auth state: logged in
+- Default model: `gpt-5.5`
+- Model provider: `openai-codex`
+- Model base URL: `https://chatgpt.com/backend-api/codex`
+- Terminal backend: local
+- Messaging platforms: not configured
+
+Known local caveat:
+
+- `C:\Users\kalux\.hermes` and `%LOCALAPPDATA%\hermes` may both exist.
+- `%LOCALAPPDATA%\hermes` is the current verified Hermes home.
+- If a shell reports stale auth state, set `HERMES_HOME=%LOCALAPPDATA%\hermes`
+  before checking Hermes status.
+
+Verified smoke evidence:
+
+- Korean prompt and Korean response worked.
+- Web search for the `example.com` test page worked.
+- Browser automation opened `https://example.com/`, confirmed the page title,
+  clicked the `Learn more` link, and reached the `Example Domains` page.
+- The smoke asked Hermes not to edit files, and no file modification was
+  reported.
+
+This proves Hermes can be used for browser/web investigation. It does not grant
+Hermes source editing, approval, canon, commit, push, or release authority.
+
+## 12. Next Real-Use Smoke
+
+The next meaningful Studio/Hermes smoke should use a real agenda item without
+allowing Hermes to change local files.
+
+Recommended smoke:
+
+1. Studio creates or records a broad agenda item that needs external reference
+   research.
+2. Hermes performs web search and browser inspection only.
+3. Hermes returns a short research summary with URLs, timestamps, page titles,
+   and screenshot/page-state evidence if useful.
+4. Studio imports the result as a `ResearchNote`, `MeetingReference`, or
+   `StaffReportInput`.
+5. The Human Director decides whether the result affects direction, needs more
+   research, becomes a WorkOrder input, or should be ignored.
+
+Pass criteria:
+
+- No source/data/config files are edited by Hermes.
+- No Studio decision is automatically approved.
+- No canon, task execution, commit, or push happens from Hermes output alone.
+- The returned research has enough evidence for the Human Director to review.

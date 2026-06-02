@@ -334,6 +334,15 @@
             완료 카드, 완료 보고서, 검증 보고서, Runner 실행 기록 같은 JSON artifact도 기본적으로 사람용 HTML 카드로 렌더링되며, 필요한 경우 <code>원본 JSON 보기</code>로 실제 저장 내용을 확인합니다.
           </div>
           <div class="note">
+            <strong>Hermes 사용 위치:</strong>
+            Hermes는 Studio 안의 새 결정권자가 아니라, 웹 조사와 브라우저 확인을 맡는 외부 도구입니다.
+            현재 검증된 기준은 <code>openai-codex</code> provider, <code>gpt-5.5</code> 모델, OAuth 인증, 웹 검색과 브라우저 자동화 smoke 통과입니다.
+            Hermes는 공식 문서 확인, 레퍼런스 조사, 웹 UI QA, 브라우저 게임 smoke, 화면 상태 수집처럼 “브라우저가 필요한 일”에 사용합니다.
+            Hermes 결과는 <code>ResearchNote</code>, <code>MeetingReference</code>, <code>StaffReportInput</code>, 검증 자료 링크 같은 참고 자료로 Studio에 들어옵니다.
+            Hermes 결과만으로 방향 승인, 공식 설정 확정, 소스 수정, task 실행, commit, push는 하지 않습니다.
+            다음 실제 사용 smoke는 Studio 안건에서 외부 조사가 필요한 주제를 만들고, Hermes가 URL·페이지 제목·접근 시각·필요한 화면 근거를 모아오게 한 뒤, Human Director가 그 결과를 채택/추가 조사/무시 중 하나로 판단하는 흐름입니다.
+          </div>
+          <div class="note">
             <strong>Studio에서 직접 할 수 있는 일:</strong>
             <code>홈</code>에서 현재 판단할 일과 최근 결과 검토 자료를 확인하고, 새 방향은 <code>안건 시작</code>으로 시작합니다.
             <code>안건 시작</code>에서는 큰 목표를 입력해 Director Brief로 정리하고, 필요한 AI 직원 자문, 질문, 제안, 승인 항목, 후속 업무 후보로 먼저 쪼갤 수 있습니다. 이 단계는 브리프와 후보만 만들며 공식 설정 확정, 소스 수정, task 실행, commit/push를 하지 않습니다.

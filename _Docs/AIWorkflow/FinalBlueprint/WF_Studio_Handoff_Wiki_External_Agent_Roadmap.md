@@ -9,7 +9,7 @@ It reconciles these systems:
 
 - AIWorkflow Studio
 - Handoff system
-- LLM Wiki / Obsidian-style knowledge base
+- external knowledge-base candidates (Obsidian, Hermes LLM Wiki, and the LLM Wiki experiment)
 - Hermes
 - OpenClaw
 - Codex App / Codex CLI
@@ -57,7 +57,7 @@ The Studio should not become:
 | System | Final role | User-facing level |
 |---|---|---|
 | Studio | Human Director operating console, agenda board, approval and decision center | Primary UI |
-| LLM Wiki | Company memory, official knowledge, decisions, lessons, rejected ideas, research notes | Director-visible, readable Markdown |
+| External knowledge base | Company-memory candidate, official-knowledge candidates, decisions, lessons, rejected ideas, research notes | Obsidian/Hermes/Markdown candidate |
 | Handoff | Internal work packet / dispatch layer carrying scope, constraints, context, validation, and output contract | Mostly hidden |
 | Hermes | Browser and web research / browser QA / web evidence adapter | Called through Studio |
 | OpenClaw | Long-running autonomous staff runtime candidate | Sandboxed worker candidate |
@@ -117,7 +117,7 @@ workflow.
 9. Verification material returns to Studio.
 10. Human Director accepts, accepts with known concerns, requests fixes,
     rejects, or defers.
-11. Valuable decisions, lessons, and records are written into the LLM Wiki.
+11. Valuable decisions, lessons, and records are kept in Studio records first, then handed to the external knowledge-base layer when long-term curation is useful.
 12. Git commit/push remains an explicit final gate.
 ```
 
@@ -143,12 +143,15 @@ agenda item, or rejects it.
 
 ## 6. LLM Wiki Position
 
-The LLM Wiki is the Studio's company memory.
+The LLM Wiki is not a primary Studio screen. Treat it as an external
+knowledge-base candidate.
 
 It is not just a RAG database and not just an archive folder.
 
-It is a human-readable Markdown knowledge system that an AI Librarian can
-maintain over time.
+It is a candidate human-readable Markdown knowledge system that an AI Librarian,
+Obsidian, Hermes' LLM Wiki behavior, or another external knowledge tool can
+maintain over time. Studio decides what is worth keeping; long-term wiki
+curation belongs outside the Director console.
 
 ### 6.1 Knowledge Classes
 
@@ -281,7 +284,7 @@ Hermes output should enter Studio as:
 
 - ResearchNote
 - EvidenceLink
-- Wiki Inbox item
+- external knowledge-base candidate note
 - meeting reference
 - staff report input
 
@@ -389,7 +392,7 @@ The Studio should gradually move toward these Director-facing surfaces:
 | Director Decisions | Accept, reject, revise, defer, or canonize |
 | Work Orders | Approved execution candidates |
 | Result Review | Completion, concerns, fixes, validation material |
-| LLM Wiki | Company memory and official knowledge |
+| Records | Proposals, decisions, reference notes, and canon candidates |
 | Toolbox | Small allowlisted maintenance tools |
 
 Internal surfaces should be hidden by default:
@@ -462,7 +465,7 @@ Deliverables:
 - role map
 - workflow map
 - Handoff keep/hide/retire criteria
-- LLM Wiki position
+- external knowledge-base position
 - Hermes/OpenClaw/Codex positions
 
 ### Phase 2: Studio Surface Simplification
@@ -476,17 +479,17 @@ Deliverables:
 - meeting/advisory flow becomes attached to agenda
 - internal Handoff and raw records hidden by default
 
-### Phase 3: LLM Wiki Foundation
+### Phase 3: External Knowledge-Base Foundation Review
 
-Create the Markdown Wiki structure and AI Librarian workflow.
+Compare the Markdown Wiki, AI Librarian, Hermes, and Obsidian knowledge workflows.
 
 Deliverables:
 
-- StudioWiki folder
-- MOC template
-- Inbox to Decision/Canon/Lesson promotion rules
-- Wiki candidate cards in Studio
-- Obsidian-compatible linking convention
+- external knowledge-base candidate list
+- Obsidian / Hermes LLM Wiki evaluation criteria
+- criteria for handing Studio records to the external knowledge-base layer
+- MOC template candidate
+- Obsidian-compatible linking convention candidate
 
 ### Phase 4: Context Pack and Work Packet Bridge
 
@@ -508,7 +511,7 @@ Deliverables:
 - Hermes tool request
 - ResearchNote output
 - browser evidence links
-- Wiki Inbox integration
+- external knowledge-base integration
 
 ### Phase 6: OpenClaw Sandbox Worker
 
@@ -536,11 +539,39 @@ Deliverables:
 
 ---
 
-## 15. Non-Negotiable Boundaries
+## 15. Current Tool Adoption Snapshot
+
+This roadmap now treats Hermes as installed and smoke-tested, but not yet
+automatically wired into Studio execution.
+
+Current fixed state:
+
+- Studio remains the Human Director control plane.
+- Handoff remains an internal Work Packet / dispatch layer until Studio can
+  fully preserve scope, non-goals, context, output contract, and audit history
+  without it.
+- Hermes is the interim browser/web adapter before OpenClaw is introduced.
+- Hermes is verified with `openai-codex`, `gpt-5.5`, OAuth auth, web search, and
+  browser automation smoke.
+- Hermes may collect web and browser evidence, but it may not approve, canonize,
+  implement local source changes, commit, push, or replace Codex.
+- OpenClaw is not installed in this roadmap state and remains a sandbox worker
+  candidate.
+- The LLM Wiki is not a Studio feature. It belongs to the external
+  knowledge-base layer, currently represented by Obsidian-compatible Markdown
+  and later by Hermes LLM Wiki or another knowledge tool if it proves useful.
+
+The next integration step is not another Studio page. It is a real
+Hermes-backed research smoke that turns web/browser findings into a governed
+Studio reference record.
+
+---
+
+## 16. Non-Negotiable Boundaries
 
 - Studio owns governance.
 - Human Director owns approval.
-- LLM Wiki owns durable memory.
+- The external knowledge-base layer owns durable memory.
 - Handoff carries bounded work.
 - Hermes performs browser/web work only under tool policy.
 - OpenClaw runs only as a bounded worker.
@@ -550,13 +581,13 @@ Deliverables:
 
 ---
 
-## 16. Phase 1 Decision
+## 17. Phase 1 Decision
 
 This document fixes the next direction:
 
 ```text
 Studio becomes an agenda-centered Human Director control plane.
-LLM Wiki becomes the company memory.
+The external knowledge-base layer becomes the company memory candidate.
 Handoff becomes an internal dispatch/work-packet layer.
 Hermes becomes the browser/web adapter.
 OpenClaw becomes a sandboxed long-running staff runtime candidate.
