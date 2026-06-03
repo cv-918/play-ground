@@ -111,6 +111,7 @@ async function getStaffRuns(repoRoot) {
     const outputPath = json.role_run_output_path || "";
     const exitCode = Number.isFinite(Number(json.exit_code)) ? Number(json.exit_code) : null;
     const output = outputPath ? await readJsonIfExists(path.resolve(repoRoot, outputPath)) : null;
+    const hasOutput = Boolean(output);
     items.push({
       role_run_id: json.role_run_id || "",
       context_packet_id: json.context_packet_id || "",
@@ -119,10 +120,12 @@ async function getStaffRuns(repoRoot) {
       reasoning: json.reasoning || "",
       exit_code: exitCode,
       output_validation_ok: Boolean(json.output_validation_ok),
-      status: Boolean(json.output_validation_ok) ? "valid_output" : exitCode === 0 ? "completed" : "failed",
+      status: Boolean(json.output_validation_ok)
+        ? hasOutput ? "valid_output" : "missing_output"
+        : exitCode === 0 ? "completed" : "failed",
       staff_run_path: toRepoRelative(repoRoot, file),
-      output_path: outputPath,
-      output_href: outputPath ? `/file?path=${encodeURIComponent(outputPath)}` : "",
+      output_path: hasOutput ? outputPath : "",
+      output_href: hasOutput ? `/file?path=${encodeURIComponent(outputPath)}` : "",
       output_id: output ? output.output_id || "" : "",
       output_status: output ? output.status || "" : "",
       summary: output ? output.plain_language_summary || "" : "",

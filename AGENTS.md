@@ -133,6 +133,18 @@ The English workflow documents are the operational source of truth for AI tools.
 
 The Korean required-read documents are user-facing support documents.
 
+Studio product direction is intentionally separated from the older AIWorkflow harness documents.
+
+For Studio product, UX, and Human Director workflow work, read these first:
+
+```text
+_Docs/Studio/README.md
+_Docs/Studio/Studio_Director_Workflow_Principles.md
+```
+
+Do not treat `_Docs/AIWorkflow/Studio/` as the current Studio product-direction source of truth.
+That older path may contain legacy runtime contracts, examples, or AIWorkflow-era records.
+
 ---
 
 ## 5. Core Architecture Principles

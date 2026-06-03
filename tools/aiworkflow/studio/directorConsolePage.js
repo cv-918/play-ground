@@ -264,7 +264,7 @@ function directorConsoleHtml() {
       <div class="nav-section-label">감독자 콘솔</div>
       <nav class="nav" aria-label="Human Director navigation">
         <button class="active" data-nav="home">홈 <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="sessions">자문 세션 <span class="count" id="nav-sessions-count"></span></button>
+        <button data-nav="sessions">스튜디오 대화 <span class="count" id="nav-sessions-count"></span></button>
         <button data-nav="inbox">감독자 결정함 <span class="count" id="nav-inbox-count"></span></button>
         <button data-nav="evidence">결과 검토 <span class="count" id="nav-evidence-count"></span></button>
         <button data-nav="knowledge">기록함 <span class="count" id="nav-knowledge-count"></span></button>
@@ -328,10 +328,10 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card">
-              <div class="section-title"><h2>새 자문 세션</h2><span class="pill">Director Brief</span></div>
+              <div class="section-title"><h2>새 스튜디오 대화</h2><span class="pill">Director Brief</span></div>
               <p class="summary">세부 task를 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 안건으로 정리하고 필요한 자문과 업무 후보로 이어갑니다.</p>
               <div class="row">
-                <button class="good" data-nav-jump="sessions">새 자문 세션</button>
+                <button class="good" data-nav-jump="sessions">새 대화 시작</button>
                 <button class="secondary" data-nav-jump="sessions">진행 중 자문 보기</button>
                 <button class="secondary" data-nav-jump="work">업무 지시 보기</button>
               </div>
@@ -415,7 +415,7 @@ function directorConsoleHtml() {
     const PAGES = {
       home: ["홈", "Human Director가 지금 결정할 일과 진행 중인 방향만 봅니다."],
       toolbox: ["도구함", "직접 사용할 만한 유지보수 도구만 설명과 함께 실행합니다."],
-      sessions: ["자문 세션", "큰 방향을 자연어로 입력하고 AI 직원 자문, 방향 판단, 업무 후보로 이어갑니다."],
+      sessions: ["스튜디오 대화", "자연어로 말하면서 AI 직원 의견을 받고, 구체화되면 방향 판단이나 업무 후보로 넘깁니다."],
       project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["감독자 결정함", "사람 판단이 필요한 항목만 모아서 봅니다."],
       departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
@@ -912,7 +912,7 @@ function directorConsoleHtml() {
       return '<div class="empty">' + esc(text) + '</div>';
     }
     function meetingNextActionText(meeting) {
-      if (!meeting.is_stored) return "예시 자문입니다. 실제로 쓰려면 새 자문 세션 만들기로 기록을 생성하세요.";
+      if (!meeting.is_stored) return "예시 대화입니다. 실제로 쓰려면 새 대화 기록을 생성하세요.";
       if (meeting.status === "draft") return "자문판을 보고 내 의견을 기록하거나 다음 AI 발언을 받아 첫 관점을 모으세요.";
       if (meeting.unresolved_count) return "남은 질문을 정리하고 답할 직원의 의견을 더 받으세요.";
       if (meeting.follow_up_count) return "후속 업무 후보를 확인하고 실제 업무 지시로 넘길지 결정하세요.";
@@ -1015,7 +1015,7 @@ function directorConsoleHtml() {
       const meetings = consultationMeetings();
       el("meetingCount").textContent = String(meetings.length);
       if (!meetings.length) {
-        target.innerHTML = renderEmpty("아직 자문 세션이 없습니다. 위에서 새 자문을 시작하세요.");
+        target.innerHTML = renderEmpty("아직 대화 기록이 없습니다. 채팅창에 첫 메시지를 보내거나 왼쪽에서 주제를 정해 시작하세요.");
         return;
       }
       target.innerHTML = meetings.map((meeting) => {
@@ -1037,7 +1037,7 @@ function directorConsoleHtml() {
       const safety = el("consultationSafety");
       if (!summary || !participants || !questions || !candidates || !safety) return;
       if (!meeting) {
-        const empty = renderEmpty("세션을 선택하면 여기에 내용이 표시됩니다.");
+        const empty = renderEmpty("대화를 선택하면 여기에 내용이 표시됩니다.");
         summary.innerHTML = empty;
         participants.innerHTML = empty;
         questions.innerHTML = empty;
@@ -1077,14 +1077,14 @@ function directorConsoleHtml() {
       const staffSelect = el("consultationStaffSelect");
       if (!title || !status || !badge || !timeline || !staffSelect) return;
       if (!meeting) {
-        title.textContent = "자문 세션을 선택하세요";
-        status.textContent = "왼쪽에서 세션을 고르거나 새 자문을 시작하세요.";
+        title.textContent = "바로 대화를 시작하세요";
+        status.textContent = "아래 채팅창에 첫 메시지를 보내면 내부 대화 기록이 자동으로 만들어집니다.";
         badge.textContent = "대기";
         staffSelect.innerHTML = '<option value="">AI 직원 없음</option>';
         const pendingAction = consultationActionState.meeting_id === "__new__"
-          ? chatMessageHtml("pending", "Studio", "실행 중", (consultationActionState.title || "자문 세션을 만드는 중입니다.") + (consultationActionState.detail ? "\\n" + consultationActionState.detail : ""))
+          ? chatMessageHtml("pending", "Studio", "실행 중", (consultationActionState.title || "대화 기록을 만드는 중입니다.") + (consultationActionState.detail ? "\\n" + consultationActionState.detail : ""))
           : "";
-        timeline.innerHTML = chatMessageHtml("system", "Studio", "안내", "아직 자문 세션이 없습니다. 왼쪽에서 새 자문을 시작하세요.") + pendingAction;
+        timeline.innerHTML = chatMessageHtml("system", "Studio", "안내", "대화가 아직 없습니다. 채팅창에 자연어로 말하면 바로 시작됩니다.") + pendingAction;
         renderConsultationContext(null);
         return;
       }
@@ -1139,9 +1139,68 @@ function directorConsoleHtml() {
       ].filter(Boolean);
       return candidates[0] || "";
     }
+    function consultationDefaultParticipants() {
+      const available = new Set(asArray(state?.staff_agents).map((agent) => agent.agent_id).filter(Boolean));
+      const preferred = ["executive_producer", "game_designer", "tools_engineer", "qa_tester"];
+      const selected = preferred.filter((agentId) => available.has(agentId));
+      if (selected.length) return selected.slice(0, 3);
+      return asArray(state?.staff_agents).slice(0, 3).map((agent) => agent.agent_id).filter(Boolean);
+    }
+    function inferConsultationMeetingType(text) {
+      const value = String(text || "").toLowerCase();
+      if (value.includes("버그") || value.includes("검증") || value.includes("테스트") || value.includes("오류") || value.includes("실패") || value.includes("qa")) return "qa_triage";
+      if (value.includes("도구") || value.includes("studio") || value.includes("스튜디오") || value.includes("ux") || value.includes("시스템") || value.includes("구현") || value.includes("코드") || value.includes("데이터") || value.includes("런타임")) return "technical";
+      if (value.includes("일정") || value.includes("우선순위") || value.includes("분배") || value.includes("관리") || value.includes("진행")) return "production";
+      return "creative";
+    }
+    function stripLeadingConsultationCommand(content) {
+      const raw = String(content || "").trim();
+      if (!raw.startsWith("/")) return raw;
+      let splitAt = raw.length;
+      for (let i = 1; i < raw.length; i += 1) {
+        const ch = raw[i];
+        if (ch === " " || ch === "\\n" || ch === "\\r" || ch === "\\t") {
+          splitAt = i;
+          break;
+        }
+      }
+      const command = raw.slice(1, splitAt).toLowerCase();
+      if (!["ask", "summon", "work", "decision", "close"].includes(command)) return raw;
+      return raw.slice(splitAt).trim();
+    }
+    function consultationTopicFromMessage(content) {
+      const cleaned = stripLeadingConsultationCommand(content);
+      return short(cleaned || "자유 대화", 80);
+    }
+    async function createConsultationFromFirstMessage(content) {
+      const participants = consultationDefaultParticipants();
+      const topic = consultationTopicFromMessage(content);
+      consultationActionState.meeting_id = "__new__";
+      consultationActionState.status = "running";
+      consultationActionState.title = "대화를 여는 중입니다.";
+      consultationActionState.detail = "첫 메시지로 내부 대화 기록만 만듭니다. source, task, git은 바꾸지 않습니다.";
+      renderConsultationChat();
+      const result = await post("/api/studio/meeting/create", {
+        topic,
+        meeting_type: inferConsultationMeetingType(content),
+        participants,
+        chair_agent_id: participants[0] || "executive_producer",
+        agenda: "Human Director가 채팅으로 시작한 자유 대화입니다.",
+        known_constraints: fieldValue("goalCreateConstraints") || "source/task/git 자동 변경 금지\\n자동 구현 실행 금지\\n후보 생성 전 Human Director 확인",
+      });
+      const createdMeetingId = extractCreatedMeetingId(result);
+      if (createdMeetingId) activeConsultationMeetingId = createdMeetingId;
+      consultationActionState.status = "done";
+      consultationActionState.title = "대화 기록 생성 완료";
+      consultationActionState.detail = createdMeetingId || "첫 대화 기록을 만들었습니다.";
+      await refresh();
+      const meeting = currentConsultationMeeting();
+      if (!meeting) throw new Error("대화 기록을 만들었지만 다시 읽지 못했습니다.");
+      return meeting;
+    }
     function activeConsultationOrAlert() {
       const meeting = currentConsultationMeeting();
-      if (!meeting) alert("먼저 자문 세션을 선택하거나 새로 시작하세요.");
+      if (!meeting) alert("대화를 선택하거나, 채팅창에 첫 메시지를 바로 입력하세요.");
       return meeting;
     }
     function setPage(page) {
@@ -1418,7 +1477,7 @@ function directorConsoleHtml() {
         listHtml(plan.non_goals || ["Director Brief만으로 실행, 공식 설정 확정, commit/push를 하지 않습니다."]) +
         (nextSteps.length ? '<h4>다음 행동</h4>' + listHtml(nextSteps) : '') +
         '<div class="row">' +
-        '<button class="secondary" data-nav-jump="sessions">자문 세션으로 이동</button>' +
+        '<button class="secondary" data-nav-jump="sessions">스튜디오 대화로 이동</button>' +
         '<button class="secondary" data-nav-jump="inbox">감독자 결정함 보기</button>' +
         '<button class="secondary" data-nav-jump="work">업무 후보 보기</button>' +
         '</div>' +
@@ -1522,7 +1581,7 @@ function directorConsoleHtml() {
       const hasActiveTask = Boolean(activeTask.task_id);
       const displayNextAction = hasActiveTask ? nextAction : {
         label: "새 작업 선택",
-        detail: "현재 선택된 작업이 없습니다. 자문 세션에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
+        detail: "현재 선택된 작업이 없습니다. 스튜디오 대화에서 방향을 잡거나 업무 지시/작업 목록에서 다음 실제 작업을 선택하세요.",
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       const activeTaskHtml = activeTask.task_id
@@ -2055,7 +2114,7 @@ function directorConsoleHtml() {
       const decisionActions = hasReviewContext ? completionFollowUpActionItems(core) : [];
       const decisionActionSummary = hasReviewContext
         ? completionDirectorDecisionSummary(core)
-        : "현재 선택된 작업이나 완료 보고서가 없습니다. 자문 세션, 업무 지시, 또는 결과 검토가 필요한 작업을 먼저 선택하세요.";
+        : "현재 선택된 작업이나 완료 보고서가 없습니다. 스튜디오 대화, 업무 지시, 또는 결과 검토가 필요한 작업을 먼저 선택하세요.";
       const decisionStateLabel = hasReviewContext ? completionDecisionStateLabel(core) : "검토할 작업 없음";
       el("evidenceSummary").innerHTML =
         metric("현재 작업", activeTask.task_id || "없음") +
@@ -2138,8 +2197,8 @@ function directorConsoleHtml() {
       if (!payload.goal) return alert("감독자 안건을 입력하세요.");
       consultationActionState.meeting_id = "__new__";
       consultationActionState.status = "running";
-      consultationActionState.title = "자문 세션을 만드는 중입니다.";
-      consultationActionState.detail = "브리프와 자문 기록만 생성합니다. source, task, git은 바꾸지 않습니다.";
+      consultationActionState.title = "대화 기록을 만드는 중입니다.";
+      consultationActionState.detail = "브리프와 대화 기록만 생성합니다. source, task, git은 바꾸지 않습니다.";
       renderConsultationChat();
       try {
         const result = await post("/api/studio/director-goal/create-bundle", payload);
@@ -2149,14 +2208,14 @@ function directorConsoleHtml() {
           activeConsultationMeetingId = createdMeetingId;
         }
         consultationActionState.status = "done";
-        consultationActionState.title = "자문 세션 생성 완료";
-        consultationActionState.detail = createdMeetingId ? createdMeetingId : "새 자문 기록이 생성되었습니다.";
+        consultationActionState.title = "대화 기록 생성 완료";
+        consultationActionState.detail = createdMeetingId ? createdMeetingId : "새 대화 기록이 생성되었습니다.";
         el("goalCreateText").value = "";
         el("goalCreateConstraints").value = "";
         await refresh();
       } catch (error) {
         consultationActionState.status = "failed";
-        consultationActionState.title = "자문 세션 생성 실패";
+        consultationActionState.title = "대화 기록 생성 실패";
         consultationActionState.detail = error?.message || String(error);
         renderConsultationChat();
       }
@@ -2236,7 +2295,7 @@ function directorConsoleHtml() {
       const participants = selectedMeetingParticipants();
       if (!topic) return alert("자문 주제를 입력하세요.");
       if (!participants.length) return alert("참가 직원을 한 명 이상 선택하세요.");
-      if (!confirm("새 자문 세션을 저장할까요? 자문 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
+      if (!confirm("새 대화 기록을 저장할까요? 대화 생성은 승인, 공식 설정 확정, 작업 실행을 하지 않습니다.")) return;
       log(await post("/api/studio/meeting/create", {
         topic,
         meeting_type: fieldValue("meetingCreateType") || "creative",
@@ -2258,31 +2317,50 @@ function directorConsoleHtml() {
       const skipConfirm = options.skipConfirm === true;
       const quiet = options.quiet === true;
       if (!meeting) {
-        alert("자문 세션을 찾지 못했습니다. 자문 ID를 확인하세요.");
+        alert("대화 기록을 찾지 못했습니다. 대화 ID를 확인하세요.");
         return true;
       }
       if (command === "/ask") {
-        const question = argument || rawContent.replace(/^\\/ask\\s*/iu, "").trim();
+        const question = argument || stripLeadingConsultationCommand(rawContent);
         if (!question) {
-          alert("/ask 뒤에 자문에 남길 질문을 적어주세요.");
+          alert("/ask 뒤에 AI 직원에게 물어볼 질문을 적어주세요.");
           return true;
         }
-        if (!skipConfirm && !confirm("이 질문을 Human Director 발언으로 자문 기록에 남길까요?")) return true;
-        setConsultationStatus(meeting, "running", "질문을 자문 기록에 저장 중입니다.");
-        const result = await post("/api/studio/meeting/add-turn", {
-          meeting_id: meetingId,
-          speaker_id: "human_director",
-          turn_type: "question",
-          content: question,
-        });
-        if (!quiet) log(result);
-        markConsultationActionDone("질문 기록 완료", "Human Director 발언으로 자문 기록에 남겼습니다.");
-        await refresh();
+        const agentId = options.agent_id || fieldValue("consultationStaffSelect") || asArray(meeting.participants)[0] || "";
+        const agentLabel = agentId ? staffName(agentId) : "AI 직원";
+        if (!skipConfirm && !confirm("이 질문을 자문 기록에 남기고 " + agentLabel + " 의견을 요청할까요?")) return true;
+        try {
+          setConsultationStatus(meeting, "running", "질문을 자문 기록에 저장하는 중입니다.", "저장 후 AI 직원 의견을 이어서 요청합니다.");
+          const turnResult = await post("/api/studio/meeting/add-turn", {
+            meeting_id: meetingId,
+            speaker_id: "human_director",
+            turn_type: "question",
+            content: question,
+          });
+          if (!meeting.path) {
+            if (!quiet) log(turnResult);
+            markConsultationActionDone("질문 기록 완료", "저장된 세션 경로가 없어 AI 직원 의견 요청은 건너뛰었습니다.");
+            await refresh();
+            return true;
+          }
+          setConsultationStatus(meeting, "running", agentLabel + "에게 의견을 요청하는 중입니다.", "완료되면 질문 아래에 AI 직원 발언이 추가됩니다.");
+          const agentResult = await post("/api/studio/meeting/agent-turn-run", {
+            path: meeting.path,
+            agent_id: agentId,
+            model: "gpt-5.5",
+            reasoning: "high",
+          });
+          if (!quiet) log({ question: turnResult, response: agentResult });
+          markConsultationActionDone("AI 직원 의견 추가 완료", "질문과 " + agentLabel + " 답변을 자문 타임라인에 추가했습니다.");
+          await refresh();
+        } catch (error) {
+          setConsultationStatus(meeting, "failed", "/ask 처리 실패", error?.message || String(error));
+        }
         return true;
       }
       if (command === "/summon") {
         if (!meeting.path) {
-          alert("이 자문 세션은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
+          alert("이 대화 기록은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
           return true;
         }
         const agentId = argument || options.agent_id || "";
@@ -2301,7 +2379,7 @@ function directorConsoleHtml() {
       }
       if (command === "/work") {
         if (!meeting.path) {
-          alert("이 자문 세션은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
+          alert("이 대화 기록은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
           return true;
         }
         if (!skipConfirm && !confirm("자문 내용을 업무 후보로 넘길까요? 구현, task 실행, commit/push는 하지 않습니다.")) return true;
@@ -2314,7 +2392,7 @@ function directorConsoleHtml() {
       }
       if (command === "/decision") {
         if (!meeting.path) {
-          alert("이 자문 세션은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
+          alert("이 대화 기록은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
           return true;
         }
         if (!skipConfirm && !confirm("자문 내용을 감독자 결정함에 올릴까요? 공식 확정, 구현, task 실행은 하지 않습니다.")) return true;
@@ -2326,8 +2404,8 @@ function directorConsoleHtml() {
         return true;
       }
       if (command === "/close") {
-        if (!skipConfirm && !confirm("이 자문 세션을 종료 상태로 바꿀까요? 결정, 업무 생성, commit/push는 하지 않습니다.")) return true;
-        setConsultationStatus(meeting, "running", "자문 세션을 종료하는 중입니다.", "기록 상태만 닫고 source, task, git은 바꾸지 않습니다.");
+        if (!skipConfirm && !confirm("이 대화 기록을 종료 상태로 바꿀까요? 결정, 업무 생성, commit/push는 하지 않습니다.")) return true;
+        setConsultationStatus(meeting, "running", "대화 기록을 종료하는 중입니다.", "기록 상태만 닫고 source, task, git은 바꾸지 않습니다.");
         const result = await post("/api/meeting/finalize", { meeting_id: meetingId });
         if (!quiet) log(result);
         markConsultationActionDone("자문 종료 완료", "자문 기록 상태만 닫았습니다. source, task, git은 바꾸지 않았습니다.");
@@ -2356,37 +2434,54 @@ function directorConsoleHtml() {
       await refresh();
     }
     async function sendConsultationMessage() {
-      const meeting = activeConsultationOrAlert();
-      if (!meeting) return;
       const content = fieldValue("consultationComposer");
       if (!content) return alert("보낼 내용을 입력하세요.");
-      const meetingId = meeting.meeting_id || meeting.id;
       try {
+        let meeting = currentConsultationMeeting();
+        if (!meeting) meeting = await createConsultationFromFirstMessage(content);
+        const meetingId = meeting.meeting_id || meeting.id;
         if (content.startsWith("/")) {
           await runMeetingSlashCommand(meetingId, content, { skipConfirm: true, quiet: true, agent_id: fieldValue("consultationStaffSelect") });
           el("consultationComposer").value = "";
           return;
         }
         setConsultationStatus(meeting, "running", "내 발언을 저장하는 중입니다.");
-        await post("/api/studio/meeting/add-turn", {
+        const turnResult = await post("/api/studio/meeting/add-turn", {
           meeting_id: meetingId,
           speaker_id: "human_director",
           turn_type: "synthesis",
           content,
         });
         el("consultationComposer").value = "";
+        if (!meeting.path) {
+          consultationActionState.status = "done";
+          consultationActionState.title = "내 발언 기록 완료";
+          consultationActionState.detail = "대화 기록에만 저장했습니다. source, task, git은 바꾸지 않았습니다.";
+          await refresh();
+          return;
+        }
+        const agentId = fieldValue("consultationStaffSelect") || asArray(meeting.participants)[0] || "";
+        const agentLabel = agentId ? staffName(agentId) : "AI 직원";
+        setConsultationStatus(meeting, "running", agentLabel + "에게 의견을 요청하는 중입니다.", "대화 기록에만 직원 발언을 추가합니다. source, task, git은 바꾸지 않습니다.");
+        const agentResult = await post("/api/studio/meeting/agent-turn-run", {
+          path: meeting.path,
+          agent_id: agentId,
+          model: "gpt-5.5",
+          reasoning: "high",
+        });
         consultationActionState.status = "done";
-        consultationActionState.title = "내 발언 기록 완료";
-        consultationActionState.detail = "자문 기록에만 저장했습니다. source, task, git은 바꾸지 않았습니다.";
+        consultationActionState.title = "AI 직원 의견 추가 완료";
+        consultationActionState.detail = "내 발언과 " + agentLabel + " 의견을 대화 타임라인에 추가했습니다.";
         await refresh();
       } catch (error) {
-        setConsultationStatus(meeting, "failed", "내 발언 저장 실패", error?.message || String(error));
+        const meeting = currentConsultationMeeting();
+        setConsultationStatus(meeting, "failed", "대화 처리 실패", error?.message || String(error));
       }
     }
     async function requestConsultationAgentTurn() {
       const meeting = activeConsultationOrAlert();
       if (!meeting) return;
-      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
+      if (!meeting.path) return alert("이 대화 기록은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
       const agentId = fieldValue("consultationStaffSelect");
       try {
         await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/summon " + agentId, { skipConfirm: true, quiet: true, agent_id: agentId });
@@ -2397,7 +2492,7 @@ function directorConsoleHtml() {
     async function createConsultationWorkCandidate() {
       const meeting = activeConsultationOrAlert();
       if (!meeting) return;
-      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
+      if (!meeting.path) return alert("이 대화 기록은 저장된 경로가 없어 업무 후보를 만들 수 없습니다.");
       try {
         await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/work", { skipConfirm: true, quiet: true });
       } catch (error) {
@@ -2407,7 +2502,7 @@ function directorConsoleHtml() {
     async function createConsultationDecisionCandidate() {
       const meeting = activeConsultationOrAlert();
       if (!meeting) return;
-      if (!meeting.path) return alert("이 자문 세션은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
+      if (!meeting.path) return alert("이 대화 기록은 저장된 경로가 없어 방향 판단 후보를 만들 수 없습니다.");
       try {
         await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/decision", { skipConfirm: true, quiet: true });
       } catch (error) {
@@ -2417,7 +2512,7 @@ function directorConsoleHtml() {
     async function closeConsultationSession() {
       const meeting = activeConsultationOrAlert();
       if (!meeting) return;
-      if (!confirm("이 자문 세션을 종료할까요? 결정, 업무 생성, source, task, git은 바꾸지 않습니다.")) return;
+      if (!confirm("이 대화 기록을 종료할까요? 결정, 업무 생성, source, task, git은 바꾸지 않습니다.")) return;
       try {
         await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/close", { skipConfirm: true, quiet: true });
       } catch (error) {
@@ -2628,7 +2723,7 @@ function directorConsoleHtml() {
       if (action === "meeting-runbook") return log(await post("/api/studio/meeting/runbook", { path:filePath }));
       if (action === "meeting-agent-plan") return log(await post("/api/studio/meeting/agent-turn-plan", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
       if (action === "meeting-agent-run") {
-        if (!confirm("다음 AI 의견을 받을까요? Codex 직원 실행을 호출하고, 결과 요약을 새 자문 발언으로 추가합니다. 결정/공식 설정/task/git은 변경하지 않습니다.")) return;
+        if (!confirm("다음 AI 의견을 받을까요? Codex 직원 실행을 호출하고, 결과 요약을 새 대화 발언으로 추가합니다. 결정/공식 설정/task/git은 변경하지 않습니다.")) return;
         log(await post("/api/studio/meeting/agent-turn-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
         await refresh();
       }

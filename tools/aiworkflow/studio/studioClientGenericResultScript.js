@@ -21,7 +21,7 @@ function renderClientGenericResultScript() {
     function translateStudioMessage(message) {
       const text = String(message || "").trim();
       if (!text) return "";
-      if (text.includes("Nothing was written")) return "Nothing was written. No Studio record was changed.";
+      if (text.includes("Nothing was written")) return "아무 기록도 저장하지 않았습니다. Studio 기록은 변경되지 않았습니다.";
       return text;
     }
     function reportValue(report, key) {
@@ -113,6 +113,31 @@ function renderClientGenericResultScript() {
       const isMemoryResult = memoryId || String(value?.target_path || "").includes("MemoryRecords");
       if (!isMemoryResult) return "";
       const ok = value?.ok !== false;
+      const displayTitle = ok ? "참고 기록 저장 완료" : "참고 기록 저장 실패";
+      const displaySourceRefs = asArray(summary.source_refs || value?.record?.source_refs);
+      const displaySafety = value?.safety || {};
+      const displaySafetyLines = [
+        "참고 기록 저장: " + (displaySafety.memory_written ? "yes (예)" : "no (아니오)"),
+        "Backlog/task 변경: " + (displaySafety.backlog_written || displaySafety.active_task_changed ? "yes (예)" : "no (아니오)"),
+        "승인/실행 변경: " + (displaySafety.approval_changed || displaySafety.runner_started ? "yes (예)" : "no (아니오)"),
+        "소스/git 변경: " + (displaySafety.source_changed || displaySafety.git_changed ? "yes (예)" : "no (아니오)"),
+      ];
+      const displayValidationErrors = asArray(value?.validation?.errors);
+      return '<div class="item ' + (ok ? "good" : "danger") + '"><h3>' + esc(displayTitle) + '</h3>' +
+        '<p class="summary">' + esc(ok ? "Studio 기록함에 참고/검증 자료를 저장했습니다." : translateStudioMessage(value?.error || "참고 기록을 저장하지 못했습니다.")) + '</p>' +
+        reportSection("저장한 내용", [
+          memoryId ? "ID: " + memoryId : "",
+          summary.status || value?.status ? "상태: " + optionLabel(summary.status || value?.status) : "",
+          summary.type || value?.type ? "종류: " + optionLabel(summary.type || value?.type) : "",
+          summary.owner_agent_id ? "담당: " + staffName(summary.owner_agent_id) : "",
+          summary.content_preview ? "요약: " + summary.content_preview : "",
+        ]) +
+        reportSection("출처", displaySourceRefs, "출처 정보 없음") +
+        (displayValidationErrors.length ? reportSection("확인할 오류", displayValidationErrors) : "") +
+        reportSection("안전 상태", displaySafetyLines) +
+        (value?.target_path ? '<p class="small muted">저장 위치: ' + esc(value.target_path) + '</p>' : "") +
+        rawJsonDetails(value, "원본 JSON") +
+        '</div>';
       const title = ok ? "참고 기록 저장 완료" : "참고 기록 저장 실패";
       const sourceRefs = asArray(summary.source_refs || value?.record?.source_refs);
       const safety = value?.safety || {};
