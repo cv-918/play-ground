@@ -5,7 +5,7 @@ function renderKnowledgePageShell() {
   return `        <section class="page" data-page="knowledge">
           <div class="card">
             <div class="section-title">
-              <h2>이 페이지의 역할</h2>
+              <h2>Record Keeping: 이 페이지의 역할</h2>
               <button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button>
             </div>
             <ul class="small">
@@ -22,7 +22,7 @@ function renderKnowledgePageShell() {
           <div class="grid">
             <div class="card">
               <div class="section-title"><h2>Hermes 조사 결과 가져오기</h2><span class="pill">외부 조사</span></div>
-              <p class="small muted">Hermes가 웹 검색이나 브라우저 확인으로 정리한 내용을 Studio 참고 기록으로 저장합니다. 저장해도 공식 설정, 감독자 결정, task, source, git은 바뀌지 않습니다.</p>
+              <p class="small muted">Hermes가 웹 검색이나 브라우저 확인으로 정리한 내용을 Studio 참고 기록으로 저장합니다. 저장해도 공식 설정, 감독자 결정, 실행 상태, source, git은 바뀌지 않습니다.</p>
               <div class="form-grid">
                 <label>조사 제목 <span class="required-mark">필수</span><input id="hermesImportTitle" placeholder="예: Hermes LLM Wiki 기능 확인"></label>
                 <label>출처 URL 또는 세션 <span class="required-mark">필수</span><input id="hermesImportSource" placeholder="예: https://... 또는 hermes session 20260602-..."></label>
@@ -54,7 +54,7 @@ function renderKnowledgePageShell() {
             <div class="grid">
               <div class="item">
                 <div class="section-title"><h2>제안 만들기</h2><span class="pill">아이디어</span></div>
-                <p class="small muted">Human Director가 직접 떠올린 아이디어를 검토 대상으로 저장합니다. 저장만으로 공식 설정, task, git은 바뀌지 않습니다.</p>
+                <p class="small muted">Human Director가 직접 떠올린 아이디어를 검토 대상으로 저장합니다. 저장만으로 공식 설정, 실행 상태, git은 바뀌지 않습니다.</p>
                 <div class="form-grid">
                   <label>제안 제목 <span class="required-mark">필수</span><input id="proposalCreateTitle" placeholder="예: 초반 생존 동기 방향"></label>
                 </div>
@@ -67,7 +67,7 @@ function renderKnowledgePageShell() {
 
               <div class="item">
                 <div class="section-title"><h2>결정 기록하기</h2><span class="pill">결정</span></div>
-                <p class="small muted">제안함에 있는 제안에 대한 감독자의 판단을 남깁니다. 회의나 업무 지시는 각 화면의 전용 버튼에서 처리합니다. 기록만 남기면 구현이나 커밋은 하지 않습니다.</p>
+                <p class="small muted">제안함에 있는 제안에 대한 감독자의 판단을 남깁니다. 대화나 실행 요청은 각 화면의 전용 버튼에서 처리합니다. 기록만 남기면 구현이나 커밋은 하지 않습니다.</p>
                 <div class="form-grid">
                   <label>판단 대상 <span class="required-mark">필수</span><select id="decisionCreateTarget"></select></label>
                   <label>결정 종류 <span class="required-mark">필수</span><select id="decisionCreateType"></select></label>

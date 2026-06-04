@@ -7,6 +7,7 @@ const { createWorkflowApiHandler } = require("./studioWorkflowApiRoutes");
 const { createWorkOrderApiHandler } = require("./studioWorkOrderApiRoutes");
 const { createKnowledgeDecisionApiHandler } = require("./studioKnowledgeDecisionApiRoutes");
 const { createEvidenceReviewApiHandler } = require("./studioEvidenceReviewApiRoutes");
+const { createDirectorApiAliasHandler } = require("./studioDirectorApiAliases");
 
 function createStudioApiHandler(deps = {}) {
   const {
@@ -20,6 +21,7 @@ function createStudioApiHandler(deps = {}) {
   const handleWorkOrderApi = createWorkOrderApiHandler(deps);
   const handleKnowledgeDecisionApi = createKnowledgeDecisionApiHandler(deps);
   const handleEvidenceReviewApi = createEvidenceReviewApiHandler(deps);
+  const handleDirectorApiAlias = createDirectorApiAliasHandler(deps);
 
   return async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
     if (req.method === "GET" && parsedUrl.pathname === "/api/summary") {
@@ -27,6 +29,9 @@ function createStudioApiHandler(deps = {}) {
     }
 
     const routeContext = { repoRoot, req, res, parsedUrl, serverContext };
+
+    const directorApiAliasResult = await handleDirectorApiAlias(routeContext);
+    if (directorApiAliasResult !== false) return directorApiAliasResult;
 
     const toolAutomationResult = await handleToolAutomationApi(routeContext);
     if (toolAutomationResult !== false) return toolAutomationResult;

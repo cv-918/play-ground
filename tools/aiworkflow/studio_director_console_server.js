@@ -44,6 +44,7 @@ const {
 } = require("./studio/studioWorkflowReviewPlanBuilders");
 const { createStudioOperationalPlanBuilders } = require("./studio/studioOperationalPlanBuilders");
 const { createStudioToolboxService } = require("./studio/studioToolboxService");
+const { buildDirectorViews } = require("./studio/studioDirectorViewModels");
 const {
   getReviewPackets,
   getDirectorGoalPlans,
@@ -712,6 +713,17 @@ async function getSummary(repoRoot) {
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
     meetings: meetings.slice(0, 12),
+    director_views: buildDirectorViews({
+      meetings: meetings.slice(0, 12),
+      proposals: proposals.slice(0, 12),
+      directorGoalPlans: directorGoalPlans.slice(0, 12),
+      workOrders: workOrders.slice(0, 12),
+      reviewPackets: reviewPackets.slice(0, 12),
+      recentStaffRuns: staffRuns.slice(0, 12),
+      decisions: decisions.slice(0, 12),
+      devLogs: devLogs.slice(0, 24),
+      memories: memories.slice(0, 12),
+    }),
     dev_logs: devLogs.slice(0, 24),
     project_profiles: projectProfiles.profiles.slice(0, 12),
     active_project: {
@@ -792,16 +804,19 @@ function listenOnce(server, host, port) {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       server.off("error", onError);
+      server.off("listening", onListening);
     };
     const onError = (error) => {
       cleanup();
       reject(error);
     };
-    server.once("error", onError);
-    server.listen(port, host, () => {
+    const onListening = () => {
       cleanup();
       resolve(port);
-    });
+    };
+    server.once("error", onError);
+    server.once("listening", onListening);
+    server.listen(port, host);
   });
 }
 

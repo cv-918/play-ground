@@ -2,11 +2,11 @@
 
 function renderSessionsPageShell() {
   return `
-    <section class="page-shell page-shell-wide">
+    <section class="page page-shell page-shell-wide" data-page="sessions">
       <div class="page-title-row">
         <div>
           <h2>스튜디오 대화</h2>
-          <p>그냥 말하면서 아이디어를 구체화하고, 필요해지면 방향 판단이나 업무 후보로 넘깁니다.</p>
+          <p><strong>Conversation.</strong> 자연어로 의도, 문제, 선택지를 구체화하고 필요할 때만 결정이나 실행 요청 후보로 넘깁니다.</p>
         </div>
       </div>
 
@@ -40,13 +40,13 @@ function renderSessionsPageShell() {
               <h3>대화 목록</h3>
               <span id="meetingCount" class="badge">0</span>
             </div>
-            <input id="meetingSearch" placeholder="세션 제목, ID 검색" />
+            <input id="meetingSearch" placeholder="대화 제목 검색" />
             <select id="meetingStatusFilter">
               <option value="__active__">진행 중 / 중단</option>
               <option value="__all__">모든 대화</option>
               <option value="in_progress">진행 중</option>
               <option value="director_decision_needed">판단 필요</option>
-              <option value="follow_up_tasking">후속 업무</option>
+              <option value="follow_up_tasking">후속 실행 요청</option>
               <option value="closed">종료</option>
             </select>
             <div id="consultationSessionList" class="session-list"></div>
@@ -58,7 +58,7 @@ function renderSessionsPageShell() {
             <div class="panel-title-row">
               <div>
                 <h3 id="activeConsultationTitle">바로 대화를 시작하세요</h3>
-                <p id="consultationStatus" class="muted small">아래 채팅창에 첫 메시지를 보내면 내부 대화 기록이 자동으로 만들어집니다.</p>
+                <p id="consultationStatus" class="muted small">아래 채팅창에 첫 메시지를 보내면 Studio 대화 기록이 자동으로 만들어집니다.</p>
               </div>
               <span id="activeConsultationBadge" class="badge">대기</span>
             </div>
@@ -73,7 +73,7 @@ function renderSessionsPageShell() {
                 </div>
               </div>
               <p class="muted small">
-                첫 메시지를 보내면 대화가 자동으로 열립니다. /ask, /summon, /work, /decision, /close 명령은 보조 기능입니다.
+                첫 메시지를 보내면 대화가 자동으로 열립니다. 필요한 직원 의견, 방향 판단, 실행 요청 후보는 자연어로 요청하세요.
               </p>
             </div>
           </div>
@@ -101,11 +101,11 @@ function renderSessionsPageShell() {
           <div class="panel">
             <h3>다음 단계 후보</h3>
             <p class="muted small">
-              후보 생성은 Studio 기록만 만듭니다. source, task 실행, commit/push는 하지 않습니다.
+              후보 생성은 Studio 기록만 만듭니다. 소스 수정, 실행, commit/push는 별도 승인 없이는 하지 않습니다.
             </p>
             <div class="button-stack">
               <button id="consultationDecision" class="primary">방향 판단으로 넘기기</button>
-              <button id="consultationWork">업무 후보 만들기</button>
+              <button id="consultationWork">실행 요청 후보 만들기</button>
               <button id="consultationClose" class="danger-secondary">대화 종료</button>
             </div>
             <div id="consultationCandidates" class="stack"></div>

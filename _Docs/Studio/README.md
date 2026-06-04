@@ -18,11 +18,21 @@ It is intentionally separate from `_Docs/AIWorkflow/`.
 
 ## Required Reading
 
+- [Personal_AI_Game_Development_Operating_System_North_Star.md](Personal_AI_Game_Development_Operating_System_North_Star.md)
+- [Personal_AI_Game_Development_Operating_Rules.md](Personal_AI_Game_Development_Operating_Rules.md)
 - [Studio_Director_Workflow_Principles.md](Studio_Director_Workflow_Principles.md)
+- [Studio_Current_System_Diagnostic_2026-06-04.md](Studio_Current_System_Diagnostic_2026-06-04.md)
+- [Studio_Director_Surface_Refactor_Plan_2026-06-04.md](Studio_Director_Surface_Refactor_Plan_2026-06-04.md)
+- [Studio_Internal_Model_API_Consolidation_Plan_2026-06-04.md](Studio_Internal_Model_API_Consolidation_Plan_2026-06-04.md)
+- [Studio_Internal_Model_API_Inventory_2026-06-04.md](Studio_Internal_Model_API_Inventory_2026-06-04.md)
+- [Studio_Director_API_Alias_Plan_2026-06-04.md](Studio_Director_API_Alias_Plan_2026-06-04.md)
+- [Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md](Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md)
 
 ## Boundary
 
-Studio is not a generic operations dashboard.
+The user's desired service is broader than Studio: it is a personal AI game development operating system where the user acts as Human Director and AI staff handle proposal, execution, verification, and records.
+
+Studio is the first Director-facing product surface for that broader system.
 
 Studio is the Human Director console for:
 

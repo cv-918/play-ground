@@ -80,8 +80,8 @@ function renderClientWorkflowResultScript() {
     function completionFollowUpActionItems(core) {
       const items = completionDecisionActionItems(core);
       if (completionChangesAlreadyRequested(core)) {
-        items.push(button("수정 업무 지시 만들기", "completion-create-fix-workorder", "", "good"));
-        items.push('<button class="secondary" data-nav-jump="work">업무 지시로 이동</button>');
+        items.push(button("수정 실행 요청 만들기", "completion-create-fix-workorder", "", "good"));
+        items.push('<button class="secondary" data-nav-jump="work">실행 요청으로 이동</button>');
       }
       return items;
     }
@@ -93,7 +93,7 @@ function renderClientWorkflowResultScript() {
     }
     function completionDirectorDecisionSummary(core) {
       if (completionChangesAlreadyRequested(core)) {
-        return "이미 수정 요청을 남긴 결과입니다. 같은 결과를 다시 완료 처리하지 말고, 수정 업무로 넘긴 뒤 새 검토 결과를 확인하세요.";
+        return "이미 수정 요청을 남긴 결과입니다. 같은 결과를 다시 완료 처리하지 말고, 수정 실행 요청으로 넘긴 뒤 새 검토 결과를 확인하세요.";
       }
       if (completionNeedsDirectorChoice(core)) {
         return "그냥 완료 처리하기에는 우려가 남아 있습니다. 받아들일 수 있는 우려면 감수 후 완료, 고쳐야 하면 수정 요청, 아직 모르겠으면 판단 보류를 선택하세요.";
@@ -143,7 +143,7 @@ function renderClientWorkflowResultScript() {
             "고쳐야 할 문제가 있으면 수정 요청을 누르세요.",
             "아직 판단 근거가 부족하면 판단 보류를 누르세요.",
           ]
-        : ["Runner 상태와 완료 카드를 다시 확인한 뒤 필요한 판단 버튼을 선택하세요."];
+        : ["완료 카드와 실행 기록을 다시 확인한 뒤 필요한 판단 버튼을 선택하세요."];
       return '<div class="item danger"><h3>완료 승인 실패</h3>' +
         '<p class="summary">' + esc(notReady ? "이 완료 보고서는 우려가 남아 있어 일반 완료 승인을 사용할 수 없습니다." : "완료 판단을 처리하지 못했습니다.") + '</p>' +
         reportSection("왜 실패했나", reasonLines) +
