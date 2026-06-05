@@ -636,6 +636,93 @@ Boundary kept:
 - No Director action POST endpoint was implemented.
 - No game source/data, schema, save/load, migration, build setting, dependency, `_Temp`, `_Local`, `.env`, node_modules, commit, push, release, or deployment change.
 
+## Goal C Execution Request Foundation Planning
+
+After the B-A-C pass, the user approved committing the readiness review and moving to Goal C.
+
+Commit recorded:
+
+- `d0857ff docs: review Studio worker execution readiness`
+
+Created the Goal C architecture/scope packet:
+
+- `_Docs/Studio/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
+
+Planning outcome:
+
+- Goal C is the Execution Request storage/schema/readiness foundation.
+- Goal C is not worker dispatch, PC Runner start, Codex CLI start, local shell execution, Backlog task creation, automatic approval, completion, commit, or push.
+- Recommended durable store: `_Docs/AIWorkflow/Studio/ExecutionRequests/`.
+- Recommended schema: `execution_request.v1`.
+- Recommended first implementation slice: planner/status/list/read/validate/store only, with `_Temp/AIWorkflowStudio/execution_requests/` as the validation store override.
+- `mark-ready` can be included only if the Human Director approves that first implementation slice; dispatch remains future Goal E.
+
+Boundary kept:
+
+- No Goal C implementation was performed.
+- No Execution Request JSON records were stored.
+- No runtime, worker, runner, source, game data, schema migration, save/load, build setting, dependency, `_Temp`, `_Local`, `.env`, node_modules, push, release, or deployment change.
+
+## Goal C.1 Execution Request Foundation Implementation
+
+The user approved Goal C.1 with this bounded scope:
+
+```text
+Execution Request storage, execution_request.v1 schema validation, planner status/list/read/validate/store, _Temp validation override, tests, README/WorkLog updates.
+Excluded: mark-ready, worker dispatch, PC Runner start, Codex/local execution, Backlog task creation, commit/push.
+```
+
+Files changed:
+
+- `_Docs/AIWorkflow/Studio/ExecutionRequests/README.md`
+- `tools/aiworkflow/studio_execution_request_planner.js`
+- `tools/aiworkflow/studio_execution_request_planner.bat`
+- `tools/aiworkflow/studio/studioExecutionRequestPlanner.test.js`
+- `_Docs/Studio/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
+- `_Docs/Studio/README.md`
+- `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
+
+Implementation notes:
+
+- Added a standalone Node.js planner with `status`, `list`, `read`, `validate`, and `store` commands.
+- Added Windows `.bat` wrapper for local use.
+- Default durable store is `_Docs/AIWorkflow/Studio/ExecutionRequests/`.
+- `--store-path` override is allowed only inside repository `_Temp` for validation smoke tests.
+- `store` is dry-run by default and requires `--execute` to write an Execution Request record.
+- Duplicate `execution_request_id` writes are rejected.
+- Planner safety metadata explicitly reports no runner start, worker dispatch, source change, or git change.
+- Schema validation enforces `execution_request.v1`, required field groups, enum values, false-by-default safety flags, and no raw-shell authority in worker intent.
+
+Validation summary:
+
+- RED observed before implementation: `node tools/aiworkflow/studio/studioExecutionRequestPlanner.test.js` failed with missing `../studio_execution_request_planner` module.
+- GREEN after implementation:
+  - `node tools/aiworkflow/studio/studioExecutionRequestPlanner.test.js`
+  - `node tools/aiworkflow/studio/directorConsoleActionVocabulary.test.js`
+  - `node tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+  - `node tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
+  - `node tools/aiworkflow/studio/studioDirectorApiAliases.test.js`
+  - `node tools/aiworkflow/studio/studioDirectorViewModels.test.js`
+  - `node tools/aiworkflow/studio/directorConsoleDirectorViews.test.js`
+  - `node tools/aiworkflow/studio/studioServerPortFallback.test.js`
+  - `node --check tools/aiworkflow/studio_execution_request_planner.js`
+  - `node --check tools/aiworkflow/studio/studioExecutionRequestPlanner.test.js`
+  - `git diff --check`
+- Planner smoke under `_Temp` passed for:
+  - `validate`
+  - `store` dry-run
+  - `store --execute`
+  - `status`
+  - `list`
+  - `read`
+
+Boundary kept:
+
+- No `mark-ready` implementation.
+- No worker dispatch, PC Runner start, Codex CLI start, local shell execution, build/test command execution, Backlog task creation, automatic approval, automatic completion, commit, or push.
+- No game source/data changes.
+- No tracked `_Temp`, `_Local`, `.env`, or node_modules files.
+
 ## AI Assistance
 
-Hermes updated the documents and applied the bounded Fast UX Containment, Director Surface Refactor UI changes, Action Vocabulary restoration, legacy Discord cleanup, and B-A-C Studio planning pass based on the user's approved goals. Durable direction was recorded in memory where appropriate.
+Hermes updated the documents and applied the bounded Fast UX Containment, Director Surface Refactor UI changes, Action Vocabulary restoration, legacy Discord cleanup, B-A-C Studio planning pass, Goal C Execution Request foundation planning, and Goal C.1 Execution Request planner foundation implementation based on the user's approved goals. Durable direction was recorded in memory where appropriate.

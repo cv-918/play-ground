@@ -32,6 +32,7 @@ It is intentionally separate from `_Docs/AIWorkflow/`.
 - [Studio_B_Current_Review_Risk_Sweep_2026-06-05.md](Studio_B_Current_Review_Risk_Sweep_2026-06-05.md)
 - [Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md](Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md)
 - [Studio_C_Director_UX_Flow_Review_2026-06-05.md](Studio_C_Director_UX_Flow_Review_2026-06-05.md)
+- [Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md](Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md)
 
 ## Boundary
 
