@@ -26,10 +26,10 @@ This goal follows the completed Fast UX Containment pass. The containment pass r
 
 Read these first:
 
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_System_North_Star.md`
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_Rules.md`
-- `_Docs/Studio/Studio_Director_Workflow_Principles.md`
-- `_Docs/Studio/Studio_Current_System_Diagnostic_2026-06-04.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_System_North_Star.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_Rules.md`
+- `_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md`
+- `_Docs/Studio/Diagnostics/Studio_Current_System_Diagnostic_2026-06-04.md`
 - `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
 - `AGENTS.md`
 

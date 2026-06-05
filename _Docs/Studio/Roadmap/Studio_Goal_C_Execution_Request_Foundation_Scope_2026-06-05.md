@@ -483,8 +483,8 @@ Goal C should normally keep this as `not_started`.
   ],
   "required_context": [
     "AGENTS.md",
-    "_Docs/Studio/Personal_AI_Game_Development_Operating_Rules.md",
-    "_Docs/Studio/Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md"
+    "_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_Rules.md",
+    "_Docs/Studio/Roadmap/Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md"
   ],
   "expected_outputs": [
     "Execution Request record stored or previewed.",

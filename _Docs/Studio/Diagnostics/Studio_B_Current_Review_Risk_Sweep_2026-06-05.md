@@ -26,9 +26,9 @@ Reviewed the current Studio direction and recent implementation state around:
 Repository evidence reviewed:
 
 - `_Docs/Studio/README.md`
-- `_Docs/Studio/Studio_Director_Workflow_Principles.md`
-- `_Docs/Studio/Studio_Director_Action_Model_Plan_2026-06-05.md`
-- `_Docs/Studio/Studio_Director_Read_Only_API_Contract_2026-06-05.md`
+- `_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md`
+- `_Docs/Studio/Contracts/Studio_Director_Action_Model_Plan_2026-06-05.md`
+- `_Docs/Studio/Contracts/Studio_Director_Read_Only_API_Contract_2026-06-05.md`
 - `_Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint.md`
 - `_Docs/AIWorkflow/FinalBlueprint/WF_Build_Test_Runner.md`
 - `tools/aiworkflow/studio/directorConsolePage.js`

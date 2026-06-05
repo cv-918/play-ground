@@ -139,7 +139,7 @@ For Studio product, UX, and Human Director workflow work, read these first:
 
 ```text
 _Docs/Studio/README.md
-_Docs/Studio/Studio_Director_Workflow_Principles.md
+_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md
 ```
 
 Do not treat `_Docs/AIWorkflow/Studio/` as the current Studio product-direction source of truth.

@@ -23,9 +23,9 @@ Main concern:
 
 This report evaluates the current Studio implementation against the newer Studio direction documents:
 
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_System_North_Star.md`
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_Rules.md`
-- `_Docs/Studio/Studio_Director_Workflow_Principles.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_System_North_Star.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_Rules.md`
+- `_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md`
 
 ## Diagnostic Method
 

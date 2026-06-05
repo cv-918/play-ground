@@ -20,11 +20,11 @@ Documentation-only update.
 
 ## Files Changed
 
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_System_North_Star.md`
-- `_Docs/Studio/Personal_AI_Game_Development_Operating_Rules.md`
-- `_Docs/Studio/Studio_Current_System_Diagnostic_2026-06-04.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_System_North_Star.md`
+- `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_Rules.md`
+- `_Docs/Studio/Diagnostics/Studio_Current_System_Diagnostic_2026-06-04.md`
 - `_Docs/Studio/README.md`
-- `_Docs/Studio/Studio_Director_Workflow_Principles.md`
+- `_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md`
 - `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
 
 ## Key Direction Changes
@@ -118,7 +118,7 @@ After the Fast UX Containment pass, the user approved moving to the next remedia
 
 Created a bounded implementation plan for Goal 2:
 
-- `_Docs/Studio/Studio_Director_Surface_Refactor_Plan_2026-06-04.md`
+- `_Docs/Studio/DirectorSurface/Studio_Director_Surface_Refactor_Plan_2026-06-04.md`
 
 The plan keeps the next step focused on the Director-facing surface rather than backend/API consolidation. It defines:
 
@@ -134,7 +134,7 @@ This planning step did not change Studio source code beyond the previously compl
 
 ## Director Surface Refactor Implementation
 
-The user approved `_Docs/Studio/Studio_Director_Surface_Refactor_Plan_2026-06-04.md` as the Goal 2 execution scope.
+The user approved `_Docs/Studio/DirectorSurface/Studio_Director_Surface_Refactor_Plan_2026-06-04.md` as the Goal 2 execution scope.
 
 Implemented the reduced-scope Director Surface Refactor:
 
@@ -184,7 +184,7 @@ Recommended next goal:
 
 Created a bounded planning document for Goal 3:
 
-- `_Docs/Studio/Studio_Internal_Model_API_Consolidation_Plan_2026-06-04.md`
+- `_Docs/Studio/Contracts/Studio_Internal_Model_API_Consolidation_Plan_2026-06-04.md`
 
 The plan is intentionally documentation/planning only. It does not change source behavior, API routes, JSON schemas, persisted folders, runtime policy, or build settings.
 
@@ -209,7 +209,7 @@ Implemented the next bounded goal:
 
 Files added:
 
-- `_Docs/Studio/Studio_Internal_Model_API_Inventory_2026-06-04.md`
+- `_Docs/Studio/Diagnostics/Studio_Internal_Model_API_Inventory_2026-06-04.md`
 - `tools/aiworkflow/studio/studioDirectorViewModels.js`
 - `tools/aiworkflow/studio/studioDirectorViewModels.test.js`
 
@@ -289,7 +289,7 @@ TDD/validation notes:
 
 Created a bounded planning document for the next API-boundary goal:
 
-- `_Docs/Studio/Studio_Director_API_Alias_Plan_2026-06-04.md`
+- `_Docs/Studio/Contracts/Studio_Director_API_Alias_Plan_2026-06-04.md`
 
 The plan is intentionally documentation/planning only. It does not add routes, remove routes, change `/api/summary`, change persisted JSON schemas, move folders, alter runtime behavior, or modify build/git behavior.
 
@@ -365,7 +365,7 @@ Prepared the current Studio Director surface chain for Human Director commit dec
 
 Created:
 
-- `_Docs/Studio/Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md`
+- `_Docs/Studio/DirectorSurface/Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md`
 
 Updated:
 
@@ -457,8 +457,8 @@ Continued the Studio Director-facing surface stabilization with four bounded fol
 Files added:
 
 - `tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
-- `_Docs/Studio/Studio_Director_Read_Only_API_Contract_2026-06-05.md`
-- `_Docs/Studio/Studio_Director_Action_Model_Plan_2026-06-05.md`
+- `_Docs/Studio/Contracts/Studio_Director_Read_Only_API_Contract_2026-06-05.md`
+- `_Docs/Studio/Contracts/Studio_Director_Action_Model_Plan_2026-06-05.md`
 
 Files updated:
 
@@ -506,7 +506,7 @@ Files added:
 Files updated:
 
 - `tools/aiworkflow/studio/directorConsolePage.js`
-- `_Docs/Studio/Studio_Director_Action_Model_Plan_2026-06-05.md`
+- `_Docs/Studio/Contracts/Studio_Director_Action_Model_Plan_2026-06-05.md`
 - `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
 
 TDD evidence:
@@ -598,9 +598,9 @@ C. Director UX Flow Review
 
 Files changed:
 
-- `_Docs/Studio/Studio_B_Current_Review_Risk_Sweep_2026-06-05.md`
-- `_Docs/Studio/Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md`
-- `_Docs/Studio/Studio_C_Director_UX_Flow_Review_2026-06-05.md`
+- `_Docs/Studio/Diagnostics/Studio_B_Current_Review_Risk_Sweep_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md`
+- `_Docs/Studio/DirectorSurface/Studio_C_Director_UX_Flow_Review_2026-06-05.md`
 - `_Docs/Studio/README.md`
 - `tools/aiworkflow/studio/studioWorkflowApiRoutes.js`
 - `tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
@@ -646,7 +646,7 @@ Commit recorded:
 
 Created the Goal C architecture/scope packet:
 
-- `_Docs/Studio/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
 
 Planning outcome:
 
@@ -678,7 +678,7 @@ Files changed:
 - `tools/aiworkflow/studio_execution_request_planner.js`
 - `tools/aiworkflow/studio_execution_request_planner.bat`
 - `tools/aiworkflow/studio/studioExecutionRequestPlanner.test.js`
-- `_Docs/Studio/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_C_Execution_Request_Foundation_Scope_2026-06-05.md`
 - `_Docs/Studio/README.md`
 - `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
 
@@ -723,6 +723,37 @@ Boundary kept:
 - No game source/data changes.
 - No tracked `_Temp`, `_Local`, `.env`, or node_modules files.
 
+## Goal E Design Completion Pass
+
+After committing Goal C.1, the user requested all remaining designs required up to Goal E and a concise list of approval decisions needed from the Human Director.
+
+Commit recorded:
+
+- `cf4eb4f feat: add Studio execution request foundation`
+
+Design documents added:
+
+- `_Docs/Studio/Roadmap/Studio_Goal_C2_Execution_Request_Read_Only_Surface_Scope_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_C3_Readiness_Preflight_Scope_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_D_Result_Review_Evidence_Linkage_Scope_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Goal_E_Worker_Dispatch_Approval_Packet_2026-06-05.md`
+- `_Docs/Studio/Roadmap/Studio_Roadmap_To_Goal_E_Approval_Matrix_2026-06-05.md`
+
+Design conclusion:
+
+```text
+C.2 Read-only Execution Request surface
+  -> C.3 Readiness + preflight
+  -> D.1 Result Review foundation
+  -> E.1 Worker Dispatch request-record foundation
+  -> E.2 one safe live runner smoke
+```
+
+Boundary kept:
+
+- No C.2/C.3/D/E implementation was performed.
+- No mark-ready, worker dispatch, PC Runner start, Codex/local execution, Backlog task creation, automatic acceptance, commit, push, game source, or game data change.
+
 ## AI Assistance
 
-Hermes updated the documents and applied the bounded Fast UX Containment, Director Surface Refactor UI changes, Action Vocabulary restoration, legacy Discord cleanup, B-A-C Studio planning pass, Goal C Execution Request foundation planning, and Goal C.1 Execution Request planner foundation implementation based on the user's approved goals. Durable direction was recorded in memory where appropriate.
+Hermes updated the documents and applied the bounded Fast UX Containment, Director Surface Refactor UI changes, Action Vocabulary restoration, legacy Discord cleanup, B-A-C Studio planning pass, Goal C Execution Request foundation planning, Goal C.1 Execution Request planner foundation implementation, and Goal E design completion pass based on the user's approved goals. Durable direction was recorded in memory where appropriate.

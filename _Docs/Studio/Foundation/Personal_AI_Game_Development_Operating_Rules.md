@@ -12,8 +12,8 @@ Changing these rules requires explicit Human Director approval.
 
 Read these first when interpreting this document:
 
-1. `_Docs/Studio/Personal_AI_Game_Development_Operating_System_North_Star.md`
-2. `_Docs/Studio/Studio_Director_Workflow_Principles.md`
+1. `_Docs/Studio/Foundation/Personal_AI_Game_Development_Operating_System_North_Star.md`
+2. `_Docs/Studio/Foundation/Studio_Director_Workflow_Principles.md`
 3. `AGENTS.md`
 
 ## Operating Intent
