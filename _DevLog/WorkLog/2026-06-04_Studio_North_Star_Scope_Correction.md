@@ -488,6 +488,51 @@ Validation summary:
 - Live browser smoke on `http://127.0.0.1:4317/` verified Director source links include `rel="noopener noreferrer"` and browser console had no messages/errors.
 - After live smoke, stale Studio server child processes were terminated and port `4317` was confirmed free.
 
+## Director Action Vocabulary UI Copy
+
+Re-implemented the preview-only Director Action Vocabulary after the prior uncommitted implementation was lost during a separate terminal cleanup.
+
+Implemented the first reduced-scope step from the Director Action Model:
+
+- Added a preview-only `Director Action Vocabulary` panel to the Director Desk.
+- Added five vocabulary groups for Conversation, Decision, Execution Request, Result Review, and Record Keeping.
+- Added disabled preview buttons marked with `data-director-action-preview`.
+- Added Korean copy stating that these actions are not executed yet and do not write records, run workers, or commit before separate approval.
+
+Files added:
+
+- `tools/aiworkflow/studio/directorConsoleActionVocabulary.test.js`
+
+Files updated:
+
+- `tools/aiworkflow/studio/directorConsolePage.js`
+- `_Docs/Studio/Studio_Director_Action_Model_Plan_2026-06-05.md`
+- `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
+
+TDD evidence:
+
+- RED: `node tools/aiworkflow/studio/directorConsoleActionVocabulary.test.js` failed because the action vocabulary constants/panel did not exist.
+- GREEN: the same test passed after the preview-only vocabulary panel was implemented.
+
+Boundary kept:
+
+- No action endpoint implementation.
+- No write/mutation route.
+- No file write from the UI vocabulary panel.
+- No worker execution.
+- No commit/push/release/deployment automation.
+- No game source/data, `_Docs/Handoff/*`, schema, save/load, migration, build setting, or dependency changes.
+
+Validation summary:
+
+- `node tools/aiworkflow/studio/directorConsoleActionVocabulary.test.js`
+- Targeted Studio regression chain including legacy Discord cleanup, Director API alias, view-model, director_views consumption, and port fallback tests.
+- `node --check` for the restored test, edited Director console page, and Studio server module.
+- `node tools/aiworkflow/studio_director_console_server.js --once > _Temp/studio_summary_check.json`
+- `git diff --check`
+- Live browser smoke on `http://127.0.0.1:4317/` verified 5 vocabulary cards, 19 disabled preview buttons, safety copy, and no browser console messages/errors.
+- After live smoke, stale Studio server child processes were terminated and port `4317` was confirmed free.
+
 ## Studio Legacy Discord Reference Cleanup
 
 After Hermes Discord gateway migration and legacy bot removal, the user approved a bounded cleanup goal for remaining current Studio/runtime references to the removed Discord bot.

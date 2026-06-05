@@ -323,6 +323,14 @@ function directorConsoleHtml() {
             </div>
           </section>
           <section class="grid">
+            <div class="card span-all">
+              <div class="section-title"><h2>Director Action Vocabulary</h2><span class="pill">preview only</span></div>
+              <p class="summary">다음 단계에서 가능한 감독자 행동의 언어만 먼저 고정합니다. 아직 실행되지 않습니다.</p>
+              <div id="homeDirectorActionVocabulary" class="grid"></div>
+              <p class="small muted">별도 승인 전에는 기록/실행/commit이 일어나지 않습니다.</p>
+            </div>
+          </section>
+          <section class="grid">
             <div class="card">
               <div class="section-title"><h2>다음 판단</h2><span id="coreNextAction" class="pill"></span></div>
               <div id="homeWorkflowCore" class="list"></div>
@@ -442,6 +450,38 @@ function directorConsoleHtml() {
       { page:"work", label:"Execution Request", title:"실행 요청", purpose:"승인된 방향을 범위가 있는 실행 계약으로 만듭니다." },
       { page:"evidence", label:"Result Review", title:"결과 검토", purpose:"결과, 검증, 위험, 다음 판단을 확인합니다." },
       { page:"knowledge", label:"Record Keeping", title:"기록함", purpose:"중요한 결정과 지식을 durable record로 남깁니다." },
+    ];
+    const DIRECTOR_ACTION_VOCABULARY = [
+      {
+        page: "sessions",
+        label: "대화: 후보 추출 / 맥락 연결 / 기록 후보화",
+        actions: ["후보 추출", "맥락 연결", "기록 후보화"],
+        boundary: "대화 요약은 승인이나 실행이 아닙니다.",
+      },
+      {
+        page: "inbox",
+        label: "결정: 승인 / 보류 / 반려 / 명확화 요청",
+        actions: ["승인", "보류", "반려", "명확화 요청"],
+        boundary: "결정은 별도 실행 요청이 승인되기 전까지 소스 변경을 시작하지 않습니다.",
+      },
+      {
+        page: "work",
+        label: "실행 요청: 초안 작성 / 범위 수정 / 작업 준비 표시 / 취소",
+        actions: ["초안 작성", "범위 수정", "작업 준비 표시", "취소"],
+        boundary: "작업 준비 표시는 실행이 아니며 worker 실행은 별도 승인된 요청이 필요합니다.",
+      },
+      {
+        page: "evidence",
+        label: "결과 검토: 수락 / 수정 요청 / 반려 / 기록으로 승격",
+        actions: ["수락", "수정 요청", "반려", "기록으로 승격"],
+        boundary: "결과 수락은 commit/push 승인이 아닙니다.",
+      },
+      {
+        page: "knowledge",
+        label: "기록함: 기록 승격 / 근거 연결 / 요약 / 보관",
+        actions: ["기록 승격", "근거 연결", "요약", "보관"],
+        boundary: "durable record는 Human Director 의도와 근거가 있을 때만 남깁니다.",
+      },
     ];
     const SECONDARY_PAGE_GROUPS = {
       operations: ["runs", "diff", "devlog", "timeline"],
@@ -1628,6 +1668,19 @@ function directorConsoleHtml() {
         '<div class="row"><button class="secondary" data-nav-jump="' + esc(step.page) + '">' + esc(step.title) + '로 이동</button></div></div>'
       ).join("");
     }
+    function renderDirectorActionVocabulary() {
+      el("homeDirectorActionVocabulary").innerHTML = DIRECTOR_ACTION_VOCABULARY.map((group) =>
+        '<div class="item director-action-vocabulary-card" data-director-action-page="' + esc(group.page) + '">' +
+        '<h3>' + esc(group.label) + '</h3>' +
+        '<p class="small muted">' + esc(group.boundary) + '</p>' +
+        '<div class="row">' + group.actions.map((action) =>
+          '<button class="secondary" disabled data-director-action-preview="' + esc(group.page + ':' + action) + '">' + esc(action) + '</button>'
+        ).join("") + '</div>' +
+        '<p class="small muted">아직 실행되지 않습니다. 별도 승인 전에는 기록/실행/commit이 일어나지 않습니다.</p>' +
+        '</div>'
+      ).join("");
+    }
+
     function renderHomePanels() {
       const core = state.workflow_core || {};
       const activeTask = core.active_task || {};
@@ -1643,6 +1696,7 @@ function directorConsoleHtml() {
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       renderDirectorFlowCards();
+      renderDirectorActionVocabulary();
       const activeTaskHtml = activeTask.task_id
         ? '<div class="item warn"><h3>' + esc(activeTask.title || "실행 승인 대기") + ' <span class="pill">' + esc(optionLabel(activeTask.status || "")) + '</span></h3>' +
           '<p class="summary">우선순위 ' + esc(activeTask.priority || "-") + '</p>' +

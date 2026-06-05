@@ -381,18 +381,23 @@ Every future action implementation must include:
 
 ## Current Recommendation
 
-Do not implement action endpoints yet.
-
-Next safe implementation should be:
+Implemented first reduced-scope step:
 
 ```text
 Action Vocabulary and UI Copy
 ```
 
-or, if the user wants source behavior:
+Current implementation status:
+
+- Studio Director Desk shows a preview-only `Director Action Vocabulary` panel.
+- The panel names the allowed future action language for Conversation, Decision, Execution Request, Result Review, and Record Keeping.
+- Preview buttons are disabled and marked with `data-director-action-preview`.
+- No action endpoint, write route, file mutation, worker execution, commit, push, or durable record write is wired to the vocabulary panel.
+
+Next source-behavior step, if approved:
 
 ```text
 Decision Action Draft Records
 ```
 
-but only after storage path and approval boundary are explicitly approved.
+Before that step, storage path and approval boundary must be explicitly approved.
