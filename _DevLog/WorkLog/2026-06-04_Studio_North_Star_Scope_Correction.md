@@ -445,6 +445,49 @@ Validation summary:
 - Browser console had no messages and no JavaScript errors.
 - After validation, stopped the server and confirmed port `4317` was free.
 
+## Director API Contract and Action Model Planning
+
+Continued the Studio Director-facing surface stabilization with four bounded follow-up tasks:
+
+1. Added API handler wiring coverage for the read-only Director aliases.
+2. Strengthened Director view card traceability expectations and added `rel="noopener noreferrer"` to source links opened with `target="_blank"`.
+3. Documented the current read-only Director API contract.
+4. Wrote the plan-only Director Action Model for future write/action work.
+
+Files added:
+
+- `tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
+- `_Docs/Studio/Studio_Director_Read_Only_API_Contract_2026-06-05.md`
+- `_Docs/Studio/Studio_Director_Action_Model_Plan_2026-06-05.md`
+
+Files updated:
+
+- `tools/aiworkflow/studio/directorConsoleDirectorViews.test.js`
+- `tools/aiworkflow/studio/directorConsolePage.js`
+- `tools/aiworkflow/studio/studioServerPortFallback.test.js`
+- `_Docs/Studio/README.md`
+- `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
+
+Boundary kept:
+
+- No game source or game data changes.
+- No `_Docs/Handoff/*` changes.
+- No write/action API implementation.
+- No JSON schema, persisted artifact, save/load, migration, build setting, package dependency, commit, push, release, or deployment change.
+
+Validation summary:
+
+- `node tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
+- `node tools/aiworkflow/studio/studioDirectorApiAliases.test.js`
+- `node tools/aiworkflow/studio/studioDirectorViewModels.test.js`
+- `node tools/aiworkflow/studio/directorConsoleDirectorViews.test.js`
+- `node tools/aiworkflow/studio/studioServerPortFallback.test.js`
+- `node --check` for edited Studio JS/test modules and server module.
+- `node tools/aiworkflow/studio_director_console_server.js --once > _Temp/studio_summary_check.json`
+- `git diff --check`
+- Live browser smoke on `http://127.0.0.1:4317/` verified Director source links include `rel="noopener noreferrer"` and browser console had no messages/errors.
+- After live smoke, stale Studio server child processes were terminated and port `4317` was confirmed free.
+
 ## AI Assistance
 
 Hermes updated the documents and applied the bounded Fast UX Containment and Director Surface Refactor UI changes based on the user's approved goals. Durable direction was recorded in memory where appropriate.

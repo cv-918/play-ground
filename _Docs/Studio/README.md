@@ -27,6 +27,8 @@ It is intentionally separate from `_Docs/AIWorkflow/`.
 - [Studio_Internal_Model_API_Inventory_2026-06-04.md](Studio_Internal_Model_API_Inventory_2026-06-04.md)
 - [Studio_Director_API_Alias_Plan_2026-06-04.md](Studio_Director_API_Alias_Plan_2026-06-04.md)
 - [Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md](Studio_Director_Surface_Smoke_and_Commit_Preparation_2026-06-04.md)
+- [Studio_Director_Read_Only_API_Contract_2026-06-05.md](Studio_Director_Read_Only_API_Contract_2026-06-05.md)
+- [Studio_Director_Action_Model_Plan_2026-06-05.md](Studio_Director_Action_Model_Plan_2026-06-05.md)
 
 ## Boundary
 

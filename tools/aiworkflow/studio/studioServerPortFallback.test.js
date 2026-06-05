@@ -74,7 +74,7 @@ function runStudioServer(basePort) {
     }, 10000);
 
     const poll = setInterval(() => {
-      if (stdout.includes("AIWorkflow Studio Director Console")) {
+      if (stdout.includes(`url: http://${HOST}:`)) {
         clearTimeout(timeout);
         clearInterval(poll);
         child.kill();
@@ -83,7 +83,7 @@ function runStudioServer(basePort) {
     }, 50);
 
     child.on("exit", (code) => {
-      if (!stdout.includes("AIWorkflow Studio Director Console")) {
+      if (!stdout.includes(`url: http://${HOST}:`)) {
         clearTimeout(timeout);
         clearInterval(poll);
         reject(new Error(`Studio server exited before startup. code=${code} stdout=${stdout} stderr=${stderr}`));

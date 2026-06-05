@@ -1478,7 +1478,7 @@ function directorConsoleHtml() {
         '<p class="summary">' + esc(short(item.summary || "요약이 없습니다.", 260)) + '</p>' +
         '<p class="small muted">' + esc(item.updated_at || "시간 정보 없음") + (item.source_id ? ' · ' + esc(item.source_id) : '') + '</p>' +
         '<div class="row"><button class="secondary" data-nav-jump="' + esc(page) + '">' + esc(actionLabel) + '</button>' +
-        (item.href ? '<a href="' + esc(item.href) + '" target="_blank">원본 보기</a>' : '') + '</div></div>';
+        (item.href ? '<a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a>' : '') + '</div></div>';
     }
     function normalizedDecisionCards() {
       const viewItems = directorViewItems("decision_items");
