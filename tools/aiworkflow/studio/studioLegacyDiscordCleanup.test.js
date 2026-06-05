@@ -80,6 +80,34 @@ function collectCatalogToolIds(catalog) {
   return ids;
 }
 
+async function testRemainingWorkflowGitCommitRouteStillUsesInjectedJsonReader() {
+  let commitBody = null;
+  const responses = [];
+  const handler = createWorkflowApiHandler({
+    commitSelectedFiles: async (repoRoot, body) => {
+      commitBody = { repoRoot, body };
+      return { committed: true, sha: "abc123" };
+    },
+    pushCurrentBranch: async () => ({ pushed: true }),
+    readRequestJson: async () => ({ message: "test", push: false }),
+    sendJson: (res, status, value) => {
+      responses.push({ res, status, value });
+      return value;
+    },
+  });
+
+  const result = await handler({
+    repoRoot: "repo-root",
+    req: fakeReq("POST"),
+    res: {},
+    parsedUrl: makeParsedUrl("/api/workflow/git/commit"),
+  });
+
+  assert.deepStrictEqual(commitBody, { repoRoot: "repo-root", body: { message: "test", push: false } });
+  assert.strictEqual(responses[0].status, 200);
+  assert.strictEqual(result.command, "commit-selected");
+}
+
 function testToolboxCatalogDoesNotExposeLegacyDiscordBotTools() {
   const service = createStudioToolboxService();
   const catalog = service.buildToolboxCatalog(process.cwd());
@@ -93,6 +121,7 @@ function testToolboxCatalogDoesNotExposeLegacyDiscordBotTools() {
 
 async function run() {
   await testLegacyDiscordWorkflowRoutesReturnRetiredEnvelopeWithoutImportingRemovedServices();
+  await testRemainingWorkflowGitCommitRouteStillUsesInjectedJsonReader();
   testToolboxCatalogDoesNotExposeLegacyDiscordBotTools();
   console.log("studio legacy Discord cleanup tests passed");
 }

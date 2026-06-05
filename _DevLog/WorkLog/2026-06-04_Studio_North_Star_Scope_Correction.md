@@ -586,6 +586,56 @@ Boundary kept:
 - No JSON schema, persisted artifact, save/load, migration, build setting, package dependency, commit, push, release, or deployment change.
 - No new write/action Director API implementation.
 
+## B-A-C Studio Planning Pass
+
+After Action Vocabulary restoration and Discord gateway cleanup, the user approved proceeding in this order:
+
+```text
+B. Current Review / Risk Sweep
+A. Goal E Worker Execution Integration architecture/scope packet
+C. Director UX Flow Review
+```
+
+Files changed:
+
+- `_Docs/Studio/Studio_B_Current_Review_Risk_Sweep_2026-06-05.md`
+- `_Docs/Studio/Studio_Goal_E_Worker_Execution_Integration_Scope_2026-06-05.md`
+- `_Docs/Studio/Studio_C_Director_UX_Flow_Review_2026-06-05.md`
+- `_Docs/Studio/README.md`
+- `tools/aiworkflow/studio/studioWorkflowApiRoutes.js`
+- `tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+
+Review notes:
+
+- Found and fixed one remaining Studio workflow route regression: the retained `/api/workflow/git/commit` route still called `readRequestJson(req)` after the legacy Discord cleanup removed `readRequestJson` from dependency destructuring.
+- Restored `readRequestJson` dependency injection and added a regression test proving the retained git commit route uses the injected JSON reader.
+- Independent reviewer found no blocking issue in that focused fix.
+
+Planning outcome:
+
+- Goal E should not immediately implement worker execution.
+- Worker execution requires approved Execution Request storage/schema and an explicit dispatch contract first.
+- The recommended next behavior step is Goal C-style Execution Request foundation before actual Goal E worker dispatch wiring.
+
+Validation summary:
+
+- `node tools/aiworkflow/studio/directorConsoleActionVocabulary.test.js`
+- `node tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+- `node tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
+- `node tools/aiworkflow/studio/studioDirectorApiAliases.test.js`
+- `node tools/aiworkflow/studio/studioDirectorViewModels.test.js`
+- `node tools/aiworkflow/studio/directorConsoleDirectorViews.test.js`
+- `node tools/aiworkflow/studio/studioServerPortFallback.test.js`
+- `node --check tools/aiworkflow/studio/studioWorkflowApiRoutes.js`
+- `node --check tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+- `git diff --check`
+
+Boundary kept:
+
+- No worker execution was implemented.
+- No Director action POST endpoint was implemented.
+- No game source/data, schema, save/load, migration, build setting, dependency, `_Temp`, `_Local`, `.env`, node_modules, commit, push, release, or deployment change.
+
 ## AI Assistance
 
-Hermes updated the documents and applied the bounded Fast UX Containment and Director Surface Refactor UI changes based on the user's approved goals. Durable direction was recorded in memory where appropriate.
+Hermes updated the documents and applied the bounded Fast UX Containment, Director Surface Refactor UI changes, Action Vocabulary restoration, legacy Discord cleanup, and B-A-C Studio planning pass based on the user's approved goals. Durable direction was recorded in memory where appropriate.

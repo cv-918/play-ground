@@ -24,6 +24,7 @@ function createWorkflowApiHandler(deps = {}) {
   const {
     commitSelectedFiles,
     pushCurrentBranch,
+    readRequestJson,
     sendJson,
   } = deps;
 
