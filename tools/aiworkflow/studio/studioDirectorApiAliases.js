@@ -12,10 +12,6 @@ const DIRECTOR_API_ALIASES = {
     functionName: "decision",
     viewKey: "decision_items",
   },
-  "/api/director/execution-requests": {
-    functionName: "execution_request",
-    viewKey: "execution_requests",
-  },
   "/api/director/result-reviews": {
     functionName: "result_review",
     viewKey: "result_review_items",
@@ -42,8 +38,11 @@ function itemMatchesQuery(item, query) {
     item.title,
     item.summary,
     item.status,
+    item.risk_level,
+    item.source_ref,
     item.source_type,
     item.source_id,
+    item.approval_state,
   ].map(normalizedText).join(" ");
   return haystack.includes(query);
 }

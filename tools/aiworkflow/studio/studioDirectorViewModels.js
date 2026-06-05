@@ -13,6 +13,10 @@ function count(value) {
   return list(value).length;
 }
 
+function firstText(values, fallback = "") {
+  return list(values)[0] || fallback;
+}
+
 function sourceFields(source = {}, sourceType, sourceId) {
   return {
     source_type: sourceType,
@@ -29,6 +33,13 @@ function fallbackTitle(...values) {
     if (candidate) return candidate;
   }
   return "Untitled";
+}
+
+function requestArraySummary(values, fallback = "(none)") {
+  const items = list(values);
+  if (!items.length) return fallback;
+  if (items.length === 1) return items[0];
+  return `${items[0]} (+${items.length - 1})`;
 }
 
 function toConversationRecord(meeting = {}) {
@@ -65,6 +76,57 @@ function toDecisionItem(source = {}, sourceType = "decision") {
     summary: fallbackTitle(source.summary, source.decision_summary, source.rationale, source.goal, title),
     attention_count: risks + approvals + unresolved,
     primary_action: sourceType === "proposal" ? "decide_proposal" : "review_decision_item",
+  };
+}
+
+function toExecutionRequestRecord(record = {}) {
+  const request = record.execution_request || {};
+  const validation = record.validation || { ok: false, errors: [] };
+  const validationErrors = list(validation.errors);
+  const sourceId = text(record.execution_request_id || request.execution_request_id);
+  const title = fallbackTitle(request.title, request.objective, sourceId, record.file, "Invalid Execution Request");
+  const approval = request.approval && typeof request.approval === "object" ? request.approval : {};
+  const workerIntent = request.worker_intent && typeof request.worker_intent === "object" ? request.worker_intent : {};
+  const status = text(request.status, validation.ok ? "director_review" : "invalid");
+  const warning = validation.ok ? "" : text(record.warning_summary, "Execution Request validation failed.");
+
+  return {
+    kind: "execution_request",
+    director_function: "execution_request",
+    execution_request_id: sourceId,
+    source_type: text(request.source_type, "execution_request"),
+    source_id: sourceId,
+    source_ref: text(request.source_ref),
+    path: record.path || "",
+    href: record.href || "",
+    updated_at: record.updated_at || "",
+    title,
+    objective: text(request.objective),
+    status,
+    risk_level: text(request.risk_level),
+    summary: validation.ok
+      ? fallbackTitle(request.objective, firstText(request.scope), title)
+      : `Warning: ${warning}`,
+    scope_summary: requestArraySummary(request.scope),
+    non_goals_summary: requestArraySummary(request.non_goals),
+    validation_plan_summary: requestArraySummary(request.validation_plan),
+    approval_state: text(approval.approval_state, validation.ok ? "not_approved" : "invalid"),
+    worker_profile: text(workerIntent.worker_profile),
+    worker_executor: text(workerIntent.worker_executor),
+    dispatch_mode: text(workerIntent.dispatch_mode),
+    safety_boundary: "Read-only review only. Studio does not mark ready, dispatch a worker, run local execution, create Backlog tasks, or change git from this surface.",
+    validation_ok: Boolean(validation.ok),
+    validation_errors: validationErrors,
+    warning_summary: warning,
+    internal_details: {
+      file: record.file || "",
+      schema_version: text(request.schema_version),
+      parse_error: text(record.parse_error),
+      worker_command_id_or_route: text(workerIntent.worker_command_id_or_route),
+      validation_errors: validationErrors,
+    },
+    attention_count: validation.ok ? (text(approval.approval_state) === "not_approved" ? 1 : 0) : 1,
+    primary_action: "review_execution_request",
   };
 }
 
@@ -127,7 +189,7 @@ function buildDirectorViews(data = {}) {
       ...list(data.proposals).map((item) => toDecisionItem(item, "proposal")),
       ...list(data.directorGoalPlans).map((item) => toDecisionItem(item, "director_goal_plan")),
     ],
-    execution_requests: list(data.workOrders).map(toExecutionRequest),
+    execution_requests: list(data.executionRequests).map(toExecutionRequestRecord),
     result_review_items: [
       ...list(data.reviewPackets).map((item) => toResultReviewItem(item, "review_packet")),
       ...list(data.recentStaffRuns).map((item) => toResultReviewItem(item, "staff_run")),
@@ -145,6 +207,7 @@ module.exports = {
   toConversationRecord,
   toDecisionItem,
   toExecutionRequest,
+  toExecutionRequestRecord,
   toResultReviewItem,
   toRecordItem,
 };

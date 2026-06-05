@@ -60,7 +60,7 @@ function renderWorkPageShell() {
             </div>
           </div>
           <div class="grid">
-            <div class="card"><h2>실행 요청</h2><p class="muted">저장된 실행 요청입니다. 여기서 AI에게 맡기거나 승인 가능한 실행 후보로 정리할 수 있습니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>Execution Request 레코드</h2><p class="muted">C.1 store에 저장된 실행 요청을 읽기 전용으로 검토합니다. 이 목록은 준비 표시, worker dispatch, 로컬 실행을 제공하지 않습니다.</p><div id="workorders" class="list"></div></div>
             <div class="card"><h2>전달 후보</h2><p class="muted">다른 AI에게 넘길 수 있는 별도 전달 후보입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
           </div>
         </section>

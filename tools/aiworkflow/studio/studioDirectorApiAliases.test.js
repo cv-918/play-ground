@@ -45,12 +45,11 @@ async function testFiveReadOnlyAliasesReturnDirectorViewEnvelopes() {
   const expected = [
     ["/api/director/conversations", "conversation", "conversation_records"],
     ["/api/director/decisions", "decision", "decision_items"],
-    ["/api/director/execution-requests", "execution_request", "execution_requests"],
     ["/api/director/result-reviews", "result_review", "result_review_items"],
     ["/api/director/records", "record_keeping", "record_items"],
   ];
 
-  assert.strictEqual(Object.keys(DIRECTOR_API_ALIASES).length, 5);
+  assert.strictEqual(Object.keys(DIRECTOR_API_ALIASES).length, 4);
   for (const [path, functionName, viewKey] of expected) {
     const { handler, calls } = createHarness(summary);
     const result = await handler({

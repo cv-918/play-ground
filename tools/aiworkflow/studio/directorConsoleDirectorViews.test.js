@@ -35,6 +35,23 @@ assert(
   "director console should render normalized director view cards"
 );
 assert(
+  html.includes("function renderExecutionRequestCard"),
+  "execution request page should render a C.2-specific read-only detail card"
+);
+assert(
+  html.includes("scope_summary") &&
+  html.includes("non_goals_summary") &&
+  html.includes("validation_plan_summary") &&
+  html.includes("approval_state") &&
+  html.includes("worker_profile") &&
+  html.includes("safety_boundary"),
+  "execution request card should expose Director-facing C.2 summary fields"
+);
+assert(
+  html.includes("레코드 경고") && html.includes("내부/디버그 상세"),
+  "execution request card should show invalid-record warning summaries with raw details behind debug details"
+);
+assert(
   html.includes('data-nav-jump="') && html.includes('esc(page)') && html.includes('esc(actionLabel)'),
   "director view cards should keep a Director-facing navigation action"
 );
@@ -45,6 +62,17 @@ assert(
 assert(
   html.includes("item.source_id ? ' · '") && html.includes('esc(item.source_id)'),
   "director view cards should surface source_id for traceability"
+);
+
+const executionRequestCardSource = html.slice(
+  html.indexOf("function renderExecutionRequestCard"),
+  html.indexOf("function normalizedDecisionCards")
+);
+assert(
+  !executionRequestCardSource.includes("data-action=") &&
+  !executionRequestCardSource.includes("mark-ready") &&
+  !executionRequestCardSource.includes("staff-run"),
+  "C.2 execution request cards must not expose mark-ready, dispatch, or run actions"
 );
 
 console.log("director console director_views consumption test passed");

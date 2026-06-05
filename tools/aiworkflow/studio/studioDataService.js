@@ -25,6 +25,7 @@ const {
   repoPath,
   toRepoRelative,
 } = require("./studioDataUtils");
+const { listExecutionRequestRecords } = require("./studioExecutionRequestStore");
 
 const DEPARTMENT_UI = {
   executive_production: {
@@ -278,12 +279,23 @@ async function getStaffDirectory(repoRoot) {
   };
 }
 
+async function getExecutionRequestStore(repoRoot, options = {}) {
+  return listExecutionRequestRecords(repoRoot, options);
+}
+
+async function getExecutionRequests(repoRoot, options = {}) {
+  const store = await getExecutionRequestStore(repoRoot, options);
+  return store.records;
+}
+
 module.exports = {
   getReviewPackets,
   getDirectorGoalPlans,
   getDevLogs,
   getStaffRuns,
   getContextPackets,
+  getExecutionRequestStore,
+  getExecutionRequests,
   getMaterializations,
   getWorkOrders,
   getProposals,

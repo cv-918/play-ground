@@ -51,6 +51,7 @@ const {
   getDevLogs,
   getStaffRuns,
   getContextPackets,
+  getExecutionRequestStore,
   getMaterializations,
   getWorkOrders,
   getProposals,
@@ -643,6 +644,8 @@ async function getSummary(repoRoot) {
   const staffRuns = await getStaffRuns(repoRoot);
   const contextPackets = await getContextPackets(repoRoot);
   const handoffs = await getHandoffCandidates(repoRoot);
+  const executionRequestStore = await getExecutionRequestStore(repoRoot);
+  const executionRequests = executionRequestStore.records;
   const materializations = await getMaterializations(repoRoot);
   const workOrders = await getWorkOrders(repoRoot);
   const proposals = await getProposals(repoRoot);
@@ -668,6 +671,7 @@ async function getSummary(repoRoot) {
     materializations: await countJsonFiles(path.join(studioRoot, "Materializations")),
     task_bindings: await countJsonFiles(path.join(studioRoot, "TaskBindings")),
     director_goal_plans: await countJsonFiles(path.join(studioRoot, "DirectorGoals")),
+    execution_requests: executionRequestStore.count,
     dev_logs: devLogs.length,
   };
   const companyRuntime = buildCompanyRuntimeReadinessReport(repoRoot, {
@@ -693,6 +697,7 @@ async function getSummary(repoRoot) {
       review_packets: reviewPackets.length,
       staff_runs: staffRuns.length,
       handoffs: handoffs.length,
+      execution_request_invalid_records: executionRequestStore.invalid_count,
       company_runtime_gates: companyRuntime.stage_summary.passed_gate_count + "/" + companyRuntime.stage_summary.total_gate_count,
       ...stores,
     },
@@ -701,6 +706,12 @@ async function getSummary(repoRoot) {
     director_goal_plans: directorGoalPlans.slice(0, 12),
     workflow_core: workflowCore,
     recent_staff_runs: staffRuns.slice(0, 80),
+    execution_request_store: {
+      count: executionRequestStore.count,
+      invalid_count: executionRequestStore.invalid_count,
+      safety: executionRequestStore.safety,
+    },
+    execution_requests: executionRequests.slice(0, 24),
     context_packets: contextPackets.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
@@ -713,6 +724,7 @@ async function getSummary(repoRoot) {
       meetings: meetings.slice(0, 12),
       proposals: proposals.slice(0, 12),
       directorGoalPlans: directorGoalPlans.slice(0, 12),
+      executionRequests: executionRequests.slice(0, 24),
       workOrders: workOrders.slice(0, 12),
       reviewPackets: reviewPackets.slice(0, 12),
       recentStaffRuns: staffRuns.slice(0, 12),

@@ -839,6 +839,10 @@ function directorConsoleHtml() {
         creative:"크리에이티브", technical:"기술", production:"제작", review:"리뷰", qa_triage:"QA 분류", postmortem:"회고", release_readiness:"릴리즈 준비",
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
+        changes_requested:"수정 요청됨", ready_for_worker:"worker 준비됨", superseded:"대체됨", cancelled:"취소됨", dispatched:"dispatch 기록됨", result_ready:"결과 준비됨", closed:"종료됨",
+        not_approved:"미승인", approved_for_draft_storage:"초안 저장 승인", approved_for_worker_readiness:"worker 준비 승인", revoked:"승인 취소", invalid:"유효하지 않음",
+        analysis:"분석", none:"없음", codex_cli:"Codex CLI", local_cli:"Local CLI", build_test_runner:"Build/Test Runner", pc_runner:"PC Runner",
+        not_dispatchable:"dispatch 불가", future_dispatch_required:"향후 dispatch 승인 필요",
         approve:"채택", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"조건부 채택", canonize:"공식 설정 후보",
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"자문", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
@@ -1520,6 +1524,50 @@ function directorConsoleHtml() {
         '<div class="row"><button class="secondary" data-nav-jump="' + esc(page) + '">' + esc(actionLabel) + '</button>' +
         (item.href ? '<a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a>' : '') + '</div></div>';
     }
+    function renderExecutionRequestCard(item) {
+      const className = item.validation_ok === false ? "item warn execution-request-card" : "item execution-request-card";
+      const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
+      const risk = item.risk_level ? '<span class="pill">위험도 ' + esc(optionLabel(item.risk_level)) + '</span>' : '';
+      const validation = item.validation_ok === false
+        ? '<span class="pill">검증 경고</span>'
+        : '<span class="pill">검증 OK</span>';
+      const sourceLine = [optionLabel(item.source_type || ""), item.source_ref || ""].filter(Boolean).join(" · ") || "(없음)";
+      const workerLine = [
+        item.worker_profile ? "profile " + optionLabel(item.worker_profile) : "",
+        item.worker_executor ? "executor " + optionLabel(item.worker_executor) : "",
+        item.dispatch_mode ? "dispatch " + optionLabel(item.dispatch_mode) : "",
+      ].filter(Boolean).join(" · ") || "worker metadata 없음";
+      const internal = item.internal_details || {};
+      const internalLines = [
+        internal.file ? "file: " + internal.file : "",
+        internal.schema_version ? "schema: " + internal.schema_version : "",
+        internal.worker_command_id_or_route ? "worker route: " + internal.worker_command_id_or_route : "",
+        internal.parse_error ? "parse error: " + internal.parse_error : "",
+        ...asArray(item.validation_errors).map((error) => "validation: " + error),
+      ].filter(Boolean);
+      return '<div class="' + className + '">' +
+        '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Execution Request", 220)) + '</h3>' +
+        [status, risk, validation].filter(Boolean).join("") + '</div>' +
+        (item.validation_ok === false
+          ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Execution Request validation failed.", 260)) + '</p></div>'
+          : '') +
+        '<h4>목표</h4>' +
+        '<p class="summary">' + esc(short(item.objective || item.summary || "목표 요약이 없습니다.", 320)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>출처</span><span class="pill">' + esc(sourceLine) + '</span></div>' +
+        '<div class="compact-line"><span>범위</span><span>' + esc(short(item.scope_summary || "(없음)", 220)) + '</span></div>' +
+        '<div class="compact-line"><span>하지 않을 일</span><span>' + esc(short(item.non_goals_summary || "(없음)", 220)) + '</span></div>' +
+        '<div class="compact-line"><span>검증 계획</span><span>' + esc(short(item.validation_plan_summary || "(없음)", 220)) + '</span></div>' +
+        '<div class="compact-line"><span>승인 상태</span><span class="pill">' + esc(optionLabel(item.approval_state || "not_approved")) + '</span></div>' +
+        '<div class="compact-line"><span>worker 의도</span><span>' + esc(workerLine) + '</span></div>' +
+        '</div>' +
+        '<h4>안전 경계</h4>' +
+        '<p class="small muted">' + esc(item.safety_boundary || "읽기 전용 검토만 수행합니다.") + '</p>' +
+        (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
+        '<details class="internal-links"><summary>내부/디버그 상세</summary>' +
+        compactListHtml(internalLines, "내부 상세가 없습니다.") +
+        '</details></div>';
+    }
     function normalizedDecisionCards() {
       const viewItems = directorViewItems("decision_items");
       return viewItems.length ? viewItems.map((item) => renderDirectorViewCard(item, { page: "inbox", actionLabel: "결정 보기" })) : [];
@@ -1925,11 +1973,11 @@ function directorConsoleHtml() {
         internalLinksHtml([link("채택 후보 원본", m.href)]) + '</div>'
       ).join("") : '<p class="muted">아직 채택 후보가 없습니다. 왼쪽 직원 보고서에서 채택 후보로 넘기기를 누르면 여기에 나타납니다.</p>') + sampleRecordsHtml("숨긴 테스트/샘플 채택 후보", state.materializations);
       const visibleExecutionRequests = directorViewItems("execution_requests").filter((item) =>
-        includesText([item.source_id, item.title, item.summary, item.status].join(" "), filters.workSearch)
+        includesText([item.source_id, item.source_ref, item.title, item.summary, item.status, item.risk_level, item.approval_state].join(" "), filters.workSearch)
       );
       el("workorders").innerHTML = visibleExecutionRequests.length
-        ? visibleExecutionRequests.map((item) => renderDirectorViewCard(item, { page: "work", actionLabel: "실행 요청 보기" })).join("")
-        : renderEmpty("조건에 맞는 실행 요청이 없습니다.");
+        ? visibleExecutionRequests.map((item) => renderExecutionRequestCard(item)).join("")
+        : renderEmpty("저장된 Execution Request 레코드가 없습니다. C.2 화면은 _Docs/AIWorkflow/Studio/ExecutionRequests/의 읽기 전용 레코드만 표시합니다.");
       const visibleHandoffs = operationalRecords(state.handoffs).filter((h) =>
         includesText([h.handoff_id, h.from_agent_id, h.to_agent_id, h.reason, h.status].join(" "), filters.workSearch)
       );
