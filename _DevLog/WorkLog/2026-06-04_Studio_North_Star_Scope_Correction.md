@@ -488,6 +488,59 @@ Validation summary:
 - Live browser smoke on `http://127.0.0.1:4317/` verified Director source links include `rel="noopener noreferrer"` and browser console had no messages/errors.
 - After live smoke, stale Studio server child processes were terminated and port `4317` was confirmed free.
 
+## Studio Legacy Discord Reference Cleanup
+
+After Hermes Discord gateway migration and legacy bot removal, the user approved a bounded cleanup goal for remaining current Studio/runtime references to the removed Discord bot.
+
+Scope:
+
+- Retire Studio workflow routes that still attempted to import removed `tools/discord-orchestrator` services.
+- Remove legacy Discord bot status/restart toolbox entries from the Studio toolbox catalog.
+- Remove the now-unused Studio server dynamic import helper for Discord services.
+- Keep git commit/push routes, Director read-only aliases, `director_views`, and Studio UI behavior otherwise unchanged.
+
+Files changed:
+
+- `tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+- `tools/aiworkflow/studio/studioWorkflowApiRoutes.js`
+- `tools/aiworkflow/studio/studioToolboxService.js`
+- `tools/aiworkflow/studio_director_console_server.js`
+- `_DevLog/WorkLog/2026-06-04_Studio_North_Star_Scope_Correction.md`
+
+Behavior notes:
+
+- `POST /api/workflow/intake`, `POST /api/workflow/finalize`, and `POST /api/workflow/task/approve-start` now return HTTP `410` with a retired-route envelope instead of parsing a request body or importing removed legacy services.
+- Studio toolbox catalog no longer exposes `discord_bot_status` or `discord_bot_restart`.
+- Historical DevLog and older AIWorkflow documents may still mention the retired bot as past evidence, but current Studio/runtime code no longer points at the removed bot scripts/services.
+
+Validation summary:
+
+- RED observed: `node tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js` failed because the old workflow route imported the removed legacy service path.
+- GREEN: `node tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js` passed.
+- Regression tests passed:
+  - `node tools/aiworkflow/studio/studioApiHandlersDirectorAliases.test.js`
+  - `node tools/aiworkflow/studio/studioDirectorApiAliases.test.js`
+  - `node tools/aiworkflow/studio/studioDirectorViewModels.test.js`
+  - `node tools/aiworkflow/studio/directorConsoleDirectorViews.test.js`
+  - `node tools/aiworkflow/studio/studioServerPortFallback.test.js`
+- Syntax/diff checks passed:
+  - `node --check tools/aiworkflow/studio/studioLegacyDiscordCleanup.test.js`
+  - `node --check tools/aiworkflow/studio/studioWorkflowApiRoutes.js`
+  - `node --check tools/aiworkflow/studio/studioToolboxService.js`
+  - `node --check tools/aiworkflow/studio_director_console_server.js`
+  - `git diff --check`
+- Live API smoke passed:
+  - Started Studio server and tested `POST /api/workflow/intake`, `POST /api/workflow/finalize`, and `POST /api/workflow/task/approve-start`; all returned HTTP `410` retired-route envelopes.
+  - Fetched `/api/toolbox/catalog`; confirmed no `discord_bot_status`, `discord_bot_restart`, or `tools/discord-orchestrator` catalog references.
+  - Stopped verified Studio server child processes and confirmed ports `4317` and `4318` were free.
+
+Boundary kept:
+
+- No game source or game data changes.
+- No `_Docs/Handoff/*` changes.
+- No JSON schema, persisted artifact, save/load, migration, build setting, package dependency, commit, push, release, or deployment change.
+- No new write/action Director API implementation.
+
 ## AI Assistance
 
 Hermes updated the documents and applied the bounded Fast UX Containment and Director Surface Refactor UI changes based on the user's approved goals. Durable direction was recorded in memory where appropriate.

@@ -1,92 +1,43 @@
 #!/usr/bin/env node
 "use strict";
 
-const { sendToolJson } = require("./studioApiRouteUtils");
+
+function sendRetiredDiscordWorkflowRoute(sendJson, res, route) {
+  return sendJson(res, 410, {
+    ok: false,
+    status: "retired",
+    legacy_system: "discord-orchestrator",
+    replacement: "hermes-discord-gateway",
+    route,
+    message: "The legacy Discord Orchestrator workflow route has been retired after migration to Hermes Discord gateway. Use the Director-facing Studio flow or Hermes gateway entrypoint instead.",
+    safety: {
+      body_parsed: false,
+      legacy_service_imported: false,
+      source_changed: false,
+      task_state_changed: false,
+      commit_or_push: false,
+    },
+  });
+}
 
 function createWorkflowApiHandler(deps = {}) {
   const {
     commitSelectedFiles,
-    importDiscordService,
     pushCurrentBranch,
-    readRequestJson,
-    safeWorkflowId,
     sendJson,
-    studioServiceConfig,
   } = deps;
 
   return async function handleWorkflowApi({ repoRoot, req, res, parsedUrl, serverContext = {} }) {
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/intake") {
-      const body = await readRequestJson(req);
-      const text = String(body.text || "").trim();
-      if (!text) throw new Error("Missing intake text.");
-      const { createTaskFromIntake } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/intakeTaskCreationService.js");
-      const result = await createTaskFromIntake(studioServiceConfig(repoRoot), { text });
-      return sendToolJson(sendJson, res, result);
+      return sendRetiredDiscordWorkflowRoute(sendJson, res, parsedUrl.pathname);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/finalize") {
-      const body = await readRequestJson(req);
-      const taskId = safeWorkflowId(body.task_id, "task id");
-      const decision = String(body.decision || "").trim();
-      const runnerRunId = String(body.runner_run_id || "").trim();
-      const completionReportId = String(body.completion_report_id || "").trim();
-      const config = studioServiceConfig(repoRoot);
-
-      if (decision === "accept" || decision === "accept-concerns") {
-        const { acceptCompletionAndContinueRunner } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/runnerCompletionService.js");
-        const result = await acceptCompletionAndContinueRunner(config, {
-          id: taskId,
-          decision,
-          runnerRunId,
-          completionReportId,
-          markDone: body.mark_done === true,
-          actor: "studio_console",
-        });
-        return sendToolJson(sendJson, res, result);
-      }
-
-      const commandByDecision = {
-        "request-changes": "request-changes",
-        reject: "reject",
-        defer: "defer",
-      };
-      if (!commandByDecision[decision]) {
-        throw new Error("Unsupported finalization decision.");
-      }
-      const { recordFinalizationDecision } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/finalizationService.js");
-      const result = await recordFinalizationDecision(config, {
-        id: taskId,
-        command: commandByDecision[decision],
-        completionReportId,
-        actor: "studio_console",
-      });
-      return sendToolJson(sendJson, res, result);
+      return sendRetiredDiscordWorkflowRoute(sendJson, res, parsedUrl.pathname);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/task/approve-start") {
-      const body = await readRequestJson(req);
-      const taskId = safeWorkflowId(body.task_id, "task id");
-      const config = studioServiceConfig(repoRoot);
-      const { setActiveTask, approveTask } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/taskService.js");
-      const { startPcRunnerDetached } = await importDiscordService(repoRoot, "tools/discord-orchestrator/src/services/pcRunnerService.js");
-      const activation = await setActiveTask(config, taskId);
-      if (!activation.ok) return sendJson(res, 500, activation);
-      const approval = await approveTask(config, {
-        id: taskId,
-        note: body.note || "Studio Console approved selected task scope for PC Runner execution.",
-      });
-      if (!approval.ok) return sendJson(res, 500, approval);
-      const runner = await startPcRunnerDetached(config, {
-        id: taskId,
-        profile: body.profile || "",
-        executor: body.executor || "",
-      });
-      return sendJson(res, runner.ok ? 200 : 500, {
-        ok: runner.ok,
-        command: "approve-start",
-        data: { activation, approval, runner },
-        error: runner.error || "",
-      });
+      return sendRetiredDiscordWorkflowRoute(sendJson, res, parsedUrl.pathname);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/git/commit") {

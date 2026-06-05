@@ -6,7 +6,7 @@ const fsp = require("fs/promises");
 const http = require("http");
 const path = require("path");
 const { spawn } = require("child_process");
-const { pathToFileURL } = require("url");
+
 const { DEFAULT_HOST, DEFAULT_PORT, parseArgs } = require("./studio/cliArgs");
 const { runGit, parseGitShortStatus, getGitStatusEntries, commitSelectedFiles, pushCurrentBranch } = require("./studio/gitService");
 const { directorConsoleHtml } = require("./studio/directorConsolePage");
@@ -275,10 +275,6 @@ function normalizeWorkflowTask(row, fallback = {}) {
   };
 }
 
-async function importDiscordService(repoRoot, relativePath) {
-  const fileUrl = pathToFileURL(repoPath(repoRoot, relativePath)).href;
-  return import(fileUrl);
-}
 
 function slugifyId(value, fallback = "item") {
   const slug = String(value || "")
@@ -915,7 +911,7 @@ async function startServer(options) {
     getConditionalAutomation,
     getSummary,
     getWorkflowCore,
-    importDiscordService,
+
     readRequestJson,
     readStudioRecordFromBody,
     repoPath,

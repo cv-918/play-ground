@@ -169,32 +169,6 @@ function createStudioToolboxService(options = {}) {
       timeout_ms: 60000,
       safety: "읽기 전용입니다. 게임 소스나 데이터를 수정하지 않습니다.",
     },
-    {
-      id: "discord_bot_status",
-      category: "Discord 보조",
-      label: "Discord 봇 상태 확인",
-      purpose: "Discord Orchestrator 봇이 실행 중인지 확인합니다.",
-      when_to_use: "Discord 명령 응답이 이상하거나 봇이 멈춘 것 같을 때 사용합니다.",
-      script: "tools/discord-orchestrator/status_bot.bat",
-      args: [],
-      command_display: "tools\\discord-orchestrator\\status_bot.bat",
-      timeout_ms: 30000,
-      safety: "읽기 전용입니다.",
-    },
-    {
-      id: "discord_bot_restart",
-      category: "핵심 도구",
-      label: "Discord 봇 재시작",
-      purpose: "관리 상태 파일이 있는 Discord 봇을 기존 restart script로 재시작합니다.",
-      when_to_use: "Discord 봇 코드 변경 후 봇을 다시 띄워야 할 때 사용합니다.",
-      script: "tools/discord-orchestrator/restart_bot.bat",
-      args: [],
-      command_display: "tools\\discord-orchestrator\\restart_bot.bat",
-      timeout_ms: 30000,
-      safety: "workflow task, source, git은 바꾸지 않고 봇 프로세스만 재시작합니다.",
-      primary: true,
-      confirm_message: "Discord 봇을 재시작할까요? 진행 중인 Discord 응답이 잠시 끊길 수 있습니다.",
-    },
   ];
 
   function toolboxToolExists(repoRoot, tool) {
@@ -218,7 +192,7 @@ function createStudioToolboxService(options = {}) {
       confirm_message: tool.confirm_message || "",
       publish_data: tool.publish_data === true,
     });
-    const primaryOrder = ["studio_restart", "discord_bot_restart", "google_drive_data_upload"];
+    const primaryOrder = ["studio_restart", "google_drive_data_upload"];
     const primaryTools = primaryOrder
       .map((id) => TOOLBOX_TOOLS.find((tool) => tool.id === id))
       .filter(Boolean)
