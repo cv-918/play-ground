@@ -52,6 +52,8 @@ const {
   getStaffRuns,
   getContextPackets,
   getExecutionRequestStore,
+  getResultReviewStore,
+  getWorkerDispatchStore,
   getMaterializations,
   getWorkOrders,
   getProposals,
@@ -646,6 +648,10 @@ async function getSummary(repoRoot) {
   const handoffs = await getHandoffCandidates(repoRoot);
   const executionRequestStore = await getExecutionRequestStore(repoRoot);
   const executionRequests = executionRequestStore.records;
+  const resultReviewStore = await getResultReviewStore(repoRoot);
+  const resultReviews = resultReviewStore.records;
+  const workerDispatchStore = await getWorkerDispatchStore(repoRoot);
+  const workerDispatches = workerDispatchStore.records;
   const materializations = await getMaterializations(repoRoot);
   const workOrders = await getWorkOrders(repoRoot);
   const proposals = await getProposals(repoRoot);
@@ -672,6 +678,8 @@ async function getSummary(repoRoot) {
     task_bindings: await countJsonFiles(path.join(studioRoot, "TaskBindings")),
     director_goal_plans: await countJsonFiles(path.join(studioRoot, "DirectorGoals")),
     execution_requests: executionRequestStore.count,
+    result_reviews: resultReviewStore.count,
+    worker_dispatches: workerDispatchStore.count,
     dev_logs: devLogs.length,
   };
   const companyRuntime = buildCompanyRuntimeReadinessReport(repoRoot, {
@@ -698,6 +706,8 @@ async function getSummary(repoRoot) {
       staff_runs: staffRuns.length,
       handoffs: handoffs.length,
       execution_request_invalid_records: executionRequestStore.invalid_count,
+      result_review_invalid_records: resultReviewStore.invalid_count,
+      worker_dispatch_invalid_records: workerDispatchStore.invalid_count,
       company_runtime_gates: companyRuntime.stage_summary.passed_gate_count + "/" + companyRuntime.stage_summary.total_gate_count,
       ...stores,
     },
@@ -711,7 +721,19 @@ async function getSummary(repoRoot) {
       invalid_count: executionRequestStore.invalid_count,
       safety: executionRequestStore.safety,
     },
+    result_review_store: {
+      count: resultReviewStore.count,
+      invalid_count: resultReviewStore.invalid_count,
+      safety: resultReviewStore.safety,
+    },
+    worker_dispatch_store: {
+      count: workerDispatchStore.count,
+      invalid_count: workerDispatchStore.invalid_count,
+      safety: workerDispatchStore.safety,
+    },
     execution_requests: executionRequests.slice(0, 24),
+    result_reviews: resultReviews.slice(0, 24),
+    worker_dispatches: workerDispatches.slice(0, 24),
     context_packets: contextPackets.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
@@ -725,7 +747,9 @@ async function getSummary(repoRoot) {
       proposals: proposals.slice(0, 12),
       directorGoalPlans: directorGoalPlans.slice(0, 12),
       executionRequests: executionRequests.slice(0, 24),
+      workerDispatches: workerDispatches.slice(0, 24),
       workOrders: workOrders.slice(0, 12),
+      resultReviews: resultReviews.slice(0, 24),
       reviewPackets: reviewPackets.slice(0, 12),
       recentStaffRuns: staffRuns.slice(0, 12),
       decisions: decisions.slice(0, 12),

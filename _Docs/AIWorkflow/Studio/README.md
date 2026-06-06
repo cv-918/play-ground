@@ -76,6 +76,13 @@ This slice defines:
 - Creative MeetingSession to WorkOrder to TaskBinding examples
 - Canon decision flow and proposal/decision/memory examples
 - Local WorkOrder store and read/list/store tool
+- Local ExecutionRequest store and read/list/store tool
+- Local ResultReview store and read/list/store tool
+- Local WorkerDispatch store and read/list/store tool for E.1 request-record
+  only dispatch approvals
+- Local WorkerDispatchEvidence store location and E.2 safe smoke runner for
+  the single allowlisted `validation` / `hermes_safe_smoke` /
+  `studio.validation.report` route
 - Local Proposal/Decision store, validation, and canon handoff planner
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Deterministic Knowledge Transition Plan for Proposal, Decision, and
@@ -317,6 +324,22 @@ tools\aiworkflow\studio_tool_run_planner.bat plan _Docs\AIWorkflow\Studio\Exampl
 tools\aiworkflow\studio_tool_run_planner.bat create _Docs\AIWorkflow\Studio\Examples\tool_run_request_codex_staff.example.json --execute
 tools\aiworkflow\studio_conditional_automation.bat validate
 tools\aiworkflow\studio_conditional_automation.bat test --execute
+tools\aiworkflow\studio_execution_request_planner.bat status
+tools\aiworkflow\studio_execution_request_planner.bat list
+tools\aiworkflow\studio_execution_request_planner.bat validate <execution_request_json_path>
+tools\aiworkflow\studio_execution_request_planner.bat store <execution_request_json_path> --execute
+tools\aiworkflow\studio_result_review_planner.bat status
+tools\aiworkflow\studio_result_review_planner.bat list
+tools\aiworkflow\studio_result_review_planner.bat validate <result_review_json_path>
+tools\aiworkflow\studio_result_review_planner.bat store <result_review_json_path> --execute
+tools\aiworkflow\studio_worker_dispatch_planner.bat status
+tools\aiworkflow\studio_worker_dispatch_planner.bat list
+tools\aiworkflow\studio_worker_dispatch_planner.bat validate <worker_dispatch_json_path>
+tools\aiworkflow\studio_worker_dispatch_planner.bat store <worker_dispatch_json_path> --execute
+tools\aiworkflow\studio_safe_smoke_runner.bat status
+tools\aiworkflow\studio_safe_smoke_runner.bat read <worker_dispatch_id>
+tools\aiworkflow\studio_safe_smoke_runner.bat preflight <worker_dispatch_id>
+tools\aiworkflow\studio_safe_smoke_runner.bat run <worker_dispatch_id> --execute
 ```
 
 These tools validate registry references, print department/staff details, and
@@ -450,6 +473,14 @@ _Docs/AIWorkflow/Studio/
 |   +-- README.md
 +-- WorkOrders/
 |   +-- README.md
++-- ExecutionRequests/
+|   +-- README.md
++-- ResultReviews/
+|   +-- README.md
++-- WorkerDispatches/
+|   +-- README.md
++-- WorkerDispatchEvidence/
+|   +-- README.md
 +-- TaskBindings/
 |   +-- README.md
 +-- Proposals/
@@ -581,6 +612,22 @@ These rules are mandatory for all future implementations:
     It may record governed draft decisions and create Backlog tasks from
     reviewed WorkOrders, but it must not become a task-execution approval,
     canon, source-edit, runner-start, commit, or push authority.
+28. ResultReview records are Director-facing review summaries. They may store
+    worker report and evidence metadata, but they must not accept/reject work,
+    close Execution Requests, mark tasks done, dispatch workers, commit, or
+    push.
+29. WorkerDispatch records are Director-approved dispatch request records. In
+    E.1 they may only record a guarded request for a future pickup path; they
+    must not start PC Runner, Codex/local execution, build/test dispatch,
+    worker processes, Backlog/ActiveTask changes, automatic Result Review
+    generation, source changes, commit, or push.
+30. E.2 WorkerDispatch safe smoke is limited to
+    `validation` / `hermes_safe_smoke` / `studio.validation.report`. It may
+    update an eligible WorkerDispatch record, write WorkerDispatchEvidence, and
+    generate a ResultReview, but it must not start PC Runner, Codex/local
+    execution, arbitrary shell commands, build/test dispatch, game source/data
+    changes, Backlog/ActiveTask changes, automatic accept/reject/close/done,
+    commit, or push.
 
 ## Relationship To Existing AIWorkflow Core
 
@@ -602,6 +649,9 @@ The Studio layer adds:
 - MeetingSession
 - WorkOrder
 - WorkOrderTaskBinding
+- ExecutionRequest
+- ResultReview
+- WorkerDispatch
 - Memory
 - Proposal
 - Decision

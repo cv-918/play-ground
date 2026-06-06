@@ -60,7 +60,8 @@ function renderWorkPageShell() {
             </div>
           </div>
           <div class="grid">
-            <div class="card"><h2>Execution Request 레코드</h2><p class="muted">C.1 store에 저장된 실행 요청을 읽기 전용으로 검토합니다. 이 목록은 준비 표시, worker dispatch, 로컬 실행을 제공하지 않습니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>Execution Request 레코드</h2><p class="muted">C.1 store에 저장된 실행 요청을 검토하고 C.3 준비 표시 또는 E.1 dispatch 요청 기록 생성을 할 수 있습니다. dispatch 요청 기록은 Worker Dispatch JSON만 만들며 runner, worker process, Result Review, Backlog/task, commit/push를 시작하지 않습니다.</p><div id="workorders" class="list"></div></div>
+            <div class="card"><h2>Worker Dispatch 레코드</h2><p class="muted">E.1 store에 저장된 dispatch 요청 기록입니다. 이 레코드는 Hermes/runner가 나중에 검토할 요청 자료일 뿐, Studio가 PC Runner나 Codex/local execution을 시작했다는 뜻이 아닙니다.</p><div id="workerDispatches" class="list"></div></div>
             <div class="card"><h2>전달 후보</h2><p class="muted">다른 AI에게 넘길 수 있는 별도 전달 후보입니다. 실행은 명시 클릭으로만 시작됩니다.</p><div id="handoffs" class="list"></div></div>
           </div>
         </section>

@@ -27,8 +27,8 @@ assert(
   "Decision action vocabulary should be visible in Director-friendly Korean copy"
 );
 assert(
-  html.includes("실행 요청: 초안 작성 / 범위 수정 / 작업 준비 표시 / 취소"),
-  "Execution Request action vocabulary should be visible in Director-friendly Korean copy"
+  html.includes("실행 요청: 초안 작성 / 범위 수정 / 작업 준비 표시 / dispatch 요청 기록 / 취소"),
+  "Execution Request and Worker Dispatch action vocabulary should be visible in Director-friendly Korean copy"
 );
 assert(
   html.includes("결과 검토: 수락 / 수정 요청 / 반려 / 기록으로 승격"),

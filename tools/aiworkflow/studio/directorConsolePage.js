@@ -466,9 +466,9 @@ function directorConsoleHtml() {
       },
       {
         page: "work",
-        label: "실행 요청: 초안 작성 / 범위 수정 / 작업 준비 표시 / 취소",
-        actions: ["초안 작성", "범위 수정", "작업 준비 표시", "취소"],
-        boundary: "작업 준비 표시는 실행이 아니며 worker 실행은 별도 승인된 요청이 필요합니다.",
+        label: "실행 요청: 초안 작성 / 범위 수정 / 작업 준비 표시 / dispatch 요청 기록 / 취소",
+        actions: ["초안 작성", "범위 수정", "작업 준비 표시", "dispatch 요청 기록", "취소"],
+        boundary: "dispatch 요청 기록은 Worker Dispatch JSON만 만들며 별도 runner 승인 전까지 실행되지 않습니다.",
       },
       {
         page: "evidence",
@@ -840,9 +840,10 @@ function directorConsoleHtml() {
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
         changes_requested:"수정 요청됨", ready_for_worker:"worker 준비됨", superseded:"대체됨", cancelled:"취소됨", dispatched:"dispatch 기록됨", result_ready:"결과 준비됨", closed:"종료됨",
+        ready_to_start:"시작 요청 가능", start_requested:"시작 요청됨", starting:"시작 중", running:"실행 중", stopped_for_human_gate:"사람 확인 대기", failed_to_start:"시작 실패", failed_during_run:"실행 중 실패", preflight_failed:"preflight 실패",
         not_approved:"미승인", approved_for_draft_storage:"초안 저장 승인", approved_for_worker_readiness:"worker 준비 승인", revoked:"승인 취소", invalid:"유효하지 않음",
         analysis:"분석", none:"없음", codex_cli:"Codex CLI", local_cli:"Local CLI", build_test_runner:"Build/Test Runner", pc_runner:"PC Runner",
-        not_dispatchable:"dispatch 불가", future_dispatch_required:"향후 dispatch 승인 필요",
+        not_dispatchable:"dispatch 불가", future_dispatch_required:"향후 dispatch 승인 필요", dispatch_request_record_only:"dispatch 요청 기록만",
         approve:"채택", reject:"반려", defer:"보류", request_changes:"수정 요청", accept_concerns:"조건부 채택", canonize:"공식 설정 후보",
         project:"프로젝트", canon:"공식 설정", global:"전체", agent:"직원", department:"부서", meeting:"자문", task:"작업",
         fact:"사실", preference:"선호", decision:"결정", rejection:"반려 기록", evidence:"검증 자료", lesson:"교훈",
@@ -1321,7 +1322,7 @@ function directorConsoleHtml() {
     }
     function renderNavCounts() {
       const m = state.metrics;
-      setNavCount("home", directorViewCount("decision_items") + directorViewCount("execution_requests") + directorViewCount("result_review_items"));
+      setNavCount("home", directorViewCount("decision_items") + directorViewCount("execution_requests") + directorViewCount("worker_dispatches") + directorViewCount("result_review_items"));
       setNavCount("toolbox", state.toolbox?.tool_count || "");
       setNavCount("sessions", state.director_goal_plans.length + directorViewCount("conversation_records"));
       setNavCount("project", state.project_profiles.length);
@@ -1329,7 +1330,7 @@ function directorConsoleHtml() {
       setNavCount("departments", m.departments);
       setNavCount("staff", m.staff);
       setNavCount("runs", operationalRecords(state.recent_staff_runs).length + operationalRecords(state.materializations).length);
-      setNavCount("work", directorViewCount("execution_requests"));
+      setNavCount("work", directorViewCount("execution_requests") + directorViewCount("worker_dispatches"));
       setNavCount("knowledge", directorViewCount("record_items"));
       setNavCount("timeline", buildTimelineItems().length);
       setNavCount("diff", state.workflow_core?.git?.changed_count || "");
@@ -1525,12 +1526,21 @@ function directorConsoleHtml() {
         (item.href ? '<a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a>' : '') + '</div></div>';
     }
     function renderExecutionRequestCard(item) {
-      const className = item.validation_ok === false ? "item warn execution-request-card" : "item execution-request-card";
+      const className = item.validation_ok === false
+        ? "item warn execution-request-card"
+        : item.preflight_ok === true && item.readiness_status === "ready_for_worker"
+          ? "item good execution-request-card"
+          : "item execution-request-card";
       const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
       const risk = item.risk_level ? '<span class="pill">위험도 ' + esc(optionLabel(item.risk_level)) + '</span>' : '';
       const validation = item.validation_ok === false
         ? '<span class="pill">검증 경고</span>'
         : '<span class="pill">검증 OK</span>';
+      const preflightPill = item.preflight_ok === true
+        ? '<span class="pill">preflight OK</span>'
+        : item.preflight_ok === false
+          ? '<span class="pill">preflight 실패</span>'
+          : '<span class="pill">preflight 미실행</span>';
       const sourceLine = [optionLabel(item.source_type || ""), item.source_ref || ""].filter(Boolean).join(" · ") || "(없음)";
       const workerLine = [
         item.worker_profile ? "profile " + optionLabel(item.worker_profile) : "",
@@ -1538,16 +1548,30 @@ function directorConsoleHtml() {
         item.dispatch_mode ? "dispatch " + optionLabel(item.dispatch_mode) : "",
       ].filter(Boolean).join(" · ") || "worker metadata 없음";
       const internal = item.internal_details || {};
+      const terminalStatus = ["dispatched", "result_ready", "closed", "cancelled", "superseded"].includes(item.status);
+      const markReadyButton = item.validation_ok !== false && !terminalStatus
+        ? button(item.readiness_status === "ready_for_worker" ? "준비 상태 재점검" : "작업 준비 표시", "execution-request-mark-ready", item.execution_request_id || item.source_id, "good")
+        : "";
+      const dispatchRequestButton = item.validation_ok !== false && item.readiness_status === "ready_for_worker" && item.preflight_ok === true
+        ? button("dispatch 요청 기록", "execution-request-dispatch-worker", item.execution_request_id || item.source_id, "warn")
+        : "";
+      const preflightLines = [
+        item.preflight_summary ? "summary: " + item.preflight_summary : "",
+        ...asArray(item.preflight_errors).map((error) => "error: " + error),
+        ...asArray(item.preflight_warnings).map((warning) => "warning: " + warning),
+      ].filter(Boolean);
       const internalLines = [
         internal.file ? "file: " + internal.file : "",
         internal.schema_version ? "schema: " + internal.schema_version : "",
         internal.worker_command_id_or_route ? "worker route: " + internal.worker_command_id_or_route : "",
         internal.parse_error ? "parse error: " + internal.parse_error : "",
         ...asArray(item.validation_errors).map((error) => "validation: " + error),
+        ...asArray(internal.preflight_errors).map((error) => "preflight error: " + error),
+        ...asArray(internal.preflight_warnings).map((warning) => "preflight warning: " + warning),
       ].filter(Boolean);
       return '<div class="' + className + '">' +
         '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Execution Request", 220)) + '</h3>' +
-        [status, risk, validation].filter(Boolean).join("") + '</div>' +
+        [status, risk, validation, preflightPill].filter(Boolean).join("") + '</div>' +
         (item.validation_ok === false
           ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Execution Request validation failed.", 260)) + '</p></div>'
           : '') +
@@ -1559,13 +1583,126 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>하지 않을 일</span><span>' + esc(short(item.non_goals_summary || "(없음)", 220)) + '</span></div>' +
         '<div class="compact-line"><span>검증 계획</span><span>' + esc(short(item.validation_plan_summary || "(없음)", 220)) + '</span></div>' +
         '<div class="compact-line"><span>승인 상태</span><span class="pill">' + esc(optionLabel(item.approval_state || "not_approved")) + '</span></div>' +
+        '<div class="compact-line"><span>준비 상태</span><span class="pill">' + esc(optionLabel(item.readiness_status || item.status || "director_review")) + '</span></div>' +
+        '<div class="compact-line"><span>preflight</span><span>' + esc(short(item.preflight_summary || "Preflight not run.", 220)) + '</span></div>' +
+        '<div class="compact-line"><span>다음 승인</span><span class="pill">' + esc(item.dispatch_approved ? "dispatch 승인됨" : "dispatch 승인 필요") + '</span></div>' +
         '<div class="compact-line"><span>worker 의도</span><span>' + esc(workerLine) + '</span></div>' +
         '</div>' +
+        (preflightLines.length ? '<h4>preflight 상세</h4>' + compactListHtml(preflightLines) : '') +
+        '<div class="inline-help"><h3>작업 준비와 dispatch 요청 기록은 실행이 아닙니다</h3><p class="summary">준비 표시는 대상 Execution Request JSON의 readiness/preflight metadata만 갱신합니다. dispatch 요청 기록은 Worker Dispatch JSON만 생성합니다. worker, PC Runner, Codex/local execution, Backlog/task, result review, commit/push는 시작하지 않습니다.</p></div>' +
         '<h4>안전 경계</h4>' +
         '<p class="small muted">' + esc(item.safety_boundary || "읽기 전용 검토만 수행합니다.") + '</p>' +
+        actionsHtml([markReadyButton, dispatchRequestButton]) +
         (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
         '<details class="internal-links"><summary>내부/디버그 상세</summary>' +
         compactListHtml(internalLines, "내부 상세가 없습니다.") +
+        '</details></div>';
+    }
+    function renderResultReviewCard(item) {
+      const className = item.validation_ok === false
+        ? "item warn result-review-card"
+        : item.validation_not_run
+          ? "item warn result-review-card"
+          : "item good result-review-card";
+      const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
+      const validation = item.validation_ok === false
+        ? '<span class="pill">레코드 검증 경고</span>'
+        : item.validation_not_run
+          ? '<span class="pill">validation not run</span>'
+          : '<span class="pill">validation evidence</span>';
+      const advisory = '<span class="pill">commit advisory only</span>';
+      const internal = item.internal_details || {};
+      const evidenceLines = [
+        item.execution_request_id ? "execution request: " + item.execution_request_id : "",
+        item.worker_dispatch_id ? "worker dispatch: " + item.worker_dispatch_id : "",
+        internal.file ? "file: " + internal.file : "",
+        internal.schema_version ? "schema: " + internal.schema_version : "",
+        internal.parse_error ? "parse error: " + internal.parse_error : "",
+        ...asArray(item.evidence_refs || internal.source_evidence_refs).map((ref) => "evidence: " + ref),
+        ...asArray(item.record_refs || internal.record_refs).map((ref) => "record ref: " + ref),
+        ...asArray(item.validation_errors).map((error) => "validation: " + error),
+      ].filter(Boolean);
+      return '<div class="' + className + '">' +
+        '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Result Review", 220)) + '</h3>' +
+        [status, validation, advisory].filter(Boolean).join("") + '</div>' +
+        (item.validation_ok === false
+          ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Result Review validation failed.", 260)) + '</p></div>'
+          : '') +
+        '<h4>Implementation summary</h4>' +
+        '<p class="summary">' + esc(short(item.implementation_summary || item.summary || "구현 요약이 없습니다.", 340)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>Files changed</span><span>' + esc(short(item.files_changed_summary || "(none)", 220)) + '</span></div>' +
+        '<div class="compact-line"><span>Behavior/model summary</span><span>' + esc(short(item.behavior_or_model_summary || "(none)", 260)) + '</span></div>' +
+        '<div class="compact-line"><span>Recommended next action</span><span class="pill">' + esc(optionLabel(item.recommended_next_action || "(none)")) + '</span></div>' +
+        '<div class="compact-line"><span>Commit recommendation</span><span>' + esc(short(item.commit_recommendation || "(none)", 260)) + '</span></div>' +
+        '</div>' +
+        (item.validation_not_run
+          ? '<div class="inline-help"><h3>Validation was not run</h3><p class="summary">' + esc(item.validation_not_run_notice || "No validation command/result evidence was recorded.") + '</p></div>'
+          : '') +
+        '<h4>Validation commands run</h4>' +
+        compactListHtml(item.validation_commands_run, "Validation commands were not recorded.") +
+        '<h4>Validation results</h4>' +
+        compactListHtml(item.validation_results, "Validation results were not recorded.") +
+        '<h4>Known risks</h4>' +
+        compactListHtml(item.known_risks, "Known risks were not recorded.") +
+        '<h4>Human decisions needed</h4>' +
+        compactListHtml(item.human_decisions_needed, "No Director decision was recorded as needed.") +
+        '<h4>안전 경계</h4>' +
+        '<p class="small muted">' + esc(item.safety_boundary || "Result Review does not accept, reject, close, mark done, dispatch workers, commit, or push from this surface.") + '</p>' +
+        (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
+        '<details class="internal-links"><summary>내부 evidence 상세</summary>' +
+        compactListHtml(evidenceLines, "내부 evidence 상세가 없습니다.") +
+        '</details></div>';
+    }
+    function renderWorkerDispatchCard(item) {
+      const className = item.validation_ok === false
+        ? "item warn worker-dispatch-card"
+        : item.result_review_pending
+          ? "item warn worker-dispatch-card"
+          : "item good worker-dispatch-card";
+      const status = item.dispatch_state ? '<span class="pill">' + esc(optionLabel(item.dispatch_state)) + '</span>' : '';
+      const mode = item.dispatch_mode ? '<span class="pill">' + esc(optionLabel(item.dispatch_mode)) + '</span>' : '';
+      const pending = item.result_review_pending ? '<span class="pill">Result Review pending</span>' : '<span class="pill">Result Review linked</span>';
+      const internal = item.internal_details || {};
+      const safeSmokeHelp = item.safe_smoke_completed
+        ? '<div class="inline-help"><h3>E.2 safe smoke result</h3><p class="summary">이 레코드는 allowlisted hermes_safe_smoke 경로가 Studio validation report만 수행하고 evidence와 Result Review를 연결한 상태입니다. Studio는 PC Runner, Codex/local execution, build/test dispatch, source/git 변경, 자동 accept/reject/close/done, commit/push를 시작하지 않습니다.</p></div>'
+        : '<div class="inline-help"><h3>E.1 request record only</h3><p class="summary">이 레코드는 worker dispatch 요청을 durable store에 남긴 것입니다. Studio는 PC Runner, Codex/local execution, build/test dispatch, worker process, Backlog/ActiveTask, Result Review 생성, commit/push를 시작하지 않습니다.</p></div>';
+      const routeLine = [
+        item.profile ? "profile " + optionLabel(item.profile) : "",
+        item.executor ? "executor " + optionLabel(item.executor) : "",
+        item.command_id_or_runner_route ? "route " + item.command_id_or_runner_route : "",
+      ].filter(Boolean).join(" · ") || "dispatch route 없음";
+      const internalLines = [
+        internal.file ? "file: " + internal.file : "",
+        internal.schema_version ? "schema: " + internal.schema_version : "",
+        item.execution_request_id ? "execution request: " + item.execution_request_id : "",
+        item.runner_plan_id ? "runner plan: " + item.runner_plan_id : "runner plan: none",
+        item.runner_run_id ? "runner run: " + item.runner_run_id : "runner run: none",
+        item.result_review_id ? "result review: " + item.result_review_id : "result review: pending",
+        internal.parse_error ? "parse error: " + internal.parse_error : "",
+        ...asArray(item.evidence_refs).map((ref) => "evidence: " + ref),
+        ...asArray(item.validation_errors).map((error) => "validation: " + error),
+      ].filter(Boolean);
+      return '<div class="' + className + '">' +
+        '<div class="section-title"><h3>' + esc(short(item.worker_dispatch_id || item.source_id || "Worker Dispatch", 220)) + '</h3>' +
+        [status, mode, pending].filter(Boolean).join("") + '</div>' +
+        (item.validation_ok === false
+          ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Worker Dispatch validation failed.", 260)) + '</p></div>'
+          : '') +
+        '<p class="summary">' + esc(short(item.status_summary || item.summary || "Worker Dispatch request record.", 340)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>Execution Request</span><span class="pill">' + esc(item.execution_request_id || "(none)") + '</span></div>' +
+        '<div class="compact-line"><span>Dispatch route</span><span>' + esc(routeLine) + '</span></div>' +
+        '<div class="compact-line"><span>Preflight</span><span>' + esc(item.preflight_summary || "Dispatch guard result not recorded.") + '</span></div>' +
+        '<div class="compact-line"><span>Result Review</span><span class="pill">' + esc(item.result_review_pending ? "pending" : item.result_review_id) + '</span></div>' +
+        '<div class="compact-line"><span>Approval</span><span>' + esc(short(item.approval_summary || "(none)", 240)) + '</span></div>' +
+        '</div>' +
+        safeSmokeHelp +
+        '<h4>안전 경계</h4>' +
+        '<p class="small muted">' + esc(item.safety_boundary || "Worker Dispatch record only.") + '</p>' +
+        (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
+        '<details class="internal-links"><summary>내부 dispatch 상세</summary>' +
+        compactListHtml(internalLines, "내부 dispatch 상세가 없습니다.") +
         '</details></div>';
     }
     function normalizedDecisionCards() {
@@ -1978,6 +2115,12 @@ function directorConsoleHtml() {
       el("workorders").innerHTML = visibleExecutionRequests.length
         ? visibleExecutionRequests.map((item) => renderExecutionRequestCard(item)).join("")
         : renderEmpty("저장된 Execution Request 레코드가 없습니다. C.2 화면은 _Docs/AIWorkflow/Studio/ExecutionRequests/의 읽기 전용 레코드만 표시합니다.");
+      const visibleWorkerDispatches = directorViewItems("worker_dispatches").filter((item) =>
+        includesText([item.worker_dispatch_id, item.execution_request_id, item.status_summary, item.dispatch_state, item.dispatch_mode, item.profile, item.executor, item.command_id_or_runner_route].join(" "), filters.workSearch)
+      );
+      el("workerDispatches").innerHTML = visibleWorkerDispatches.length
+        ? visibleWorkerDispatches.map((item) => renderWorkerDispatchCard(item)).join("")
+        : renderEmpty("저장된 Worker Dispatch 레코드가 없습니다. E.1 dispatch 요청 기록은 ready Execution Request에서 명시 승인 후 생성되며 runner를 시작하지 않습니다.");
       const visibleHandoffs = operationalRecords(state.handoffs).filter((h) =>
         includesText([h.handoff_id, h.from_agent_id, h.to_agent_id, h.reason, h.status].join(" "), filters.workSearch)
       );
@@ -2225,7 +2368,11 @@ function directorConsoleHtml() {
       }
       const resultReviewItems = directorViewItems("result_review_items");
       el("packets").innerHTML = resultReviewItems.length
-        ? '<div class="list">' + resultReviewItems.map((item) => renderDirectorViewCard(item, { page: "evidence", actionLabel: "결과 보기" })).join("") + '</div>'
+        ? '<div class="list">' + resultReviewItems.map((item) =>
+          item.kind === "result_review_item" && item.source_type === "result_review"
+            ? renderResultReviewCard(item)
+            : renderDirectorViewCard(item, { page: "evidence", actionLabel: "결과 보기" })
+        ).join("") + '</div>'
         : '<p class="muted">검토 보고서가 없습니다.</p>';
     }
     async function refresh() {
@@ -2844,6 +2991,44 @@ function directorConsoleHtml() {
       if (action === "workorder-staff-run") {
         if (!confirm("선택한 업무 지시를 담당 AI 직원에게 맡길까요? Codex CLI를 호출하며 결과는 _Temp 검증 자료로 남습니다. 소스/작업/공식 설정/git은 직접 변경하지 않습니다.")) return;
         log(await post("/api/studio/workorder/staff-run", { path:filePath, model:"gpt-5.5", reasoning:"high" }));
+        await refresh();
+      }
+      if (action === "execution-request-mark-ready") {
+        const executionRequestId = String(filePath || "").trim();
+        const executionRequest = directorViewItems("execution_requests").find((item) =>
+          item.execution_request_id === executionRequestId || item.source_id === executionRequestId
+        );
+        if (!executionRequestId) return alert("Execution Request ID가 없습니다.");
+        if (!confirm("이 Execution Request를 worker 준비 상태로 표시할까요?\\n\\n바뀌는 것: 대상 Execution Request JSON의 readiness/preflight metadata\\n바뀌지 않는 것: worker 시작, PC Runner, Codex/local execution, Backlog/task, result review, commit/push")) return;
+        log(await post("/api/director/execution-requests/actions/mark-ready", {
+          execution_request_id: executionRequestId,
+          director_confirmation: true,
+          confirmation_summary: "Scope and validation plan reviewed in Studio UI.",
+          approved_worker_profile: executionRequest?.worker_profile || "documentation",
+          approved_worker_executor: "none",
+        }));
+        await refresh();
+      }
+      if (action === "execution-request-dispatch-worker") {
+        const executionRequestId = String(filePath || "").trim();
+        const executionRequest = directorViewItems("execution_requests").find((item) =>
+          item.execution_request_id === executionRequestId || item.source_id === executionRequestId
+        );
+        if (!executionRequestId) return alert("Execution Request ID가 없습니다.");
+        if (!executionRequest || executionRequest.readiness_status !== "ready_for_worker" || executionRequest.preflight_ok !== true) {
+          return alert("ready_for_worker 상태와 통과한 readiness preflight가 있어야 dispatch 요청 기록을 만들 수 있습니다.");
+        }
+        const profile = executionRequest.worker_profile === "validation" ? "validation" : "documentation";
+        const commandIdOrRoute = profile === "validation" ? "studio.validation.report" : "studio.documentation.review";
+        if (!confirm("이 Execution Request의 Worker Dispatch 요청 기록을 만들까요?\\n\\n바뀌는 것: Worker Dispatch JSON request record 생성\\n바뀌지 않는 것: runner 시작, worker process, PC Runner, Codex/local execution, build/test dispatch, Backlog/task, Result Review 생성, commit/push")) return;
+        log(await post("/api/director/execution-requests/actions/dispatch-worker", {
+          execution_request_id: executionRequestId,
+          director_confirmation: true,
+          approved_worker_profile: profile,
+          approved_worker_executor: "none",
+          approved_command_id_or_route: commandIdOrRoute,
+          approval_summary: "Director approved E.1 Worker Dispatch request-record creation only. No runner, worker process, Result Review generation, source changes, commit, or push.",
+        }));
         await refresh();
       }
       if (action === "toolrun-plan") return log(await post("/api/studio/toolrun/plan-file", { path:filePath }));

@@ -9,6 +9,8 @@ const {
   toExecutionRequest,
   toExecutionRequestRecord,
   toResultReviewItem,
+  toResultReviewRecord,
+  toWorkerDispatchRecord,
   toRecordItem,
 } = require("./studioDirectorViewModels");
 
@@ -47,6 +49,129 @@ function executionRequestRecord(request = validExecutionRequest(), overrides = {
     updated_at: "2026-06-05T17:00:00.000Z",
     execution_request: safeRequest,
     validation: { ok: true, execution_request_id: executionRequestId, errors: [] },
+    validation_ok: true,
+    warning_summary: "",
+    parse_error: "",
+    ...overrides,
+  };
+}
+
+function validResultReview(overrides = {}) {
+  const review = {
+    result_review_id: "RR-20260606-120000-d1-view-model-test",
+    schema_version: "result_review.v1",
+    execution_request_id: "ER-20260606-110000-d1-execution-request",
+    worker_dispatch_id: "WD-20260606-113000-d1-worker-dispatch",
+    source_evidence_refs: ["_Temp/AIWorkflowStudio/evidence/d1-worker-report.json"],
+    status: "ready_for_director_review",
+    summary: {
+      implementation_summary: "Implemented Result Review display.",
+      behavior_or_model_summary: "Director can read review data without automatic acceptance.",
+      validation_not_run: false,
+    },
+    changed_files_summary: ["tools/aiworkflow/studio/studioDirectorViewModels.js"],
+    validation_commands: ["node tools/aiworkflow/studio/studioDirectorViewModels.test.js"],
+    validation_results: ["View model tests passed."],
+    risks: ["Future decision mutation remains deferred."],
+    human_decisions_needed: ["Human Director must decide accept/request changes/defer later."],
+    recommended_next_action: "director_review",
+    commit_recommendation: {
+      advisory_only: true,
+      recommendation: "Do not commit before review.",
+    },
+    record_refs: ["_DevLog/WorkLog/2026-06-06_Studio_Goal_D1_Result_Review_Foundation.md"],
+    created_at: "2026-06-06T12:00:00.000Z",
+    updated_at: "2026-06-06T12:00:00.000Z",
+  };
+  return {
+    ...review,
+    ...overrides,
+    summary: {
+      ...review.summary,
+      ...(overrides.summary || {}),
+    },
+    commit_recommendation: overrides.commit_recommendation || review.commit_recommendation,
+  };
+}
+
+function resultReviewRecord(review = validResultReview(), overrides = {}) {
+  const safeReview = review || {};
+  const resultReviewId = safeReview.result_review_id || "RR-20260606-120001-invalid-result-review";
+  return {
+    result_review_id: resultReviewId,
+    file: `${resultReviewId}.json`,
+    path: "_Docs/AIWorkflow/Studio/ResultReviews/test.json",
+    href: "/file?path=result-review-test",
+    updated_at: "2026-06-06T12:00:00.000Z",
+    result_review: safeReview,
+    validation: { ok: true, result_review_id: resultReviewId, errors: [] },
+    validation_ok: true,
+    warning_summary: "",
+    parse_error: "",
+    ...overrides,
+  };
+}
+
+function validWorkerDispatch(overrides = {}) {
+  const dispatch = {
+    worker_dispatch_id: "WD-20260606-130000-e1-worker-dispatch-test",
+    schema_version: "worker_dispatch.v1",
+    execution_request_id: "ER-20260606-110000-d1-execution-request",
+    dispatch_state: "ready_to_start",
+    dispatch_mode: "dispatch_request_record_only",
+    profile: "documentation",
+    executor: "none",
+    command_id_or_runner_route: "studio.documentation.review",
+    preflight_result: {
+      ok: true,
+      checked_at: "2026-06-06T13:00:00.000Z",
+      execution_request_status: "ready_for_worker",
+      readiness_preflight_ok: true,
+      guard_warning_count: 0,
+      warnings: [],
+    },
+    approval: {
+      director_confirmation: true,
+      approved_by: "human_director",
+      approved_at: "2026-06-06T13:00:00.000Z",
+      approval_summary: "Request-record only dispatch approved.",
+      approved_worker_profile: "documentation",
+      approved_worker_executor: "none",
+      approved_command_id_or_runner_route: "studio.documentation.review",
+    },
+    runner_plan_id: "",
+    runner_run_id: "",
+    evidence_refs: [],
+    result_review_id: "pending",
+    status_summary: "Worker Dispatch request record created only.",
+    created_at: "2026-06-06T13:00:00.000Z",
+    updated_at: "2026-06-06T13:00:00.000Z",
+  };
+  return {
+    ...dispatch,
+    ...overrides,
+    preflight_result: {
+      ...dispatch.preflight_result,
+      ...(overrides.preflight_result || {}),
+    },
+    approval: {
+      ...dispatch.approval,
+      ...(overrides.approval || {}),
+    },
+  };
+}
+
+function workerDispatchRecord(dispatch = validWorkerDispatch(), overrides = {}) {
+  const safeDispatch = dispatch || {};
+  const workerDispatchId = safeDispatch.worker_dispatch_id || "WD-20260606-130001-invalid-worker-dispatch";
+  return {
+    worker_dispatch_id: workerDispatchId,
+    file: `${workerDispatchId}.json`,
+    path: "_Docs/AIWorkflow/Studio/WorkerDispatches/test.json",
+    href: "/file?path=worker-dispatch-test",
+    updated_at: "2026-06-06T13:00:00.000Z",
+    worker_dispatch: safeDispatch,
+    validation: { ok: true, worker_dispatch_id: workerDispatchId, errors: [] },
     validation_ok: true,
     warning_summary: "",
     parse_error: "",
@@ -130,7 +255,38 @@ function testExecutionRequestRecord() {
   assert.strictEqual(request.worker_executor, "none");
   assert.strictEqual(request.dispatch_mode, "not_dispatchable");
   assert.strictEqual(request.validation_ok, true);
-  assert(request.safety_boundary.includes("does not mark ready"));
+  assert.strictEqual(request.preflight_summary, "Preflight not run.");
+  assert.strictEqual(request.dispatch_approved, false);
+  assert(request.safety_boundary.includes("does not start a worker"));
+}
+
+function testReadyExecutionRequestRecord() {
+  const request = toExecutionRequestRecord(executionRequestRecord(validExecutionRequest({
+    status: "ready_for_worker",
+    approval: {
+      approval_state: "approved_for_worker_readiness",
+      readiness_preflight: {
+        ok: true,
+        errors: [],
+        warnings: [
+          {
+            code: "future_dispatch_still_requires_approval",
+            field: "worker_intent.dispatch_mode",
+            message: "Future dispatch remains separate.",
+          },
+        ],
+      },
+      dispatch_approved: false,
+    },
+  })));
+
+  assert.strictEqual(request.readiness_status, "ready_for_worker");
+  assert.strictEqual(request.approval_state, "approved_for_worker_readiness");
+  assert.strictEqual(request.preflight_ok, true);
+  assert.strictEqual(request.preflight_warnings.length, 1);
+  assert(request.preflight_summary.includes("Preflight OK"));
+  assert.strictEqual(request.next_required_approval, "dispatch_approval");
+  assert.strictEqual(request.dispatch_approved, false);
 }
 
 function testInvalidExecutionRequestRecordWarning() {
@@ -183,6 +339,81 @@ function testDecisionAndRecordItems() {
 }
 
 function testResultReviewAndAggregate() {
+  const resultReviewRecordView = toResultReviewRecord(resultReviewRecord());
+  assert.strictEqual(resultReviewRecordView.kind, "result_review_item");
+  assert.strictEqual(resultReviewRecordView.director_function, "result_review");
+  assert.strictEqual(resultReviewRecordView.result_review_id, "RR-20260606-120000-d1-view-model-test");
+  assert.strictEqual(resultReviewRecordView.execution_request_id, "ER-20260606-110000-d1-execution-request");
+  assert.strictEqual(resultReviewRecordView.worker_dispatch_id, "WD-20260606-113000-d1-worker-dispatch");
+  assert.strictEqual(resultReviewRecordView.implementation_summary, "Implemented Result Review display.");
+  assert.strictEqual(resultReviewRecordView.files_changed_summary, "tools/aiworkflow/studio/studioDirectorViewModels.js");
+  assert.strictEqual(resultReviewRecordView.behavior_or_model_summary, "Director can read review data without automatic acceptance.");
+  assert.deepStrictEqual(resultReviewRecordView.validation_commands_run, ["node tools/aiworkflow/studio/studioDirectorViewModels.test.js"]);
+  assert.deepStrictEqual(resultReviewRecordView.validation_results, ["View model tests passed."]);
+  assert.deepStrictEqual(resultReviewRecordView.known_risks, ["Future decision mutation remains deferred."]);
+  assert.deepStrictEqual(resultReviewRecordView.human_decisions_needed, ["Human Director must decide accept/request changes/defer later."]);
+  assert.strictEqual(resultReviewRecordView.recommended_next_action, "director_review");
+  assert.strictEqual(resultReviewRecordView.commit_recommendation, "Do not commit before review.");
+  assert.strictEqual(resultReviewRecordView.commit_recommendation_advisory_only, true);
+  assert.deepStrictEqual(resultReviewRecordView.evidence_refs, ["_Temp/AIWorkflowStudio/evidence/d1-worker-report.json"]);
+  assert(resultReviewRecordView.safety_boundary.includes("does not accept"));
+
+  const workerDispatchRecordView = toWorkerDispatchRecord(workerDispatchRecord());
+  assert.strictEqual(workerDispatchRecordView.kind, "worker_dispatch");
+  assert.strictEqual(workerDispatchRecordView.director_function, "worker_dispatch");
+  assert.strictEqual(workerDispatchRecordView.worker_dispatch_id, "WD-20260606-130000-e1-worker-dispatch-test");
+  assert.strictEqual(workerDispatchRecordView.execution_request_id, "ER-20260606-110000-d1-execution-request");
+  assert.strictEqual(workerDispatchRecordView.dispatch_state, "ready_to_start");
+  assert.strictEqual(workerDispatchRecordView.dispatch_mode, "dispatch_request_record_only");
+  assert.strictEqual(workerDispatchRecordView.profile, "documentation");
+  assert.strictEqual(workerDispatchRecordView.executor, "none");
+  assert.strictEqual(workerDispatchRecordView.command_id_or_runner_route, "studio.documentation.review");
+  assert.strictEqual(workerDispatchRecordView.preflight_ok, true);
+  assert.strictEqual(workerDispatchRecordView.result_review_id, "pending");
+  assert.strictEqual(workerDispatchRecordView.result_review_pending, true);
+  assert.strictEqual(workerDispatchRecordView.safe_smoke_completed, false);
+  assert(workerDispatchRecordView.safety_boundary.includes("request record only"));
+
+  const safeSmokeDispatchView = toWorkerDispatchRecord(workerDispatchRecord(validWorkerDispatch({
+    worker_dispatch_id: "WD-20260606-150000-e2-safe-smoke-test",
+    dispatch_state: "result_ready",
+    dispatch_mode: "safe_smoke_run",
+    profile: "validation",
+    executor: "hermes_safe_smoke",
+    command_id_or_runner_route: "studio.validation.report",
+    runner_plan_id: "SSMOKE-PLAN-WD-20260606-150000-e2-safe-smoke-test",
+    runner_run_id: "SSMOKE-RUN-WD-20260606-150000-e2-safe-smoke-test",
+    evidence_refs: ["_Docs/AIWorkflow/Studio/WorkerDispatchEvidence/WD-20260606-150000-e2-safe-smoke-test-safe-smoke-evidence.json"],
+    result_review_id: "RR-20260606-150000-e2-safe-smoke-test",
+    status_summary: "E.2 safe smoke completed.",
+    safe_smoke_result: {
+      status: "completed",
+      evidence_ref: "_Docs/AIWorkflow/Studio/WorkerDispatchEvidence/WD-20260606-150000-e2-safe-smoke-test-safe-smoke-evidence.json",
+      result_review_id: "RR-20260606-150000-e2-safe-smoke-test",
+    },
+  })));
+  assert.strictEqual(safeSmokeDispatchView.dispatch_state, "result_ready");
+  assert.strictEqual(safeSmokeDispatchView.dispatch_mode, "safe_smoke_run");
+  assert.strictEqual(safeSmokeDispatchView.executor, "hermes_safe_smoke");
+  assert.strictEqual(safeSmokeDispatchView.result_review_pending, false);
+  assert.strictEqual(safeSmokeDispatchView.safe_smoke_completed, true);
+  assert.strictEqual(safeSmokeDispatchView.safe_smoke_result_status, "completed");
+  assert(safeSmokeDispatchView.safety_boundary.includes("E.2 safe smoke"));
+  assert(safeSmokeDispatchView.safety_boundary.includes("does not start PC Runner"));
+
+  const validationNotRunView = toResultReviewRecord(resultReviewRecord(validResultReview({
+    result_review_id: "RR-20260606-120010-validation-not-run",
+    summary: {
+      implementation_summary: "Validation was skipped.",
+      behavior_or_model_summary: "The no-validation notice must be explicit.",
+      validation_not_run: true,
+    },
+    validation_commands: [],
+    validation_results: [],
+  })));
+  assert.strictEqual(validationNotRunView.validation_not_run, true);
+  assert(validationNotRunView.validation_not_run_notice.includes("Validation was not run"));
+
   const review = toResultReviewItem({
     id: "RP-1",
     path: "_Temp/AIWorkflowStudio/review_packets/RP-1.html",
@@ -197,6 +428,8 @@ function testResultReviewAndAggregate() {
     proposals: [{ proposal_id: "P-1", title: "제안", risks: ["risk"] }],
     decisions: [{ decision_id: "D-1", decision_type: "scope", summary: "승인" }],
     executionRequests: [executionRequestRecord()],
+    workerDispatches: [workerDispatchRecord()],
+    resultReviews: [resultReviewRecord()],
     workOrders: [{ work_order_id: "WO-1", objective: "legacy work order", scope: ["a"] }],
     reviewPackets: [{ id: "RP-1" }],
     devLogs: [{ id: "WL-1", title: "기록" }],
@@ -207,6 +440,7 @@ function testResultReviewAndAggregate() {
     "conversation_records",
     "decision_items",
     "execution_requests",
+    "worker_dispatches",
     "result_review_items",
     "record_items",
   ]);
@@ -214,13 +448,18 @@ function testResultReviewAndAggregate() {
   assert.strictEqual(views.decision_items.length, 1);
   assert.strictEqual(views.execution_requests.length, 1);
   assert.strictEqual(views.execution_requests[0].source_id, "ER-20260605-170000-studio-c2-test");
-  assert.strictEqual(views.result_review_items.length, 1);
+  assert.strictEqual(views.worker_dispatches.length, 1);
+  assert.strictEqual(views.worker_dispatches[0].source_type, "worker_dispatch");
+  assert.strictEqual(views.result_review_items.length, 2);
+  assert.strictEqual(views.result_review_items[0].source_type, "result_review");
+  assert.strictEqual(views.result_review_items[1].source_type, "review_packet");
   assert.strictEqual(views.record_items.length, 3);
 }
 
 testConversationRecord();
 testExecutionRequest();
 testExecutionRequestRecord();
+testReadyExecutionRequestRecord();
 testInvalidExecutionRequestRecordWarning();
 testDecisionAndRecordItems();
 testResultReviewAndAggregate();

@@ -26,6 +26,8 @@ const {
   toRepoRelative,
 } = require("./studioDataUtils");
 const { listExecutionRequestRecords } = require("./studioExecutionRequestStore");
+const { listResultReviewRecords } = require("./studioResultReviewStore");
+const { listWorkerDispatchRecords } = require("./studioWorkerDispatchStore");
 
 const DEPARTMENT_UI = {
   executive_production: {
@@ -288,6 +290,24 @@ async function getExecutionRequests(repoRoot, options = {}) {
   return store.records;
 }
 
+async function getResultReviewStore(repoRoot, options = {}) {
+  return listResultReviewRecords(repoRoot, options);
+}
+
+async function getResultReviews(repoRoot, options = {}) {
+  const store = await getResultReviewStore(repoRoot, options);
+  return store.records;
+}
+
+async function getWorkerDispatchStore(repoRoot, options = {}) {
+  return listWorkerDispatchRecords(repoRoot, options);
+}
+
+async function getWorkerDispatches(repoRoot, options = {}) {
+  const store = await getWorkerDispatchStore(repoRoot, options);
+  return store.records;
+}
+
 module.exports = {
   getReviewPackets,
   getDirectorGoalPlans,
@@ -296,6 +316,10 @@ module.exports = {
   getContextPackets,
   getExecutionRequestStore,
   getExecutionRequests,
+  getResultReviewStore,
+  getResultReviews,
+  getWorkerDispatchStore,
+  getWorkerDispatches,
   getMaterializations,
   getWorkOrders,
   getProposals,

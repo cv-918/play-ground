@@ -9,6 +9,8 @@ const { createKnowledgeDecisionApiHandler } = require("./studioKnowledgeDecision
 const { createEvidenceReviewApiHandler } = require("./studioEvidenceReviewApiRoutes");
 const { createDirectorApiAliasHandler } = require("./studioDirectorApiAliases");
 const { createExecutionRequestApiHandler } = require("./studioExecutionRequestApiRoutes");
+const { createResultReviewApiHandler } = require("./studioResultReviewApiRoutes");
+const { createWorkerDispatchApiHandler } = require("./studioWorkerDispatchApiRoutes");
 
 function createStudioApiHandler(deps = {}) {
   const {
@@ -23,6 +25,8 @@ function createStudioApiHandler(deps = {}) {
   const handleKnowledgeDecisionApi = createKnowledgeDecisionApiHandler(deps);
   const handleEvidenceReviewApi = createEvidenceReviewApiHandler(deps);
   const handleExecutionRequestApi = createExecutionRequestApiHandler(deps);
+  const handleWorkerDispatchApi = createWorkerDispatchApiHandler(deps);
+  const handleResultReviewApi = createResultReviewApiHandler(deps);
   const handleDirectorApiAlias = createDirectorApiAliasHandler(deps);
 
   return async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
@@ -34,6 +38,12 @@ function createStudioApiHandler(deps = {}) {
 
     const executionRequestApiResult = await handleExecutionRequestApi(routeContext);
     if (executionRequestApiResult !== false) return executionRequestApiResult;
+
+    const workerDispatchApiResult = await handleWorkerDispatchApi(routeContext);
+    if (workerDispatchApiResult !== false) return workerDispatchApiResult;
+
+    const resultReviewApiResult = await handleResultReviewApi(routeContext);
+    if (resultReviewApiResult !== false) return resultReviewApiResult;
 
     const directorApiAliasResult = await handleDirectorApiAlias(routeContext);
     if (directorApiAliasResult !== false) return directorApiAliasResult;
