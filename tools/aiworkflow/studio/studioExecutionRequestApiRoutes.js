@@ -9,9 +9,11 @@ const {
   listExecutionRequestRecords,
   readExecutionRequestRecord,
 } = require("./studioExecutionRequestStore");
+const { markExecutionRequestReady } = require("./studioExecutionRequestReadiness");
 const { toExecutionRequestRecord } = require("./studioDirectorViewModels");
 
 const EXECUTION_REQUEST_LIST_PATH = "/api/director/execution-requests";
+const EXECUTION_REQUEST_MARK_READY_PATH = "/api/director/execution-requests/actions/mark-ready";
 
 function decodePathPart(value) {
   try {
@@ -70,9 +72,26 @@ function detailEnvelope(result, viewModel) {
 }
 
 function createExecutionRequestApiHandler(deps = {}) {
-  const { sendJson } = deps;
+  const { readRequestJson, sendJson } = deps;
 
   return async function handleExecutionRequestApi({ repoRoot, req, res, parsedUrl, serverContext = {} }) {
+    if (req.method === "POST" && parsedUrl.pathname === EXECUTION_REQUEST_MARK_READY_PATH) {
+      if (typeof readRequestJson !== "function") {
+        return sendJson(res, 500, {
+          ok: false,
+          function: "execution_request",
+          error: "readRequestJson dependency is required for mark-ready.",
+        });
+      }
+      const body = await readRequestJson(req);
+      const result = await markExecutionRequestReady(
+        repoRoot,
+        body,
+        routeStoreOptions(deps, serverContext)
+      );
+      return sendJson(res, result.ok ? 200 : result.status || 400, result);
+    }
+
     if (req.method !== "GET") return false;
 
     if (parsedUrl.pathname === EXECUTION_REQUEST_LIST_PATH) {
@@ -106,5 +125,6 @@ function createExecutionRequestApiHandler(deps = {}) {
 
 module.exports = {
   EXECUTION_REQUEST_LIST_PATH,
+  EXECUTION_REQUEST_MARK_READY_PATH,
   createExecutionRequestApiHandler,
 };
