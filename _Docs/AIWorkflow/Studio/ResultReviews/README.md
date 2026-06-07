@@ -73,7 +73,31 @@ superseded
 closed
 ```
 
-D.1 only provides read/store/display foundation. Later Director decision mutation requires separate approval.
+Goal F adds explicit Director decision actions:
+
+```text
+accept
+request_changes
+reject
+defer
+supersede
+close
+```
+
+These actions may update only the Result Review `status`, `decision`, `decision_history`, and `updated_at` fields.
+
+They must not:
+
+- commit or push
+- rollback
+- retry or start workers
+- close Execution Requests
+- mark tasks done
+- mutate game source/data
+
+Goal I adds a derived Evidence Collector metadata view and separate Verification Gate view. Evidence collection gathers metadata only. Verification Gate may judge `passed`, `failed`, `blocked`, or `deferred`, but it must not accept, close, commit, push, or start retries.
+
+Goal J adds an advisory Completion Card view model derived from the Result Review, evidence metadata, and Verification Gate result. The card is a decision aid only.
 
 ## Local Tool
 

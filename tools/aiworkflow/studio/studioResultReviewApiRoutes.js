@@ -9,9 +9,11 @@ const {
   listResultReviewRecords,
   readResultReviewRecord,
 } = require("./studioResultReviewStore");
+const { decideResultReview } = require("./studioResultReviewDecisionActions");
 const { toResultReviewRecord } = require("./studioDirectorViewModels");
 
 const RESULT_REVIEW_LIST_PATH = "/api/director/result-reviews";
+const RESULT_REVIEW_DECISION_ACTION_PATH = "/api/director/result-reviews/actions/decision";
 
 function decodePathPart(value) {
   try {
@@ -70,9 +72,27 @@ function detailEnvelope(result, viewModel) {
 }
 
 function createResultReviewApiHandler(deps = {}) {
-  const { sendJson } = deps;
+  const { readRequestJson, sendJson } = deps;
 
   return async function handleResultReviewApi({ repoRoot, req, res, parsedUrl, serverContext = {} }) {
+    if (req.method === "POST" && parsedUrl.pathname === RESULT_REVIEW_DECISION_ACTION_PATH) {
+      if (typeof readRequestJson !== "function") {
+        return sendJson(res, 500, {
+          ok: false,
+          function: "result_review",
+          error: "readRequestJson dependency is required for Result Review decision actions.",
+        });
+      }
+      const body = await readRequestJson(req);
+      const result = await decideResultReview(repoRoot, body, routeStoreOptions(deps, serverContext));
+      return sendJson(res, result.ok ? 200 : result.status || 400, {
+        director_api_version: DIRECTOR_API_VERSION,
+        function: "result_review",
+        source: "result_review_store",
+        ...result,
+      });
+    }
+
     if (req.method !== "GET") return false;
 
     if (parsedUrl.pathname === RESULT_REVIEW_LIST_PATH) {
@@ -105,6 +125,7 @@ function createResultReviewApiHandler(deps = {}) {
 }
 
 module.exports = {
+  RESULT_REVIEW_DECISION_ACTION_PATH,
   RESULT_REVIEW_LIST_PATH,
   createResultReviewApiHandler,
 };

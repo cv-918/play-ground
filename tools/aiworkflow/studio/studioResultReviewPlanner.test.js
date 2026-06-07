@@ -9,6 +9,7 @@ const {
   getResultReviewStorePath,
   runPlanner,
   validateResultReview,
+  validateResultReviewDecisionAction,
 } = require("../studio_result_review_planner");
 
 const repoRoot = path.resolve(__dirname, "../../..");
@@ -70,6 +71,7 @@ function testSafetyDefaultsBlockExecutionSideEffects() {
   assert.deepStrictEqual(createSafetyState(), {
     read_only: true,
     result_review_written: false,
+    result_review_decision_updated: false,
     execution_request_changed: false,
     execution_request_closed: false,
     backlog_written: false,
@@ -132,6 +134,57 @@ function testStorePathDefaultAndTempOverrideBoundaries() {
     () => getResultReviewStorePath(repoRoot, path.resolve(repoRoot, "..", "outside-rr-store")),
     /must stay inside repository root/
   );
+}
+
+function testDecisionActionValidationAndOptionalDecisionHistory() {
+  const action = validateResultReviewDecisionAction({
+    result_review_id: "RR-20260606-120000-d1-result-review-test",
+    action: "request_changes",
+    director_confirmation: true,
+    decision_summary: "Needs one focused follow-up.",
+  });
+  assert.strictEqual(action.ok, true, action.errors.join("\n"));
+
+  const invalidAction = validateResultReviewDecisionAction({
+    result_review_id: "RR-20260606-120000-d1-result-review-test",
+    action: "commit",
+    director_confirmation: true,
+    decision_summary: "Do commit.",
+    commit_push_authorized: true,
+  });
+  assert.strictEqual(invalidAction.ok, false);
+  assert(invalidAction.errors.includes("Invalid action: commit"));
+  assert(invalidAction.errors.includes("Result Review decision action must not authorize commit or push"));
+
+  const review = validReview({
+    status: "changes_requested",
+    decision: {
+      action: "request_changes",
+      decision_state: "changes_requested",
+      result_status: "changes_requested",
+      decided_by: "human_director",
+      decided_at: "2026-06-06T12:30:00.000Z",
+      decision_summary: "Needs a focused fix.",
+      commit_push_authorized: false,
+      worker_retry_started: false,
+      execution_request_closed: false,
+    },
+    decision_history: [
+      {
+        action: "request_changes",
+        decision_state: "changes_requested",
+        result_status: "changes_requested",
+        decided_by: "human_director",
+        decided_at: "2026-06-06T12:30:00.000Z",
+        decision_summary: "Needs a focused fix.",
+        commit_push_authorized: false,
+        worker_retry_started: false,
+        execution_request_closed: false,
+      },
+    ],
+  });
+  const result = validateResultReview(review);
+  assert.strictEqual(result.ok, true, result.errors.join("\n"));
 }
 
 async function testStoreDryRunWritesNothingAndExecuteStoresRecord() {
@@ -227,6 +280,7 @@ async function main() {
   testValidationAcceptsValidV1Review();
   testValidationRejectsMissingRequiredFieldsAndInvalidStatus();
   testValidationRejectsInvalidIdFormat();
+  testDecisionActionValidationAndOptionalDecisionHistory();
   testStorePathDefaultAndTempOverrideBoundaries();
   await testStoreDryRunWritesNothingAndExecuteStoresRecord();
   await testStatusListReadAndValidateCommandsAreReadOnly();

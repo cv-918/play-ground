@@ -57,6 +57,39 @@ const STATUSES = new Set([
   "superseded",
   "closed",
 ]);
+const RESULT_REVIEW_DECISION_ACTIONS = Object.freeze({
+  accept: {
+    result_status: "accepted",
+    decision_state: "accepted",
+    label: "Accept result",
+  },
+  request_changes: {
+    result_status: "changes_requested",
+    decision_state: "changes_requested",
+    label: "Request changes",
+  },
+  reject: {
+    result_status: "rejected",
+    decision_state: "rejected",
+    label: "Reject result",
+  },
+  defer: {
+    result_status: "deferred",
+    decision_state: "deferred",
+    label: "Defer decision",
+  },
+  supersede: {
+    result_status: "superseded",
+    decision_state: "superseded",
+    label: "Supersede review",
+  },
+  close: {
+    result_status: "closed",
+    decision_state: "closed",
+    label: "Close review",
+  },
+});
+const RESULT_REVIEW_DECISION_ACTION_NAMES = new Set(Object.keys(RESULT_REVIEW_DECISION_ACTIONS));
 
 function normalizePath(filePath) {
   return path.resolve(filePath);
@@ -70,9 +103,11 @@ function isInsideOrSame(parent, candidate) {
 
 function createSafetyState(overrides = {}) {
   const written = Boolean(overrides.result_review_written);
+  const decisionUpdated = Boolean(overrides.result_review_decision_updated);
   return {
-    read_only: !written,
+    read_only: !(written || decisionUpdated),
     result_review_written: written,
+    result_review_decision_updated: decisionUpdated,
     execution_request_changed: false,
     execution_request_closed: false,
     backlog_written: false,
@@ -165,6 +200,76 @@ function validateCommitRecommendation(errors, recommendation) {
   if (!text) addError(errors, "commit_recommendation must include recommendation text");
 }
 
+function validateDecisionEntry(errors, entry, label) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    addError(errors, `${label} must be an object`);
+    return;
+  }
+
+  const action = asText(entry.action);
+  if (!action) addError(errors, `Required decision field is empty: ${label}.action`);
+  else if (!RESULT_REVIEW_DECISION_ACTION_NAMES.has(action)) addError(errors, `Invalid ${label}.action: ${action}`);
+
+  const decisionState = asText(entry.decision_state);
+  if (!decisionState) addError(errors, `Required decision field is empty: ${label}.decision_state`);
+  else if (!STATUSES.has(decisionState)) addError(errors, `Invalid ${label}.decision_state: ${decisionState}`);
+
+  const resultStatus = asText(entry.result_status);
+  if (!resultStatus) addError(errors, `Required decision field is empty: ${label}.result_status`);
+  else if (!STATUSES.has(resultStatus)) addError(errors, `Invalid ${label}.result_status: ${resultStatus}`);
+
+  if (!asText(entry.decided_by)) addError(errors, `Required decision field is empty: ${label}.decided_by`);
+  if (!asText(entry.decided_at)) addError(errors, `Required decision field is empty: ${label}.decided_at`);
+  if (!asText(entry.decision_summary)) addError(errors, `Required decision field is empty: ${label}.decision_summary`);
+
+  if (hasOwn(entry, "commit_push_authorized") && entry.commit_push_authorized !== false) {
+    addError(errors, `${label}.commit_push_authorized must be false`);
+  }
+  if (hasOwn(entry, "worker_retry_started") && entry.worker_retry_started !== false) {
+    addError(errors, `${label}.worker_retry_started must be false`);
+  }
+  if (hasOwn(entry, "execution_request_closed") && entry.execution_request_closed !== false) {
+    addError(errors, `${label}.execution_request_closed must be false`);
+  }
+}
+
+function validateResultReviewDecisionAction(action) {
+  const errors = [];
+  const value = action && typeof action === "object" && !Array.isArray(action) ? action : {};
+  const actionName = asText(value.action);
+
+  if (!actionName) addError(errors, "Missing required field: action");
+  else if (!RESULT_REVIEW_DECISION_ACTION_NAMES.has(actionName)) addError(errors, `Invalid action: ${actionName}`);
+
+  if (value.director_confirmation !== true) {
+    addError(errors, "director_confirmation must be true");
+  }
+  if (!asText(value.decision_summary || value.summary)) {
+    addError(errors, "decision_summary is required");
+  }
+
+  const resultReviewId = asText(value.result_review_id);
+  if (!resultReviewId) addError(errors, "Missing required field: result_review_id");
+  else if (!RESULT_REVIEW_ID_PATTERN.test(resultReviewId)) addError(errors, `Invalid result_review_id: ${resultReviewId}`);
+
+  if (hasOwn(value, "commit") || hasOwn(value, "push") || value.commit_push_authorized === true) {
+    addError(errors, "Result Review decision action must not authorize commit or push");
+  }
+  if (value.worker_retry_started === true || value.auto_run_worker === true) {
+    addError(errors, "Result Review decision action must not start or retry workers");
+  }
+  if (value.execution_request_closed === true || value.auto_close_execution_request === true) {
+    addError(errors, "Result Review decision action must not close Execution Requests");
+  }
+
+  return {
+    ok: errors.length === 0,
+    action: actionName,
+    result_review_id: resultReviewId,
+    errors,
+  };
+}
+
 function validateResultReview(review) {
   const errors = [];
   const value = review && typeof review === "object" && !Array.isArray(review) ? review : {};
@@ -201,6 +306,14 @@ function validateResultReview(review) {
 
   if (hasOwn(value, "summary")) validateSummary(errors, value.summary);
   if (hasOwn(value, "commit_recommendation")) validateCommitRecommendation(errors, value.commit_recommendation);
+  if (hasOwn(value, "decision")) validateDecisionEntry(errors, value.decision, "decision");
+  if (hasOwn(value, "decision_history")) {
+    if (!Array.isArray(value.decision_history)) {
+      addError(errors, "decision_history must be an array");
+    } else {
+      value.decision_history.forEach((entry, index) => validateDecisionEntry(errors, entry, `decision_history[${index}]`));
+    }
+  }
 
   return {
     ok: errors.length === 0,
@@ -493,11 +606,14 @@ if (require.main === module) {
 }
 
 module.exports = {
+  RESULT_REVIEW_DECISION_ACTIONS,
+  RESULT_REVIEW_DECISION_ACTION_NAMES,
   RESULT_REVIEW_ID_PATTERN,
   createSafetyState,
   getResultReviewStorePath,
   listResultReviews,
   readResultReview,
   runPlanner,
+  validateResultReviewDecisionAction,
   validateResultReview,
 };
