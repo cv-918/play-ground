@@ -3,23 +3,21 @@
 function renderSessionsPageShell() {
   return `
     <section class="page page-shell page-shell-wide" data-page="sessions">
-      <div class="page-title-row">
-        <div>
-          <h2>스튜디오 대화</h2>
-          <p><strong>Conversation.</strong> 자연어로 의도, 문제, 선택지를 구체화하고 필요할 때만 결정이나 실행 요청 후보로 넘깁니다.</p>
-        </div>
+      <div class="card">
+        <div class="section-title"><h2>Conversation: 이 페이지의 역할</h2><span class="pill">record + candidates</span></div>
+        <p class="muted small"><strong>Conversation.</strong> 자연어로 의도, 문제, 선택지를 구체화하고 필요할 때만 결정이나 실행 요청 후보로 넘깁니다.</p>
+        <p class="muted small">대화는 기록과 후보만 만들며, 소스 수정/실행/commit/push는 별도 승인 없이는 하지 않습니다.</p>
       </div>
 
       <div class="consultation-layout">
         <aside class="consultation-sidebar">
-          <div class="panel">
-            <div class="panel-title-row">
-              <h3>대화 시작 메모</h3>
-              <span class="badge">Human Director</span>
+          <div class="card">
+            <div class="section-title">
+              <h3>대화 시작</h3>
+              <span class="pill">Human Director</span>
             </div>
             <p class="muted small">
-              여기에서 주제를 미리 정리할 수 있습니다. 꼭 작성할 필요는 없습니다.
-              가운데 채팅창에 바로 말해도 대화 기록이 자동으로 만들어집니다.
+              주제를 미리 정리하거나 가운데 채팅창에 바로 말할 수 있습니다. 첫 메시지는 Studio 대화 기록으로만 저장됩니다.
             </p>
             <label>대화 주제</label>
             <textarea id="goalCreateText" rows="5" placeholder="예: 초반 10분 플레이 루프를 더 명확하게 만들고, 필요한 기획/구현/검증 업무를 나눠줘."></textarea>
@@ -35,10 +33,10 @@ function renderSessionsPageShell() {
             </p>
           </div>
 
-          <div class="panel">
-            <div class="panel-title-row">
-              <h3>대화 목록</h3>
-              <span id="meetingCount" class="badge">0</span>
+          <div class="card">
+            <div class="section-title">
+              <h3>대화 기록</h3>
+              <span id="meetingCount" class="pill">0</span>
             </div>
             <input id="meetingSearch" placeholder="대화 제목 검색" />
             <select id="meetingStatusFilter">
@@ -54,8 +52,8 @@ function renderSessionsPageShell() {
         </aside>
 
         <section class="consultation-main">
-          <div class="panel consultation-chat-panel">
-            <div class="panel-title-row">
+          <div class="card consultation-chat-panel">
+            <div class="section-title">
               <div>
                 <h3 id="activeConsultationTitle">바로 대화를 시작하세요</h3>
                 <p id="consultationStatus" class="muted small">아래 채팅창에 첫 메시지를 보내면 Studio 대화 기록이 자동으로 만들어집니다.</p>
@@ -80,25 +78,25 @@ function renderSessionsPageShell() {
         </section>
 
         <aside class="consultation-context">
-          <div class="panel">
-            <div class="panel-title-row">
-              <h3>현재 안건</h3>
-              <span class="badge">요약</span>
+          <div class="card">
+            <div class="section-title">
+              <h3>현재 맥락</h3>
+              <span class="pill">요약</span>
             </div>
             <div id="consultationSessionSummary" class="stack"></div>
           </div>
 
-          <div class="panel">
+          <div class="card">
             <h3>참가 직원</h3>
             <div id="consultationParticipants" class="stack"></div>
           </div>
 
-          <div class="panel">
+          <div class="card">
             <h3>남은 질문</h3>
             <div id="consultationOpenQuestions" class="stack"></div>
           </div>
 
-          <div class="panel">
+          <div class="card">
             <h3>다음 단계 후보</h3>
             <p class="muted small">
               후보 생성은 Studio 기록만 만듭니다. 소스 수정, 실행, commit/push는 별도 승인 없이는 하지 않습니다.
@@ -111,7 +109,7 @@ function renderSessionsPageShell() {
             <div id="consultationCandidates" class="stack"></div>
           </div>
 
-          <div class="panel">
+          <div class="card">
             <h3>안전 상태</h3>
             <div id="consultationSafety" class="stack"></div>
           </div>

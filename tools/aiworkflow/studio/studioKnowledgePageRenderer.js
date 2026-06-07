@@ -5,11 +5,12 @@ function renderKnowledgePageShell() {
   return `        <section class="page" data-page="knowledge">
           <div class="card">
             <div class="section-title">
-              <h2>Record Keeping: 이 페이지의 역할</h2>
+              <h2>Records: 이 페이지의 역할</h2>
               <button class="secondary" data-action="canon-conflict-report">공식 설정 충돌 점검</button>
             </div>
             <ul class="small">
               <li><strong>기록함은 장기 Wiki가 아닙니다.</strong> Studio 안에서는 감독자 판단, 참고 기록, 공식 설정 후보만 최소한으로 다룹니다.</li>
+              <li><strong>자동 Director Brain ingest나 공식 설정 확정은 하지 않습니다.</strong> 명시 승인된 기록만 저장합니다.</li>
               <li><strong>제안</strong>: AI 직원이나 Human Director가 떠올린 아이디어를 임시로 모아둡니다. 이 단계에서는 공식 설정도, 구현 지시도 아닙니다.</li>
               <li><strong>감독자 판단</strong>: 제안을 채택, 수정 요청, 반려, 보류 중 하나로 정리합니다. 판단 기록만 만들면 구현과 commit/push는 하지 않습니다.</li>
               <li><strong>참고 기록</strong>: 이후 AI 직원이 참고할 메모입니다. 일반 기록은 참고용이고, 공식 설정 후보는 별도 검토 대상입니다.</li>
@@ -21,7 +22,7 @@ function renderKnowledgePageShell() {
 
           <div class="grid">
             <div class="card">
-              <div class="section-title"><h2>Hermes 조사 결과 가져오기</h2><span class="pill">외부 조사</span></div>
+              <div class="section-title"><h2>기록 작성</h2><span class="pill">외부 조사</span></div>
               <p class="small muted">Hermes가 웹 검색이나 브라우저 확인으로 정리한 내용을 Studio 참고 기록으로 저장합니다. 저장해도 공식 설정, 감독자 결정, 실행 상태, source, git은 바뀌지 않습니다.</p>
               <div class="form-grid">
                 <label>조사 제목 <span class="required-mark">필수</span><input id="hermesImportTitle" placeholder="예: Hermes LLM Wiki 기능 확인"></label>
@@ -90,7 +91,7 @@ function renderKnowledgePageShell() {
           </div>
 
           <div class="card">
-            <div class="section-title"><h2>기록함 버튼 안내</h2><span class="pill">판단 기록</span></div>
+            <div class="section-title"><h2>기록 검토 기준</h2><span class="pill">판단 기록</span></div>
             <div class="grid">
               <div class="item">
                 <h3>검토만 할 때</h3>
@@ -125,11 +126,14 @@ function renderKnowledgePageShell() {
             </div>
           </div>
 
-          <div class="grid">
+          <section class="card">
+            <div class="section-title"><h2>기록 목록</h2><span class="pill">records only</span></div>
+            <div class="grid">
             <div class="card"><h2>제안함</h2><p class="muted">아직 감독자 판단을 기다리는 아이디어입니다. 제안 자체는 결정이나 공식 설정이 아닙니다.</p><div id="proposals" class="list"></div></div>
             <div class="card"><h2>감독자 결정</h2><p class="muted">Human Director가 채택, 수정 요청, 반려, 보류로 정리한 판단 기록입니다.</p><div id="decisions" class="list"></div></div>
             <div class="card"><h2>참고 기록 / 공식 설정 후보</h2><p class="muted">AI 직원이 참고할 메모와 나중에 canon으로 검토할 후보만 남깁니다.</p><div id="memories" class="list"></div></div>
           </div>
+          </section>
         </section>
 
 `;

@@ -259,42 +259,41 @@ function directorConsoleHtml() {
     <aside class="sidebar">
       <div class="brand">
         <p class="brand-title">AIWorkflow Studio</p>
-        <p class="brand-subtitle">Human Director 운영 콘솔</p>
+        <p class="brand-subtitle">Human Director Console</p>
       </div>
       <div class="nav-section-label">Director Flow</div>
       <nav class="nav" aria-label="Human Director navigation">
-        <button class="active" data-nav="home">Director Desk <span class="count" id="nav-home-count"></span></button>
-        <button data-nav="sessions">스튜디오 대화 <span class="count" id="nav-sessions-count"></span></button>
-        <button data-nav="inbox">결정 <span class="count" id="nav-inbox-count"></span></button>
-        <button data-nav="work">실행 요청 <span class="count" id="nav-work-count"></span></button>
-        <button data-nav="evidence">결과 검토 <span class="count" id="nav-evidence-count"></span></button>
-        <button data-nav="knowledge">기록함 <span class="count" id="nav-knowledge-count"></span></button>
+        <button class="active" data-nav="home">Dashboard <span class="count" id="nav-home-count"></span></button>
+        <button data-nav="sessions">Conversation <span class="count" id="nav-sessions-count"></span></button>
+        <button data-nav="inbox">Decisions <span class="count" id="nav-inbox-count"></span></button>
+        <button data-nav="work">Execution Requests <span class="count" id="nav-work-count"></span></button>
+        <button data-nav="evidence">Result Review <span class="count" id="nav-evidence-count"></span></button>
+        <button data-nav="knowledge">Records <span class="count" id="nav-knowledge-count"></span></button>
       </nav>
-      <p class="small muted">대화 → 결정 → 실행 요청 → 결과 검토 → 기록</p>
-      <button id="referenceNavToggle" class="internal-toggle">참고/검증 자료 <span id="referenceNavState">숨김</span></button>
+      <button id="referenceNavToggle" class="internal-toggle">References <span id="referenceNavState">Hide</span></button>
       <nav id="referenceNav" class="nav reference-nav" aria-label="Operations detail navigation" hidden>
-        <button data-nav="runs">직원 보고서 <span class="count" id="nav-runs-count"></span></button>
-        <button data-nav="diff">변경 검토 <span class="count" id="nav-diff-count"></span></button>
+        <button data-nav="runs">Staff Reports <span class="count" id="nav-runs-count"></span></button>
+        <button data-nav="diff">Change Review <span class="count" id="nav-diff-count"></span></button>
         <button data-nav="devlog">DevLog <span class="count" id="nav-devlog-count"></span></button>
-        <button data-nav="timeline">실행 타임라인 <span class="count" id="nav-timeline-count"></span></button>
+        <button data-nav="timeline">Timeline <span class="count" id="nav-timeline-count"></span></button>
       </nav>
-      <button id="organizationNavToggle" class="internal-toggle">프로젝트/조직 참고 <span id="organizationNavState">숨김</span></button>
+      <button id="organizationNavToggle" class="internal-toggle">Project / Organization <span id="organizationNavState">Hide</span></button>
       <nav id="organizationNav" class="nav reference-nav" aria-label="Organization reference navigation" hidden>
-        <button data-nav="project">프로젝트 <span class="count" id="nav-project-count"></span></button>
-        <button data-nav="departments">부서 <span class="count" id="nav-departments-count"></span></button>
-        <button data-nav="staff">AI 직원 <span class="count" id="nav-staff-count"></span></button>
+        <button data-nav="project">Project <span class="count" id="nav-project-count"></span></button>
+        <button data-nav="departments">Departments <span class="count" id="nav-departments-count"></span></button>
+        <button data-nav="staff">AI Staff <span class="count" id="nav-staff-count"></span></button>
       </nav>
-      <button id="internalNavToggle" class="internal-toggle">관리자 도구 <span id="internalNavState">숨김</span></button>
+      <button id="internalNavToggle" class="internal-toggle">Admin Tools <span id="internalNavState">Hide</span></button>
       <nav id="internalNav" class="nav internal-nav" aria-label="Internal Studio navigation" hidden>
-        <button data-nav="toolbox">내부 도구함 <span class="count" id="nav-toolbox-count"></span></button>
-        <button data-nav="systems">시스템 <span class="count" id="nav-systems-count"></span></button>
-        <button data-nav="policy">정책 <span class="count" id="nav-policy-count"></span></button>
+        <button data-nav="toolbox">Toolbox <span class="count" id="nav-toolbox-count"></span></button>
+        <button data-nav="systems">Systems <span class="count" id="nav-systems-count"></span></button>
+        <button data-nav="policy">Policy <span class="count" id="nav-policy-count"></span></button>
       </nav>
       <p class="small muted">이 콘솔은 로컬 전용입니다. 버튼은 allowlist된 Studio 도구만 호출합니다.</p>
     </aside>
     <div class="workspace">
       <header>
-        <h1 id="pageTitle">스튜디오 홈</h1>
+        <h1 id="pageTitle">Dashboard</h1>
         <p id="pageSubtitle" class="muted">지금 필요한 판단과 다섯 가지 Director 흐름만 먼저 봅니다.</p>
         <div class="toolbar">
           <button id="refresh">새로고침</button>
@@ -310,62 +309,50 @@ function directorConsoleHtml() {
         <section class="page active" data-page="home">
           <div class="hero">
             <div class="card hero-card span-all">
-              <span class="kicker">Human Director Desk</span>
+              <span class="kicker">Human Director Dashboard</span>
               <h2>내가 지금 판단할 것</h2>
               <p class="muted">세부 업무 조작이 아니라 방향 승인, 결과 컨펌, 수정 요청처럼 감독자가 실제로 결정해야 하는 항목만 먼저 봅니다.</p>
               <div id="inbox" class="list"></div>
             </div>
           </div>
           <section class="grid">
-            <div class="card span-all">
-              <div class="section-title"><h2>오늘의 Director Flow</h2><span class="pill">5 functions</span></div>
-              <div id="homeDirectorFlow" class="grid"></div>
-            </div>
-          </section>
-          <section class="grid">
-            <div class="card span-all">
-              <div class="section-title"><h2>Director Action Vocabulary</h2><span class="pill">preview only</span></div>
-              <p class="summary">다음 단계에서 가능한 감독자 행동의 언어만 먼저 고정합니다. 아직 실행되지 않습니다.</p>
-              <div id="homeDirectorActionVocabulary" class="grid"></div>
-              <p class="small muted">별도 승인 전에는 기록/실행/commit이 일어나지 않습니다.</p>
-            </div>
-          </section>
-          <section class="grid">
             <div class="card">
-              <div class="section-title"><h2>다음 판단</h2><span id="coreNextAction" class="pill"></span></div>
+              <div class="section-title"><h2>다음 결정</h2><span id="coreNextAction" class="pill"></span></div>
               <div id="homeWorkflowCore" class="list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>결과/기록 주의 항목</h2><button class="secondary" data-nav-jump="evidence">결과 검토</button></div>
+              <div class="section-title"><h2>주의할 결과/기록</h2><button class="secondary" data-nav-jump="evidence">Result Review로 이동</button></div>
               <div id="homeWorkflowEvidence" class="compact-list"></div>
             </div>
           </section>
           <section class="grid">
             <div class="card">
-              <div class="section-title"><h2>알림 대기</h2><span class="pill">records only</span></div>
+              <div class="section-title"><h2>알림 기록</h2><span class="pill">records only</span></div>
               <div id="homeNotifications" class="list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>런타임 관찰</h2><span class="pill">read-only</span></div>
+              <div class="section-title"><h2>런타임 상태</h2><span class="pill">read-only</span></div>
               <div id="homeRuntimeObservation" class="compact-list"></div>
             </div>
           </section>
           <section class="grid">
-            <div class="card">
-              <div class="section-title"><h2>새 스튜디오 대화</h2><span class="pill">Director Brief</span></div>
-              <p class="summary">세부 실행 항목을 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 안건으로 정리하고 필요한 자문과 실행 요청 후보로 이어갑니다.</p>
-              <div class="row">
-                <button class="good" data-nav-jump="sessions">새 대화 시작</button>
-                <button class="secondary" data-nav-jump="sessions">진행 중 자문 보기</button>
-                <button class="secondary" data-nav-jump="work">실행 요청 보기</button>
-              </div>
-              <p class="small muted">빠른 검증용 작업 접수 기능은 유지하지만 홈 기본 흐름에서는 숨깁니다. 필요한 경우 실행 요청 흐름을 사용하세요.</p>
-              <div hidden>
-                <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
-                <button id="studioIntakeSubmit">작업 접수</button>
-              </div>
-            </div>
+            <details class="card span-all dashboard-reference-section">
+              <summary class="section-title"><h2>오늘의 흐름</h2><span class="pill">5 steps</span></summary>
+              <div id="homeDirectorFlow" class="grid"></div>
+            </details>
           </section>
+          <section class="grid">
+            <details class="card span-all dashboard-reference-section">
+              <summary class="section-title"><h2>가능한 행동</h2><span class="pill">preview only</span></summary>
+              <p class="summary">각 단계에서 사용할 감독자 행동 용어를 미리 보여줍니다. 이 버튼들은 아직 실행되지 않습니다.</p>
+              <div id="homeDirectorActionVocabulary" class="grid"></div>
+              <p class="small muted">별도 승인 전에는 기록/실행/commit이 일어나지 않습니다.</p>
+            </details>
+          </section>
+          <div hidden>
+            <textarea id="studioIntakeText" placeholder="예: VAL task: source/data 변경 없이 현재 Runner 흐름을 검증해줘."></textarea>
+            <button id="studioIntakeSubmit">작업 접수</button>
+          </div>
           <section id="metrics" class="grid" hidden></section>
           <section class="grid" hidden>
             <div class="card">
@@ -437,29 +424,29 @@ function directorConsoleHtml() {
       detail: "",
     };
     const PAGES = {
-      home: ["Director Desk", "지금 필요한 판단과 다섯 가지 Director 흐름만 먼저 봅니다."],
-      toolbox: ["내부 도구함", "관리자/디버그용 유지보수 도구를 필요할 때만 확인합니다."],
-      sessions: ["스튜디오 대화", "Conversation: 자연어로 의도, 문제, 선택지를 구체화합니다."],
-      project: ["프로젝트", "현재 프로젝트와 실행 경계를 확인합니다."],
-      inbox: ["결정", "Decision: 승인, 수정, 보류, 반려가 필요한 판단만 봅니다."],
-      departments: ["부서", "부서별 책임, 직원, 검토 기준을 확인합니다."],
-      staff: ["AI 직원", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
-      runs: ["직원 보고서", "AI 직원 보고서와 채택 후보를 검토합니다."],
-      work: ["실행 요청", "Execution Request: 승인된 방향을 범위가 있는 실행 계약으로 만듭니다."],
-      knowledge: ["기록함", "Record Keeping: 결정, 제안, 참고 지식을 durable record로 남깁니다."],
-      timeline: ["실행 타임라인", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
-      diff: ["변경 검토", "현재 Git 변경과 커밋 후보를 확인합니다."],
-      systems: ["시스템", "내부/관리자용 도구 경계를 확인합니다."],
-      policy: ["정책", "내부/관리자용 자동 진행 정책을 확인합니다."],
-      evidence: ["결과 검토", "Result Review: 결과, 검증, 위험, 다음 판단을 확인합니다."],
+      home: ["Dashboard", "지금 필요한 판단과 다섯 가지 Director 흐름만 먼저 봅니다."],
+      toolbox: ["Admin Tools", "관리자/디버그용 유지보수 도구를 필요할 때만 확인합니다."],
+      sessions: ["Conversation", "Conversation: 자연어로 의도, 문제, 선택지를 구체화합니다."],
+      project: ["Project / Organization", "현재 프로젝트와 실행 경계를 확인합니다."],
+      inbox: ["Decisions", "Decisions: 승인, 수정, 보류, 반려가 필요한 판단만 봅니다."],
+      departments: ["Project / Organization", "부서별 책임, 직원, 검토 기준을 확인합니다."],
+      staff: ["Project / Organization", "AI 직원의 역할, 권한, 결과물 책임을 확인합니다."],
+      runs: ["References", "AI 직원 보고서와 채택 후보를 검토합니다."],
+      work: ["Execution Requests", "Execution Requests: 승인된 방향을 범위가 있는 실행 계약으로 만듭니다."],
+      knowledge: ["Records", "Records: 결정, 제안, 참고 지식을 durable record로 남깁니다."],
+      timeline: ["References", "최근 Studio와 AIWorkflow 활동을 시간순으로 확인합니다."],
+      diff: ["References", "현재 Git 변경과 커밋 후보를 확인합니다."],
+      systems: ["Admin Tools", "내부/관리자용 도구 경계를 확인합니다."],
+      policy: ["Admin Tools", "내부/관리자용 자동 진행 정책을 확인합니다."],
+      evidence: ["Result Review", "Result Review: 결과, 검증, 위험, 다음 판단을 확인합니다."],
       devlog: ["DevLog", "작업 기록과 남은 위험을 확인합니다."],
     };
     const DIRECTOR_FLOW = [
-      { page:"sessions", label:"Conversation", title:"스튜디오 대화", purpose:"자연어로 의도와 방향을 구체화합니다." },
-      { page:"inbox", label:"Decision", title:"결정", purpose:"승인, 수정, 보류, 반려가 필요한 판단만 봅니다." },
-      { page:"work", label:"Execution Request", title:"실행 요청", purpose:"승인된 방향을 범위가 있는 실행 계약으로 만듭니다." },
-      { page:"evidence", label:"Result Review", title:"결과 검토", purpose:"결과, 검증, 위험, 다음 판단을 확인합니다." },
-      { page:"knowledge", label:"Record Keeping", title:"기록함", purpose:"중요한 결정과 지식을 durable record로 남깁니다." },
+      { page:"sessions", label:"Conversation", title:"Conversation", purpose:"의도, 문제, 선택지를 자연어로 정리합니다." },
+      { page:"inbox", label:"Decisions", title:"Decisions", purpose:"승인, 보류, 반려처럼 Director 판단이 필요한 항목만 봅니다." },
+      { page:"work", label:"Execution Requests", title:"Execution Requests", purpose:"승인된 방향을 범위가 있는 실행 계약으로 정리합니다." },
+      { page:"evidence", label:"Result Review", title:"Result Review", purpose:"결과, 검증, 위험, 다음 판단을 확인합니다." },
+      { page:"knowledge", label:"Records", title:"Records", purpose:"중요한 결정과 지식을 durable record로 남깁니다." },
     ];
     const DIRECTOR_ACTION_VOCABULARY = [
       {
@@ -1285,7 +1272,9 @@ function directorConsoleHtml() {
       if (!meeting) alert("대화를 선택하거나, 채팅창에 첫 메시지를 바로 입력하세요.");
       return meeting;
     }
-    function setPage(page) {
+    function setPage(page, options = {}) {
+      const updateHistory = options.updateHistory !== false;
+      const replaceHistory = options.replaceHistory === true;
       const normalizedPage = (page === "goals" || page === "meetings") ? "sessions" : page;
       const nextPage = PAGES[normalizedPage] ? normalizedPage : "home";
       if (nextPage !== activePage) {
@@ -1313,8 +1302,13 @@ function directorConsoleHtml() {
       el("pageTitle").textContent = PAGES[activePage][0];
       el("pageSubtitle").textContent = PAGES[activePage][1];
       const nextHash = activePage === "home" ? "" : "#" + activePage;
-      if (location.hash !== nextHash) {
-        history.replaceState(null, "", location.pathname + location.search + nextHash);
+      if (updateHistory && location.hash !== nextHash) {
+        const nextUrl = location.pathname + location.search + nextHash;
+        if (replaceHistory) {
+          history.replaceState({ studioPage: activePage }, "", nextUrl);
+        } else {
+          history.pushState({ studioPage: activePage }, "", nextUrl);
+        }
       }
     }
     function setNavCount(page, value) {
@@ -1325,19 +1319,19 @@ function directorConsoleHtml() {
       const nav = el("internalNav");
       const stateLabel = el("internalNavState");
       nav.hidden = !visible;
-      stateLabel.textContent = visible ? "표시" : "숨김";
+      stateLabel.textContent = visible ? "Show" : "Hide";
     }
     function setReferenceNavVisible(visible) {
       const nav = el("referenceNav");
       const stateLabel = el("referenceNavState");
       nav.hidden = !visible;
-      stateLabel.textContent = visible ? "표시" : "숨김";
+      stateLabel.textContent = visible ? "Show" : "Hide";
     }
     function setOrganizationNavVisible(visible) {
       const nav = el("organizationNav");
       const stateLabel = el("organizationNavState");
       nav.hidden = !visible;
-      stateLabel.textContent = visible ? "표시" : "숨김";
+      stateLabel.textContent = visible ? "Show" : "Hide";
     }
     function renderNavCounts() {
       const m = state.metrics;
@@ -1943,7 +1937,7 @@ function directorConsoleHtml() {
         '<div class="item"><span class="kicker">' + esc(index + 1) + '. ' + esc(step.label) + '</span>' +
         '<h3>' + esc(step.title) + (countFor(step.page) ? ' <span class="pill">' + esc(countFor(step.page)) + '</span>' : '') + '</h3>' +
         '<p class="summary">' + esc(step.purpose) + '</p>' +
-        '<div class="row"><button class="secondary" data-nav-jump="' + esc(step.page) + '">' + esc(step.title) + '로 이동</button></div></div>'
+        '<div class="row"><button class="' + esc(step.page === "sessions" ? "good" : "secondary") + '" data-nav-jump="' + esc(step.page) + '">' + esc(step.title) + '으로 이동</button></div></div>'
       ).join("");
     }
     function renderDirectorActionVocabulary() {
@@ -1970,7 +1964,7 @@ function directorConsoleHtml() {
       const hasActiveTask = Boolean(activeTask.task_id);
       const displayNextAction = hasActiveTask ? nextAction : {
         label: "새 실행 요청 선택",
-        detail: "현재 선택된 실행 항목이 없습니다. 스튜디오 대화에서 방향을 잡거나 실행 요청에서 다음 실제 작업을 선택하세요.",
+        detail: "선택된 실행 요청이 없습니다. Conversation에서 방향을 정리하거나 Execution Requests에서 다음 작업을 고르세요.",
       };
       el("coreNextAction").textContent = displayNextAction.label || "대기";
       renderDirectorFlowCards();
@@ -1979,7 +1973,7 @@ function directorConsoleHtml() {
         ? '<div class="item warn"><h3>' + esc(activeTask.title || "실행 승인 대기") + ' <span class="pill">' + esc(optionLabel(activeTask.status || "")) + '</span></h3>' +
           '<p class="summary">우선순위 ' + esc(activeTask.priority || "-") + '</p>' +
           '<p class="small muted">종류 ' + esc(optionLabel(activeTask.kind || "-")) + ' · 위험도 ' + esc(optionLabel(activeTask.risk || "-")) + '</p></div>'
-        : '<div class="item warn"><h3>선택된 실행 요청 없음</h3><p class="summary">대화에서 방향을 잡거나 실행 요청 화면에서 다음에 맡길 일을 정리하세요.</p></div>';
+        : '<div class="item warn"><h3>선택된 실행 요청 없음</h3><p class="summary">Conversation에서 방향을 정리하거나 Execution Requests에서 다음에 맡길 일을 고르세요.</p></div>';
       const actionButtons = hasActiveTask && (runner.stop_reason === "completion_review_required" || completion.state === "needs_human_decision")
           ? (completionDecisionStatusLines(core).length ? '<div class="item warn"><h3>완료 판단 상태</h3>' + compactListHtml(completionDecisionStatusLines(core)) + '</div>' : '') +
           actionsHtml([
@@ -1990,7 +1984,7 @@ function directorConsoleHtml() {
           ? '<div class="row">' + workflowStartButton("승인+실행", activeTask.task_id, "good") + '</div>'
           : '');
       el("homeWorkflowCore").innerHTML =
-        '<div class="item good"><h3>지금 할 일</h3><p class="summary">' + esc(displayNextAction.detail || "즉시 처리할 gate가 보이지 않습니다.") + '</p></div>' +
+        '<div class="item good"><h3>지금 볼 것</h3><p class="summary">' + esc(displayNextAction.detail || "지금 처리할 gate가 없습니다.") + '</p></div>' +
         activeTaskHtml +
         actionButtons;
       const evidenceLines = hasActiveTask ? [
@@ -2022,7 +2016,7 @@ function directorConsoleHtml() {
         '<p class="small muted">' + esc(item.director_action || "Studio에서 확인합니다.") + '</p>' +
         '<p class="small muted">' + esc(item.channel_boundary || "외부 채널은 알림만 전달합니다.") + '</p>' +
         '</div>'
-      ).join("") : '<div class="item good"><h3>보낼 알림 없음</h3><p class="summary">blocker, approval wait, completion notice가 생기면 여기에서 먼저 확인됩니다.</p></div>';
+      ).join("") : '<div class="item good"><h3>대기 중인 알림 없음</h3><p class="summary">blocker, approval wait, completion notice가 생기면 여기에서 먼저 확인합니다.</p></div>';
       const runtime = state.runtime_observation || {};
       const runtimeLines = [
         ["실행 관찰", (runtime.running_count ?? 0) + "개"],
@@ -3493,8 +3487,9 @@ function directorConsoleHtml() {
     el("decisionCreateTarget").addEventListener("change", () => syncDecisionTypeOptions());
     el("refresh").addEventListener("click", () => refresh().catch(log));
     el("export-dashboard").addEventListener("click", () => exportDashboard().catch(log));
-    setPage((location.hash || "").replace("#", "") || "home");
-    window.addEventListener("hashchange", () => setPage((location.hash || "").replace("#", "") || "home"));
+    setPage((location.hash || "").replace("#", "") || "home", { replaceHistory: true });
+    window.addEventListener("popstate", () => setPage((location.hash || "").replace("#", "") || "home", { updateHistory: false }));
+    window.addEventListener("hashchange", () => setPage((location.hash || "").replace("#", "") || "home", { updateHistory: false }));
     refresh().catch(log);
   </script>
 </body>

@@ -16,7 +16,34 @@ assert(
 );
 assert(
   html.includes('id="homeDirectorActionVocabulary"'),
-  "Director Desk should include a visible action vocabulary panel"
+  "Dashboard should include a visible action vocabulary panel"
+);
+assert(
+  html.indexOf('id="homeWorkflowCore"') < html.indexOf('id="homeDirectorFlow"'),
+  "Dashboard should show next decision before lower reference flow sections"
+);
+assert(
+  html.includes('<details class="card span-all dashboard-reference-section">') &&
+  html.includes('<summary class="section-title"><h2>오늘의 흐름</h2>') &&
+  html.includes('<summary class="section-title"><h2>가능한 행동</h2>'),
+  "Director Flow and action vocabulary should be lower collapsed reference sections"
+);
+assert(
+  !html.includes('<div class="section-title"><h2>새 스튜디오 대화</h2>'),
+  "Dashboard should not expose a duplicate new conversation section"
+);
+assert(
+  html.includes('step.page === "sessions" ? "good" : "secondary"') && html.includes("esc(step.title) + '으로 이동"),
+  "Dashboard should keep Conversation as the emphasized Director Flow entry point"
+);
+assert(
+  html.includes("오늘의 흐름") &&
+  html.includes("가능한 행동") &&
+  html.includes("다음 결정") &&
+  html.includes("주의할 결과/기록") &&
+  html.includes("알림 기록") &&
+  html.includes("런타임 상태"),
+  "Dashboard section labels should use polished concise copy"
 );
 assert(
   html.includes("대화: 후보 추출 / 맥락 연결 / 기록 후보화"),
