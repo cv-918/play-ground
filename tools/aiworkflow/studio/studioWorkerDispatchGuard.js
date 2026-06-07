@@ -87,6 +87,10 @@ function hasMeaningfulValue(value) {
   return Boolean(text(value));
 }
 
+function nonEmptyItems(value) {
+  return Array.isArray(value) ? value.filter((item) => text(item)) : [];
+}
+
 function collectCommandStringIssues(value, currentPath, errors) {
   if (!value || typeof value !== "object") return;
   for (const [key, fieldValue] of Object.entries(value)) {
@@ -207,6 +211,26 @@ function validateApprovedWorkerMatchesIntent(request, body, errors) {
   }
 }
 
+function validateImplementationScopeBoundary(request, body, errors) {
+  if (text(body.approved_worker_profile) !== "implementation") return;
+
+  if (!nonEmptyItems(request.scope).length) {
+    addIssue(errors, "implementation_scope_required", "scope", "Implementation pickup requires a non-empty approved Execution Request scope.");
+  }
+  if (!nonEmptyItems(request.allowed_files_or_areas).length) {
+    addIssue(errors, "implementation_allowed_scope_required", "allowed_files_or_areas", "Implementation pickup requires approved allowed_files_or_areas boundaries.");
+  }
+  if (!Array.isArray(request.blocked_files_or_areas)) {
+    addIssue(errors, "implementation_blocked_scope_required", "blocked_files_or_areas", "Implementation pickup requires blocked_files_or_areas to be recorded as an array.");
+  }
+  if (!nonEmptyItems(request.validation_plan).length) {
+    addIssue(errors, "implementation_validation_plan_required", "validation_plan", "Implementation pickup requires validation_plan evidence requirements.");
+  }
+  if (!nonEmptyItems(request.return_format).length) {
+    addIssue(errors, "implementation_return_format_required", "return_format", "Implementation pickup requires a bounded worker return_format.");
+  }
+}
+
 function recordDispatchGuardIssues(record, body, errors, warnings) {
   const request = record.execution_request && typeof record.execution_request === "object" ? record.execution_request : null;
   const validation = record.validation || { ok: false, errors: ["Execution Request validation failed."] };
@@ -237,6 +261,7 @@ function recordDispatchGuardIssues(record, body, errors, warnings) {
   }
 
   validateApprovedWorkerMatchesIntent(request, body, errors);
+  validateImplementationScopeBoundary(request, body, errors);
   collectCommandStringIssues(request, "execution_request", errors);
 
   const safety = request.safety && typeof request.safety === "object" ? request.safety : {};
@@ -415,6 +440,27 @@ function createWorkerDispatchRecord(preflightResult, body = {}, options = {}) {
     runner_run_id: "",
     evidence_refs: [],
     result_review_id: "pending",
+    worker_status: {
+      status: "requested",
+      requested_at: iso,
+      picked_up_at: "",
+      heartbeat_at: "",
+      last_activity_at: iso,
+      result_ready_at: "",
+      blocked_reason: "",
+      failure_summary: "",
+      closed_at: "",
+      superseded_by: "",
+      observation_only: true,
+    },
+    result_handoff: {
+      evidence_required: true,
+      result_review_required: true,
+      validation_commands_required: true,
+      validation_results_required: true,
+      skipped_validation_must_be_explicit_risk: true,
+      director_review_required: true,
+    },
     status_summary: isImplementationPickup
       ? "Bounded implementation worker pickup contract created for Hermes/runner. Studio did not start PC Runner, Codex/local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push."
       : "Worker Dispatch request record created only. E.1 does not start PC Runner, Codex, local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push.",

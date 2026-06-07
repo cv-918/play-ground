@@ -45,6 +45,8 @@ const {
 const { createStudioOperationalPlanBuilders } = require("./studio/studioOperationalPlanBuilders");
 const { createStudioToolboxService } = require("./studio/studioToolboxService");
 const { buildDirectorViews } = require("./studio/studioDirectorViewModels");
+const { buildRuntimeObservation } = require("./studio/studioRuntimeObservation");
+const { buildStudioNotificationRecords } = require("./studio/studioNotificationRecords");
 const {
   getReviewPackets,
   getDirectorGoalPlans,
@@ -697,11 +699,39 @@ async function getSummary(repoRoot) {
     projectProfiles,
     toolRegistry,
   });
+  const generatedAt = new Date().toISOString();
+  const runtimeObservation = buildRuntimeObservation({
+    workerDispatches,
+    meetings,
+    workflowCore,
+  });
+  const directorViews = buildDirectorViews({
+    meetings: meetings.slice(0, 12),
+    proposals: proposals.slice(0, 12),
+    directorGoalPlans: directorGoalPlans.slice(0, 12),
+    executionRequests: executionRequests.slice(0, 24),
+    workerDispatches: workerDispatches.slice(0, 24),
+    workOrders: workOrders.slice(0, 12),
+    resultReviews: resultReviews.slice(0, 24),
+    reviewPackets: reviewPackets.slice(0, 12),
+    recentStaffRuns: staffRuns.slice(0, 12),
+    decisions: decisions.slice(0, 12),
+    recordKeepingRecords: studioRecords.slice(0, 24),
+    commitPushRequests: commitPushRequests.slice(0, 24),
+    devLogs: devLogs.slice(0, 24),
+    memories: memories.slice(0, 12),
+  });
+  directorViews.runtime_observations = runtimeObservation.all_observations.slice(0, 48);
+  const notificationRecordSet = buildStudioNotificationRecords({
+    directorViews,
+    runtimeObservation,
+    generatedAt,
+  });
 
   return {
     ok: true,
     repo_root: repoRoot,
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt,
     metrics: {
       departments: staffDirectory.departments.length,
       staff: staffDirectory.staff.length,
@@ -717,6 +747,9 @@ async function getSummary(repoRoot) {
       result_review_invalid_records: resultReviewStore.invalid_count,
       worker_dispatch_invalid_records: workerDispatchStore.invalid_count,
       company_runtime_gates: companyRuntime.stage_summary.passed_gate_count + "/" + companyRuntime.stage_summary.total_gate_count,
+      runtime_observations: runtimeObservation.all_observations.length,
+      runtime_stalled_observations: runtimeObservation.stalled_count,
+      notification_records: notificationRecordSet.count,
       ...stores,
     },
     company_runtime: companyRuntime,
@@ -749,6 +782,12 @@ async function getSummary(repoRoot) {
       invalid_count: commitPushRequestStore.invalid_count,
       safety: commitPushRequestStore.safety,
     },
+    runtime_observation: runtimeObservation,
+    notification_records: notificationRecordSet.records,
+    notification_record_store: {
+      count: notificationRecordSet.count,
+      safety: notificationRecordSet.safety,
+    },
     execution_requests: executionRequests.slice(0, 24),
     result_reviews: resultReviews.slice(0, 24),
     worker_dispatches: workerDispatches.slice(0, 24),
@@ -762,22 +801,7 @@ async function getSummary(repoRoot) {
     decisions: decisions.slice(0, 12),
     memories: memories.slice(0, 12),
     meetings: meetings.slice(0, 12),
-    director_views: buildDirectorViews({
-      meetings: meetings.slice(0, 12),
-      proposals: proposals.slice(0, 12),
-      directorGoalPlans: directorGoalPlans.slice(0, 12),
-      executionRequests: executionRequests.slice(0, 24),
-      workerDispatches: workerDispatches.slice(0, 24),
-      workOrders: workOrders.slice(0, 12),
-      resultReviews: resultReviews.slice(0, 24),
-      reviewPackets: reviewPackets.slice(0, 12),
-      recentStaffRuns: staffRuns.slice(0, 12),
-      decisions: decisions.slice(0, 12),
-      recordKeepingRecords: studioRecords.slice(0, 24),
-      commitPushRequests: commitPushRequests.slice(0, 24),
-      devLogs: devLogs.slice(0, 24),
-      memories: memories.slice(0, 12),
-    }),
+    director_views: directorViews,
     dev_logs: devLogs.slice(0, 24),
     project_profiles: projectProfiles.profiles.slice(0, 12),
     active_project: {

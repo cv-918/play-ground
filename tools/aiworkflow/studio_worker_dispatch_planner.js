@@ -45,22 +45,47 @@ const EXECUTION_REQUEST_ID_PATTERN = /^ER-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$/
 const RESULT_REVIEW_ID_PATTERN = /^RR-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$/;
 const DISPATCH_STATES = new Set([
   "draft",
+  "requested",
   "preflight_failed",
   "ready_to_start",
   "start_requested",
+  "picked_up",
   "starting",
   "running",
+  "blocked",
   "stopped_for_human_gate",
   "result_ready",
+  "failed",
   "failed_to_start",
   "failed_during_run",
   "cancelled",
   "closed",
+  "superseded",
 ]);
 const DISPATCH_MODES = new Set(["dispatch_request_record_only", "safe_smoke_run", "implementation_pickup_contract"]);
-const REQUEST_RECORD_ONLY_STATES = new Set(["ready_to_start"]);
-const SAFE_SMOKE_STATES = new Set(["result_ready"]);
-const IMPLEMENTATION_PICKUP_STATES = new Set(["start_requested"]);
+const REQUEST_RECORD_ONLY_STATES = new Set(["ready_to_start", "requested"]);
+const SAFE_SMOKE_STATES = new Set(["result_ready", "blocked", "failed"]);
+const IMPLEMENTATION_PICKUP_STATES = new Set([
+  "start_requested",
+  "requested",
+  "picked_up",
+  "running",
+  "result_ready",
+  "blocked",
+  "failed",
+  "closed",
+  "superseded",
+]);
+const WORKER_LIFECYCLE_STATUSES = new Set([
+  "requested",
+  "picked_up",
+  "running",
+  "result_ready",
+  "blocked",
+  "failed",
+  "closed",
+  "superseded",
+]);
 const WORKER_PROFILES = new Set(["documentation", "validation", "implementation"]);
 const WORKER_EXECUTORS = new Set(["none", "hermes_safe_smoke", "hermes_bounded_codex"]);
 const COMMAND_IDS_OR_RUNNER_ROUTES = new Set([
@@ -191,6 +216,19 @@ function validateApproval(errors, approval) {
   }
 }
 
+function validateWorkerStatus(errors, workerStatus) {
+  if (!workerStatus || typeof workerStatus !== "object" || Array.isArray(workerStatus)) {
+    addError(errors, "worker_status must be an object when present");
+    return;
+  }
+  const status = asText(workerStatus.status || workerStatus.lifecycle_status);
+  if (!status) addError(errors, "worker_status.status is required when worker_status is present");
+  else if (!WORKER_LIFECYCLE_STATUSES.has(status)) addError(errors, `Invalid worker_status.status: ${status}`);
+  if (workerStatus.observation_only !== true) {
+    addError(errors, "worker_status.observation_only must be true");
+  }
+}
+
 function validateWorkerDispatch(dispatch) {
   const errors = [];
   const value = dispatch && typeof dispatch === "object" && !Array.isArray(dispatch) ? dispatch : {};
@@ -316,6 +354,7 @@ function validateWorkerDispatch(dispatch) {
 
   if (hasOwn(value, "preflight_result")) validatePreflightResult(errors, value.preflight_result);
   if (hasOwn(value, "approval")) validateApproval(errors, value.approval);
+  if (hasOwn(value, "worker_status")) validateWorkerStatus(errors, value.worker_status);
 
   return {
     ok: errors.length === 0,
@@ -621,6 +660,7 @@ module.exports = {
   IMPLEMENTATION_PICKUP_MODE,
   IMPLEMENTATION_PICKUP_ROUTE,
   IMPLEMENTATION_PICKUP_STATES,
+  WORKER_LIFECYCLE_STATUSES,
   SAFE_SMOKE_EXECUTOR,
   SAFE_SMOKE_MODE,
   SAFE_SMOKE_ROUTE,

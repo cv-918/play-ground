@@ -116,6 +116,49 @@ function testValidationRejectsInvalidIdFormat() {
   assert(result.errors.includes("Invalid result_review_id: BAD-20260606-120000-d1"));
 }
 
+function testValidationRequiresImplementationWorkerValidationEvidenceOrExplicitSkipRisk() {
+  const missingEvidence = validateResultReview(validReview({
+    worker_result: {
+      kind: "implementation_worker_result",
+      profile: "implementation",
+    },
+    validation_commands: [],
+    validation_results: [],
+  }));
+  assert.strictEqual(missingEvidence.ok, false);
+  assert(missingEvidence.errors.includes("Implementation worker Result Review must include validation_commands or set summary.validation_not_run true"));
+  assert(missingEvidence.errors.includes("Implementation worker Result Review must include validation_results or set summary.validation_not_run true"));
+
+  const explicitSkipWithoutRisk = validateResultReview(validReview({
+    worker_result: {
+      kind: "implementation_worker_result",
+      profile: "implementation",
+    },
+    summary: {
+      validation_not_run: true,
+    },
+    validation_commands: [],
+    validation_results: [],
+    risks: ["No extra risk text."],
+  }));
+  assert.strictEqual(explicitSkipWithoutRisk.ok, false);
+  assert(explicitSkipWithoutRisk.errors.includes("Skipped implementation validation must be recorded as an explicit risk"));
+
+  const explicitSkipWithRisk = validateResultReview(validReview({
+    worker_result: {
+      kind: "implementation_worker_result",
+      profile: "implementation",
+    },
+    summary: {
+      validation_not_run: true,
+    },
+    validation_commands: [],
+    validation_results: [],
+    risks: ["Validation was skipped and must be accepted by the Human Director."],
+  }));
+  assert.strictEqual(explicitSkipWithRisk.ok, true, explicitSkipWithRisk.errors.join("\n"));
+}
+
 function testStorePathDefaultAndTempOverrideBoundaries() {
   const defaultStore = getResultReviewStorePath(repoRoot, "");
   assert.strictEqual(defaultStore, path.join(repoRoot, "_Docs", "AIWorkflow", "Studio", "ResultReviews"));
@@ -280,6 +323,7 @@ async function main() {
   testValidationAcceptsValidV1Review();
   testValidationRejectsMissingRequiredFieldsAndInvalidStatus();
   testValidationRejectsInvalidIdFormat();
+  testValidationRequiresImplementationWorkerValidationEvidenceOrExplicitSkipRisk();
   testDecisionActionValidationAndOptionalDecisionHistory();
   testStorePathDefaultAndTempOverrideBoundaries();
   await testStoreDryRunWritesNothingAndExecuteStoresRecord();

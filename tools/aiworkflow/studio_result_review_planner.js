@@ -200,6 +200,48 @@ function validateCommitRecommendation(errors, recommendation) {
   if (!text) addError(errors, "commit_recommendation must include recommendation text");
 }
 
+function reviewSummaryObject(review = {}) {
+  return review.summary && typeof review.summary === "object" && !Array.isArray(review.summary)
+    ? review.summary
+    : {};
+}
+
+function implementationWorkerResult(review = {}) {
+  const workerResult = review.worker_result && typeof review.worker_result === "object" && !Array.isArray(review.worker_result)
+    ? review.worker_result
+    : {};
+  const fields = [
+    review.worker_profile,
+    review.worker_kind,
+    review.result_kind,
+    workerResult.profile,
+    workerResult.worker_profile,
+    workerResult.kind,
+  ].map((value) => asText(value).toLowerCase());
+  return fields.some((value) => value === "implementation" || value === "implementation_worker_result");
+}
+
+function validateImplementationWorkerEvidence(errors, review = {}) {
+  if (!implementationWorkerResult(review)) return;
+  const summary = reviewSummaryObject(review);
+  const validationNotRun = summary.validation_not_run === true || review.validation_not_run === true;
+  const commands = Array.isArray(review.validation_commands) ? review.validation_commands.filter((item) => asText(item)) : [];
+  const results = Array.isArray(review.validation_results) ? review.validation_results.filter((item) => asText(item)) : [];
+
+  if (!validationNotRun && !commands.length) {
+    addError(errors, "Implementation worker Result Review must include validation_commands or set summary.validation_not_run true");
+  }
+  if (!validationNotRun && !results.length) {
+    addError(errors, "Implementation worker Result Review must include validation_results or set summary.validation_not_run true");
+  }
+  if (validationNotRun) {
+    const risks = Array.isArray(review.risks) ? review.risks.map(asText).join("\n").toLowerCase() : "";
+    if (!/(skip|skipped|not run|미실행|생략)/u.test(risks)) {
+      addError(errors, "Skipped implementation validation must be recorded as an explicit risk");
+    }
+  }
+}
+
 function validateDecisionEntry(errors, entry, label) {
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
     addError(errors, `${label} must be an object`);
@@ -305,6 +347,7 @@ function validateResultReview(review) {
   }
 
   if (hasOwn(value, "summary")) validateSummary(errors, value.summary);
+  validateImplementationWorkerEvidence(errors, value);
   if (hasOwn(value, "commit_recommendation")) validateCommitRecommendation(errors, value.commit_recommendation);
   if (hasOwn(value, "decision")) validateDecisionEntry(errors, value.decision, "decision");
   if (hasOwn(value, "decision_history")) {

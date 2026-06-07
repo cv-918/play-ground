@@ -272,6 +272,37 @@ function testValidationAcceptsImplementationPickupContractDispatch() {
   assert.strictEqual(result.ok, true, result.errors.join("\n"));
 }
 
+function testValidationAcceptsObservedImplementationLifecycleStatus() {
+  const result = validateWorkerDispatch(validDispatch({
+    worker_dispatch_id: "WD-20260607-020000-h-implementation-running",
+    dispatch_state: "running",
+    dispatch_mode: "implementation_pickup_contract",
+    profile: "implementation",
+    executor: "hermes_bounded_codex",
+    command_id_or_runner_route: "studio.implementation.bounded_codex_cli",
+    worker_status: {
+      status: "running",
+      heartbeat_at: "2026-06-07T02:00:00.000Z",
+      last_activity_at: "2026-06-07T02:00:00.000Z",
+      observation_only: true,
+    },
+    pickup_contract: {
+      worker_kind: "bounded_codex_cli",
+      pickup_owner: "hermes_or_runner",
+      source_editing_boundary: "approved_execution_request_scope_only",
+      allowed_files_or_areas: ["tools/aiworkflow/studio/"],
+      blocked_files_or_areas: ["PlayGround/"],
+      validation_plan: ["node --test tools/aiworkflow/studio/*.test.js"],
+      return_format: ["Implementation summary"],
+      raw_shell_allowed: false,
+      pc_runner_direct_call_allowed: false,
+      commit_push_allowed: false,
+      result_review_required: true,
+    },
+  }));
+  assert.strictEqual(result.ok, true, result.errors.join("\n"));
+}
+
 function testValidationRejectsMissingRequiredFieldsAndInvalidState() {
   const dispatch = validDispatch({
     dispatch_state: "auto_started",
@@ -733,11 +764,48 @@ async function testDispatchCreatesImplementationPickupContractOnly() {
   assert.strictEqual(result.safety.push_started, false);
 }
 
+async function testDispatchRefusesImplementationPickupWithoutApprovedScopeBoundary() {
+  const erStore = makeExecutionRequestStorePath("h-implementation-missing-scope");
+  const wdStore = makeWorkerDispatchStorePath("h-implementation-missing-scope");
+  const request = validExecutionRequest({
+    execution_request_id: "ER-20260607-011000-h-implementation-missing-scope",
+    title: "H implementation missing scope",
+    scope: [],
+    allowed_files_or_areas: [],
+    worker_intent: {
+      worker_profile: "implementation",
+      worker_executor: "hermes_bounded_codex",
+      worker_command_id_or_route: "studio.implementation.bounded_codex_cli",
+      dispatch_mode: "future_dispatch_required",
+    },
+  });
+  writeExecutionRequest(erStore, request);
+
+  const result = await createWorkerDispatchRequest(repoRoot, dispatchBody({
+    execution_request_id: request.execution_request_id,
+    approved_worker_profile: "implementation",
+    approved_worker_executor: "hermes_bounded_codex",
+    approved_command_id_or_route: "studio.implementation.bounded_codex_cli",
+    source_editing_scope_confirmed: true,
+    approval_summary: "Director approved bounded implementation pickup contract only.",
+  }), {
+    executionRequestStorePathOverride: erStore,
+    workerDispatchStorePathOverride: wdStore,
+  });
+
+  assert.strictEqual(result.ok, false);
+  const codes = issueCodes(result.preflight);
+  assert(codes.includes("implementation_scope_required"));
+  assert(codes.includes("implementation_allowed_scope_required"));
+  assert.strictEqual(fs.existsSync(wdStore) && fs.readdirSync(wdStore).length > 0, false);
+}
+
 async function main() {
   testSafetyDefaultsBlockLiveExecutionSideEffects();
   testValidationAcceptsValidV1Dispatch();
   testValidationAcceptsSafeSmokeRunDispatch();
   testValidationAcceptsImplementationPickupContractDispatch();
+  testValidationAcceptsObservedImplementationLifecycleStatus();
   testValidationRejectsMissingRequiredFieldsAndInvalidState();
   testValidationRejectsRunnerRefsInRequestRecordMode();
   testValidationRejectsUnsafeSafeSmokeRunShape();
@@ -756,6 +824,7 @@ async function main() {
   await testDispatchRefusesCommitPushAndSourceSchemaBuildAuthorization();
   await testDispatchCreatesRequestRecordOnly();
   await testDispatchCreatesImplementationPickupContractOnly();
+  await testDispatchRefusesImplementationPickupWithoutApprovedScopeBoundary();
   console.log("studio worker dispatch planner tests passed");
 }
 

@@ -10,11 +10,17 @@ function slash(value) {
 
 function runGit(repoRoot, args, timeoutMs = 10000) {
   return new Promise((resolve) => {
-    const child = spawn("git", args, {
-      cwd: repoRoot,
-      windowsHide: true,
-      shell: false,
-    });
+    let child = null;
+    try {
+      child = spawn("git", args, {
+        cwd: repoRoot,
+        windowsHide: true,
+        shell: false,
+      });
+    } catch (error) {
+      resolve({ ok: false, stdout: "", stderr: error && error.message ? error.message : String(error) });
+      return;
+    }
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {
