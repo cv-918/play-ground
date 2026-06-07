@@ -9,17 +9,22 @@ function renderDiffPageShell() {
               <div id="diffChangedFiles" class="list"></div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>커밋 범위 선택</h2><span class="pill">변경 검토</span></div>
-              <p class="muted">변경 검토 전용 화면입니다. 이번 승인 범위와 무관한 변경은 선택하지 마세요.</p>
+              <div class="section-title"><h2>커밋/푸시 요청 범위</h2><span class="pill">request only</span></div>
+              <p class="muted">변경 검토 전용 화면입니다. 이 화면은 commit/push를 실행하지 않고 Hermes/Human Director용 요청 기록만 만듭니다.</p>
               <div id="diffGitFileSelect" class="file-select"></div>
-              <input id="diffGitCommitMessage" placeholder="커밋 메시지 비우면 자동 제안">
+              <input id="diffGitCommitMessage" placeholder="제안 커밋 메시지">
               <div class="row">
                 <button class="secondary" id="diffGitSelectWorkflow">Workflow만 선택</button>
                 <button class="secondary" id="diffGitClearSelection">선택 해제</button>
-                <button class="good" id="diffGitCommitSelected">선택 커밋</button>
-                <button class="good" id="diffGitCommitPushSelected">선택 커밋+푸시</button>
+                <button class="good" id="diffGitCommitSelected">커밋 요청 기록</button>
+                <button class="good" id="diffGitCommitPushSelected">커밋+푸시 요청 기록</button>
               </div>
             </div>
+          </section>
+          <section class="card">
+            <div class="section-title"><h2>Commit/Push 요청 기록</h2><span class="pill">no git execution</span></div>
+            <p class="muted small">명시 승인 기록만 표시합니다. 실제 git commit/push는 Hermes 또는 Human Director가 별도로 실행합니다.</p>
+            <div id="diffCommitPushRequests" class="list"></div>
           </section>
           <section class="card">
             <h2>diff 통계</h2>

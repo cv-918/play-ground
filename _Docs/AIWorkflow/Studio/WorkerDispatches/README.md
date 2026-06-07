@@ -124,6 +124,43 @@ build/test dispatch, source or game data changes, Backlog/ActiveTask mutation,
 automatic Result Review accept/reject, Execution Request close/done, commit,
 or push.
 
+## H Bounded Implementation Pickup Contract
+
+Goal H adds a controlled implementation-worker contract as data only:
+
+```text
+profile: implementation
+executor: hermes_bounded_codex
+command_id_or_runner_route: studio.implementation.bounded_codex_cli
+dispatch_mode: implementation_pickup_contract
+dispatch_state: start_requested
+```
+
+This contract is for Hermes/runner pickup by a bounded Codex CLI worker. Studio
+does not start the worker and does not expose raw shell execution.
+
+The `pickup_contract` must include:
+
+- `worker_kind: bounded_codex_cli`
+- approved `allowed_files_or_areas`
+- approved `blocked_files_or_areas`
+- `raw_shell_allowed: false`
+- `pc_runner_direct_call_allowed: false`
+- `commit_push_allowed: false`
+- `result_review_required: true`
+
+Future worker edits are allowed only inside the approved Execution Request scope.
+
+The H pickup contract must not:
+
+- start PC Runner
+- start Codex/local execution from Studio
+- run build/test dispatch directly from Studio
+- mutate source or game data by itself
+- auto-create Backlog/ActiveTask entries
+- auto-accept, auto-close, or mark done
+- commit or push
+
 ## Local Tool
 
 ```bat

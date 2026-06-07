@@ -6,6 +6,9 @@ const fsp = require("fs/promises");
 const path = require("path");
 const {
   COMMAND_IDS_OR_RUNNER_ROUTES,
+  IMPLEMENTATION_PICKUP_EXECUTOR,
+  IMPLEMENTATION_PICKUP_MODE,
+  IMPLEMENTATION_PICKUP_ROUTE,
   WORKER_EXECUTORS,
   WORKER_PROFILES,
   createSafetyState,
@@ -24,9 +27,11 @@ const READY_FOR_WORKER_STATUS = "ready_for_worker";
 const WORKER_READINESS_APPROVAL_STATE = "approved_for_worker_readiness";
 const REQUEST_RECORD_ONLY_MODE = "dispatch_request_record_only";
 const REQUEST_RECORD_STATE = "ready_to_start";
+const IMPLEMENTATION_PICKUP_STATE = "start_requested";
 const DEFAULT_COMMAND_BY_PROFILE = new Map([
   ["documentation", "studio.documentation.review"],
   ["validation", "studio.validation.report"],
+  ["implementation", IMPLEMENTATION_PICKUP_ROUTE],
 ]);
 
 function text(value, fallback = "") {
@@ -151,6 +156,18 @@ function validateApprovalBody(body, errors) {
     addIssue(errors, "approved_command_id_or_runner_route_required", "approved_command_id_or_route", "approved_command_id_or_route is required.");
   } else if (!COMMAND_IDS_OR_RUNNER_ROUTES.has(commandIdOrRoute)) {
     addIssue(errors, "approved_command_id_or_runner_route_not_allowlisted", "approved_command_id_or_route", `Unsupported Worker Dispatch command id/runner route: ${commandIdOrRoute}`);
+  }
+
+  if (profile === "implementation") {
+    if (executor !== IMPLEMENTATION_PICKUP_EXECUTOR) {
+      addIssue(errors, "implementation_executor_required", "approved_worker_executor", `Implementation pickup must use ${IMPLEMENTATION_PICKUP_EXECUTOR}.`);
+    }
+    if (commandIdOrRoute !== IMPLEMENTATION_PICKUP_ROUTE) {
+      addIssue(errors, "implementation_route_required", "approved_command_id_or_route", `Implementation pickup must use ${IMPLEMENTATION_PICKUP_ROUTE}.`);
+    }
+    if (body.source_editing_scope_confirmed !== true) {
+      addIssue(errors, "source_editing_scope_confirmation_required", "source_editing_scope_confirmed", "Implementation pickup requires confirmation that future source edits are bounded by the approved Execution Request scope.");
+    }
   }
 
   collectCommandStringIssues(body, "body", errors);
@@ -349,13 +366,31 @@ function createWorkerDispatchRecord(preflightResult, body = {}, options = {}) {
   const commandIdOrRoute = approvedCommandIdOrRoute(body);
   const workerDispatchId = text(options.workerDispatchId) || makeWorkerDispatchId(request.title || preflightResult.execution_request_id, now);
   const readiness = readinessPreflight(request.approval || {}) || {};
+  const isImplementationPickup = text(body.approved_worker_profile) === "implementation"
+    && text(body.approved_worker_executor) === IMPLEMENTATION_PICKUP_EXECUTOR
+    && commandIdOrRoute === IMPLEMENTATION_PICKUP_ROUTE;
+  const dispatchState = isImplementationPickup ? IMPLEMENTATION_PICKUP_STATE : REQUEST_RECORD_STATE;
+  const dispatchMode = isImplementationPickup ? IMPLEMENTATION_PICKUP_MODE : REQUEST_RECORD_ONLY_MODE;
+  const pickupContract = isImplementationPickup ? {
+    worker_kind: "bounded_codex_cli",
+    pickup_owner: "hermes_or_runner",
+    source_editing_boundary: "approved_execution_request_scope_only",
+    allowed_files_or_areas: Array.isArray(request.allowed_files_or_areas) ? request.allowed_files_or_areas : [],
+    blocked_files_or_areas: Array.isArray(request.blocked_files_or_areas) ? request.blocked_files_or_areas : [],
+    validation_plan: Array.isArray(request.validation_plan) ? request.validation_plan : [],
+    return_format: Array.isArray(request.return_format) ? request.return_format : [],
+    raw_shell_allowed: false,
+    pc_runner_direct_call_allowed: false,
+    commit_push_allowed: false,
+    result_review_required: true,
+  } : null;
 
-  return {
+  const record = {
     worker_dispatch_id: workerDispatchId,
     schema_version: "worker_dispatch.v1",
     execution_request_id: preflightResult.execution_request_id,
-    dispatch_state: REQUEST_RECORD_STATE,
-    dispatch_mode: REQUEST_RECORD_ONLY_MODE,
+    dispatch_state: dispatchState,
+    dispatch_mode: dispatchMode,
     profile: text(body.approved_worker_profile),
     executor: text(body.approved_worker_executor),
     command_id_or_runner_route: commandIdOrRoute,
@@ -380,10 +415,14 @@ function createWorkerDispatchRecord(preflightResult, body = {}, options = {}) {
     runner_run_id: "",
     evidence_refs: [],
     result_review_id: "pending",
-    status_summary: "Worker Dispatch request record created only. E.1 does not start PC Runner, Codex, local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push.",
+    status_summary: isImplementationPickup
+      ? "Bounded implementation worker pickup contract created for Hermes/runner. Studio did not start PC Runner, Codex/local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push."
+      : "Worker Dispatch request record created only. E.1 does not start PC Runner, Codex, local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push.",
     created_at: iso,
     updated_at: iso,
   };
+  if (pickupContract) record.pickup_contract = pickupContract;
+  return record;
 }
 
 async function createWorkerDispatchRequest(repoRoot, body = {}, options = {}) {
@@ -458,6 +497,7 @@ async function createWorkerDispatchRequest(repoRoot, body = {}, options = {}) {
 }
 
 module.exports = {
+  IMPLEMENTATION_PICKUP_STATE,
   READY_FOR_WORKER_STATUS,
   REQUEST_RECORD_ONLY_MODE,
   REQUEST_RECORD_STATE,

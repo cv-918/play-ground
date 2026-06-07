@@ -247,17 +247,42 @@ function testValidationAcceptsSafeSmokeRunDispatch() {
   assert.strictEqual(result.ok, true, result.errors.join("\n"));
 }
 
+function testValidationAcceptsImplementationPickupContractDispatch() {
+  const result = validateWorkerDispatch(validDispatch({
+    worker_dispatch_id: "WD-20260607-010000-h-implementation-pickup",
+    dispatch_state: "start_requested",
+    dispatch_mode: "implementation_pickup_contract",
+    profile: "implementation",
+    executor: "hermes_bounded_codex",
+    command_id_or_runner_route: "studio.implementation.bounded_codex_cli",
+    pickup_contract: {
+      worker_kind: "bounded_codex_cli",
+      pickup_owner: "hermes_or_runner",
+      source_editing_boundary: "approved_execution_request_scope_only",
+      allowed_files_or_areas: ["tools/aiworkflow/studio/"],
+      blocked_files_or_areas: ["PlayGround/"],
+      validation_plan: ["node --test tools/aiworkflow/studio/*.test.js"],
+      return_format: ["Implementation summary"],
+      raw_shell_allowed: false,
+      pc_runner_direct_call_allowed: false,
+      commit_push_allowed: false,
+      result_review_required: true,
+    },
+  }));
+  assert.strictEqual(result.ok, true, result.errors.join("\n"));
+}
+
 function testValidationRejectsMissingRequiredFieldsAndInvalidState() {
   const dispatch = validDispatch({
     dispatch_state: "auto_started",
-    profile: "implementation",
+    profile: "source_editing",
   });
   delete dispatch.preflight_result;
   const result = validateWorkerDispatch(dispatch);
   assert.strictEqual(result.ok, false);
   assert(result.errors.includes("Missing required field: preflight_result"));
   assert(result.errors.includes("Invalid dispatch_state: auto_started"));
-  assert(result.errors.includes("Invalid profile: implementation"));
+  assert(result.errors.includes("Invalid profile: source_editing"));
 }
 
 function testValidationRejectsRunnerRefsInRequestRecordMode() {
@@ -540,7 +565,7 @@ async function testDispatchRefusesUnknownExecutorProfileAndCommandId() {
   writeExecutionRequest(erStore, request);
 
   const result = await createWorkerDispatchRequest(repoRoot, dispatchBody({
-    approved_worker_profile: "implementation",
+    approved_worker_profile: "source_editing",
     approved_worker_executor: "pc_runner",
     approved_command_id_or_route: "studio.source.edit",
   }), {
@@ -648,10 +673,71 @@ async function testDispatchCreatesRequestRecordOnly() {
   assert.strictEqual(result.safety.push_started, false);
 }
 
+async function testDispatchCreatesImplementationPickupContractOnly() {
+  const erStore = makeExecutionRequestStorePath("h-implementation-contract");
+  const wdStore = makeWorkerDispatchStorePath("h-implementation-contract");
+  const request = validExecutionRequest({
+    execution_request_id: "ER-20260607-010000-h-implementation-request",
+    title: "H implementation pickup contract",
+    worker_intent: {
+      worker_profile: "implementation",
+      worker_executor: "hermes_bounded_codex",
+      worker_command_id_or_route: "studio.implementation.bounded_codex_cli",
+      dispatch_mode: "future_dispatch_required",
+    },
+    allowed_files_or_areas: ["tools/aiworkflow/studio/"],
+    blocked_files_or_areas: ["PlayGround/", "_Docs/AIWorkflow/Backlog.md"],
+  });
+  const requestPath = writeExecutionRequest(erStore, request);
+  const beforeRequest = readText(requestPath);
+
+  const result = await createWorkerDispatchRequest(repoRoot, dispatchBody({
+    execution_request_id: request.execution_request_id,
+    approved_worker_profile: "implementation",
+    approved_worker_executor: "hermes_bounded_codex",
+    approved_command_id_or_route: "studio.implementation.bounded_codex_cli",
+    source_editing_scope_confirmed: true,
+    approval_summary: "Director approved bounded implementation pickup contract only.",
+  }), {
+    executionRequestStorePathOverride: erStore,
+    workerDispatchStorePathOverride: wdStore,
+    workerDispatchId: "WD-20260607-010001-h-implementation-contract",
+    now: new Date("2026-06-07T01:00:01.000Z"),
+  });
+  const afterRequest = readText(requestPath);
+
+  assert.strictEqual(result.ok, true, result.error || "");
+  assert.strictEqual(result.worker_dispatch_id, "WD-20260607-010001-h-implementation-contract");
+  assert.strictEqual(result.dispatch_mode, "implementation_pickup_contract");
+  assert.strictEqual(result.dispatch_state, "start_requested");
+  assert.strictEqual(result.worker_dispatch.profile, "implementation");
+  assert.strictEqual(result.worker_dispatch.executor, "hermes_bounded_codex");
+  assert.strictEqual(result.worker_dispatch.command_id_or_runner_route, "studio.implementation.bounded_codex_cli");
+  assert.strictEqual(result.worker_dispatch.result_review_id, "pending");
+  assert.strictEqual(result.worker_dispatch.runner_plan_id, "");
+  assert.strictEqual(result.worker_dispatch.runner_run_id, "");
+  assert.deepStrictEqual(result.worker_dispatch.evidence_refs, []);
+  assert.strictEqual(result.worker_dispatch.pickup_contract.worker_kind, "bounded_codex_cli");
+  assert.deepStrictEqual(result.worker_dispatch.pickup_contract.allowed_files_or_areas, ["tools/aiworkflow/studio/"]);
+  assert.strictEqual(result.worker_dispatch.pickup_contract.raw_shell_allowed, false);
+  assert.strictEqual(result.worker_dispatch.pickup_contract.pc_runner_direct_call_allowed, false);
+  assert.strictEqual(result.worker_dispatch.pickup_contract.commit_push_allowed, false);
+  assert.strictEqual(beforeRequest, afterRequest, "implementation pickup contract creation must not mutate the Execution Request");
+  assert.strictEqual(result.safety.runner_started, false);
+  assert.strictEqual(result.safety.pc_runner_started, false);
+  assert.strictEqual(result.safety.codex_started, false);
+  assert.strictEqual(result.safety.local_execution_started, false);
+  assert.strictEqual(result.safety.source_changed, false);
+  assert.strictEqual(result.safety.git_changed, false);
+  assert.strictEqual(result.safety.commit_started, false);
+  assert.strictEqual(result.safety.push_started, false);
+}
+
 async function main() {
   testSafetyDefaultsBlockLiveExecutionSideEffects();
   testValidationAcceptsValidV1Dispatch();
   testValidationAcceptsSafeSmokeRunDispatch();
+  testValidationAcceptsImplementationPickupContractDispatch();
   testValidationRejectsMissingRequiredFieldsAndInvalidState();
   testValidationRejectsRunnerRefsInRequestRecordMode();
   testValidationRejectsUnsafeSafeSmokeRunShape();
@@ -669,6 +755,7 @@ async function main() {
   await testDispatchRefusesApprovalThatDoesNotMatchPreflightedWorkerIntent();
   await testDispatchRefusesCommitPushAndSourceSchemaBuildAuthorization();
   await testDispatchCreatesRequestRecordOnly();
+  await testDispatchCreatesImplementationPickupContractOnly();
   console.log("studio worker dispatch planner tests passed");
 }
 

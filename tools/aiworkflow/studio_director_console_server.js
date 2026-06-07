@@ -8,7 +8,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const { DEFAULT_HOST, DEFAULT_PORT, parseArgs } = require("./studio/cliArgs");
-const { runGit, parseGitShortStatus, getGitStatusEntries, commitSelectedFiles, pushCurrentBranch } = require("./studio/gitService");
+const { runGit, parseGitShortStatus, getGitStatusEntries } = require("./studio/gitService");
 const { directorConsoleHtml } = require("./studio/directorConsolePage");
 const { renderMarkdownDocument, renderJsonArtifactDocument, contentType } = require("./studio/artifactRenderer");
 const { createStudioApiHandler } = require("./studio/studioApiHandlers");
@@ -54,6 +54,8 @@ const {
   getExecutionRequestStore,
   getResultReviewStore,
   getWorkerDispatchStore,
+  getStudioRecordStore,
+  getCommitPushRequestStore,
   getMaterializations,
   getWorkOrders,
   getProposals,
@@ -652,6 +654,10 @@ async function getSummary(repoRoot) {
   const resultReviews = resultReviewStore.records;
   const workerDispatchStore = await getWorkerDispatchStore(repoRoot);
   const workerDispatches = workerDispatchStore.records;
+  const studioRecordStore = await getStudioRecordStore(repoRoot);
+  const studioRecords = studioRecordStore.records;
+  const commitPushRequestStore = await getCommitPushRequestStore(repoRoot);
+  const commitPushRequests = commitPushRequestStore.records;
   const materializations = await getMaterializations(repoRoot);
   const workOrders = await getWorkOrders(repoRoot);
   const proposals = await getProposals(repoRoot);
@@ -680,6 +686,8 @@ async function getSummary(repoRoot) {
     execution_requests: executionRequestStore.count,
     result_reviews: resultReviewStore.count,
     worker_dispatches: workerDispatchStore.count,
+    studio_records: studioRecordStore.count,
+    commit_push_requests: commitPushRequestStore.count,
     dev_logs: devLogs.length,
   };
   const companyRuntime = buildCompanyRuntimeReadinessReport(repoRoot, {
@@ -731,9 +739,21 @@ async function getSummary(repoRoot) {
       invalid_count: workerDispatchStore.invalid_count,
       safety: workerDispatchStore.safety,
     },
+    studio_record_store: {
+      count: studioRecordStore.count,
+      invalid_count: studioRecordStore.invalid_count,
+      safety: studioRecordStore.safety,
+    },
+    commit_push_request_store: {
+      count: commitPushRequestStore.count,
+      invalid_count: commitPushRequestStore.invalid_count,
+      safety: commitPushRequestStore.safety,
+    },
     execution_requests: executionRequests.slice(0, 24),
     result_reviews: resultReviews.slice(0, 24),
     worker_dispatches: workerDispatches.slice(0, 24),
+    studio_records: studioRecords.slice(0, 24),
+    commit_push_requests: commitPushRequests.slice(0, 24),
     context_packets: contextPackets.slice(0, 12),
     review_packets: reviewPackets.slice(0, 12),
     materializations: materializations.slice(0, 12),
@@ -753,6 +773,8 @@ async function getSummary(repoRoot) {
       reviewPackets: reviewPackets.slice(0, 12),
       recentStaffRuns: staffRuns.slice(0, 12),
       decisions: decisions.slice(0, 12),
+      recordKeepingRecords: studioRecords.slice(0, 24),
+      commitPushRequests: commitPushRequests.slice(0, 24),
       devLogs: devLogs.slice(0, 24),
       memories: memories.slice(0, 12),
     }),
@@ -942,7 +964,6 @@ async function startServer(options) {
     buildWorkOrderHandoffPlan,
     buildWorkOrderPayload,
     cleanupTemporaryStaffRun,
-    commitSelectedFiles,
     extractMeetingTurnFromStaffRun,
     getConditionalAutomation,
     getSummary,
@@ -962,7 +983,6 @@ async function startServer(options) {
     slash,
     studioServiceConfig,
     stringList,
-    pushCurrentBranch,
     writeStudioRecord,
     writeTempStudioInput,
     writeTempStudioText,

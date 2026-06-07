@@ -11,6 +11,8 @@ const { createDirectorApiAliasHandler } = require("./studioDirectorApiAliases");
 const { createExecutionRequestApiHandler } = require("./studioExecutionRequestApiRoutes");
 const { createResultReviewApiHandler } = require("./studioResultReviewApiRoutes");
 const { createWorkerDispatchApiHandler } = require("./studioWorkerDispatchApiRoutes");
+const { createRecordKeepingApiHandler } = require("./studioRecordKeepingApiRoutes");
+const { createCommitPushRequestApiHandler } = require("./studioCommitPushRequestApiRoutes");
 
 function createStudioApiHandler(deps = {}) {
   const {
@@ -27,6 +29,8 @@ function createStudioApiHandler(deps = {}) {
   const handleExecutionRequestApi = createExecutionRequestApiHandler(deps);
   const handleWorkerDispatchApi = createWorkerDispatchApiHandler(deps);
   const handleResultReviewApi = createResultReviewApiHandler(deps);
+  const handleRecordKeepingApi = createRecordKeepingApiHandler(deps);
+  const handleCommitPushRequestApi = createCommitPushRequestApiHandler(deps);
   const handleDirectorApiAlias = createDirectorApiAliasHandler(deps);
 
   return async function handleApi(repoRoot, req, res, parsedUrl, serverContext = {}) {
@@ -44,6 +48,12 @@ function createStudioApiHandler(deps = {}) {
 
     const resultReviewApiResult = await handleResultReviewApi(routeContext);
     if (resultReviewApiResult !== false) return resultReviewApiResult;
+
+    const recordKeepingApiResult = await handleRecordKeepingApi(routeContext);
+    if (recordKeepingApiResult !== false) return recordKeepingApiResult;
+
+    const commitPushRequestApiResult = await handleCommitPushRequestApi(routeContext);
+    if (commitPushRequestApiResult !== false) return commitPushRequestApiResult;
 
     const directorApiAliasResult = await handleDirectorApiAlias(routeContext);
     if (directorApiAliasResult !== false) return directorApiAliasResult;

@@ -20,10 +20,24 @@ function sendRetiredDiscordWorkflowRoute(sendJson, res, route) {
   });
 }
 
+function sendCommitPushBoundaryRoute(sendJson, res, route) {
+  return sendJson(res, 410, {
+    ok: false,
+    status: "retired_direct_git_execution",
+    route,
+    replacement: "/api/director/commit-push-requests/actions/create",
+    message: "Studio no longer runs git commit or git push from this route. Create a Commit/Push request record for Hermes or the Human Director instead.",
+    safety: {
+      body_parsed: false,
+      git_changed: false,
+      commit_started: false,
+      push_started: false,
+    },
+  });
+}
+
 function createWorkflowApiHandler(deps = {}) {
   const {
-    commitSelectedFiles,
-    pushCurrentBranch,
     readRequestJson,
     sendJson,
   } = deps;
@@ -42,26 +56,11 @@ function createWorkflowApiHandler(deps = {}) {
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/git/commit") {
-      const body = await readRequestJson(req);
-      const commit = await commitSelectedFiles(repoRoot, body);
-      let push = null;
-      if (body.push === true && commit.committed === true) {
-        push = await pushCurrentBranch(repoRoot);
-      }
-      return sendJson(res, 200, {
-        ok: true,
-        command: body.push === true ? "commit-push-selected" : "commit-selected",
-        data: { commit, push },
-      });
+      return sendCommitPushBoundaryRoute(sendJson, res, parsedUrl.pathname);
     }
 
     if (req.method === "POST" && parsedUrl.pathname === "/api/workflow/git/push") {
-      const push = await pushCurrentBranch(repoRoot);
-      return sendJson(res, 200, {
-        ok: true,
-        command: "push",
-        data: push,
-      });
+      return sendCommitPushBoundaryRoute(sendJson, res, parsedUrl.pathname);
     }
     return false;
   };

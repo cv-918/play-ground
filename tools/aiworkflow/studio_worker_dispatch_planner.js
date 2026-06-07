@@ -57,18 +57,23 @@ const DISPATCH_STATES = new Set([
   "cancelled",
   "closed",
 ]);
-const DISPATCH_MODES = new Set(["dispatch_request_record_only", "safe_smoke_run"]);
+const DISPATCH_MODES = new Set(["dispatch_request_record_only", "safe_smoke_run", "implementation_pickup_contract"]);
 const REQUEST_RECORD_ONLY_STATES = new Set(["ready_to_start"]);
 const SAFE_SMOKE_STATES = new Set(["result_ready"]);
-const WORKER_PROFILES = new Set(["documentation", "validation"]);
-const WORKER_EXECUTORS = new Set(["none", "hermes_safe_smoke"]);
+const IMPLEMENTATION_PICKUP_STATES = new Set(["start_requested"]);
+const WORKER_PROFILES = new Set(["documentation", "validation", "implementation"]);
+const WORKER_EXECUTORS = new Set(["none", "hermes_safe_smoke", "hermes_bounded_codex"]);
 const COMMAND_IDS_OR_RUNNER_ROUTES = new Set([
   "studio.documentation.review",
   "studio.validation.report",
+  "studio.implementation.bounded_codex_cli",
 ]);
 const SAFE_SMOKE_MODE = "safe_smoke_run";
 const SAFE_SMOKE_EXECUTOR = "hermes_safe_smoke";
 const SAFE_SMOKE_ROUTE = "studio.validation.report";
+const IMPLEMENTATION_PICKUP_MODE = "implementation_pickup_contract";
+const IMPLEMENTATION_PICKUP_EXECUTOR = "hermes_bounded_codex";
+const IMPLEMENTATION_PICKUP_ROUTE = "studio.implementation.bounded_codex_cli";
 
 function normalizePath(filePath) {
   return path.resolve(filePath);
@@ -268,6 +273,44 @@ function validateWorkerDispatch(dispatch) {
     }
     if (!resultReviewId || resultReviewId === "pending") {
       addError(errors, "result_review_id must link a Result Review for safe_smoke_run");
+    }
+  }
+
+  if (asText(value.dispatch_mode) === IMPLEMENTATION_PICKUP_MODE) {
+    if (asText(value.dispatch_state) && !IMPLEMENTATION_PICKUP_STATES.has(asText(value.dispatch_state))) {
+      addError(errors, `implementation_pickup_contract records may only use pickup request state: ${value.dispatch_state}`);
+    }
+    if (asText(value.profile) !== "implementation") addError(errors, "implementation_pickup_contract profile must be implementation");
+    if (asText(value.executor) !== IMPLEMENTATION_PICKUP_EXECUTOR) addError(errors, "implementation_pickup_contract executor must be hermes_bounded_codex");
+    if (asText(value.command_id_or_runner_route) !== IMPLEMENTATION_PICKUP_ROUTE) {
+      addError(errors, "implementation_pickup_contract command_id_or_runner_route must be studio.implementation.bounded_codex_cli");
+    }
+    if (asText(value.runner_plan_id)) addError(errors, "runner_plan_id must be empty for implementation_pickup_contract");
+    if (asText(value.runner_run_id)) addError(errors, "runner_run_id must be empty for implementation_pickup_contract");
+    if (Array.isArray(value.evidence_refs) && value.evidence_refs.length !== 0) {
+      addError(errors, "evidence_refs must be empty until a bounded implementation worker reports evidence");
+    }
+    if (resultReviewId !== "pending") {
+      addError(errors, "result_review_id must be pending for implementation_pickup_contract");
+    }
+    const contract = value.pickup_contract && typeof value.pickup_contract === "object" && !Array.isArray(value.pickup_contract)
+      ? value.pickup_contract
+      : null;
+    if (!contract) {
+      addError(errors, "pickup_contract is required for implementation_pickup_contract");
+    } else {
+      if (asText(contract.worker_kind) !== "bounded_codex_cli") {
+        addError(errors, "pickup_contract.worker_kind must be bounded_codex_cli");
+      }
+      if (contract.raw_shell_allowed !== false) addError(errors, "pickup_contract.raw_shell_allowed must be false");
+      if (contract.pc_runner_direct_call_allowed !== false) addError(errors, "pickup_contract.pc_runner_direct_call_allowed must be false");
+      if (contract.commit_push_allowed !== false) addError(errors, "pickup_contract.commit_push_allowed must be false");
+      if (!Array.isArray(contract.allowed_files_or_areas) || contract.allowed_files_or_areas.length === 0) {
+        addError(errors, "pickup_contract.allowed_files_or_areas must contain approved Execution Request scope boundaries");
+      }
+      if (!Array.isArray(contract.blocked_files_or_areas)) {
+        addError(errors, "pickup_contract.blocked_files_or_areas must be an array");
+      }
     }
   }
 
@@ -574,6 +617,10 @@ module.exports = {
   DISPATCH_STATES,
   EXECUTION_REQUEST_ID_PATTERN,
   REQUEST_RECORD_ONLY_STATES,
+  IMPLEMENTATION_PICKUP_EXECUTOR,
+  IMPLEMENTATION_PICKUP_MODE,
+  IMPLEMENTATION_PICKUP_ROUTE,
+  IMPLEMENTATION_PICKUP_STATES,
   SAFE_SMOKE_EXECUTOR,
   SAFE_SMOKE_MODE,
   SAFE_SMOKE_ROUTE,

@@ -18,12 +18,10 @@ function createWorkflowHarness() {
   let readRequestJsonCalls = 0;
   let importDiscordServiceCalls = 0;
   const handler = createWorkflowApiHandler({
-    commitSelectedFiles: async () => { throw new Error("commitSelectedFiles should not be called"); },
     importDiscordService: async () => {
       importDiscordServiceCalls += 1;
       throw new Error("legacy discord-orchestrator service must not be imported");
     },
-    pushCurrentBranch: async () => { throw new Error("pushCurrentBranch should not be called"); },
     readRequestJson: async () => {
       readRequestJsonCalls += 1;
       return { text: "hello", task_id: "WF-1", decision: "accept" };
@@ -80,15 +78,9 @@ function collectCatalogToolIds(catalog) {
   return ids;
 }
 
-async function testRemainingWorkflowGitCommitRouteStillUsesInjectedJsonReader() {
-  let commitBody = null;
+async function testWorkflowGitCommitRouteIsBoundaryOnly() {
   const responses = [];
   const handler = createWorkflowApiHandler({
-    commitSelectedFiles: async (repoRoot, body) => {
-      commitBody = { repoRoot, body };
-      return { committed: true, sha: "abc123" };
-    },
-    pushCurrentBranch: async () => ({ pushed: true }),
     readRequestJson: async () => ({ message: "test", push: false }),
     sendJson: (res, status, value) => {
       responses.push({ res, status, value });
@@ -103,9 +95,12 @@ async function testRemainingWorkflowGitCommitRouteStillUsesInjectedJsonReader() 
     parsedUrl: makeParsedUrl("/api/workflow/git/commit"),
   });
 
-  assert.deepStrictEqual(commitBody, { repoRoot: "repo-root", body: { message: "test", push: false } });
-  assert.strictEqual(responses[0].status, 200);
-  assert.strictEqual(result.command, "commit-selected");
+  assert.strictEqual(responses[0].status, 410);
+  assert.strictEqual(result.ok, false);
+  assert.strictEqual(result.status, "retired_direct_git_execution");
+  assert.strictEqual(result.replacement, "/api/director/commit-push-requests/actions/create");
+  assert.strictEqual(result.safety.commit_started, false);
+  assert.strictEqual(result.safety.push_started, false);
 }
 
 function testToolboxCatalogDoesNotExposeLegacyDiscordBotTools() {
@@ -121,7 +116,7 @@ function testToolboxCatalogDoesNotExposeLegacyDiscordBotTools() {
 
 async function run() {
   await testLegacyDiscordWorkflowRoutesReturnRetiredEnvelopeWithoutImportingRemovedServices();
-  await testRemainingWorkflowGitCommitRouteStillUsesInjectedJsonReader();
+  await testWorkflowGitCommitRouteIsBoundaryOnly();
   testToolboxCatalogDoesNotExposeLegacyDiscordBotTools();
   console.log("studio legacy Discord cleanup tests passed");
 }

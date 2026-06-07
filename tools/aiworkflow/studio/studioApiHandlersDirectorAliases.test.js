@@ -24,11 +24,14 @@ function createHarness(summary, options = {}) {
     executionRequestStorePathOverride: options.executionRequestStorePathOverride || "",
     resultReviewStorePathOverride: options.resultReviewStorePathOverride || "",
     workerDispatchStorePathOverride: options.workerDispatchStorePathOverride || "",
+    studioRecordStorePathOverride: options.studioRecordStorePathOverride || "",
+    commitPushRequestStorePathOverride: options.commitPushRequestStorePathOverride || "",
     getSummary: async (repoRoot) => {
       summaryCalls += 1;
       assert.strictEqual(repoRoot, "repo-root");
       return summary;
     },
+    getWorkflowCore: async () => options.workflowCore || { git: { changed_entries: [] } },
     readRequestJson: async (req) => req.body || {},
     runTool: async () => {
       runToolCalls += 1;
@@ -189,6 +192,18 @@ function makeWorkerDispatchStorePath(label) {
   return fs.mkdtempSync(path.join(root, `${label}-`));
 }
 
+function makeStudioRecordStorePath(label) {
+  const root = path.join(repoRoot, "_Temp", "AIWorkflowStudio", "records");
+  fs.mkdirSync(root, { recursive: true });
+  return fs.mkdtempSync(path.join(root, `${label}-`));
+}
+
+function makeCommitPushRequestStorePath(label) {
+  const root = path.join(repoRoot, "_Temp", "AIWorkflowStudio", "commit_push_requests");
+  fs.mkdirSync(root, { recursive: true });
+  return fs.mkdtempSync(path.join(root, `${label}-`));
+}
+
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -329,6 +344,147 @@ async function testStudioApiHandlerDispatchesResultReviewStoreRoutes() {
   assert.strictEqual(invalidId.ok, false);
   assert.match(invalidId.error, /Invalid result_review_id/);
   assert.deepStrictEqual(snapshotFiles(storePath), before, "GET list/detail/id validation must not write files");
+}
+
+async function testStudioApiHandlerRecordsResultReviewDecisionOnly() {
+  const storePath = makeResultReviewStorePath("api-rr-decision");
+  const review = validResultReview({
+    result_review_id: "RR-20260607-010000-api-decision-result-review",
+  });
+  const targetPath = path.join(storePath, `${review.result_review_id}.json`);
+  writeJson(targetPath, review);
+  const before = snapshotTree(storePath);
+
+  const harness = createHarness({ generated_at: "now", director_views: {} }, {
+    resultReviewStorePathOverride: storePath,
+  });
+  const result = await harness.handler(
+    repoRoot,
+    fakeReq("POST", {
+      result_review_id: review.result_review_id,
+      action: "request_changes",
+      director_confirmation: true,
+      decision_summary: "Needs a focused follow-up.",
+    }),
+    {},
+    makeParsedUrl("/api/director/result-reviews/actions/decision")
+  );
+  const after = snapshotTree(storePath);
+  const updated = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+
+  assert.strictEqual(harness.summaryCalls, 0);
+  assert.strictEqual(harness.runToolCalls, 0);
+  assert.strictEqual(harness.responses[0].status, 200);
+  assert.strictEqual(result.ok, true, result.error || "");
+  assert.strictEqual(result.action, "request_changes");
+  assert.strictEqual(result.result_status, "changes_requested");
+  assert.strictEqual(updated.status, "changes_requested");
+  assert.strictEqual(updated.decision.action, "request_changes");
+  assert.strictEqual(updated.decision_history.length, 1);
+  assert.strictEqual(result.safety.result_review_decision_updated, true);
+  assert.strictEqual(result.safety.execution_request_closed, false);
+  assert.strictEqual(result.safety.worker_dispatched, false);
+  assert.strictEqual(result.safety.commit_started, false);
+  assert.strictEqual(result.safety.push_started, false);
+  assert.deepStrictEqual(changedTreeFiles(before, after), [`${review.result_review_id}.json`]);
+}
+
+async function testStudioApiHandlerCreatesRecordKeepingRecordFromResultReviewOnly() {
+  const resultReviewStore = makeResultReviewStorePath("api-record-rr");
+  const studioRecordStore = makeStudioRecordStorePath("api-record-store");
+  const review = validResultReview({
+    result_review_id: "RR-20260607-011000-api-record-source",
+    status: "accepted",
+    decision: {
+      action: "accept",
+      decision_state: "accepted",
+      result_status: "accepted",
+      decided_by: "human_director",
+      decided_at: "2026-06-07T01:10:00.000Z",
+      decision_summary: "Accepted for record keeping.",
+      commit_push_authorized: false,
+      worker_retry_started: false,
+      execution_request_closed: false,
+    },
+  });
+  const reviewPath = path.join(resultReviewStore, `${review.result_review_id}.json`);
+  writeJson(reviewPath, review);
+  const beforeReviews = snapshotTree(resultReviewStore);
+  const beforeRecords = snapshotFiles(studioRecordStore);
+
+  const harness = createHarness({ generated_at: "now", director_views: {} }, {
+    resultReviewStorePathOverride: resultReviewStore,
+    studioRecordStorePathOverride: studioRecordStore,
+  });
+  const result = await harness.handler(
+    repoRoot,
+    fakeReq("POST", {
+      result_review_id: review.result_review_id,
+      director_confirmation: true,
+      summary: "Accepted result review outcome.",
+    }),
+    {},
+    makeParsedUrl("/api/director/studio-records/actions/create-from-result-review")
+  );
+  const afterReviews = snapshotTree(resultReviewStore);
+  const afterRecords = snapshotFiles(studioRecordStore);
+
+  assert.strictEqual(harness.runToolCalls, 0);
+  assert.strictEqual(harness.responses[0].status, 200);
+  assert.strictEqual(result.ok, true, result.error || "");
+  assert.match(result.record_id, /^REC-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$/);
+  assert.strictEqual(result.studio_record.record_type, "result_review_outcome");
+  assert.deepStrictEqual(result.studio_record.links.result_review_ids, [review.result_review_id]);
+  assert.strictEqual(result.studio_record.storage_policy.director_brain_ingest, "not_requested");
+  assert.strictEqual(result.studio_record.storage_policy.raw_logs_stored, false);
+  assert.strictEqual(result.safety.studio_record_written, true);
+  assert.strictEqual(result.safety.director_brain_ingested, false);
+  assert.strictEqual(result.safety.obsidian_changed, false);
+  assert.strictEqual(result.safety.commit_started, false);
+  assert.deepStrictEqual(changedTreeFiles(beforeReviews, afterReviews), []);
+  assert.strictEqual(afterRecords.length, beforeRecords.length + 1);
+}
+
+async function testStudioApiHandlerCreatesCommitPushRequestWithoutGitExecution() {
+  const storePath = makeCommitPushRequestStorePath("api-cpr-store");
+  const harness = createHarness({ generated_at: "now", director_views: {} }, {
+    commitPushRequestStorePathOverride: storePath,
+    workflowCore: {
+      git: {
+        changed_entries: [
+          { status: "M", path: "tools/aiworkflow/studio/studioApiHandlers.js" },
+          { status: "M", path: "_Docs/Studio/Roadmap/test.md" },
+        ],
+      },
+    },
+  });
+  const before = snapshotFiles(storePath);
+  const result = await harness.handler(
+    repoRoot,
+    fakeReq("POST", {
+      files: ["tools/aiworkflow/studio/studioApiHandlers.js"],
+      message: "Update AIWorkflow Studio",
+      push: true,
+      director_confirmation: true,
+      approval_summary: "Create request only.",
+    }),
+    {},
+    makeParsedUrl("/api/director/commit-push-requests/actions/create")
+  );
+  const after = snapshotFiles(storePath);
+
+  assert.strictEqual(harness.runToolCalls, 0);
+  assert.strictEqual(harness.responses[0].status, 200);
+  assert.strictEqual(result.ok, true, result.error || "");
+  assert.match(result.commit_push_request_id, /^CPR-[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]*$/);
+  assert.strictEqual(result.commit_push_request.request_type, "push_after_commit");
+  assert.deepStrictEqual(result.commit_push_request.selected_files, ["tools/aiworkflow/studio/studioApiHandlers.js"]);
+  assert.strictEqual(result.commit_push_request.approval.push_requires_separate_approval, true);
+  assert.strictEqual(result.safety.commit_push_request_written, true);
+  assert.strictEqual(result.safety.git_changed, false);
+  assert.strictEqual(result.safety.commit_started, false);
+  assert.strictEqual(result.safety.push_started, false);
+  assert.strictEqual(after.length, before.length + 1);
 }
 
 async function testStudioApiHandlerDispatchesWorkerDispatchStoreRoutes() {
@@ -641,7 +797,10 @@ async function run() {
   await testStudioApiHandlerDispatchesDirectorReadOnlyAliases();
   await testStudioApiHandlerDispatchesExecutionRequestStoreRoutes();
   await testStudioApiHandlerDispatchesResultReviewStoreRoutes();
+  await testStudioApiHandlerRecordsResultReviewDecisionOnly();
+  await testStudioApiHandlerCreatesRecordKeepingRecordFromResultReviewOnly();
   await testStudioApiHandlerDispatchesWorkerDispatchStoreRoutes();
+  await testStudioApiHandlerCreatesCommitPushRequestWithoutGitExecution();
   await testStudioApiHandlerExecutionRequestEmptyStore();
   await testStudioApiHandlerResultReviewEmptyStore();
   await testStudioApiHandlerMarksExecutionRequestReadyWithoutWorkerDispatch();

@@ -85,25 +85,6 @@ function suggestCommitMessage(files = []) {
   return "Update selected project files";
 }
 
-function validateSelectedGitFiles(currentEntries, files = []) {
-  const current = new Set(currentEntries.map((entry) => slash(entry.path)));
-  const selected = Array.from(new Set((Array.isArray(files) ? files : [])
-    .map((file) => slash(file).trim())
-    .filter(Boolean)));
-  if (selected.length === 0) {
-    throw new Error("No files selected.");
-  }
-  for (const filePath of selected) {
-    if (!current.has(filePath)) {
-      throw new Error(`Selected file is not in current git status: ${filePath}`);
-    }
-    if (filePath.includes("..") || path.isAbsolute(filePath) || isForbiddenGitPath(filePath)) {
-      throw new Error(`Refusing to stage forbidden or unsafe path: ${filePath}`);
-    }
-  }
-  return selected;
-}
-
 async function getGitStatusEntries(repoRoot) {
   const status = await runGit(repoRoot, ["status", "--short"]);
   if (!status.ok) {
@@ -112,74 +93,10 @@ async function getGitStatusEntries(repoRoot) {
   return parseGitShortStatus(status.stdout);
 }
 
-async function commitSelectedFiles(repoRoot, input = {}) {
-  const entries = await getGitStatusEntries(repoRoot);
-  const files = validateSelectedGitFiles(entries, input.files);
-  const message = String(input.message || "").replace(/\s+/g, " ").trim() || suggestCommitMessage(files);
-  if (message.length > 180) {
-    throw new Error("Commit message must be 180 characters or fewer.");
-  }
-
-  const selected = new Set(files);
-  const preStaged = await runGit(repoRoot, ["diff", "--cached", "--name-only"], 30000);
-  const preStagedFiles = preStaged.stdout ? preStaged.stdout.split(/\r?\n/u).filter(Boolean).map(slash) : [];
-  const unexpectedPreStaged = preStagedFiles.filter((filePath) => !selected.has(filePath));
-  if (unexpectedPreStaged.length > 0) {
-    throw new Error(`Refusing selected commit while unrelated files are already staged: ${unexpectedPreStaged.join(", ")}`);
-  }
-
-  const add = await runGit(repoRoot, ["add", "--", ...files], 30000);
-  if (!add.ok) {
-    throw new Error(add.stderr || "git add failed.");
-  }
-  const diffCheck = await runGit(repoRoot, ["diff", "--cached", "--check"], 30000);
-  if (!diffCheck.ok) {
-    throw new Error(diffCheck.stderr || "git diff --cached --check failed.");
-  }
-  const staged = await runGit(repoRoot, ["diff", "--cached", "--name-only"], 30000);
-  const stagedFiles = staged.stdout ? staged.stdout.split(/\r?\n/u).filter(Boolean).map(slash) : [];
-  const unexpectedStaged = stagedFiles.filter((filePath) => !selected.has(filePath));
-  if (unexpectedStaged.length > 0) {
-    throw new Error(`Refusing to commit files outside current Studio selection: ${unexpectedStaged.join(", ")}`);
-  }
-  if (stagedFiles.length === 0) {
-    return { committed: false, message, staged_files: [], note: "No staged changes after selection." };
-  }
-  const commit = await runGit(repoRoot, ["commit", "-m", message], 60000);
-  if (!commit.ok) {
-    throw new Error(commit.stderr || commit.stdout || "git commit failed.");
-  }
-  const head = await runGit(repoRoot, ["rev-parse", "--short", "HEAD"], 10000);
-  return {
-    committed: true,
-    pushed: false,
-    message,
-    staged_files: stagedFiles,
-    commit_sha: head.ok ? head.stdout.trim() : "",
-    git: commit,
-  };
-}
-
-async function pushCurrentBranch(repoRoot) {
-  const branch = await runGit(repoRoot, ["branch", "--show-current"], 10000);
-  if (!branch.ok) {
-    throw new Error(branch.stderr || "git branch --show-current failed.");
-  }
-  const push = await runGit(repoRoot, ["push"], 120000);
-  if (!push.ok) {
-    throw new Error(push.stderr || push.stdout || "git push failed.");
-  }
-  return {
-    pushed: true,
-    branch: branch.stdout.trim(),
-    git: push,
-  };
-}
-
 module.exports = {
   runGit,
   parseGitShortStatus,
+  isForbiddenGitPath,
+  suggestCommitMessage,
   getGitStatusEntries,
-  commitSelectedFiles,
-  pushCurrentBranch,
 };

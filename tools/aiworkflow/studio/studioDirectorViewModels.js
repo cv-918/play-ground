@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
+const {
+  collectResultReviewEvidenceMetadata,
+  evaluateVerificationGate,
+} = require("./studioEvidenceVerification");
+const { buildCompletionCard } = require("./studioCompletionCardBuilder");
+
 function text(value, fallback = "") {
   return String(value || fallback || "").trim();
 }
@@ -271,6 +277,14 @@ function toResultReviewRecord(record = {}) {
   const noValidation = validationNotRun(review);
   const warning = validation.ok ? "" : text(record.warning_summary, "Result Review validation failed.");
   const title = fallbackTitle(implementationSummary, sourceId, record.file, "Invalid Result Review");
+  const decision = review.decision && typeof review.decision === "object" && !Array.isArray(review.decision) ? review.decision : {};
+  const decisionHistory = Array.isArray(review.decision_history) ? review.decision_history : [];
+  const evidenceCollection = collectResultReviewEvidenceMetadata(review);
+  const verificationGate = evaluateVerificationGate(evidenceCollection, {
+    recordValid: validation.ok,
+    resultReviewStatus: text(review.status),
+  });
+  const completionCard = buildCompletionCard(review, verificationGate);
 
   return {
     kind: "result_review_item",
@@ -301,12 +315,21 @@ function toResultReviewRecord(record = {}) {
     recommended_next_action: text(review.recommended_next_action),
     commit_recommendation: commitRecommendationText(review.commit_recommendation),
     commit_recommendation_advisory_only: true,
+    decision_action: text(decision.action),
+    decision_state: text(decision.decision_state || review.status),
+    decision_summary: text(decision.decision_summary),
+    decision_history_count: decisionHistory.length,
     evidence_refs: evidenceRefs,
+    evidence_collection: evidenceCollection,
+    verification_gate: verificationGate,
+    verification_gate_status: verificationGate.status,
+    verification_gate_summary: verificationGate.summary,
+    completion_card: completionCard,
     record_refs: recordRefs,
     validation_ok: Boolean(validation.ok),
     validation_errors: validationErrors,
     warning_summary: warning,
-    safety_boundary: "Result Review is read/store/display only. Studio does not accept, reject, close, mark done, dispatch workers, close Execution Requests, commit, or push from this surface.",
+    safety_boundary: "Result Review decisions update only the Result Review decision state/history. Studio does not mark done, dispatch workers, close Execution Requests, commit, push, rollback, or retry from this surface.",
     internal_details: {
       file: record.file || "",
       schema_version: text(review.schema_version),
@@ -315,6 +338,8 @@ function toResultReviewRecord(record = {}) {
       worker_dispatch_id: text(review.worker_dispatch_id),
       source_evidence_refs: evidenceRefs,
       record_refs: recordRefs,
+      decision,
+      decision_history: decisionHistory,
       validation_errors: validationErrors,
     },
     attention_count: validation.ok ? (decisionsNeeded.length || risks.length || (noValidation ? 1 : 0)) : 1,
@@ -331,11 +356,14 @@ function toWorkerDispatchRecord(record = {}) {
   const approval = dispatch.approval && typeof dispatch.approval === "object" ? dispatch.approval : {};
   const safeSmokeResult = dispatch.safe_smoke_result && typeof dispatch.safe_smoke_result === "object" ? dispatch.safe_smoke_result : null;
   const safeSmokeCompleted = text(dispatch.dispatch_mode) === "safe_smoke_run" && text(dispatch.executor) === "hermes_safe_smoke";
+  const implementationPickup = text(dispatch.dispatch_mode) === "implementation_pickup_contract" && text(dispatch.executor) === "hermes_bounded_codex";
   const warning = validation.ok ? "" : text(record.warning_summary, "Worker Dispatch validation failed.");
   const resultReviewId = text(dispatch.result_review_id);
   const resultReviewPending = !resultReviewId || resultReviewId === "pending";
   const title = fallbackTitle(dispatch.status_summary, sourceId, record.file, "Invalid Worker Dispatch");
-  const safetyBoundary = safeSmokeCompleted
+  const safetyBoundary = implementationPickup
+    ? "Worker Dispatch H implementation pickup is a bounded Codex CLI/Hermes pickup contract only. Studio does not expose raw shell execution, start PC Runner/Codex/local execution, mutate source/data, auto-close, commit, or push; future worker edits must stay inside the approved Execution Request scope."
+    : safeSmokeCompleted
     ? "Worker Dispatch E.2 safe smoke is limited to hermes_safe_smoke on studio.validation.report. It may write safe smoke evidence and a Result Review, but it does not start PC Runner, Codex/local execution, build/test dispatch, source changes, Backlog/ActiveTask changes, automatic accept/reject/close/done, commit, or push."
     : "Worker Dispatch E.1 writes a request record only. Studio does not start PC Runner, Codex/local execution, build/test dispatch, worker processes, Backlog/ActiveTask changes, automatic Result Review generation, commit, or push from this surface.";
 
@@ -372,6 +400,8 @@ function toWorkerDispatchRecord(record = {}) {
     result_review_pending: resultReviewPending,
     result_review_status: resultReviewPending ? "pending" : "linked",
     safe_smoke_completed: safeSmokeCompleted,
+    implementation_pickup_contract: implementationPickup,
+    pickup_contract: dispatch.pickup_contract || null,
     safe_smoke_result_status: text(safeSmokeResult?.status),
     approval_summary: text(approval.approval_summary),
     validation_ok: Boolean(validation.ok),
@@ -409,6 +439,89 @@ function toRecordItem(source = {}, sourceType = "record") {
   };
 }
 
+function toRecordKeepingRecord(record = {}) {
+  const studioRecord = record.studio_record || {};
+  const validation = record.validation || { ok: false, errors: [] };
+  const validationErrors = list(validation.errors);
+  const sourceId = text(record.record_id || studioRecord.record_id);
+  const warning = validation.ok ? "" : text(record.warning_summary, "Studio Record validation failed.");
+  return {
+    kind: "record_item",
+    director_function: "record_keeping",
+    record_id: sourceId,
+    source_type: "studio_record",
+    source_id: sourceId,
+    path: record.path || "",
+    href: record.href || "",
+    updated_at: record.updated_at || "",
+    title: fallbackTitle(studioRecord.title, studioRecord.record_type, sourceId, record.file, "Invalid Studio Record"),
+    status: text(studioRecord.status, validation.ok ? "stored" : "invalid"),
+    summary: validation.ok
+      ? fallbackTitle(studioRecord.summary, studioRecord.outcome?.decision_summary, "기록 요약이 없습니다.")
+      : `Warning: ${warning}`,
+    record_type: text(studioRecord.record_type),
+    source_refs: itemTexts(studioRecord.source_refs),
+    links: studioRecord.links || {},
+    outcome: studioRecord.outcome || {},
+    validation_ok: Boolean(validation.ok),
+    validation_errors: validationErrors,
+    warning_summary: warning,
+    safety_boundary: "Record Keeping records are Director-readable summaries only. Studio does not automatically ingest Director Brain/Obsidian, store raw logs or secrets, dispatch workers, commit, or push from this surface.",
+    internal_details: {
+      file: record.file || "",
+      schema_version: text(studioRecord.schema_version),
+      parse_error: text(record.parse_error),
+      storage_policy: studioRecord.storage_policy || null,
+      validation_errors: validationErrors,
+    },
+    attention_count: validation.ok ? 0 : 1,
+    primary_action: "open_record",
+  };
+}
+
+function toCommitPushRequestRecord(record = {}) {
+  const request = record.commit_push_request || {};
+  const validation = record.validation || { ok: false, errors: [] };
+  const validationErrors = list(validation.errors);
+  const sourceId = text(record.commit_push_request_id || request.commit_push_request_id);
+  const warning = validation.ok ? "" : text(record.warning_summary, "Commit/Push request validation failed.");
+  return {
+    kind: "commit_push_request",
+    director_function: "decision",
+    source_type: "commit_push_request",
+    source_id: sourceId,
+    commit_push_request_id: sourceId,
+    path: record.path || "",
+    href: record.href || "",
+    updated_at: record.updated_at || "",
+    title: fallbackTitle(request.proposed_commit_message, sourceId, "Commit/Push request"),
+    status: text(request.status, validation.ok ? "approval_requested" : "invalid"),
+    request_type: text(request.request_type),
+    summary: validation.ok
+      ? `${requestArraySummary(request.selected_files, "push only")} · ${text(request.proposed_commit_group, "unclassified")}`
+      : `Warning: ${warning}`,
+    selected_files: itemTexts(request.selected_files),
+    excluded_files: itemTexts(request.excluded_files),
+    proposed_commit_message: text(request.proposed_commit_message),
+    proposed_commit_group: text(request.proposed_commit_group),
+    push_requires_separate_approval: request.approval?.push_requires_separate_approval === true,
+    validation_ok: Boolean(validation.ok),
+    validation_errors: validationErrors,
+    warning_summary: warning,
+    safety_boundary: "Commit/Push requests are approval records only. Studio does not run git commit or git push from this layer.",
+    internal_details: {
+      file: record.file || "",
+      schema_version: text(request.schema_version),
+      parse_error: text(record.parse_error),
+      validation_summary: request.validation_summary || null,
+      safety: request.safety || null,
+      validation_errors: validationErrors,
+    },
+    attention_count: validation.ok ? 1 : 1,
+    primary_action: "review_commit_push_request",
+  };
+}
+
 function buildDirectorViews(data = {}) {
   return {
     conversation_records: list(data.meetings).map(toConversationRecord),
@@ -425,9 +538,11 @@ function buildDirectorViews(data = {}) {
     ],
     record_items: [
       ...list(data.decisions).map((item) => toRecordItem(item, "decision")),
+      ...list(data.recordKeepingRecords).map(toRecordKeepingRecord),
       ...list(data.devLogs).map((item) => toRecordItem(item, "devlog")),
       ...list(data.memories).map((item) => toRecordItem(item, "memory")),
     ],
+    commit_push_requests: list(data.commitPushRequests).map(toCommitPushRequestRecord),
   };
 }
 
@@ -440,5 +555,7 @@ module.exports = {
   toResultReviewItem,
   toResultReviewRecord,
   toWorkerDispatchRecord,
+  toRecordKeepingRecord,
+  toCommitPushRequestRecord,
   toRecordItem,
 };

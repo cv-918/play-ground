@@ -11,6 +11,7 @@ const {
   toResultReviewItem,
   toResultReviewRecord,
   toWorkerDispatchRecord,
+  toCommitPushRequestRecord,
   toRecordItem,
 } = require("./studioDirectorViewModels");
 
@@ -355,8 +356,13 @@ function testResultReviewAndAggregate() {
   assert.strictEqual(resultReviewRecordView.recommended_next_action, "director_review");
   assert.strictEqual(resultReviewRecordView.commit_recommendation, "Do not commit before review.");
   assert.strictEqual(resultReviewRecordView.commit_recommendation_advisory_only, true);
+  assert.strictEqual(resultReviewRecordView.verification_gate_status, "passed");
+  assert(resultReviewRecordView.verification_gate_summary.includes("Recorded validation evidence"));
+  assert.strictEqual(resultReviewRecordView.completion_card.advisory_only, true);
+  assert.strictEqual(resultReviewRecordView.completion_card.commit_started, false);
+  assert.strictEqual(resultReviewRecordView.completion_card.push_started, false);
   assert.deepStrictEqual(resultReviewRecordView.evidence_refs, ["_Temp/AIWorkflowStudio/evidence/d1-worker-report.json"]);
-  assert(resultReviewRecordView.safety_boundary.includes("does not accept"));
+  assert(resultReviewRecordView.safety_boundary.includes("decision state/history"));
 
   const workerDispatchRecordView = toWorkerDispatchRecord(workerDispatchRecord());
   assert.strictEqual(workerDispatchRecordView.kind, "worker_dispatch");
@@ -401,6 +407,53 @@ function testResultReviewAndAggregate() {
   assert(safeSmokeDispatchView.safety_boundary.includes("E.2 safe smoke"));
   assert(safeSmokeDispatchView.safety_boundary.includes("does not start PC Runner"));
 
+  const implementationDispatchView = toWorkerDispatchRecord(workerDispatchRecord(validWorkerDispatch({
+    worker_dispatch_id: "WD-20260607-010000-h-implementation-pickup",
+    dispatch_state: "start_requested",
+    dispatch_mode: "implementation_pickup_contract",
+    profile: "implementation",
+    executor: "hermes_bounded_codex",
+    command_id_or_runner_route: "studio.implementation.bounded_codex_cli",
+    pickup_contract: {
+      worker_kind: "bounded_codex_cli",
+      allowed_files_or_areas: ["tools/aiworkflow/studio/"],
+      blocked_files_or_areas: ["PlayGround/"],
+      raw_shell_allowed: false,
+      pc_runner_direct_call_allowed: false,
+      commit_push_allowed: false,
+    },
+  })));
+  assert.strictEqual(implementationDispatchView.implementation_pickup_contract, true);
+  assert.strictEqual(implementationDispatchView.pickup_contract.worker_kind, "bounded_codex_cli");
+  assert(implementationDispatchView.safety_boundary.includes("pickup contract"));
+
+  const commitPushRequestView = toCommitPushRequestRecord({
+    commit_push_request_id: "CPR-20260607-020000-commit-request",
+    file: "CPR-20260607-020000-commit-request.json",
+    path: "_Docs/AIWorkflow/Studio/CommitPushRequests/CPR-20260607-020000-commit-request.json",
+    href: "/file?path=commit-request-test",
+    updated_at: "2026-06-07T02:00:00.000Z",
+    commit_push_request: {
+      commit_push_request_id: "CPR-20260607-020000-commit-request",
+      schema_version: "commit_push_request.v1",
+      request_type: "commit_only",
+      status: "approval_requested",
+      selected_files: ["tools/aiworkflow/studio/studioDirectorViewModels.js"],
+      excluded_files: [],
+      proposed_commit_message: "Update AIWorkflow Studio",
+      proposed_commit_group: "workflow_changes",
+      validation_summary: {},
+      approval: { push_requires_separate_approval: false },
+      safety: { git_changed: false, commit_started: false, push_started: false },
+      created_at: "2026-06-07T02:00:00.000Z",
+      updated_at: "2026-06-07T02:00:00.000Z",
+    },
+    validation: { ok: true, commit_push_request_id: "CPR-20260607-020000-commit-request", errors: [] },
+  });
+  assert.strictEqual(commitPushRequestView.kind, "commit_push_request");
+  assert.strictEqual(commitPushRequestView.request_type, "commit_only");
+  assert.strictEqual(commitPushRequestView.safety_boundary.includes("does not run git commit"), true);
+
   const validationNotRunView = toResultReviewRecord(resultReviewRecord(validResultReview({
     result_review_id: "RR-20260606-120010-validation-not-run",
     summary: {
@@ -434,6 +487,18 @@ function testResultReviewAndAggregate() {
     reviewPackets: [{ id: "RP-1" }],
     devLogs: [{ id: "WL-1", title: "기록" }],
     memories: [{ memory_id: "MEM-1", content: "메모" }],
+    commitPushRequests: [{
+      commit_push_request_id: "CPR-20260607-020000-commit-request",
+      commit_push_request: {
+        commit_push_request_id: "CPR-20260607-020000-commit-request",
+        request_type: "commit_only",
+        status: "approval_requested",
+        selected_files: ["tools/aiworkflow/studio/studioDirectorViewModels.js"],
+        excluded_files: [],
+        proposed_commit_message: "Update AIWorkflow Studio",
+      },
+      validation: { ok: true, errors: [] },
+    }],
   });
 
   assert.deepStrictEqual(Object.keys(views), [
@@ -443,6 +508,7 @@ function testResultReviewAndAggregate() {
     "worker_dispatches",
     "result_review_items",
     "record_items",
+    "commit_push_requests",
   ]);
   assert.strictEqual(views.conversation_records.length, 1);
   assert.strictEqual(views.decision_items.length, 1);
@@ -454,6 +520,7 @@ function testResultReviewAndAggregate() {
   assert.strictEqual(views.result_review_items[0].source_type, "result_review");
   assert.strictEqual(views.result_review_items[1].source_type, "review_packet");
   assert.strictEqual(views.record_items.length, 3);
+  assert.strictEqual(views.commit_push_requests.length, 1);
 }
 
 testConversationRecord();

@@ -1612,9 +1612,27 @@ function directorConsoleHtml() {
           : '<span class="pill">validation evidence</span>';
       const advisory = '<span class="pill">commit advisory only</span>';
       const internal = item.internal_details || {};
+      const decisionPill = item.decision_action
+        ? '<span class="pill">decision ' + esc(optionLabel(item.decision_action)) + '</span>'
+        : '<span class="pill">decision needed</span>';
+      const verificationPill = item.verification_gate_status
+        ? '<span class="pill">verification ' + esc(optionLabel(item.verification_gate_status)) + '</span>'
+        : '';
+      const decisionButtons = item.validation_ok === false ? [] : [
+        button("수락", "result-review-decision", item.result_review_id || item.source_id, "good", 'data-decision-action="accept"'),
+        button("수정 요청", "result-review-decision", item.result_review_id || item.source_id, "warn", 'data-decision-action="request_changes"'),
+        button("반려", "result-review-decision", item.result_review_id || item.source_id, "danger", 'data-decision-action="reject"'),
+        button("보류", "result-review-decision", item.result_review_id || item.source_id, "secondary", 'data-decision-action="defer"'),
+        button("대체됨", "result-review-decision", item.result_review_id || item.source_id, "secondary", 'data-decision-action="supersede"'),
+        button("닫기", "result-review-decision", item.result_review_id || item.source_id, "secondary", 'data-decision-action="close"'),
+        button("기록으로 승격", "record-result-review", item.result_review_id || item.source_id, "secondary")
+      ];
+      const completionCard = item.completion_card || {};
       const evidenceLines = [
         item.execution_request_id ? "execution request: " + item.execution_request_id : "",
         item.worker_dispatch_id ? "worker dispatch: " + item.worker_dispatch_id : "",
+        item.decision_action ? "decision action: " + item.decision_action : "",
+        item.verification_gate_status ? "verification gate: " + item.verification_gate_status + " · " + (item.verification_gate_summary || "") : "",
         internal.file ? "file: " + internal.file : "",
         internal.schema_version ? "schema: " + internal.schema_version : "",
         internal.parse_error ? "parse error: " + internal.parse_error : "",
@@ -1624,7 +1642,7 @@ function directorConsoleHtml() {
       ].filter(Boolean);
       return '<div class="' + className + '">' +
         '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Result Review", 220)) + '</h3>' +
-        [status, validation, advisory].filter(Boolean).join("") + '</div>' +
+        [status, validation, verificationPill, decisionPill, advisory].filter(Boolean).join("") + '</div>' +
         (item.validation_ok === false
           ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Result Review validation failed.", 260)) + '</p></div>'
           : '') +
@@ -1635,6 +1653,15 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>Behavior/model summary</span><span>' + esc(short(item.behavior_or_model_summary || "(none)", 260)) + '</span></div>' +
         '<div class="compact-line"><span>Recommended next action</span><span class="pill">' + esc(optionLabel(item.recommended_next_action || "(none)")) + '</span></div>' +
         '<div class="compact-line"><span>Commit recommendation</span><span>' + esc(short(item.commit_recommendation || "(none)", 260)) + '</span></div>' +
+        '<div class="compact-line"><span>Decision</span><span>' + esc(short(item.decision_summary || optionLabel(item.decision_state || "not_decided"), 260)) + '</span></div>' +
+        '<div class="compact-line"><span>Verification Gate</span><span>' + esc(short(item.verification_gate_summary || "(none)", 260)) + '</span></div>' +
+        '</div>' +
+        '<h4>Completion Card</h4>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>Goal</span><span>' + esc(short(completionCard.goal || item.implementation_summary || "(none)", 260)) + '</span></div>' +
+        '<div class="compact-line"><span>Verification</span><span class="pill">' + esc(optionLabel(completionCard.verification?.status || item.verification_gate_status || "blocked")) + '</span></div>' +
+        '<div class="compact-line"><span>Next action</span><span class="pill">' + esc(optionLabel(completionCard.next_action || item.recommended_next_action || "director_review")) + '</span></div>' +
+        '<div class="compact-line"><span>Commit boundary</span><span>' + esc(short(completionCard.commit_recommendation || item.commit_recommendation || "(none)", 260)) + '</span></div>' +
         '</div>' +
         (item.validation_not_run
           ? '<div class="inline-help"><h3>Validation was not run</h3><p class="summary">' + esc(item.validation_not_run_notice || "No validation command/result evidence was recorded.") + '</p></div>'
@@ -1649,6 +1676,7 @@ function directorConsoleHtml() {
         compactListHtml(item.human_decisions_needed, "No Director decision was recorded as needed.") +
         '<h4>안전 경계</h4>' +
         '<p class="small muted">' + esc(item.safety_boundary || "Result Review does not accept, reject, close, mark done, dispatch workers, commit, or push from this surface.") + '</p>' +
+        actionsHtml(decisionButtons) +
         (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
         '<details class="internal-links"><summary>내부 evidence 상세</summary>' +
         compactListHtml(evidenceLines, "내부 evidence 상세가 없습니다.") +
@@ -1664,7 +1692,10 @@ function directorConsoleHtml() {
       const mode = item.dispatch_mode ? '<span class="pill">' + esc(optionLabel(item.dispatch_mode)) + '</span>' : '';
       const pending = item.result_review_pending ? '<span class="pill">Result Review pending</span>' : '<span class="pill">Result Review linked</span>';
       const internal = item.internal_details || {};
-      const safeSmokeHelp = item.safe_smoke_completed
+      const pickupContract = item.pickup_contract || {};
+      const safeSmokeHelp = item.implementation_pickup_contract
+        ? '<div class="inline-help"><h3>H bounded implementation pickup contract</h3><p class="summary">이 레코드는 Hermes/runner가 bounded Codex CLI worker로 집어갈 데이터 계약입니다. Studio는 raw shell, PC Runner direct call, Codex/local execution, source/data 수정, 자동 close/done, commit/push를 시작하지 않습니다. 실제 worker 수정은 Execution Request의 approved scope 안으로 제한됩니다.</p></div>'
+        : item.safe_smoke_completed
         ? '<div class="inline-help"><h3>E.2 safe smoke result</h3><p class="summary">이 레코드는 allowlisted hermes_safe_smoke 경로가 Studio validation report만 수행하고 evidence와 Result Review를 연결한 상태입니다. Studio는 PC Runner, Codex/local execution, build/test dispatch, source/git 변경, 자동 accept/reject/close/done, commit/push를 시작하지 않습니다.</p></div>'
         : '<div class="inline-help"><h3>E.1 request record only</h3><p class="summary">이 레코드는 worker dispatch 요청을 durable store에 남긴 것입니다. Studio는 PC Runner, Codex/local execution, build/test dispatch, worker process, Backlog/ActiveTask, Result Review 생성, commit/push를 시작하지 않습니다.</p></div>';
       const routeLine = [
@@ -1679,6 +1710,9 @@ function directorConsoleHtml() {
         item.runner_plan_id ? "runner plan: " + item.runner_plan_id : "runner plan: none",
         item.runner_run_id ? "runner run: " + item.runner_run_id : "runner run: none",
         item.result_review_id ? "result review: " + item.result_review_id : "result review: pending",
+        pickupContract.worker_kind ? "worker kind: " + pickupContract.worker_kind : "",
+        asArray(pickupContract.allowed_files_or_areas).length ? "allowed scope: " + asArray(pickupContract.allowed_files_or_areas).join(", ") : "",
+        asArray(pickupContract.blocked_files_or_areas).length ? "blocked scope: " + asArray(pickupContract.blocked_files_or_areas).join(", ") : "",
         internal.parse_error ? "parse error: " + internal.parse_error : "",
         ...asArray(item.evidence_refs).map((ref) => "evidence: " + ref),
         ...asArray(item.validation_errors).map((error) => "validation: " + error),
@@ -1831,6 +1865,18 @@ function directorConsoleHtml() {
       el("diffGitFileSelect").innerHTML = entries.length ? entries.map((entry) =>
         '<label><input type="checkbox" data-git-file="' + esc(entry.path) + '"' + (isWorkflowPath(entry.path) ? ' checked' : '') + '> <span><code>' + esc(entry.status) + '</code> ' + esc(entry.path) + '</span></label>'
       ).join("") : '<p class="muted">커밋할 변경 파일이 없습니다.</p>';
+      const commitRequests = directorViewItems("commit_push_requests");
+      el("diffCommitPushRequests").innerHTML = commitRequests.length ? commitRequests.slice(0, 8).map((item) =>
+        '<div class="item warn"><h3>' + esc(short(item.title || item.commit_push_request_id, 220)) + ' <span class="pill">' + esc(optionLabel(item.request_type || "request")) + '</span></h3>' +
+        '<p class="summary">' + esc(short(item.summary || item.proposed_commit_message || "", 260)) + '</p>' +
+        '<div class="compact-list">' +
+        '<div class="compact-line"><span>선택 파일</span><span class="pill">' + esc(asArray(item.selected_files).length) + '</span></div>' +
+        '<div class="compact-line"><span>push 승인</span><span class="pill">' + esc(item.push_requires_separate_approval ? "별도 승인 필요" : "요청 없음") + '</span></div>' +
+        '</div>' +
+        '<p class="small muted">' + esc(item.safety_boundary || "request only; no git command") + '</p>' +
+        (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank">요청 원본 보기</a></div>' : '') +
+        '</div>'
+      ).join("") : '<div class="empty">아직 Commit/Push 요청 기록이 없습니다.</div>';
       el("diffStatView").textContent = git.diff_stat || "diff 통계가 없습니다.";
     }
     function renderDevLogPage() {
@@ -2506,13 +2552,24 @@ function directorConsoleHtml() {
         alert("커밋할 파일을 선택하세요.");
         return;
       }
-      if (!confirm("선택한 " + files.length + "개 파일만 커밋" + (pushAfter ? "+푸시" : "") + "합니다. 선택하지 않은 변경은 그대로 둡니다.")) return;
-      log(await post("/api/workflow/git/commit", { files, message, push: pushAfter }));
+      if (!confirm("선택한 " + files.length + "개 파일에 대한 커밋" + (pushAfter ? "+푸시" : "") + " 요청 기록을 만들까요?\\n\\nStudio는 git commit/push를 실행하지 않습니다.")) return;
+      log(await post("/api/director/commit-push-requests/actions/create", {
+        files,
+        message,
+        push: pushAfter,
+        director_confirmation: true,
+        approval_summary: "Human Director requested a commit/push boundary record from Studio UI. No git command was run by Studio.",
+      }));
       await refresh();
     }
     async function pushOnly() {
-      if (!confirm("현재 branch를 push할까요? 새 커밋은 만들지 않습니다.")) return;
-      log(await post("/api/workflow/git/push", {}));
+      if (!confirm("현재 branch push 요청 기록을 만들까요? Studio는 git push를 실행하지 않습니다.")) return;
+      log(await post("/api/director/commit-push-requests/actions/create", {
+        request_type: "push_only",
+        files: [],
+        director_confirmation: true,
+        approval_summary: "Human Director requested a push-only boundary record from Studio UI. No git command was run by Studio.",
+      }));
       await refresh();
     }
     function fieldValue(id) {
@@ -3005,7 +3062,7 @@ function directorConsoleHtml() {
           director_confirmation: true,
           confirmation_summary: "Scope and validation plan reviewed in Studio UI.",
           approved_worker_profile: executionRequest?.worker_profile || "documentation",
-          approved_worker_executor: "none",
+          approved_worker_executor: executionRequest?.worker_executor || "none",
         }));
         await refresh();
       }
@@ -3018,16 +3075,60 @@ function directorConsoleHtml() {
         if (!executionRequest || executionRequest.readiness_status !== "ready_for_worker" || executionRequest.preflight_ok !== true) {
           return alert("ready_for_worker 상태와 통과한 readiness preflight가 있어야 dispatch 요청 기록을 만들 수 있습니다.");
         }
-        const profile = executionRequest.worker_profile === "validation" ? "validation" : "documentation";
-        const commandIdOrRoute = profile === "validation" ? "studio.validation.report" : "studio.documentation.review";
-        if (!confirm("이 Execution Request의 Worker Dispatch 요청 기록을 만들까요?\\n\\n바뀌는 것: Worker Dispatch JSON request record 생성\\n바뀌지 않는 것: runner 시작, worker process, PC Runner, Codex/local execution, build/test dispatch, Backlog/task, Result Review 생성, commit/push")) return;
+        const profile = executionRequest.worker_profile === "implementation"
+          ? "implementation"
+          : executionRequest.worker_profile === "validation" ? "validation" : "documentation";
+        const executor = profile === "implementation" ? "hermes_bounded_codex" : "none";
+        const commandIdOrRoute = profile === "implementation"
+          ? "studio.implementation.bounded_codex_cli"
+          : profile === "validation" ? "studio.validation.report" : "studio.documentation.review";
+        if (!confirm("이 Execution Request의 Worker Dispatch 요청 기록을 만들까요?\\n\\n바뀌는 것: Worker Dispatch JSON request record 생성" + (profile === "implementation" ? " 및 bounded implementation pickup contract 기록" : "") + "\\n바뀌지 않는 것: runner 시작, worker process, PC Runner, Codex/local execution, build/test dispatch, Backlog/task, Result Review 생성, commit/push")) return;
         log(await post("/api/director/execution-requests/actions/dispatch-worker", {
           execution_request_id: executionRequestId,
           director_confirmation: true,
           approved_worker_profile: profile,
-          approved_worker_executor: "none",
+          approved_worker_executor: executor,
           approved_command_id_or_route: commandIdOrRoute,
-          approval_summary: "Director approved E.1 Worker Dispatch request-record creation only. No runner, worker process, Result Review generation, source changes, commit, or push.",
+          source_editing_scope_confirmed: profile === "implementation" ? true : undefined,
+          approval_summary: profile === "implementation"
+            ? "Director approved bounded implementation pickup contract only. Future source edits are limited to approved Execution Request scope. No runner, worker process, Result Review generation, commit, or push was started by Studio."
+            : "Director approved E.1 Worker Dispatch request-record creation only. No runner, worker process, Result Review generation, source changes, commit, or push.",
+        }));
+        await refresh();
+      }
+      if (action === "result-review-decision") {
+        const resultReviewId = String(filePath || "").trim();
+        const decisionAction = target.dataset.decisionAction || "";
+        const labels = {
+          accept: "수락",
+          request_changes: "수정 요청",
+          reject: "반려",
+          defer: "보류",
+          supersede: "대체됨",
+          close: "닫기",
+        };
+        if (!resultReviewId || !decisionAction) return alert("Result Review 결정 정보가 없습니다.");
+        const summary = prompt("Result Review 결정 요약을 입력하세요.", labels[decisionAction] || decisionAction);
+        if (!summary) return;
+        if (!confirm("이 Result Review에 '" + (labels[decisionAction] || decisionAction) + "' 결정을 기록할까요?\\n\\n바뀌는 것: Result Review decision/status/history\\n바뀌지 않는 것: worker 재실행, Execution Request close/done, rollback, commit, push")) return;
+        log(await post("/api/director/result-reviews/actions/decision", {
+          result_review_id: resultReviewId,
+          action: decisionAction,
+          director_confirmation: true,
+          decision_summary: summary,
+        }));
+        await refresh();
+      }
+      if (action === "record-result-review") {
+        const resultReviewId = String(filePath || "").trim();
+        if (!resultReviewId) return alert("Result Review ID가 없습니다.");
+        const summary = prompt("기록함에 남길 요약을 입력하세요.", "Result Review outcome recorded for future reference.");
+        if (!summary) return;
+        if (!confirm("이 Result Review 결과를 Record Keeping 기록으로 승격할까요?\\n\\n바뀌는 것: Studio Record JSON 생성\\n바뀌지 않는 것: Director Brain/Obsidian 자동 ingest, worker 실행, source, commit, push")) return;
+        log(await post("/api/director/studio-records/actions/create-from-result-review", {
+          result_review_id: resultReviewId,
+          director_confirmation: true,
+          summary,
         }));
         await refresh();
       }
