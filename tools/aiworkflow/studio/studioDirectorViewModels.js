@@ -4,6 +4,7 @@
 const {
   collectResultReviewEvidenceMetadata,
   evaluateVerificationGate,
+  validateEvidenceMetadata,
 } = require("./studioEvidenceVerification");
 const { buildCompletionCard } = require("./studioCompletionCardBuilder");
 
@@ -92,6 +93,176 @@ function validationNotRun(review = {}) {
   return itemTexts(review.validation_commands).length === 0 && itemTexts(review.validation_results).length === 0;
 }
 
+function executionRequestCue(status, approvalState, validationOk, preflightOk) {
+  if (!validationOk) {
+    return {
+      status_group: "attention",
+      director_status_label: "레코드 점검 필요",
+      next_action_label: "레코드 경고 확인",
+      next_action_detail: "Execution Request JSON이 유효한지 확인한 뒤 다시 준비 상태를 판단합니다.",
+    };
+  }
+  if (status === "ready_for_worker" && approvalState === "approved_for_worker_readiness" && preflightOk === true) {
+    return {
+      status_group: "ready",
+      director_status_label: "작업 준비 완료",
+      next_action_label: "dispatch 요청 기록 검토",
+      next_action_detail: "승인된 범위 안에서 Worker Dispatch request record를 만들지 결정합니다. 실행 시작은 아닙니다.",
+    };
+  }
+  if (status === "ready_for_worker") {
+    return {
+      status_group: "ready",
+      director_status_label: "준비 상태 재점검 필요",
+      next_action_label: "readiness preflight 재확인",
+      next_action_detail: "작업 준비 상태는 표시되어 있지만 preflight 결과가 없거나 통과하지 않았습니다.",
+    };
+  }
+  if (approvalState === "not_approved" || !approvalState) {
+    return {
+      status_group: "waiting_for_director",
+      director_status_label: "승인 판단 대기",
+      next_action_label: "범위와 검증 계획 확인",
+      next_action_detail: "Human Director가 목표, 범위, 하지 않을 일, 검증 계획을 확인해야 합니다.",
+    };
+  }
+  return {
+    status_group: "in_review",
+    director_status_label: "검토 중",
+    next_action_label: "상태 확인",
+    next_action_detail: "현재 승인/준비 상태를 확인하고 필요한 다음 결정을 고릅니다.",
+  };
+}
+
+function workerLifecycleStatus(dispatch = {}, validationOk = true) {
+  if (!validationOk) return "blocked";
+  const statusObject = summaryObject(dispatch.worker_status);
+  const explicit = text(statusObject.status || statusObject.lifecycle_status);
+  const raw = explicit || text(dispatch.dispatch_state);
+  if (["requested", "ready_to_start", "start_requested", "draft"].includes(raw)) return "requested";
+  if (["picked_up", "starting"].includes(raw)) return "picked_up";
+  if (raw === "running") return "running";
+  if (raw === "result_ready") return "result_ready";
+  if (["blocked", "stopped_for_human_gate", "preflight_failed"].includes(raw)) return "blocked";
+  if (["failed", "failed_to_start", "failed_during_run"].includes(raw)) return "failed";
+  if (raw === "superseded") return "superseded";
+  if (["closed", "cancelled"].includes(raw)) return "closed";
+  return raw || "requested";
+}
+
+function latestText(...values) {
+  return values.map((value) => text(value)).filter(Boolean).sort().pop() || "";
+}
+
+function workerStatusGroup(lifecycleStatus, resultReviewPending) {
+  if (["blocked", "failed"].includes(lifecycleStatus)) return "attention";
+  if (lifecycleStatus === "result_ready" && resultReviewPending) return "result_review_needed";
+  if (lifecycleStatus === "result_ready") return "complete";
+  if (["picked_up", "running"].includes(lifecycleStatus)) return "running";
+  if (["closed", "superseded"].includes(lifecycleStatus)) return "closed";
+  return "requested";
+}
+
+function workerCue(lifecycleStatus, resultReviewPending) {
+  if (lifecycleStatus === "failed") {
+    return {
+      director_status_label: "worker 실패 신호",
+      next_action_label: "Result Review 또는 blocker 확인",
+      next_action_detail: "실패 사실과 evidence handoff가 기록되었는지 확인합니다. Studio가 재시도하지 않습니다.",
+    };
+  }
+  if (lifecycleStatus === "blocked") {
+    return {
+      director_status_label: "worker 차단/대기",
+      next_action_label: "blocker 확인",
+      next_action_detail: "무엇 때문에 멈췄는지 확인하고 필요한 결정을 Result Review 또는 Execution Request에서 내립니다.",
+    };
+  }
+  if (lifecycleStatus === "result_ready" && resultReviewPending) {
+    return {
+      director_status_label: "결과 handoff 필요",
+      next_action_label: "Result Review 연결 요구",
+      next_action_detail: "worker 결과가 있으면 evidence refs와 Result Review가 연결되어야 Director가 판단할 수 있습니다.",
+    };
+  }
+  if (["picked_up", "running"].includes(lifecycleStatus)) {
+    return {
+      director_status_label: lifecycleStatus === "running" ? "실행 관찰 중" : "pickup 확인됨",
+      next_action_label: "읽기 전용 상태 관찰",
+      next_action_detail: "heartbeat와 마지막 활동 시간을 확인합니다. Studio는 pause/stop/retry/replan을 제공하지 않습니다.",
+    };
+  }
+  if (["closed", "superseded"].includes(lifecycleStatus)) {
+    return {
+      director_status_label: lifecycleStatus === "superseded" ? "대체됨" : "종료됨",
+      next_action_label: "기록 확인",
+      next_action_detail: "종료 또는 대체 사유가 기록되어 있는지 확인합니다.",
+    };
+  }
+  return {
+    director_status_label: "요청 기록됨",
+    next_action_label: "worker pickup 대기",
+    next_action_detail: "Worker Dispatch request record가 저장되어 있습니다. Studio가 runner나 local execution을 시작한 것은 아닙니다.",
+  };
+}
+
+function resultReviewCue(validationOk, verificationStatus, noValidation, decisionAction) {
+  if (!validationOk) {
+    return {
+      status_group: "attention",
+      director_status_label: "레코드 점검 필요",
+      next_action_label: "레코드 경고 확인",
+      next_action_detail: "Result Review JSON validation 문제를 먼저 확인합니다.",
+    };
+  }
+  if (noValidation || verificationStatus === "skipped") {
+    return {
+      status_group: "skipped_validation",
+      director_status_label: "검증 생략 위험",
+      next_action_label: "검증 생략 수용 여부 결정",
+      next_action_detail: "검증 command/result가 없으므로 완료 판단 전에 위험을 명시적으로 수용하거나 추가 검증을 요청합니다.",
+    };
+  }
+  if (verificationStatus === "fail") {
+    return {
+      status_group: "failed",
+      director_status_label: "검증 실패 신호",
+      next_action_label: "수정 요청 또는 반려 판단",
+      next_action_detail: "검증 실패/major risk 신호가 있어 완료 수락 전에 조치가 필요합니다.",
+    };
+  }
+  if (verificationStatus === "blocked") {
+    return {
+      status_group: "blocked",
+      director_status_label: "판단 차단",
+      next_action_label: "차단 사유 확인",
+      next_action_detail: "필수 evidence 또는 판단 조건이 부족합니다.",
+    };
+  }
+  if (verificationStatus === "warning") {
+    return {
+      status_group: "warning",
+      director_status_label: "주의 후 판단 가능",
+      next_action_label: "우려 수용 또는 수정 요청",
+      next_action_detail: "warning 신호를 확인한 뒤 수락, 수정 요청, 보류 중 하나를 고릅니다.",
+    };
+  }
+  if (decisionAction) {
+    return {
+      status_group: "decided",
+      director_status_label: "결정 기록됨",
+      next_action_label: "기록 승격 또는 다음 단계 확인",
+      next_action_detail: "결정이 기록되었습니다. 필요한 경우 Record Keeping으로 승격합니다.",
+    };
+  }
+  return {
+    status_group: "ready_for_decision",
+    director_status_label: "결과 판단 대기",
+    next_action_label: "수락 / 수정 요청 / 보류 결정",
+    next_action_detail: "구현 요약, 검증 결과, 위험을 보고 Human Director 판단을 기록합니다.",
+  };
+}
+
 function readinessPreflight(approval = {}) {
   const preflight = approval.readiness_preflight || approval.preflight || null;
   return preflight && typeof preflight === "object" && !Array.isArray(preflight) ? preflight : null;
@@ -169,6 +340,7 @@ function toExecutionRequestRecord(record = {}) {
   const preflightWarnings = issueTexts(preflight?.warnings);
   const status = text(request.status, validation.ok ? "director_review" : "invalid");
   const warning = validation.ok ? "" : text(record.warning_summary, "Execution Request validation failed.");
+  const cue = executionRequestCue(status, text(approval.approval_state), Boolean(validation.ok), preflight ? preflight.ok === true : null);
 
   return {
     kind: "execution_request",
@@ -183,6 +355,10 @@ function toExecutionRequestRecord(record = {}) {
     title,
     objective: text(request.objective),
     status,
+    status_group: cue.status_group,
+    director_status_label: cue.director_status_label,
+    next_action_label: cue.next_action_label,
+    next_action_detail: cue.next_action_detail,
     risk_level: text(request.risk_level),
     summary: validation.ok
       ? fallbackTitle(request.objective, firstText(request.scope), title)
@@ -280,11 +456,14 @@ function toResultReviewRecord(record = {}) {
   const decision = review.decision && typeof review.decision === "object" && !Array.isArray(review.decision) ? review.decision : {};
   const decisionHistory = Array.isArray(review.decision_history) ? review.decision_history : [];
   const evidenceCollection = collectResultReviewEvidenceMetadata(review);
+  const evidenceMetadataValidation = validateEvidenceMetadata(evidenceCollection, review);
   const verificationGate = evaluateVerificationGate(evidenceCollection, {
     recordValid: validation.ok,
     resultReviewStatus: text(review.status),
+    review,
   });
   const completionCard = buildCompletionCard(review, verificationGate);
+  const cue = resultReviewCue(Boolean(validation.ok), verificationGate.status, noValidation, text(decision.action));
 
   return {
     kind: "result_review_item",
@@ -299,6 +478,10 @@ function toResultReviewRecord(record = {}) {
     updated_at: record.updated_at || "",
     title,
     status: text(review.status, validation.ok ? "ready_for_director_review" : "invalid"),
+    status_group: cue.status_group,
+    director_status_label: cue.director_status_label,
+    next_action_label: cue.next_action_label,
+    next_action_detail: cue.next_action_detail,
     summary: validation.ok
       ? fallbackTitle(implementationSummary, behaviorSummary, "Result Review summary is empty.")
       : `Warning: ${warning}`,
@@ -310,6 +493,7 @@ function toResultReviewRecord(record = {}) {
     validation_results: validationResults,
     validation_not_run: noValidation,
     validation_not_run_notice: noValidation ? "Validation was not run or no validation evidence was recorded." : "",
+    skipped_validation_risk: noValidation || verificationGate.status === "skipped",
     known_risks: risks,
     human_decisions_needed: decisionsNeeded,
     recommended_next_action: text(review.recommended_next_action),
@@ -321,6 +505,8 @@ function toResultReviewRecord(record = {}) {
     decision_history_count: decisionHistory.length,
     evidence_refs: evidenceRefs,
     evidence_collection: evidenceCollection,
+    evidence_metadata_validation: evidenceMetadataValidation,
+    evidence_metadata_validation_ok: evidenceMetadataValidation.ok,
     verification_gate: verificationGate,
     verification_gate_status: verificationGate.status,
     verification_gate_summary: verificationGate.summary,
@@ -340,6 +526,7 @@ function toResultReviewRecord(record = {}) {
       record_refs: recordRefs,
       decision,
       decision_history: decisionHistory,
+      evidence_metadata_validation: evidenceMetadataValidation,
       validation_errors: validationErrors,
     },
     attention_count: validation.ok ? (decisionsNeeded.length || risks.length || (noValidation ? 1 : 0)) : 1,
@@ -360,6 +547,24 @@ function toWorkerDispatchRecord(record = {}) {
   const warning = validation.ok ? "" : text(record.warning_summary, "Worker Dispatch validation failed.");
   const resultReviewId = text(dispatch.result_review_id);
   const resultReviewPending = !resultReviewId || resultReviewId === "pending";
+  const lifecycleStatus = workerLifecycleStatus(dispatch, Boolean(validation.ok));
+  const workerGroup = workerStatusGroup(lifecycleStatus, resultReviewPending);
+  const cue = workerCue(lifecycleStatus, resultReviewPending);
+  const explicitWorkerStatus = summaryObject(dispatch.worker_status);
+  const workerStatus = {
+    status: lifecycleStatus,
+    raw_dispatch_state: text(dispatch.dispatch_state),
+    heartbeat_at: text(explicitWorkerStatus.heartbeat_at || dispatch.heartbeat_at),
+    last_activity_at: latestText(
+      explicitWorkerStatus.last_activity_at,
+      dispatch.last_activity_at,
+      safeSmokeResult?.completed_at,
+      dispatch.updated_at,
+      dispatch.created_at
+    ),
+    stalled: explicitWorkerStatus.stalled === true,
+    observation_only: true,
+  };
   const title = fallbackTitle(dispatch.status_summary, sourceId, record.file, "Invalid Worker Dispatch");
   const safetyBoundary = implementationPickup
     ? "Worker Dispatch H implementation pickup is a bounded Codex CLI/Hermes pickup contract only. Studio does not expose raw shell execution, start PC Runner/Codex/local execution, mutate source/data, auto-close, commit, or push; future worker edits must stay inside the approved Execution Request scope."
@@ -380,6 +585,11 @@ function toWorkerDispatchRecord(record = {}) {
     title,
     status: text(dispatch.dispatch_state, validation.ok ? "ready_to_start" : "invalid"),
     dispatch_state: text(dispatch.dispatch_state, validation.ok ? "ready_to_start" : "invalid"),
+    status_group: workerGroup,
+    lifecycle_status: lifecycleStatus,
+    director_status_label: cue.director_status_label,
+    next_action_label: cue.next_action_label,
+    next_action_detail: cue.next_action_detail,
     dispatch_mode: text(dispatch.dispatch_mode),
     profile: text(dispatch.profile),
     executor: text(dispatch.executor),
@@ -399,9 +609,20 @@ function toWorkerDispatchRecord(record = {}) {
     result_review_id: resultReviewId,
     result_review_pending: resultReviewPending,
     result_review_status: resultReviewPending ? "pending" : "linked",
+    evidence_handoff_required: resultReviewPending,
+    result_review_handoff_required: resultReviewPending,
+    result_review_handoff_summary: resultReviewPending
+      ? "Worker result must hand off evidence refs and a Result Review before Director completion judgment."
+      : "Result Review is linked for Director review.",
     safe_smoke_completed: safeSmokeCompleted,
     implementation_pickup_contract: implementationPickup,
     pickup_contract: dispatch.pickup_contract || null,
+    worker_status: workerStatus,
+    handoff_requirements: [
+      "Evidence refs must identify worker output or validation evidence before Director completion judgment.",
+      "Result Review must summarize implementation, validation commands/results, risks, and human decisions needed.",
+      "Validation skipped must be recorded as a first-class risk, not hidden in internal details.",
+    ],
     safe_smoke_result_status: text(safeSmokeResult?.status),
     approval_summary: text(approval.approval_summary),
     validation_ok: Boolean(validation.ok),
@@ -416,6 +637,7 @@ function toWorkerDispatchRecord(record = {}) {
       runner_run_id: text(dispatch.runner_run_id),
       preflight_result: preflight || null,
       safe_smoke_result: safeSmokeResult,
+      worker_status: explicitWorkerStatus,
       safety: dispatch.safety || null,
       approval,
       validation_errors: validationErrors,
@@ -496,6 +718,12 @@ function toCommitPushRequestRecord(record = {}) {
     updated_at: record.updated_at || "",
     title: fallbackTitle(request.proposed_commit_message, sourceId, "Commit/Push request"),
     status: text(request.status, validation.ok ? "approval_requested" : "invalid"),
+    status_group: validation.ok ? "waiting_for_director" : "attention",
+    director_status_label: validation.ok ? "Git 승인 판단 대기" : "레코드 점검 필요",
+    next_action_label: validation.ok ? "commit/push 요청 검토" : "레코드 경고 확인",
+    next_action_detail: validation.ok
+      ? "선택 파일과 commit/push 경계를 확인합니다. Studio는 이 레코드에서 git commit 또는 push를 실행하지 않습니다."
+      : "Commit/Push request JSON validation 문제를 먼저 확인합니다.",
     request_type: text(request.request_type),
     summary: validation.ok
       ? `${requestArraySummary(request.selected_files, "push only")} · ${text(request.proposed_commit_group, "unclassified")}`

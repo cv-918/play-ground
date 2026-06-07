@@ -252,6 +252,9 @@ function testExecutionRequestRecord() {
   assert.strictEqual(request.non_goals_summary, "Do not dispatch a worker.");
   assert.strictEqual(request.validation_plan_summary, "Run read-only API tests.");
   assert.strictEqual(request.approval_state, "not_approved");
+  assert.strictEqual(request.status_group, "waiting_for_director");
+  assert.strictEqual(request.director_status_label, "승인 판단 대기");
+  assert.strictEqual(request.next_action_label, "범위와 검증 계획 확인");
   assert.strictEqual(request.worker_profile, "documentation");
   assert.strictEqual(request.worker_executor, "none");
   assert.strictEqual(request.dispatch_mode, "not_dispatchable");
@@ -282,6 +285,8 @@ function testReadyExecutionRequestRecord() {
   })));
 
   assert.strictEqual(request.readiness_status, "ready_for_worker");
+  assert.strictEqual(request.status_group, "ready");
+  assert.strictEqual(request.next_action_label, "dispatch 요청 기록 검토");
   assert.strictEqual(request.approval_state, "approved_for_worker_readiness");
   assert.strictEqual(request.preflight_ok, true);
   assert.strictEqual(request.preflight_warnings.length, 1);
@@ -356,7 +361,10 @@ function testResultReviewAndAggregate() {
   assert.strictEqual(resultReviewRecordView.recommended_next_action, "director_review");
   assert.strictEqual(resultReviewRecordView.commit_recommendation, "Do not commit before review.");
   assert.strictEqual(resultReviewRecordView.commit_recommendation_advisory_only, true);
-  assert.strictEqual(resultReviewRecordView.verification_gate_status, "passed");
+  assert.strictEqual(resultReviewRecordView.verification_gate_status, "pass");
+  assert.strictEqual(resultReviewRecordView.evidence_metadata_validation_ok, true);
+  assert.strictEqual(resultReviewRecordView.status_group, "ready_for_decision");
+  assert.strictEqual(resultReviewRecordView.next_action_label, "수락 / 수정 요청 / 보류 결정");
   assert(resultReviewRecordView.verification_gate_summary.includes("Recorded validation evidence"));
   assert.strictEqual(resultReviewRecordView.completion_card.advisory_only, true);
   assert.strictEqual(resultReviewRecordView.completion_card.commit_started, false);
@@ -370,6 +378,10 @@ function testResultReviewAndAggregate() {
   assert.strictEqual(workerDispatchRecordView.worker_dispatch_id, "WD-20260606-130000-e1-worker-dispatch-test");
   assert.strictEqual(workerDispatchRecordView.execution_request_id, "ER-20260606-110000-d1-execution-request");
   assert.strictEqual(workerDispatchRecordView.dispatch_state, "ready_to_start");
+  assert.strictEqual(workerDispatchRecordView.lifecycle_status, "requested");
+  assert.strictEqual(workerDispatchRecordView.status_group, "requested");
+  assert.strictEqual(workerDispatchRecordView.next_action_label, "worker pickup 대기");
+  assert.strictEqual(workerDispatchRecordView.worker_status.status, "requested");
   assert.strictEqual(workerDispatchRecordView.dispatch_mode, "dispatch_request_record_only");
   assert.strictEqual(workerDispatchRecordView.profile, "documentation");
   assert.strictEqual(workerDispatchRecordView.executor, "none");
@@ -399,6 +411,8 @@ function testResultReviewAndAggregate() {
     },
   })));
   assert.strictEqual(safeSmokeDispatchView.dispatch_state, "result_ready");
+  assert.strictEqual(safeSmokeDispatchView.lifecycle_status, "result_ready");
+  assert.strictEqual(safeSmokeDispatchView.status_group, "complete");
   assert.strictEqual(safeSmokeDispatchView.dispatch_mode, "safe_smoke_run");
   assert.strictEqual(safeSmokeDispatchView.executor, "hermes_safe_smoke");
   assert.strictEqual(safeSmokeDispatchView.result_review_pending, false);
@@ -424,6 +438,8 @@ function testResultReviewAndAggregate() {
     },
   })));
   assert.strictEqual(implementationDispatchView.implementation_pickup_contract, true);
+  assert.strictEqual(implementationDispatchView.lifecycle_status, "requested");
+  assert.strictEqual(implementationDispatchView.result_review_handoff_required, true);
   assert.strictEqual(implementationDispatchView.pickup_contract.worker_kind, "bounded_codex_cli");
   assert(implementationDispatchView.safety_boundary.includes("pickup contract"));
 
@@ -465,6 +481,9 @@ function testResultReviewAndAggregate() {
     validation_results: [],
   })));
   assert.strictEqual(validationNotRunView.validation_not_run, true);
+  assert.strictEqual(validationNotRunView.skipped_validation_risk, true);
+  assert.strictEqual(validationNotRunView.verification_gate_status, "skipped");
+  assert.strictEqual(validationNotRunView.status_group, "skipped_validation");
   assert(validationNotRunView.validation_not_run_notice.includes("Validation was not run"));
 
   const review = toResultReviewItem({

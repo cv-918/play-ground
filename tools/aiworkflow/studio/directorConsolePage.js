@@ -342,6 +342,16 @@ function directorConsoleHtml() {
           </section>
           <section class="grid">
             <div class="card">
+              <div class="section-title"><h2>알림 대기</h2><span class="pill">records only</span></div>
+              <div id="homeNotifications" class="list"></div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>런타임 관찰</h2><span class="pill">read-only</span></div>
+              <div id="homeRuntimeObservation" class="compact-list"></div>
+            </div>
+          </section>
+          <section class="grid">
+            <div class="card">
               <div class="section-title"><h2>새 스튜디오 대화</h2><span class="pill">Director Brief</span></div>
               <p class="summary">세부 실행 항목을 바로 만들기보다, 먼저 “무엇을 더 좋게 만들지”를 안건으로 정리하고 필요한 자문과 실행 요청 후보로 이어갑니다.</p>
               <div class="row">
@@ -498,6 +508,9 @@ function directorConsoleHtml() {
       runStatus: "",
       workSearch: "",
       workDepartment: "",
+      workStatus: "",
+      evidenceSearch: "",
+      evidenceStatus: "",
       knowledgeSearch: "",
       proposalDecision: "",
       memoryStatus: "",
@@ -840,7 +853,7 @@ function directorConsoleHtml() {
         brief:"요약", proposal:"제안", objection:"반론", question:"질문", answer:"답변", synthesis:"종합", decision_note:"결정 메모",
         director_review:"감독자 검토", proposed:"제안됨", draft:"초안", approved_for_tasking:"작업화 승인", follow_up_tasking:"후속 작업화",
         changes_requested:"수정 요청됨", ready_for_worker:"worker 준비됨", superseded:"대체됨", cancelled:"취소됨", dispatched:"dispatch 기록됨", result_ready:"결과 준비됨", closed:"종료됨",
-        ready_to_start:"시작 요청 가능", start_requested:"시작 요청됨", starting:"시작 중", running:"실행 중", stopped_for_human_gate:"사람 확인 대기", failed_to_start:"시작 실패", failed_during_run:"실행 중 실패", preflight_failed:"preflight 실패",
+        requested:"요청됨", picked_up:"pickup 확인됨", ready_to_start:"요청 기록됨", start_requested:"요청 기록됨", starting:"시작 중", running:"실행 중", blocked:"차단됨", stopped_for_human_gate:"사람 확인 대기", failed_to_start:"시작 실패", failed_during_run:"실행 중 실패", preflight_failed:"preflight 실패", stalled:"멈춤 의심",
         not_approved:"미승인", approved_for_draft_storage:"초안 저장 승인", approved_for_worker_readiness:"worker 준비 승인", revoked:"승인 취소", invalid:"유효하지 않음",
         analysis:"분석", none:"없음", codex_cli:"Codex CLI", local_cli:"Local CLI", build_test_runner:"Build/Test Runner", pc_runner:"PC Runner",
         not_dispatchable:"dispatch 불가", future_dispatch_required:"향후 dispatch 승인 필요", dispatch_request_record_only:"dispatch 요청 기록만",
@@ -850,6 +863,9 @@ function directorConsoleHtml() {
         approved:"승인됨", rejected:"반려됨",
         active:"활성", available:"사용 가능", planned:"예정", stored:"저장됨", example:"예시", triage_needed:"정리 필요", canon_area:"공식 설정 영역", index:"목차",
         valid_output:"보고서 준비됨", output_ready:"보고서 준비됨", needs_evidence:"검증 자료 필요", needs_director_decision:"감독자 결정 필요", completed:"실행 완료", failed:"실패",
+        waiting_for_director:"승인 판단 대기", ready:"작업 준비 완료", result_review_needed:"결과 handoff 필요", attention:"주의 필요", skipped_validation:"검증 생략 위험", ready_for_decision:"결과 판단 대기", decided:"결정 기록됨",
+        pass:"통과", fail:"실패", warning:"주의", skipped:"검증 생략",
+        stage_change:"단계 변경", approval_wait:"승인 대기", blocker:"차단 알림", completion:"완료 알림",
         completion_review_required:"완료 검토 필요", done_or_commit_decision:"완료/커밋 결정 필요", ready_for_implementation:"구현 준비 완료", in_progress:"진행 중", todo:"대기",
         low:"낮음", medium:"중간", high:"높음", critical:"치명적",
         validation:"검증", implementation:"구현", documentation:"문서", data:"데이터", automation:"자동화", review_task:"리뷰",
@@ -967,6 +983,9 @@ function directorConsoleHtml() {
       el("runStatusFilter").value = filters.runStatus;
       el("workSearch").value = filters.workSearch;
       el("workDepartmentFilter").value = filters.workDepartment;
+      el("workStatusGroupFilter").value = filters.workStatus;
+      el("evidenceSearch").value = filters.evidenceSearch;
+      el("evidenceStatusFilter").value = filters.evidenceStatus;
       el("knowledgeSearch").value = filters.knowledgeSearch;
       el("proposalDecisionFilter").value = filters.proposalDecision;
       el("memoryStatusFilter").value = filters.memoryStatus;
@@ -1515,12 +1534,14 @@ function directorConsoleHtml() {
       const page = options.page || "home";
       const title = item.title || item.source_id || "Untitled";
       const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
+      const directorStatus = item.director_status_label ? '<span class="pill">' + esc(item.director_status_label) + '</span>' : '';
       const attention = item.attention_count ? '<span class="pill">확인 ' + esc(item.attention_count) + '</span>' : '';
       const source = item.source_type ? '<span class="pill">' + esc(optionLabel(item.source_type)) + '</span>' : '';
       const actionLabel = options.actionLabel || "관련 화면 보기";
       return '<div class="item director-view-card" data-director-view-kind="' + esc(item.kind || "") + '">' +
-        '<div class="section-title"><h3>' + esc(short(title, 220)) + '</h3>' + [status, attention, source].filter(Boolean).join("") + '</div>' +
+        '<div class="section-title"><h3>' + esc(short(title, 220)) + '</h3>' + [directorStatus, status, attention, source].filter(Boolean).join("") + '</div>' +
         '<p class="summary">' + esc(short(item.summary || "요약이 없습니다.", 260)) + '</p>' +
+        (item.next_action_label ? '<p class="small"><strong>다음 행동:</strong> ' + esc(item.next_action_label) + '</p>' : '') +
         '<p class="small muted">' + esc(item.updated_at || "시간 정보 없음") + (item.source_id ? ' · ' + esc(item.source_id) : '') + '</p>' +
         '<div class="row"><button class="secondary" data-nav-jump="' + esc(page) + '">' + esc(actionLabel) + '</button>' +
         (item.href ? '<a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a>' : '') + '</div></div>';
@@ -1532,6 +1553,7 @@ function directorConsoleHtml() {
           ? "item good execution-request-card"
           : "item execution-request-card";
       const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
+      const directorStatus = item.director_status_label ? '<span class="pill">' + esc(item.director_status_label) + '</span>' : '';
       const risk = item.risk_level ? '<span class="pill">위험도 ' + esc(optionLabel(item.risk_level)) + '</span>' : '';
       const validation = item.validation_ok === false
         ? '<span class="pill">검증 경고</span>'
@@ -1571,12 +1593,13 @@ function directorConsoleHtml() {
       ].filter(Boolean);
       return '<div class="' + className + '">' +
         '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Execution Request", 220)) + '</h3>' +
-        [status, risk, validation, preflightPill].filter(Boolean).join("") + '</div>' +
+        [directorStatus, status, risk, validation, preflightPill].filter(Boolean).join("") + '</div>' +
         (item.validation_ok === false
           ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Execution Request validation failed.", 260)) + '</p></div>'
           : '') +
         '<h4>목표</h4>' +
         '<p class="summary">' + esc(short(item.objective || item.summary || "목표 요약이 없습니다.", 320)) + '</p>' +
+        '<div class="inline-help"><h3>다음 판단</h3><p class="summary">' + esc(item.next_action_label || "상태 확인") + '</p><p class="small muted">' + esc(item.next_action_detail || "필요한 다음 판단을 확인합니다.") + '</p></div>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>출처</span><span class="pill">' + esc(sourceLine) + '</span></div>' +
         '<div class="compact-line"><span>범위</span><span>' + esc(short(item.scope_summary || "(없음)", 220)) + '</span></div>' +
@@ -1605,6 +1628,7 @@ function directorConsoleHtml() {
           ? "item warn result-review-card"
           : "item good result-review-card";
       const status = item.status ? '<span class="pill">' + esc(optionLabel(item.status)) + '</span>' : '';
+      const directorStatus = item.director_status_label ? '<span class="pill">' + esc(item.director_status_label) + '</span>' : '';
       const validation = item.validation_ok === false
         ? '<span class="pill">레코드 검증 경고</span>'
         : item.validation_not_run
@@ -1642,12 +1666,13 @@ function directorConsoleHtml() {
       ].filter(Boolean);
       return '<div class="' + className + '">' +
         '<div class="section-title"><h3>' + esc(short(item.title || item.source_id || "Result Review", 220)) + '</h3>' +
-        [status, validation, verificationPill, decisionPill, advisory].filter(Boolean).join("") + '</div>' +
+        [directorStatus, status, validation, verificationPill, decisionPill, advisory].filter(Boolean).join("") + '</div>' +
         (item.validation_ok === false
           ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Result Review validation failed.", 260)) + '</p></div>'
           : '') +
         '<h4>Implementation summary</h4>' +
         '<p class="summary">' + esc(short(item.implementation_summary || item.summary || "구현 요약이 없습니다.", 340)) + '</p>' +
+        '<div class="inline-help"><h3>다음 판단</h3><p class="summary">' + esc(item.next_action_label || "결과 판단") + '</p><p class="small muted">' + esc(item.next_action_detail || "수락, 수정 요청, 보류 중 하나를 고릅니다.") + '</p></div>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>Files changed</span><span>' + esc(short(item.files_changed_summary || "(none)", 220)) + '</span></div>' +
         '<div class="compact-line"><span>Behavior/model summary</span><span>' + esc(short(item.behavior_or_model_summary || "(none)", 260)) + '</span></div>' +
@@ -1655,6 +1680,7 @@ function directorConsoleHtml() {
         '<div class="compact-line"><span>Commit recommendation</span><span>' + esc(short(item.commit_recommendation || "(none)", 260)) + '</span></div>' +
         '<div class="compact-line"><span>Decision</span><span>' + esc(short(item.decision_summary || optionLabel(item.decision_state || "not_decided"), 260)) + '</span></div>' +
         '<div class="compact-line"><span>Verification Gate</span><span>' + esc(short(item.verification_gate_summary || "(none)", 260)) + '</span></div>' +
+        '<div class="compact-line"><span>Evidence Metadata</span><span class="pill">' + esc(item.evidence_metadata_validation_ok === false ? "점검 필요" : "facts recorded") + '</span></div>' +
         '</div>' +
         '<h4>Completion Card</h4>' +
         '<div class="compact-list">' +
@@ -1689,6 +1715,8 @@ function directorConsoleHtml() {
           ? "item warn worker-dispatch-card"
           : "item good worker-dispatch-card";
       const status = item.dispatch_state ? '<span class="pill">' + esc(optionLabel(item.dispatch_state)) + '</span>' : '';
+      const lifecycle = item.lifecycle_status ? '<span class="pill">' + esc(optionLabel(item.lifecycle_status)) + '</span>' : '';
+      const directorStatus = item.director_status_label ? '<span class="pill">' + esc(item.director_status_label) + '</span>' : '';
       const mode = item.dispatch_mode ? '<span class="pill">' + esc(optionLabel(item.dispatch_mode)) + '</span>' : '';
       const pending = item.result_review_pending ? '<span class="pill">Result Review pending</span>' : '<span class="pill">Result Review linked</span>';
       const internal = item.internal_details || {};
@@ -1719,19 +1747,24 @@ function directorConsoleHtml() {
       ].filter(Boolean);
       return '<div class="' + className + '">' +
         '<div class="section-title"><h3>' + esc(short(item.worker_dispatch_id || item.source_id || "Worker Dispatch", 220)) + '</h3>' +
-        [status, mode, pending].filter(Boolean).join("") + '</div>' +
+        [directorStatus, lifecycle, status, mode, pending].filter(Boolean).join("") + '</div>' +
         (item.validation_ok === false
           ? '<div class="inline-help"><h3>레코드 경고</h3><p class="summary">' + esc(short(item.warning_summary || "Worker Dispatch validation failed.", 260)) + '</p></div>'
           : '') +
         '<p class="summary">' + esc(short(item.status_summary || item.summary || "Worker Dispatch request record.", 340)) + '</p>' +
+        '<div class="inline-help"><h3>다음 행동</h3><p class="summary">' + esc(item.next_action_label || "상태 관찰") + '</p><p class="small muted">' + esc(item.next_action_detail || "Studio는 이 화면에서 실행 제어를 하지 않습니다.") + '</p></div>' +
         '<div class="compact-list">' +
         '<div class="compact-line"><span>Execution Request</span><span class="pill">' + esc(item.execution_request_id || "(none)") + '</span></div>' +
+        '<div class="compact-line"><span>Worker status</span><span class="pill">' + esc(optionLabel(item.worker_status?.status || item.lifecycle_status || "requested")) + '</span></div>' +
+        '<div class="compact-line"><span>Last activity</span><span>' + esc(item.worker_status?.last_activity_at || "(none)") + '</span></div>' +
         '<div class="compact-line"><span>Dispatch route</span><span>' + esc(routeLine) + '</span></div>' +
         '<div class="compact-line"><span>Preflight</span><span>' + esc(item.preflight_summary || "Dispatch guard result not recorded.") + '</span></div>' +
         '<div class="compact-line"><span>Result Review</span><span class="pill">' + esc(item.result_review_pending ? "pending" : item.result_review_id) + '</span></div>' +
         '<div class="compact-line"><span>Approval</span><span>' + esc(short(item.approval_summary || "(none)", 240)) + '</span></div>' +
         '</div>' +
         safeSmokeHelp +
+        '<h4>Evidence / Result Review handoff</h4>' +
+        compactListHtml(item.handoff_requirements, "handoff requirements not recorded.") +
         '<h4>안전 경계</h4>' +
         '<p class="small muted">' + esc(item.safety_boundary || "Worker Dispatch record only.") + '</p>' +
         (item.href ? '<div class="row"><a href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer">원본 보기</a></div>' : '') +
@@ -1838,6 +1871,20 @@ function directorConsoleHtml() {
       if (core.runner?.runner_run_id) {
         items.push({ when: core.runner.updated_at || state.generated_at, kind: "실행 기록", title: core.runner.runner_run_id, detail: core.runner.stop_reason || core.runner.status, page: "evidence" });
       }
+      asArray(state.notification_records).forEach((notification) => items.push({
+        when: notification.updated_at || state.generated_at,
+        kind: "알림",
+        title: notification.title || notification.source_id,
+        detail: notification.summary || notification.event_type,
+        page: notification.recommended_surface || "home",
+      }));
+      asArray(state.runtime_observation?.all_observations).forEach((observation) => items.push({
+        when: observation.last_activity_at || observation.updated_at || state.generated_at,
+        kind: "런타임 관찰",
+        title: observation.source_id,
+        detail: (observation.director_status_label || observation.status) + " · " + (observation.summary || ""),
+        page: observation.observation_type === "worker_session" ? "work" : "timeline",
+      }));
       state.recent_staff_runs.forEach((run) => items.push({ when: run.updated_at, kind: "직원 보고서", title: run.output_id || run.role_run_id, detail: staffName(run.agent_id) + " · " + optionLabel(run.output_status || run.status), page: "runs" }));
       state.meetings.forEach((meeting) => items.push({ when: meeting.updated_at || meeting.created_at || "", kind: "자문", title: meeting.meeting_id, detail: meeting.topic || meeting.status, page: "sessions" }));
       state.work_orders.forEach((wo) => items.push({ when: wo.updated_at || wo.created_at || "", kind: "실행 요청", title: wo.objective || wo.work_order_id, detail: wo.status, page: "work" }));
@@ -1967,6 +2014,31 @@ function directorConsoleHtml() {
           '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
         ).join("") +
         (evidenceLinks ? '<div class="row">' + evidenceLinks + '</div>' : '<p class="small muted">검증 보고서나 완료 카드가 생기면 여기에서 바로 열 수 있습니다.</p>');
+      const notifications = asArray(state.notification_records).slice(0, 5);
+      el("homeNotifications").innerHTML = notifications.length ? notifications.map((item) =>
+        '<div class="item ' + (item.severity === "warning" || item.severity === "high" ? "warn" : "good") + '">' +
+        '<div class="section-title"><h3>' + esc(short(item.title || item.source_id, 160)) + '</h3><span class="pill">' + esc(optionLabel(item.event_type)) + '</span></div>' +
+        '<p class="summary">' + esc(short(item.summary, 220)) + '</p>' +
+        '<p class="small muted">' + esc(item.director_action || "Studio에서 확인합니다.") + '</p>' +
+        '<p class="small muted">' + esc(item.channel_boundary || "외부 채널은 알림만 전달합니다.") + '</p>' +
+        '</div>'
+      ).join("") : '<div class="item good"><h3>보낼 알림 없음</h3><p class="summary">blocker, approval wait, completion notice가 생기면 여기에서 먼저 확인됩니다.</p></div>';
+      const runtime = state.runtime_observation || {};
+      const runtimeLines = [
+        ["실행 관찰", (runtime.running_count ?? 0) + "개"],
+        ["멈춤 의심", (runtime.stalled_count ?? 0) + "개"],
+        ["차단/실패", (runtime.blocked_count ?? 0) + "개"],
+        ["완료 신호", (runtime.completed_count ?? 0) + "개"],
+      ];
+      const runtimePreview = asArray(runtime.all_observations).slice(0, 4).map((item) =>
+        '<div class="compact-line"><span>' + esc(short(item.director_status_label || item.source_id, 120)) + '</span><span class="pill">' + esc(optionLabel(item.status || item.status_group || "")) + '</span></div>'
+      ).join("");
+      el("homeRuntimeObservation").innerHTML =
+        runtimeLines.map(([label, value]) =>
+          '<div class="compact-line"><span>' + esc(label) + '</span><span class="pill">' + esc(value) + '</span></div>'
+        ).join("") +
+        (runtimePreview || '<p class="small muted">관찰할 runtime/session record가 없습니다.</p>') +
+        '<p class="small muted">읽기 전용 관찰만 합니다. pause/stop/retry/replan endpoint는 없습니다.</p>';
       const decisionQueueCards = normalizedDecisionCards().slice(0, 6);
       const queue = decisionQueueCards.length ? [] : buildDirectorDecisionItems({ includeGit: false }).slice(0, 6);
       const queueCount = decisionQueueCards.length || queue.length;
@@ -2156,13 +2228,15 @@ function directorConsoleHtml() {
         internalLinksHtml([link("채택 후보 원본", m.href)]) + '</div>'
       ).join("") : '<p class="muted">아직 채택 후보가 없습니다. 왼쪽 직원 보고서에서 채택 후보로 넘기기를 누르면 여기에 나타납니다.</p>') + sampleRecordsHtml("숨긴 테스트/샘플 채택 후보", state.materializations);
       const visibleExecutionRequests = directorViewItems("execution_requests").filter((item) =>
-        includesText([item.source_id, item.source_ref, item.title, item.summary, item.status, item.risk_level, item.approval_state].join(" "), filters.workSearch)
+        (!filters.workStatus || item.status_group === filters.workStatus || item.readiness_status === filters.workStatus) &&
+        includesText([item.source_id, item.source_ref, item.title, item.summary, item.status, item.status_group, item.director_status_label, item.next_action_label, item.next_action_detail, item.risk_level, item.approval_state].join(" "), filters.workSearch)
       );
       el("workorders").innerHTML = visibleExecutionRequests.length
         ? visibleExecutionRequests.map((item) => renderExecutionRequestCard(item)).join("")
         : renderEmpty("저장된 Execution Request 레코드가 없습니다. C.2 화면은 _Docs/AIWorkflow/Studio/ExecutionRequests/의 읽기 전용 레코드만 표시합니다.");
       const visibleWorkerDispatches = directorViewItems("worker_dispatches").filter((item) =>
-        includesText([item.worker_dispatch_id, item.execution_request_id, item.status_summary, item.dispatch_state, item.dispatch_mode, item.profile, item.executor, item.command_id_or_runner_route].join(" "), filters.workSearch)
+        (!filters.workStatus || item.status_group === filters.workStatus || item.lifecycle_status === filters.workStatus) &&
+        includesText([item.worker_dispatch_id, item.execution_request_id, item.status_summary, item.dispatch_state, item.lifecycle_status, item.status_group, item.director_status_label, item.next_action_label, item.next_action_detail, item.dispatch_mode, item.profile, item.executor, item.command_id_or_runner_route].join(" "), filters.workSearch)
       );
       el("workerDispatches").innerHTML = visibleWorkerDispatches.length
         ? visibleWorkerDispatches.map((item) => renderWorkerDispatchCard(item)).join("")
@@ -2412,7 +2486,27 @@ function directorConsoleHtml() {
             '<li>' + esc(translateConcernDetail(warning)) + '</li>'
           ).join("") + warningMore + '</ul></div>' : "");
       }
-      const resultReviewItems = directorViewItems("result_review_items");
+      const resultReviewItems = directorViewItems("result_review_items").filter((item) => {
+        const matchesStatus = !filters.evidenceStatus
+          || item.status_group === filters.evidenceStatus
+          || item.verification_gate_status === filters.evidenceStatus
+          || (filters.evidenceStatus === "skipped" && item.status_group === "skipped_validation");
+        const matchesSearch = includesText([
+          item.source_id,
+          item.title,
+          item.summary,
+          item.implementation_summary,
+          item.behavior_or_model_summary,
+          item.verification_gate_status,
+          item.verification_gate_summary,
+          item.director_status_label,
+          item.next_action_label,
+          item.next_action_detail,
+          asArray(item.known_risks).join(" "),
+          asArray(item.validation_results).join(" "),
+        ].join(" "), filters.evidenceSearch);
+        return matchesStatus && matchesSearch;
+      });
       el("packets").innerHTML = resultReviewItems.length
         ? '<div class="list">' + resultReviewItems.map((item) =>
           item.kind === "result_review_item" && item.source_type === "result_review"
@@ -3286,7 +3380,8 @@ function directorConsoleHtml() {
         const scope = clearTarget.dataset.clearFilter;
         if (scope === "staff") { filters.staffSearch = ""; filters.staffDepartment = ""; }
         if (scope === "runs") { filters.runSearch = ""; filters.runStatus = ""; }
-        if (scope === "work") { filters.workSearch = ""; filters.workDepartment = ""; }
+        if (scope === "work") { filters.workSearch = ""; filters.workDepartment = ""; filters.workStatus = ""; }
+        if (scope === "evidence") { filters.evidenceSearch = ""; filters.evidenceStatus = ""; }
         if (scope === "meetings") { filters.meetingSearch = ""; filters.meetingStatus = "__active__"; }
         render();
       }
@@ -3389,6 +3484,9 @@ function directorConsoleHtml() {
     bindFilter("runStatusFilter", "runStatus");
     bindFilter("workSearch", "workSearch");
     bindFilter("workDepartmentFilter", "workDepartment");
+    bindFilter("workStatusGroupFilter", "workStatus");
+    bindFilter("evidenceSearch", "evidenceSearch");
+    bindFilter("evidenceStatusFilter", "evidenceStatus");
     bindFilter("knowledgeSearch", "knowledgeSearch");
     bindFilter("proposalDecisionFilter", "proposalDecision");
     bindFilter("memoryStatusFilter", "memoryStatus");

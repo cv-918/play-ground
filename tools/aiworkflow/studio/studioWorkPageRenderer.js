@@ -35,6 +35,16 @@ function renderWorkPageShell() {
           <div class="control-bar">
             <input id="workSearch" placeholder="실행 요청, 담당 영역 검색">
             <select id="workDepartmentFilter"></select>
+            <select id="workStatusGroupFilter">
+              <option value="">모든 상태</option>
+              <option value="waiting_for_director">승인 판단 대기</option>
+              <option value="ready">작업 준비 완료</option>
+              <option value="requested">worker pickup 대기</option>
+              <option value="running">실행 관찰 중</option>
+              <option value="result_review_needed">결과 handoff 필요</option>
+              <option value="attention">주의 필요</option>
+              <option value="closed">종료/대체됨</option>
+            </select>
             <button class="secondary" data-clear-filter="work">필터 해제</button>
           </div>
           <div class="card">
