@@ -83,6 +83,20 @@ This slice defines:
 - Local WorkerDispatchEvidence store location and E.2 safe smoke runner for
   the single allowlisted `validation` / `hermes_safe_smoke` /
   `studio.validation.report` route
+- Controlled implementation-worker pickup contract for bounded Hermes/Codex
+  workers. Implementation dispatch remains a request/pickup record path only:
+  it requires an approved ExecutionRequest scope, records lifecycle/evidence
+  handoff state, and does not start PC Runner, shell, Codex, commits, pushes,
+  Backlog tasks, or automatic ResultReview decisions from Studio.
+- Read-only RuntimeObservation model that derives requested, picked_up,
+  running, result_ready/completed, blocked, failed, closed, superseded, and
+  stalled state from existing records and heartbeat/last-activity metadata.
+  It exposes no pause, stop, retry, replan, approve, close, commit, or push
+  mutation endpoint.
+- Studio NotificationRecord model for stage changes, blockers, approval waits,
+  skipped-validation risk, stalled runtime observations, and completion/review
+  waits. Discord, OpenClaw, mobile, and voice are delivery candidates only;
+  Studio Human Director decisions remain the governance authority.
 - Local Proposal/Decision store, validation, and canon handoff planner
 - Local MemoryRecord store, validation, canon view, and retrieval query tool
 - Deterministic Knowledge Transition Plan for Proposal, Decision, and
