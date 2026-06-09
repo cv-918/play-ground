@@ -327,7 +327,7 @@ function createPlanningMeetingApiHandler(deps = {}) {
       const runJson = staffRun.json || {};
       let turnResult = null;
       const canAppendTurn = slash(relativePath).startsWith("_Docs/AIWorkflow/Studio/MeetingSessions/");
-      const turnContent = staffRun.ok ? extractMeetingTurnFromStaffRun(repoRoot, runJson) : "";
+      const turnContent = staffRun.ok ? extractMeetingTurnFromStaffRun(repoRoot, runJson, workOrder.conversation_controller_decision) : "";
       if (canAppendTurn && turnContent) {
         const turnContentPath = await writeTempStudioText(repoRoot, "meeting-agent-turn", turnContent);
         const meetingScript = repoPath(repoRoot, "tools/aiworkflow/studio_meeting_runtime.ps1");

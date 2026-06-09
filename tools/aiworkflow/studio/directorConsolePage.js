@@ -140,10 +140,10 @@ function directorConsoleHtml() {
     .staff-choice input { margin-top:3px; }
     .staff-choice strong, .staff-choice span { display:block; overflow-wrap:anywhere; }
     .staff-choice span { color:var(--muted); font-size:12px; margin-top:2px; }
-    .consultation-layout { display:grid; grid-template-columns:minmax(280px, .75fr) minmax(420px, 1.35fr) minmax(280px, .8fr); gap:14px; align-items:start; }
-    .consultation-sidebar, .consultation-context { display:grid; gap:12px; min-width:0; }
+    .consultation-layout { display:grid; grid-template-columns:minmax(260px, .7fr) minmax(620px, 1.8fr); gap:14px; align-items:start; }
+    .consultation-sidebar { display:grid; gap:12px; min-width:0; }
     .consultation-main { min-width:0; }
-    .consultation-chat-panel { display:grid; grid-template-rows:auto minmax(360px, 58vh) auto; gap:12px; min-height:640px; }
+    .consultation-chat-panel { display:grid; grid-template-rows:auto minmax(440px, 68vh) auto; gap:12px; min-height:760px; }
     .session-list { display:grid; gap:8px; margin-top:10px; max-height:44vh; overflow:auto; padding-right:4px; }
     .session-card { width:100%; display:block; text-align:left; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:10px; }
     .session-card:hover { background:#2a3240; }
@@ -172,15 +172,21 @@ function directorConsoleHtml() {
     .chat-message.failed .chat-bubble { border-left:4px solid var(--danger); }
     .chat-speaker { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:5px; font-weight:700; }
     .chat-content { white-space:pre-wrap; overflow-wrap:anywhere; }
-    .chat-composer { border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.025); }
+    .chat-composer { position:relative; border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.025); }
     .composer-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:8px; }
     .composer-bar select { min-height:36px; max-width:280px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:#121722; color:var(--text); }
+    .active-session-info { display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
+    .active-session-info .info-chip { display:inline-flex; gap:4px; align-items:center; border:1px solid var(--line); border-radius:999px; padding:2px 8px; background:rgba(255,255,255,.04); color:var(--muted); }
+    .active-session-info .info-chip strong { color:var(--text); font-weight:700; }
+    .slash-command-menu { position:absolute; left:10px; right:10px; bottom:calc(100% + 10px); z-index:20; display:grid; gap:6px; max-height:min(300px, 42vh); overflow:auto; padding:8px; border:1px solid #5276c8; border-radius:8px; background:#151d2a; box-shadow:0 14px 34px rgba(0,0,0,.42); }
+    .slash-command-option { display:grid; gap:2px; text-align:left; color:var(--text); background:transparent; border:1px solid transparent; border-radius:7px; padding:7px 9px; }
+    .slash-command-option:hover, .slash-command-option.active { border-color:#5276c8; background:#24324a; }
+    .slash-command-option small { color:var(--muted); }
     .button-stack { display:grid; gap:8px; }
     .button-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     [hidden], .hidden { display:none !important; }
     @media (max-width: 1180px) {
-      .consultation-layout { grid-template-columns:minmax(260px, .8fr) minmax(420px, 1.2fr); }
-      .consultation-context { grid-column:1 / -1; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); }
+      .consultation-layout { grid-template-columns:minmax(220px, .65fr) minmax(520px, 1.6fr); }
     }
     @media (max-width: 820px) {
       .consultation-layout { grid-template-columns:1fr; }
@@ -417,16 +423,25 @@ function directorConsoleHtml() {
     let activePage = "home";
     let latestGoalPreview = null;
     let activeConsultationMeetingId = "";
+    let consultationNewDraftMode = false;
+    let consultationSlashActiveIndex = -1;
     const consultationActionState = {
       meeting_id: "",
       status: "",
       title: "",
       detail: "",
     };
+    const CONSULTATION_SLASH_COMMANDS = [
+      { command:"/ask", insert:"/ask ", title:"AI 직원에게 질문", detail:"내 질문을 기록하고 선택한 AI 직원 응답을 요청합니다." },
+      { command:"/summon", insert:"/summon ", title:"추가 의견 받기", detail:"선택한 대화에 AI 직원 발언을 추가합니다." },
+      { command:"/decision", insert:"/decision", title:"판단 후보 만들기", detail:"자문 내용을 Decisions 후보로 넘깁니다. 실행은 하지 않습니다." },
+      { command:"/work", insert:"/work", title:"실행 요청 후보 만들기", detail:"자문 내용을 Execution Request 후보로 정리합니다. 구현은 하지 않습니다." },
+      { command:"/close", insert:"/close", title:"대화 닫기", detail:"대화 기록 상태만 종료로 바꿉니다." },
+    ];
     const PAGES = {
       home: ["Dashboard", "지금 필요한 판단과 다섯 가지 Director 흐름만 먼저 봅니다."],
       toolbox: ["Admin Tools", "관리자/디버그용 유지보수 도구를 필요할 때만 확인합니다."],
-      sessions: ["Conversation", "Conversation: 자연어로 의도, 문제, 선택지를 구체화합니다."],
+      sessions: ["Conversation", "자연어로 의도, 문제, 선택지를 구체화하고 대화 기록과 후보만 만듭니다. 소스 수정, 실행, commit/push는 별도 승인 없이는 하지 않습니다."],
       project: ["Project / Organization", "현재 프로젝트와 실행 경계를 확인합니다."],
       inbox: ["Decisions", "Decisions: 승인, 수정, 보류, 반려가 필요한 판단만 봅니다."],
       departments: ["Project / Organization", "부서별 책임, 직원, 검토 기준을 확인합니다."],
@@ -993,10 +1008,7 @@ function directorConsoleHtml() {
       if (!turn || !turn.content) return "아직 기록된 발언이 없습니다.";
       return staffName(turn.speaker_id || "") + " · " + optionLabel(turn.turn_type || "brief") + ": " + short(turn.content, 150);
     }
-    function meetingCountLine(label, count, emptyLabel) {
-      const value = Number(count || 0);
-      return value ? label + " " + value + "개" : emptyLabel;
-    }
+
     function consultationMeetings() {
       return operationalRecords(state?.meetings || []).filter((meeting) =>
         meetingMatchesStatusFilter(meeting) &&
@@ -1004,6 +1016,7 @@ function directorConsoleHtml() {
       );
     }
     function currentConsultationMeeting() {
+      if (consultationNewDraftMode) return null;
       const meetings = consultationMeetings();
       if (!meetings.length) {
         activeConsultationMeetingId = "";
@@ -1084,7 +1097,7 @@ function directorConsoleHtml() {
       const meetings = consultationMeetings();
       el("meetingCount").textContent = String(meetings.length);
       if (!meetings.length) {
-        target.innerHTML = renderEmpty("아직 대화 기록이 없습니다. 채팅창에 첫 메시지를 보내거나 왼쪽에서 주제를 정해 시작하세요.");
+        target.innerHTML = renderEmpty("아직 대화 기록이 없습니다. 가운데 채팅창에 첫 메시지를 보내면 새 대화가 시작됩니다.");
         return;
       }
       target.innerHTML = meetings.map((meeting) => {
@@ -1098,68 +1111,37 @@ function directorConsoleHtml() {
           '</button>';
       }).join("");
     }
-    function renderConsultationContext(meeting) {
-      const summary = el("consultationSessionSummary");
-      const participants = el("consultationParticipants");
-      const questions = el("consultationOpenQuestions");
-      const candidates = el("consultationCandidates");
-      const safety = el("consultationSafety");
-      if (!summary || !participants || !questions || !candidates || !safety) return;
-      if (!meeting) {
-        const empty = renderEmpty("대화를 선택하면 여기에 내용이 표시됩니다.");
-        summary.innerHTML = empty;
-        participants.innerHTML = empty;
-        questions.innerHTML = empty;
-        candidates.innerHTML = empty;
-        safety.innerHTML = empty;
-        return;
-      }
-      summary.innerHTML =
-        '<div class="item"><h3>' + esc(short(meeting.topic || meeting.meeting_id, 140)) + '</h3>' +
-        '<p class="small muted">상태: ' + esc(optionLabel(meeting.status || "")) + ' · 종류: ' + esc(optionLabel(meeting.meeting_type || "")) + '</p>' +
-        '<p class="summary">' + esc(meetingNextActionText(meeting)) + '</p></div>';
-      participants.innerHTML = asArray(meeting.participants).length
-        ? listHtml(asArray(meeting.participants).map((agentId) => staffName(agentId) + " · " + meetingSpeakerRole(agentId)))
-        : renderEmpty("참가 직원이 기록되지 않았습니다.");
-      questions.innerHTML = asArray(meeting.unresolved_questions).length
-        ? listHtml(meeting.unresolved_questions)
-        : '<div class="item good"><p class="summary">현재 남은 질문은 없습니다.</p></div>';
-      candidates.innerHTML =
-        '<div class="compact-list">' +
-        '<div class="compact-line"><span>판단할 제안</span><span class="pill">' + esc(asArray(meeting.proposals).length) + '</span></div>' +
-        '<div class="compact-line"><span>후속 업무 후보</span><span class="pill">' + esc(asArray(meeting.follow_up_workorders).length || meeting.follow_up_count || 0) + '</span></div>' +
-        '<div class="compact-line"><span>남은 질문</span><span class="pill">' + esc(asArray(meeting.unresolved_questions).length || meeting.unresolved_count || 0) + '</span></div>' +
-        '</div>';
-      safety.innerHTML = listHtml([
-        "자문 발언은 MeetingSession 기록만 바꿉니다.",
-        "방향 판단/실행 요청 후보는 후보 기록만 만들고 자동 구현하지 않습니다.",
-        "소스 변경, 실행 완료 처리, commit, push는 이 화면에서 자동 실행하지 않습니다.",
-        "Hermes Gateway는 이번 화면에서 활성화하지 않습니다.",
-      ]);
-    }
     function renderConsultationChat() {
       const meeting = currentConsultationMeeting();
       const title = el("activeConsultationTitle");
       const status = el("consultationStatus");
+      const info = el("activeConsultationInfo");
       const badge = el("activeConsultationBadge");
       const timeline = el("consultationChatTimeline");
       const staffSelect = el("consultationStaffSelect");
-      if (!title || !status || !badge || !timeline || !staffSelect) return;
+      if (!title || !status || !info || !badge || !timeline || !staffSelect) return;
+      title.textContent = "대화하기";
       if (!meeting) {
-        title.textContent = "바로 대화를 시작하세요";
         status.textContent = "아래 채팅창에 첫 메시지를 보내면 Studio 대화 기록이 자동으로 만들어집니다.";
+        info.className = "muted small active-session-info";
+        info.innerHTML = '<span class="info-chip"><strong>모드</strong> ' + esc(consultationNewDraftMode ? "새 대화 작성 중" : "새 대화 대기 중") + '</span>';
         badge.textContent = "대기";
         staffSelect.innerHTML = '<option value="">AI 직원 없음</option>';
         const pendingAction = consultationActionState.meeting_id === "__new__"
           ? chatMessageHtml("pending", "Studio", "실행 중", (consultationActionState.title || "대화 기록을 만드는 중입니다.") + (consultationActionState.detail ? "\\n" + consultationActionState.detail : ""))
           : "";
-        timeline.innerHTML = chatMessageHtml("system", "Studio", "안내", "대화가 아직 없습니다. 채팅창에 자연어로 말하면 바로 시작됩니다.") + pendingAction;
-        renderConsultationContext(null);
+        timeline.innerHTML = chatMessageHtml("system", "Studio", "안내", "새 대화를 시작하려면 메시지를 입력하고 Enter를 누르세요. Shift+Enter는 줄바꿈입니다.") + pendingAction;
         return;
       }
       const meetingId = meeting.meeting_id || meeting.id || "";
-      title.textContent = meeting.topic || meetingId;
-      status.textContent = meetingId + " · " + optionLabel(meeting.status || "") + " · " + meetingNextActionText(meeting);
+      status.textContent = "이어가기 모드입니다. 가운데 채팅창에 기존 로그가 표시됩니다.";
+      info.className = "muted small active-session-info";
+      info.innerHTML = [
+        ["제목", short(meeting.topic || meetingId, 80)],
+        ["ID", meetingId],
+        ["상태", optionLabel(meeting.status || "")],
+        ["다음", meetingNextActionText(meeting)],
+      ].map(([label, value]) => '<span class="info-chip"><strong>' + esc(label) + '</strong> ' + esc(value || "-") + '</span>').join("");
       badge.textContent = optionLabel(meeting.status || "draft");
       const staffOptions = consultationStaffOptions(meeting);
       staffSelect.innerHTML = staffOptions.length
@@ -1170,12 +1152,11 @@ function directorConsoleHtml() {
         "system",
         "Studio",
         "세션 안내",
-        "이 대화는 자문 기록입니다. AI 직원 발언을 받아 방향을 좁히고, 필요하면 방향 판단이나 업무 후보로 넘기세요."
+        "이 대화는 자문 기록입니다. AI 직원 발언을 받아 방향을 좁히고, 필요하면 /decision 또는 /work로 후보 기록을 만들 수 있습니다."
       );
-      const empty = turns.length ? "" : chatMessageHtml("system", "Studio", "대기", "아직 발언이 없습니다. 먼저 내 의견을 보내거나 AI 직원 의견을 받아보세요.");
+      const empty = turns.length ? "" : chatMessageHtml("system", "Studio", "대기", "아직 발언이 없습니다. 먼저 내 의견을 보내거나 ‘추가 의견 받기’로 AI 직원 의견을 받아보세요.");
       timeline.innerHTML = systemIntro + turns.map(turnChatHtml).join("") + empty + consultationActionHtml(meeting);
       timeline.scrollTop = timeline.scrollHeight;
-      renderConsultationContext(meeting);
     }
     function renderConsultationPage() {
       renderConsultationSessionList();
@@ -1237,6 +1218,76 @@ function directorConsoleHtml() {
       if (!["ask", "summon", "work", "decision", "close"].includes(command)) return raw;
       return raw.slice(splitAt).trim();
     }
+    function selectedSlashCommandPrefix(value) {
+      const text = String(value || "");
+      if (!text.startsWith("/")) return "";
+      return text.split(/\s/u)[0].toLowerCase();
+    }
+    function renderConsultationSlashMenu() {
+      const menu = el("consultationSlashMenu");
+      const composer = el("consultationComposer");
+      if (!menu || !composer) return;
+      const prefix = selectedSlashCommandPrefix(composer.value || "");
+      if (!prefix) {
+        consultationSlashActiveIndex = -1;
+        menu.hidden = true;
+        menu.innerHTML = "";
+        return;
+      }
+      const commands = CONSULTATION_SLASH_COMMANDS.filter((item) => item.command.startsWith(prefix));
+      if (!commands.length) {
+        consultationSlashActiveIndex = -1;
+        menu.innerHTML = '<button type="button" class="slash-command-option" disabled><strong>알 수 없는 명령</strong><small>사용 가능: /ask, /summon, /decision, /work, /close</small></button>';
+        menu.hidden = false;
+        return;
+      }
+      if (consultationSlashActiveIndex >= commands.length) consultationSlashActiveIndex = -1;
+      menu.innerHTML = commands.map((item, index) =>
+        '<button type="button" class="slash-command-option ' + (index === consultationSlashActiveIndex ? "active" : "") + '" data-slash-index="' + esc(index) + '" data-slash-insert="' + esc(item.insert) + '">' +
+        '<strong>' + esc(item.command) + ' · ' + esc(item.title) + '</strong>' +
+        '<small>' + esc(item.detail) + '</small>' +
+        '</button>'
+      ).join("");
+      menu.hidden = false;
+    }
+    function hideConsultationSlashMenu() {
+      const menu = el("consultationSlashMenu");
+      consultationSlashActiveIndex = -1;
+      if (menu) menu.hidden = true;
+    }
+    function consultationSlashMenuOpen() {
+      const menu = el("consultationSlashMenu");
+      return !!menu && !menu.hidden;
+    }
+    function consultationVisibleSlashCommands() {
+      const composer = el("consultationComposer");
+      const prefix = selectedSlashCommandPrefix(composer?.value || "");
+      if (!prefix) return [];
+      return CONSULTATION_SLASH_COMMANDS.filter((item) => item.command.startsWith(prefix));
+    }
+    function insertConsultationSlashCommand(insertText) {
+      const composer = el("consultationComposer");
+      if (!composer) return;
+      composer.value = insertText || "";
+      composer.focus();
+      hideConsultationSlashMenu();
+    }
+    function moveConsultationSlashSelection(delta) {
+      const commands = consultationVisibleSlashCommands();
+      if (!commands.length) return;
+      if (consultationSlashActiveIndex < 0) {
+        consultationSlashActiveIndex = delta > 0 ? 0 : commands.length - 1;
+      } else {
+        consultationSlashActiveIndex = (consultationSlashActiveIndex + delta + commands.length) % commands.length;
+      }
+      renderConsultationSlashMenu();
+    }
+    function insertActiveConsultationSlashCommand() {
+      const commands = consultationVisibleSlashCommands();
+      if (!commands.length || consultationSlashActiveIndex < 0) return false;
+      insertConsultationSlashCommand(commands[consultationSlashActiveIndex].insert);
+      return true;
+    }
     function consultationTopicFromMessage(content) {
       const cleaned = stripLeadingConsultationCommand(content);
       return short(cleaned || "자유 대화", 80);
@@ -1259,6 +1310,7 @@ function directorConsoleHtml() {
       });
       const createdMeetingId = extractCreatedMeetingId(result);
       if (createdMeetingId) activeConsultationMeetingId = createdMeetingId;
+      consultationNewDraftMode = false;
       consultationActionState.status = "done";
       consultationActionState.title = "대화 기록 생성 완료";
       consultationActionState.detail = createdMeetingId || "첫 대화 기록을 만들었습니다.";
@@ -2568,6 +2620,7 @@ function directorConsoleHtml() {
         const createdMeetingId = extractCreatedMeetingId(result);
         if (createdMeetingId) {
           activeConsultationMeetingId = createdMeetingId;
+          consultationNewDraftMode = false;
         }
         consultationActionState.status = "done";
         consultationActionState.title = "대화 기록 생성 완료";
@@ -2724,8 +2777,9 @@ function directorConsoleHtml() {
             reasoning: "high",
           });
           if (!quiet) log({ question: turnResult, response: agentResult });
-          markConsultationActionDone("AI 직원 의견 추가 완료", "질문과 " + agentLabel + " 답변을 자문 타임라인에 추가했습니다.");
           await refresh();
+          markConsultationActionDone("AI 직원 의견 추가 완료", "질문과 " + agentLabel + " 답변을 자문 타임라인에 추가했습니다.");
+          renderConsultationChat();
         } catch (error) {
           setConsultationStatus(meeting, "failed", "/ask 처리 실패", error?.message || String(error));
         }
@@ -2746,8 +2800,9 @@ function directorConsoleHtml() {
           reasoning: "high",
         });
         if (!quiet) log(result);
-        markConsultationActionDone("AI 직원 발언 완료", (agentId ? staffName(agentId) : "AI 직원") + " 발언을 자문 타임라인에 추가했습니다.");
         await refresh();
+        markConsultationActionDone("AI 직원 발언 완료", (agentId ? staffName(agentId) : "AI 직원") + " 발언을 자문 타임라인에 추가했습니다.");
+        renderConsultationChat();
         return true;
       }
       if (command === "/work") {
@@ -2826,25 +2881,9 @@ function directorConsoleHtml() {
           content,
         });
         el("consultationComposer").value = "";
-        if (!meeting.path) {
-          consultationActionState.status = "done";
-          consultationActionState.title = "내 발언 기록 완료";
-          consultationActionState.detail = "대화 기록에만 저장했습니다. source, task, git은 바꾸지 않았습니다.";
-          await refresh();
-          return;
-        }
-        const agentId = fieldValue("consultationStaffSelect") || asArray(meeting.participants)[0] || "";
-        const agentLabel = agentId ? staffName(agentId) : "AI 직원";
-        setConsultationStatus(meeting, "running", agentLabel + "에게 의견을 요청하는 중입니다.", "대화 기록에만 직원 발언을 추가합니다. source, task, git은 바꾸지 않습니다.");
-        const agentResult = await post("/api/studio/meeting/agent-turn-run", {
-          path: meeting.path,
-          agent_id: agentId,
-          model: "gpt-5.5",
-          reasoning: "high",
-        });
         consultationActionState.status = "done";
-        consultationActionState.title = "AI 직원 의견 추가 완료";
-        consultationActionState.detail = "내 발언과 " + agentLabel + " 의견을 대화 타임라인에 추가했습니다.";
+        consultationActionState.title = "내 발언 기록 완료";
+        consultationActionState.detail = "AI 직원 응답은 자동 생성하지 않습니다. 필요하면 ‘추가 의견 받기’ 또는 /ask, /summon을 사용하세요.";
         await refresh();
       } catch (error) {
         const meeting = currentConsultationMeeting();
@@ -2857,7 +2896,19 @@ function directorConsoleHtml() {
       if (!meeting.path) return alert("이 대화 기록은 저장된 경로가 없어 AI 직원 발언을 요청할 수 없습니다.");
       const agentId = fieldValue("consultationStaffSelect");
       try {
-        await runMeetingSlashCommand(meeting.meeting_id || meeting.id, "/summon " + agentId, { skipConfirm: true, quiet: true, agent_id: agentId });
+        const agentLabel = agentId ? staffName(agentId) : "AI 직원";
+        setConsultationStatus(meeting, "running", agentLabel + "에게 의견을 요청하는 중입니다.", "완료되면 자문 타임라인에 발언이 추가됩니다.");
+        await post("/api/studio/meeting/agent-turn-run", {
+          path: meeting.path,
+          agent_id: agentId,
+          model: "gpt-5.5",
+          reasoning: "high",
+        });
+        await refresh();
+        consultationActionState.status = "done";
+        consultationActionState.title = "AI 직원 발언 완료";
+        consultationActionState.detail = agentLabel + " 발언을 자문 타임라인에 추가했습니다.";
+        renderConsultationChat();
       } catch (error) {
         setConsultationStatus(meeting, "failed", "AI 직원 발언 요청 실패", error?.message || String(error));
       }
@@ -3327,6 +3378,11 @@ function directorConsoleHtml() {
         applyMeetingPreset(meetingPresetTarget.dataset.meetingPreset);
         return;
       }
+      const slashTarget = event.target.closest("button[data-slash-insert]");
+      if (slashTarget) {
+        insertConsultationSlashCommand(slashTarget.dataset.slashInsert || "");
+        return;
+      }
       const navTarget = event.target.closest("button[data-nav], button[data-nav-jump]");
       if (navTarget) {
         setPage(navTarget.dataset.nav || navTarget.dataset.navJump);
@@ -3335,8 +3391,22 @@ function directorConsoleHtml() {
       const consultationSessionTarget = event.target.closest("button[data-consultation-session]");
       if (consultationSessionTarget) {
         activeConsultationMeetingId = consultationSessionTarget.dataset.consultationSession || "";
+        consultationNewDraftMode = false;
         consultationActionState.status = "";
         renderConsultationPage();
+        const composer = el("consultationComposer");
+        if (composer) composer.focus();
+        return;
+      }
+      const consultationNewTarget = event.target.closest("button[data-consultation-new]");
+      if (consultationNewTarget) {
+        activeConsultationMeetingId = "";
+        consultationNewDraftMode = true;
+        consultationActionState.status = "";
+        const composer = el("consultationComposer");
+        if (composer) composer.value = "";
+        renderConsultationPage();
+        if (composer) composer.focus();
         return;
       }
       const departmentTarget = event.target.closest("button[data-filter-department]");
@@ -3358,6 +3428,7 @@ function directorConsoleHtml() {
       const meetingTurnTarget = event.target.closest("button[data-meeting-turn]");
       if (meetingTurnTarget) {
         activeConsultationMeetingId = meetingTurnTarget.dataset.meetingTurn;
+        consultationNewDraftMode = false;
         setPage("sessions");
         renderConsultationPage();
         el("consultationComposer").focus();
@@ -3414,20 +3485,41 @@ function directorConsoleHtml() {
         el("goalCreateConstraints").value = buttonEl.dataset.goalConstraints || "";
       });
     });
-    el("goalPlanSubmit").addEventListener("click", () => previewDirectorGoalPlan().catch(log));
-    el("goalStoreSubmit").addEventListener("click", () => storeDirectorGoalPlan().catch(log));
-    el("goalBundleSubmit").addEventListener("click", () => createDirectorGoalBundle().catch(log));
-    el("consultationSend").addEventListener("click", () => sendConsultationMessage().catch(log));
-    el("consultationAskStaff").addEventListener("click", () => requestConsultationAgentTurn().catch(log));
-    el("consultationDecision").addEventListener("click", () => createConsultationDecisionCandidate().catch(log));
-    el("consultationWork").addEventListener("click", () => createConsultationWorkCandidate().catch(log));
-    el("consultationClose").addEventListener("click", () => closeConsultationSession().catch(log));
-    el("consultationComposer").addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    el("goalPlanSubmit")?.addEventListener("click", () => previewDirectorGoalPlan().catch(log));
+    el("goalStoreSubmit")?.addEventListener("click", () => storeDirectorGoalPlan().catch(log));
+    el("goalBundleSubmit")?.addEventListener("click", () => createDirectorGoalBundle().catch(log));
+    el("consultationSend")?.addEventListener("click", () => sendConsultationMessage().catch(log));
+    el("consultationAskStaff")?.addEventListener("click", () => requestConsultationAgentTurn().catch(log));
+    el("consultationDecision")?.addEventListener("click", () => createConsultationDecisionCandidate().catch(log));
+    el("consultationWork")?.addEventListener("click", () => createConsultationWorkCandidate().catch(log));
+    el("consultationClose")?.addEventListener("click", () => closeConsultationSession().catch(log));
+    el("consultationComposer")?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideConsultationSlashMenu();
+        return;
+      }
+      if (consultationSlashMenuOpen() && event.key === "ArrowDown") {
         event.preventDefault();
+        moveConsultationSlashSelection(1);
+        return;
+      }
+      if (consultationSlashMenuOpen() && event.key === "ArrowUp") {
+        event.preventDefault();
+        moveConsultationSlashSelection(-1);
+        return;
+      }
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        if (consultationSlashMenuOpen()) {
+          insertActiveConsultationSlashCommand();
+          return;
+        }
+        hideConsultationSlashMenu();
         sendConsultationMessage().catch(log);
       }
     });
+    el("consultationComposer")?.addEventListener("input", () => renderConsultationSlashMenu());
+    el("consultationComposer")?.addEventListener("blur", () => setTimeout(hideConsultationSlashMenu, 120));
     const homeGitSelectWorkflow = el("gitSelectWorkflow");
     if (homeGitSelectWorkflow) {
       homeGitSelectWorkflow.addEventListener("click", () => {

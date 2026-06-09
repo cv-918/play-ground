@@ -380,6 +380,7 @@ async function getMeetings(repoRoot) {
       accepted_directions: stringList(json.accepted_directions),
       rejected_directions: stringList(json.rejected_directions),
       follow_up_workorders: stringList(json.follow_up_workorders),
+      discussion_turns: Array.isArray(json.discussion_turns) ? json.discussion_turns : [],
       participant_count: Array.isArray(json.participants) ? json.participants.length : 0,
       turn_count: Array.isArray(json.discussion_turns) ? json.discussion_turns.length : 0,
       last_turn: Array.isArray(json.discussion_turns) && json.discussion_turns.length ? {

@@ -4,6 +4,11 @@
 const fs = require("fs");
 const path = require("path");
 const { getStaffDirectory } = require("./studioDataService");
+const {
+  interpretConversationTurn,
+  buildConversationControllerInstruction,
+  guardStaffTurnForConversationController,
+} = require("./studioConversationController");
 
 function shortText(value, max = 180) {
   const clean = String(value || "").replace(/\s+/g, " ").trim();
@@ -624,6 +629,9 @@ function buildDecisionFromMeetingPayload(meeting = {}, decisionType = "approve")
   const unresolved = stringList(meeting.unresolved_questions);
   const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
   const lastTurn = turns[turns.length - 1] || null;
+  const lastHumanTurn = [...turns].reverse().find((turn) => String(turn?.speaker_id || "") === "human_director") || null;
+  const lastHumanText = String(lastHumanTurn?.content || "").trim();
+  const asksForNextStep = /다음\s*단계|넘겨|넘기|테스트용|studio\s*테스트|스튜디오\s*테스트|진행/.test(lastHumanText);
   const fallbackAcceptedScope = [
     `자문 주제 검토: ${topic}`,
     lastTurn?.content ? `마지막 발언 참고: ${shortText(lastTurn.content, 240)}` : "",
@@ -662,22 +670,35 @@ function buildMeetingAgentTurnWorkOrder(meeting = {}, agentId = "") {
   const constraints = stringList(meeting.known_constraints);
   const proposals = stringList(meeting.proposals);
   const objections = stringList(meeting.objections);
-  const unresolved = stringList(meeting.unresolved_questions);
+  const turns = Array.isArray(meeting.discussion_turns) ? meeting.discussion_turns : [];
+  const lastHumanTurn = [...turns].reverse().find((turn) => String(turn?.speaker_id || "") === "human_director") || null;
+  const lastHumanText = String(lastHumanTurn?.content || "").trim();
+  const controllerDecision = interpretConversationTurn({ meeting });
+  const controllerInstruction = buildConversationControllerInstruction(controllerDecision);
+  const unresolved = controllerDecision.supersedes_previous_questions ? [] : stringList(meeting.unresolved_questions);
   const objective = `Prepare a meeting contribution from ${speaker}: ${topic}`;
   return {
     work_order_id: makeStudioId("WO", objective),
     source_type: "meeting_agent_turn",
     source_ref: meeting.meeting_id || "meeting",
+    conversation_controller_decision: controllerDecision,
     objective,
     department_id: inferDepartmentFromAgents([speaker]),
     assigned_agents: [speaker],
     scope: [
       `Contribute to the meeting topic: ${topic}`,
-      "Write the meeting contribution in natural Korean for the Human Director.",
-      ...agenda.map((item) => `Address agenda: ${item}`),
-      ...proposals.map((item) => `React to proposal: ${item}`),
-      ...objections.map((item) => `Respect objection: ${item}`),
-      ...unresolved.map((item) => `Clarify unresolved question: ${item}`),
+      ...(lastHumanText ? [`Latest Human Director turn to prioritize: ${lastHumanText}`] : []),
+      ...(controllerInstruction ? [controllerInstruction] : []),
+      "Always answer the latest Human Director turn first. Older topic details and earlier open questions are context only; do not repeat them if the latest turn changes intent.",
+      "Write like a helpful coworker in a real conversation with the Human Director, not like a technical report.",
+      "Use warm, concise Korean. Prefer 1-3 short paragraphs or bullets. Avoid schema-like labels unless the Director explicitly asks for formal analysis.",
+      "Ask at most one follow-up question at a time. If more information would help, narrow it to the single easiest thing the Director can answer now.",
+      "Avoid report/review phrases such as '확정 판단', '추정', '현재 패치', '범위 제안', '검토 범위', '제공해 주세요'. Prefer coworker phrases like '우선 하나만 볼게요', '지금 제일 헷갈리는 문구 하나만 알려줘도 돼요', '그 정도면 다음 판단은 할 수 있어요'.",
+      "Studio Conversation is text-only right now. Do not ask the Director to attach, upload, show, send, or provide screenshots/images/files. If visual context is needed, ask them for one visible section name, button label, layout problem, or odd text in words.",
+      ...agenda.map((item) => `Address agenda briefly: ${item}`),
+      ...proposals.map((item) => `React to proposal conversationally: ${item}`),
+      ...objections.map((item) => `Respect objection without over-explaining: ${item}`),
+      ...unresolved.map((item) => `Clarify unresolved question naturally: ${item}`),
     ],
     non_goals: [
       "Do not finalize meeting decisions.",
@@ -775,26 +796,68 @@ function resolveWorkOrderAgent(workOrder, requestedAgentId = "") {
   return "executive_producer";
 }
 
-function extractMeetingTurnFromStaffRun(repoRoot, runResult) {
+function hasInternalMeetingTerm(text) {
+  const value = String(text || "");
+  return /Human Director|StaffContextPacket|ScopeRecommendation|RiskList|ApprovalItems|OpenQuestions|MeetingTurn|WorkOrder|Payload/i.test(value);
+}
+
+function sanitizeMeetingTurnText(text) {
+  return String(text || "")
+    .replace(/Human Director/gi, "디렉터")
+    .replace(/ScopeRecommendation/gi, "개선 방향")
+    .replace(/StaffContextPacket/gi, "현재 맥락")
+    .replace(/RiskList/gi, "주의할 점")
+    .replace(/현재 패치/g, "지금 화면")
+    .replace(/확정 판단/g, "판단")
+    .replace(/추정/g, "가늠")
+    .replace(/제공해 주세요/g, "알려주세요")
+    .trim();
+}
+
+function meetingTurnQuestionText(questions) {
+  const questionTexts = Array.isArray(questions)
+    ? questions.map((item) => sanitizeMeetingTurnText(item.question || String(item))).filter(Boolean)
+    : [];
+  const first = questionTexts.find((item) => !hasInternalMeetingTerm(item)) || questionTexts[0] || "";
+  if (!first) return "";
+  if ((first.match(/,/g) || []).length >= 2 || /섹션.*버튼.*목록|버튼.*목록.*표시|여러|모두/.test(first)) {
+    return "우선 하나만 볼게요. 지금 화면에서 제일 헷갈리는 버튼이나 문구 하나만 알려줘도 돼요.";
+  }
+  return first;
+}
+
+function extractMeetingTurnFromStaffRun(repoRoot, runResult, controllerDecision = null) {
   const outputPath = runResult?.role_run_output_path || "";
   const output = outputPath ? fs.existsSync(path.resolve(repoRoot, outputPath)) ? JSON.parse(fs.readFileSync(path.resolve(repoRoot, outputPath), "utf8")) : null : null;
   if (!output) return "";
   const parts = [];
-  if (output.plain_language_summary) parts.push(output.plain_language_summary);
-  if (Array.isArray(output.proposals) && output.proposals.length) {
-    parts.push("제안: " + output.proposals.map((item) => item.title || item.summary || item.proposal_id || "").filter(Boolean).join("; "));
-  }
-  if (Array.isArray(output.approval_items) && output.approval_items.length) {
-    parts.push("승인 필요: " + output.approval_items.map((item) => item.plain_language_summary || item.summary || item.title || String(item)).join("; "));
-  }
+  const summaryParagraphs = sanitizeMeetingTurnText(output.plain_language_summary)
+    .split(/\n{2,}/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => !hasInternalMeetingTerm(item))
+    .slice(0, 2);
+  parts.push(...summaryParagraphs);
+  const proposals = Array.isArray(output.proposals)
+    ? output.proposals
+        .map((item) => sanitizeMeetingTurnText(item.title || item.summary || item.proposal_id || ""))
+        .filter(Boolean)
+        .filter((item) => !hasInternalMeetingTerm(item))
+        .slice(0, 1)
+    : [];
   const questions = Array.isArray(output.questions) ? output.questions : output.open_questions;
-  if (Array.isArray(questions) && questions.length) {
-    parts.push("남은 질문: " + questions.map((item) => item.question || String(item)).join("; "));
+  const question = meetingTurnQuestionText(questions);
+  if (proposals.length) parts.push("가볍게 보면 " + proposals[0] + " 쪽을 먼저 이야기해볼 수 있어요.");
+  if (question) parts.push(question);
+  if (!parts.length) {
+    parts.push("좋아요. 우선 하나만 볼게요.", "지금 화면에서 제일 헷갈리는 버튼이나 문구 하나만 알려줘도 돼요.");
   }
-  if (Array.isArray(output.objections) && output.objections.length) {
-    parts.push("우려/반론: " + output.objections.map((item) => item.summary || item.reason || String(item)).join("; "));
+  const turnText = parts.filter(Boolean).slice(0, 3).join("\n\n");
+  if (controllerDecision) {
+    const guard = guardStaffTurnForConversationController(turnText, controllerDecision);
+    return guard.ok ? turnText : guard.fallback_text;
   }
-  return parts.filter(Boolean).join("\n");
+  return turnText;
 }
 
 function buildToolRunRequestPayload(body) {

@@ -3,41 +3,17 @@
 function renderSessionsPageShell() {
   return `
     <section class="page page-shell page-shell-wide" data-page="sessions">
-      <div class="card">
-        <div class="section-title"><h2>Conversation: 이 페이지의 역할</h2><span class="pill">record + candidates</span></div>
-        <p class="muted small"><strong>Conversation.</strong> 자연어로 의도, 문제, 선택지를 구체화하고 필요할 때만 결정이나 실행 요청 후보로 넘깁니다.</p>
-        <p class="muted small">대화는 기록과 후보만 만들며, 소스 수정/실행/commit/push는 별도 승인 없이는 하지 않습니다.</p>
-      </div>
-
       <div class="consultation-layout">
         <aside class="consultation-sidebar">
           <div class="card">
             <div class="section-title">
-              <h3>대화 시작</h3>
-              <span class="pill">Human Director</span>
-            </div>
-            <p class="muted small">
-              주제를 미리 정리하거나 가운데 채팅창에 바로 말할 수 있습니다. 첫 메시지는 Studio 대화 기록으로만 저장됩니다.
-            </p>
-            <label>대화 주제</label>
-            <textarea id="goalCreateText" rows="5" placeholder="예: 초반 10분 플레이 루프를 더 명확하게 만들고, 필요한 기획/구현/검증 업무를 나눠줘."></textarea>
-            <label>제약 조건</label>
-            <textarea id="goalCreateConstraints" rows="3" placeholder="예:&#10;승인 없는 소스/데이터 수정 금지&#10;Discord 기능 제외&#10;현재 게임 방향은 유지"></textarea>
-            <div class="button-row">
-              <button id="goalBundleSubmit" class="primary">주제로 대화 시작</button>
-              <button id="goalPlanSubmit">브리프만 미리보기</button>
-              <button id="goalStoreSubmit" class="hidden">브리프 저장</button>
-            </div>
-            <p class="muted small">
-              주제로 시작하면 브리프와 대화 기록만 만듭니다. 구현과 커밋은 별도 승인 흐름을 탑니다.
-            </p>
-          </div>
-
-          <div class="card">
-            <div class="section-title">
               <h3>대화 기록</h3>
-              <span id="meetingCount" class="pill">0</span>
+              <div class="row">
+                <button class="secondary" data-consultation-new="true">새 대화</button>
+                <span id="meetingCount" class="pill">0</span>
+              </div>
             </div>
+            <p class="muted small">이전 대화를 선택하면 가운데 채팅창에 기존 로그와 이어가기 상태가 표시됩니다.</p>
             <input id="meetingSearch" placeholder="대화 제목 검색" />
             <select id="meetingStatusFilter">
               <option value="__active__">진행 중 / 중단</option>
@@ -55,13 +31,15 @@ function renderSessionsPageShell() {
           <div class="card consultation-chat-panel">
             <div class="section-title">
               <div>
-                <h3 id="activeConsultationTitle">바로 대화를 시작하세요</h3>
-                <p id="consultationStatus" class="muted small">아래 채팅창에 첫 메시지를 보내면 Studio 대화 기록이 자동으로 만들어집니다.</p>
+                <h3 id="activeConsultationTitle">대화하기</h3>
+                <p id="consultationStatus" class="muted small">첫 메시지를 보내면 Studio 대화 기록만 자동 생성됩니다.</p>
+                <p id="activeConsultationInfo" class="muted small">새 대화 대기 중</p>
               </div>
               <span id="activeConsultationBadge" class="badge">대기</span>
             </div>
             <div id="consultationChatTimeline" class="chat-timeline"></div>
             <div class="chat-composer">
+              <div id="consultationSlashMenu" class="slash-command-menu" hidden></div>
               <textarea id="consultationComposer" rows="3" placeholder="자연어로 바로 말하세요. 예: 초반 10분 플레이 루프를 더 명확하게 만들고 싶어. 기획자랑 QA 의견도 받아봐."></textarea>
               <div class="composer-bar">
                 <select id="consultationStaffSelect"></select>
@@ -71,49 +49,12 @@ function renderSessionsPageShell() {
                 </div>
               </div>
               <p class="muted small">
-                첫 메시지를 보내면 대화가 자동으로 열립니다. 필요한 직원 의견, 방향 판단, 실행 요청 후보는 자연어로 요청하세요.
+                Enter로 보내기 · Shift+Enter는 줄바꿈. 말하기는 내 발언만 기록합니다. 슬래시 명령은 / 입력 시 위에 표시됩니다. AI 직원 응답은 추가 의견 받기 또는 /ask, /summon으로 요청합니다. 후보 정리는 /decision, /work, 종료는 /close를 사용합니다.
               </p>
             </div>
           </div>
         </section>
 
-        <aside class="consultation-context">
-          <div class="card">
-            <div class="section-title">
-              <h3>현재 맥락</h3>
-              <span class="pill">요약</span>
-            </div>
-            <div id="consultationSessionSummary" class="stack"></div>
-          </div>
-
-          <div class="card">
-            <h3>참가 직원</h3>
-            <div id="consultationParticipants" class="stack"></div>
-          </div>
-
-          <div class="card">
-            <h3>남은 질문</h3>
-            <div id="consultationOpenQuestions" class="stack"></div>
-          </div>
-
-          <div class="card">
-            <h3>다음 단계 후보</h3>
-            <p class="muted small">
-              후보 생성은 Studio 기록만 만듭니다. 소스 수정, 실행, commit/push는 별도 승인 없이는 하지 않습니다.
-            </p>
-            <div class="button-stack">
-              <button id="consultationDecision" class="primary">방향 판단으로 넘기기</button>
-              <button id="consultationWork">실행 요청 후보 만들기</button>
-              <button id="consultationClose" class="danger-secondary">대화 종료</button>
-            </div>
-            <div id="consultationCandidates" class="stack"></div>
-          </div>
-
-          <div class="card">
-            <h3>안전 상태</h3>
-            <div id="consultationSafety" class="stack"></div>
-          </div>
-        </aside>
       </div>
 
       <section class="panel hidden" id="goalPreviewPanel">
@@ -127,6 +68,11 @@ function renderSessionsPageShell() {
       <section class="panel hidden">
         <span id="goalPlanCount">0</span>
         <div id="directorGoalPlans"></div>
+        <input id="goalCreateText" />
+        <textarea id="goalCreateConstraints"></textarea>
+        <button id="goalBundleSubmit"></button>
+        <button id="goalPlanSubmit"></button>
+        <button id="goalStoreSubmit"></button>
         <input id="meetingCreateTopic" />
         <select id="meetingCreateType"></select>
         <select id="meetingCreateChair"></select>
