@@ -4,6 +4,41 @@ Status: Active operating rule
 Scope: Stage 1 Super Bot working with this repository
 Last updated: 2026-06-09
 
+## Reading Order
+
+Use this section as the onboarding map for the Super Bot Stage 1 document set.
+
+### Minimum required reading for repo work
+
+1. `AGENTS.md`
+   - Repository-level AI working rules, source-of-truth list, architecture constraints, validation expectations, and approval boundaries.
+2. `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md`
+   - Common behavior inherited by Super Bot and future AI staff: uncertainty, scope control, verification honesty, and permission boundaries.
+3. This document: `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md`
+   - Stage 1-specific role, layer split, default artifact locations, end-to-end flow, and completion criteria.
+
+### Full onboarding sequence
+
+1. `AGENTS.md`
+2. `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md`
+3. `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md`
+4. `_Docs/AIWorkflow/SuperBot_Stage1_Flowchart.html`
+5. `_Docs/AIWorkflow/Studio/WorkOrders/2026-06-09_super_bot_stage1_implementation_roadmap.md`
+6. `_Docs/AIWorkflow/Studio/ResultReviews/SuperBot_Stage1_Index.md`
+7. `_DevLog/Retrospective/2026-06-10_super_bot_stage1_batch0_6_retrospective.md`
+8. `_DevLog/WorkLog/2026-06-09_super_bot_stage1_behavior_application.md`
+
+### Document roles
+
+- `AGENTS.md` is the repository entry point and local law for AI tools.
+- `Universal_AI_Staff_Behavior.md` is the common staff behavior layer.
+- This charter is the Stage 1 Super Bot operating rule for this repo.
+- `SuperBot_Stage1_Flowchart.html` is the visual aid for the end-to-end flow; keep it aligned with this charter.
+- The WorkOrder roadmap is the historical implementation and validation plan.
+- The ResultReview index points to validation evidence for each Batch test.
+- The Retrospective summarizes the Batch 0-6 rollout outcome and remaining risks.
+- The WorkLog records the original application history and may contain historical notes that were superseded by later Batch work.
+
 ## 1. Purpose
 
 This document defines how the Stage 1 Super Bot works in this repository.
