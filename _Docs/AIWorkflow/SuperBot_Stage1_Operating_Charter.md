@@ -148,6 +148,7 @@ Until a task-specific Work Packet says otherwise, use these locations:
 - Intake template: `_Docs/AIWorkflow/Studio/Templates/SuperBot_Intake_Template.md`
 - Design / plan template: `_Docs/AIWorkflow/Studio/Templates/SuperBot_Design_Plan_Template.md`
 - Progress record template: `_Docs/AIWorkflow/Studio/Templates/SuperBot_Progress_Record_Template.md`
+- Completion / gap template: `_Docs/AIWorkflow/Studio/Templates/SuperBot_Completion_Gap_Template.md`
 - Design / plan: `_Docs/AIWorkflow/Studio/WorkOrders/`
 - Progress record: `_Docs/AIWorkflow/Studio/RoleRuns/`
 - Completion record: `_Docs/AIWorkflow/Studio/ResultReviews/`
