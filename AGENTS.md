@@ -125,11 +125,15 @@ _Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
+_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md
+_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md
 ```
 
 Required-read Korean summaries may exist next to the English originals.
 
 The English workflow documents are the operational source of truth for AI tools.
+
+`_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md` defines common behavior for Super Bot and future AI staff. `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md` defines Stage 1 Super Bot operation, layer boundaries, document outputs, and the end-to-end task flow.
 
 The Korean required-read documents are user-facing support documents.
 

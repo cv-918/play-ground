@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Super Bot Stage 1 End-to-End Flow</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #11182d;
+      --panel2: #151f3a;
+      --text: #eef4ff;
+      --muted: #aab7d4;
+      --hermes: #41d6ff;
+      --workflow: #b78cff;
+      --both: #f8c14a;
+      --tool: #64e38c;
+      --danger: #ff6b85;
+      --line: #52607f;
+      --ok: #2fe6a6;
+      --shadow: rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #182449 0, var(--bg) 38%, #070a13 100%);
+      color: var(--text);
+      font-family: Segoe UI, Pretendard, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      padding: 28px 34px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(6,10,22,.72);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.02em; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;
+      font-size: 13px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot.hermes { background: var(--hermes); }
+    .dot.workflow { background: var(--workflow); }
+    .dot.both { background: var(--both); }
+    .dot.tool { background: var(--tool); }
+    .dot.danger { background: var(--danger); }
+    main { padding: 28px 32px 60px; max-width: 1500px; margin: 0 auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+    .section {
+      background: rgba(17,24,45,.78);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 18px 44px var(--shadow);
+    }
+    .section h2 { margin: 0 0 14px; font-size: 18px; }
+    .lane-title {
+      font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
+      margin: 20px 0 10px;
+    }
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .node {
+      position: relative;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035));
+      border-radius: 14px;
+      padding: 13px 14px 13px 16px;
+      min-height: 54px;
+    }
+    .node:not(:last-child)::after {
+      content: "↓";
+      position: absolute;
+      bottom: -22px;
+      left: 24px;
+      color: var(--line);
+      font-size: 18px;
+      z-index: 1;
+    }
+    .node h3 { margin: 0 0 5px; font-size: 15px; }
+    .node p { margin: 0; color: var(--muted); font-size: 13px; }
+    .node.hermes { border-left: 5px solid var(--hermes); }
+    .node.workflow { border-left: 5px solid var(--workflow); }
+    .node.both { border-left: 5px solid var(--both); }
+    .node.tool { border-left: 5px solid var(--tool); }
+    .node.gate { border-left: 5px solid var(--danger); background: rgba(255,107,133,.08); }
+    .node.done { border-left: 5px solid var(--ok); }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: #06101c;
+      font-weight: 700;
+      margin-right: 6px;
+      vertical-align: 1px;
+    }
+    .badge.hermes { background: var(--hermes); }
+    .badge.workflow { background: var(--workflow); }
+    .badge.both { background: var(--both); }
+    .badge.tool { background: var(--tool); }
+    .badge.gate { background: var(--danger); color: #fff; }
+    .decision {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .branch {
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.055);
+      border: 1px dashed rgba(255,255,255,.18);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .branch strong { color: var(--text); }
+    .matrix {
+      display: grid;
+      grid-template-columns: 180px 1fr 1fr;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    .matrix > div { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .matrix > div:nth-child(3n+1) { background: rgba(255,255,255,.05); font-weight: 700; color: var(--text); }
+    .matrix > div:nth-last-child(-n+3) { border-bottom: 0; }
+    .matrix .head { background: rgba(255,255,255,.11) !important; color: var(--text); font-weight: 800; }
+    .small { color: var(--muted); font-size: 12px; margin-top: 10px; }
+    .callout {
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(248,193,74,.10);
+      border: 1px solid rgba(248,193,74,.32);
+      margin-bottom: 18px;
+    }
+    .callout strong { color: #ffe39a; }
+    code { color: #d7e4ff; background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 5px; }
+    ul { margin: 8px 0 0 18px; padding: 0; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Super Bot Stage 1: 작업 지시 → 완료 전체 플로우</h1>
+  <div class="subtitle">Hermes 계층과 Workflow / Repo Harness 계층이 언제 개입하는지 한 화면에서 추적하기 위한 시각 자료</div>
+  <div class="legend">
+    <span class="pill"><span class="dot hermes"></span>Hermes: 직원 정체성 / 행동 원칙 / 도구 실행</span>
+    <span class="pill"><span class="dot workflow"></span>Workflow: repo 법 / 승인 / 문서 산출물 / 검증 규칙</span>
+    <span class="pill"><span class="dot both"></span>Both: 양쪽이 함께 판단</span>
+    <span class="pill"><span class="dot tool"></span>Tool: file / terminal / web 등 실제 실행</span>
+    <span class="pill"><span class="dot danger"></span>Gate: 중단 / 질문 / 재승인 지점</span>
+  </div>
+</header>
+
+<main>
+  <div class="callout">
+    <strong>핵심 원칙:</strong> Super Bot Stage 1은 하위직원이 없는 단일 end-spec 직원이다. 직접 수행 가능한 일은 직접 수행하되, workflow 계층의 승인 scope, 설계/진행/완료 기록, 검증 규칙을 따른다.
+  </div>
+
+  <div class="grid">
+    <section class="section">
+      <h2>End-to-End Main Flow</h2>
+      <div class="flow">
+        <div class="node hermes"><h3><span class="badge hermes">Hermes</span>1. Super Bot identity loads</h3><p>단일 S급 직원. 하위직원 없는 Stage 1에서는 직접 수행 원칙 적용.</p></div>
+        <div class="node hermes"><h3><span class="badge hermes">Hermes</span>2. Universal AI Staff Behavior</h3><p>Think Before Acting, Signal Uncertainty, Simplicity, Surgical Scope, Evidence, Permission Boundary.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>3. Repo law loads</h3><p><code>AGENTS.md</code>, AIWorkflow 문서, Work Packet / ActiveTask / Handoff 계약 확인.</p></div>
+        <div class="node both"><h3><span class="badge both">Both</span>4. Intake</h3><p>goal, scope, non-goals, success criteria, risk, affected area로 작업을 재정의.</p></div>
+        <div class="node gate"><h3><span class="badge gate">Gate</span>5. Ambiguity gate</h3><p>구현/권한/검증에 영향이 있는 모호성은 없어질 때까지 질문.</p>
+          <div class="decision"><div class="branch"><strong>불명확</strong><br/>질문 → Intake로 복귀</div><div class="branch"><strong>명확</strong><br/>상태 조사로 진행</div></div>
+        </div>
+        <div class="node tool"><h3><span class="badge tool">Tool</span>6. Inspect actual state</h3><p>git status, 관련 파일, 기존 패턴, 로그, 문서를 실제 도구로 확인.</p></div>
+        <div class="node gate"><h3><span class="badge gate">Gate</span>7. Approved scope gate</h3><p>승인된 scope가 없으면 plan을 만들고 승인 요청. 있으면 문서화로 진행.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>8. Design / Plan document</h3><p>기본 위치: <code>_Docs/AIWorkflow/Studio/WorkOrders/</code>. 구현 전 작성.</p></div>
+        <div class="node both"><h3><span class="badge both">Both</span>9. Plan review</h3><p>scope, final-form architecture, simplicity, risks, validation, permission boundary 재검토.</p></div>
+        <div class="node gate"><h3><span class="badge gate">Gate</span>10. Protected-change gate</h3><p>schema/save-load/build/workflow/runtime architecture 등 scope 밖 보호 영역이면 중단 후 재승인.</p></div>
+        <div class="node tool"><h3><span class="badge tool">Tool</span>11. Execute bounded work</h3><p>file/patch/terminal/web 등으로 승인 scope 안에서만 실행.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>12. Progress record</h3><p>기본 위치: <code>_Docs/AIWorkflow/Studio/RoleRuns/</code>. 판단, 명령, 파일, 막힘, scope 신호 기록.</p></div>
+        <div class="node tool"><h3><span class="badge tool">Tool</span>13. Verification</h3><p>빌드/테스트/로그/수동검증 항목 확인. 못 한 검증은 미수행으로 기록.</p></div>
+        <div class="node both"><h3><span class="badge both">Both</span>14. Self-review</h3><p>diff와 결과를 Critical/Major/Minor/Optional로 검토. 검증 없는 확신 금지.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>15. Completion record</h3><p>기본 위치: <code>_Docs/AIWorkflow/Studio/ResultReviews/</code>. 완료 내용, 검증, 리스크, metadata 기록.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>16. Verification evidence placement</h3><p>검증 후 같은 산출물을 업데이트할지, final report에만 증거를 남길지 scope에서 먼저 결정.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>17. Design-vs-completion gap</h3><p>최초 설계와 실제 결과 차이, scope deviation, reapproval needed, 행동 개선안을 분리 기록.</p></div>
+        <div class="node workflow"><h3><span class="badge workflow">Workflow</span>18. DevLog if required</h3><p>FixLog / WorkLog / Retrospective 중 성격에 맞게 기록.</p></div>
+        <div class="node done"><h3>19. Final report + human decision</h3><p>변경 요약, 검증 결과, 미검증, 리스크, 커밋/수동테스트/승인 필요 여부 보고.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>계층별 개입 매트릭스</h2>
+      <div class="matrix">
+        <div class="head">단계</div><div class="head">Hermes 계층</div><div class="head">Workflow / Repo Harness 계층</div>
+        <div>Identity</div><div>Super Bot Stage 1 skill, Discord runtime behavior</div><div>repo 작업이면 AGENTS.md와 AIWorkflow를 따라야 함</div>
+        <div>Intake</div><div>요청을 목표/성공 기준으로 변환</div><div>approved scope, non-goals, task contract 확인</div>
+        <div>Ambiguity</div><div>Signal Uncertainty, 질문 지속</div><div>권한/검증/범위 모호하면 진행 금지</div>
+        <div>Planning</div><div>Think Before Acting, Simplicity</div><div>WorkOrder 위치, final-form architecture, validation plan</div>
+        <div>Execution</div><div>도구 사용, Surgical Scope Control</div><div>승인 scope 밖 수정 금지, unrelated cleanup 금지</div>
+        <div>Verification</div><div>Evidence-driven, 검증 과장 금지</div><div>Validation Rules, build != runtime validation</div>
+        <div>Review</div><div>불확실성/추론/사실 분리</div><div>Critical/Major/Minor/Optional 분류</div>
+        <div>Completion</div><div>최종 보고, 다음 결정 요청</div><div>ResultReview, DevLog, design-vs-completion gap</div>
+      </div>
+
+      <div class="lane-title">보호된 재승인 대상</div>
+      <div class="node gate"><h3><span class="badge gate">Re-approval</span>Scope 밖이면 중단</h3>
+        <ul>
+          <li>JSON schema 변경</li>
+          <li>save/load behavior 변경</li>
+          <li>build settings / policy 변경</li>
+          <li>workflow rule 변경</li>
+          <li>broad runtime architecture 변경</li>
+          <li>destructive cleanup</li>
+          <li>commit / push / release / deploy</li>
+        </ul>
+      </div>
+
+      <div class="lane-title">기본 산출물 위치</div>
+      <div class="node workflow"><h3><span class="badge workflow">Design</span>WorkOrders</h3><p><code>_Docs/AIWorkflow/Studio/WorkOrders/</code></p></div>
+      <div class="node workflow"><h3><span class="badge workflow">Progress</span>RoleRuns</h3><p><code>_Docs/AIWorkflow/Studio/RoleRuns/</code></p></div>
+      <div class="node workflow"><h3><span class="badge workflow">Completion</span>ResultReviews</h3><p><code>_Docs/AIWorkflow/Studio/ResultReviews/</code></p></div>
+      <div class="node workflow"><h3><span class="badge workflow">DevLog</span>WorkLog/FixLog/Retrospective</h3><p><code>_DevLog/WorkLog/</code>, <code>_DevLog/FixLog/</code>, <code>_DevLog/Retrospective/</code></p></div>
+
+      <div class="lane-title">Batch 6 보강 규칙</div>
+      <div class="node workflow"><h3><span class="badge workflow">Metadata</span>Progress / Completion 추적성</h3><p>가능하면 timestamp/date, acting agent, session/channel, WorkOrder/Task ID, 관련 artifact/evidence link를 기록.</p></div>
+      <div class="node workflow"><h3><span class="badge workflow">Gap</span>Completion gap 안전 필드</h3><p>scope deviation, reapproval needed, executed/unexecuted verification, remaining risks, human decisions, commit recommendation을 분리.</p></div>
+      <div class="node gate"><h3><span class="badge gate">Evidence</span>Post-verification update scope</h3><p>검증 후 같은 ResultReview를 업데이트하려면 그 second write가 승인 scope에 포함돼야 함. 아니면 최종 검증 증거는 final report에 남김.</p></div>
+
+      <div class="lane-title">Windows / Discord runtime notes</div>
+      <div class="node hermes"><h3><span class="badge hermes">Hermes</span>Explicit repo workdir</h3><p>Discord gateway 기본 cwd는 <code>/c/Users/kalux</code>일 수 있음. repo 작업은 <code>/c/Users/kalux/workStation/play-ground</code> 명시.</p></div>
+      <div class="node hermes"><h3><span class="badge hermes">Hermes</span>Active logs</h3><p><code>C:/Users/kalux/AppData/Local/hermes/logs/</code> 기준. <code>~/.hermes/logs</code>는 stale일 수 있음.</p></div>
+    </section>
+  </div>
+
+  <section class="section" style="margin-top:22px;">
+    <h2>한 줄 요약</h2>
+    <p class="small">Hermes는 “직원이 어떻게 생각하고 도구를 쓰는가”를 담당하고, Workflow / Repo Harness는 “이 repo에서 무엇이 허용되고 어떤 산출물/검증 증거를 남겨야 하는가”를 담당한다. Super Bot은 두 계층의 교차점에서 직접 작업을 수행한다.</p>
+  </section>
+</main>
+</body>
+</html>
