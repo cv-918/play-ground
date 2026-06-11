@@ -97,6 +97,9 @@ The AI Orchestrator workflow is defined by these documents:
 
 ```text
 _Docs/AIWorkflow/README.md
+_Docs/AIWorkflow/Workflow_Document_Authority_Map.md
+_Docs/AIWorkflow/State_Tool_Schema_Map.md
+_Docs/AIWorkflow/FinalBlueprint/README.md
 _Docs/AIWorkflow/00_AI_Orchestrator_Overview.md
 _Docs/AIWorkflow/01_AI_Orchestrator_Protocol.md
 _Docs/AIWorkflow/02_Workflow_Scope.md
@@ -118,12 +121,10 @@ _Docs/AIWorkflow/FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_K
 _Docs/AIWorkflow/Studio/README.md
 _Docs/AIWorkflow/ActiveTask_Template.md
 _Docs/AIWorkflow/Project_Profile_Schema.md
-_Docs/AIWorkflow/Discord_Orchestrator_Safety_Rules.md
 _Docs/AIWorkflow/Active_Project_Selector.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Post_309_Workflow_Stabilization_Roadmap.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Unified_PC_Runner_Orchestration_Entrypoint.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Intake_Auto_Handoff.md
-_Docs/AIWorkflow/FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md
 _Docs/AIWorkflow/FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md
 _Docs/AIWorkflow/Universal_AI_Staff_Behavior.md
 _Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md
@@ -132,6 +133,8 @@ _Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md
 Required-read Korean summaries may exist next to the English originals.
 
 The English workflow documents are the operational source of truth for AI tools.
+
+Use `_Docs/AIWorkflow/Workflow_Document_Authority_Map.md` to resolve document-role or conflict questions inside `_Docs/AIWorkflow/`. Use `_Docs/AIWorkflow/State_Tool_Schema_Map.md` before changing task-state documents or tool-facing fields. Use `_Docs/AIWorkflow/FinalBlueprint/README.md` before treating a FinalBlueprint document as current authority.
 
 `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md` defines common behavior for Super Bot and future AI staff. `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md` defines Stage 1 Super Bot operation, layer boundaries, document outputs, and the end-to-end task flow.
 
