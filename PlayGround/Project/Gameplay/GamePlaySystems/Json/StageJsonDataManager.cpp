@@ -25,6 +25,13 @@ _bool StageJsonDataManager::Load(const std::string& _stage_path, const std::stri
 		for (const auto& item : stage_json)
 		{
 			auto info = item.get<StageJsonInfo>();
+			if (loaded_stage_table.find(info.id_) != loaded_stage_table.end())
+			{
+				_SYSTEM_LOG_ERROR(L"Duplicate stage ID found. file: %s, id: %u", stage_path_w.c_str(), info.id_);
+				_DEBUG_MSGBOX(_T("Duplicate stage ID %u in %s"), info.id_, stage_path_w.c_str());
+				return false;
+			}
+
 			loaded_stage_table[info.id_] = info;
 		}
 	}
@@ -52,6 +59,13 @@ _bool StageJsonDataManager::Load(const std::string& _stage_path, const std::stri
 		for (const auto& item : pool_json)
 		{
 			auto info = item.get<StageSpawnPoolJsonInfo>();
+			if (loaded_pool_table.find(info.id_) != loaded_pool_table.end())
+			{
+				_SYSTEM_LOG_ERROR(L"Duplicate spawn pool ID found. file: %s, id: %u", pool_path_w.c_str(), info.id_);
+				_DEBUG_MSGBOX(_T("Duplicate spawn pool ID %u in %s"), info.id_, pool_path_w.c_str());
+				return false;
+			}
+
 			loaded_pool_table[info.id_] = info;
 		}
 	}

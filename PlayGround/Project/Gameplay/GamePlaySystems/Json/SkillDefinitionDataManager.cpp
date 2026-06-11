@@ -18,19 +18,20 @@ _bool SkillDefinitionDataManager::Load(const std::string& _file_path)
 		file >> json_root;
 
 		const auto records = json_root.get<std::vector<SkillDefinitionJsonInfo>>();
-		data_table_.clear();
+		std::unordered_map<_uint, SkillDefinition> loaded_data_table;
 
 		for (const auto& record : records)
 		{
-			if (data_table_.find(record.id_) != data_table_.end())
+			if (loaded_data_table.find(record.id_) != loaded_data_table.end())
 			{
 				_DEBUG_MSGBOX(_T("Duplicate skill definition ID %d in %s"), record.id_, _TF(_file_path.c_str()));
-				continue;
+				return false;
 			}
 
-			data_table_[record.id_] = CompileSkillDefinition(record);
+			loaded_data_table[record.id_] = CompileSkillDefinition(record);
 		}
 
+		data_table_ = std::move(loaded_data_table);
 		_SYSTEM_LOG_INFO(_T("SkillDefinitionDataManager loaded: %d entries."), data_table_.size());
 		return true;
 	}

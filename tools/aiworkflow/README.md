@@ -160,6 +160,20 @@ This is a source-anchor smoke validation. It proves the intended Stage/SpawnPool
 
 ---
 
+## game007c_duplicate_policy_anchor_check.bat
+
+Validates GAME-007C source anchors for duplicate-id policy: core game data duplicate IDs are fatal, while TownNpcPlacement duplicate placement IDs remain non-fatal skipped entries.
+
+```bat
+tools\aiworkflow\game007c_duplicate_policy_anchor_check.bat
+```
+
+Expected output includes PASS lines for generic JsonDataManager duplicate policy, SkillDefinition duplicate policy, Stage/SpawnPool duplicate policy, and TownNpcPlacement non-fatal duplicate policy.
+
+This is a source-anchor smoke validation. It proves the intended loader duplicate-policy structure is present, not that every malformed data scenario has been runtime-tested.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

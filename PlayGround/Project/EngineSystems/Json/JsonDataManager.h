@@ -61,17 +61,20 @@ _bool JsonDataManager<T>::Load(const std::string& _file_path)
 
 		std::vector<T> dataList = j.get<std::vector<T>>();
 
-		data_table_.clear();
+		std::unordered_map<_uint, T> loaded_data_table;
 		for (const auto& item : dataList)
 		{
 			// T 구조체는 반드시 'id' 멤버를 가지고 있어야 합니다.
-			if (data_table_.find(item.id_) != data_table_.end())
+			if (loaded_data_table.find(item.id_) != loaded_data_table.end())
 			{
-				// ID 중복 발견 시 로깅
+				// Core game data duplicate IDs are fatal to avoid ambiguous references.
 				_DEBUG_MSGBOX(_T("Duplicate ID %d in %s"), item.id_, _TF(_file_path.c_str()));
+				return false;
 			}
-			data_table_[item.id_] = item;
+			loaded_data_table[item.id_] = item;
 		}
+
+		data_table_ = std::move(loaded_data_table);
 		_SYSTEM_LOG_INFO(_T("%s loaded: %d entries."), _UtilFunc::ToWString(typeid(T).name()).c_str(), data_table_.size());
 		return true;
 	}
