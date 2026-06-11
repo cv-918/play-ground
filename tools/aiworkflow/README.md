@@ -174,6 +174,20 @@ This is a source-anchor smoke validation. It proves the intended loader duplicat
 
 ---
 
+## game007d_missing_file_policy_scenario_check.bat
+
+Validates GAME-007D missing-file policy scenarios against temporary copies of `PlayGround\Data` without modifying real game data.
+
+```bat
+tools\aiworkflow\game007d_missing_file_policy_scenario_check.bat
+```
+
+Expected output includes PASS lines for source policy anchors, baseline copied data, required-missing file behavior, and optional-missing file behavior.
+
+This is a data-copy scenario smoke validation. It proves the required/optional file policy manifest and `GameDataLoader` source anchors agree, but it does not boot the game runtime.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:
