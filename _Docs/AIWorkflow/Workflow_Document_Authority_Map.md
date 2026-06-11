@@ -9,6 +9,12 @@ Non-goals: no task lifecycle change, no game source/data/runtime change, no auto
 
 This document maps the authority, role, and relationship of the repository's AIWorkflow-related documents before DOC-001 consolidates workflow instruction entry points.
 
+For a one-page browser-readable visual summary, open:
+
+```text
+Workflow_Document_Authority_Visual_Map.html
+```
+
 It exists because the current document set contains multiple eras and multiple document roles in the same tree:
 
 - early AI Orchestrator protocol documents;

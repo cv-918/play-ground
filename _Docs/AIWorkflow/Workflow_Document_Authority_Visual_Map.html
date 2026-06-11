@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AIWorkflow Document Authority Visual Map</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel2: #1f2630;
+      --text: #e6edf3;
+      --muted: #9aa7b2;
+      --line: #30363d;
+      --blue: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --cyan: #39c5cf;
+      --gray: #8b949e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #142033 0, var(--bg) 36rem);
+      color: var(--text);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1400px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: -0.02em; }
+    h2 { margin: 0 0 14px; font-size: 18px; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); margin-bottom: 22px; }
+    .grid { display: grid; gap: 16px; }
+    .top { grid-template-columns: 1.2fr 1fr; align-items: stretch; }
+    .panel {
+      background: rgba(22, 27, 34, .92);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.25);
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: 5px 9px; color: var(--muted); background: #0f141b;
+      white-space: nowrap;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .blue { color: var(--blue); } .green { color: var(--green); } .yellow { color: var(--yellow); }
+    .red { color: var(--red); } .purple { color: var(--purple); } .cyan { color: var(--cyan); }
+    .gray { color: var(--gray); }
+    .map { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 14px; margin-top: 16px; }
+    .lane { background: rgba(31, 38, 48, .72); border: 1px solid var(--line); border-radius: 14px; padding: 12px; min-height: 250px; }
+    .lane h3 { margin: 0 0 10px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .card {
+      position: relative; margin: 9px 0; padding: 10px 10px 10px 13px;
+      background: #0f141b; border: 1px solid var(--line); border-radius: 10px;
+    }
+    .card:before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 4px; background: var(--gray); }
+    .card.blue:before { background: var(--blue); } .card.green:before { background: var(--green); }
+    .card.yellow:before { background: var(--yellow); } .card.red:before { background: var(--red); }
+    .card.purple:before { background: var(--purple); } .card.cyan:before { background: var(--cyan); }
+    .card strong { display: block; font-size: 13px; color: var(--text); }
+    .card span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 12px; }
+    .step { padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: #0f141b; min-height: 80px; }
+    .step b { color: var(--blue); display: block; margin-bottom: 4px; }
+    .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; }
+    .matrix th, .matrix td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    .matrix th { color: var(--muted); font-weight: 600; background: #111820; }
+    .matrix td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+    .callout { border-left: 4px solid var(--yellow); background: rgba(210,153,34,.08); padding: 12px; border-radius: 10px; color: #f0d79a; }
+    .next { border-left-color: var(--green); background: rgba(63,185,80,.08); color: #b7f7c0; }
+    .two { grid-template-columns: 1fr 1fr; margin-top: 16px; }
+    code { color: #d2a8ff; }
+    @media (max-width: 1100px) { .map { grid-template-columns: repeat(2, 1fr); } .flow { grid-template-columns: 1fr 1fr; } .top, .two { grid-template-columns: 1fr; } }
+    @media (max-width: 650px) { main { padding: 16px; } .map, .flow { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>AIWorkflow 문서 권한 지도 — 한눈에 보기</h1>
+  <p class="subtitle">목표: “어떤 문서를 먼저 믿고, 어디는 기록/상태/참고로만 볼지”를 빠르게 판단한다.</p>
+
+  <section class="grid top">
+    <div class="panel">
+      <h2>핵심 판정</h2>
+      <div class="callout next">
+        DOC-001은 완료. README는 지도/색인, Playbook은 실행 가이드, Authority Map은 충돌 해결 지도, State Map은 상태/schema 보호장치다.
+      </div>
+      <div class="legend">
+        <span class="pill"><span class="dot" style="background:var(--blue)"></span>Entry / Index</span>
+        <span class="pill"><span class="dot" style="background:var(--green)"></span>Current / Canonical</span>
+        <span class="pill"><span class="dot" style="background:var(--cyan)"></span>State Source</span>
+        <span class="pill"><span class="dot" style="background:var(--purple)"></span>Product Direction</span>
+        <span class="pill"><span class="dot" style="background:var(--yellow)"></span>Support / Guide</span>
+        <span class="pill"><span class="dot" style="background:var(--red)"></span>Legacy / Historical</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>가장 중요한 금지선</h2>
+      <div class="callout">
+        <p><b>일반 문서 정리 중에는</b> <code>Backlog.md</code>, <code>ActiveTask.md</code>, <code>ProjectStatus.md</code> schema나 tool-facing section을 바꾸지 않는다.</p>
+        <p style="margin-top:8px;">필요하면 별도 schema/tool migration task로 분리한다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:16px;">
+    <h2>문서 역할 맵</h2>
+    <div class="map">
+      <div class="lane">
+        <h3>0. Repo Entry</h3>
+        <div class="card blue"><strong>AGENTS.md</strong><span>AI가 repo에서 작업할 때 보는 최상위 규칙</span></div>
+        <div class="card blue"><strong>.github/copilot-instructions.md</strong><span>Copilot 전용 구현 지침</span></div>
+      </div>
+      <div class="lane">
+        <h3>1. AIWorkflow Index</h3>
+        <div class="card blue"><strong>README.md</strong><span>문서 지도/색인. 정책 원본이 아님.</span></div>
+        <div class="card green"><strong>Workflow_Document_Authority_Map.md</strong><span>문서 역할/충돌 해결 지도</span></div>
+        <div class="card green"><strong>09_Operational_Playbook.md</strong><span>일상 실행 runbook</span></div>
+      </div>
+      <div class="lane">
+        <h3>2. Canonical Rules</h3>
+        <div class="card green"><strong>02 / 04 / 05 / 07 / 08</strong><span>scope, approval, routing, review/validation, DevLog</span></div>
+        <div class="card green"><strong>Task_State_Model.md</strong><span>task state enum과 transition 원본</span></div>
+        <div class="card yellow"><strong>10 / 11 / 12</strong><span>checklist, examples, troubleshooting</span></div>
+      </div>
+      <div class="lane">
+        <h3>3. State / Tool Contract</h3>
+        <div class="card cyan"><strong>Backlog.md</strong><span>durable task row/status source</span></div>
+        <div class="card cyan"><strong>ActiveTask.md</strong><span>현재 선택 task</span></div>
+        <div class="card cyan"><strong>ProjectStatus.md</strong><span>derived/manual status snapshot</span></div>
+        <div class="card cyan"><strong>State_Tool_Schema_Map.md</strong><span>문서와 tool reader drift 방지</span></div>
+      </div>
+      <div class="lane">
+        <h3>4. Product / Historical</h3>
+        <div class="card purple"><strong>_Docs/Studio/</strong><span>현재 Studio product direction</span></div>
+        <div class="card red"><strong>_Docs/AIWorkflow/Studio/</strong><span>AIWorkflow-era records/templates/contracts</span></div>
+        <div class="card yellow"><strong>FinalBlueprint/README.md</strong><span>FinalBlueprint current/historical 분류 index</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:16px;">
+    <h2>읽는 순서 — 일반 작업</h2>
+    <div class="flow">
+      <div class="step"><b>1</b>AGENTS.md<br><span class="gray">repo-level rule</span></div>
+      <div class="step"><b>2</b>README.md<br><span class="gray">어디로 갈지 찾기</span></div>
+      <div class="step"><b>3</b>Authority Map<br><span class="gray">충돌/역할 판단</span></div>
+      <div class="step"><b>4</b>Playbook<br><span class="gray">실행 절차</span></div>
+      <div class="step"><b>5</b>Canonical Docs<br><span class="gray">scope/approval/routing</span></div>
+      <div class="step"><b>6</b>State Docs<br><span class="gray">Backlog/ActiveTask</span></div>
+      <div class="step"><b>7</b>Evidence<br><span class="gray">review/validation/commit</span></div>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <div class="panel">
+      <h2>어떤 질문이면 어디를 보나?</h2>
+      <table class="matrix">
+        <tr><th>질문</th><th>먼저 볼 문서</th></tr>
+        <tr><td>어떤 문서가 우선?</td><td><code>Workflow_Document_Authority_Map.md</code></td></tr>
+        <tr><td>작업을 어떻게 진행?</td><td><code>09_Operational_Playbook.md</code></td></tr>
+        <tr><td>승인 필요?</td><td><code>04_Human_Approval_Gates.md</code></td></tr>
+        <tr><td>task 상태가 맞나?</td><td><code>Task_State_Model.md</code>, <code>Backlog.md</code>, <code>ActiveTask.md</code></td></tr>
+        <tr><td>tool이 읽는 field를 바꿔도 되나?</td><td><code>State_Tool_Schema_Map.md</code></td></tr>
+        <tr><td>FinalBlueprint 문서가 current인가?</td><td><code>FinalBlueprint/README.md</code></td></tr>
+        <tr><td>Studio 방향성?</td><td><code>_Docs/Studio/</code></td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>다음 작업: SUPERBOT-001로 넘어가기 전</h2>
+      <div class="callout next">
+        이 시각화는 SuperBot alignment의 전제 지도다. 다음에는 SuperBot이 이 지도 위에서 어떤 reading order, 산출물 위치, 승인 경계, gap log를 따라야 하는지 정렬하면 된다.
+      </div>
+      <table class="matrix" style="margin-top:12px;">
+        <tr><th>SuperBot 질문</th><th>연결할 지도</th></tr>
+        <tr><td>무슨 규칙을 먼저 읽나?</td><td>AGENTS → Charter → Playbook → task docs</td></tr>
+        <tr><td>WorkOrder는 어디에?</td><td>AIWorkflow/Studio vs _Docs/Studio boundary 확인</td></tr>
+        <tr><td>결과/갭은 어디에?</td><td>Playbook + SuperBot Charter 정렬</td></tr>
+        <tr><td>무엇을 멈춰야 하나?</td><td>Approval gates + scope-based approval</td></tr>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>
