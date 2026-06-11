@@ -230,6 +230,20 @@ This is a source/data/document smoke. It does not modify gameplay code.
 
 ---
 
+## unity001_profile_requirements_check.bat
+
+Validates the UNITY-001 Unity project workflow profile requirements document, the JSON template contract, and workflow-state references.
+
+```bat
+tools\aiworkflow\unity001_profile_requirements_check.bat
+```
+
+Expected output includes PASS lines for requirements document anchors, UnityProjectProfile template contract, and workflow state references.
+
+This is a document/schema smoke. It does not run Unity Editor or modify Unity projects.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

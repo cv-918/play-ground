@@ -1,0 +1,135 @@
+{
+  "profile_id": "unity_steam_android_default",
+  "project_id": "example-unity-project",
+  "project_name": "Example Unity Project",
+  "engine": "unity",
+  "unity": {
+    "unity_version": "2022.3 LTS",
+    "project_root": "<path-to-unity-project>",
+    "active_project_selector_id": "<active-project-id>",
+    "unity_editor_path": null,
+    "batchmode_supported": true
+  },
+  "paths": {
+    "scripts": "Assets/Scripts",
+    "tests": "Assets/Tests",
+    "editor": "Assets/Editor",
+    "scenes": "Assets/Scenes",
+    "prefabs": "Assets/Prefabs",
+    "scriptable_objects": "Assets/ScriptableObjects",
+    "resources": "Assets/Resources",
+    "addressables": null,
+    "packages_manifest": "Packages/manifest.json",
+    "packages_lock": "Packages/packages-lock.json",
+    "project_settings": "ProjectSettings",
+    "generated_or_local": [
+      "Library",
+      "Temp",
+      "Obj",
+      "Logs",
+      "UserSettings",
+      "Build",
+      "Builds"
+    ]
+  },
+  "approval_gates": {
+    "allowed_in_scope": [
+      "Assets/Scripts",
+      "Assets/Tests",
+      "Assets/Editor",
+      "Assets/ScriptableObjects"
+    ],
+    "review_required": [
+      "Assets/Scenes",
+      "Assets/Prefabs",
+      "Assets/Animations",
+      "Assets/Materials",
+      "Assets/Resources",
+      "Addressables configuration",
+      "Packages/manifest.json",
+      "Packages/packages-lock.json",
+      "ProjectSettings"
+    ],
+    "ask_user_first": [
+      "unity_version",
+      "render_pipeline",
+      "input_system",
+      "package_major_upgrade",
+      "build_target_switch",
+      "player_settings",
+      "scripting_backend",
+      "bundle_identifier_or_application_id",
+      "keystore_or_signing",
+      "steam_app_id_or_depot_config",
+      "google_play_package_identity"
+    ],
+    "forbidden_generated": [
+      "Library",
+      "Temp",
+      "Obj",
+      "Logs",
+      "UserSettings"
+    ]
+  },
+  "validation": {
+    "unity_project_open_check": {
+      "required": true,
+      "command_template": "<Unity> -batchmode -quit -projectPath <project_path> -logFile <log_path>"
+    },
+    "package_restore_check": {
+      "required": true,
+      "command_template": "<Unity> -batchmode -quit -projectPath <project_path> -logFile <log_path>"
+    },
+    "editmode_tests": {
+      "required": true,
+      "command_template": "<Unity> -batchmode -projectPath <project_path> -runTests -testPlatform EditMode -testResults <results_xml> -logFile <log_path>"
+    },
+    "playmode_tests": {
+      "required": true,
+      "command_template": "<Unity> -batchmode -projectPath <project_path> -runTests -testPlatform PlayMode -testResults <results_xml> -logFile <log_path>"
+    },
+    "platform_build_smoke": {
+      "required": true,
+      "build_commands": {
+        "windows_steam": "<Unity> -batchmode -quit -projectPath <project_path> -executeMethod BuildScript.BuildWindowsSteam -logFile <log_path>",
+        "android_google_play": "<Unity> -batchmode -quit -projectPath <project_path> -executeMethod BuildScript.BuildAndroidGooglePlay -logFile <log_path>"
+      }
+    },
+    "asset_reference_check": {
+      "required": false,
+      "command_template": "<project-defined>"
+    },
+    "scene_open_smoke": {
+      "required": false,
+      "command_template": "<project-defined>"
+    }
+  },
+  "platform_targets": [
+    "windows_steam",
+    "android_google_play"
+  ],
+  "release_tracks": {
+    "windows_steam": {
+      "unity_build_target": "StandaloneWindows64",
+      "build_output_dir": "Builds/WindowsSteam",
+      "steam_app_id": null,
+      "steam_depot_config": null,
+      "save_data_policy": "project-defined",
+      "controller_input_policy": "project-defined",
+      "achievement_integration_status": "not_configured"
+    },
+    "android_google_play": {
+      "unity_build_target": "Android",
+      "build_output_dir": "Builds/AndroidGooglePlay",
+      "application_id": null,
+      "version_code_policy": "human-approved",
+      "version_name_policy": "human-approved",
+      "keystore_policy": "ask_user_first",
+      "min_sdk": null,
+      "target_sdk": null,
+      "scripting_backend": "IL2CPP",
+      "architecture": "ARM64",
+      "permission_review_required": true
+    }
+  }
+}

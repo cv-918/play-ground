@@ -142,13 +142,14 @@ Do not edit archived rows for routine planning. If a completed task needs correc
 | WF-20260511-000002 | P1 | done | automation | Implement Codex CLI-assisted `/ai intake` with GPT-5.5 | Upgrade the Discord intake flow from rule-based-only draft generation to Codex CLI assisted TaskDraft generation while preserving local schema validation, rule-based cross-checks, Backlog creation from `/ai intake`, and no automatic approval/implementation/done/commit. | Codex App -> human review | done: "Implemented Codex CLI-assisted TaskDraft generation with default model gpt-5.5, local schema validation, rule-based cross-check, /ai intake Backlog creation, /ai intake-preview read-only preview, /ai intake-create compatibility alias, /ai intake-engine status diagnostics, config example updates, docs, and DevLog. Validation evidence is recorded in the DevLog for the final implementation pass. No OpenAI API key path, separate API billing dependency, automatic ActiveTask update, approval, implementation execution, done, commit, push, or game source/data change was implemented." |
 | GAME-009 | P2 | done | analysis | Decide GAME-008 unused schema field policy | Turn GAME-008 audit findings into field-level keep/reserve/remove-later decisions before any schema/data change. | ChatGPT -> Hermes | done: decision report saved at `_Docs/AIWorkflow/Studio/ResultReviews/2026-06-11_game009_schema_field_decision_pass.md`; `game009_schema_field_decision_check.bat` passed. |
 | GAME-010 | P2 | done | data | Remove stale Stage.json grade_ field | Execute the GAME-009 remove_later decision for ignored Stage.json grade_ only. Preserve StageJsonInfo id_/spawn_pool_id_ mapping and avoid gameplay behavior changes. | Hermes | done: removed `grade_` from `PlayGround/Data/Stage.json`; added `game010_stage_grade_cleanup_check.bat`; updated GAME-009 check for post-cleanup state; JSON/readability checks and Debug x64 build passed. |
+| UNITY-001 | P1 | done | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | done: requirements doc saved at `_Docs/AIWorkflow/Unity_Project_Workflow_Profile_Requirements.md`; template saved at `_Docs/AIWorkflow/UnityProjectProfile_Template.json`; `unity001_profile_requirements_check.bat` passed. |
 
 ---
 
 ## Archive Notes
 
 ```text
-Archived rows after GAME-010: 127
+Archived rows after UNITY-001: 128
 Active rows left in Backlog.md: 5
 Deferred rows left in Backlog.md: 5
 ```

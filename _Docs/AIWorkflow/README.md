@@ -43,6 +43,8 @@ Workflow_Document_Authority_Map.md
 | `Workflow_Document_Authority_Visual_Map.html` | Browser-readable visual map of AIWorkflow document authority, reading order, state sources, and Studio/AIWorkflow boundaries |
 | `State_Tool_Schema_Map.md` | Draft map of machine-readable state-document contracts and tool reader drift for `Backlog.md`, `BacklogArchive.md`, `ActiveTask.md`, `ProjectStatus.md`, and `Task_State_Model.md` |
 | `BacklogArchive.md` | Historical archive of completed Backlog rows; active/open and deferred rows remain in `Backlog.md` |
+| `Unity_Project_Workflow_Profile_Requirements.md` | UNITY-001 requirements for Unity project profiles, path scopes, approval gates, validation hooks, and Steam/Google Play platform hooks |
+| `UnityProjectProfile_Template.json` | Machine-readable starter template for a Unity project workflow profile |
 | `FinalBlueprint/README.md` | Draft authority index for classifying FinalBlueprint files as current references, historical specs, reports, roadmaps, companions, or reference-only material |
 | `SuperBot_Stage1_Alignment_Map.md` | Draft alignment map for connecting SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps |
 | `SuperBot_Stage1_Visual_Companion.html` | Browser-readable visual companion for SuperBot Stage 1 operating flow, layers, artifact flow, stop boundaries, and readiness checks |

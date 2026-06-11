@@ -73,7 +73,6 @@ release
 
 | ID | Priority | Status | Kind | Item | Reason | Tool Route | Validation |
 |---|---:|---|---|---|---|---|---|
-| UNITY-001 | P1 | todo | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | Document review |
 | UNITY-002 | P2 | todo | unity | Define Unity validation profile candidates | Unity workflows need build/playmode/editmode/package validation categories | ChatGPT -> Codex later | Validation profile review |
 | UNITY-003 | P2 | todo | release | Define release-track workflow fields for Steam and Google Play | Long-term workflow includes publishing, not just coding | ChatGPT | Release checklist review |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
