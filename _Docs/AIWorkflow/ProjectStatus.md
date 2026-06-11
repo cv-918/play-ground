@@ -3,18 +3,18 @@
 ## Metadata Snapshot
 
 ```yaml
-last_updated: 2026-05-13
+last_updated: 2026-06-11
 analysis_mode:
   - workflow_document_cleanup_review
-  - pc_runner_status_review
+  - superbot_operating_stabilization_review
 workflow_level_actual: Discord-first PC Runner execution harness stabilization
-workflow_level_target_next: real small GAME task stabilization
-worktree_status_at_analysis: documentation cleanup in progress
+workflow_level_target_next: SuperBot and workflow operating stabilization
+worktree_status_at_analysis: workflow status cleanup in progress
 latest_local_script_validation:
   pc_runner_build_profile_plan: passed
   build_test_runner_visual_studio_dry_run: passed
   intake_auto_handoff_policy_smoke: passed
-build_verified_in_latest_update: true
+build_verified_in_latest_update: false
 runtime_verified_in_latest_update: false
 json_syntax_smoke_check:
   total: 11
@@ -124,10 +124,11 @@ Visual Studio build evidence:
 Current missing pieces for final workflow stabilization:
 
 ```text
-- repeat real small GAME source/data tasks through PC Runner
-- refine approval policy levels from observed use
-- continue reducing completion/commit friction without removing Human Director authority
-- keep command/document surface pruned as old manual paths become rare
+- align SuperBot Stage 1 operating rules with AIWorkflow and Studio entry points
+- consolidate workflow instruction entry points that may drift
+- keep ProjectStatus / Backlog / ActiveTask recommendations current
+- preserve Unity-ready project-profile direction while using Dust Land as a testbed
+- continue pruning or labeling old manual/Discord/runner paths as they become obsolete
 ```
 
 ---
@@ -189,14 +190,14 @@ autonomous source/data changes should still be introduced incrementally.
 | Scene Flow | Implemented | `Intro -> OutGame -> InGame -> OutGame` exists. `LoadingScene` appears unconnected. |
 | OutGame / Town | Implemented | `OutGameScene` is the current town-like scene. |
 | InGame / Combat | Implemented | `Enter -> Ready -> Play -> Result/Exit` structure exists. |
-| Run Clear Semantics | Partial / inconsistent | Survival result, kill clear, next-stage availability, and result behavior need unified meaning. |
-| Progression / Profile | Implemented but needs validation | Dust, exp, stage progress, story progress, equipped skills, unlocked characters are persisted. |
+| Run Clear Semantics | Implemented / validated | GAME-002 consolidated timer expired, player death, kill goal, stage progress, restart, and abandon behavior. |
+| Progression / Profile | Implemented with follow-up risk | Dust, exp, stage progress, story progress, equipped skills, and unlocked characters are persisted; GAME-006 remains open for level-0 node data cleanup. |
 | Enemy Runtime | Implemented | Enemy combat and abilities exist. |
 | Skill Runtime | Implemented | Skill manager, casting/cooldown/status flow exists. |
 | Dialogue Runtime | Implemented | Dialogue conversion, runner, typing, choices, skip, and events exist. |
 | Dialogue Result Consumption | Partial | `end_reason` and `choice_records` handling remains incomplete. |
 | Town NPC Placement | Implemented v1 | Placement JSON loads and spawns `TownNpc`; role logic still order-coupled. |
-| Data Loading | Implemented but still needs runtime validation | JSON syntax smoke check passed locally. `GameDataLoader` runtime validation remains separate. |
+| Data Loading | Implemented / runtime validated | GAME-001B validated Debug x64 build, data copy, game boot, Intro to OutGame transition, and no GameDataLoader/OutGame debug errors. |
 | Debug / WorkStation | Implemented | WorkStation scene and JSON reload support exist. |
 
 ---
@@ -220,63 +221,44 @@ known_data_anomaly:
 
 ## Known Blockers
 
-### JSON Integrity Status
+### JSON / GameDataLoader Status
 
-Previously reported blocker:
+Previously reported JSON syntax and loader blockers are no longer active:
 
 ```text
-Skill.json
-PlayableCharacter.json
-AttributeNode.json
+- JSON syntax smoke passed: 11 total, 0 failed.
+- GAME-001B runtime validation passed: Debug x64 build, data copy, game boot,
+  Intro to OutGame transition, and no GameDataLoader/OutGame debug errors.
 ```
 
-Current local result:
+Current interpretation:
 
 ```text
-JSON syntax smoke check passed.
-Total: 11
-Failed: 0
-```
-
-Updated interpretation:
-
-```text
-The syntax-level JSON parse blocker is not currently reproduced locally.
-```
-
-Remaining required validation:
-
-```text
-GameDataLoader runtime validation
-boot smoke test
-OutGame entry smoke test
-data semantic validation
-```
-
-Status:
-
-```text
-syntax_blocker_cleared
-runtime_validation_needed
+No active JSON syntax or GameDataLoader boot blocker is recorded here.
+Remaining data work should be tracked as focused follow-up tasks such as GAME-006,
+not as a generic loader blocker.
 ```
 
 ---
 
-### Run Clear Semantics Are Split
+### Run Clear Semantics Status
 
-Current clear/result meaning appears split across:
+Previously split run-result behavior was consolidated and validated by GAME-002:
 
 ```text
-survival result
-kill-count clear condition
-next-stage availability
-result screen behavior
+timer expired result
+player death result
+kill goal reached
+stage progress action
+result restart
+pause abandon
 ```
 
-Required next action:
+Current interpretation:
 
 ```text
-Define intended run clear semantics before modifying StageManager/RunState behavior.
+No active run-clear architecture blocker is recorded here. Future gameplay tuning
+should be created as a new focused task if the intended design changes.
 ```
 
 ---
@@ -303,28 +285,28 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 | Risk | Impact | Recommendation |
 |---|---|---|
-| `GameDataLoader` runtime behavior not yet revalidated after JSON smoke check | Startup/data loading uncertainty | Run focused boot/data-load validation |
-| Run clear semantics split | Gameplay progression ambiguity | Architecture task before implementation |
+| `UserData.json` may contain level-0 node data | Save/profile semantic ambiguity | Handle through GAME-006 with load/save roundtrip and node-state validation |
 | `npcs_[0..2]` story coupling | Town story fragility | Defer if NPC work is low ROI |
-| `GetDataByIndex(0)` over unordered data | Non-deterministic selection risk | Fix before character-selection work |
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
 | Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
-| Multiple workflow instruction entry points | Drift risk | Consolidate source-of-truth policy |
-| Unused schema fields | Data ambiguity | Audit before schema expansion |
+| Multiple workflow / SuperBot instruction entry points | Drift risk | Consolidate source-of-truth and reading order through DOC-001 / SuperBot alignment work |
+| Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
 
 ---
 
 ## Recommended Next 3 Tasks
 
-1. `WF-002: Define task status enum and transition rules`
-2. `WF-005: Define read-only status summary command for future Discord use`
-3. `GAME-001B: Validate GameDataLoader runtime after JSON smoke check`
+1. `DOC-001: Consolidate workflow instruction entry points`
+   - Include SuperBot Stage 1 artifact locations, reading order, and source-of-truth boundaries in this consolidation pass.
+2. `UNITY-001: Define Unity project workflow profile requirements`
+3. `UNITY-002: Define Unity validation profile candidates`
 
 Strategic follow-up:
 
 ```text
-UNITY-001: Define Unity project profile requirements for the AI workflow.
+After workflow / SuperBot stabilization, decide whether a separate SuperBot alignment Backlog task is needed.
+Then return to VAL-001 or GAME-006 for real gameplay/data validation work.
 ```
 
 ---

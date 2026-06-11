@@ -3,6 +3,8 @@
 Status: Active index
 Scope: Super Bot Stage 1 operational templates under `_Docs/AIWorkflow/Studio/Templates/`
 
+Path note: despite the `Studio` path segment, this directory is an AIWorkflow / Super Bot operating artifact area, not the source of truth for current Studio product direction. Current Studio product-direction documents live under `_Docs/Studio/`.
+
 ## Purpose
 
 This directory contains practical templates for running Super Bot Stage 1 work in a consistent, evidence-backed, scope-controlled way.

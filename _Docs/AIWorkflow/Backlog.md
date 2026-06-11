@@ -105,7 +105,7 @@ release
 | GAME-005 | P2 | done | refactoring | Replace `GetDataByIndex(0)` with deterministic character selection | `unordered_map` index access may be non-deterministic | Codex -> Copilot | done: "Reduced-scope deterministic playable character lookup implemented and committed. GetDataByIndex(0) playable character selection was replaced with explicit default Dusty ID lookup. Debug x64 build passed, json smoke passed, and no remaining GetDataByIndex(0) usage exists in PlayGround/Project." |
 | GAME-006 | P2 | todo | data | Normalize `UserData.json` and guard level-0 node data | Current save data may contain invalid node level | Codex -> Copilot | Load/save roundtrip, node state |
 | GAME-007 | P3 | todo | refactoring | Standardize data loader path and failure policy | Loader policy differs between managers | ChatGPT -> Codex -> manual | cwd boot, reload, optional/fatal separation |
-| GAME-008 | P3 | todo | analysis | Audit unused schema fields | `facing`, `spawn_interval_`, `unlock_type_`, `grade_` unclear | ChatGPT -> Codex | Field usage table |
+| GAME-008 | P3 | done | analysis | Audit unused schema fields | Read-only audit completed; implementation/removal decisions are deferred until game-data cleanup resumes. | ChatGPT -> Hermes CLI | done: audit report committed in `d329a44`; fields classified for `facing`, `spawn_interval_`, `unlock_type_`, and `grade_`; no source/data/schema changes were made. |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
 | DOC-001 | P1 | todo | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | Document review |
 | VAL-20260504-205258 | P2 | done | validation | VAL-002 Add run result semantics smoke validation | Automate part of the GAME-002 runtime validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, reward/save timing, stage_progress rules, and duplicate result application. | Discord -> human review | done: "Analysis-only validation planning completed. Codex confirmed that reduced-scope smoke validation should be split into a follow-up task. Recommended path is a focused dev-only or pure-helper smoke validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, reward/save timing, and stage_progress rules." |
@@ -202,16 +202,16 @@ release
 ## Recommended Next Workflow Task
 
 ```text
-GAME-001: Runtime validate GameDataLoader after JSON syntax smoke check
+DOC-001: Consolidate workflow instruction entry points
 ```
 
 Reason:
 
 ```text
-The regular runner path now supports controlled implementation, text encoding
-guarding, completion review, reviewed-concern finalization, auto-approval
-evaluation, and follow-up generation. The next useful step is to use this path
-on a real but bounded game validation task.
+The current Human Director direction is workflow / SuperBot stabilization before
+new gameplay implementation. Multiple workflow, Studio, Discord, PC Runner, and
+SuperBot entry points may drift unless their source-of-truth order and reading
+path are consolidated.
 ```
 
 ---
@@ -219,13 +219,14 @@ on a real but bounded game validation task.
 ## Recommended Next Gameplay Task
 
 ```text
-GAME-001: Runtime validate GameDataLoader after JSON syntax smoke check
+VAL-001: Combat/reward/collection/restart playtest pass
 ```
 
 Reason:
 
 ```text
-JSON syntax passed, but runtime loading and game boot are still separate.
+When gameplay work resumes, runtime combat and reward evidence is more valuable
+than further P3 schema cleanup. GAME-001/GAME-001B are already complete.
 ```
 
 Recommended path:
@@ -233,10 +234,9 @@ Recommended path:
 ```text
 Full Path:
 ChatGPT orchestrator
--> Codex focused read-only analysis if needed
+-> read-only validation plan / checklist
 -> approval
--> runtime validation plan
--> user executes boot/OutGame check
+-> runtime playtest pass
 -> update ProjectStatus
 ```
 
@@ -265,9 +265,9 @@ WF-201 through WF-309 done
 Current target:
 
 ```text
-First real game-task pilot through the regular runner workflow
+Workflow / SuperBot operating stabilization before new gameplay implementation
 ```
 
 Discord integration is active. The regular surface is now runner-centered. The
-next step is to exercise the regular path on a bounded game validation task so
-the workflow can stabilize under real game-project evidence.
+next step is to consolidate stale workflow recommendations and align SuperBot
+Stage 1 operating artifacts with the AIWorkflow / Studio source-of-truth order.
