@@ -325,7 +325,7 @@ Exit criteria:
 
 ### Batch 7: DOC-001 readiness decision
 
-Status: planned.
+Status: complete as an authority-map readiness decision.
 
 Decision outcomes:
 
@@ -333,36 +333,48 @@ Decision outcomes:
 - PASS_WITH_NOTES: DOC-001 can proceed while carrying known cleanup notes.
 - BLOCKED: more authority-map cleanup is required first.
 
-Checklist:
+Checklist result:
 
-- Core document roles are assigned.
-- Source-of-truth order is accepted.
-- Studio / AIWorkflow / SuperBot boundary is clear.
-- Current / legacy / historical labeling approach is accepted.
-- State document schema drift is visible.
-- FinalBlueprint indexing plan is accepted.
+| Check | Result | Evidence |
+|---|---|---|
+| Core document roles are assigned | PASS | Sections 4 and 5 classify folders and core documents |
+| Source-of-truth order is visible | PASS | Section 3 defines the proposed order |
+| Studio / AIWorkflow / SuperBot boundary is clear | PASS | `_FolderPurpose.md`, `Studio/README.md`, and section 6.3 distinguish `_Docs/Studio/` from `_Docs/AIWorkflow/Studio/` |
+| Current / legacy / historical labeling approach exists | PASS | Section 2 defines labels; high-risk root docs now have minimal status labels |
+| State document schema drift is visible | PASS_WITH_NOTES | `State_Tool_Schema_Map.md` records field/section drift and required consistency checks |
+| FinalBlueprint is indexed | PASS_WITH_NOTES | `FinalBlueprint/README.md` classifies all current FinalBlueprint markdown files |
 
-Current draft verdict:
+Final readiness verdict:
 
-`PASS_WITH_NOTES` for continuing with authority-map cleanup. `BLOCKED` for starting DOC-001 consolidation immediately, because structural authority boundaries are not yet applied to the existing docs.
+`PASS_WITH_NOTES` for starting DOC-001 consolidation.
+
+DOC-001 may proceed now, but it must carry these notes:
+
+1. Do not rewrite all historical documents at once.
+2. Treat `README.md` as an index/map, not the policy source itself.
+3. Treat `ProjectStatus.md` as a status snapshot, not the task source of truth.
+4. Do not change `Backlog.md`, `ActiveTask.md`, or `ProjectStatus.md` schema without a separate approved migration.
+5. Use `State_Tool_Schema_Map.md` before changing tool-facing fields or sections.
+6. Use `FinalBlueprint/README.md` before linking a FinalBlueprint document as current authority.
+7. Keep `_Docs/Studio/` as current Studio product direction and `_Docs/AIWorkflow/Studio/` as AIWorkflow-era records/templates/contracts/SuperBot artifact area.
 
 ## 8. Recommended Next Work
 
 Recommended next batch:
 
 ```text
-Batch 2 + Batch 3 + Batch 4
+DOC-001: Consolidate workflow instruction entry points
 ```
 
-Recommended scope:
+Recommended DOC-001 starting scope:
 
-1. Review and accept or revise the source-of-truth order in this document.
-2. Add minimal status labels to the highest-risk root documents.
-3. Update only map/index/path-note text needed to clarify Studio / AIWorkflow / SuperBot boundaries.
-4. Do not yet rewrite full document bodies.
+1. Reduce duplicated rule text in `_Docs/AIWorkflow/README.md` by turning it into links to canonical/operational documents.
+2. Align `09_Operational_Playbook.md` with the authority map without rewriting every procedure.
+3. Add links from relevant index/map docs to `Workflow_Document_Authority_Map.md`, `State_Tool_Schema_Map.md`, and `FinalBlueprint/README.md`.
+4. Defer any tool parser/schema migration to a separate approved task.
 
 Recommended commit message after review:
 
 ```text
-docs: add AIWorkflow document authority map
+docs: record DOC-001 readiness decision
 ```
