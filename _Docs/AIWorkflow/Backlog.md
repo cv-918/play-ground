@@ -106,7 +106,7 @@ release
 | GAME-003 | P2 | deferred | refactoring | Replace town `npcs_[index]` dependency with `npc_id` role lookup | Reduces coupling but low ROI now | Codex -> Copilot | Placement reorder, enabled=false, story interaction |
 | GAME-004 | P2 | done | refactoring | Consume dialogue session result explicitly | `end_reason` and `choice_records` TODO remains | Codex -> Copilot | done: "Runtime validation passed: OutGame entry normal, normal dialogue completion preserved story/event flow, hold skip worked, required gameplay events executed during skip, no abnormal termination or duplicate handling observed, NPC Prologue4 callback dialogue start/end worked, result consumption preserved flow, scene exit/return did not treat running dialogue as normal completed." |
 | GAME-005 | P2 | done | refactoring | Replace `GetDataByIndex(0)` with deterministic character selection | `unordered_map` index access may be non-deterministic | Codex -> Copilot | done: "Reduced-scope deterministic playable character lookup implemented and committed. GetDataByIndex(0) playable character selection was replaced with explicit default Dusty ID lookup. Debug x64 build passed, json smoke passed, and no remaining GetDataByIndex(0) usage exists in PlayGround/Project." |
-| GAME-006 | P2 | todo | data | Normalize `UserData.json` and guard level-0 node data | Current save data may contain invalid node level | Codex -> Copilot | Load/save roundtrip, node state |
+| GAME-006 | P2 | done | data | Normalize `UserData.json` and guard level-0 node data | Original concern satisfied/superseded by later UserData default/load guard, LocalAppData save separation, and runtime migration work. | Codex -> Copilot | done: reconciliation audit recorded in `_Docs/AIWorkflow/Studio/ResultReviews/2026-06-11_game006_userdata_reconciliation_audit.md`; no new source/data changes recommended. |
 | GAME-007 | P3 | todo | refactoring | Standardize data loader path and failure policy | Loader policy differs between managers | ChatGPT -> Codex -> manual | cwd boot, reload, optional/fatal separation |
 | GAME-008 | P3 | done | analysis | Audit unused schema fields | Read-only audit completed; implementation/removal decisions are deferred until game-data cleanup resumes. | ChatGPT -> Hermes CLI | done: audit report committed in `d329a44`; fields classified for `facing`, `spawn_interval_`, `unlock_type_`, and `grade_`; no source/data/schema changes were made. |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
@@ -225,24 +225,26 @@ to VAL-001 or GAME-006 for real gameplay/data validation work.
 ## Recommended Next Gameplay Task
 
 ```text
-VAL-001C: Short manual runtime playtest checklist
+VAL-ATTR-001: Fix AttributeNode readability check false positives
 ```
 
 Reason:
 
 ```text
-When gameplay work resumes, runtime combat and reward evidence is more valuable
-than further P3 schema cleanup. GAME-001/GAME-001B are already complete.
+VAL-001C is parked until home playtest is possible. GAME-006 is now reconciled
+as done/superseded by later UserData fixes. The next non-runtime cleanup with
+clear value is removing AttributeNode children_nodes_info_ false positives from
+the data readability validation script.
 ```
 
 Recommended path:
 
 ```text
 Full Path:
-VAL-001A read-only automation/manual split audit done
--> VAL-001B gameplay runtime anchor smoke validation done
--> VAL-001C short manual runtime playtest checklist
--> update ProjectStatus and split any discovered bugs into follow-up tasks
+VAL-001C remains parked for manual playtest
+-> GAME-006 reconciliation audit done
+-> VAL-ATTR-001 validation-script cleanup
+-> return to gameplay/data work with cleaner loader readability evidence
 ```
 
 ---

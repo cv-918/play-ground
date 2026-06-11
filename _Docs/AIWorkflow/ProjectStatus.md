@@ -194,7 +194,7 @@ autonomous source/data changes should still be introduced incrementally.
 | OutGame / Town | Implemented | `OutGameScene` is the current town-like scene. |
 | InGame / Combat | Implemented | `Enter -> Ready -> Play -> Result/Exit` structure exists. |
 | Run Clear Semantics | Implemented / validated | GAME-002 consolidated timer expired, player death, kill goal, stage progress, restart, and abandon behavior. |
-| Progression / Profile | Implemented with follow-up risk | Dust, exp, stage progress, story progress, equipped skills, and unlocked characters are persisted; GAME-006 remains open for level-0 node data cleanup. |
+| Progression / Profile | Implemented with follow-up risk | Dust, exp, stage progress, story progress, equipped skills, and unlocked characters are persisted; GAME-006 was reconciled as satisfied/superseded by later UserData default/load guard, LocalAppData save separation, and runtime migration work. |
 | Enemy Runtime | Implemented | Enemy combat and abilities exist. |
 | Skill Runtime | Implemented | Skill manager, casting/cooldown/status flow exists. |
 | Dialogue Runtime | Implemented | Dialogue conversion, runner, typing, choices, skip, and events exist. |
@@ -217,7 +217,7 @@ experience: 2356
 equipped_skill_ids: [1, 2]
 unlocked_character_ids: [1]
 known_data_anomaly:
-  - acquired_node_ids contains a level-0 entry
+  - acquired_node_ids previously contained a level-0 entry; current UserData load normalization skips level-0 entries, and GAME-006 is reconciled as done/superseded
 ```
 
 ---
@@ -238,8 +238,8 @@ Current interpretation:
 
 ```text
 No active JSON syntax or GameDataLoader boot blocker is recorded here.
-Remaining data work should be tracked as focused follow-up tasks such as GAME-006,
-not as a generic loader blocker.
+Remaining data work should be tracked as focused follow-up tasks such as GAME-007,
+GAME-008 follow-ups, or validation-script cleanup rather than reopening broad GAME-001.
 ```
 
 ---
@@ -288,7 +288,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 | Risk | Impact | Recommendation |
 |---|---|---|
-| `UserData.json` may contain level-0 node data | Save/profile semantic ambiguity | Handle through GAME-006 with load/save roundtrip and node-state validation |
+| `UserData.json` may contain level-0 node data | Save/profile semantic ambiguity | GAME-006 reconciliation found current load normalization covers this; no new source/data change recommended |
 | `npcs_[0..2]` story coupling | Town story fragility | Defer if NPC work is low ROI |
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
 | Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later |
@@ -300,8 +300,8 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 ## Recommended Next 3 Tasks
 
-1. `VAL-001C: Short manual runtime playtest checklist`
-2. `GAME-006: Normalize UserData.json and guard level-0 node data`
+1. `VAL-001C: Short manual runtime playtest checklist` when home playtest is possible
+2. `VAL-ATTR-001: Fix AttributeNode readability check false positives`
 3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
@@ -309,8 +309,9 @@ Strategic follow-up:
 ```text
 DOC-001 and SUPERBOT-001 are complete. VAL-001B added automated gameplay
 runtime anchor smoke validation for contact/projectile/dust/result/restart
-source paths. Recommended next move is VAL-001C: a short manual runtime smoke
-focused only on visuals, input feel, UI readability, and real scene flow.
+source paths. VAL-001C is parked until home playtest is possible. GAME-006 was
+reconciled as done/superseded. If continuing now, prefer VAL-ATTR-001 to clean
+known AttributeNode readability-script false positives before more data work.
 ```
 
 ---
