@@ -218,237 +218,102 @@ They are execution records and reusable prompts.
 
 ## 7. How to Start a New Task
 
-Use this command in ChatGPT:
+This README is only the navigation entry point. For task-start procedure and
+regular operating flow, use:
 
 ```text
-이 작업에 대해 AI 오케스트레이터 워크플로우 실행해줘.
-
-Task:
-...
-
-Context:
-...
-
-Scope:
-...
-
-Non-Goals:
-...
-
-Output needed:
-...
+09_Operational_Playbook.md
 ```
 
-For meaningful code or data work, do not start with Copilot directly.
+For deciding whether a task belongs on Fast Path, Full Path, or direct work, use:
 
-Start with orchestration, then route to Codex or Copilot only when appropriate.
+```text
+02_Workflow_Scope.md
+```
+
+For reusable task request wording, use:
+
+```text
+PromptTemplates/01_orchestrator_task_request.md
+```
+
+For task state and active task records, use:
+
+```text
+Task_State_Model.md
+Backlog.md
+ActiveTask.md
+State_Tool_Schema_Map.md
+```
 
 ---
 
-## 8. Recommended Default Flow
+## 8. Operating Flow References
 
-The final target is a Discord-first PC Runner-based execution harness. Discord
-is the user-facing interface; the PC Runner owns execution, session supervision,
-evidence collection, verification reporting, and audit logging.
+Do not keep the detailed operating flow duplicated in this README. Use these
+current references instead:
 
-Manual Codex App / Codex CLI prompt copy/paste is a legacy/bootstrap escalation
-path. It remains allowed while the PC Runner execution path is being built, but
-it is not the final architecture.
+| Need | Use |
+|---|---|
+| Day-to-day workflow operation | `09_Operational_Playbook.md` |
+| Scope / Fast Path / Full Path decision | `02_Workflow_Scope.md` |
+| Human approval boundaries | `04_Human_Approval_Gates.md` |
+| Review and validation rules | `07_Review_Validation_Rules.md` |
+| Dev Log rules | `08_DevLog_Rules.md` |
+| Quick checklists | `10_Quick_Checklists.md` |
+| Examples | `11_Workflow_Examples.md` |
+| Recovery / troubleshooting | `12_Troubleshooting_and_Recovery_Guide.md` |
+| Document authority and conflict resolution | `Workflow_Document_Authority_Map.md` |
+| Tool-facing state contract | `State_Tool_Schema_Map.md` |
 
-For regular Discord-assisted AIWorkflow task operation:
-
-```text
-1. /ai intake text:<request>
-2. If auto-handoff is allowed, review the runner/completion card when it stops.
-3. If approval is required, approve the task and start the runner from the
-   next-command card.
-4. Use /ai runner accept-completion after reviewing the Completion Card.
-5. Use mark-done:true only when the completion result is acceptable.
-6. Use /ai git commit, /ai git push, or /ai git commit-push after diff review.
-```
-
-Compatibility and preview options:
+User-facing workflow changes may also require updating:
 
 ```text
-/ai intake-preview text:<request>
-/ai task create                   # manual Backlog task creation
-/ai prepare goal                  # manual escalation / compatibility path
-/ai result audit                  # manual escalation / compatibility path
+Guide/AIWorkflow_User_Guide_KR.html
 ```
 
-Current responsibility split:
-
-```text
-Discord Orchestrator:
-  task state, approval records, command safety, Codex CLI-backed
-  intake-to-Backlog automation, and runner control cards
-
-Codex CLI intake backend:
-  non-interactive TaskDraft JSON generation only
-
-PC Runner execution target:
-  final owner of task workspace execution, session supervision, evidence
-  collection, verification reporting, and Discord progress/completion reporting
-
-Codex App / Codex CLI manual execution:
-  approved manual-escalation path for bootstrap, adapter failure, auth/session
-  failure, or high-risk exceptions
-```
-
-Current `/ai intake` uses local `codex exec` through the signed-in Codex CLI as
-the LLM-assisted intake backend. It creates one Backlog task from a validated
-TaskDraft. For P2/P3 low-risk allowlisted work, deterministic auto-handoff may
-set ActiveTask, approve, and start PC Runner. Current allowlisted classes are
-DOC/VAL, documentation/validation, WF documentation/maintenance, and safe
-GAME validation/build validation when the request explicitly excludes
-source/data/schema/runtime mutation. `/ai intake` does not mark done, commit, or
-push. `/ai intake-preview` is the read-only draft path.
-
-When auto-handoff is blocked, the manual post-intake task flow is:
-
-```text
-1. /ai task set-active
-2. /ai task approve
-3. /ai runner start
-4. /ai completion card
-5. /ai runner accept-completion
-6. /ai task done or /ai runner accept-completion ... mark-done:true
-7. /ai git commit, /ai git push, or /ai git commit-push
-```
-
-Optional/debug/admin commands such as `/ai role status`, `/ai task
-review-intake`, `/ai run workflow-status`, `/ai run active-project`, `/ai run
-project-profile`, and `/ai prepare codex` are not required in the regular path.
-
-For broader architecture or high-risk implementation work, the older Full Path
-still applies conceptually: intake, architecture/reduced scope, approval,
-bounded execution, review, validation, Dev Log, and manual commit decision.
-
-User guide update policy:
-
-`Guide/AIWorkflow_User_Guide_KR.html` is the canonical browser-readable user
-guide for the Human Director. Any task that changes the user-facing workflow
-must update this guide in the same change set. This includes Discord command
-names/options, output cards, next-command prompts, auto-handoff eligibility,
-approval behavior, runner profiles, executor routing, stop reasons, completion
-gates, task done, finalization, commit/push, manual escalation, or any user
-intervention point in the regular workflow.
-
-If a workflow-related task does not require a guide update, the review or
-validation summary must explicitly say that the guide was checked and no update
-was needed.
+If no guide update is needed, the review or validation summary should say so.
 
 ---
 
-## 9. Fast Path
+## 9. Critical Operating Reminders
 
-Fast Path may be used for:
-
-- Documentation edits
-- Prompt template edits
-- Dev Log generation
-- Explanation-only requests
-- Formatting-only changes
-
-Fast Path should not be used for:
-
-- Runtime behavior changes
-- Data schema changes
-- Save/load changes
-- Scene/actor lifecycle changes
-- Broad refactoring
-- AI-generated implementation across multiple files
-
----
-
-## 10. Full Path
-
-Full Path is required for:
-
-- New systems
-- Runtime behavior changes
-- Data schema changes
-- Scene or actor lifecycle changes
-- Save/load behavior changes
-- Multiple-file implementation
-- Copilot Agent Mode implementation
-- Refactoring
-- Build/project file changes
-
-Full Path requires approval, review, validation, and documentation when meaningful.
-
----
-
-## 11. Critical Operating Rules
+This README only summarizes the reminders. Use the linked canonical or
+operational documents above for the full rules.
 
 ```text
 Do not let AI jump from idea to implementation.
-Do not use Copilot before architecture and scope are approved.
+Do not use implementation tools before architecture and scope are approved.
 Do not review a diff that is missing newly created files.
 Do not treat build success as full validation.
 Do not commit without reviewing staged changes.
 Do not invent validation results.
 ```
 
----
-
-## 12. Git Review Reminders
-
-For newly created untracked files:
-
-```bash
-git add -N <new_file>
-git diff > review.diff
-```
-
-or:
-
-```bash
-git add <intended_files>
-git diff --cached > review.diff
-```
-
-Before commit:
-
-```bash
-git diff --check
-git status
-git diff --cached --stat
-```
-
-Avoid `git add .` unless the whole working tree has been reviewed.
+For Git review details, use `10_Quick_Checklists.md` and the repository-level
+rules in `AGENTS.md`.
 
 ---
 
-## 13. Dev Log Locations
+## 10. Dev Log References
 
-Use:
+For Dev Log location and content rules, use:
+
+```text
+08_DevLog_Rules.md
+```
+
+Common locations remain:
 
 ```text
 _DevLog/FixLog/
-```
-
-for completed implementation or bug-fix records.
-
-Use:
-
-```text
 _DevLog/WorkLog/
-```
-
-for investigation or partial progress.
-
-Use:
-
-```text
 _DevLog/Retrospective/
 ```
 
-for workflow/process retrospectives.
-
 ---
 
-## 14. Relationship to Repository-Level Instructions
+## 11. Relationship to Repository-Level Instructions
 
 Top-level AI rules are stored at:
 
@@ -465,7 +330,7 @@ This directory contains detailed workflow documentation.
 
 ---
 
-## 15. Maintenance Policy
+## 12. Maintenance Policy
 
 Update this document when:
 
@@ -481,7 +346,7 @@ Use `09_workflow_update_request.md` when changing workflow behavior.
 
 ---
 
-## 16. Summary
+## 13. Summary
 
 This document set exists to make AI-assisted development:
 
