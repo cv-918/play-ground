@@ -16,23 +16,29 @@ Use this section as the onboarding map for the Super Bot Stage 1 document set.
    - Common behavior inherited by Super Bot and future AI staff: uncertainty, scope control, verification honesty, and permission boundaries.
 3. This document: `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md`
    - Stage 1-specific role, layer split, default artifact locations, end-to-end flow, and completion criteria.
+4. `_Docs/AIWorkflow/SuperBot_Stage1_Alignment_Map.md`
+   - Connects SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps.
 
 ### Full onboarding sequence
 
 1. `AGENTS.md`
 2. `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md`
 3. `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md`
-4. `_Docs/AIWorkflow/SuperBot_Stage1_Flowchart.html`
-5. `_Docs/AIWorkflow/Studio/WorkOrders/2026-06-09_super_bot_stage1_implementation_roadmap.md`
-6. `_Docs/AIWorkflow/Studio/ResultReviews/SuperBot_Stage1_Index.md`
-7. `_DevLog/Retrospective/2026-06-10_super_bot_stage1_batch0_6_retrospective.md`
-8. `_DevLog/WorkLog/2026-06-09_super_bot_stage1_behavior_application.md`
+4. `_Docs/AIWorkflow/SuperBot_Stage1_Alignment_Map.md`
+5. `_Docs/AIWorkflow/Workflow_Document_Authority_Visual_Map.html`
+6. `_Docs/AIWorkflow/SuperBot_Stage1_Flowchart.html`
+7. `_Docs/AIWorkflow/Studio/WorkOrders/2026-06-09_super_bot_stage1_implementation_roadmap.md`
+8. `_Docs/AIWorkflow/Studio/ResultReviews/SuperBot_Stage1_Index.md`
+9. `_DevLog/Retrospective/2026-06-10_super_bot_stage1_batch0_6_retrospective.md`
+10. `_DevLog/WorkLog/2026-06-09_super_bot_stage1_behavior_application.md`
 
 ### Document roles
 
 - `AGENTS.md` is the repository entry point and local law for AI tools.
 - `Universal_AI_Staff_Behavior.md` is the common staff behavior layer.
 - This charter is the Stage 1 Super Bot operating rule for this repo.
+- `SuperBot_Stage1_Alignment_Map.md` explains how this charter connects to the DOC-001 authority maps and artifact locations.
+- `Workflow_Document_Authority_Visual_Map.html` is the quick visual orientation for document authority and reading order.
 - `SuperBot_Stage1_Flowchart.html` is the visual aid for the end-to-end flow; keep it aligned with this charter.
 - The WorkOrder roadmap is the historical implementation and validation plan.
 - The ResultReview index points to validation evidence for each Batch test.

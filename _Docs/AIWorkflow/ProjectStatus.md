@@ -300,15 +300,16 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 ## Recommended Next 3 Tasks
 
-1. Decide whether a separate SuperBot alignment Backlog task is still needed.
+1. `SUPERBOT-001: Align SuperBot Stage 1 operating contract with AIWorkflow authority map`
 2. `UNITY-001: Define Unity project workflow profile requirements`
 3. `UNITY-002: Define Unity validation profile candidates`
 
 Strategic follow-up:
 
 ```text
-DOC-001 is complete. After the SuperBot alignment decision, return to VAL-001 or
-GAME-006 for real gameplay/data validation work.
+DOC-001 is complete and SUPERBOT-001 has started with a draft alignment map.
+After SuperBot Stage 1 alignment, return to VAL-001 or GAME-006 for real
+gameplay/data validation work.
 ```
 
 ---
