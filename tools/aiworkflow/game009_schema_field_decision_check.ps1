@@ -72,7 +72,11 @@ $allOk = (Complete-Step "decision document anchors" $issues) -and $allOk
 
 $issues = New-Object System.Collections.Generic.List[string]
 if ($audit -notmatch "GAME-008 Unused Schema Fields Audit") { $issues.Add("GAME-008 audit report missing") }
-if (-not (Assert-Match "Stage.json contains stale grade_ evidence" $stageJson '"grade_"\s*:\s*0')) { $issues.Add("Stage.json grade_ stale evidence changed") }
+if ($stageJson -match '"grade_"\s*:') {
+    if (-not [regex]::IsMatch($stageJson, '"grade_"\s*:\s*0')) { $issues.Add("Stage.json grade_ exists but no longer matches stale neutral evidence") }
+} else {
+    Write-Host "INFO Stage.json grade_ already removed by later cleanup"
+}
 if ([regex]::IsMatch($stageHeader, "(?s)StageJsonInfo,\s*id_,\s*grade_,\s*spawn_pool_id_")) { $issues.Add("StageJsonInfo now parses grade_; decision needs review") }
 if (-not (Assert-Match "StageJsonInfo ignores grade_ anchor" $stageHeader "(?s)StageJsonInfo,\s*id_,\s*spawn_pool_id_")) { $issues.Add("StageJsonInfo parser anchor changed") }
 $allOk = (Complete-Step "stage grade decision evidence" $issues) -and $allOk

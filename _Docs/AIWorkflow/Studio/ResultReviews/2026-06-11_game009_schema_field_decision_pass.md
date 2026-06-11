@@ -105,7 +105,13 @@ Not part of GAME-009:
 - change runtime behavior
 ```
 
-## 6. Validation Evidence
+## 6. GAME-010 Status Update
+
+```text
+GAME-010 completed on 2026-06-11. Stage.json grade_ was removed as decided here, and the GAME-009 check was updated to accept the post-cleanup state while preserving this decision trace.
+```
+
+## 7. Validation Evidence
 
 Validated by source/data search and the dedicated GAME-009 decision smoke:
 
@@ -114,7 +120,7 @@ facing: appears in TownNpcPlacement data and parser only
 spawn_interval_: appears in SpawnPool data/parser plus separate StageManager global timer
 unlock_type_: appears in Skill data/parser/enum only
 AttributeNode grade_: used by AttributeNodeToolTip
-Stage grade_: present in Stage.json, absent from StageJsonInfo parser
+Stage grade_: removed from Stage.json by GAME-010; still absent from StageJsonInfo parser
 ```
 
 The decision smoke checks that this document contains all five decisions and that the key source/data anchors still match the evidence above.

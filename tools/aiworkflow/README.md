@@ -212,7 +212,21 @@ tools\aiworkflow\game009_schema_field_decision_check.bat
 
 Expected output includes PASS lines for the decision document anchors, Stage grade evidence, and reserved field evidence.
 
-This is a source/data/document smoke. It does not modify gameplay code or data.
+This is a source/data/document smoke. It does not modify gameplay code or data. After GAME-010, it accepts Stage.json `grade_` being already removed while preserving the GAME-009 decision trace.
+
+---
+
+## game010_stage_grade_cleanup_check.bat
+
+Validates that the stale ignored `grade_` key was removed from `Stage.json` while `StageJsonInfo` still maps only active stage fields.
+
+```bat
+tools\aiworkflow\game010_stage_grade_cleanup_check.bat
+```
+
+Expected output includes PASS lines for Stage.json stale grade removal, StageJsonInfo grade absence, and GAME-009 decision traceability.
+
+This is a source/data/document smoke. It does not modify gameplay code.
 
 ---
 
