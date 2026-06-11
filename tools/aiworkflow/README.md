@@ -146,6 +146,20 @@ This is a source-anchor smoke validation. It proves the intended `GameDataLoader
 
 ---
 
+## game007b_stage_loader_safety_anchor_check.bat
+
+Validates GAME-007B source anchors for `StageJsonDataManager` parse failure handling and two-phase table commit safety without booting the game runtime.
+
+```bat
+tools\aiworkflow\game007b_stage_loader_safety_anchor_check.bat
+```
+
+Expected output includes PASS lines for stage two-phase commit anchors and stage parse failure handling anchors.
+
+This is a source-anchor smoke validation. It proves the intended Stage/SpawnPool loader structure is present, not that every runtime reload scenario has been manually exercised.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:
