@@ -294,14 +294,14 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | Data loader path/failure policy inconsistency | Resolved for current scope | GAME-007A/B/C/D completed: patchable data path resolver, explicit required/optional policy, Stage/SpawnPool parse + two-phase safety, fatal core duplicate IDs, and missing-file policy scenario smoke. |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
 | Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; SUPERBOT-001 aligned Stage 1 reading order, artifact flow, stop boundaries, and visual companion |
-| Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
+| Unused schema fields | Partly resolved / follow-up scoped | GAME-008 audit accepted; GAME-009 decision pass keeps AttributeNode grade active, reserves facing/spawn_interval/unlock_type as inactive future hooks, and recommends later removal of stale Stage.json grade_. |
 
 ---
 
 ## Recommended Next 3 Tasks
 
 1. `VAL-001C: Short manual runtime playtest checklist` when home playtest is possible
-2. Choose a new explicit gameplay/data task if continuing before home playtest
+2. `GAME-010: Remove stale Stage.json grade_ field` if continuing data cleanup before home playtest
 3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
@@ -312,8 +312,9 @@ runtime anchor smoke validation for contact/projectile/dust/result/restart
 source paths. VAL-001C is parked until home playtest is possible. GAME-006 was
 reconciled as done/superseded, VAL-ATTR-001 cleaned the known AttributeNode
 readability-script false positives, GAME-007A/GAME-007B/GAME-007C/GAME-007D
-completed the data-loader path/policy cleanup chain, and the Backlog was split
-into active/parked rows plus `BacklogArchive.md` for completed task history.
+completed the data-loader path/policy cleanup chain, the Backlog was split into
+active/parked rows plus `BacklogArchive.md`, and GAME-009 resolved the GAME-008
+unused-schema audit into field-level decisions.
 ```
 
 ---
@@ -334,6 +335,7 @@ game007a_loader_policy_anchor_check_result: passed
 game007b_stage_loader_safety_anchor_check_result: passed
 game007c_duplicate_policy_anchor_check_result: passed
 game007d_missing_file_policy_scenario_check_result: passed
+game009_schema_field_decision_check_result: passed
 gameplay_runtime_anchor_check_result: passed
 run_result_semantics_check_result: passed
 build_executed_in_latest_update: true

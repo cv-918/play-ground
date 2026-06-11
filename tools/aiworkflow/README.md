@@ -202,6 +202,20 @@ This check reads `Backlog.md`, `BacklogArchive.md`, and `ActiveTask.md` only. It
 
 ---
 
+## game009_schema_field_decision_check.bat
+
+Validates the GAME-009 schema-field decision pass against GAME-008 audit evidence and current source/data anchors.
+
+```bat
+tools\aiworkflow\game009_schema_field_decision_check.bat
+```
+
+Expected output includes PASS lines for the decision document anchors, Stage grade evidence, and reserved field evidence.
+
+This is a source/data/document smoke. It does not modify gameplay code or data.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:
