@@ -258,6 +258,20 @@ This is a document/schema smoke. It does not run Unity Editor or modify Unity pr
 
 ---
 
+## unity003_release_track_fields_check.bat
+
+Validates the UNITY-003 Unity release-track workflow fields document, JSON template contract, and workflow-state / Unity boundary references.
+
+```bat
+tools\aiworkflow\unity003_release_track_fields_check.bat
+```
+
+Expected output includes PASS lines for release track document anchors, UnityReleaseTrack template contract, and workflow state / Unity boundary references.
+
+This is a document/schema smoke. It does not run Unity Editor, contact Steam or Google Play, upload builds, publish releases, or handle credentials.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

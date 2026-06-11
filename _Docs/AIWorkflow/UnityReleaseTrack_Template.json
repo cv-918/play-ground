@@ -1,0 +1,159 @@
+{
+  "release_track_schema_id": "unity_release_tracks_default",
+  "engine": "unity",
+  "tracks": [
+    {
+      "release_track_id": "example_windows_steam_release",
+      "project_id": "example-unity-project",
+      "profile_id": "unity_steam_android_default",
+      "target": "windows_steam",
+      "status": "pre_release",
+      "owner": "Human Director",
+      "last_reviewed": null,
+      "version": {
+        "version_name": "0.1.0",
+        "build_number": null,
+        "unity_version": "2022.3 LTS"
+      },
+      "build": {
+        "unity_build_target": "StandaloneWindows64",
+        "validation_profile_id": "unity_windows_steam_build_smoke",
+        "artifact_path": "Builds/WindowsSteam",
+        "artifact_manifest_path": null,
+        "executable_path": null,
+        "last_build_log_path": null
+      },
+      "steam": {
+        "steam_app_id": null,
+        "steam_depot_ids": [],
+        "depot_config_path": null,
+        "steam_branch": "internal",
+        "save_data_policy": "project-defined",
+        "steam_cloud_status": "not_configured",
+        "achievements_status": "not_configured",
+        "controller_support_status": "unknown",
+        "store_page_status": "not_started",
+        "capsule_assets_status": "not_started",
+        "steamworks_sdk_status": "not_configured"
+      },
+      "workflow_status": {
+        "store_metadata_status": "not_started",
+        "store_assets_status": "not_started",
+        "release_notes_status": "not_started",
+        "qa_status": "not_started",
+        "human_approval_status": "not_requested",
+        "publish_status": "not_started"
+      }
+    },
+    {
+      "release_track_id": "example_android_google_play_release",
+      "project_id": "example-unity-project",
+      "profile_id": "unity_steam_android_default",
+      "target": "android_google_play",
+      "status": "internal_test",
+      "owner": "Human Director",
+      "last_reviewed": null,
+      "version": {
+        "version_name": "0.1.0",
+        "version_code": 1,
+        "version_code_policy": "monotonic_increase",
+        "unity_version": "2022.3 LTS"
+      },
+      "build": {
+        "unity_build_target": "Android",
+        "validation_profile_id": "unity_android_google_play_build_smoke",
+        "artifact_type": "AAB",
+        "aab_output_path": "Builds/AndroidGooglePlay",
+        "artifact_manifest_path": null,
+        "last_build_log_path": null
+      },
+      "android": {
+        "application_id": null,
+        "keystore_policy": "human_managed",
+        "signing_status": "not_configured",
+        "min_sdk": null,
+        "target_sdk": null,
+        "scripting_backend": "IL2CPP",
+        "architecture": "ARM64",
+        "permissions_review_status": "not_started",
+        "privacy_policy_status": "not_started",
+        "data_safety_status": "not_started",
+        "store_listing_status": "not_started",
+        "internal_test_status": "not_started",
+        "closed_test_status": "not_started",
+        "production_release_status": "not_started"
+      },
+      "workflow_status": {
+        "store_metadata_status": "not_started",
+        "store_assets_status": "not_started",
+        "release_notes_status": "not_started",
+        "qa_status": "not_started",
+        "human_approval_status": "not_requested",
+        "publish_status": "not_started"
+      }
+    }
+  ],
+  "approval_gates": {
+    "auto_check_allowed": [
+      "artifact_path_exists",
+      "artifact_manifest_parses",
+      "version_format_check",
+      "store_asset_file_existence",
+      "permission_list_extract"
+    ],
+    "prepare_only": [
+      "local_release_checklist_draft",
+      "store_metadata_gap_report",
+      "artifact_handoff_summary"
+    ],
+    "ask_user_first": [
+      "version_name_change",
+      "version_code_change",
+      "release_branch_change",
+      "store_copy_change"
+    ],
+    "human_approval_required": [
+      "steam_app_id_change",
+      "steam_depot_ids_change",
+      "depot_config_path_change",
+      "application_id_change",
+      "keystore_or_signing_change",
+      "privacy_policy_change",
+      "data_safety_change",
+      "permission_sensitive_manifest_change"
+    ],
+    "forbidden_without_explicit_approval": [
+      "steam_upload",
+      "steam_branch_publish",
+      "steam_store_page_publish",
+      "google_play_upload",
+      "google_play_track_promote",
+      "google_play_production_release",
+      "credential_storage",
+      "public_release_announcement"
+    ]
+  },
+  "forbidden_without_approval": [
+    "Steam upload",
+    "Steam branch publish",
+    "Steam store page publish",
+    "Google Play upload",
+    "Google Play track promote",
+    "Google Play production_release",
+    "keystore generation/change/import",
+    "signing credential handling",
+    "store credential handling",
+    "application_id change",
+    "steam_app_id change",
+    "privacy policy external publish/change"
+  ],
+  "evidence_fields": [
+    "last_validation_profile_id",
+    "last_validation_result",
+    "last_validation_report_path",
+    "last_build_artifact_path",
+    "last_build_log_path",
+    "last_store_asset_check_path",
+    "last_permission_review_path"
+  ]
+}

@@ -47,6 +47,8 @@ Workflow_Document_Authority_Map.md
 | `UnityProjectProfile_Template.json` | Machine-readable starter template for a Unity project workflow profile |
 | `Unity_Validation_Profile_Candidates.md` | UNITY-002 candidate validation profiles for Unity project-open, EditMode, PlayMode, build smoke, asset reference, and scene smoke checks |
 | `UnityValidationProfiles_Template.json` | Machine-readable starter template for Unity validation profile selection |
+| `Unity_Release_Track_Workflow_Fields.md` | UNITY-003 release-track workflow fields, approval gates, and forbidden automation for Steam and Google Play |
+| `UnityReleaseTrack_Template.json` | Machine-readable starter template for Unity release-track state records |
 | `FinalBlueprint/README.md` | Draft authority index for classifying FinalBlueprint files as current references, historical specs, reports, roadmaps, companions, or reference-only material |
 | `SuperBot_Stage1_Alignment_Map.md` | Draft alignment map for connecting SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps |
 | `SuperBot_Stage1_Visual_Companion.html` | Browser-readable visual companion for SuperBot Stage 1 operating flow, layers, artifact flow, stop boundaries, and readiness checks |

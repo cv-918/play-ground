@@ -144,13 +144,14 @@ Do not edit archived rows for routine planning. If a completed task needs correc
 | GAME-010 | P2 | done | data | Remove stale Stage.json grade_ field | Execute the GAME-009 remove_later decision for ignored Stage.json grade_ only. Preserve StageJsonInfo id_/spawn_pool_id_ mapping and avoid gameplay behavior changes. | Hermes | done: removed `grade_` from `PlayGround/Data/Stage.json`; added `game010_stage_grade_cleanup_check.bat`; updated GAME-009 check for post-cleanup state; JSON/readability checks and Debug x64 build passed. |
 | UNITY-001 | P1 | done | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | done: requirements doc saved at `_Docs/AIWorkflow/Unity_Project_Workflow_Profile_Requirements.md`; template saved at `_Docs/AIWorkflow/UnityProjectProfile_Template.json`; `unity001_profile_requirements_check.bat` passed. |
 | UNITY-002 | P2 | done | unity | Define Unity validation profile candidates | Unity workflows need build/playmode/editmode/package validation categories | ChatGPT -> Codex later | done: validation candidate doc saved at `_Docs/AIWorkflow/Unity_Validation_Profile_Candidates.md`; template saved at `_Docs/AIWorkflow/UnityValidationProfiles_Template.json`; `unity002_validation_profiles_check.bat` passed. |
+| UNITY-003 | P2 | done | release | Define release-track workflow fields for Steam and Google Play | Long-term workflow includes publishing, not just coding | ChatGPT | done: release-track field doc saved at `_Docs/AIWorkflow/Unity_Release_Track_Workflow_Fields.md`; template saved at `_Docs/AIWorkflow/UnityReleaseTrack_Template.json`; `unity003_release_track_fields_check.bat` passed. |
 
 ---
 
 ## Archive Notes
 
 ```text
-Archived rows after UNITY-002: 129
-Active rows left in Backlog.md: 3
+Archived rows after UNITY-003: 130
+Active rows left in Backlog.md: 2
 Deferred rows left in Backlog.md: 5
 ```
