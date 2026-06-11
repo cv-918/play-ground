@@ -1,5 +1,8 @@
 # 03. Agent Roles
 
+Status: Legacy/current mixed role reference
+Authority: Historical AI Orchestrator role model. Current AI staff behavior is governed by `Universal_AI_Staff_Behavior.md`; Stage 1 SuperBot behavior is governed by `SuperBot_Stage1_Operating_Charter.md`.
+
 ## 1. Purpose
 
 This document defines the specialized AI roles used by the AI Orchestrator workflow.

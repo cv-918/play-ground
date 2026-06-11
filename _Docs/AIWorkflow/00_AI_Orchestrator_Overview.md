@@ -1,5 +1,8 @@
 # 00. AI Orchestrator Overview
 
+Status: Mixed overview — current context plus historical and long-term direction
+Authority: Orientation document. For conflict resolution, use `Workflow_Document_Authority_Map.md` and the current canonical documents it names.
+
 ## 1. Purpose
 
 This document defines the high-level direction for building an AI Orchestrator-based development workflow for the Dust Land / PlayGround project.

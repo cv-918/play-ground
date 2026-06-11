@@ -1,5 +1,8 @@
 # 01. AI Orchestrator Protocol
 
+Status: Legacy/manual full-protocol reference unless explicitly selected
+Authority: Use for the named full AI Orchestrator protocol path. For current regular operation, prefer `09_Operational_Playbook.md`, current task state docs, and `Workflow_Document_Authority_Map.md`.
+
 ## 1. Purpose
 
 This document defines the operating protocol for the AI Orchestrator workflow.

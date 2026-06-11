@@ -1,5 +1,8 @@
 # Folder Purpose: AIWorkflow
 
+Status: Current folder-purpose map
+Authority: Folder boundary summary; see `Workflow_Document_Authority_Map.md` for document-role and conflict-resolution order.
+
 ## Purpose
 
 This folder stores the source-of-truth documents for the repository's AI Orchestrator workflow.
@@ -26,6 +29,17 @@ Use this folder for workflow rules, role definitions, approval gates, routing ru
 - Dev logs for completed investigations or fixes
 - Runtime artifacts from workflow execution
 - Local machine configuration
+
+## Important Boundary Notes
+
+- `_Docs/Studio/` is the source of truth for current Studio product direction.
+- `_Docs/AIWorkflow/Studio/` is an AIWorkflow-era governed records, templates,
+  contracts, and SuperBot operating artifact area. Do not treat that path as the
+  current Studio product-direction source of truth.
+- Durable AIWorkflow evidence and governance records may live under
+  `_Docs/AIWorkflow/Studio/` when they are intentionally promoted from runtime
+  artifacts into reviewable records. Raw transient runtime output still belongs
+  under `_Temp/`.
 
 ## Related Folders
 

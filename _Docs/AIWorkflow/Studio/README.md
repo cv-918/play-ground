@@ -1,5 +1,8 @@
 # AIWorkflow Studio Domain Model
 
+Status: AIWorkflow-era Studio contracts and durable record model
+Authority: This folder is not the source of truth for current Studio product direction. Current Studio product-direction documents live under `_Docs/Studio/`. This folder remains the governed AIWorkflow-era area for Studio contracts, records, templates, and SuperBot operating artifacts unless a future migration is approved.
+
 ## Purpose
 
 This folder contains the first durable implementation slice for the

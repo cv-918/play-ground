@@ -1,5 +1,8 @@
 # 05. Tool Routing Rules
 
+Status: Legacy/current mixed tool-routing reference
+Authority: General tool-selection principles remain useful. Current PC Runner, Codex CLI, Studio, Hermes, and SuperBot paths may supersede older ChatGPT/Copilot/manual routing examples.
+
 ## 1. Purpose
 
 This document defines which tool should be used for each responsibility in the AI Orchestrator workflow.

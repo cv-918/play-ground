@@ -1,5 +1,8 @@
 # AI Workflow Document Index
 
+Status: Current index / map
+Authority: Navigation document only; detailed operating rules live in the linked canonical or operational documents.
+
 ## 1. Purpose
 
 This directory contains the AI Orchestrator workflow documents for this repository.
@@ -17,7 +20,15 @@ The workflow defines how AI tools should be used for development work, including
 - Dev Logs
 - Commit decisions
 
-This README is the entry point for the document set.
+This README is the entry point for the document set. It should help readers find
+the right document, not replace the detailed authority order in
+`Workflow_Document_Authority_Map.md`.
+
+For document-role and conflict-resolution questions, read:
+
+```text
+Workflow_Document_Authority_Map.md
+```
 
 ---
 
@@ -28,6 +39,7 @@ This README is the entry point for the document set.
 | `AIWorkflow_Overview_KR.md` | Korean Human Director overview of the AIWorkflow layers, responsibilities, and regular operating model |
 | `AIWorkflow_Flowchart_KR.md` | Korean flowchart guide for the regular path, read-only inspection path, missing-validation path, and commit decision path |
 | `AIWorkflow_Korean_Guide_Glossary.md` | Korean glossary and command usage guide for regular and optional/debug AIWorkflow commands |
+| `Workflow_Document_Authority_Map.md` | Draft authority map for classifying AIWorkflow documents as current canonical, operational, state source, legacy, historical, product source, or support documents |
 | `Guide/AIWorkflow_User_Guide_KR.html` | Browser-readable Korean Human Director guide for the Studio-centered workflow, PC Runner gates, and legacy Discord helper path |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |

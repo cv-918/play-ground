@@ -1,5 +1,8 @@
 # 04. Human Approval Gates
 
+Status: Current approval-gate reference, pending wording alignment with scope-based approval
+Authority: Defines approval boundaries. Read with `AGENTS.md`, `Universal_AI_Staff_Behavior.md`, and `SuperBot_Stage1_Operating_Charter.md`: approved scope may proceed, while scope expansion, protected workflow/policy/schema/save-load/build changes, commit, push, or genuine ambiguity require explicit approval.
+
 ## 1. Purpose
 
 This document defines when the AI Orchestrator workflow must stop and request explicit human approval.
