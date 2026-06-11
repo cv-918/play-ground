@@ -1,5 +1,8 @@
 # 02. Workflow Scope
 
+Status: Current canonical scope reference
+Authority: Defines when to use full workflow, fast path, or direct work. README and playbook documents should summarize or link here rather than redefine scope rules.
+
 ## 1. Purpose
 
 This document defines where the AI Orchestrator workflow should be applied and where it should not be applied.

@@ -1,5 +1,8 @@
 # Project Status
 
+Status: Derived/manual status snapshot
+Authority: Human-readable status and planning aid. This file is not the task lifecycle source of truth; use `Backlog.md`, `ActiveTask.md`, and `Task_State_Model.md` for task state.
+
 ## Metadata Snapshot
 
 ```yaml

@@ -1,5 +1,8 @@
 # 06. Task Templates
 
+Status: Current template reference
+Authority: Describes task template content. Reusable prompt files live under `PromptTemplates/`; use `Workflow_Document_Authority_Map.md` when template authority is unclear.
+
 ## 1. Purpose
 
 This document defines the standard task templates used by the AI Orchestrator workflow.

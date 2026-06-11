@@ -1,5 +1,8 @@
 # Active Task
 
+Status: State source
+Authority: Current active workflow task source. This file does not by itself approve source/data/schema/workflow-policy/git changes.
+
 ## Purpose
 
 This file represents the current active AI Orchestrator workflow task.

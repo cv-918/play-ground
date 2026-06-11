@@ -56,8 +56,7 @@ Workflow_Document_Authority_Map.md
 | `StudioWiki/README.md` | Preserves the external LLM Wiki / Obsidian / Hermes knowledge-base candidate and states that it is not a primary Studio screen |
 | `StudioWiki/00_MOC.md` | Top-level map of content for the external StudioWiki experiment and promotion review checklist |
 | `Guide/AIWorkflow_LLM_Wiki_Guide_KR.md` | Korean Human Director reference for the deferred/externalized LLM Wiki and AI Librarian memory workflow |
-| `Studio/README.md` | First durable Studio implementation slice: domain model, schemas, read-only staff registry, WorkOrder bridge, staff context/output contract, canon decision flow, memory policy, and runtime contracts |
-| `Discord_Korean_Output_Localization.md` | Defines Korean-facing Discord response localization policy for WF-050 |
+| `Studio/README.md` | AIWorkflow-era Studio contracts, durable records, templates, and SuperBot operating artifacts; not the current Studio product-direction source |
 | `Slash_Command_Metadata_Korean_Localization.md` | Defines Korean-facing Discord slash command metadata localization policy for WF-051 |
 | `00_AI_Orchestrator_Overview.md` | High-level overview of the AI Orchestrator workflow |
 | `01_AI_Orchestrator_Protocol.md` | Full execution protocol from request to completion |
@@ -104,7 +103,6 @@ Workflow_Document_Authority_Map.md
 | `FinalBlueprint/WF_End_To_End_Workflow_Technical_Spec_KR.md` | Korean Human Director companion for the end-to-end technical workflow specification |
 | `FinalBlueprint/WF_Human_Director_Operation_Guide_KR.md` | Practical Korean Human Director guide for requesting work, approving work, monitoring progress, reviewing completion, and deciding commits |
 | `FinalBlueprint/WF_Human_Director_Operation_Guide_KR.html` | Browser-readable HTML version of the Korean Human Director operation guide |
-| `FinalBlueprint/WF_Discord_Command_Quick_Reference_KR.md` | Korean quick reference for Discord commands by runner stop reason and Human Director decision point |
 | `FinalBlueprint/WF_Intake_Auto_Handoff.md` | Defines low-risk `/ai intake` to PC Runner auto-handoff policy, safety boundaries, configuration, and validation |
 | `FinalBlueprint/WF_Intake_Auto_Handoff_KR.md` | Korean Human Director companion for low-risk intake auto-handoff behavior |
 | `FinalBlueprint/WF_Codex_Model_Routing_And_Ephemeral.md` | Defines Codex CLI model/reasoning routing, fast intake candidate, and ephemeral run policy |
@@ -138,15 +136,7 @@ Workflow_Document_Authority_Map.md
 | `Task_State_Model.md` | Defines fixed task states, lifecycle transitions, approval-sensitive transitions, and completion rules for future local/Discord orchestration |
 | `ActiveTask_Template.md` | Template for replacing `ActiveTask.md` when starting a new workflow task |
 | `Project_Profile_Schema.md` | Defines project profile schema for multi-project, Unity-ready, and Discord-connected workflow orchestration |
-| `Discord_Orchestrator_Safety_Rules.md` | Defines permission classes and safety rules for Discord-connected orchestration |
-| `Discord_Bot_Config_Template.json` | Template for local Discord bot configuration without secrets |
 | `Active_Project_Selector.md` | Defines the durable active project selector convention for multi-project and Unity-ready workflow operation |
-| `Discord_Bot_Always_On_Guide.md` | Operation guide for Discord Bot always-on background start, stop, status, restart, logging, and local safety checks |
-| `Discord_Task_Management_Commands.md` | Defines Release B Discord task management commands, safety scope, validation commands, and acceptance criteria |
-| `Discord_Task_Status_Commands.md` | Defines Release C Discord approval and status note commands, write scope, backup behavior, and validation result |
-| `Discord_Safe_Script_Execution_Commands.md` | Defines Release D Discord safe script execution commands, allowlist-only execution, cautions, and validation result |
-| `Discord_Codex_Task_Routing_Commands.md` | Defines Release E Discord Codex App task routing prompt generation commands, safety scope, manual bridge, and validation result |
-| `Discord_Task_Intake_Command.md` | Defines the read-only `/ai intake` natural-language task suggestion command, classification rules, safety scope, and validation expectations |
 
 ---
 

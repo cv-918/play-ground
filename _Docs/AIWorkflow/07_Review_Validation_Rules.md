@@ -1,5 +1,8 @@
 # 07. Review and Validation Rules
 
+Status: Current review/validation reference
+Authority: Defines review severity, validation evidence, and completion rules. Runner-generated verification artifacts remain evidence, not automatic approval.
+
 ## 1. Purpose
 
 This document defines how AI-assisted work should be reviewed and validated before it is considered complete.

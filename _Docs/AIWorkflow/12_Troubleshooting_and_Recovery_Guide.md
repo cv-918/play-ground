@@ -1,5 +1,8 @@
 # 12. Troubleshooting and Recovery Guide
 
+Status: Support / recovery reference
+Authority: Recovery guide for workflow failures. Follow canonical safety and approval rules when recovery actions would change source, state, schema, or git history.
+
 ## 1. Purpose
 
 This document defines how to recover when the AI Orchestrator workflow goes wrong.

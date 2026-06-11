@@ -1,5 +1,8 @@
 # 11. Workflow Examples
 
+Status: Support / examples reference
+Authority: Examples are illustrative. Use current canonical and operational documents when an example conflicts with newer workflow rules.
+
 ## 1. Purpose
 
 This document provides practical examples for applying the AI Orchestrator workflow.

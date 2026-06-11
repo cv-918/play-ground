@@ -1,5 +1,8 @@
 # AI Workflow Backlog
 
+Status: State source
+Authority: Durable task list and task status source. Derived recommendations should not override task rows or `Task_State_Model.md`.
+
 ## Purpose
 
 This is the durable TODO list for Dust Land and AI workflow automation.

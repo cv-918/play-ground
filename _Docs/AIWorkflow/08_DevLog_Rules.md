@@ -1,5 +1,8 @@
 # 08. Dev Log Rules
 
+Status: Current DevLog reference
+Authority: Defines when and how to write Dev Logs. Other documents should summarize or link here rather than duplicate DevLog policy.
+
 ## 1. Purpose
 
 This document defines when and how Dev Logs should be created in the AI Orchestrator workflow.

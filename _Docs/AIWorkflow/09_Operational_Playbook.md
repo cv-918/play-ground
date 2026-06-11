@@ -1,5 +1,8 @@
 # 09. Operational Playbook
 
+Status: Current operational runbook
+Authority: Day-to-day execution guide. It operationalizes canonical rules but should not override `Workflow_Document_Authority_Map.md`, task state sources, or approval gates.
+
 ## 1. Purpose
 
 This document is the practical runbook for using the AI Orchestrator workflow during real development.

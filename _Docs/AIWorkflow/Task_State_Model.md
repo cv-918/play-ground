@@ -1,5 +1,8 @@
 # Task State Model
 
+Status: Current canonical task-state model
+Authority: Defines task state enum and transition rules. Backlog, ActiveTask, tools, and generated summaries should align to this model.
+
 ## 1. Purpose
 
 This document defines the task state model for the AI Orchestrator workflow.

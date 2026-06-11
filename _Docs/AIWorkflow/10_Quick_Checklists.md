@@ -1,5 +1,8 @@
 # 10. Quick Checklists
 
+Status: Support / quick-check reference
+Authority: Checklist companion for current workflow. If a checklist conflicts with canonical rules or the operational playbook, use the canonical rule.
+
 ## 1. Purpose
 
 This document provides short practical checklists for the AI Orchestrator workflow.
