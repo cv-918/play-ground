@@ -16,6 +16,31 @@ request -> classification -> architecture/scope -> approval -> tool routing
 
 Use this document when starting, reviewing, validating, or committing AI-assisted work.
 
+### 1.1 Required Authority References
+
+This playbook is an execution guide, not the source for every rule it mentions.
+Before changing workflow structure, state fields, tool-facing sections, or
+document authority, check these maps first:
+
+```text
+Workflow_Document_Authority_Map.md
+State_Tool_Schema_Map.md
+FinalBlueprint/README.md
+```
+
+Use the task-state documents as state sources:
+
+```text
+Task_State_Model.md
+Backlog.md
+ActiveTask.md
+ProjectStatus.md       # status snapshot only, not task lifecycle authority
+```
+
+Do not change `Backlog.md`, `ActiveTask.md`, `ProjectStatus.md`, or tool-facing
+field/section names as part of a routine documentation cleanup. Treat those as a
+separate schema/tool migration unless explicitly approved.
+
 ---
 
 ## 2. Core Rule
@@ -30,6 +55,18 @@ Plan, approve, implement narrowly, review, validate, document, then commit.
 ## 3. Standard Flow
 
 For meaningful code/data/runtime work:
+
+State record responsibilities:
+
+```text
+Backlog.md: durable task row and status source
+ActiveTask.md: current selected task and current-task metadata
+Task_State_Model.md: valid task states and transitions
+ProjectStatus.md: derived/manual status snapshot
+```
+
+If a Discord or runner command updates state, review the resulting Markdown state
+files before treating the task as done, validated, or committable.
 
 ```text
 1. Capture and create the Backlog task with `/ai intake text:<request>`.
@@ -127,6 +164,9 @@ Use the workflow if the task affects architecture, runtime behavior, data schema
 
 ## 5. Tool Routing
 
+For full tool-routing rules, use `05_Tool_Routing_Rules.md`. This section is a
+quick operational summary.
+
 ```text
 ChatGPT:
   reasoning, architecture, planning, review criteria, validation criteria, documentation, prompt generation
@@ -160,6 +200,10 @@ This section describes the legacy/bootstrap or manual-escalation path. Do not
 treat manual Codex prompt copy/paste as the final architecture. Normal execution
 should move toward PC Runner-owned execution adapters when that path is
 available.
+
+For current runner, adapter, and long-term product direction documents, check
+`FinalBlueprint/README.md` before treating any FinalBlueprint file as current
+authority.
 
 After WF-407, use `/ai runner` for the regular path. Use `/ai prepare codex`,
 `/ai prepare goal`, or `/ai result audit` only when the runner path is blocked,
