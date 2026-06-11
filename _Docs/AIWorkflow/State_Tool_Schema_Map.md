@@ -12,6 +12,7 @@ This document maps the relationship between durable AIWorkflow state documents a
 It exists because several Markdown documents are both human-readable documents and machine-readable tool contracts:
 
 - `_Docs/AIWorkflow/Backlog.md`
+- `_Docs/AIWorkflow/BacklogArchive.md`
 - `_Docs/AIWorkflow/ActiveTask.md`
 - `_Docs/AIWorkflow/ProjectStatus.md`
 - `_Docs/AIWorkflow/Task_State_Model.md`
@@ -33,8 +34,9 @@ Known readers include:
 
 | Tool | Reads | Notes |
 |---|---|---|
-| `tools/aiworkflow/workflow_status.ps1` | `ProjectStatus.md`, `Backlog.md`, `ActiveTask.md`, git status | Main read-only workflow status summary |
-| `tools/aiworkflow/role_router_status.ps1` | `ActiveTask.md`, `Backlog.md`, policy docs | Role routing recommendation; has older scalar parsing behavior |
+| `tools/aiworkflow/workflow_status.ps1` | `ProjectStatus.md`, active `Backlog.md`, `ActiveTask.md`, git status | Main read-only workflow status summary |
+| `tools/aiworkflow/role_router_status.ps1` | `ActiveTask.md`, active `Backlog.md`, policy docs | Role routing recommendation; scalar parsing keeps empty YAML values on one line |
+| `tools/aiworkflow/backlog_archive_consistency_check.ps1` | `Backlog.md`, `BacklogArchive.md`, `ActiveTask.md` | Validates active/archive partition, duplicate task IDs, and active task references |
 | `tools/aiworkflow/studio_director_console_server.js` | `ActiveTask.md`, `Backlog.md`, `ProjectStatus.md`, runtime artifacts | Studio dashboard/core view |
 | `tools/aiworkflow/pc_runner.ps1` | `ActiveTask.md`, `Backlog.md`, runtime artifacts | Runner task context and prompt boundary |
 | Runtime/report tools | `Backlog.md` plus runtime artifacts | Verification, completion, finalization, auto-approval, follow-up generation |

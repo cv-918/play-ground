@@ -59,7 +59,8 @@ For meaningful code/data/runtime work:
 State record responsibilities:
 
 ```text
-Backlog.md: durable task row and status source
+Backlog.md: active/parked task row and status source
+BacklogArchive.md: completed task evidence archive
 ActiveTask.md: current selected task and current-task metadata
 Task_State_Model.md: valid task states and transitions
 ProjectStatus.md: derived/manual status snapshot

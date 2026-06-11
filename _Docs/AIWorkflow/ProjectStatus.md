@@ -1,7 +1,7 @@
 # Project Status
 
 Status: Derived/manual status snapshot
-Authority: Human-readable status and planning aid. This file is not the task lifecycle source of truth; use `Backlog.md`, `ActiveTask.md`, and `Task_State_Model.md` for task state.
+Authority: Human-readable status and planning aid. This file is not the task lifecycle source of truth; use `Backlog.md`, `BacklogArchive.md`, `ActiveTask.md`, and `Task_State_Model.md` for task state/history.
 
 ## Metadata Snapshot
 
@@ -311,9 +311,9 @@ DOC-001 and SUPERBOT-001 are complete. VAL-001B added automated gameplay
 runtime anchor smoke validation for contact/projectile/dust/result/restart
 source paths. VAL-001C is parked until home playtest is possible. GAME-006 was
 reconciled as done/superseded, VAL-ATTR-001 cleaned the known AttributeNode
-readability-script false positives, and GAME-007A/GAME-007B/GAME-007C/GAME-007D
-completed the data-loader path/policy cleanup chain with green data smoke,
-scenario smoke, and Debug x64 build.
+readability-script false positives, GAME-007A/GAME-007B/GAME-007C/GAME-007D
+completed the data-loader path/policy cleanup chain, and the Backlog was split
+into active/parked rows plus `BacklogArchive.md` for completed task history.
 ```
 
 ---

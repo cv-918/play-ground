@@ -188,6 +188,20 @@ This is a data-copy scenario smoke validation. It proves the required/optional f
 
 ---
 
+## backlog_archive_consistency_check.bat
+
+Validates the Active Backlog / Archive split after moving completed rows out of `Backlog.md`.
+
+```bat
+tools\aiworkflow\backlog_archive_consistency_check.bat
+```
+
+Expected output includes PASS lines for split structure, active/archive status partition, combined task id integrity, active task references, and active backlog row availability.
+
+This check reads `Backlog.md`, `BacklogArchive.md`, and `ActiveTask.md` only. It does not modify workflow state.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

@@ -58,6 +58,7 @@ When documents conflict, use this order unless the Human Director gives a newer 
    - `_Docs/AIWorkflow/Task_State_Model.md`
 5. Durable task state:
    - `_Docs/AIWorkflow/Backlog.md`
+   - `_Docs/AIWorkflow/BacklogArchive.md`
    - `_Docs/AIWorkflow/ActiveTask.md`
 6. Current AI staff behavior:
    - `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md`
@@ -118,7 +119,8 @@ Supporting maps created from this audit:
 | `_Docs/AIWorkflow/11_Workflow_Examples.md` | Support / examples | Examples | Label examples by current or legacy path |
 | `_Docs/AIWorkflow/12_Troubleshooting_and_Recovery_Guide.md` | Support / operational | Recovery guide | Keep linked from README/playbook |
 | `_Docs/AIWorkflow/Task_State_Model.md` | Current canonical | Task state enum and transition model | Bring Backlog status description and tool expectations into alignment |
-| `_Docs/AIWorkflow/Backlog.md` | State source | Durable task list and task status | Avoid derived recommendations or mark them generated |
+| `_Docs/AIWorkflow/Backlog.md` | State source | Active/parked task list and task status | Avoid derived recommendations or mark them generated |
+| `_Docs/AIWorkflow/BacklogArchive.md` | Historical archive | Completed task evidence rows moved out of active Backlog | Do not use as active planning source; keep row schema compatible |
 | `_Docs/AIWorkflow/ActiveTask.md` | State source | Current active task | Align section names and scalar fields with tools |
 | `_Docs/AIWorkflow/ProjectStatus.md` | Derived/manual status snapshot | Human-readable status snapshot | Reduce copied state; clarify not task source of truth |
 | `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md` | Current canonical | Common AI staff behavior | Ensure conflict order vs older numbered docs is explicit |
@@ -180,7 +182,7 @@ Resolution direction:
 
 ### 6.5 Markdown state docs are also tool contracts
 
-`Backlog.md`, `ActiveTask.md`, and `ProjectStatus.md` are human-readable Markdown documents, but tools parse them as machine-readable state.
+`Backlog.md`, `BacklogArchive.md`, `ActiveTask.md`, and `ProjectStatus.md` are human-readable Markdown documents. Tools parse `Backlog.md` as active/parked machine-readable state; `BacklogArchive.md` preserves completed rows for history and consistency checks.
 
 Known drift:
 
@@ -359,7 +361,7 @@ DOC-001 may proceed now, but it must carry these notes:
 1. Do not rewrite all historical documents at once.
 2. Treat `README.md` as an index/map, not the policy source itself.
 3. Treat `ProjectStatus.md` as a status snapshot, not the task source of truth.
-4. Do not change `Backlog.md`, `ActiveTask.md`, or `ProjectStatus.md` schema without a separate approved migration.
+4. Do not change `Backlog.md`, `BacklogArchive.md`, `ActiveTask.md`, or `ProjectStatus.md` schema without a separate approved migration.
 5. Use `State_Tool_Schema_Map.md` before changing tool-facing fields or sections.
 6. Use `FinalBlueprint/README.md` before linking a FinalBlueprint document as current authority.
 7. Keep `_Docs/Studio/` as current Studio product direction and `_Docs/AIWorkflow/Studio/` as AIWorkflow-era records/templates/contracts/SuperBot artifact area.
