@@ -118,6 +118,20 @@ Expected output includes PASS lines for `TimeExpired`, `PlayerDied`, `StageProgr
 
 ---
 
+## gameplay_runtime_anchor_check.bat
+
+Validates VAL-001 gameplay runtime source anchors without booting the game runtime and without reading or writing `PlayGround\Data\UserData.json`.
+
+```bat
+tools\aiworkflow\gameplay_runtime_anchor_check.bat
+```
+
+Expected output includes PASS lines for contact attack anchors, projectile attack anchors, bullet/player projectile anchors, dust/reward anchors, and result/restart anchors.
+
+This is a source-anchor smoke validation. It reduces manual playtest scope, but it does not prove visual feedback, input feel, scene timing, UI readability, or runtime collision feel.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

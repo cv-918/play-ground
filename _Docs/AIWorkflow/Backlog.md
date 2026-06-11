@@ -110,6 +110,7 @@ release
 | GAME-007 | P3 | todo | refactoring | Standardize data loader path and failure policy | Loader policy differs between managers | ChatGPT -> Codex -> manual | cwd boot, reload, optional/fatal separation |
 | GAME-008 | P3 | done | analysis | Audit unused schema fields | Read-only audit completed; implementation/removal decisions are deferred until game-data cleanup resumes. | ChatGPT -> Hermes CLI | done: audit report committed in `d329a44`; fields classified for `facing`, `spawn_interval_`, `unlock_type_`, and `grade_`; no source/data/schema changes were made. |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
+| VAL-001B | P1 | done | validation | Add gameplay runtime anchor smoke validation | Reduce VAL-001 manual playtest scope by checking combat/projectile/dust/result/restart source anchors before manual runtime play | ChatGPT / Hermes | done: `gameplay_runtime_anchor_check.bat`, run-result semantics smoke, and JSON smoke passed; manual visual/input/scene-flow smoke remains for VAL-001C. |
 | DOC-001 | P1 | done | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | done: README now acts as index/map, core document roles are labeled, playbook/AGENTS link to authority and state maps, stale missing links were removed, and guide-update review found no user-facing workflow change. |
 | SUPERBOT-001 | P1 | done | documentation | Align SuperBot Stage 1 operating contract with AIWorkflow authority map | SuperBot reading order, artifact locations, stop boundaries, and Stage 1 readiness should match DOC-001 authority maps | ChatGPT / Hermes | done: Stage 1 alignment map, charter required maps, artifact flow, readiness checklist, Universal behavior pointer, and visual companion are in place; final multi-pass review found no blocking gaps. |
 | VAL-20260504-205258 | P2 | done | validation | VAL-002 Add run result semantics smoke validation | Automate part of the GAME-002 runtime validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, reward/save timing, stage_progress rules, and duplicate result application. | Discord -> human review | done: "Analysis-only validation planning completed. Codex confirmed that reduced-scope smoke validation should be split into a follow-up task. Recommended path is a focused dev-only or pure-helper smoke validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, reward/save timing, and stage_progress rules." |
@@ -223,7 +224,7 @@ to VAL-001 or GAME-006 for real gameplay/data validation work.
 ## Recommended Next Gameplay Task
 
 ```text
-VAL-001: Combat/reward/collection/restart playtest pass
+VAL-001C: Short manual runtime playtest checklist
 ```
 
 Reason:
@@ -237,11 +238,10 @@ Recommended path:
 
 ```text
 Full Path:
-ChatGPT orchestrator
--> read-only validation plan / checklist
--> approval
--> runtime playtest pass
--> update ProjectStatus
+VAL-001A read-only automation/manual split audit done
+-> VAL-001B gameplay runtime anchor smoke validation done
+-> VAL-001C short manual runtime playtest checklist
+-> update ProjectStatus and split any discovered bugs into follow-up tasks
 ```
 
 ---

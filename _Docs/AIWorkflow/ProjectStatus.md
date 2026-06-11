@@ -300,16 +300,17 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 ## Recommended Next 3 Tasks
 
-1. `VAL-001: Combat/reward/collection/restart playtest pass`
+1. `VAL-001C: Short manual runtime playtest checklist`
 2. `GAME-006: Normalize UserData.json and guard level-0 node data`
 3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
 
 ```text
-DOC-001 and SUPERBOT-001 are complete. Workflow/SuperBot stabilization can pause
-unless new drift appears. Recommended next move is real gameplay/data validation:
-VAL-001 first, then GAME-006 if save/node data issues remain relevant.
+DOC-001 and SUPERBOT-001 are complete. VAL-001B added automated gameplay
+runtime anchor smoke validation for contact/projectile/dust/result/restart
+source paths. Recommended next move is VAL-001C: a short manual runtime smoke
+focused only on visuals, input feel, UI readability, and real scene flow.
 ```
 
 ---
@@ -324,6 +325,8 @@ capture_diff_include_untracked_result: passed
 json_smoke_check_result: passed
 json_smoke_total: 11
 json_smoke_failed: 0
+gameplay_runtime_anchor_check_result: passed
+run_result_semantics_check_result: passed
 build_executed_in_latest_update: false
 runtime_executed_in_latest_update: false
 manual_gameplay_validation_executed_in_latest_update: false
