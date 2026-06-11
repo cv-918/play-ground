@@ -292,7 +292,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | `npcs_[0..2]` story coupling | Town story fragility | Defer if NPC work is low ROI |
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
 | Data loader path/failure policy inconsistency | Resolved for current scope | GAME-007A/B/C/D completed: patchable data path resolver, explicit required/optional policy, Stage/SpawnPool parse + two-phase safety, fatal core duplicate IDs, and missing-file policy scenario smoke. |
-| C++ custom-engine workflow overfitting | Partly mitigated | UNITY-001 defined Unity project workflow profile requirements and a UnityProjectProfile template; UNITY-002/003 remain for validation/release specifics. |
+| C++ custom-engine workflow overfitting | Partly mitigated | UNITY-001 defined Unity project workflow profile requirements; UNITY-002 defined Unity validation profile candidates; UNITY-003 remains for release specifics. |
 | Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; SUPERBOT-001 aligned Stage 1 reading order, artifact flow, stop boundaries, and visual companion |
 | Unused schema fields | Resolved for current scope | GAME-008 audit accepted; GAME-009 decision pass keeps AttributeNode grade active, reserves facing/spawn_interval/unlock_type as inactive future hooks, and GAME-010 removed stale ignored Stage.json grade_. |
 
@@ -302,7 +302,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 
 1. `VAL-001C: Short manual runtime playtest checklist` when home playtest is possible
 2. Choose a new explicit gameplay/data task if continuing before home playtest
-3. `UNITY-002: Define Unity validation profile candidates`
+3. `UNITY-003: Define release-track workflow fields for Steam and Google Play`
 
 Strategic follow-up:
 
@@ -315,8 +315,9 @@ readability-script false positives, GAME-007A/GAME-007B/GAME-007C/GAME-007D
 completed the data-loader path/policy cleanup chain, the Backlog was split into
 active/parked rows plus `BacklogArchive.md`, GAME-009 resolved the GAME-008
 unused-schema audit into field-level decisions, GAME-010 removed stale ignored
-Stage.json grade_ data, and UNITY-001 defined Unity project workflow profile
-requirements for future Steam/Google Play Unity workflows.
+Stage.json grade_ data, UNITY-001 defined Unity project workflow profile
+requirements, and UNITY-002 defined Unity validation profile candidates for
+future Steam/Google Play Unity workflows.
 ```
 
 ---
@@ -340,6 +341,7 @@ game007d_missing_file_policy_scenario_check_result: passed
 game009_schema_field_decision_check_result: passed
 game010_stage_grade_cleanup_check_result: passed
 unity001_profile_requirements_check_result: passed
+unity002_validation_profiles_check_result: passed
 gameplay_runtime_anchor_check_result: passed
 run_result_semantics_check_result: passed
 build_executed_in_latest_update: true

@@ -143,13 +143,14 @@ Do not edit archived rows for routine planning. If a completed task needs correc
 | GAME-009 | P2 | done | analysis | Decide GAME-008 unused schema field policy | Turn GAME-008 audit findings into field-level keep/reserve/remove-later decisions before any schema/data change. | ChatGPT -> Hermes | done: decision report saved at `_Docs/AIWorkflow/Studio/ResultReviews/2026-06-11_game009_schema_field_decision_pass.md`; `game009_schema_field_decision_check.bat` passed. |
 | GAME-010 | P2 | done | data | Remove stale Stage.json grade_ field | Execute the GAME-009 remove_later decision for ignored Stage.json grade_ only. Preserve StageJsonInfo id_/spawn_pool_id_ mapping and avoid gameplay behavior changes. | Hermes | done: removed `grade_` from `PlayGround/Data/Stage.json`; added `game010_stage_grade_cleanup_check.bat`; updated GAME-009 check for post-cleanup state; JSON/readability checks and Debug x64 build passed. |
 | UNITY-001 | P1 | done | unity | Define Unity project workflow profile requirements | Needed for Steam/Play Store Unity projects | ChatGPT | done: requirements doc saved at `_Docs/AIWorkflow/Unity_Project_Workflow_Profile_Requirements.md`; template saved at `_Docs/AIWorkflow/UnityProjectProfile_Template.json`; `unity001_profile_requirements_check.bat` passed. |
+| UNITY-002 | P2 | done | unity | Define Unity validation profile candidates | Unity workflows need build/playmode/editmode/package validation categories | ChatGPT -> Codex later | done: validation candidate doc saved at `_Docs/AIWorkflow/Unity_Validation_Profile_Candidates.md`; template saved at `_Docs/AIWorkflow/UnityValidationProfiles_Template.json`; `unity002_validation_profiles_check.bat` passed. |
 
 ---
 
 ## Archive Notes
 
 ```text
-Archived rows after UNITY-001: 128
-Active rows left in Backlog.md: 5
+Archived rows after UNITY-002: 129
+Active rows left in Backlog.md: 3
 Deferred rows left in Backlog.md: 5
 ```

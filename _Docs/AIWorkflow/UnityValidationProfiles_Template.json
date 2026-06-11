@@ -1,0 +1,178 @@
+{
+  "profile_set_id": "unity_validation_profiles_default",
+  "engine": "unity",
+  "inherits_project_profile": "UnityProjectProfile_Template.json",
+  "artifact_root": "_Temp/UnityValidationReports",
+  "profiles": [
+    {
+      "profile_id": "unity_project_open",
+      "name": "Unity project open and package restore",
+      "category": "project_health",
+      "required_by_default": true,
+      "command_template": "<Unity> -batchmode -quit -projectPath <project_path> -logFile <artifact_root>/project-open.log",
+      "expected_artifacts": [
+        "project-open.log"
+      ],
+      "blocks_completion_on_failure": true,
+      "human_approval_notes": [
+        "Package add/remove/major upgrade requires human approval.",
+        "Unity version, render pipeline, input system, and ProjectSettings changes require explicit approval."
+      ]
+    },
+    {
+      "profile_id": "unity_editmode_tests",
+      "name": "Unity EditMode tests",
+      "category": "automated_tests",
+      "required_by_default": false,
+      "command_template": "<Unity> -batchmode -projectPath <project_path> -runTests -testPlatform EditMode -testResults <artifact_root>/editmode-results.xml -logFile <artifact_root>/editmode.log",
+      "expected_artifacts": [
+        "editmode-results.xml",
+        "editmode.log"
+      ],
+      "blocks_completion_on_failure": true,
+      "select_when": [
+        "Assets/Scripts change",
+        "Assets/Editor change",
+        "ScriptableObject/data model logic change",
+        "editor validation tooling change"
+      ]
+    },
+    {
+      "profile_id": "unity_playmode_tests",
+      "name": "Unity PlayMode tests",
+      "category": "automated_tests",
+      "required_by_default": false,
+      "command_template": "<Unity> -batchmode -projectPath <project_path> -runTests -testPlatform PlayMode -testResults <artifact_root>/playmode-results.xml -logFile <artifact_root>/playmode.log",
+      "expected_artifacts": [
+        "playmode-results.xml",
+        "playmode.log"
+      ],
+      "blocks_completion_on_failure": true,
+      "select_when": [
+        "runtime gameplay behavior change",
+        "MonoBehaviour lifecycle change",
+        "scene boot behavior change",
+        "prefab-instantiated behavior change"
+      ]
+    },
+    {
+      "profile_id": "unity_windows_steam_build_smoke",
+      "name": "Windows Steam build smoke",
+      "category": "platform_build",
+      "target_platform": "windows_steam",
+      "unity_build_target": "StandaloneWindows64",
+      "required_by_default": false,
+      "command_template": "<Unity> -batchmode -quit -projectPath <project_path> -executeMethod BuildScript.BuildWindowsSteam -logFile <artifact_root>/windows-steam-build.log",
+      "expected_artifacts": [
+        "windows-steam-build.log",
+        "Builds/WindowsSteam"
+      ],
+      "blocks_completion_on_failure": true,
+      "select_when": [
+        "Windows/Steam build-impacting change",
+        "ProjectSettings change for desktop target",
+        "release-track Windows smoke requested"
+      ]
+    },
+    {
+      "profile_id": "unity_android_google_play_build_smoke",
+      "name": "Android Google Play build smoke",
+      "category": "platform_build",
+      "target_platform": "android_google_play",
+      "unity_build_target": "Android",
+      "required_by_default": false,
+      "command_template": "<Unity> -batchmode -quit -projectPath <project_path> -executeMethod BuildScript.BuildAndroidGooglePlay -logFile <artifact_root>/android-google-play-build.log",
+      "expected_artifacts": [
+        "android-google-play-build.log",
+        "Builds/AndroidGooglePlay"
+      ],
+      "blocks_completion_on_failure": true,
+      "human_approval_notes": [
+        "Keystore/signing changes require human approval.",
+        "Application id/package name and store identity changes require human approval.",
+        "Google Play publish actions are outside this validation profile."
+      ],
+      "select_when": [
+        "Android/mobile build-impacting change",
+        "ProjectSettings change for Android target",
+        "release-track Android smoke requested"
+      ]
+    },
+    {
+      "profile_id": "unity_asset_reference_check",
+      "name": "Unity asset reference check",
+      "category": "asset_integrity",
+      "required_by_default": false,
+      "command_template": "<project-defined asset reference validation command>",
+      "expected_artifacts": [
+        "asset-reference-check.log"
+      ],
+      "blocks_completion_on_failure": true,
+      "select_when": [
+        "Assets/Prefabs change",
+        "Assets/Scenes change",
+        "Assets/Resources change",
+        "Addressables configuration change",
+        "asset path or GUID-sensitive move"
+      ]
+    },
+    {
+      "profile_id": "unity_scene_open_smoke",
+      "name": "Unity scene open smoke",
+      "category": "scene_integrity",
+      "required_by_default": false,
+      "command_template": "<project-defined scene open validation command>",
+      "expected_artifacts": [
+        "scene-open-smoke.log"
+      ],
+      "blocks_completion_on_failure": true,
+      "select_when": [
+        "Assets/Scenes change",
+        "scene boot or UI-flow change",
+        "prefab placement change affecting scene startup"
+      ]
+    }
+  ],
+  "selection_matrix": [
+    {
+      "change_type": "C# gameplay/domain script",
+      "profiles": [
+        "unity_project_open",
+        "unity_editmode_tests",
+        "unity_playmode_tests"
+      ]
+    },
+    {
+      "change_type": "Editor tooling or validators",
+      "profiles": [
+        "unity_project_open",
+        "unity_editmode_tests"
+      ]
+    },
+    {
+      "change_type": "Scene or prefab behavior",
+      "profiles": [
+        "unity_project_open",
+        "unity_playmode_tests",
+        "unity_scene_open_smoke",
+        "unity_asset_reference_check"
+      ]
+    },
+    {
+      "change_type": "Windows Steam build-impacting change",
+      "profiles": [
+        "unity_project_open",
+        "unity_editmode_tests",
+        "unity_windows_steam_build_smoke"
+      ]
+    },
+    {
+      "change_type": "Android Google Play build-impacting change",
+      "profiles": [
+        "unity_project_open",
+        "unity_editmode_tests",
+        "unity_android_google_play_build_smoke"
+      ]
+    }
+  ]
+}

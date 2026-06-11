@@ -45,6 +45,8 @@ Workflow_Document_Authority_Map.md
 | `BacklogArchive.md` | Historical archive of completed Backlog rows; active/open and deferred rows remain in `Backlog.md` |
 | `Unity_Project_Workflow_Profile_Requirements.md` | UNITY-001 requirements for Unity project profiles, path scopes, approval gates, validation hooks, and Steam/Google Play platform hooks |
 | `UnityProjectProfile_Template.json` | Machine-readable starter template for a Unity project workflow profile |
+| `Unity_Validation_Profile_Candidates.md` | UNITY-002 candidate validation profiles for Unity project-open, EditMode, PlayMode, build smoke, asset reference, and scene smoke checks |
+| `UnityValidationProfiles_Template.json` | Machine-readable starter template for Unity validation profile selection |
 | `FinalBlueprint/README.md` | Draft authority index for classifying FinalBlueprint files as current references, historical specs, reports, roadmaps, companions, or reference-only material |
 | `SuperBot_Stage1_Alignment_Map.md` | Draft alignment map for connecting SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps |
 | `SuperBot_Stage1_Visual_Companion.html` | Browser-readable visual companion for SuperBot Stage 1 operating flow, layers, artifact flow, stop boundaries, and readiness checks |

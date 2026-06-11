@@ -244,6 +244,20 @@ This is a document/schema smoke. It does not run Unity Editor or modify Unity pr
 
 ---
 
+## unity002_validation_profiles_check.bat
+
+Validates the UNITY-002 Unity validation profile candidate document, JSON template contract, and workflow-state references.
+
+```bat
+tools\aiworkflow\unity002_validation_profiles_check.bat
+```
+
+Expected output includes PASS lines for validation profile document anchors, UnityValidationProfiles template contract, and workflow state / UNITY-001 boundary references.
+
+This is a document/schema smoke. It does not run Unity Editor or modify Unity projects.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:
