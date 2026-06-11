@@ -117,6 +117,33 @@ function Assert-Ref {
     }
 }
 
+function Test-IsScalarJsonValue {
+    param($Value)
+    if ($null -eq $Value) {
+        return $false
+    }
+    if ($Value -is [System.Array]) {
+        return $false
+    }
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        return $false
+    }
+    return $true
+}
+
+function Assert-AttributeChildRef {
+    param(
+        $NodeId,
+        $ChildId,
+        [System.Collections.Generic.HashSet[string]]$AttributeNodeIds
+    )
+
+    if ([string]$ChildId -eq [string]$NodeId) {
+        Add-Failure "AttributeNode[$NodeId] cannot reference itself as a child."
+    }
+    Assert-Ref "AttributeNode[$NodeId].children_nodes_info_.child_id" $ChildId $AttributeNodeIds
+}
+
 function Assert-ArrayFile {
     param([string]$Key, [string]$Label)
     $value = $script:data[$Key]
@@ -289,17 +316,25 @@ foreach ($node in $attributeNodes) {
     $nodeId = Get-Prop $node "id_"
     Assert-Ref "AttributeNode[$nodeId].parent_node_id_" (Get-Prop $node "parent_node_id_") $attributeNodeIds -AllowNegative
     $children = As-Array (Get-Prop $node "children_nodes_info_")
+    $scalarChildren = @($children | Where-Object { Test-IsScalarJsonValue $_ })
+    if ($children.Count -gt 0 -and $scalarChildren.Count -eq $children.Count) {
+        if (($children.Count % 2) -ne 0) {
+            Add-Failure "AttributeNode[$nodeId].children_nodes_info_ has an odd number of scalar tuple values."
+            continue
+        }
+        for ($childIndex = 0; $childIndex -lt $children.Count; $childIndex += 2) {
+            Assert-AttributeChildRef $nodeId $children[$childIndex] $attributeNodeIds
+        }
+        continue
+    }
+
     foreach ($childInfo in $children) {
         $parts = As-Array $childInfo
         if ($parts.Count -lt 1) {
             Add-Failure "AttributeNode[$nodeId].children_nodes_info_ has an invalid child entry."
             continue
         }
-        $childId = [string]$parts[0]
-        if ($childId -eq [string]$nodeId) {
-            Add-Failure "AttributeNode[$nodeId] cannot reference itself as a child."
-        }
-        Assert-Ref "AttributeNode[$nodeId].children_nodes_info_.child_id" $childId $attributeNodeIds
+        Assert-AttributeChildRef $nodeId $parts[0] $attributeNodeIds
     }
 }
 

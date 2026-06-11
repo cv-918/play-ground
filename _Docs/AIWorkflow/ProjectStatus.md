@@ -291,7 +291,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | `UserData.json` may contain level-0 node data | Save/profile semantic ambiguity | GAME-006 reconciliation found current load normalization covers this; no new source/data change recommended |
 | `npcs_[0..2]` story coupling | Town story fragility | Defer if NPC work is low ROI |
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
-| Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later |
+| Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later; current JSON smoke and game data loader readability pass after VAL-ATTR-001 cleanup |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
 | Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; SUPERBOT-001 aligned Stage 1 reading order, artifact flow, stop boundaries, and visual companion |
 | Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
@@ -301,7 +301,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 ## Recommended Next 3 Tasks
 
 1. `VAL-001C: Short manual runtime playtest checklist` when home playtest is possible
-2. `VAL-ATTR-001: Fix AttributeNode readability check false positives`
+2. Choose a new explicit gameplay/data task if continuing before home playtest
 3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
@@ -310,8 +310,8 @@ Strategic follow-up:
 DOC-001 and SUPERBOT-001 are complete. VAL-001B added automated gameplay
 runtime anchor smoke validation for contact/projectile/dust/result/restart
 source paths. VAL-001C is parked until home playtest is possible. GAME-006 was
-reconciled as done/superseded. If continuing now, prefer VAL-ATTR-001 to clean
-known AttributeNode readability-script false positives before more data work.
+reconciled as done/superseded, and VAL-ATTR-001 cleaned the known AttributeNode
+readability-script false positives. Current non-runtime data smoke is green.
 ```
 
 ---
@@ -326,6 +326,8 @@ capture_diff_include_untracked_result: passed
 json_smoke_check_result: passed
 json_smoke_total: 11
 json_smoke_failed: 0
+game_data_loader_readability_check_result: passed
+game_data_loader_readability_failed: 0
 gameplay_runtime_anchor_check_result: passed
 run_result_semantics_check_result: passed
 build_executed_in_latest_update: false

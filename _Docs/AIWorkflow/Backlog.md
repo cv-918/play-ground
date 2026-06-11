@@ -112,6 +112,7 @@ release
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
 | VAL-001B | P1 | done | validation | Add gameplay runtime anchor smoke validation | Reduce VAL-001 manual playtest scope by checking combat/projectile/dust/result/restart source anchors before manual runtime play | ChatGPT / Hermes | done: `gameplay_runtime_anchor_check.bat`, run-result semantics smoke, and JSON smoke passed; manual visual/input/scene-flow smoke remains for VAL-001C. |
 | VAL-001C | P1 | in_progress | validation | Short manual runtime playtest checklist | Automated source-anchor and data smoke checks passed; remaining risk is visual/input/UI/scene-flow runtime behavior | Human validation with Hermes checklist support | checklist created at `_Docs/Validation/VAL-001C_Manual_Runtime_Playtest_Checklist.md`; no local executable found yet. |
+| VAL-ATTR-001 | P2 | done | validation | Fix AttributeNode readability check false positives | `game_data_loader_readability_check.bat` misread flattened `children_nodes_info_` tuple metadata as child IDs. | ChatGPT / Hermes | done: script now groups scalar tuple values as `[child_id, metadata]`; JSON smoke and game data loader readability both pass with Failed 0. |
 | DOC-001 | P1 | done | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | done: README now acts as index/map, core document roles are labeled, playbook/AGENTS link to authority and state maps, stale missing links were removed, and guide-update review found no user-facing workflow change. |
 | SUPERBOT-001 | P1 | done | documentation | Align SuperBot Stage 1 operating contract with AIWorkflow authority map | SuperBot reading order, artifact locations, stop boundaries, and Stage 1 readiness should match DOC-001 authority maps | ChatGPT / Hermes | done: Stage 1 alignment map, charter required maps, artifact flow, readiness checklist, Universal behavior pointer, and visual companion are in place; final multi-pass review found no blocking gaps. |
 | VAL-20260504-205258 | P2 | done | validation | VAL-002 Add run result semantics smoke validation | Automate part of the GAME-002 runtime validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, reward/save timing, stage_progress rules, and duplicate result application. | Discord -> human review | done: "Analysis-only validation planning completed. Codex confirmed that reduced-scope smoke validation should be split into a follow-up task. Recommended path is a focused dev-only or pure-helper smoke validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, reward/save timing, and stage_progress rules." |
@@ -225,16 +226,16 @@ to VAL-001 or GAME-006 for real gameplay/data validation work.
 ## Recommended Next Gameplay Task
 
 ```text
-VAL-ATTR-001: Fix AttributeNode readability check false positives
+VAL-001C: Short manual runtime playtest checklist when home playtest is possible
 ```
 
 Reason:
 
 ```text
-VAL-001C is parked until home playtest is possible. GAME-006 is now reconciled
-as done/superseded by later UserData fixes. The next non-runtime cleanup with
-clear value is removing AttributeNode children_nodes_info_ false positives from
-the data readability validation script.
+VAL-001C is parked until home playtest is possible. GAME-006 is reconciled as
+done/superseded, and VAL-ATTR-001 cleaned the AttributeNode readability-script
+false positives. No higher-value non-runtime gameplay validation task is open
+ahead of the parked manual runtime smoke.
 ```
 
 Recommended path:
@@ -243,8 +244,8 @@ Recommended path:
 Full Path:
 VAL-001C remains parked for manual playtest
 -> GAME-006 reconciliation audit done
--> VAL-ATTR-001 validation-script cleanup
--> return to gameplay/data work with cleaner loader readability evidence
+-> VAL-ATTR-001 validation-script cleanup done
+-> return to VAL-001C when home playtest is possible, or choose a new explicit gameplay/data task
 ```
 
 ---
