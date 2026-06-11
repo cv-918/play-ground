@@ -1,6 +1,8 @@
 #include "framework.h"
 #include "GameDataLoader.h"
 
+#include <filesystem>
+
 #include "EngineSystems/Render/ParticleService.h"
 
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
@@ -29,6 +31,114 @@ namespace
 	constexpr char kStagePath[] = "Data/Stage.json";
 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
 	constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
+
+	enum class LoaderFailurePolicy
+	{
+		Required,
+		Optional
+	};
+
+	std::filesystem::path GetExecutableDirectory()
+	{
+		wchar_t module_path[MAX_PATH] = {};
+		const DWORD length = GetModuleFileNameW(nullptr, module_path, MAX_PATH);
+		if (length == 0 || length >= MAX_PATH)
+			return {};
+
+		return std::filesystem::path(module_path).parent_path();
+	}
+
+	void AddPathCandidate(std::vector<std::filesystem::path>& _candidates, const std::filesystem::path& _candidate)
+	{
+		if (_candidate.empty())
+			return;
+
+		_candidates.push_back(_candidate);
+	}
+
+	void AddAncestorCandidates(std::vector<std::filesystem::path>& _candidates, std::filesystem::path _base, const std::filesystem::path& _requested_path)
+	{
+		while (!_base.empty())
+		{
+			AddPathCandidate(_candidates, _base / _requested_path);
+			AddPathCandidate(_candidates, _base / "PlayGround" / _requested_path);
+
+			const auto parent = _base.parent_path();
+			if (parent == _base)
+				break;
+
+			_base = parent;
+		}
+	}
+
+	std::string ResolvePatchableDataPath(const char* _relative_path)
+	{
+		const std::filesystem::path requested_path(_relative_path);
+		if (requested_path.is_absolute())
+			return requested_path.string();
+
+		std::vector<std::filesystem::path> candidates;
+		AddPathCandidate(candidates, std::filesystem::current_path() / requested_path);
+		AddAncestorCandidates(candidates, std::filesystem::current_path(), requested_path);
+
+		const auto executable_dir = GetExecutableDirectory();
+		AddPathCandidate(candidates, executable_dir / requested_path);
+		AddAncestorCandidates(candidates, executable_dir, requested_path);
+
+		for (const auto& candidate : candidates)
+		{
+			std::error_code ec;
+			if (std::filesystem::exists(candidate, ec) && !ec)
+				return candidate.string();
+		}
+
+		return requested_path.string();
+	}
+
+	_bool HandleLoaderFailure(const char* _label, const std::string& _path, const LoaderFailurePolicy _policy)
+	{
+		const auto path_w = _UtilFunc::ToWString(_path);
+		const auto label_w = _UtilFunc::ToWString(_label);
+
+		switch (_policy)
+		{
+		case LoaderFailurePolicy::Required:
+			_SYSTEM_LOG_ERROR(L"Required game data load failed. label: %s, path: %s", label_w.c_str(), path_w.c_str());
+			_DEBUG_MSGBOX(_T("Failed to load required game data: %s"), label_w.c_str());
+			return false;
+
+		case LoaderFailurePolicy::Optional:
+			_SYSTEM_LOG_WARN(L"Optional game data load failed. label: %s, path: %s", label_w.c_str(), path_w.c_str());
+#ifdef _DEBUG
+			_DEBUG_MSGBOX(_T("Failed to load optional game data: %s"), label_w.c_str());
+#endif
+			return true;
+		}
+
+		return false;
+	}
+
+	template <typename LoaderFunc>
+	_bool LoadWithPolicy(const char* _label, const char* _relative_path, const LoaderFailurePolicy _policy, LoaderFunc _loader)
+	{
+		const std::string resolved_path = ResolvePatchableDataPath(_relative_path);
+		if (_loader(resolved_path))
+			return true;
+
+		return HandleLoaderFailure(_label, resolved_path, _policy);
+	}
+
+	template <typename LoaderFunc>
+	_bool LoadRequired(const char* _label, const char* _relative_path, LoaderFunc _loader)
+	{
+		return LoadWithPolicy(_label, _relative_path, LoaderFailurePolicy::Required, _loader);
+	}
+
+	template <typename LoaderFunc>
+	_bool LoadOptional(const char* _label, const char* _relative_path, LoaderFunc _loader)
+	{
+		return LoadWithPolicy(_label, _relative_path, LoaderFailurePolicy::Optional, _loader);
+	}
 }
 
 _bool GameDataLoader::LoadAll()
@@ -46,64 +156,39 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 	if (_clear_particle_runtime)
 		_ParticleService.ClearSceneState();
 
-	if (!_CharacterDagaMgr.Load(kPlayableCharacterPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load playable character data from JSON."));
+	if (!LoadRequired("PlayableCharacter", kPlayableCharacterPath, [](const std::string& path) { return _CharacterDagaMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_DialogueJsonDataMgr.Load(kDialoguePath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load dialogue data from JSON."));
+	if (!LoadRequired("Dialogue", kDialoguePath, [](const std::string& path) { return _DialogueJsonDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_SkillDataMgr.Load(kSkillPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load skill data from JSON."));
+	if (!LoadRequired("Skill", kSkillPath, [](const std::string& path) { return _SkillDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_SkillDefinitionDataMgr.Load(kSkillPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load skill definition data from JSON."));
+	if (!LoadRequired("SkillDefinition", kSkillPath, [](const std::string& path) { return _SkillDefinitionDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_ParticleDataMgr.Load(kParticlePath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load particle data from JSON."));
+	if (!LoadRequired("Particle", kParticlePath, [](const std::string& path) { return _ParticleDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_ParticleEmitterDataMgr.Load(kParticleEmitterPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load particle emitter data from JSON."));
+	if (!LoadRequired("ParticleEmitter", kParticleEmitterPath, [](const std::string& path) { return _ParticleEmitterDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_ParticleEventSetDataMgr.Load(kParticleEventSetPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load particle event set data from JSON."));
+	if (!LoadRequired("ParticleEventSet", kParticleEventSetPath, [](const std::string& path) { return _ParticleEventSetDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_EnemyDataMgr.Load(kEnemyPath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load enemy data from JSON."));
+	if (!LoadRequired("Enemy", kEnemyPath, [](const std::string& path) { return _EnemyDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_AttributeNodeDataMgr.Load(kAttributeNodePath))
-	{
-		_DEBUG_MSGBOX(_T("Failed to load attribute node data from JSON."));
+	if (!LoadRequired("AttributeNode", kAttributeNodePath, [](const std::string& path) { return _AttributeNodeDataMgr.Load(path); }))
 		return false;
-	}
 
-	if (!_StageDataMgr.Load(kStagePath, kSpawnPoolPath))
+	const std::string resolved_stage_path = ResolvePatchableDataPath(kStagePath);
+	const std::string resolved_spawn_pool_path = ResolvePatchableDataPath(kSpawnPoolPath);
+	if (!_StageDataMgr.Load(resolved_stage_path, resolved_spawn_pool_path))
 	{
-		_DEBUG_MSGBOX(_T("Failed to load stage data from JSON."));
-		return false;
+		if (!HandleLoaderFailure("Stage", resolved_stage_path, LoaderFailurePolicy::Required))
+			return false;
 	}
 
 	if (!_UserDataMgr.LoadUserData())
@@ -112,13 +197,8 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 		return false;
 	}
 
-	if (!_TownNpcPlacementDataMgr.Load(kTownNpcPlacementPath))
-	{
-		_SYSTEM_LOG_ERROR(L"Failed to load town npc placement data from JSON. path: %s", _UtilFunc::ToWString(kTownNpcPlacementPath).c_str());
-#ifdef _DEBUG
-		_DEBUG_MSGBOX(_T("Failed to load town npc placement data from JSON."));
-#endif
-	}
+	if (!LoadOptional("TownNpcPlacement", kTownNpcPlacementPath, [](const std::string& path) { return _TownNpcPlacementDataMgr.Load(path); }))
+		return false;
 
 	return true;
 }

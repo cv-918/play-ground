@@ -291,7 +291,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | `UserData.json` may contain level-0 node data | Save/profile semantic ambiguity | GAME-006 reconciliation found current load normalization covers this; no new source/data change recommended |
 | `npcs_[0..2]` story coupling | Town story fragility | Defer if NPC work is low ROI |
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
-| Data loader path/failure policy inconsistency | Working directory/reload risk | GAME-007 audit recommends GAME-007A: patchable data path resolver + explicit required/optional loader policy |
+| Data loader path/failure policy inconsistency | Working directory/reload risk | GAME-007A implemented patchable data path resolver + explicit required/optional loader policy; deeper Stage/duplicate/missing-file scenario cleanup remains optional follow-up. |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
 | Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; SUPERBOT-001 aligned Stage 1 reading order, artifact flow, stop boundaries, and visual companion |
 | Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
@@ -301,7 +301,7 @@ Introduce project-profile abstraction before Discord or multi-project automation
 ## Recommended Next 3 Tasks
 
 1. `VAL-001C: Short manual runtime playtest checklist` when home playtest is possible
-2. `GAME-007A: Add patchable data path resolver and explicit loader policy table`
+2. Choose `GAME-007B/007C/007D` only if continuing data-loader cleanup before home playtest
 3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
@@ -311,8 +311,8 @@ DOC-001 and SUPERBOT-001 are complete. VAL-001B added automated gameplay
 runtime anchor smoke validation for contact/projectile/dust/result/restart
 source paths. VAL-001C is parked until home playtest is possible. GAME-006 was
 reconciled as done/superseded, VAL-ATTR-001 cleaned the known AttributeNode
-readability-script false positives, and GAME-007 audit recommends GAME-007A as
-the next non-runtime game-side implementation slice.
+readability-script false positives, and GAME-007A implemented the first
+data-loader path/policy cleanup slice with green data smoke and Debug x64 build.
 ```
 
 ---
@@ -329,9 +329,13 @@ json_smoke_total: 11
 json_smoke_failed: 0
 game_data_loader_readability_check_result: passed
 game_data_loader_readability_failed: 0
+game007a_loader_policy_anchor_check_result: passed
 gameplay_runtime_anchor_check_result: passed
 run_result_semantics_check_result: passed
-build_executed_in_latest_update: false
+build_executed_in_latest_update: true
+build_configuration: Debug|x64
+build_warnings: 0
+build_errors: 0
 runtime_executed_in_latest_update: false
 manual_gameplay_validation_executed_in_latest_update: false
 ```

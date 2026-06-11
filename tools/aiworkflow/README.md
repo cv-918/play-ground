@@ -132,6 +132,20 @@ This is a source-anchor smoke validation. It reduces manual playtest scope, but 
 
 ---
 
+## game007a_loader_policy_anchor_check.bat
+
+Validates GAME-007A source anchors for patchable data path resolution and explicit required/optional loader failure policy without booting the game runtime.
+
+```bat
+tools\aiworkflow\game007a_loader_policy_anchor_check.bat
+```
+
+Expected output includes PASS lines for patchable data path resolver anchors, explicit loader failure policy anchors, and loader call-site policy anchors.
+
+This is a source-anchor smoke validation. It proves the intended `GameDataLoader` structure is present, not that every possible install/runtime working-directory scenario has been manually exercised.
+
+---
+
 ## workflow_status.bat
 
 Summarizes workflow state from:

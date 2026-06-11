@@ -107,8 +107,8 @@ release
 | GAME-004 | P2 | done | refactoring | Consume dialogue session result explicitly | `end_reason` and `choice_records` TODO remains | Codex -> Copilot | done: "Runtime validation passed: OutGame entry normal, normal dialogue completion preserved story/event flow, hold skip worked, required gameplay events executed during skip, no abnormal termination or duplicate handling observed, NPC Prologue4 callback dialogue start/end worked, result consumption preserved flow, scene exit/return did not treat running dialogue as normal completed." |
 | GAME-005 | P2 | done | refactoring | Replace `GetDataByIndex(0)` with deterministic character selection | `unordered_map` index access may be non-deterministic | Codex -> Copilot | done: "Reduced-scope deterministic playable character lookup implemented and committed. GetDataByIndex(0) playable character selection was replaced with explicit default Dusty ID lookup. Debug x64 build passed, json smoke passed, and no remaining GetDataByIndex(0) usage exists in PlayGround/Project." |
 | GAME-006 | P2 | done | data | Normalize `UserData.json` and guard level-0 node data | Original concern satisfied/superseded by later UserData default/load guard, LocalAppData save separation, and runtime migration work. | Codex -> Copilot | done: reconciliation audit recorded in `_Docs/AIWorkflow/Studio/ResultReviews/2026-06-11_game006_userdata_reconciliation_audit.md`; no new source/data changes recommended. |
-| GAME-007 | P3 | todo | refactoring | Standardize data loader path and failure policy | Audit completed; patchable data loaders are mostly cwd-dependent and failure policy is implicit, while UserData has separate LocalAppData ownership. | ChatGPT -> Codex -> manual | audit: `_Docs/AIWorkflow/Studio/ResultReviews/2026-06-11_game007_data_loader_path_failure_policy_audit.md`; next recommended slice is GAME-007A path resolver + explicit required/optional policy. |
-| GAME-007A | P2 | todo | refactoring | Add patchable data path resolver and explicit loader policy table | Reduce boot/reload fragility without changing gameplay data schema or UserData LocalAppData behavior. | ChatGPT -> Codex -> manual | Add resolver for patchable Data paths, preserve TownNpcPlacement optional behavior, run JSON/readability/build checks. |
+| GAME-007 | P3 | in_progress | refactoring | Standardize data loader path and failure policy | Audit completed and first slice implemented; remaining deeper cleanup should stay split. | ChatGPT -> Codex -> manual | GAME-007A done; optional future slices: StageJsonDataManager parse/two-phase safety, duplicate policy normalization, missing-file scenario smoke. |
+| GAME-007A | P2 | done | refactoring | Add patchable data path resolver and explicit loader policy table | Reduce boot/reload fragility without changing gameplay data schema or UserData LocalAppData behavior. | ChatGPT -> Codex -> manual | done: `GameDataLoader` resolver + required/optional policy helpers implemented; TownNpcPlacement remains optional; JSON/readability/GAME-007A anchor smoke and Debug x64 build passed. |
 | GAME-008 | P3 | done | analysis | Audit unused schema fields | Read-only audit completed; implementation/removal decisions are deferred until game-data cleanup resumes. | ChatGPT -> Hermes CLI | done: audit report committed in `d329a44`; fields classified for `facing`, `spawn_interval_`, `unlock_type_`, and `grade_`; no source/data/schema changes were made. |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
 | VAL-001B | P1 | done | validation | Add gameplay runtime anchor smoke validation | Reduce VAL-001 manual playtest scope by checking combat/projectile/dust/result/restart source anchors before manual runtime play | ChatGPT / Hermes | done: `gameplay_runtime_anchor_check.bat`, run-result semantics smoke, and JSON smoke passed; manual visual/input/scene-flow smoke remains for VAL-001C. |
@@ -227,16 +227,15 @@ to VAL-001 or GAME-006 for real gameplay/data validation work.
 ## Recommended Next Gameplay Task
 
 ```text
-GAME-007A: Add patchable data path resolver and explicit loader policy table
+VAL-001C: Short manual runtime playtest checklist when home playtest is possible
 ```
 
 Reason:
 
 ```text
 VAL-001C is parked until home playtest is possible. GAME-006 is reconciled as
-done/superseded, VAL-ATTR-001 cleaned readability false positives, and GAME-007
-audit found a small implementation slice that can be done without manual
-playtest or schema changes.
+done/superseded, VAL-ATTR-001 cleaned readability false positives, and GAME-007A
+implemented the safe non-runtime data-loader path/policy slice.
 ```
 
 Recommended path:
@@ -247,7 +246,8 @@ VAL-001C remains parked for manual playtest
 -> GAME-006 reconciliation audit done
 -> VAL-ATTR-001 validation-script cleanup done
 -> GAME-007 read-only audit done
--> GAME-007A path resolver + explicit required/optional loader policy
+-> GAME-007A path resolver + explicit required/optional loader policy done
+-> return to VAL-001C when home playtest is possible, or choose GAME-007B/007C/007D as separate explicit slices
 ```
 
 ---
