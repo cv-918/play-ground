@@ -86,6 +86,11 @@ Notes:
 | `_Docs/AIWorkflow/TaskRequests/` | Historical/support | Concrete execution request records and reusable prompts | Should not be read as standing policy |
 | `tools/aiworkflow/` | Tool implementation | Scripts that parse workflow docs and runtime artifacts | Tool/document field drift exists |
 
+Supporting maps created from this audit:
+
+- `State_Tool_Schema_Map.md` records the state-document/tool-reader contract and known field drift.
+- `FinalBlueprint/README.md` classifies FinalBlueprint files so the folder is no longer a flat pile of competing canonical-looking documents.
+
 ## 5. Core Document Role Map
 
 | Document | Proposed authority | Intended role | Required cleanup direction |
@@ -284,7 +289,7 @@ Exit criteria:
 
 ### Batch 5: State document and tool schema relationship
 
-Status: planned.
+Status: represented by `State_Tool_Schema_Map.md`.
 
 Tasks:
 
@@ -299,7 +304,7 @@ Exit criteria:
 
 ### Batch 6: FinalBlueprint index
 
-Status: planned.
+Status: represented by `FinalBlueprint/README.md`.
 
 Tasks:
 

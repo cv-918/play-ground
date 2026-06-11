@@ -40,6 +40,8 @@ Workflow_Document_Authority_Map.md
 | `AIWorkflow_Flowchart_KR.md` | Korean flowchart guide for the regular path, read-only inspection path, missing-validation path, and commit decision path |
 | `AIWorkflow_Korean_Guide_Glossary.md` | Korean glossary and command usage guide for regular and optional/debug AIWorkflow commands |
 | `Workflow_Document_Authority_Map.md` | Draft authority map for classifying AIWorkflow documents as current canonical, operational, state source, legacy, historical, product source, or support documents |
+| `State_Tool_Schema_Map.md` | Draft map of machine-readable state-document contracts and tool reader drift for `Backlog.md`, `ActiveTask.md`, `ProjectStatus.md`, and `Task_State_Model.md` |
+| `FinalBlueprint/README.md` | Draft authority index for classifying FinalBlueprint files as current references, historical specs, reports, roadmaps, companions, or reference-only material |
 | `Guide/AIWorkflow_User_Guide_KR.html` | Browser-readable Korean Human Director guide for the Studio-centered workflow, PC Runner gates, and legacy Discord helper path |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |
