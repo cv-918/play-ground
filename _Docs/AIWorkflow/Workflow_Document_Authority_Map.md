@@ -360,21 +360,35 @@ DOC-001 may proceed now, but it must carry these notes:
 
 ## 8. Recommended Next Work
 
-Recommended next batch:
+DOC-001 consolidation status:
 
 ```text
-DOC-001: Consolidate workflow instruction entry points
+completed with notes
 ```
 
-Recommended DOC-001 starting scope:
+Completed scope:
 
-1. Reduce duplicated rule text in `_Docs/AIWorkflow/README.md` by turning it into links to canonical/operational documents.
-2. Align `09_Operational_Playbook.md` with the authority map without rewriting every procedure.
-3. Add links from relevant index/map docs to `Workflow_Document_Authority_Map.md`, `State_Tool_Schema_Map.md`, and `FinalBlueprint/README.md`.
-4. Defer any tool parser/schema migration to a separate approved task.
+1. `README.md` now behaves as an index/map and links to canonical/operational documents instead of carrying the full duplicated operating flow.
+2. `09_Operational_Playbook.md` is linked to this authority map, `State_Tool_Schema_Map.md`, and `FinalBlueprint/README.md` without rewriting the procedure body.
+3. `AGENTS.md` includes the authority map, state/tool schema map, and FinalBlueprint index as AIWorkflow references.
+4. Core state, operational, and support documents have minimal status/authority labels.
+5. Broken/stale README and AGENTS document links found during DOC-001 were removed or redirected.
+6. `Guide/AIWorkflow_User_Guide_KR.html` was checked; no update was required because DOC-001 changed internal document structure, not user-facing commands, cards, approval behavior, runner flow, completion gates, or commit/push behavior.
+
+Remaining notes:
+
+1. No tool parser/schema migration was performed.
+2. Historical documents were not bulk-rewritten.
+3. If SuperBot Stage 1 still needs a dedicated alignment pass, create or select a separate Backlog task rather than expanding DOC-001.
+
+Recommended next decision:
+
+```text
+Decide whether a separate SuperBot alignment Backlog task is needed, then return to VAL-001 or GAME-006 when workflow stabilization is sufficient.
+```
 
 Recommended commit message after review:
 
 ```text
-docs: record DOC-001 readiness decision
+docs: close DOC-001 workflow consolidation notes
 ```

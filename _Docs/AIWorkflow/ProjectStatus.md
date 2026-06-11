@@ -12,7 +12,7 @@ analysis_mode:
   - superbot_operating_stabilization_review
 workflow_level_actual: Discord-first PC Runner execution harness stabilization
 workflow_level_target_next: SuperBot and workflow operating stabilization
-worktree_status_at_analysis: workflow status cleanup in progress
+worktree_status_at_analysis: DOC-001 consolidation completed; only scope-out untracked VisualTests remains
 latest_local_script_validation:
   pc_runner_build_profile_plan: passed
   build_test_runner_visual_studio_dry_run: passed
@@ -293,23 +293,22 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
 | Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
-| Multiple workflow / SuperBot instruction entry points | Drift risk | Consolidate source-of-truth and reading order through DOC-001 / SuperBot alignment work |
+| Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; decide separately whether SuperBot Stage 1 needs its own alignment task |
 | Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
 
 ---
 
 ## Recommended Next 3 Tasks
 
-1. `DOC-001: Consolidate workflow instruction entry points`
-   - Include SuperBot Stage 1 artifact locations, reading order, and source-of-truth boundaries in this consolidation pass.
+1. Decide whether a separate SuperBot alignment Backlog task is still needed.
 2. `UNITY-001: Define Unity project workflow profile requirements`
 3. `UNITY-002: Define Unity validation profile candidates`
 
 Strategic follow-up:
 
 ```text
-After workflow / SuperBot stabilization, decide whether a separate SuperBot alignment Backlog task is needed.
-Then return to VAL-001 or GAME-006 for real gameplay/data validation work.
+DOC-001 is complete. After the SuperBot alignment decision, return to VAL-001 or
+GAME-006 for real gameplay/data validation work.
 ```
 
 ---

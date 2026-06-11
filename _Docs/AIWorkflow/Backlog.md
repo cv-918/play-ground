@@ -110,7 +110,7 @@ release
 | GAME-007 | P3 | todo | refactoring | Standardize data loader path and failure policy | Loader policy differs between managers | ChatGPT -> Codex -> manual | cwd boot, reload, optional/fatal separation |
 | GAME-008 | P3 | done | analysis | Audit unused schema fields | Read-only audit completed; implementation/removal decisions are deferred until game-data cleanup resumes. | ChatGPT -> Hermes CLI | done: audit report committed in `d329a44`; fields classified for `facing`, `spawn_interval_`, `unlock_type_`, and `grade_`; no source/data/schema changes were made. |
 | VAL-001 | P1 | todo | validation | Combat/reward/collection/restart playtest pass | Runtime exists but current evidence is partial | Human validation | Contact, projectile, dust, result values |
-| DOC-001 | P1 | todo | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | Document review |
+| DOC-001 | P1 | done | documentation | Consolidate workflow instruction entry points | Multiple instruction files may drift | ChatGPT | done: README now acts as index/map, core document roles are labeled, playbook/AGENTS link to authority and state maps, stale missing links were removed, and guide-update review found no user-facing workflow change. |
 | VAL-20260504-205258 | P2 | done | validation | VAL-002 Add run result semantics smoke validation | Automate part of the GAME-002 runtime validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, reward/save timing, stage_progress rules, and duplicate result application. | Discord -> human review | done: "Analysis-only validation planning completed. Codex confirmed that reduced-scope smoke validation should be split into a follow-up task. Recommended path is a focused dev-only or pure-helper smoke validation for TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, reward/save timing, and stage_progress rules." |
 | VAL-20260504-214915 | P2 | done | validation | VAL-003 Implement reduced-scope run result semantics smoke validation category: VAL | Add focused smoke validation for GAME-002 run result semantics without mutating save data or introducing a broad test framework. | Discord -> human review | done: run_result_semantics_check.bat passed: TimeExpired, PlayerDied, StageProgressed, Abandoned, duplicate apply guard, result_apply_eligible behavior, stage_progress condition, reward/save eligibility rule. json_smoke_check passed: 11 OK, 0 failed. No UserData.json mutation. |
 | WF-20260505-225727 | P1 | done | automation | WF-026 Add goal-oriented execution routing | Add Codex CLI /goal prompt generation as the next execution routing layer for the AIWorkflow orchestrator. | Discord -> human review | done: "WF-026 validation passed: /ai prepare goal default, GAME-001 analysis, GAME-005 implementation, WF-021 review generated goal request files under _Temp/AIWorkflowTaskRequests. /ai status and /ai active passed. npm run register passed, bot restart/status passed, git diff --check passed with line-ending warnings only, and private/local files were not tracked." |
@@ -202,19 +202,19 @@ release
 | WF-20260511-000002 | P1 | done | automation | Implement Codex CLI-assisted `/ai intake` with GPT-5.5 | Upgrade the Discord intake flow from rule-based-only draft generation to Codex CLI assisted TaskDraft generation while preserving local schema validation, rule-based cross-checks, Backlog creation from `/ai intake`, and no automatic approval/implementation/done/commit. | Codex App -> human review | done: "Implemented Codex CLI-assisted TaskDraft generation with default model gpt-5.5, local schema validation, rule-based cross-check, /ai intake Backlog creation, /ai intake-preview read-only preview, /ai intake-create compatibility alias, /ai intake-engine status diagnostics, config example updates, docs, and DevLog. Validation evidence is recorded in the DevLog for the final implementation pass. No OpenAI API key path, separate API billing dependency, automatic ActiveTask update, approval, implementation execution, done, commit, push, or game source/data change was implemented." |
 ---
 
-## Recommended Next Workflow Task
+## Recommended Next Workflow Decision
 
 ```text
-DOC-001: Consolidate workflow instruction entry points
+Decide whether a separate SuperBot alignment Backlog task is still needed.
 ```
 
 Reason:
 
 ```text
-The current Human Director direction is workflow / SuperBot stabilization before
-new gameplay implementation. Multiple workflow, Studio, Discord, PC Runner, and
-SuperBot entry points may drift unless their source-of-truth order and reading
-path are consolidated.
+DOC-001 consolidated the AIWorkflow instruction entry points and document roles.
+If SuperBot Stage 1 needs additional artifact-location, reading-order, or
+work-order alignment, create or select that as a separate task. Otherwise return
+to VAL-001 or GAME-006 for real gameplay/data validation work.
 ```
 
 ---
