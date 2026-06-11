@@ -44,6 +44,7 @@ Workflow_Document_Authority_Map.md
 | `State_Tool_Schema_Map.md` | Draft map of machine-readable state-document contracts and tool reader drift for `Backlog.md`, `ActiveTask.md`, `ProjectStatus.md`, and `Task_State_Model.md` |
 | `FinalBlueprint/README.md` | Draft authority index for classifying FinalBlueprint files as current references, historical specs, reports, roadmaps, companions, or reference-only material |
 | `SuperBot_Stage1_Alignment_Map.md` | Draft alignment map for connecting SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps |
+| `SuperBot_Stage1_Visual_Companion.html` | Browser-readable visual companion for SuperBot Stage 1 operating flow, layers, artifact flow, stop boundaries, and readiness checks |
 | `Guide/AIWorkflow_User_Guide_KR.html` | Browser-readable Korean Human Director guide for the Studio-centered workflow, PC Runner gates, and legacy Discord helper path |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture.md` | Official long-term architecture for evolving AIWorkflow into a project-independent Personal AI Development Studio / AI Studio Company Runtime |
 | `FinalBlueprint/WF_Personal_AI_Development_Studio_Architecture_KR.md` | Korean Human Director companion for the Personal AI Development Studio / AI Studio Company Runtime architecture |

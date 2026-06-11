@@ -293,23 +293,23 @@ Introduce project-profile abstraction before Discord or multi-project automation
 | Dialogue listener mutates profile directly | Event/profile coupling | Review before story expansion |
 | Data loader path/failure policy inconsistency | Working directory/reload risk | Standardize later |
 | C++ custom-engine workflow overfitting | Future Unity reuse risk | Add Unity/project-profile abstraction |
-| Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; decide separately whether SuperBot Stage 1 needs its own alignment task |
+| Multiple workflow / SuperBot instruction entry points | Drift risk | DOC-001 consolidated AIWorkflow entry points; SUPERBOT-001 aligned Stage 1 reading order, artifact flow, stop boundaries, and visual companion |
 | Unused schema fields | Data ambiguity | GAME-008 audit evidence exists; defer implementation/removal decisions until game-data work resumes |
 
 ---
 
 ## Recommended Next 3 Tasks
 
-1. `SUPERBOT-001: Align SuperBot Stage 1 operating contract with AIWorkflow authority map`
-2. `UNITY-001: Define Unity project workflow profile requirements`
-3. `UNITY-002: Define Unity validation profile candidates`
+1. `VAL-001: Combat/reward/collection/restart playtest pass`
+2. `GAME-006: Normalize UserData.json and guard level-0 node data`
+3. `UNITY-001: Define Unity project workflow profile requirements`
 
 Strategic follow-up:
 
 ```text
-DOC-001 is complete and SUPERBOT-001 has started with a draft alignment map.
-After SuperBot Stage 1 alignment, return to VAL-001 or GAME-006 for real
-gameplay/data validation work.
+DOC-001 and SUPERBOT-001 are complete. Workflow/SuperBot stabilization can pause
+unless new drift appears. Recommended next move is real gameplay/data validation:
+VAL-001 first, then GAME-006 if save/node data issues remain relevant.
 ```
 
 ---

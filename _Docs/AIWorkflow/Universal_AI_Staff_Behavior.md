@@ -31,6 +31,8 @@ When working in this repository, AI staff must follow this order:
 
 If instructions conflict, stop and report the conflict instead of guessing.
 
+For SuperBot Stage 1 work, use `_Docs/AIWorkflow/SuperBot_Stage1_Alignment_Map.md` and `_Docs/AIWorkflow/Workflow_Document_Authority_Map.md` to decide which workflow documents, state sources, artifact locations, and stop boundaries apply before changing files.
+
 ## 3. Universal Principles
 
 ### 3.1 Think Before Acting

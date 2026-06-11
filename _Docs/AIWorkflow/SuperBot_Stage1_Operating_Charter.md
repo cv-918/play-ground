@@ -18,6 +18,8 @@ Use this section as the onboarding map for the Super Bot Stage 1 document set.
    - Stage 1-specific role, layer split, default artifact locations, end-to-end flow, and completion criteria.
 4. `_Docs/AIWorkflow/SuperBot_Stage1_Alignment_Map.md`
    - Connects SuperBot Stage 1 reading order, artifact locations, stop boundaries, and DOC-001 authority maps.
+5. `_Docs/AIWorkflow/SuperBot_Stage1_Visual_Companion.html`
+   - Browser-readable visual companion for the Stage 1 operating flow, layer ownership, artifact flow, stop boundaries, and readiness checks.
 
 ### Full onboarding sequence
 
@@ -25,12 +27,13 @@ Use this section as the onboarding map for the Super Bot Stage 1 document set.
 2. `_Docs/AIWorkflow/Universal_AI_Staff_Behavior.md`
 3. `_Docs/AIWorkflow/SuperBot_Stage1_Operating_Charter.md`
 4. `_Docs/AIWorkflow/SuperBot_Stage1_Alignment_Map.md`
-5. `_Docs/AIWorkflow/Workflow_Document_Authority_Visual_Map.html`
-6. `_Docs/AIWorkflow/SuperBot_Stage1_Flowchart.html`
-7. `_Docs/AIWorkflow/Studio/WorkOrders/2026-06-09_super_bot_stage1_implementation_roadmap.md`
-8. `_Docs/AIWorkflow/Studio/ResultReviews/SuperBot_Stage1_Index.md`
-9. `_DevLog/Retrospective/2026-06-10_super_bot_stage1_batch0_6_retrospective.md`
-10. `_DevLog/WorkLog/2026-06-09_super_bot_stage1_behavior_application.md`
+5. `_Docs/AIWorkflow/SuperBot_Stage1_Visual_Companion.html`
+6. `_Docs/AIWorkflow/Workflow_Document_Authority_Visual_Map.html`
+7. `_Docs/AIWorkflow/SuperBot_Stage1_Flowchart.html`
+8. `_Docs/AIWorkflow/Studio/WorkOrders/2026-06-09_super_bot_stage1_implementation_roadmap.md`
+9. `_Docs/AIWorkflow/Studio/ResultReviews/SuperBot_Stage1_Index.md`
+10. `_DevLog/Retrospective/2026-06-10_super_bot_stage1_batch0_6_retrospective.md`
+11. `_DevLog/WorkLog/2026-06-09_super_bot_stage1_behavior_application.md`
 
 ### Document roles
 
@@ -38,6 +41,7 @@ Use this section as the onboarding map for the Super Bot Stage 1 document set.
 - `Universal_AI_Staff_Behavior.md` is the common staff behavior layer.
 - This charter is the Stage 1 Super Bot operating rule for this repo.
 - `SuperBot_Stage1_Alignment_Map.md` explains how this charter connects to the DOC-001 authority maps and artifact locations.
+- `SuperBot_Stage1_Visual_Companion.html` is the visual aid for the Stage 1 operating flow and readiness checks.
 - `Workflow_Document_Authority_Visual_Map.html` is the quick visual orientation for document authority and reading order.
 - `SuperBot_Stage1_Flowchart.html` is the visual aid for the end-to-end flow; keep it aligned with this charter.
 - The WorkOrder roadmap is the historical implementation and validation plan.
@@ -147,6 +151,21 @@ For meaningful implementation, workflow, architecture, data, runtime, or source-
 
 Small read-only checks, explanations, and rough drafts do not require the full document set.
 
+### 3.5 Required Maps Before Action
+
+Before meaningful repo work, the Super Bot should check the smallest relevant map set instead of rereading every document:
+
+| Situation | Required map |
+| --- | --- |
+| Unsure which AIWorkflow document wins | `Workflow_Document_Authority_Map.md` |
+| Need a quick visual orientation | `Workflow_Document_Authority_Visual_Map.html` |
+| Changing Backlog, ActiveTask, ProjectStatus, or tool-facing sections | `State_Tool_Schema_Map.md` |
+| Treating a FinalBlueprint file as current authority | `FinalBlueprint/README.md` |
+| Aligning SuperBot behavior, records, or stop boundaries | `SuperBot_Stage1_Alignment_Map.md` |
+| Running day-to-day workflow work | `09_Operational_Playbook.md` |
+
+Do not change state-document schema, workflow authority, Studio product direction, runner behavior, Discord command behavior, commit/push policy, or protected runtime behavior as part of routine SuperBot documentation cleanup.
+
 ## 4. Default Document Locations
 
 Until a task-specific Work Packet says otherwise, use these locations:
@@ -167,6 +186,20 @@ The file naming convention should include date and a short slug:
 ```text
 YYYY-MM-DD_<task_slug>.md
 ```
+
+### 4.1 Artifact Flow
+
+Use this default flow unless a task-specific Work Packet says otherwise:
+
+| Phase | Artifact | Default location | Required for |
+| --- | --- | --- | --- |
+| Intake | Intake notes or WorkOrder preface | Chat, task record, or `_Docs/AIWorkflow/Studio/WorkOrders/` | Ambiguous, risky, or multi-step work |
+| Plan | Design / plan | `_Docs/AIWorkflow/Studio/WorkOrders/` | Meaningful source, workflow, architecture, data, runtime, or document changes |
+| Progress | Progress record | `_Docs/AIWorkflow/Studio/RoleRuns/` | Long-running, multi-step, blocked, or verification-heavy work |
+| Completion | Completion / gap record | `_Docs/AIWorkflow/Studio/ResultReviews/` | Meaningful completed work, remaining risks, or design-vs-result comparison |
+| Evidence | Build/test/review evidence | Inline report, ResultReview, `_DevLog/`, or runtime evidence path as applicable | Any validation or completion claim |
+
+`_Docs/AIWorkflow/Studio/` is the AIWorkflow-era SuperBot artifact area. Current Studio product direction remains under `_Docs/Studio/` unless a future migration is approved.
 
 ## 5. Record Metadata and Verification Evidence Rules
 
@@ -327,3 +360,20 @@ A Super Bot task is complete only when:
 - DevLog exists when required
 - remaining risks and human decisions are stated
 - commit/push was not performed without explicit approval
+
+## 10. Stage 1 Readiness Checklist
+
+Stage 1 Super Bot is ready for a real task when these checks pass:
+
+```text
+[ ] Current user goal and approved scope are clear.
+[ ] Reading order was applied: AGENTS -> authority/alignment maps -> charter/playbook -> task docs.
+[ ] Work uses direct execution, not fake delegation to nonexistent staff.
+[ ] Required artifact level is chosen: compact chat, WorkOrder, RoleRun, ResultReview, or DevLog.
+[ ] Protected boundaries are identified before action: schema, save/load, build policy, workflow rules, runtime architecture, destructive cleanup, commit/push/release/deploy.
+[ ] Ambiguity that affects implementation, validation, permission, or final behavior is resolved before execution.
+[ ] Verification plan exists for any claim that will need evidence.
+[ ] Final report will separate executed verification, unexecuted verification, risks, and human decisions.
+```
+
+If any readiness item fails, either ask for clarification, create a plan for approval, or stop with the human decision needed.

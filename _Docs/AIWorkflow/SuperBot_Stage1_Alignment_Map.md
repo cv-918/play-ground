@@ -1,12 +1,18 @@
 # SuperBot Stage 1 Alignment Map
 
-Status: Draft alignment map
+Status: Active alignment map
 Scope: SuperBot Stage 1 operating contract alignment after DOC-001
 Last updated: 2026-06-11
 
 ## 1. Purpose
 
 This document connects SuperBot Stage 1 operation to the AIWorkflow document authority map.
+
+For a one-page browser-readable visual companion, open:
+
+```text
+SuperBot_Stage1_Visual_Companion.html
+```
 
 It answers:
 
@@ -131,28 +137,29 @@ These are not blockers for normal CLI work, but they are useful for the next Sup
 
 | Gap | Why it matters | Suggested handling |
 |---|---|---|
-| Charter reading order does not yet mention the new visual authority map | SuperBot onboarding may miss the easiest map | Add visual map to charter onboarding |
-| Universal behavior source order predates DOC-001 maps | Staff may not know when to check authority/state maps | Add short pointer, not a full rewrite |
-| Artifact locations are clear but not visualized | WorkOrder / RoleRun / ResultReview can be hard to explain | Add an artifact-flow diagram or compact table in charter |
+| Charter reading order did not mention the new visual authority map | SuperBot onboarding could miss the easiest map | Addressed in `SuperBot_Stage1_Operating_Charter.md` |
+| Universal behavior source order predates DOC-001 maps | Staff may not know when to check authority/state maps | Addressed with a short pointer in `Universal_AI_Staff_Behavior.md` |
+| Artifact locations are clear but not visualized | WorkOrder / RoleRun / ResultReview can be hard to explain | Addressed with an artifact-flow table in `SuperBot_Stage1_Operating_Charter.md` |
 | Studio path boundary is repeated across docs | Good for safety, but can drift | Keep `Workflow_Document_Authority_Map.md` as the conflict source |
-| SuperBot completion criteria are spread across charter, templates, and skill | Hard to know what “Stage 1 ready” means | Add one concise readiness checklist |
+| SuperBot completion criteria are spread across charter, templates, and skill | Hard to know what “Stage 1 ready” means | Addressed with a Stage 1 readiness checklist in `SuperBot_Stage1_Operating_Charter.md` |
 
-## 9. Recommended Next Batch
+## 9. Closure Note
 
 ```text
-SUPERBOT-001B: Patch SuperBot charter with DOC-001 map references and readiness checklist
+SUPERBOT-001 closed after final multi-pass review.
 ```
 
-Recommended scope:
+Closure evidence:
 
-1. Add `Workflow_Document_Authority_Visual_Map.html` to the SuperBot charter reading order.
-2. Add a compact “required maps before action” section.
-3. Add a concise artifact-flow table if missing or unclear.
-4. Add a Stage 1 readiness checklist.
-5. Avoid changing Studio product docs, Discord commands, runner behavior, or tool schemas.
+1. SuperBot charter includes required maps, artifact flow, and Stage 1 readiness checklist.
+2. Universal staff behavior points SuperBot Stage 1 work to the alignment and authority maps.
+3. README links both the alignment map and the visual companion.
+4. Backlog marks SUPERBOT-001 done.
+5. ProjectStatus returns the recommended next work to gameplay/data validation.
+6. No Studio product docs, Discord commands, runner behavior, tool schemas, game source, or runtime data were changed.
 
-Recommended commit message after review:
+Commit recommendation:
 
 ```text
-docs: add SuperBot Stage 1 alignment map
+docs: close SuperBot Stage 1 alignment
 ```
