@@ -1,0 +1,76 @@
+{
+  "background": {
+    "path": "Town_BG.png"
+  },
+  "npcs": [
+    {
+      "enabled": true,
+      "facing": "right",
+      "interaction_area": {
+        "center_offset": {
+          "x": 1.0,
+          "y": 13.0
+        },
+        "radius_x": 72.0,
+        "y_ratio": 0.44999998807907104
+      },
+      "npc_id": "elder",
+      "placement_id": "town_elder_001",
+      "position": {
+        "x": 285.0,
+        "y": 420.0,
+        "z": 0.0
+      },
+      "visual_width": 150.0
+    },
+    {
+      "enabled": true,
+      "facing": "right",
+      "interaction_area": {
+        "center_offset": {
+          "x": -3.0,
+          "y": 58.5
+        },
+        "radius_x": 72.0,
+        "y_ratio": 0.44999998807907104
+      },
+      "npc_id": "engineer",
+      "placement_id": "town_engineer_001",
+      "position": {
+        "x": 750.0,
+        "y": 377.5,
+        "z": 0.0
+      },
+      "visual_width": 150.0
+    },
+    {
+      "enabled": true,
+      "facing": "right",
+      "interaction_area": {
+        "center_offset": {
+          "x": 0.0,
+          "y": 165.0
+        },
+        "radius_x": 72.0,
+        "y_ratio": 0.44999998807907104
+      },
+      "npc_id": "ring",
+      "placement_id": "town_ring_001",
+      "position": {
+        "x": 1017.5,
+        "y": 270.0,
+        "z": 0.0
+      },
+      "visual_width": 100.0
+    }
+  ],
+  "player": {
+    "walkable_rect": {
+      "bottom": 606,
+      "left": 11,
+      "right": 1269,
+      "top": 436
+    }
+  },
+  "scene_id": "out_game"
+}

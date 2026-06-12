@@ -53,6 +53,7 @@ private:
 #ifndef SHIPPING
 	class Button* debug_particle_station_button_ = nullptr;
 	class Button* debug_character_station_button_ = nullptr;
+	class Button* debug_outgame_layout_station_button_ = nullptr;
 	class OutGameExitView* exit_popup_ = nullptr;
 #endif // SHIPPING
 };

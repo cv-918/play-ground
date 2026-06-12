@@ -7,6 +7,11 @@
 
 #include <cmath>
 
+namespace
+{
+	constexpr _bool ENABLE_PLAYER_DASH_INPUT = false;
+}
+
 PlayerMovement::PlayerMovement(const PlayableCharacterJsonInfo* _info)
 	: input_manager_(nullptr)
 {
@@ -113,8 +118,8 @@ void PlayerMovement::_OnAxis(_double _delta_time)
 
 	move_direction_ = input_dir;
 
-	// 대시는 액션 에지 입력으로 시작한다.
-	if (input_manager_->ActionDown(InputAction::Dash))
+	// 플레이어 대시는 StageProgress 기본 Space 입력과 충돌하므로 현재 빌드에서는 닫아둔다.
+	if (ENABLE_PLAYER_DASH_INPUT && input_manager_->ActionDown(InputAction::Dash))
 		StartDashByInputDir(1200.f, 0.075);
 
 	// 입력이 있으면 목표 속도까지 가속

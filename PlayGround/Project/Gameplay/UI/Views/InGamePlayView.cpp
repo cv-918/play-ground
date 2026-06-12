@@ -11,15 +11,24 @@
 namespace
 {
 	constexpr _double NEXT_STAGE_PROMPT_BLINK_SECONDS = 0.45;
-	constexpr const wchar_t* NEXT_STAGE_PROMPT_TEXT = L"스페이스바를 누르세요";
 
-	std::wstring GetSkillShortcutText(InputAction _action)
+	std::wstring GetActionShortcutText(InputAction _action)
 	{
 		InputBinding binding;
 		if (_InputMgr.TryGetPrimaryBinding(_InputMgr.GetCurrentPreset(), _action, &binding))
 			return InputDisplayText::ToBindingText(binding);
 
 		return L"-";
+	}
+
+	std::wstring GetSkillShortcutText(InputAction _action)
+	{
+		return GetActionShortcutText(_action);
+	}
+
+	std::wstring GetStageProgressPromptText()
+	{
+		return GetActionShortcutText(InputAction::StageProgress) + L"를 누르세요";
 	}
 
 	void RefreshSkillShortcutLabels(InGameSkillSlot* _slot0, InGameSkillSlot* _slot1)
@@ -103,7 +112,8 @@ _int InGamePlayView::Update(_double _delta_time)
 	{
 		next_stage_prompt_elapsed_ += _delta_time;
 		const _int blink_phase = s_int(next_stage_prompt_elapsed_ / NEXT_STAGE_PROMPT_BLINK_SECONDS);
-		next_stage_progress_->SetText((blink_phase % 2 == 0) ? NEXT_STAGE_PROMPT_TEXT : L"");
+		const std::wstring prompt_text = GetStageProgressPromptText();
+		next_stage_progress_->SetText((blink_phase % 2 == 0) ? prompt_text : L"");
 	}
 	else
 	{

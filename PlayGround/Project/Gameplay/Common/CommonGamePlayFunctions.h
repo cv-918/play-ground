@@ -38,6 +38,8 @@ namespace CommonGamePlayFunctions
 			return L"ParticleStation";
 		case SceneType::CharacterStation:
 			return L"CharacterStation";
+		case SceneType::OutGameLayoutStation:
+			return L"OutGameLayoutStation";
 		default:
 			return L"Undefined";
 		}

@@ -34,6 +34,7 @@ public:
 
 	_float GetVisualHeightForIndicator() const;
 
+	void SetInteractionArea(const _Vector2& _center_offset, _float _radius_x, _float _y_ratio = 0.6f);
 	void SetCanInteract(_bool _can_interact) { can_interact_ = _can_interact; }
 	void SetOnInteractCallback(const std::function<void()>& _callback) { on_interact_ = _callback; }
 

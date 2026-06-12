@@ -724,7 +724,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'E', 1.f },
 			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, VK_SPACE, 1.f},
 		};
 	}
 
@@ -742,7 +742,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Skill2, InputSourceType::KeyboardKey, 'S', 1.f },
 			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, VK_SPACE, 1.f},
 		};
 	}
 
@@ -774,7 +774,7 @@ PresetDefaultBindingTable InputManager::CreateDefaultPresetBindingTable()
 			{ InputAction::Skill2, InputSourceType::MouseButton, VK_RBUTTON, 1.f },
 			{ InputAction::Interact, InputSourceType::KeyboardKey, 'E', 1.f},
 			{ InputAction::Pause, InputSourceType::KeyboardKey, VK_ESCAPE, 1.f },
-			{ InputAction::StageProgress, InputSourceType::KeyboardKey, 'F', 1.f},
+			{ InputAction::StageProgress, InputSourceType::KeyboardKey, VK_SPACE, 1.f},
 		};
 	}
 
@@ -854,6 +854,20 @@ _bool InputManager::RunSelfTest()
 	interact_remap_binding.scale = 1.f;
 	ok = ExpectInputSelfTest(TryRemapAction(ControllerPreset::KeyboardMouse, InputAction::Interact, interact_remap_binding) == InputRemapResult::Success,
 		"TryRemap.KeyboardMouse.Interact.Success") && ok;
+
+	InputBinding stage_progress_binding;
+	ok = ExpectInputSelfTest(TryGetPrimaryBinding(ControllerPreset::KeyboardA, InputAction::StageProgress, &stage_progress_binding)
+		&& stage_progress_binding.source_type == InputSourceType::KeyboardKey
+		&& stage_progress_binding.source_code == VK_SPACE,
+		"Default.KeyboardA.StageProgress.Space") && ok;
+	ok = ExpectInputSelfTest(TryGetPrimaryBinding(ControllerPreset::KeyboardB, InputAction::StageProgress, &stage_progress_binding)
+		&& stage_progress_binding.source_type == InputSourceType::KeyboardKey
+		&& stage_progress_binding.source_code == VK_SPACE,
+		"Default.KeyboardB.StageProgress.Space") && ok;
+	ok = ExpectInputSelfTest(TryGetPrimaryBinding(ControllerPreset::KeyboardMouse, InputAction::StageProgress, &stage_progress_binding)
+		&& stage_progress_binding.source_type == InputSourceType::KeyboardKey
+		&& stage_progress_binding.source_code == VK_SPACE,
+		"Default.KeyboardMouse.StageProgress.Space") && ok;
 
 	SetCurrentPreset(ControllerPreset::KeyboardMouse);
 	BeginFrame();

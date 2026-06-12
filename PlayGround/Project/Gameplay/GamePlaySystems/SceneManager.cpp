@@ -10,6 +10,7 @@
 #include "Scenes/InGameScene.h"
 #include "Scenes/ParticleStationScene.h"
 #include "Scenes/CharacterStationScene.h"
+#include "Scenes/OutGameLayoutStationScene.h"
 
 SceneManager::~SceneManager()
 {
@@ -231,6 +232,18 @@ void SceneManager::_CreateNextScene()
 		transition_alpha_ = 0.f;
 		return;
 #endif
+	case SceneType::OutGameLayoutStation:
+#ifndef SHIPPING
+		curr_scene_ = new OutGameLayoutStationScene();
+		break;
+#else
+		_SYSTEM_LOG_ERROR(_T("OutGameLayoutStation scene is only available in debug builds."));
+		next_scene_type_ = SceneType::Count;
+		transition_phase_ = TransitionPhase::None;
+		transition_elapsed_ = 0.0;
+		transition_alpha_ = 0.f;
+		return;
+#endif
 	default:
 	{
 		_SYSTEM_LOG_ERROR(_T("Unsupported scene type requested: %d"), s_int(next_scene_type_));
@@ -300,6 +313,7 @@ std::wstring SceneManager::_GetSceneName(SceneType _type) const
 	case SceneType::InGame:		return L"InGame";
 	case SceneType::ParticleStation:	return L"ParticleStation";
 	case SceneType::CharacterStation:	return L"CharacterStation";
+	case SceneType::OutGameLayoutStation:	return L"OutGameLayoutStation";
 	}
 
 	return L"Unknown";

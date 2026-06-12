@@ -14,7 +14,7 @@
 #include "GamePlay/Actors/Town/TownPlayer.h"
 #include "GamePlay/Actors/Town/TownNpc.h"
 #include "GamePlaySystems/Json/PlayableCharacterDataManager.h"
-#include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
+#include "GamePlaySystems/Json/OutGameLayoutDataManager.h"
 #include "GamePlaySystems/TownNpcPlacementSpawner.h"
 #include "EngineSystems/Physics/CollisionManager.h"
 
@@ -174,10 +174,11 @@ void OutGameScene::OnEnter()
 	last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
 
 	const auto res = _ScreenSystem.WindowResolution();
+	const auto& outgame_layout = _OutGameLayoutDataMgr.GetOutGameLayout();
 
 	// s, [ Temporary Background and NavMesh Setup for Town Testing ]
 	Background::CreateInfo background_info;
-	background_info.background_path_ = Path::World + L"Town_BG.png";
+	background_info.background_path_ = Path::World + outgame_layout.background_path_;
 	background_info.nav_mesh_size_ = _Size(res.width, res.height);
 	background_info.nav_mesh_center_ = _Point(background_info.nav_mesh_size_.x >> 1, background_info.nav_mesh_size_.y >> 1);
 	background_info.render_dest_rect_ = _RectF(
@@ -195,6 +196,7 @@ void OutGameScene::OnEnter()
 	// e, [ Temporary Background and NavMesh Setup for Town Testing ]
 
 	const auto& nav_mesh = background_->NavMesh();
+	const _Rect outgame_player_walkable_area = outgame_layout.player_walkable_rect_.ToRect();
 
 	// s, [ Temporary Town Player Setup for Testing ]
 	const auto player_spawn_data = _CharacterDagaMgr.GetDefaultPlayableCharacterData();
@@ -211,7 +213,7 @@ void OutGameScene::OnEnter()
 		_NULL_DETECTION_MSGBOX;
 		return;
 	}
-	test_town_player_->SetNavMesh(nav_mesh);
+	test_town_player_->SetNavMesh(outgame_player_walkable_area);
 
 	ui_manager_->CreateUI<TownNpcInteractionIndicator>(
 		test_town_player_,
@@ -223,7 +225,7 @@ void OutGameScene::OnEnter()
 	// e, [ Temporary Town Player Setup for Testing ]
 
 	TownNpcPlacementSpawner npc_placement_spawner;
-	npcs_ = npc_placement_spawner.Spawn(object_manager_, _TownNpcPlacementDataMgr.GetOutGamePlacements(), nav_mesh);
+	npcs_ = npc_placement_spawner.Spawn(object_manager_, outgame_layout.npcs_, nav_mesh);
 
 	std::vector<std::wstring> npc_names = { L"할아버지", L"엔지니어", L"반지" };
 	for (_uint i = 0; i < npc_names.size() && i < npcs_.size(); ++i)
@@ -233,7 +235,7 @@ void OutGameScene::OnEnter()
 	if (!has_required_story_npcs)
 	{
 		_SYSTEM_LOG_ERROR(L"OutGameScene requires at least 3 spawned TownNpc placements. spawned: %d", s_int(npcs_.size()));
-		_DEBUG_MSGBOX(L"OutGameScene requires at least 3 TownNpc placements in Data/TownNpcPlacement.json");
+		_DEBUG_MSGBOX(L"OutGameScene requires at least 3 NPC entries in Data/OutGameLayout.json");
 	}
 
 	if (has_required_story_npcs)
@@ -373,6 +375,9 @@ void OutGameScene::OnEnter()
 		}
 	}
 
+	if (test_town_player_ != nullptr)
+		test_town_player_->SetNavMesh(outgame_player_walkable_area);
+
 	_CameraMgr.Initialize(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
 	_CameraMgr.SetWorldBounds(nav_mesh.ToRECT());
@@ -490,8 +495,10 @@ void OutGameScene::_HandleViewportChanged()
 		return;
 
 	NormalizedFieldPosition player_field_position;
+	const auto& outgame_layout = _OutGameLayoutDataMgr.GetOutGameLayout();
+	const _Rect previous_walkable_area = outgame_layout.player_walkable_rect_.ToRect();
 	if (background_)
-		player_field_position = CaptureNormalizedFieldPosition(test_town_player_, background_->NavMesh());
+		player_field_position = CaptureNormalizedFieldPosition(test_town_player_, previous_walkable_area);
 
 	if (background_)
 		background_->UpdateViewport(_Size(res.width, res.height));
@@ -499,14 +506,15 @@ void OutGameScene::_HandleViewportChanged()
 	if (background_)
 	{
 		const auto& nav_mesh = background_->NavMesh();
+		const _Rect outgame_player_walkable_area = outgame_layout.player_walkable_rect_.ToRect();
 		if (test_town_player_)
 		{
-			ApplyNormalizedFieldPosition(test_town_player_, nav_mesh, player_field_position);
-			test_town_player_->SetNavMesh(nav_mesh);
+			ApplyNormalizedFieldPosition(test_town_player_, outgame_player_walkable_area, player_field_position);
+			test_town_player_->SetNavMesh(outgame_player_walkable_area);
 		}
 
 		TownNpcPlacementSpawner npc_placement_spawner;
-		npc_placement_spawner.ApplyPositions(npcs_, _TownNpcPlacementDataMgr.GetOutGamePlacements(), nav_mesh);
+		npc_placement_spawner.ApplyPositions(npcs_, outgame_layout.npcs_, nav_mesh);
 
 		_CameraMgr.Initialize(res.width, res.height);
 		if (test_town_player_)

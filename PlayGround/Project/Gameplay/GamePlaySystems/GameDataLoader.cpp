@@ -16,6 +16,7 @@
 #include "GamePlaySystems/Json/ParticleEmitterDataManager.h"
 #include "GamePlaySystems/Json/ParticleEventSetDataManager.h"
 #include "GamePlaySystems/Json/DialogueJsonDataManager.h"
+#include "GamePlaySystems/Json/OutGameLayoutDataManager.h"
 #include "GamePlaySystems/Json/TownNpcPlacementDataManager.h"
 
 namespace
@@ -30,6 +31,7 @@ namespace
 	constexpr char kAttributeNodePath[] = "Data/AttributeNode.json";
 	constexpr char kStagePath[] = "Data/Stage.json";
 	constexpr char kSpawnPoolPath[] = "Data/SpawnPool.json";
+	constexpr char kOutGameLayoutPath[] = "Data/OutGameLayout.json";
 	constexpr char kTownNpcPlacementPath[] = "Data/TownNpcPlacement.json";
 
 	enum class LoaderFailurePolicy
@@ -196,6 +198,9 @@ _bool GameDataLoader::_LoadAllInternal(const _bool _clear_particle_runtime)
 		_DEBUG_MSGBOX(_T("Failed to load user data from JSON."));
 		return false;
 	}
+
+	if (!LoadRequired("OutGameLayout", kOutGameLayoutPath, [](const std::string& path) { return _OutGameLayoutDataMgr.Load(path); }))
+		return false;
 
 	if (!LoadOptional("TownNpcPlacement", kTownNpcPlacementPath, [](const std::string& path) { return _TownNpcPlacementDataMgr.Load(path); }))
 		return false;

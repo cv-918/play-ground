@@ -330,6 +330,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AnimationClipPathInfoJson.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\AttributeNodeDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\DialogueJsonDataManager.h" />
+    <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\OutGameLayoutDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.h" />
@@ -409,6 +410,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClInclude Include="Project\Gameplay\Scenes\CharacterStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\LoadingScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\OutGameScene.h" />
+    <ClInclude Include="Project\Gameplay\Scenes\OutGameLayoutStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\ParticleStationScene.h" />
     <ClInclude Include="Project\Gameplay\Scenes\Scene.h" />
     <ClInclude Include="Project\Gameplay\GamePlaySystems\SceneManager.h" />
@@ -511,6 +513,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEmitterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleEventSetDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\ParticleDataManager.cpp" />
+    <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\OutGameLayoutDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\PlayableCharacterDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillDefinitionDataManager.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\Json\SkillJsonDataManager.cpp" />
@@ -535,6 +538,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <ClCompile Include="Project\Gameplay\Scenes\CharacterStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\OutGameScene.cpp" />
+    <ClCompile Include="Project\Gameplay\Scenes\OutGameLayoutStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\ParticleStationScene.cpp" />
     <ClCompile Include="Project\Gameplay\Scenes\Scene.cpp" />
     <ClCompile Include="Project\Gameplay\GamePlaySystems\SceneManager.cpp" />
@@ -578,6 +582,7 @@ xcopy "$(ProjectDir)Data" "$(OutDir)Data" /I /E /Y /D</Command>
     <None Include="DataUpdater\download_manifest.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Data\OutGameLayout.json" />
     <None Include="Data\TownNpcPlacement.json" />
     <None Include="_DevLog\Documents\Memo\input_system_test_improvement_guide.md" />
     <None Include="_DevLog\Documents\Memo\video_option_test_improvement_guide.md" />

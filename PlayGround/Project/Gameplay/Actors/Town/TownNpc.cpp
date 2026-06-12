@@ -97,6 +97,16 @@ _float TownNpc::GetVisualHeightForIndicator() const
 	return 40.f;
 }
 
+void TownNpc::SetInteractionArea(const _Vector2& _center_offset, _float _radius_x, _float _y_ratio)
+{
+	auto* ellipse_collider = d_cast(EllipseCollider*, interaction_collider_);
+	if (ellipse_collider == nullptr)
+		return;
+
+	ellipse_collider->SetCenterOffset(_center_offset);
+	ellipse_collider->SetRadius(std::max(0.f, _radius_x), _y_ratio);
+}
+
 void TownNpc::OnCollisionEnter(Collider* _this, Collider* _other)
 {
 	UNREFERENCED_PARAMETER(_this);

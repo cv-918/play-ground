@@ -70,6 +70,16 @@ _bool IntroScene::Initialize()
 	};
 
 	debug_character_station_button_ = ui_manager_->CreateUI<Button>(character_station_button_info);
+
+	Button::CreateInfo outgame_layout_station_button_info;
+	outgame_layout_station_button_info.rect = _Rect{ _Point{ 24, 124 }, _Size{ 220, 42 } };
+	outgame_layout_station_button_info.text = L"OutGameLayoutStation";
+	outgame_layout_station_button_info.on_lclick = [this]()
+	{
+		_SceneMgr.ChangeScene(SceneType::OutGameLayoutStation);
+	};
+
+	debug_outgame_layout_station_button_ = ui_manager_->CreateUI<Button>(outgame_layout_station_button_info);
 #endif // SHIPPING
 
 	MAKE_INITIALIZED;
