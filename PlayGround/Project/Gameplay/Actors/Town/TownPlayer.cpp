@@ -76,10 +76,13 @@ _int TownPlayer::Update(_double _delta_time)
 	if (!interaction_)
 		return UPDATE_CONTINUE;
 
-	interaction_->Update(_delta_time);
+	if (!gameplay_input_blocked_)
+	{
+		interaction_->Update(_delta_time);
 
-	if (_InputMgr.ActionDown(InputAction::Interact))
-		interaction_->TryInteract();
+		if (_InputMgr.ActionDown(InputAction::Interact))
+			interaction_->TryInteract();
+	}
 
 	if (movement_ != nullptr && sprite_animator_ != nullptr)
 	{
@@ -99,6 +102,16 @@ _int TownPlayer::Update(_double _delta_time)
 	}
 
 	return 0;
+}
+
+void TownPlayer::SetGameplayInputBlocked(_bool _blocked)
+{
+	if (gameplay_input_blocked_ == _blocked)
+		return;
+
+	gameplay_input_blocked_ = _blocked;
+	if (movement_)
+		movement_->SetGameplayInputBlocked(gameplay_input_blocked_);
 }
 
 void TownPlayer::SetNavMesh(const _Rect& _rt)

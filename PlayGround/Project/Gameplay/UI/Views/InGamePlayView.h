@@ -18,5 +18,7 @@ private:
 
 	class InGameSkillSlot* skill_slot_0_ = nullptr;
 	class InGameSkillSlot* skill_slot_1_ = nullptr;
+
+	_double next_stage_prompt_elapsed_ = 0.0;
 };
 

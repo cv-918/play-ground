@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "InGameScene.h"
 
+#include "App/EntryPoint.h"
 #include "UI/Views/InGamePauseView.h"
 #include "UI/Views/InGameResultView.h"
 #include "UI/Views/InGamePlayView.h"
@@ -134,6 +135,8 @@ void InGameScene::Render(_double _delta_time)
 void InGameScene::OnEnter()
 {
 	_SkillMgr.ResetEquippedSkillsToReady();
+	_SyncCursorVisibility();
+
 	_SYSTEM_LOG_INFO(
 		L"Particle emitter sample ready. Press F6 in InGame to play emitter id=%u at the mouse cursor.",
 		DEBUG_SAMPLE_PARTICLE_EMITTER_ID);
@@ -144,6 +147,8 @@ void InGameScene::OnEnter()
 
 void InGameScene::OnExit()
 {
+	SetGameCursorVisible(true);
+
 	if (_UserProfile.GetMainStoryProgress() == MainStoryProgress::Prologue1)
 		_UserProfile.SetMainStoryProgress(MainStoryProgress::Prologue2);
 
@@ -209,6 +214,8 @@ void InGameScene::ChangeView(InGameViewState _new_view_state)
 	default:
 		current_view_ = nullptr;
 	}
+
+	_SyncCursorVisibility();
 }
 
 WidgetBase* InGameScene::_CreateView()
@@ -280,4 +287,9 @@ void InGameScene::_ClearTrackedViews()
 	view_callback_ids_.clear();
 	view_map_.clear();
 	current_view_ = nullptr;
+}
+
+void InGameScene::_SyncCursorVisibility()
+{
+	SetGameCursorVisible(view_state_ == InGameViewState::Pause || view_state_ == InGameViewState::Result);
 }

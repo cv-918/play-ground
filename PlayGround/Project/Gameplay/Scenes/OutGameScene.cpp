@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "OutGameScene.h"
 
+#include "App/EntryPoint.h"
 #include "UI/Views/OutGameMainView.h"
 #include "UI/Views/OutGameAttributeView.h"
 #include "UI/Views/OutGameSkillView.h"
@@ -71,6 +72,8 @@ _bool OutGameScene::Initialize()
 
 _int OutGameScene::Update(_double _delta_time)
 {
+	_SyncTownPlayerGameplayInputBlock();
+
 	auto ret = __super::Update(_delta_time);
 	if (ret != UPDATE_CONTINUE)
 		return ret;
@@ -130,6 +133,8 @@ _int OutGameScene::Update(_double _delta_time)
 		{
 			_ConsumeDialogueSessionResult(dialogue_result);
 		}
+
+		_SyncTownPlayerGameplayInputBlock();
 	}
 	// e, [ Dialogue System Test ]
 
@@ -162,6 +167,8 @@ void OutGameScene::Render(_double _delta_time)
 
 void OutGameScene::OnEnter()
 {
+	SetGameCursorVisible(true);
+
 	hold_enter_black_ = false;
 	_ChangeView(OutGameViewState::Main);
 	last_applied_video_revision_ = _VideoSettingsMgr.AppliedRevision();
@@ -370,10 +377,14 @@ void OutGameScene::OnEnter()
 	_CameraMgr.SetFollowTarget(test_town_player_->GetTransform());
 	_CameraMgr.SetWorldBounds(nav_mesh.ToRECT());
 	_CameraMgr.EnableClamp(true);
+
+	_SyncTownPlayerGameplayInputBlock();
 }
 
 void OutGameScene::OnExit()
 {
+	SetGameCursorVisible(true);
+
 	if (dialogue_system_.IsRunning())
 		dialogue_system_.AbortSession();
 
@@ -462,6 +473,14 @@ void OutGameScene::_ConsumeDialogueSessionResult(const DialogueSessionResult& _r
 
 		_UserProfile.NodeLevelUp(0);
 	}
+}
+
+void OutGameScene::_SyncTownPlayerGameplayInputBlock()
+{
+	if (test_town_player_ == nullptr)
+		return;
+
+	test_town_player_->SetGameplayInputBlocked(dialogue_system_.IsBlockingGameInput());
 }
 
 void OutGameScene::_HandleViewportChanged()

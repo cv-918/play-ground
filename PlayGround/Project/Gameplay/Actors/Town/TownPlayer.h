@@ -15,6 +15,8 @@ public:
 	_bool Initialize() override;
 	_int Update(_double _delta_time) override;
 	void SetNavMesh(const _Rect& _rt);
+	void SetGameplayInputBlocked(_bool _blocked);
+	_bool IsGameplayInputBlocked() const { return gameplay_input_blocked_; }
 
 public:
 	void OnEnterInteractable(IInteractable* _target);
@@ -44,4 +46,5 @@ private:
 	SpriteAnimationSetData animation_set_;
 
 	_bool flip_sprite_x_ = false;
+	_bool gameplay_input_blocked_ = false;
 };

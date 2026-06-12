@@ -10,6 +10,9 @@
 
 namespace
 {
+	constexpr _double NEXT_STAGE_PROMPT_BLINK_SECONDS = 0.45;
+	constexpr const wchar_t* NEXT_STAGE_PROMPT_TEXT = L"스페이스바를 누르세요";
+
 	std::wstring GetSkillShortcutText(InputAction _action)
 	{
 		InputBinding binding;
@@ -81,9 +84,9 @@ _int InGamePlayView::Update(_double _delta_time)
 	__super::Update(_delta_time);
 
 	// 비율 업데이트
-	stage_duration_gauge_->SetRatio(_StageMgr.GetStageProgress());
+	stage_duration_gauge_->SetRatio(s_float(_StageMgr.GetStageProgress()));
 	stage_clear_progress_->SetRatio(_RunState.GetKillCountRatio());
-	next_stage_progress_->SetRatio(_StageMgr.GetNextStageProgress());
+	next_stage_progress_->SetRatio(s_float(_StageMgr.GetNextStageProgress()));
 
 	_tchar buffer[MAX_PATH] = {};
 	const auto elapsed_time = _StageMgr.GetStageElapsedTime();
@@ -95,6 +98,18 @@ _int InGamePlayView::Update(_double _delta_time)
 	const auto clear_count = _RunState.GetKillCountForClear();
 	swprintf_s(buffer, L"%d / %d", kill_count, clear_count);
 	stage_clear_progress_->SetText(buffer);
+
+	if (_StageMgr.CanProgressNextStage())
+	{
+		next_stage_prompt_elapsed_ += _delta_time;
+		const _int blink_phase = s_int(next_stage_prompt_elapsed_ / NEXT_STAGE_PROMPT_BLINK_SECONDS);
+		next_stage_progress_->SetText((blink_phase % 2 == 0) ? NEXT_STAGE_PROMPT_TEXT : L"");
+	}
+	else
+	{
+		next_stage_prompt_elapsed_ = 0.0;
+		next_stage_progress_->SetText(L"");
+	}
 
 	return UPDATE_CONTINUE;
 }

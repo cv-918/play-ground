@@ -28,8 +28,24 @@ _bool PlayerMovement::Initialize()
 	return true;
 }
 
+void PlayerMovement::SetGameplayInputBlocked(_bool _blocked)
+{
+	if (gameplay_input_blocked_ == _blocked)
+		return;
+
+	gameplay_input_blocked_ = _blocked;
+	if (gameplay_input_blocked_)
+		StopImmediately();
+}
+
 void PlayerMovement::_ProcessOnPlayerControl(_double _delta_time)
 {
+	if (gameplay_input_blocked_)
+	{
+		StopImmediately();
+		return;
+	}
+
 	if (input_manager_ && transform_ && input_manager_->GetCurrentPreset() == ControllerPreset::MouseOnly)
 	{
 		const _Vector3 player_pos = transform_->Position();

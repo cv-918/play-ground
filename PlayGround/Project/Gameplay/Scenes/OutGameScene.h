@@ -54,6 +54,7 @@ private:
 	_int _HandleSceneInput();
 	void _RequestMainExit();
 	void _ConsumeDialogueSessionResult(const DialogueSessionResult& _result);
+	void _SyncTownPlayerGameplayInputBlock();
 
 	std::wstring _GetViewName(OutGameViewState _view_state) const;
 

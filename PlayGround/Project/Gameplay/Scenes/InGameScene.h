@@ -40,6 +40,7 @@ private:
 	void _TrackView(InGameViewState _state, WidgetBase* _view);
 	void _HandleViewDestroyed(InGameViewState _state, WidgetBase* _view);
 	void _ClearTrackedViews();
+	void _SyncCursorVisibility();
 
 private:
 	class StageManager* stage_manager_ = nullptr;

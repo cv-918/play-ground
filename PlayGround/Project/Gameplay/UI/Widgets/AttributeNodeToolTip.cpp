@@ -98,7 +98,11 @@ void AttributeNodeToolTip::Render(_double _delta_time)
 void AttributeNodeToolTip::SetTargetNode(AttributeNode* _target_node)
 {
 	if (nullptr == _target_node)
+	{
+		target_node_ = nullptr;
+		tooltip_text_.clear();
 		return;
+	}
 
 	/*
 		[%s] %s				// grade, name

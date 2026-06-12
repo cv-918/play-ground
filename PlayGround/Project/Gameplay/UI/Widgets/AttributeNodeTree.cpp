@@ -107,6 +107,7 @@ _int AttributeNodeTree::Update(_double _delta_time)
 	}
 
 	const auto hit_node = _HitTestNode(mouse_pos);
+	const _bool completed_node_click = _InputMgr.Up(VK_LBUTTON) || _InputMgr.Up(VK_RBUTTON);
 	if (nullptr == mouse_overed_node_)
 	{
 		if (hit_node)
@@ -115,6 +116,10 @@ _int AttributeNodeTree::Update(_double _delta_time)
 	else
 	{
 		if (hit_node != mouse_overed_node_)
+		{
+			_SetInteractionNode(hit_node);
+		}
+		else if (hit_node && completed_node_click)
 		{
 			_SetInteractionNode(hit_node);
 		}

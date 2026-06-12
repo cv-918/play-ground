@@ -31,6 +31,7 @@ public:
 	_double GetWorldUpdateDeltaTime(_double _delta_time) const;
 	_double GetPlayerDeathSequenceDuration() const;
 	_double GetPlayerDeathWorldTimeScale() const;
+	_bool CanProgressNextStage() const { return can_progress_next_stage_; }
 
 	_double GetStageProgress() const { return stage_duration_ > 0.0 ? stage_elapsed_time_ / stage_duration_ : 0.0; }
 	_double GetStageElapsedTime() const { return stage_elapsed_time_; }

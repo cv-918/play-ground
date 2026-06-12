@@ -67,6 +67,7 @@ namespace
 	FrameLimitSettings g_frame_limit_settings;
 	HCURSOR g_custom_cursor = nullptr;
 	std::wstring g_custom_cursor_path;
+	bool g_game_cursor_visible = true;
 
 	void ConfigureFrameLimit(bool enabled, _double target_fps)
 	{
@@ -295,7 +296,27 @@ namespace
 			return;
 
 		SetClassLongPtr(g_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(g_custom_cursor));
-		SetCursor(g_custom_cursor);
+		SetCursor(g_game_cursor_visible ? g_custom_cursor : nullptr);
+	}
+
+	void ApplyGameCursorVisibility()
+	{
+		if (g_game_cursor_visible)
+		{
+			while (ShowCursor(TRUE) < 0)
+			{
+			}
+
+			if (g_custom_cursor)
+				SetCursor(g_custom_cursor);
+			return;
+		}
+
+		while (ShowCursor(FALSE) >= 0)
+		{
+		}
+
+		SetCursor(nullptr);
 	}
 
 	void DestroyGameCursor()
@@ -306,6 +327,15 @@ namespace
 		DestroyCursor(g_custom_cursor);
 		g_custom_cursor = nullptr;
 	}
+}
+
+void SetGameCursorVisible(bool _visible)
+{
+	if (g_game_cursor_visible == _visible)
+		return;
+
+	g_game_cursor_visible = _visible;
+	ApplyGameCursorVisibility();
 }
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
@@ -520,6 +550,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_SETCURSOR:
+		if (LOWORD(lParam) == HTCLIENT && !g_game_cursor_visible)
+		{
+			SetCursor(nullptr);
+			return TRUE;
+		}
+
 		if (LOWORD(lParam) == HTCLIENT && g_custom_cursor)
 		{
 			SetCursor(g_custom_cursor);
